@@ -1,0 +1,707 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+3 0 obj
+<< /Length 1030 >>
+stream
+1 1 1 rg 0 0 612 792 re f
+0.976 0.451 0.086 rg 54 742 504 4 re f
+BT /F2 28 Tf 54.00 738.00 Td (LoyaltyBase) Tj ET
+BT /F2 24 Tf 54.00 702.00 Td (Pilot Launch Checklist) Tj ET
+BT /F1 12 Tf 54.00 676.00 Td (A step-by-step operational checklist for preparing, launching, supporting, and) Tj ET
+BT /F1 12 Tf 54.00 660.00 Td (reviewing the first LoyaltyBase pilot deployment.) Tj ET
+BT /F1 11 Tf 54.00 628.00 Td (Prepared for non-technical founders. Includes exact verification steps and expected) Tj ET
+BT /F1 11 Tf 54.00 613.00 Td (outcomes.) Tj ET
+0.98 0.96 0.93 rg 54 480.00 504 92 re f
+BT /F2 13 Tf 72.00 548.00 Td (Launch principle) Tj ET
+BT /F1 10 Tf 72.00 526.00 Td (Start with one pilot business, verify every operational workflow, and expand only after the first week review.) Tj ET
+BT /F1 9 Tf 54.00 442.00 Td (Generated from docs/pilot/pilot-launch-checklist.md) Tj ET
+0.85 0.85 0.85 RG 0.5 w 54 38 m 558 38 l S
+BT /F1 8 Tf 54.00 24.00 Td (LoyaltyBase Pilot Launch Checklist) Tj ET
+BT /F1 8 Tf 520.00 24.00 Td (Page 1) Tj ET
+endstream
+endobj
+4 0 obj
+<< /Length 2833 >>
+stream
+1 1 1 rg 0 0 612 792 re f
+0.976 0.451 0.086 rg 54 742 504 4 re f
+BT /F2 22 Tf 54.00 738.00 Td (LoyaltyBase Pilot Launch Checklist) Tj ET
+BT /F1 10 Tf 54.00 693.00 Td (Audience: non-technical founder or pilot launch owner) Tj ET
+BT /F1 10 Tf 54.00 670.00 Td (Purpose: use this checklist to launch LoyaltyBase with the first pilot business in a controlled,) Tj ET
+BT /F1 10 Tf 54.00 656.00 Td (low-risk way.) Tj ET
+BT /F1 10 Tf 54.00 633.00 Td (How to use this checklist:) Tj ET
+BT /F1 10 Tf 66.00 610.00 Td (- Complete each section in order.) Tj ET
+BT /F1 10 Tf 66.00 592.00 Td (- Do not skip backup, device QA, or monitoring checks.) Tj ET
+BT /F1 10 Tf 66.00 574.00 Td (- Record the owner and date for every completed item.) Tj ET
+BT /F1 10 Tf 66.00 556.00 Td (- If any expected outcome fails, stop and resolve it before moving forward.) Tj ET
+BT /F1 10 Tf 54.00 533.00 Td (Launch rule:) Tj ET
+BT /F1 10 Tf 66.00 510.00 Td (- Start with one pilot business first.) Tj ET
+BT /F1 10 Tf 66.00 492.00 Td (- Keep staff count small during the first week.) Tj ET
+BT /F1 10 Tf 66.00 474.00 Td (- Support the business manually and collect feedback daily.) Tj ET
+0.976 0.451 0.086 rg 54 425.00 504 34 re f
+BT /F2 13 Tf 68.00 433.00 Td (1. Production Server Setup) Tj ET
+BT /F1 10 Tf 54.00 394.00 Td (Goal: confirm the production server is ready to run LoyaltyBase.) Tj ET
+BT /F1 10 Tf 54.00 371.00 Td (Checklist:) Tj ET
+BT /F1 10 Tf 66.00 348.00 Td ([ ] Choose the hosting provider or server.) Tj ET
+BT /F1 10 Tf 66.00 330.00 Td ([ ] Confirm the server has Node.js installed.) Tj ET
+BT /F1 10 Tf 66.00 312.00 Td ([ ] Confirm the server has access to PostgreSQL.) Tj ET
+BT /F1 10 Tf 66.00 294.00 Td ([ ] Upload or deploy the latest LoyaltyBase code.) Tj ET
+BT /F1 10 Tf 66.00 276.00 Td ([ ] Install dependencies using the documented production command.) Tj ET
+BT /F1 10 Tf 66.00 258.00 Td ([ ] Confirm the application can build successfully.) Tj ET
+BT /F1 10 Tf 66.00 240.00 Td ([ ] Confirm the server can start the application.) Tj ET
+BT /F1 10 Tf 66.00 222.00 Td ([ ] Confirm the server time zone is correct for the launch region.) Tj ET
+BT /F1 10 Tf 54.00 199.00 Td (Exact verification steps:) Tj ET
+BT /F1 10 Tf 66.00 176.00 Td (1. Open the server dashboard or terminal.) Tj ET
+BT /F1 10 Tf 66.00 158.00 Td (2. Confirm the application build command completes without errors.) Tj ET
+BT /F1 10 Tf 66.00 140.00 Td (3. Confirm the application start command runs without crashing.) Tj ET
+BT /F1 10 Tf 66.00 122.00 Td (4. Open the production URL in a browser.) Tj ET
+BT /F1 10 Tf 54.00 99.00 Td (Expected outcome:) Tj ET
+BT /F1 10 Tf 66.00 76.00 Td (- The production server is online.) Tj ET
+0.85 0.85 0.85 RG 0.5 w 54 38 m 558 38 l S
+BT /F1 8 Tf 54.00 24.00 Td (LoyaltyBase Pilot Launch Checklist) Tj ET
+BT /F1 8 Tf 520.00 24.00 Td (Page 2) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Length 2830 >>
+stream
+1 1 1 rg 0 0 612 792 re f
+0.976 0.451 0.086 rg 54 742 504 4 re f
+BT /F1 10 Tf 66.00 738.00 Td (- The LoyaltyBase login page loads.) Tj ET
+BT /F1 10 Tf 66.00 720.00 Td (- No development server, test server, or pilot database is being used.) Tj ET
+BT /F1 10 Tf 54.00 697.00 Td (Stop if:) Tj ET
+BT /F1 10 Tf 66.00 674.00 Td (- The app does not start.) Tj ET
+BT /F1 10 Tf 66.00 656.00 Td (- The login page does not load.) Tj ET
+BT /F1 10 Tf 66.00 638.00 Td (- The server points to the development or pilot database.) Tj ET
+0.976 0.451 0.086 rg 54 589.00 504 34 re f
+BT /F2 13 Tf 68.00 597.00 Td (2. Production Database Creation) Tj ET
+BT /F1 10 Tf 54.00 558.00 Td (Goal: create a clean production database without copying development or pilot test data.) Tj ET
+BT /F1 10 Tf 54.00 535.00 Td (Checklist:) Tj ET
+BT /F1 10 Tf 66.00 512.00 Td ([ ] Create a new empty PostgreSQL database for production.) Tj ET
+BT /F1 10 Tf 66.00 494.00 Td ([ ] Confirm the database name is clearly production-specific.) Tj ET
+BT /F1 10 Tf 66.00 476.00 Td ([ ] Confirm the production database is not loyalty_platform.) Tj ET
+BT /F1 10 Tf 66.00 458.00 Td ([ ] Confirm the production database is not loyalty_platform_pilot.) Tj ET
+BT /F1 10 Tf 66.00 440.00 Td ([ ] Configure DATABASE_URL to point to the new production database.) Tj ET
+BT /F1 10 Tf 66.00 422.00 Td ([ ] Run production migrations only.) Tj ET
+BT /F1 10 Tf 66.00 404.00 Td ([ ] Do not run demo seed scripts.) Tj ET
+BT /F1 10 Tf 66.00 386.00 Td ([ ] Do not run pilot seed scripts.) Tj ET
+BT /F1 10 Tf 54.00 363.00 Td (Exact verification steps:) Tj ET
+BT /F1 10 Tf 66.00 340.00 Td (1. Open the database administration tool.) Tj ET
+BT /F1 10 Tf 66.00 322.00 Td (2. Confirm the production database exists.) Tj ET
+BT /F1 10 Tf 66.00 304.00 Td (3. Confirm it is empty before migrations.) Tj ET
+BT /F1 10 Tf 66.00 286.00 Td (4. Run the production migration command.) Tj ET
+BT /F1 10 Tf 66.00 268.00 Td (5. Confirm tables are created.) Tj ET
+BT /F1 10 Tf 66.00 250.00 Td (6. Confirm no demo businesses or demo users exist.) Tj ET
+BT /F1 10 Tf 54.00 227.00 Td (Expected outcome:) Tj ET
+BT /F1 10 Tf 66.00 204.00 Td (- The production database contains schema tables only.) Tj ET
+BT /F1 10 Tf 66.00 186.00 Td (- No demo, test, phase, smoke, or pilot records exist.) Tj ET
+BT /F1 10 Tf 66.00 168.00 Td (- The only account should be the first System Administrator after administrator setup.) Tj ET
+BT /F1 10 Tf 54.00 145.00 Td (Stop if:) Tj ET
+BT /F1 10 Tf 66.00 122.00 Td (- Demo businesses appear.) Tj ET
+BT /F1 10 Tf 66.00 104.00 Td (- Test users appear.) Tj ET
+BT /F1 10 Tf 66.00 86.00 Td (- The database URL points to development or pilot.) Tj ET
+0.85 0.85 0.85 RG 0.5 w 54 38 m 558 38 l S
+BT /F1 8 Tf 54.00 24.00 Td (LoyaltyBase Pilot Launch Checklist) Tj ET
+BT /F1 8 Tf 520.00 24.00 Td (Page 3) Tj ET
+endstream
+endobj
+6 0 obj
+<< /Length 2510 >>
+stream
+1 1 1 rg 0 0 612 792 re f
+0.976 0.451 0.086 rg 54 742 504 4 re f
+0.976 0.451 0.086 rg 54 712.00 504 34 re f
+BT /F2 13 Tf 68.00 720.00 Td (3. Domain Configuration) Tj ET
+BT /F1 10 Tf 54.00 681.00 Td (Goal: point the public domain to the production server.) Tj ET
+BT /F1 10 Tf 54.00 658.00 Td (Checklist:) Tj ET
+BT /F1 10 Tf 66.00 635.00 Td ([ ] Choose the production domain.) Tj ET
+BT /F1 10 Tf 66.00 617.00 Td ([ ] Configure DNS records with the hosting provider.) Tj ET
+BT /F1 10 Tf 66.00 599.00 Td ([ ] Confirm the domain points to the correct production server.) Tj ET
+BT /F1 10 Tf 66.00 581.00 Td ([ ] Confirm no domain points to a local machine.) Tj ET
+BT /F1 10 Tf 66.00 563.00 Td ([ ] Configure APP_URL.) Tj ET
+BT /F1 10 Tf 66.00 545.00 Td ([ ] Configure NEXT_PUBLIC_APP_URL.) Tj ET
+BT /F1 10 Tf 66.00 527.00 Td ([ ] Configure BASE_URL if used.) Tj ET
+BT /F1 10 Tf 54.00 504.00 Td (Exact verification steps:) Tj ET
+BT /F1 10 Tf 66.00 481.00 Td (1. Open the production domain in a browser.) Tj ET
+BT /F1 10 Tf 66.00 463.00 Td (2. Confirm it loads LoyaltyBase.) Tj ET
+BT /F1 10 Tf 66.00 445.00 Td (3. Open /login.) Tj ET
+BT /F1 10 Tf 66.00 427.00 Td (4. Confirm the login page loads.) Tj ET
+BT /F1 10 Tf 66.00 409.00 Td (5. Open a customer card link after a test customer is created.) Tj ET
+BT /F1 10 Tf 54.00 386.00 Td (Expected outcome:) Tj ET
+BT /F1 10 Tf 66.00 363.00 Td (- The domain loads the production app.) Tj ET
+BT /F1 10 Tf 66.00 345.00 Td (- Login page uses the real domain.) Tj ET
+BT /F1 10 Tf 66.00 327.00 Td (- Customer card and referral links use the real domain.) Tj ET
+BT /F1 10 Tf 54.00 304.00 Td (Stop if:) Tj ET
+BT /F1 10 Tf 66.00 281.00 Td (- The domain shows a hosting default page.) Tj ET
+BT /F1 10 Tf 66.00 263.00 Td (- The app generates links with localhost or a development domain.) Tj ET
+0.976 0.451 0.086 rg 54 214.00 504 34 re f
+BT /F2 13 Tf 68.00 222.00 Td (4. SSL Setup) Tj ET
+BT /F1 10 Tf 54.00 183.00 Td (Goal: ensure all production traffic uses HTTPS.) Tj ET
+BT /F1 10 Tf 54.00 160.00 Td (Checklist:) Tj ET
+BT /F1 10 Tf 66.00 137.00 Td ([ ] Enable SSL certificate for the production domain.) Tj ET
+BT /F1 10 Tf 66.00 119.00 Td ([ ] Confirm HTTPS works.) Tj ET
+BT /F1 10 Tf 66.00 101.00 Td ([ ] Confirm HTTP redirects to HTTPS.) Tj ET
+BT /F1 10 Tf 66.00 83.00 Td ([ ] Confirm browser shows a valid lock icon.) Tj ET
+0.85 0.85 0.85 RG 0.5 w 54 38 m 558 38 l S
+BT /F1 8 Tf 54.00 24.00 Td (LoyaltyBase Pilot Launch Checklist) Tj ET
+BT /F1 8 Tf 520.00 24.00 Td (Page 4) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Length 2704 >>
+stream
+1 1 1 rg 0 0 612 792 re f
+0.976 0.451 0.086 rg 54 742 504 4 re f
+BT /F1 10 Tf 66.00 738.00 Td ([ ] Confirm scanner and camera pages are accessed over HTTPS.) Tj ET
+BT /F1 10 Tf 54.00 715.00 Td (Exact verification steps:) Tj ET
+BT /F1 10 Tf 66.00 692.00 Td (1. Open the production domain using https://.) Tj ET
+BT /F1 10 Tf 66.00 674.00 Td (2. Confirm the browser does not show a certificate warning.) Tj ET
+BT /F1 10 Tf 66.00 656.00 Td (3. Open /staff/scanner.) Tj ET
+BT /F1 10 Tf 66.00 638.00 Td (4. Confirm the browser allows camera permission prompts.) Tj ET
+BT /F1 10 Tf 54.00 615.00 Td (Expected outcome:) Tj ET
+BT /F1 10 Tf 66.00 592.00 Td (- HTTPS is active.) Tj ET
+BT /F1 10 Tf 66.00 574.00 Td (- Camera scanner can request camera permission.) Tj ET
+BT /F1 10 Tf 66.00 556.00 Td (- No browser security warning appears.) Tj ET
+BT /F1 10 Tf 54.00 533.00 Td (Stop if:) Tj ET
+BT /F1 10 Tf 66.00 510.00 Td (- SSL is invalid.) Tj ET
+BT /F1 10 Tf 66.00 492.00 Td (- Camera access is blocked because the page is not secure.) Tj ET
+0.976 0.451 0.086 rg 54 443.00 504 34 re f
+BT /F2 13 Tf 68.00 451.00 Td (5. Administrator Creation) Tj ET
+BT /F1 10 Tf 54.00 412.00 Td (Goal: create the first System Administrator safely.) Tj ET
+BT /F1 10 Tf 54.00 389.00 Td (Checklist:) Tj ET
+BT /F1 10 Tf 66.00 366.00 Td ([ ] Create one System Administrator account.) Tj ET
+BT /F1 10 Tf 66.00 348.00 Td ([ ] Use the production administrator email.) Tj ET
+BT /F1 10 Tf 66.00 330.00 Td ([ ] Generate a strong temporary password outside the repository.) Tj ET
+BT /F1 10 Tf 66.00 312.00 Td ([ ] Store the temporary password securely.) Tj ET
+BT /F1 10 Tf 66.00 294.00 Td ([ ] Log in once as the System Administrator.) Tj ET
+BT /F1 10 Tf 66.00 276.00 Td ([ ] Change the password immediately if password change is available.) Tj ET
+BT /F1 10 Tf 66.00 258.00 Td ([ ] Confirm no other users exist before onboarding the first business.) Tj ET
+BT /F1 10 Tf 54.00 235.00 Td (Recommended first account:) Tj ET
+BT /F1 10 Tf 66.00 212.00 Td (- Email: admin@yourdomain.com) Tj ET
+BT /F1 10 Tf 66.00 194.00 Td (- Password: generated temporary password) Tj ET
+BT /F1 10 Tf 54.00 171.00 Td (Exact verification steps:) Tj ET
+BT /F1 10 Tf 66.00 148.00 Td (1. Open /login.) Tj ET
+BT /F1 10 Tf 66.00 130.00 Td (2. Sign in as the System Administrator.) Tj ET
+BT /F1 10 Tf 66.00 112.00 Td (3. Confirm the Platform Operations Center opens.) Tj ET
+BT /F1 10 Tf 66.00 94.00 Td (4. Open system users.) Tj ET
+BT /F1 10 Tf 66.00 76.00 Td (5. Confirm only approved production accounts exist.) Tj ET
+0.85 0.85 0.85 RG 0.5 w 54 38 m 558 38 l S
+BT /F1 8 Tf 54.00 24.00 Td (LoyaltyBase Pilot Launch Checklist) Tj ET
+BT /F1 8 Tf 520.00 24.00 Td (Page 5) Tj ET
+endstream
+endobj
+8 0 obj
+<< /Length 2498 >>
+stream
+1 1 1 rg 0 0 612 792 re f
+0.976 0.451 0.086 rg 54 742 504 4 re f
+BT /F1 10 Tf 54.00 738.00 Td (Expected outcome:) Tj ET
+BT /F1 10 Tf 66.00 715.00 Td (- System Administrator can log in.) Tj ET
+BT /F1 10 Tf 66.00 697.00 Td (- No demo, test, or local accounts exist.) Tj ET
+BT /F1 10 Tf 66.00 679.00 Td (- Administrator has access to platform pages.) Tj ET
+BT /F1 10 Tf 54.00 656.00 Td (Stop if:) Tj ET
+BT /F1 10 Tf 66.00 633.00 Td (- Login fails.) Tj ET
+BT /F1 10 Tf 66.00 615.00 Td (- Unexpected demo users exist.) Tj ET
+BT /F1 10 Tf 66.00 597.00 Td (- The account shows a development role label.) Tj ET
+0.976 0.451 0.086 rg 54 548.00 504 34 re f
+BT /F2 13 Tf 68.00 556.00 Td (6. First Business Onboarding) Tj ET
+BT /F1 10 Tf 54.00 517.00 Td (Goal: create the first pilot business cleanly.) Tj ET
+BT /F1 10 Tf 54.00 494.00 Td (Checklist:) Tj ET
+BT /F1 10 Tf 66.00 471.00 Td ([ ] Collect business name.) Tj ET
+BT /F1 10 Tf 66.00 453.00 Td ([ ] Collect business type.) Tj ET
+BT /F1 10 Tf 66.00 435.00 Td ([ ] Collect owner name and email.) Tj ET
+BT /F1 10 Tf 66.00 417.00 Td ([ ] Collect branch name and location.) Tj ET
+BT /F1 10 Tf 66.00 399.00 Td ([ ] Choose subscription plan.) Tj ET
+BT /F1 10 Tf 66.00 381.00 Td ([ ] Add branding colors and logo if available.) Tj ET
+BT /F1 10 Tf 66.00 363.00 Td ([ ] Create the business from the System Administrator area.) Tj ET
+BT /F1 10 Tf 66.00 345.00 Td ([ ] Create the Business Owner account.) Tj ET
+BT /F1 10 Tf 66.00 327.00 Td ([ ] Confirm subscription status is active or trial.) Tj ET
+BT /F1 10 Tf 54.00 304.00 Td (Exact verification steps:) Tj ET
+BT /F1 10 Tf 66.00 281.00 Td (1. Sign in as System Administrator.) Tj ET
+BT /F1 10 Tf 66.00 263.00 Td (2. Open Businesses.) Tj ET
+BT /F1 10 Tf 66.00 245.00 Td (3. Create the pilot business.) Tj ET
+BT /F1 10 Tf 66.00 227.00 Td (4. Open the business detail page.) Tj ET
+BT /F1 10 Tf 66.00 209.00 Td (5. Confirm business, branch, owner, plan, and subscription appear correctly.) Tj ET
+BT /F1 10 Tf 54.00 186.00 Td (Expected outcome:) Tj ET
+BT /F1 10 Tf 66.00 163.00 Td (- First business is created.) Tj ET
+BT /F1 10 Tf 66.00 145.00 Td (- Business Owner account exists.) Tj ET
+BT /F1 10 Tf 66.00 127.00 Td (- First branch exists.) Tj ET
+BT /F1 10 Tf 66.00 109.00 Td (- Subscription status is correct.) Tj ET
+BT /F1 10 Tf 54.00 86.00 Td (Stop if:) Tj ET
+0.85 0.85 0.85 RG 0.5 w 54 38 m 558 38 l S
+BT /F1 8 Tf 54.00 24.00 Td (LoyaltyBase Pilot Launch Checklist) Tj ET
+BT /F1 8 Tf 520.00 24.00 Td (Page 6) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Length 2449 >>
+stream
+1 1 1 rg 0 0 612 792 re f
+0.976 0.451 0.086 rg 54 742 504 4 re f
+BT /F1 10 Tf 66.00 738.00 Td (- Business owner cannot log in.) Tj ET
+BT /F1 10 Tf 66.00 720.00 Td (- Branch is missing.) Tj ET
+BT /F1 10 Tf 66.00 702.00 Td (- Subscription is missing or inactive.) Tj ET
+0.976 0.451 0.086 rg 54 653.00 504 34 re f
+BT /F2 13 Tf 68.00 661.00 Td (7. First Loyalty Program Setup) Tj ET
+BT /F1 10 Tf 54.00 622.00 Td (Goal: create the first loyalty program for the pilot business.) Tj ET
+BT /F1 10 Tf 54.00 599.00 Td (Checklist:) Tj ET
+BT /F1 10 Tf 66.00 576.00 Td ([ ] Sign in as Business Owner.) Tj ET
+BT /F1 10 Tf 66.00 558.00 Td ([ ] Open Loyalty Programs.) Tj ET
+BT /F1 10 Tf 66.00 540.00 Td ([ ] Create the first program.) Tj ET
+BT /F1 10 Tf 66.00 522.00 Td ([ ] Choose required stamps.) Tj ET
+BT /F1 10 Tf 66.00 504.00 Td ([ ] Choose starting bonus stamps.) Tj ET
+BT /F1 10 Tf 66.00 486.00 Td ([ ] Enter reward name.) Tj ET
+BT /F1 10 Tf 66.00 468.00 Td ([ ] Activate the program.) Tj ET
+BT /F1 10 Tf 66.00 450.00 Td ([ ] Confirm program appears on dashboard.) Tj ET
+BT /F1 10 Tf 54.00 427.00 Td (Suggested pilot program:) Tj ET
+BT /F1 10 Tf 66.00 404.00 Td (- Program: Coffee Club, Meal Rewards, or Haircut Club) Tj ET
+BT /F1 10 Tf 66.00 386.00 Td (- Required stamps: 10 to 12) Tj ET
+BT /F1 10 Tf 66.00 368.00 Td (- Starting bonus stamps: 0 to 2) Tj ET
+BT /F1 10 Tf 66.00 350.00 Td (- Reward: simple free item or service) Tj ET
+BT /F1 10 Tf 54.00 327.00 Td (Exact verification steps:) Tj ET
+BT /F1 10 Tf 66.00 304.00 Td (1. Open the Business Owner dashboard.) Tj ET
+BT /F1 10 Tf 66.00 286.00 Td (2. Open Loyalty Programs.) Tj ET
+BT /F1 10 Tf 66.00 268.00 Td (3. Create a program.) Tj ET
+BT /F1 10 Tf 66.00 250.00 Td (4. Open the program detail page.) Tj ET
+BT /F1 10 Tf 66.00 232.00 Td (5. Confirm status is active.) Tj ET
+BT /F1 10 Tf 54.00 209.00 Td (Expected outcome:) Tj ET
+BT /F1 10 Tf 66.00 186.00 Td (- Program is active.) Tj ET
+BT /F1 10 Tf 66.00 168.00 Td (- Program limits respect the subscription plan.) Tj ET
+BT /F1 10 Tf 66.00 150.00 Td (- Customers can be enrolled into the program.) Tj ET
+BT /F1 10 Tf 54.00 127.00 Td (Stop if:) Tj ET
+BT /F1 10 Tf 66.00 104.00 Td (- Program cannot be created.) Tj ET
+BT /F1 10 Tf 66.00 86.00 Td (- Program does not appear on customer card.) Tj ET
+0.85 0.85 0.85 RG 0.5 w 54 38 m 558 38 l S
+BT /F1 8 Tf 54.00 24.00 Td (LoyaltyBase Pilot Launch Checklist) Tj ET
+BT /F1 8 Tf 520.00 24.00 Td (Page 7) Tj ET
+endstream
+endobj
+10 0 obj
+<< /Length 2453 >>
+stream
+1 1 1 rg 0 0 612 792 re f
+0.976 0.451 0.086 rg 54 742 504 4 re f
+0.976 0.451 0.086 rg 54 712.00 504 34 re f
+BT /F2 13 Tf 68.00 720.00 Td (8. Staff Training) Tj ET
+BT /F1 10 Tf 54.00 681.00 Td (Goal: ensure staff can use the platform during daily operations.) Tj ET
+BT /F1 10 Tf 54.00 658.00 Td (Checklist:) Tj ET
+BT /F1 10 Tf 66.00 635.00 Td ([ ] Create Branch Manager account.) Tj ET
+BT /F1 10 Tf 66.00 617.00 Td ([ ] Create Staff account.) Tj ET
+BT /F1 10 Tf 66.00 599.00 Td ([ ] Give each user their own login.) Tj ET
+BT /F1 10 Tf 66.00 581.00 Td ([ ] Train staff to open the scanner.) Tj ET
+BT /F1 10 Tf 66.00 563.00 Td ([ ] Train staff to enroll a customer.) Tj ET
+BT /F1 10 Tf 66.00 545.00 Td ([ ] Train staff to issue one stamp.) Tj ET
+BT /F1 10 Tf 66.00 527.00 Td ([ ] Train staff to issue multiple stamps with a reason.) Tj ET
+BT /F1 10 Tf 66.00 509.00 Td ([ ] Explain that staff cannot redeem rewards.) Tj ET
+BT /F1 10 Tf 66.00 491.00 Td ([ ] Explain wrong-business QR messages.) Tj ET
+BT /F1 10 Tf 66.00 473.00 Td ([ ] Explain invalid QR messages.) Tj ET
+BT /F1 10 Tf 54.00 450.00 Td (Exact verification steps:) Tj ET
+BT /F1 10 Tf 66.00 427.00 Td (1. Ask staff to log in.) Tj ET
+BT /F1 10 Tf 66.00 409.00 Td (2. Ask staff to open scanner.) Tj ET
+BT /F1 10 Tf 66.00 391.00 Td (3. Ask staff to enroll a sample customer.) Tj ET
+BT /F1 10 Tf 66.00 373.00 Td (4. Ask staff to scan the customer card.) Tj ET
+BT /F1 10 Tf 66.00 355.00 Td (5. Ask staff to issue one stamp.) Tj ET
+BT /F1 10 Tf 66.00 337.00 Td (6. Ask staff to issue two stamps and enter a reason.) Tj ET
+BT /F1 10 Tf 54.00 314.00 Td (Expected outcome:) Tj ET
+BT /F1 10 Tf 66.00 291.00 Td (- Staff can complete normal stamp flow.) Tj ET
+BT /F1 10 Tf 66.00 273.00 Td (- Staff understands error messages.) Tj ET
+BT /F1 10 Tf 66.00 255.00 Td (- Staff knows when to call a manager.) Tj ET
+BT /F1 10 Tf 54.00 232.00 Td (Stop if:) Tj ET
+BT /F1 10 Tf 66.00 209.00 Td (- Staff cannot log in.) Tj ET
+BT /F1 10 Tf 66.00 191.00 Td (- Staff cannot open scanner.) Tj ET
+BT /F1 10 Tf 66.00 173.00 Td (- Staff cannot issue stamps.) Tj ET
+0.976 0.451 0.086 rg 54 124.00 504 34 re f
+BT /F2 13 Tf 68.00 132.00 Td (9. Device QA Execution) Tj ET
+BT /F1 10 Tf 54.00 93.00 Td (Goal: verify the app works on real devices before customers use it.) Tj ET
+0.85 0.85 0.85 RG 0.5 w 54 38 m 558 38 l S
+BT /F1 8 Tf 54.00 24.00 Td (LoyaltyBase Pilot Launch Checklist) Tj ET
+BT /F1 8 Tf 520.00 24.00 Td (Page 8) Tj ET
+endstream
+endobj
+11 0 obj
+<< /Length 2489 >>
+stream
+1 1 1 rg 0 0 612 792 re f
+0.976 0.451 0.086 rg 54 742 504 4 re f
+BT /F1 10 Tf 54.00 738.00 Td (Checklist:) Tj ET
+BT /F1 10 Tf 66.00 715.00 Td ([ ] Test desktop Chrome.) Tj ET
+BT /F1 10 Tf 66.00 697.00 Td ([ ] Test desktop Edge or Firefox.) Tj ET
+BT /F1 10 Tf 66.00 679.00 Td ([ ] Test Android Chrome.) Tj ET
+BT /F1 10 Tf 66.00 661.00 Td ([ ] Test iPhone Safari.) Tj ET
+BT /F1 10 Tf 66.00 643.00 Td ([ ] Test staff scanner on a real phone.) Tj ET
+BT /F1 10 Tf 66.00 625.00 Td ([ ] Test camera permission granted.) Tj ET
+BT /F1 10 Tf 66.00 607.00 Td ([ ] Test camera permission denied.) Tj ET
+BT /F1 10 Tf 66.00 589.00 Td ([ ] Test printed QR code.) Tj ET
+BT /F1 10 Tf 66.00 571.00 Td ([ ] Test QR code from another phone screen.) Tj ET
+BT /F1 10 Tf 66.00 553.00 Td ([ ] Test wrong-business QR if available.) Tj ET
+BT /F1 10 Tf 66.00 535.00 Td ([ ] Test disabled QR if available.) Tj ET
+BT /F1 10 Tf 54.00 512.00 Td (Exact verification steps:) Tj ET
+BT /F1 10 Tf 66.00 489.00 Td (1. Open the staff scanner on Android.) Tj ET
+BT /F1 10 Tf 66.00 471.00 Td (2. Scan a customer QR.) Tj ET
+BT /F1 10 Tf 66.00 453.00 Td (3. Repeat on iPhone Safari.) Tj ET
+BT /F1 10 Tf 66.00 435.00 Td (4. Open the public customer card on mobile.) Tj ET
+BT /F1 10 Tf 66.00 417.00 Td (5. Confirm layout has no horizontal scrolling.) Tj ET
+BT /F1 10 Tf 54.00 394.00 Td (Expected outcome:) Tj ET
+BT /F1 10 Tf 66.00 371.00 Td (- Scanner works on pilot devices.) Tj ET
+BT /F1 10 Tf 66.00 353.00 Td (- Customer card is easy to read on mobile.) Tj ET
+BT /F1 10 Tf 66.00 335.00 Td (- Stamp issuance page is usable on mobile.) Tj ET
+BT /F1 10 Tf 54.00 312.00 Td (Stop if:) Tj ET
+BT /F1 10 Tf 66.00 289.00 Td (- Scanner cannot access the camera.) Tj ET
+BT /F1 10 Tf 66.00 271.00 Td (- QR scanning is unreliable on the business device.) Tj ET
+BT /F1 10 Tf 66.00 253.00 Td (- Customer card layout breaks on mobile.) Tj ET
+0.976 0.451 0.086 rg 54 204.00 504 34 re f
+BT /F2 13 Tf 68.00 212.00 Td (10. Backup Verification) Tj ET
+BT /F1 10 Tf 54.00 173.00 Td (Goal: prove the production data can be recovered.) Tj ET
+BT /F1 10 Tf 54.00 150.00 Td (Checklist:) Tj ET
+BT /F1 10 Tf 66.00 127.00 Td ([ ] Enable database backups.) Tj ET
+BT /F1 10 Tf 66.00 109.00 Td ([ ] Create a manual pre-launch backup.) Tj ET
+BT /F1 10 Tf 66.00 91.00 Td ([ ] Confirm backup file exists.) Tj ET
+0.85 0.85 0.85 RG 0.5 w 54 38 m 558 38 l S
+BT /F1 8 Tf 54.00 24.00 Td (LoyaltyBase Pilot Launch Checklist) Tj ET
+BT /F1 8 Tf 520.00 24.00 Td (Page 9) Tj ET
+endstream
+endobj
+12 0 obj
+<< /Length 2575 >>
+stream
+1 1 1 rg 0 0 612 792 re f
+0.976 0.451 0.086 rg 54 742 504 4 re f
+BT /F1 10 Tf 66.00 738.00 Td ([ ] Confirm backup file size is reasonable.) Tj ET
+BT /F1 10 Tf 66.00 720.00 Td ([ ] Store backup outside the server.) Tj ET
+BT /F1 10 Tf 66.00 702.00 Td ([ ] Document backup location.) Tj ET
+BT /F1 10 Tf 66.00 684.00 Td ([ ] Confirm restore guide is accessible.) Tj ET
+BT /F1 10 Tf 66.00 666.00 Td ([ ] Perform restore drill if possible.) Tj ET
+BT /F1 10 Tf 54.00 643.00 Td (Exact verification steps:) Tj ET
+BT /F1 10 Tf 66.00 620.00 Td (1. Create a database backup.) Tj ET
+BT /F1 10 Tf 66.00 602.00 Td (2. Confirm the backup timestamp.) Tj ET
+BT /F1 10 Tf 66.00 584.00 Td (3. Confirm the file is not empty.) Tj ET
+BT /F1 10 Tf 66.00 566.00 Td (4. If possible, restore into a temporary database.) Tj ET
+BT /F1 10 Tf 66.00 548.00 Td (5. Confirm the app can connect to the restored database.) Tj ET
+BT /F1 10 Tf 54.00 525.00 Td (Expected outcome:) Tj ET
+BT /F1 10 Tf 66.00 502.00 Td (- Backup exists.) Tj ET
+BT /F1 10 Tf 66.00 484.00 Td (- Backup can be restored or is scheduled for restore drill.) Tj ET
+BT /F1 10 Tf 66.00 466.00 Td (- Founder knows where backup is stored.) Tj ET
+BT /F1 10 Tf 54.00 443.00 Td (Stop if:) Tj ET
+BT /F1 10 Tf 66.00 420.00 Td (- No backup exists.) Tj ET
+BT /F1 10 Tf 66.00 402.00 Td (- Backup location is unknown.) Tj ET
+BT /F1 10 Tf 66.00 384.00 Td (- Restore procedure is not understood.) Tj ET
+0.976 0.451 0.086 rg 54 335.00 504 34 re f
+BT /F2 13 Tf 68.00 343.00 Td (11. Monitoring Verification) Tj ET
+BT /F1 10 Tf 54.00 304.00 Td (Goal: confirm the founder can detect issues quickly.) Tj ET
+BT /F1 10 Tf 54.00 281.00 Td (Checklist:) Tj ET
+BT /F1 10 Tf 66.00 258.00 Td ([ ] Confirm app health can be checked.) Tj ET
+BT /F1 10 Tf 66.00 240.00 Td ([ ] Confirm database health can be checked.) Tj ET
+BT /F1 10 Tf 66.00 222.00 Td ([ ] Confirm failed logins are tracked.) Tj ET
+BT /F1 10 Tf 66.00 204.00 Td ([ ] Confirm scanner failures are visible.) Tj ET
+BT /F1 10 Tf 66.00 186.00 Td ([ ] Confirm alert volume can be reviewed.) Tj ET
+BT /F1 10 Tf 66.00 168.00 Td ([ ] Confirm production logs are accessible.) Tj ET
+BT /F1 10 Tf 66.00 150.00 Td ([ ] Confirm support contact process exists.) Tj ET
+BT /F1 10 Tf 54.00 127.00 Td (Exact verification steps:) Tj ET
+BT /F1 10 Tf 66.00 104.00 Td (1. Open Platform Settings.) Tj ET
+BT /F1 10 Tf 66.00 86.00 Td (2. Review environment information.) Tj ET
+0.85 0.85 0.85 RG 0.5 w 54 38 m 558 38 l S
+BT /F1 8 Tf 54.00 24.00 Td (LoyaltyBase Pilot Launch Checklist) Tj ET
+BT /F1 8 Tf 520.00 24.00 Td (Page 10) Tj ET
+endstream
+endobj
+13 0 obj
+<< /Length 2653 >>
+stream
+1 1 1 rg 0 0 612 792 re f
+0.976 0.451 0.086 rg 54 742 504 4 re f
+BT /F1 10 Tf 66.00 738.00 Td (3. Open Platform Health and Analytics.) Tj ET
+BT /F1 10 Tf 66.00 720.00 Td (4. Confirm database status is healthy.) Tj ET
+BT /F1 10 Tf 66.00 702.00 Td (5. Open Audit Center.) Tj ET
+BT /F1 10 Tf 66.00 684.00 Td (6. Confirm recent events are visible.) Tj ET
+BT /F1 10 Tf 54.00 661.00 Td (Expected outcome:) Tj ET
+BT /F1 10 Tf 66.00 638.00 Td (- Founder can see whether the system is healthy.) Tj ET
+BT /F1 10 Tf 66.00 620.00 Td (- Operational issues have a known place to check.) Tj ET
+BT /F1 10 Tf 66.00 602.00 Td (- Support escalation path is known.) Tj ET
+BT /F1 10 Tf 54.00 579.00 Td (Stop if:) Tj ET
+BT /F1 10 Tf 66.00 556.00 Td (- Database health is unknown.) Tj ET
+BT /F1 10 Tf 66.00 538.00 Td (- Logs are not accessible.) Tj ET
+BT /F1 10 Tf 66.00 520.00 Td (- No one is assigned to monitor launch day.) Tj ET
+0.976 0.451 0.086 rg 54 471.00 504 34 re f
+BT /F2 13 Tf 68.00 479.00 Td (12. Go-Live Day Procedure) Tj ET
+BT /F1 10 Tf 54.00 440.00 Td (Goal: launch the pilot in a controlled way.) Tj ET
+BT /F1 10 Tf 54.00 417.00 Td (Checklist:) Tj ET
+BT /F1 10 Tf 66.00 394.00 Td ([ ] Confirm production URL works.) Tj ET
+BT /F1 10 Tf 66.00 376.00 Td ([ ] Confirm System Administrator login works.) Tj ET
+BT /F1 10 Tf 66.00 358.00 Td ([ ] Confirm Business Owner login works.) Tj ET
+BT /F1 10 Tf 66.00 340.00 Td ([ ] Confirm Branch Manager login works.) Tj ET
+BT /F1 10 Tf 66.00 322.00 Td ([ ] Confirm Staff login works.) Tj ET
+BT /F1 10 Tf 66.00 304.00 Td ([ ] Confirm first customer can be enrolled.) Tj ET
+BT /F1 10 Tf 66.00 286.00 Td ([ ] Confirm customer card opens.) Tj ET
+BT /F1 10 Tf 66.00 268.00 Td ([ ] Confirm QR scanner works.) Tj ET
+BT /F1 10 Tf 66.00 250.00 Td ([ ] Confirm one stamp can be issued.) Tj ET
+BT /F1 10 Tf 66.00 232.00 Td ([ ] Confirm reward-ready behavior works when target is reached.) Tj ET
+BT /F1 10 Tf 66.00 214.00 Td ([ ] Confirm support contact is available.) Tj ET
+BT /F1 10 Tf 54.00 191.00 Td (Suggested launch order:) Tj ET
+BT /F1 10 Tf 66.00 168.00 Td (1. Founder verifies platform health.) Tj ET
+BT /F1 10 Tf 66.00 150.00 Td (2. Business Owner verifies dashboard.) Tj ET
+BT /F1 10 Tf 66.00 132.00 Td (3. Branch Manager verifies scanner.) Tj ET
+BT /F1 10 Tf 66.00 114.00 Td (4. Staff enrolls one internal test customer.) Tj ET
+BT /F1 10 Tf 66.00 96.00 Td (5. Staff issues one stamp.) Tj ET
+BT /F1 10 Tf 66.00 78.00 Td (6. Business serves first real customer.) Tj ET
+0.85 0.85 0.85 RG 0.5 w 54 38 m 558 38 l S
+BT /F1 8 Tf 54.00 24.00 Td (LoyaltyBase Pilot Launch Checklist) Tj ET
+BT /F1 8 Tf 520.00 24.00 Td (Page 11) Tj ET
+endstream
+endobj
+14 0 obj
+<< /Length 2510 >>
+stream
+1 1 1 rg 0 0 612 792 re f
+0.976 0.451 0.086 rg 54 742 504 4 re f
+BT /F1 10 Tf 66.00 738.00 Td (7. Founder monitors alerts and logs for the first hour.) Tj ET
+BT /F1 10 Tf 54.00 715.00 Td (Expected outcome:) Tj ET
+BT /F1 10 Tf 66.00 692.00 Td (- First real customer can be enrolled.) Tj ET
+BT /F1 10 Tf 66.00 674.00 Td (- First real stamp can be issued.) Tj ET
+BT /F1 10 Tf 66.00 656.00 Td (- Business staff can operate without founder intervention.) Tj ET
+BT /F1 10 Tf 54.00 633.00 Td (Stop if:) Tj ET
+BT /F1 10 Tf 66.00 610.00 Td (- Scanner fails.) Tj ET
+BT /F1 10 Tf 66.00 592.00 Td (- Staff cannot log in.) Tj ET
+BT /F1 10 Tf 66.00 574.00 Td (- Customer card does not load.) Tj ET
+0.976 0.451 0.086 rg 54 525.00 504 34 re f
+BT /F2 13 Tf 68.00 533.00 Td (13. First-Week Support Procedure) Tj ET
+BT /F1 10 Tf 54.00 494.00 Td (Goal: support the pilot business closely during the first week.) Tj ET
+BT /F1 10 Tf 54.00 471.00 Td (Checklist:) Tj ET
+BT /F1 10 Tf 66.00 448.00 Td ([ ] Assign one support owner.) Tj ET
+BT /F1 10 Tf 66.00 430.00 Td ([ ] Create daily check-in time.) Tj ET
+BT /F1 10 Tf 66.00 412.00 Td ([ ] Collect staff feedback daily.) Tj ET
+BT /F1 10 Tf 66.00 394.00 Td ([ ] Review failed scans daily.) Tj ET
+BT /F1 10 Tf 66.00 376.00 Td ([ ] Review suspicious alerts daily.) Tj ET
+BT /F1 10 Tf 66.00 358.00 Td ([ ] Review customer enrollments daily.) Tj ET
+BT /F1 10 Tf 66.00 340.00 Td ([ ] Review stamp transactions daily.) Tj ET
+BT /F1 10 Tf 66.00 322.00 Td ([ ] Review reward redemptions daily.) Tj ET
+BT /F1 10 Tf 66.00 304.00 Td ([ ] Record issues in a shared issue log.) Tj ET
+BT /F1 10 Tf 66.00 286.00 Td ([ ] Classify issues by severity.) Tj ET
+BT /F1 10 Tf 54.00 263.00 Td (Daily support questions:) Tj ET
+BT /F1 10 Tf 66.00 240.00 Td (1. Did staff log in successfully?) Tj ET
+BT /F1 10 Tf 66.00 222.00 Td (2. Did the scanner work?) Tj ET
+BT /F1 10 Tf 66.00 204.00 Td (3. Did customers understand the card?) Tj ET
+BT /F1 10 Tf 66.00 186.00 Td (4. Were stamps issued correctly?) Tj ET
+BT /F1 10 Tf 66.00 168.00 Td (5. Did any alerts appear?) Tj ET
+BT /F1 10 Tf 66.00 150.00 Td (6. Did any customer complain or get confused?) Tj ET
+BT /F1 10 Tf 66.00 132.00 Td (7. What should be improved before wider launch?) Tj ET
+BT /F1 10 Tf 54.00 109.00 Td (Expected outcome:) Tj ET
+BT /F1 10 Tf 66.00 86.00 Td (- Issues are found early.) Tj ET
+0.85 0.85 0.85 RG 0.5 w 54 38 m 558 38 l S
+BT /F1 8 Tf 54.00 24.00 Td (LoyaltyBase Pilot Launch Checklist) Tj ET
+BT /F1 8 Tf 520.00 24.00 Td (Page 12) Tj ET
+endstream
+endobj
+15 0 obj
+<< /Length 2359 >>
+stream
+1 1 1 rg 0 0 612 792 re f
+0.976 0.451 0.086 rg 54 742 504 4 re f
+BT /F1 10 Tf 66.00 738.00 Td (- Staff feels supported.) Tj ET
+BT /F1 10 Tf 66.00 720.00 Td (- Founder has real usage feedback.) Tj ET
+BT /F1 10 Tf 54.00 697.00 Td (Stop if:) Tj ET
+BT /F1 10 Tf 66.00 674.00 Td (- Critical issue repeats twice.) Tj ET
+BT /F1 10 Tf 66.00 656.00 Td (- Staff stops using the system.) Tj ET
+BT /F1 10 Tf 66.00 638.00 Td (- Customers cannot access cards.) Tj ET
+0.976 0.451 0.086 rg 54 589.00 504 34 re f
+BT /F2 13 Tf 68.00 597.00 Td (14. Pilot Success Metrics) Tj ET
+BT /F1 10 Tf 54.00 558.00 Td (Goal: measure whether the pilot is successful.) Tj ET
+BT /F1 10 Tf 54.00 535.00 Td (Checklist:) Tj ET
+BT /F1 10 Tf 66.00 512.00 Td ([ ] Track businesses onboarded.) Tj ET
+BT /F1 10 Tf 66.00 494.00 Td ([ ] Track branches onboarded.) Tj ET
+BT /F1 10 Tf 66.00 476.00 Td ([ ] Track staff trained.) Tj ET
+BT /F1 10 Tf 66.00 458.00 Td ([ ] Track customers enrolled.) Tj ET
+BT /F1 10 Tf 66.00 440.00 Td ([ ] Track QR scans completed.) Tj ET
+BT /F1 10 Tf 66.00 422.00 Td ([ ] Track stamps issued.) Tj ET
+BT /F1 10 Tf 66.00 404.00 Td ([ ] Track rewards ready.) Tj ET
+BT /F1 10 Tf 66.00 386.00 Td ([ ] Track rewards redeemed.) Tj ET
+BT /F1 10 Tf 66.00 368.00 Td ([ ] Track referrals created.) Tj ET
+BT /F1 10 Tf 66.00 350.00 Td ([ ] Track referrals qualified.) Tj ET
+BT /F1 10 Tf 66.00 332.00 Td ([ ] Track support issues.) Tj ET
+BT /F1 10 Tf 66.00 314.00 Td ([ ] Track critical incidents.) Tj ET
+BT /F1 10 Tf 54.00 291.00 Td (Suggested first pilot targets:) Tj ET
+BT /F1 10 Tf 66.00 268.00 Td (- 1 business onboarded) Tj ET
+BT /F1 10 Tf 66.00 250.00 Td (- 1 to 2 branches active) Tj ET
+BT /F1 10 Tf 66.00 232.00 Td (- 3 to 5 staff trained) Tj ET
+BT /F1 10 Tf 66.00 214.00 Td (- 50 customers enrolled) Tj ET
+BT /F1 10 Tf 66.00 196.00 Td (- 100 stamps issued) Tj ET
+BT /F1 10 Tf 66.00 178.00 Td (- 5 rewards ready or redeemed) Tj ET
+BT /F1 10 Tf 66.00 160.00 Td (- 0 unresolved critical incidents) Tj ET
+BT /F1 10 Tf 54.00 137.00 Td (Expected outcome:) Tj ET
+BT /F1 10 Tf 66.00 114.00 Td (- Pilot has measurable adoption.) Tj ET
+BT /F1 10 Tf 66.00 96.00 Td (- Founder can decide whether to continue, pause, or expand.) Tj ET
+0.85 0.85 0.85 RG 0.5 w 54 38 m 558 38 l S
+BT /F1 8 Tf 54.00 24.00 Td (LoyaltyBase Pilot Launch Checklist) Tj ET
+BT /F1 8 Tf 520.00 24.00 Td (Page 13) Tj ET
+endstream
+endobj
+16 0 obj
+<< /Length 2537 >>
+stream
+1 1 1 rg 0 0 612 792 re f
+0.976 0.451 0.086 rg 54 742 504 4 re f
+BT /F1 10 Tf 54.00 738.00 Td (Stop if:) Tj ET
+BT /F1 10 Tf 66.00 715.00 Td (- Metrics are not being tracked.) Tj ET
+BT /F1 10 Tf 66.00 697.00 Td (- Staff usage remains low after training.) Tj ET
+BT /F1 10 Tf 66.00 679.00 Td (- Critical issues remain unresolved.) Tj ET
+0.976 0.451 0.086 rg 54 630.00 504 34 re f
+BT /F2 13 Tf 68.00 638.00 Td (15. Pilot Completion Review) Tj ET
+BT /F1 10 Tf 54.00 599.00 Td (Goal: decide whether LoyaltyBase is ready for more customers.) Tj ET
+BT /F1 10 Tf 54.00 576.00 Td (Checklist:) Tj ET
+BT /F1 10 Tf 66.00 553.00 Td ([ ] Review pilot goals.) Tj ET
+BT /F1 10 Tf 66.00 535.00 Td ([ ] Review usage metrics.) Tj ET
+BT /F1 10 Tf 66.00 517.00 Td ([ ] Review support issues.) Tj ET
+BT /F1 10 Tf 66.00 499.00 Td ([ ] Review customer feedback.) Tj ET
+BT /F1 10 Tf 66.00 481.00 Td ([ ] Review staff feedback.) Tj ET
+BT /F1 10 Tf 66.00 463.00 Td ([ ] Review business owner feedback.) Tj ET
+BT /F1 10 Tf 66.00 445.00 Td ([ ] Review technical incidents.) Tj ET
+BT /F1 10 Tf 66.00 427.00 Td ([ ] Review missing features.) Tj ET
+BT /F1 10 Tf 66.00 409.00 Td ([ ] Decide go, pause, or rework.) Tj ET
+BT /F1 10 Tf 54.00 386.00 Td (Review questions:) Tj ET
+BT /F1 10 Tf 66.00 363.00 Td (1. Did the business use LoyaltyBase daily?) Tj ET
+BT /F1 10 Tf 66.00 345.00 Td (2. Did customers understand digital stamp cards?) Tj ET
+BT /F1 10 Tf 66.00 327.00 Td (3. Did staff find scanning easy?) Tj ET
+BT /F1 10 Tf 66.00 309.00 Td (4. Did rewards work correctly?) Tj ET
+BT /F1 10 Tf 66.00 291.00 Td (5. Did alerts help or confuse the business?) Tj ET
+BT /F1 10 Tf 66.00 273.00 Td (6. Did the founder need to manually intervene too often?) Tj ET
+BT /F1 10 Tf 66.00 255.00 Td (7. What must be fixed before the second pilot?) Tj ET
+BT /F1 10 Tf 54.00 232.00 Td (Expected outcome:) Tj ET
+BT /F1 10 Tf 66.00 209.00 Td (- Clear go/no-go decision.) Tj ET
+BT /F1 10 Tf 66.00 191.00 Td (- Prioritized improvement list.) Tj ET
+BT /F1 10 Tf 66.00 173.00 Td (- Recommendation for next pilot business.) Tj ET
+BT /F1 10 Tf 54.00 150.00 Td (Completion decision:) Tj ET
+BT /F1 10 Tf 66.00 127.00 Td (- Go: expand to another pilot business.) Tj ET
+BT /F1 10 Tf 66.00 109.00 Td (- Pause: fix high-priority workflow issues first.) Tj ET
+BT /F1 10 Tf 66.00 91.00 Td (- Stop: product is not ready for real business use.) Tj ET
+0.85 0.85 0.85 RG 0.5 w 54 38 m 558 38 l S
+BT /F1 8 Tf 54.00 24.00 Td (LoyaltyBase Pilot Launch Checklist) Tj ET
+BT /F1 8 Tf 520.00 24.00 Td (Page 14) Tj ET
+endstream
+endobj
+17 0 obj
+<< /Length 1452 >>
+stream
+1 1 1 rg 0 0 612 792 re f
+0.976 0.451 0.086 rg 54 742 504 4 re f
+0.976 0.451 0.086 rg 54 712.00 504 34 re f
+BT /F2 13 Tf 68.00 720.00 Td (Final Founder Sign-Off) Tj ET
+BT /F1 10 Tf 54.00 681.00 Td (Complete before first public pilot day:) Tj ET
+BT /F1 10 Tf 66.00 658.00 Td ([ ] Production server verified.) Tj ET
+BT /F1 10 Tf 66.00 640.00 Td ([ ] Production database verified.) Tj ET
+BT /F1 10 Tf 66.00 622.00 Td ([ ] Domain and SSL verified.) Tj ET
+BT /F1 10 Tf 66.00 604.00 Td ([ ] System Administrator verified.) Tj ET
+BT /F1 10 Tf 66.00 586.00 Td ([ ] First business onboarded.) Tj ET
+BT /F1 10 Tf 66.00 568.00 Td ([ ] First loyalty program active.) Tj ET
+BT /F1 10 Tf 66.00 550.00 Td ([ ] Staff trained.) Tj ET
+BT /F1 10 Tf 66.00 532.00 Td ([ ] Real-device QA completed.) Tj ET
+BT /F1 10 Tf 66.00 514.00 Td ([ ] Backup verified.) Tj ET
+BT /F1 10 Tf 66.00 496.00 Td ([ ] Monitoring verified.) Tj ET
+BT /F1 10 Tf 66.00 478.00 Td ([ ] Support owner assigned.) Tj ET
+BT /F1 10 Tf 66.00 460.00 Td ([ ] Go-live decision approved.) Tj ET
+BT /F1 10 Tf 54.00 437.00 Td (Founder approval:) Tj ET
+BT /F1 10 Tf 66.00 414.00 Td (- Name:) Tj ET
+BT /F1 10 Tf 66.00 396.00 Td (- Date:) Tj ET
+BT /F1 10 Tf 66.00 378.00 Td (- Decision: Go / Pause / No-Go) Tj ET
+BT /F1 10 Tf 66.00 360.00 Td (- Notes:) Tj ET
+0.85 0.85 0.85 RG 0.5 w 54 38 m 558 38 l S
+BT /F1 8 Tf 54.00 24.00 Td (LoyaltyBase Pilot Launch Checklist) Tj ET
+BT /F1 8 Tf 520.00 24.00 Td (Page 15) Tj ET
+endstream
+endobj
+18 0 obj
+<< /Type /Page /Parent 33 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 3 0 R >>
+endobj
+19 0 obj
+<< /Type /Page /Parent 33 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 4 0 R >>
+endobj
+20 0 obj
+<< /Type /Page /Parent 33 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 5 0 R >>
+endobj
+21 0 obj
+<< /Type /Page /Parent 33 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 6 0 R >>
+endobj
+22 0 obj
+<< /Type /Page /Parent 33 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 7 0 R >>
+endobj
+23 0 obj
+<< /Type /Page /Parent 33 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 8 0 R >>
+endobj
+24 0 obj
+<< /Type /Page /Parent 33 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 9 0 R >>
+endobj
+25 0 obj
+<< /Type /Page /Parent 33 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 10 0 R >>
+endobj
+26 0 obj
+<< /Type /Page /Parent 33 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 11 0 R >>
+endobj
+27 0 obj
+<< /Type /Page /Parent 33 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 12 0 R >>
+endobj
+28 0 obj
+<< /Type /Page /Parent 33 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 13 0 R >>
+endobj
+29 0 obj
+<< /Type /Page /Parent 33 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 14 0 R >>
+endobj
+30 0 obj
+<< /Type /Page /Parent 33 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 15 0 R >>
+endobj
+31 0 obj
+<< /Type /Page /Parent 33 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 16 0 R >>
+endobj
+32 0 obj
+<< /Type /Page /Parent 33 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 17 0 R >>
+endobj
+33 0 obj
+<< /Type /Pages /Kids [18 0 R 19 0 R 20 0 R 21 0 R 22 0 R 23 0 R 24 0 R 25 0 R 26 0 R 27 0 R 28 0 R 29 0 R 30 0 R 31 0 R 32 0 R] /Count 15 >>
+endobj
+34 0 obj
+<< /Type /Catalog /Pages 33 0 R >>
+endobj
+xref
+0 35
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000000154 00000 n 
+0000001236 00000 n 
+0000004121 00000 n 
+0000007003 00000 n 
+0000009565 00000 n 
+0000012321 00000 n 
+0000014871 00000 n 
+0000017372 00000 n 
+0000019878 00000 n 
+0000022420 00000 n 
+0000025048 00000 n 
+0000027754 00000 n 
+0000030317 00000 n 
+0000032729 00000 n 
+0000035319 00000 n 
+0000036824 00000 n 
+0000036962 00000 n 
+0000037100 00000 n 
+0000037238 00000 n 
+0000037376 00000 n 
+0000037514 00000 n 
+0000037652 00000 n 
+0000037790 00000 n 
+0000037929 00000 n 
+0000038068 00000 n 
+0000038207 00000 n 
+0000038346 00000 n 
+0000038485 00000 n 
+0000038624 00000 n 
+0000038763 00000 n 
+0000038902 00000 n 
+0000039060 00000 n 
+trailer
+<< /Size 35 /Root 34 0 R >>
+startxref
+39111
+%%EOF

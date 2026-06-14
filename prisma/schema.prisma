@@ -1,0 +1,1007 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  PLATFORM_OWNER
+  BUSINESS_OWNER
+  BRANCH_MANAGER
+  STAFF
+}
+
+enum RecordStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum BusinessType {
+  COFFEE_SHOP
+  RESTAURANT
+  BARBERSHOP
+  BEAUTY_SALON
+  CAR_CARE_CENTER
+  OTHER
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  SUSPENDED
+  EXPIRED
+  CANCELLED
+}
+
+enum SubscriptionAuditAction {
+  PLAN_CHANGED
+  STATUS_CHANGED
+  TRIAL_ACTIVATED
+  TRIAL_EXPIRED
+  SUBSCRIPTION_EXTENDED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CARD
+  OTHER
+}
+
+enum CustomerSource {
+  STAFF
+  OWNER
+  IMPORT
+  SELF_SIGNUP
+}
+
+enum CustomerMembershipStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+enum CardStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum ProgramMembershipStatus {
+  ACTIVE
+  COMPLETED
+  EXPIRED
+  CANCELLED
+}
+
+enum ProgramEnrollmentSource {
+  OWNER
+  BRANCH_MANAGER
+}
+
+enum ScanStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum ScanEventResult {
+  VALID
+  INVALID
+  WRONG_BUSINESS
+  DISABLED
+}
+
+enum StampTransactionSource {
+  QR_SCAN
+}
+
+enum ActivityAlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ActivityAlertStatus {
+  OPEN
+  ASSIGNED
+  UNDER_REVIEW
+  RESOLVED
+  REVIEWED
+  DISMISSED
+  ESCALATED
+}
+
+enum AlertEventType {
+  ALERT_CREATED
+  ALERT_UPDATED
+  ALERT_ASSIGNED
+  ALERT_ESCALATED
+  ALERT_RESOLVED
+  ALERT_DISMISSED
+  ALERT_REOPENED
+}
+
+enum EngagementEventType {
+  REWARD_READY
+  NEAR_REWARD
+  BIRTHDAY
+  INACTIVE_30_DAYS
+  INACTIVE_60_DAYS
+  INACTIVE_90_DAYS
+  WELCOME_CUSTOMER
+  REWARD_REDEEMED
+}
+
+enum EngagementEventStatus {
+  ACTIVE
+  DISMISSED
+  RESOLVED
+}
+
+enum CommunicationChannel {
+  WHATSAPP
+  SMS
+  EMAIL
+  NONE
+}
+
+enum MessageDeliveryStatus {
+  DRAFT
+  READY
+  SENT_MANUALLY
+  CANCELLED
+  FAILED
+}
+
+enum ReferralStatus {
+  PENDING
+  QUALIFIED
+  REJECTED
+  EXPIRED
+}
+
+enum ReferralRewardStatus {
+  PENDING
+  GRANTED
+  CANCELLED
+}
+
+enum ReferralEventType {
+  REFERRAL_CREATED
+  SELF_REFERRAL_BLOCKED
+  REFERRAL_QUALIFIED
+  REWARD_GRANTED
+  REWARD_PENDING
+}
+
+model User {
+  id           Int          @id @default(autoincrement())
+  uuid         String       @unique @default(uuid()) @db.Uuid
+  name         String
+  email        String       @unique
+  passwordHash String       @map("password_hash")
+  sessionVersion Int        @default(1) @map("session_version")
+  role         UserRole
+  businessId   Int?         @map("business_id")
+  branchId     Int?         @map("branch_id")
+  status       RecordStatus @default(ACTIVE)
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  business Business? @relation(fields: [businessId], references: [id])
+  branch   Branch?   @relation(fields: [branchId], references: [id])
+  createdCustomerMemberships BusinessCustomerMembership[]
+  scanEvents ScanEvent[]
+  stampTransactions StampTransaction[]
+  rewardRedemptions RewardRedemption[]
+  activityAlerts ActivityAlert[] @relation("ActivityAlertUser")
+  reviewedActivityAlerts ActivityAlert[] @relation("ActivityAlertReviewer")
+  assignedActivityAlerts ActivityAlert[] @relation("ActivityAlertAssignee")
+  resolvedActivityAlerts ActivityAlert[] @relation("ActivityAlertResolver")
+  dismissedActivityAlerts ActivityAlert[] @relation("ActivityAlertDismisser")
+  alertEvents AlertEvent[]
+  subscriptionAudits SubscriptionAuditLog[]
+  createdInvoices Invoice[] @relation("InvoiceCreator")
+  recordedPayments Payment[]
+  invoiceAuditLogs InvoiceAuditLog[]
+  preparedMessages MessageDeliveryQueue[] @relation("MessagePreparedBy")
+  sentMessages MessageDeliveryQueue[] @relation("MessageSentBy")
+  auditEvents AuditEvent[]
+  cooldownEvents CooldownEvent[]
+
+  @@index([businessId])
+  @@index([branchId])
+  @@map("users")
+}
+
+model FailedLoginAudit {
+  id             Int      @id @default(autoincrement())
+  emailAttempted String   @map("email_attempted")
+  ipAddress      String   @map("ip_address")
+  userAgent      String?  @map("user_agent")
+  outcome        String
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([emailAttempted, createdAt])
+  @@index([ipAddress, createdAt])
+  @@index([outcome, createdAt])
+  @@map("failed_login_audit")
+}
+
+model Business {
+  id           Int          @id @default(autoincrement())
+  uuid         String       @unique @default(uuid()) @db.Uuid
+  name         String
+  businessType BusinessType @map("business_type")
+  status       RecordStatus @default(ACTIVE)
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  users         User[]
+  branches      Branch[]
+  branding      BusinessBranding?
+  subscriptions BusinessSubscription[]
+  customerMemberships BusinessCustomerMembership[]
+  loyaltyPrograms LoyaltyProgram[]
+  scanEvents ScanEvent[]
+  stampTransactions StampTransaction[]
+  rewardRedemptions RewardRedemption[]
+  activityAlerts ActivityAlert[]
+  abusePolicies AbusePolicy[]
+  alertEvents AlertEvent[]
+  subscriptionAudits SubscriptionAuditLog[]
+  invoices Invoice[]
+  payments Payment[]
+  invoiceAuditLogs InvoiceAuditLog[]
+  engagementEvents EngagementEvent[]
+  messageTemplates MessageTemplate[]
+  communicationSettings BusinessCommunicationSettings?
+  messageDeliveryQueue MessageDeliveryQueue[]
+  referrals Referral[]
+  referralRewards ReferralReward[]
+  referralEvents ReferralEvent[]
+  auditEvents AuditEvent[]
+  cooldownRules CooldownRule[]
+  cooldownEvents CooldownEvent[]
+
+  @@map("businesses")
+}
+
+model Branch {
+  id         Int          @id @default(autoincrement())
+  uuid       String       @unique @default(uuid()) @db.Uuid
+  businessId Int          @map("business_id")
+  name       String
+  country    String
+  city       String
+  address    String
+  status     RecordStatus @default(ACTIVE)
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  users    User[]
+  createdCustomerMemberships BusinessCustomerMembership[]
+  scanEvents ScanEvent[]
+  stampTransactions StampTransaction[]
+  rewardRedemptions RewardRedemption[]
+  activityAlerts ActivityAlert[]
+  referredFirstStampReferrals Referral[] @relation("ReferralFirstStampBranch")
+  auditEvents AuditEvent[]
+  cooldownEvents CooldownEvent[]
+
+  @@index([businessId])
+  @@map("branches")
+}
+
+model BusinessBranding {
+  id              Int      @id @default(autoincrement())
+  businessId      Int      @unique @map("business_id")
+  logoUrl         String?  @map("logo_url")
+  primaryColor    String   @default("#F97316") @map("primary_color")
+  secondaryColor  String   @default("#FDBA74") @map("secondary_color")
+  backgroundColor String   @default("#FFFFFF") @map("background_color")
+  textColor       String   @default("#111827") @map("text_color")
+  buttonColor     String   @default("#F97316") @map("button_color")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@map("business_branding")
+}
+
+model SubscriptionPlan {
+  id                 Int      @id @default(autoincrement())
+  name               String   @unique
+  maxBranches        Int      @map("max_branches")
+  maxLoyaltyPrograms Int      @map("max_loyalty_programs")
+  features           Json
+  priceMonthly       Decimal  @map("price_monthly") @db.Decimal(10, 2)
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  subscriptions BusinessSubscription[]
+
+  @@map("subscription_plans")
+}
+
+model BusinessSubscription {
+  id                 Int                @id @default(autoincrement())
+  businessId         Int                @map("business_id")
+  subscriptionPlanId Int                @map("subscription_plan_id")
+  status             SubscriptionStatus @default(ACTIVE)
+  startDate          DateTime           @map("start_date")
+  trialStartDate     DateTime?          @map("trial_start_date")
+  trialEndDate       DateTime?          @map("trial_end_date")
+  expiryDate         DateTime?          @map("expiry_date")
+  renewalDate        DateTime?          @map("renewal_date")
+  endDate            DateTime?          @map("end_date")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+
+  business         Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  subscriptionPlan SubscriptionPlan @relation(fields: [subscriptionPlanId], references: [id])
+  auditLogs        SubscriptionAuditLog[]
+  invoices         Invoice[]
+
+  @@index([businessId])
+  @@index([businessId, status, createdAt])
+  @@index([status])
+  @@index([expiryDate])
+  @@index([subscriptionPlanId])
+  @@map("business_subscriptions")
+}
+
+model SubscriptionAuditLog {
+  id                     Int                     @id @default(autoincrement())
+  businessId             Int                     @map("business_id")
+  businessSubscriptionId Int                     @map("business_subscription_id")
+  userId                 Int?                    @map("user_id")
+  action                 SubscriptionAuditAction
+  previousValue          String?                 @map("previous_value")
+  newValue               String?                 @map("new_value")
+  createdAt              DateTime                @default(now()) @map("created_at")
+
+  business             Business             @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessSubscription BusinessSubscription @relation(fields: [businessSubscriptionId], references: [id], onDelete: Cascade)
+  user                 User?                @relation(fields: [userId], references: [id])
+
+  @@index([businessId])
+  @@index([businessSubscriptionId])
+  @@index([userId])
+  @@index([action])
+  @@map("subscription_audit_logs")
+}
+
+model Invoice {
+  id                   Int           @id @default(autoincrement())
+  uuid                 String        @unique @default(uuid()) @db.Uuid
+  businessId           Int           @map("business_id")
+  subscriptionId       Int           @map("subscription_id")
+  invoiceNumber        String        @unique @map("invoice_number")
+  invoiceDate          DateTime      @map("invoice_date")
+  dueDate              DateTime      @map("due_date")
+  amount               Decimal       @db.Decimal(10, 2)
+  currency             String        @default("AED")
+  status               InvoiceStatus @default(DRAFT)
+  notes                String?
+  createdByUserId      Int           @map("created_by_user_id")
+  createdAt            DateTime      @default(now()) @map("created_at")
+  updatedAt            DateTime      @updatedAt @map("updated_at")
+
+  business      Business             @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  subscription  BusinessSubscription @relation(fields: [subscriptionId], references: [id])
+  createdByUser User                 @relation("InvoiceCreator", fields: [createdByUserId], references: [id])
+  payments      Payment[]
+  auditLogs     InvoiceAuditLog[]
+
+  @@index([businessId])
+  @@index([subscriptionId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([createdByUserId])
+  @@map("invoices")
+}
+
+model Payment {
+  id                 Int           @id @default(autoincrement())
+  uuid               String        @unique @default(uuid()) @db.Uuid
+  businessId         Int           @map("business_id")
+  invoiceId          Int           @map("invoice_id")
+  amount             Decimal       @db.Decimal(10, 2)
+  currency           String        @default("AED")
+  paymentMethod      PaymentMethod @map("payment_method")
+  paymentReference   String?       @map("payment_reference")
+  paidAt             DateTime      @map("paid_at")
+  recordedByUserId   Int           @map("recorded_by_user_id")
+  notes              String?
+  createdAt          DateTime      @default(now()) @map("created_at")
+
+  business       Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  invoice        Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  recordedByUser User     @relation(fields: [recordedByUserId], references: [id])
+
+  @@index([businessId])
+  @@index([invoiceId])
+  @@index([recordedByUserId])
+  @@index([paidAt])
+  @@map("payments")
+}
+
+model InvoiceAuditLog {
+  id             Int            @id @default(autoincrement())
+  invoiceId      Int            @map("invoice_id")
+  businessId     Int            @map("business_id")
+  userId         Int?           @map("user_id")
+  action         String
+  previousStatus InvoiceStatus? @map("previous_status")
+  newStatus      InvoiceStatus? @map("new_status")
+  notes          String?
+  createdAt      DateTime       @default(now()) @map("created_at")
+
+  invoice  Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user     User?    @relation(fields: [userId], references: [id])
+
+  @@index([invoiceId])
+  @@index([businessId])
+  @@index([userId])
+  @@index([action])
+  @@map("invoice_audit_logs")
+}
+
+model GlobalCustomer {
+  id              Int      @id @default(autoincrement())
+  uuid            String   @unique @default(uuid()) @db.Uuid
+  firstName       String   @map("first_name")
+  lastName        String?  @map("last_name")
+  phone           String
+  normalizedPhone String   @unique @map("normalized_phone")
+  email           String?
+  birthday        DateTime?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  memberships BusinessCustomerMembership[]
+  referredByReferrals Referral[]
+
+  @@map("global_customers")
+}
+
+model BusinessCustomerMembership {
+  id               Int                      @id @default(autoincrement())
+  uuid             String                   @unique @default(uuid()) @db.Uuid
+  globalCustomerId Int                      @map("global_customer_id")
+  businessId       Int                      @map("business_id")
+  createdBranchId  Int?                     @map("created_branch_id")
+  createdByUserId  Int?                     @map("created_by_user_id")
+  marketingConsent Boolean                  @default(false) @map("marketing_consent")
+  source           CustomerSource           @default(OWNER)
+  status           CustomerMembershipStatus @default(ACTIVE)
+  cardToken        String                   @unique @map("card_token")
+  cardStatus       CardStatus               @default(ACTIVE) @map("card_status")
+  cardCreatedAt    DateTime                 @default(now()) @map("card_created_at")
+  cardLastViewedAt DateTime?                @map("card_last_viewed_at")
+  referralCode     String?                  @unique @map("referral_code")
+  referralEnabled  Boolean                  @default(true) @map("referral_enabled")
+  notes            String?
+  joinedAt         DateTime                 @default(now()) @map("joined_at")
+  createdAt        DateTime                 @default(now()) @map("created_at")
+  updatedAt        DateTime                 @updatedAt @map("updated_at")
+
+  globalCustomer GlobalCustomer @relation(fields: [globalCustomerId], references: [id], onDelete: Cascade)
+  business       Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  createdBranch  Branch?        @relation(fields: [createdBranchId], references: [id])
+  createdByUser  User?          @relation(fields: [createdByUserId], references: [id])
+  programMemberships CustomerProgramMembership[]
+  engagementEvents EngagementEvent[]
+  messageDeliveryQueue MessageDeliveryQueue[]
+  referralsMade Referral[] @relation("ReferralReferrer")
+  referralsReceived Referral[] @relation("ReferralReferredMembership")
+
+  @@unique([businessId, globalCustomerId])
+  @@index([globalCustomerId])
+  @@index([businessId])
+  @@index([businessId, status])
+  @@index([businessId, referralCode])
+  @@index([businessId, createdBranchId, status])
+  @@index([createdBranchId])
+  @@index([createdByUserId])
+  @@map("business_customer_memberships")
+}
+
+model LoyaltyProgram {
+  id                   Int          @id @default(autoincrement())
+  uuid                 String       @unique @default(uuid()) @db.Uuid
+  businessId           Int          @map("business_id")
+  name                 String
+  businessType         BusinessType @map("business_type")
+  productOrServiceName String       @map("product_or_service_name")
+  description          String?
+  requiredStamps       Int          @map("required_stamps")
+  startingBonusStamps  Int          @default(0) @map("starting_bonus_stamps")
+  rewardName           String       @map("reward_name")
+  rewardDescription    String       @map("reward_description")
+  referralRewardBonusStamps Int     @default(1) @map("referral_reward_bonus_stamps")
+  active               Boolean      @default(true)
+  startDate            DateTime?    @map("start_date")
+  endDate              DateTime?    @map("end_date")
+  createdAt            DateTime     @default(now()) @map("created_at")
+  updatedAt            DateTime     @updatedAt @map("updated_at")
+
+  business    Business                    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  memberships CustomerProgramMembership[]
+  rewardRedemptions RewardRedemption[]
+  referralRewards ReferralReward[]
+  cooldownEvents CooldownEvent[]
+
+  @@index([businessId])
+  @@index([businessId, active])
+  @@map("loyalty_programs")
+}
+
+model CustomerProgramMembership {
+  id                           Int                     @id @default(autoincrement())
+  uuid                         String                  @unique @default(uuid()) @db.Uuid
+  businessCustomerMembershipId Int                     @map("business_customer_membership_id")
+  loyaltyProgramId             Int                     @map("loyalty_program_id")
+  earnedStamps                 Int                     @default(0) @map("earned_stamps")
+  bonusStamps                  Int                     @default(0) @map("bonus_stamps")
+  enrollmentSource             ProgramEnrollmentSource @map("enrollment_source")
+  status                       ProgramMembershipStatus @default(ACTIVE)
+  scanToken                    String                  @unique @map("scan_token")
+  scanStatus                   ScanStatus              @default(ACTIVE) @map("scan_status")
+  scanCreatedAt                DateTime                @default(now()) @map("scan_created_at")
+  scanLastUsedAt               DateTime?               @map("scan_last_used_at")
+  enrolledAt                   DateTime                @default(now()) @map("enrolled_at")
+  createdAt                    DateTime                @default(now()) @map("created_at")
+  updatedAt                    DateTime                @updatedAt @map("updated_at")
+
+  businessCustomerMembership BusinessCustomerMembership @relation(fields: [businessCustomerMembershipId], references: [id], onDelete: Cascade)
+  loyaltyProgram             LoyaltyProgram             @relation(fields: [loyaltyProgramId], references: [id], onDelete: Cascade)
+  scanEvents                 ScanEvent[]
+  stampTransactions          StampTransaction[]
+  rewardRedemptions          RewardRedemption[]
+  activityAlerts             ActivityAlert[]
+  referralRewards            ReferralReward[]
+  cooldownEvents             CooldownEvent[]
+
+  @@unique([businessCustomerMembershipId, loyaltyProgramId])
+  @@index([businessCustomerMembershipId])
+  @@index([loyaltyProgramId])
+  @@index([loyaltyProgramId, status])
+  @@map("customer_program_memberships")
+}
+
+model StampTransaction {
+  id                          Int                    @id @default(autoincrement())
+  businessId                  Int                    @map("business_id")
+  branchId                    Int?                   @map("branch_id")
+  customerProgramMembershipId Int                    @map("customer_program_membership_id")
+  issuedByUserId              Int                    @map("issued_by_user_id")
+  quantity                    Int
+  reason                      String?
+  source                      StampTransactionSource
+  idempotencyKey              String?                @unique @map("idempotency_key")
+  createdAt                   DateTime               @default(now()) @map("created_at")
+
+  business                  Business                  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  branch                    Branch?                   @relation(fields: [branchId], references: [id])
+  customerProgramMembership CustomerProgramMembership @relation(fields: [customerProgramMembershipId], references: [id])
+  issuedByUser              User                     @relation(fields: [issuedByUserId], references: [id])
+  referralQualifications Referral[]
+
+  @@index([businessId])
+  @@index([branchId])
+  @@index([customerProgramMembershipId])
+  @@index([customerProgramMembershipId, createdAt])
+  @@index([issuedByUserId])
+  @@index([issuedByUserId, createdAt])
+  @@index([businessId, createdAt])
+  @@map("stamp_transactions")
+}
+
+model Referral {
+  id                         Int            @id @default(autoincrement())
+  uuid                       String         @unique @default(uuid()) @db.Uuid
+  businessId                 Int            @map("business_id")
+  referrerMembershipId       Int            @map("referrer_membership_id")
+  referredGlobalCustomerId   Int?           @map("referred_global_customer_id")
+  referredMembershipId       Int?           @map("referred_membership_id")
+  referralCode               String         @map("referral_code")
+  status                     ReferralStatus @default(PENDING)
+  source                     String         @default("LINK")
+  firstStampTransactionId    Int?           @unique @map("first_stamp_transaction_id")
+  referredFirstStampBranchId Int?           @map("referred_first_stamp_branch_id")
+  qualifiedAt                DateTime?      @map("qualified_at")
+  rejectionReason            String?        @map("rejection_reason")
+  createdAt                  DateTime       @default(now()) @map("created_at")
+  updatedAt                  DateTime       @updatedAt @map("updated_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  referrerMembership BusinessCustomerMembership @relation("ReferralReferrer", fields: [referrerMembershipId], references: [id], onDelete: Cascade)
+  referredGlobalCustomer GlobalCustomer? @relation(fields: [referredGlobalCustomerId], references: [id], onDelete: SetNull)
+  referredMembership BusinessCustomerMembership? @relation("ReferralReferredMembership", fields: [referredMembershipId], references: [id], onDelete: SetNull)
+  firstStampTransaction StampTransaction? @relation(fields: [firstStampTransactionId], references: [id])
+  referredFirstStampBranch Branch? @relation("ReferralFirstStampBranch", fields: [referredFirstStampBranchId], references: [id])
+  rewards ReferralReward[]
+  events ReferralEvent[]
+
+  @@unique([businessId, referredMembershipId])
+  @@index([businessId, status])
+  @@index([referrerMembershipId])
+  @@index([referredMembershipId])
+  @@index([referredGlobalCustomerId])
+  @@index([referralCode])
+  @@map("referrals")
+}
+
+model ReferralReward {
+  id                          Int                  @id @default(autoincrement())
+  uuid                        String               @unique @default(uuid()) @db.Uuid
+  businessId                  Int                  @map("business_id")
+  referralId                  Int                  @map("referral_id")
+  loyaltyProgramId            Int                  @map("loyalty_program_id")
+  referrerProgramMembershipId Int?                 @map("referrer_program_membership_id")
+  bonusStamps                 Int                  @default(1) @map("bonus_stamps")
+  status                      ReferralRewardStatus @default(GRANTED)
+  grantedAt                   DateTime?            @map("granted_at")
+  createdAt                   DateTime             @default(now()) @map("created_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  referral Referral @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  loyaltyProgram LoyaltyProgram @relation(fields: [loyaltyProgramId], references: [id])
+  referrerProgramMembership CustomerProgramMembership? @relation(fields: [referrerProgramMembershipId], references: [id], onDelete: SetNull)
+
+  @@unique([referralId, loyaltyProgramId])
+  @@index([businessId, status])
+  @@index([loyaltyProgramId])
+  @@index([referrerProgramMembershipId])
+  @@map("referral_rewards")
+}
+
+model ReferralEvent {
+  id         Int               @id @default(autoincrement())
+  uuid       String            @unique @default(uuid()) @db.Uuid
+  businessId Int               @map("business_id")
+  referralId Int               @map("referral_id")
+  eventType  ReferralEventType @map("event_type")
+  metadata   Json              @default("{}")
+  createdAt  DateTime          @default(now()) @map("created_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  referral Referral @relation(fields: [referralId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, eventType, createdAt])
+  @@index([referralId, createdAt])
+  @@map("referral_events")
+}
+
+model RewardRedemption {
+  id                          Int      @id @default(autoincrement())
+  uuid                        String   @unique @default(uuid()) @db.Uuid
+  businessId                  Int      @map("business_id")
+  branchId                    Int?     @map("branch_id")
+  customerProgramMembershipId Int      @map("customer_program_membership_id")
+  loyaltyProgramId            Int      @map("loyalty_program_id")
+  rewardName                  String   @map("reward_name")
+  requiredStamps              Int      @map("required_stamps")
+  redeemedByUserId            Int      @map("redeemed_by_user_id")
+  redeemedAt                  DateTime @map("redeemed_at")
+  idempotencyKey              String?  @unique @map("idempotency_key")
+  notes                       String?
+  createdAt                   DateTime @default(now()) @map("created_at")
+
+  business                  Business                  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  branch                    Branch?                   @relation(fields: [branchId], references: [id])
+  customerProgramMembership CustomerProgramMembership @relation(fields: [customerProgramMembershipId], references: [id])
+  loyaltyProgram            LoyaltyProgram            @relation(fields: [loyaltyProgramId], references: [id])
+  redeemedByUser            User                      @relation(fields: [redeemedByUserId], references: [id])
+
+  @@index([businessId])
+  @@index([branchId])
+  @@index([customerProgramMembershipId])
+  @@index([loyaltyProgramId])
+  @@index([redeemedByUserId])
+  @@index([redeemedAt])
+  @@map("reward_redemptions")
+}
+
+model ActivityAlert {
+  id                          Int                   @id @default(autoincrement())
+  businessId                  Int                   @map("business_id")
+  branchId                    Int?                  @map("branch_id")
+  userId                      Int?                  @map("user_id")
+  customerProgramMembershipId Int?                  @map("customer_program_membership_id")
+  alertType                   String                @map("alert_type")
+  severity                    ActivityAlertSeverity
+  priority                    ActivityAlertSeverity @default(LOW)
+  riskScore                   Int                   @default(0) @map("risk_score")
+  dedupeKey                   String?               @map("dedupe_key")
+  occurrenceCount             Int                   @default(1) @map("occurrence_count")
+  firstDetectedAt             DateTime?             @map("first_detected_at")
+  lastDetectedAt              DateTime?             @map("last_detected_at")
+  description                 String
+  status                      ActivityAlertStatus   @default(OPEN)
+  assignedToUserId            Int?                  @map("assigned_to_user_id")
+  assignedAt                  DateTime?             @map("assigned_at")
+  resolvedAt                  DateTime?             @map("resolved_at")
+  resolvedByUserId            Int?                  @map("resolved_by_user_id")
+  dismissedAt                 DateTime?             @map("dismissed_at")
+  dismissedByUserId           Int?                  @map("dismissed_by_user_id")
+  escalatedAt                 DateTime?             @map("escalated_at")
+  escalationReason            String?               @map("escalation_reason")
+  reviewNote                  String?               @map("review_note")
+  createdAt                   DateTime              @default(now()) @map("created_at")
+  reviewedAt                  DateTime?             @map("reviewed_at")
+  reviewedBy                  Int?                  @map("reviewed_by")
+
+  business                  Business                   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  branch                    Branch?                    @relation(fields: [branchId], references: [id])
+  user                      User?                      @relation("ActivityAlertUser", fields: [userId], references: [id])
+  customerProgramMembership CustomerProgramMembership? @relation(fields: [customerProgramMembershipId], references: [id])
+  reviewer                  User?                      @relation("ActivityAlertReviewer", fields: [reviewedBy], references: [id])
+  assignedToUser            User?                      @relation("ActivityAlertAssignee", fields: [assignedToUserId], references: [id])
+  resolvedByUser            User?                      @relation("ActivityAlertResolver", fields: [resolvedByUserId], references: [id])
+  dismissedByUser           User?                      @relation("ActivityAlertDismisser", fields: [dismissedByUserId], references: [id])
+  alertEvents               AlertEvent[]
+
+  @@index([businessId])
+  @@index([businessId, status, severity, createdAt])
+  @@index([businessId, priority, riskScore])
+  @@index([businessId, dedupeKey, lastDetectedAt])
+  @@index([branchId])
+  @@index([userId])
+  @@index([customerProgramMembershipId])
+  @@index([reviewedBy])
+  @@index([assignedToUserId])
+  @@map("activity_alerts")
+}
+
+model AbusePolicy {
+  id             Int                   @id @default(autoincrement())
+  uuid           String                @unique @default(uuid()) @db.Uuid
+  businessId     Int                   @map("business_id")
+  policyName     String                @map("policy_name")
+  ruleType       String                @map("rule_type")
+  thresholdValue Int                   @map("threshold_value")
+  severity       ActivityAlertSeverity
+  enabled        Boolean               @default(true)
+  dedupeWindowHours Int                @default(24) @map("dedupe_window_hours")
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @updatedAt @map("updated_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, ruleType])
+  @@index([businessId, enabled])
+  @@map("abuse_policies")
+}
+
+model AlertEvent {
+  id          Int            @id @default(autoincrement())
+  uuid        String         @unique @default(uuid()) @db.Uuid
+  alertId     Int            @map("alert_id")
+  businessId  Int            @map("business_id")
+  actorUserId Int?           @map("actor_user_id")
+  eventType   AlertEventType @map("event_type")
+  metadata    Json           @default("{}")
+  createdAt   DateTime       @default(now()) @map("created_at")
+
+  alert     ActivityAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  business  Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  actorUser User?         @relation(fields: [actorUserId], references: [id])
+
+  @@index([alertId, createdAt])
+  @@index([businessId, eventType, createdAt])
+  @@index([actorUserId, createdAt])
+  @@map("alert_events")
+}
+
+model ScanEvent {
+  id                          Int             @id @default(autoincrement())
+  businessId                  Int             @map("business_id")
+  branchId                    Int?            @map("branch_id")
+  scannedByUserId             Int?            @map("scanned_by_user_id")
+  customerProgramMembershipId Int?            @map("customer_program_membership_id")
+  scanToken                   String          @map("scan_token")
+  result                      ScanEventResult
+  createdAt                   DateTime        @default(now()) @map("created_at")
+
+  business                  Business                   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  branch                    Branch?                    @relation(fields: [branchId], references: [id])
+  scannedByUser             User?                      @relation(fields: [scannedByUserId], references: [id])
+  customerProgramMembership CustomerProgramMembership? @relation(fields: [customerProgramMembershipId], references: [id])
+
+  @@index([businessId])
+  @@index([branchId])
+  @@index([scannedByUserId])
+  @@index([customerProgramMembershipId])
+  @@index([scanToken])
+  @@index([businessId, createdAt])
+  @@map("scan_events")
+}
+
+model EngagementEvent {
+  id          Int                   @id @default(autoincrement())
+  uuid        String                @unique @default(uuid()) @db.Uuid
+  businessId  Int                   @map("business_id")
+  customerId  Int                   @map("customer_id")
+  eventType   EngagementEventType   @map("event_type")
+  eventDate   DateTime              @map("event_date")
+  status      EngagementEventStatus @default(ACTIVE)
+  metadata    Json                  @default("{}")
+  createdAt   DateTime              @default(now()) @map("created_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customer BusinessCustomerMembership @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  messageDeliveryQueue MessageDeliveryQueue[]
+
+  @@index([businessId, eventType, eventDate])
+  @@index([businessId, status, eventDate])
+  @@index([customerId, eventDate])
+  @@map("engagement_events")
+}
+
+model MessageTemplate {
+  id           Int                 @id @default(autoincrement())
+  businessId   Int?                @map("business_id")
+  templateType EngagementEventType @map("template_type")
+  title        String
+  message      String
+  active       Boolean             @default(true)
+  createdAt    DateTime            @default(now()) @map("created_at")
+
+  business Business? @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, templateType, active])
+  @@map("message_templates")
+}
+
+model BusinessCommunicationSettings {
+  id                       Int                  @id @default(autoincrement())
+  businessId               Int                  @unique @map("business_id")
+  whatsappEnabled          Boolean              @default(false) @map("whatsapp_enabled")
+  smsEnabled               Boolean              @default(false) @map("sms_enabled")
+  emailEnabled             Boolean              @default(false) @map("email_enabled")
+  preferredDefaultChannel  CommunicationChannel @default(NONE) @map("preferred_default_channel")
+  whatsappBusinessNumber   String?              @map("whatsapp_business_number")
+  senderEmail              String?              @map("sender_email")
+  senderName               String?              @map("sender_name")
+  createdAt                DateTime             @default(now()) @map("created_at")
+  updatedAt                DateTime             @updatedAt @map("updated_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@map("business_communication_settings")
+}
+
+model MessageDeliveryQueue {
+  id                            Int                   @id @default(autoincrement())
+  uuid                          String                @unique @default(uuid()) @db.Uuid
+  businessId                    Int                   @map("business_id")
+  engagementEventId             Int?                  @map("engagement_event_id")
+  businessCustomerMembershipId  Int                   @map("business_customer_membership_id")
+  channel                       CommunicationChannel
+  recipientMasked               String                @map("recipient_masked")
+  messageBody                   String                @map("message_body")
+  status                        MessageDeliveryStatus @default(READY)
+  providerMessageId             String?               @map("provider_message_id")
+  errorMessage                  String?               @map("error_message")
+  preparedByUserId              Int?                  @map("prepared_by_user_id")
+  sentByUserId                  Int?                  @map("sent_by_user_id")
+  preparedAt                    DateTime?             @map("prepared_at")
+  sentAt                        DateTime?             @map("sent_at")
+  createdAt                     DateTime              @default(now()) @map("created_at")
+  updatedAt                     DateTime              @updatedAt @map("updated_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  engagementEvent EngagementEvent? @relation(fields: [engagementEventId], references: [id], onDelete: SetNull)
+  businessCustomerMembership BusinessCustomerMembership @relation(fields: [businessCustomerMembershipId], references: [id], onDelete: Cascade)
+  preparedByUser User? @relation("MessagePreparedBy", fields: [preparedByUserId], references: [id])
+  sentByUser User? @relation("MessageSentBy", fields: [sentByUserId], references: [id])
+
+  @@index([businessId, status, createdAt])
+  @@index([businessId, channel, status])
+  @@index([engagementEventId])
+  @@index([businessCustomerMembershipId])
+  @@index([preparedByUserId])
+  @@index([sentByUserId])
+  @@map("message_delivery_queue")
+}
+
+model PlatformSetting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     Json
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("platform_settings")
+}
+
+model AuditEvent {
+  id          Int      @id @default(autoincrement())
+  uuid        String   @unique @default(uuid()) @db.Uuid
+  actorUserId Int?     @map("actor_user_id")
+  businessId  Int?     @map("business_id")
+  branchId    Int?     @map("branch_id")
+  action      String
+  entityType  String   @map("entity_type")
+  entityId    String?  @map("entity_id")
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  actorUser User? @relation(fields: [actorUserId], references: [id])
+  business  Business? @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  branch    Branch? @relation(fields: [branchId], references: [id])
+
+  @@index([businessId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([action, createdAt])
+  @@index([entityType, entityId])
+  @@map("audit_events")
+}
+
+model CooldownRule {
+  id                              Int      @id @default(autoincrement())
+  uuid                            String   @unique @default(uuid()) @db.Uuid
+  businessId                      Int      @map("business_id")
+  name                            String   @default("Default cooldown policy")
+  active                          Boolean  @default(true)
+  minimumMinutesBetweenStamps     Int      @default(0) @map("minimum_minutes_between_stamps")
+  maximumStampsPerTransaction     Int      @default(5) @map("maximum_stamps_per_transaction")
+  maximumStampsPerCustomerPerDay  Int?     @map("maximum_stamps_per_customer_per_day")
+  maximumStampsPerStaffPerDay     Int?     @map("maximum_stamps_per_staff_per_day")
+  generateAlert                   Boolean  @default(true) @map("generate_alert")
+  createdAt                       DateTime @default(now()) @map("created_at")
+  updatedAt                       DateTime @updatedAt @map("updated_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  cooldownEvents CooldownEvent[]
+
+  @@index([businessId, active])
+  @@map("cooldown_rules")
+}
+
+model CooldownEvent {
+  id                          Int      @id @default(autoincrement())
+  uuid                        String   @unique @default(uuid()) @db.Uuid
+  businessId                  Int      @map("business_id")
+  branchId                    Int?     @map("branch_id")
+  customerProgramMembershipId Int      @map("customer_program_membership_id")
+  staffUserId                 Int      @map("staff_user_id")
+  loyaltyProgramId            Int      @map("loyalty_program_id")
+  cooldownRuleId              Int?     @map("cooldown_rule_id")
+  violationType               String   @map("violation_type")
+  attemptedQuantity           Int      @map("attempted_quantity")
+  overrideUsed                Boolean  @default(false) @map("override_used")
+  overrideReason              String?  @map("override_reason")
+  metadata                    Json     @default("{}")
+  createdAt                   DateTime @default(now()) @map("created_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  branch Branch? @relation(fields: [branchId], references: [id])
+  customerProgramMembership CustomerProgramMembership @relation(fields: [customerProgramMembershipId], references: [id])
+  staffUser User @relation(fields: [staffUserId], references: [id])
+  loyaltyProgram LoyaltyProgram @relation(fields: [loyaltyProgramId], references: [id])
+  cooldownRule CooldownRule? @relation(fields: [cooldownRuleId], references: [id])
+
+  @@index([businessId, createdAt])
+  @@index([businessId, violationType, createdAt])
+  @@index([customerProgramMembershipId, createdAt])
+  @@index([staffUserId, createdAt])
+  @@index([branchId, createdAt])
+  @@map("cooldown_events")
+}

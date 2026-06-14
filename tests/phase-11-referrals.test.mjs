@@ -1,0 +1,71 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import test from "node:test";
+
+function read(path) {
+  return readFileSync(path, "utf8");
+}
+
+test("referral schema stores configurable rewards and first-stamp qualification data", () => {
+  const schema = read("prisma/schema.prisma");
+
+  for (const expected of [
+    "model Referral",
+    "model ReferralReward",
+    "model ReferralEvent",
+    "referralRewardBonusStamps Int",
+    "referredFirstStampBranchId Int?",
+    "ReferralStatus",
+    "ReferralEventType",
+  ]) {
+    assert.match(schema, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  }
+});
+
+test("customer enrollment creates referral context without public self-registration", () => {
+  const customers = read("src/lib/customers.ts");
+  const referrals = read("src/lib/referrals.ts");
+  const referralPage = read("src/app/referral/[code]/page.tsx");
+
+  assert.match(customers, /generateReferralCode/);
+  assert.match(customers, /createPendingReferralForEnrollment/);
+  assert.match(referrals, /SELF_REFERRAL_BLOCKED/);
+  assert.match(referrals, /Self-referrals are blocked/);
+  assert.match(referralPage, /Staff enrollment/);
+  assert.doesNotMatch(referralPage, /create.*Customer/i);
+});
+
+test("first stamp qualifies referral and grants configured bonus stamps", () => {
+  const scanActions = read("src/app/scan/actions.ts");
+  const referrals = read("src/lib/referrals.ts");
+
+  assert.match(scanActions, /qualifyReferralFromFirstStamp/);
+  assert.match(referrals, /previousStamps/);
+  assert.match(referrals, /REFERRAL_QUALIFIED/);
+  assert.match(referrals, /referralRewardBonusStamps/);
+  assert.match(referrals, /bonusStamps: \{ increment: bonusStamps \}/);
+});
+
+test("public customer card exposes referral link and aggregate referral stats only", () => {
+  const card = read("src/app/card/[token]/page.tsx");
+
+  for (const expected of [
+    "Refer a friend",
+    "Referral Link",
+    "Pending Referrals",
+    "Qualified Referrals",
+    "Rewards Earned",
+    "ReferralShareActions",
+  ]) {
+    assert.match(card, new RegExp(expected));
+  }
+});
+
+test("business dashboard does not duplicate referral reporting after cleanup", () => {
+  const dashboard = read("src/app/dashboard/page.tsx");
+
+  assert.doesNotMatch(dashboard, /Pending Referrals/);
+  assert.doesNotMatch(dashboard, /Qualified Referrals/);
+  assert.doesNotMatch(dashboard, /Referral Rewards Granted/);
+  assert.doesNotMatch(dashboard, /TopReferrers/);
+});

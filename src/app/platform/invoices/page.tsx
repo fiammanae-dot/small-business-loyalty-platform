@@ -1,0 +1,245 @@
+import Link from "next/link";
+import type { InvoiceStatus } from "@prisma/client";
+import { CsrfInput } from "@/components/CsrfInput";
+import { DashboardShell } from "@/components/DashboardShell";
+import { InvoiceBadge } from "@/components/InvoiceBadge";
+import { SearchableCombobox } from "@/components/SearchableCombobox";
+import { formatDate } from "@/lib/format";
+import { prisma } from "@/lib/prisma";
+import { requireRole } from "@/lib/session";
+import { formatMoney, getInvoiceDisplayStatus, invoiceStatusLabels } from "@/lib/billing";
+import { updateInvoiceStatusAction } from "@/app/platform/invoices/actions";
+
+const statusValues = ["DRAFT", "ISSUED", "PAID", "OVERDUE", "CANCELLED"] as const;
+
+export default async function PlatformInvoicesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ business?: string; status?: string; due?: string; plan?: string; error?: string; success?: string }>;
+}) {
+  const user = await requireRole("PLATFORM_OWNER");
+  const params = await searchParams;
+  const businessId = params.business ? Number(params.business) : undefined;
+  const planId = params.plan ? Number(params.plan) : undefined;
+  const now = new Date();
+  const in30Days = new Date(now);
+  in30Days.setDate(now.getDate() + 30);
+
+  const [businesses, plans, invoices] = await Promise.all([
+    prisma.business.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    prisma.subscriptionPlan.findMany({ orderBy: { maxBranches: "asc" }, select: { id: true, name: true } }),
+    prisma.invoice.findMany({
+      where: {
+        ...(businessId ? { businessId } : {}),
+        ...(planId ? { subscription: { subscriptionPlanId: planId } } : {}),
+        ...(params.status && params.status !== "OVERDUE" && statusValues.includes(params.status as InvoiceStatus)
+          ? { status: params.status as InvoiceStatus }
+          : {}),
+        ...(params.status === "OVERDUE" ? { dueDate: { lt: now }, status: { notIn: ["PAID", "CANCELLED"] } } : {}),
+        ...(params.due === "next30" ? { dueDate: { gte: now, lte: in30Days } } : {}),
+        ...(params.due === "past" ? { dueDate: { lt: now } } : {}),
+      },
+      include: {
+        business: { select: { name: true } },
+        subscription: { include: { subscriptionPlan: true } },
+        payments: { select: { amount: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
+  const invoiceKpis = {
+    total: invoices.length,
+    paid: invoices.filter((invoice) => getInvoiceDisplayStatus(invoice) === "PAID").length,
+    overdue: invoices.filter((invoice) => getInvoiceDisplayStatus(invoice) === "OVERDUE").length,
+    outstanding: invoices.filter((invoice) => !["PAID", "CANCELLED"].includes(getInvoiceDisplayStatus(invoice))).length,
+  };
+
+  return (
+    <DashboardShell user={user} eyebrow="System Administrator" title="Invoices">
+      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
+        <Message error={params.error} success={params.success} />
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-[#111827]">Manual invoice tracking</h2>
+            <p className="text-sm text-[#6B7280]">Create invoices, record offline payments, and track billing status.</p>
+          </div>
+          <Link href="/platform/invoices/new" className="inline-flex h-10 items-center justify-center rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">
+            Create invoice
+          </Link>
+        </div>
+        <div className="mt-5 grid gap-3 md:grid-cols-4">
+          <InvoiceKpi label="Total" value={invoiceKpis.total} />
+          <InvoiceKpi label="Paid" value={invoiceKpis.paid} />
+          <InvoiceKpi label="Overdue" value={invoiceKpis.overdue} tone="text-red-700" />
+          <InvoiceKpi label="Outstanding" value={invoiceKpis.outstanding} />
+        </div>
+        <form className="mt-5 grid gap-3 rounded-md border border-[#E5E7EB] bg-zinc-50 p-3 lg:grid-cols-[1fr_1fr_1fr_1fr_auto_auto] lg:items-center">
+          <SearchableCombobox
+            label="Business"
+            name="business"
+            defaultValue={params.business ?? ""}
+            placeholder="All businesses"
+            emptyLabel="No businesses found."
+            options={[
+              { value: "", label: "All businesses", description: "Show invoices for every business" },
+              ...businesses.map((business) => ({ value: business.id.toString(), label: business.name, description: "Business" })),
+            ]}
+          />
+          <select name="status" defaultValue={params.status ?? ""} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm">
+            <option value="">All statuses</option>
+            {statusValues.map((status) => <option key={status} value={status}>{invoiceStatusLabels[status]}</option>)}
+          </select>
+          <SearchableCombobox
+            label="Plan"
+            name="plan"
+            defaultValue={params.plan ?? ""}
+            placeholder="All plans"
+            emptyLabel="No plans found."
+            options={[
+              { value: "", label: "All plans", description: "Show invoices for every plan" },
+              ...plans.map((plan) => ({ value: plan.id.toString(), label: plan.name, description: "Subscription plan" })),
+            ]}
+          />
+          <select name="due" defaultValue={params.due ?? ""} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm">
+            <option value="">All due dates</option>
+            <option value="next30">Due in 30 days</option>
+            <option value="past">Past due</option>
+          </select>
+          <button type="submit" className="h-10 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">
+            Apply
+          </button>
+          <Link href="/platform/invoices" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] bg-white px-4 text-sm font-semibold text-[#111827]">
+            Clear Filters
+          </Link>
+        </form>
+      </section>
+
+      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
+        <p className="mb-4 text-sm font-semibold text-[#6B7280]">Showing {invoices.length} invoices</p>
+        <div className="grid gap-3 lg:hidden">
+          {invoices.map((invoice) => {
+            const paid = invoice.payments.reduce((sum, payment) => sum + Number(payment.amount), 0);
+            const displayStatus = getInvoiceDisplayStatus(invoice);
+            return (
+              <article key={invoice.id} className="rounded-md border border-[#E5E7EB] p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <Link href={`/platform/invoices/${invoice.uuid}`} className="font-semibold text-[#111827] hover:text-[#F97316]">{invoice.invoiceNumber}</Link>
+                    <p className="mt-1 text-sm text-[#6B7280]">{invoice.business.name}</p>
+                  </div>
+                  <InvoiceBadge status={displayStatus} />
+                </div>
+                <div className="mt-4 grid gap-2 text-sm text-[#6B7280]">
+                  <p>Plan: {invoice.subscription.subscriptionPlan.name}</p>
+                  <p>Due: {formatDate(invoice.dueDate)}</p>
+                  <p>Amount: {formatMoney(invoice.amount, invoice.currency)}</p>
+                  <p>Paid: {formatMoney(paid, invoice.currency)}</p>
+                </div>
+                <div className="mt-4 flex items-center gap-2">
+                  <Link href={`/platform/invoices/${invoice.uuid}`} className="rounded-md bg-[#F97316] px-3 py-2 text-xs font-semibold text-white">Manage</Link>
+                  <InvoiceActions invoice={invoice} />
+                </div>
+              </article>
+            );
+          })}
+          {invoices.length === 0 ? <InvoiceEmpty /> : null}
+        </div>
+        <div className="hidden overflow-x-auto lg:block">
+          <table className="w-full min-w-[1050px] border-separate border-spacing-0 text-left text-sm">
+            <thead>
+              <tr className="text-[#6B7280]">
+                {["Invoice", "Business", "Plan", "Date", "Due date", "Amount", "Paid", "Status", "Actions"].map((heading) => (
+                  <th key={heading} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">{heading}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {invoices.map((invoice) => {
+                const paid = invoice.payments.reduce((sum, payment) => sum + Number(payment.amount), 0);
+                const displayStatus = getInvoiceDisplayStatus(invoice);
+                return (
+                  <tr key={invoice.id} className="align-top">
+                    <td className="border-b border-[#E5E7EB] px-3 py-4 font-semibold text-[#111827]">
+                      <Link href={`/platform/invoices/${invoice.uuid}`} className="hover:text-[#F97316]">{invoice.invoiceNumber}</Link>
+                    </td>
+                    <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{invoice.business.name}</td>
+                    <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{invoice.subscription.subscriptionPlan.name}</td>
+                    <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(invoice.invoiceDate)}</td>
+                    <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(invoice.dueDate)}</td>
+                    <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatMoney(invoice.amount, invoice.currency)}</td>
+                    <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatMoney(paid, invoice.currency)}</td>
+                    <td className="border-b border-[#E5E7EB] px-3 py-4"><InvoiceBadge status={displayStatus} /></td>
+                    <td className="border-b border-[#E5E7EB] px-3 py-4">
+                      <div className="flex items-center gap-2">
+                        <Link href={`/platform/invoices/${invoice.uuid}`} className="rounded-md bg-[#F97316] px-3 py-2 text-xs font-semibold text-white">Manage</Link>
+                        <InvoiceActions invoice={invoice} />
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {invoices.length === 0 ? <InvoiceEmpty /> : null}
+        </div>
+      </section>
+    </DashboardShell>
+  );
+}
+
+function InvoiceKpi({ label, value, tone = "text-[#111827]" }: { label: string; value: number; tone?: string }) {
+  return (
+    <div className="rounded-md border border-[#E5E7EB] bg-white p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{label}</p>
+      <p className={`mt-2 text-2xl font-semibold ${tone}`}>{value}</p>
+    </div>
+  );
+}
+
+type InvoiceListItem = {
+  uuid: string;
+  status: InvoiceStatus;
+};
+
+function InvoiceActions({ invoice }: { invoice: InvoiceListItem }) {
+  const hasActions = invoice.status !== "CANCELLED";
+  if (!hasActions) return null;
+  return (
+    <details className="relative">
+      <summary className="list-none rounded-md border border-[#E5E7EB] px-3 py-2 text-xs font-semibold text-[#111827] marker:hidden">
+        More
+      </summary>
+      <div className="absolute right-0 z-20 mt-2 grid min-w-36 gap-1 rounded-md border border-[#E5E7EB] bg-white p-2 shadow-lg">
+        {invoice.status === "DRAFT" ? <StatusForm uuid={invoice.uuid} status="ISSUED" label="Issue" /> : null}
+        {invoice.status !== "PAID" && invoice.status !== "CANCELLED" ? <StatusForm uuid={invoice.uuid} status="PAID" label="Mark paid" /> : null}
+        {invoice.status !== "CANCELLED" ? <StatusForm uuid={invoice.uuid} status="CANCELLED" label="Cancel" /> : null}
+      </div>
+    </details>
+  );
+}
+
+function InvoiceEmpty() {
+  return (
+    <div className="py-8 text-center">
+      <p className="text-sm font-semibold text-[#111827]">No invoices match these filters.</p>
+      <p className="mt-2 text-sm text-[#6B7280]">Clear filters or create a new manual invoice.</p>
+      <Link href="/platform/invoices" className="mt-4 inline-flex rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">Clear Filters</Link>
+    </div>
+  );
+}
+
+function StatusForm({ uuid, status, label }: { uuid: string; status: InvoiceStatus; label: string }) {
+  return (
+    <form action={updateInvoiceStatusAction}>
+      <CsrfInput scope="platform:invoices" />
+      <input type="hidden" name="invoiceUuid" value={uuid} />
+      <input type="hidden" name="nextStatus" value={status} />
+      <button type="submit" className="w-full rounded-md px-2 py-1 text-left text-xs font-semibold text-[#F97316] hover:bg-orange-50">{label}</button>
+    </form>
+  );
+}
+
+function Message({ error, success }: { error?: string; success?: string }) {
+  if (!error && !success) return null;
+  return <p className={`mb-5 rounded-md border px-3 py-2 text-sm ${error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>{error ?? success}</p>;
+}
