@@ -3,6 +3,7 @@ import { ReferralShareActions } from "@/components/ReferralShareActions";
 import Image from "next/image";
 import {
   CheckCircle2,
+  Crown,
   Gift,
   QrCode,
   ShieldCheck,
@@ -16,12 +17,14 @@ import {
   maskPhoneNumber,
   resolveBranding,
 } from "@/lib/customer-cards";
+import { calculateCustomerTier, isTierSystemEnabledForPlan } from "@/lib/customer-tiers";
 import { formatDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
 import { businessTypeLabels } from "@/lib/roles";
 import { getScanQrDataUrl } from "@/lib/scan";
 import { getReferralUrl } from "@/lib/referrals";
+import { commerciallyUsableStatuses } from "@/lib/subscriptions";
 
 export default async function PublicCustomerCardPage({
   params,
@@ -33,7 +36,18 @@ export default async function PublicCustomerCardPage({
     where: { cardToken: token },
     include: {
       globalCustomer: true,
-      business: { include: { branding: true } },
+      business: {
+        include: {
+          branding: true,
+          tierSetting: true,
+          subscriptions: {
+            where: { status: { in: commerciallyUsableStatuses } },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            include: { subscriptionPlan: true },
+          },
+        },
+      },
       programMemberships: { include: { loyaltyProgram: true }, orderBy: { enrolledAt: "desc" } },
     },
   });
@@ -59,7 +73,9 @@ export default async function PublicCustomerCardPage({
     })),
   );
   const primaryProgram = programCards[0] ?? null;
-  const [pendingReferrals, qualifiedReferrals, referralRewards] = await Promise.all([
+  const planName = membership.business.subscriptions[0]?.subscriptionPlan.name ?? null;
+  const tierEnabled = isTierSystemEnabledForPlan(planName);
+  const [pendingReferrals, qualifiedReferrals, referralRewards, lifetimeVisits] = await Promise.all([
     prisma.referral.count({
       where: { businessId: membership.businessId, referrerMembershipId: membership.id, status: "PENDING" },
     }),
@@ -71,7 +87,18 @@ export default async function PublicCustomerCardPage({
       _sum: { bonusStamps: true },
       _count: { id: true },
     }),
+    prisma.stampTransaction.count({
+      where: {
+        businessId: membership.businessId,
+        customerProgramMembership: { businessCustomerMembershipId: membership.id },
+      },
+    }),
   ]);
+  const tier = calculateCustomerTier({
+    visits: lifetimeVisits,
+    spend: 0,
+    config: membership.business.tierSetting,
+  });
 
   return (
     <main
@@ -117,11 +144,14 @@ export default async function PublicCustomerCardPage({
           </div>
 
           {primaryProgram ? (
-            <PrimaryRewardPanel
-              programMembership={primaryProgram.programMembership}
-              qrCode={primaryProgram.qrCode}
-              branding={branding}
-            />
+            <>
+              {tierEnabled ? <TierProgressPanel tier={tier} visits={lifetimeVisits} branding={branding} /> : null}
+              <PrimaryRewardPanel
+                programMembership={primaryProgram.programMembership}
+                qrCode={primaryProgram.qrCode}
+                branding={branding}
+              />
+            </>
           ) : (
             <div className="relative mt-6 rounded-3xl bg-white p-5 text-[#111827] shadow-lg">
               <p className="font-semibold">No active loyalty program yet</p>
@@ -205,6 +235,67 @@ export default async function PublicCustomerCardPage({
         </section>
       </div>
     </main>
+  );
+}
+
+function TierProgressPanel({
+  tier,
+  visits,
+  branding,
+}: {
+  tier: ReturnType<typeof calculateCustomerTier>;
+  visits: number;
+  branding: ReturnType<typeof resolveBranding>;
+}) {
+  const isRoyal = tier.isRoyalVip;
+  const label = isRoyal ? "ROYAL VIP" : `${tier.tier.toUpperCase()} MEMBER`;
+  const remainingText = tier.nextTier
+    ? `${tier.visitsRemaining} visit${tier.visitsRemaining === 1 ? "" : "s"} remaining`
+    : "Top Tier Member";
+
+  return (
+    <div
+      className={`relative mt-6 overflow-hidden rounded-[26px] p-5 shadow-xl ${
+        isRoyal ? "bg-[#111827] text-white ring-1 ring-yellow-300/40" : "bg-white text-[#111827]"
+      }`}
+    >
+      {isRoyal ? <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-yellow-300/20 blur-2xl" /> : null}
+      <div className="relative flex items-start justify-between gap-4">
+        <div>
+          <p className={`text-xs font-semibold uppercase tracking-wide ${isRoyal ? "text-yellow-200" : "text-[#F97316]"}`}>
+            Customer tier
+          </p>
+          <div className="mt-2 flex items-center gap-2">
+            {isRoyal ? <Crown className="h-5 w-5 text-yellow-300" aria-hidden="true" /> : <Sparkles className="h-5 w-5 text-[#F97316]" aria-hidden="true" />}
+            <h2 className="text-2xl font-bold tracking-tight">{label}</h2>
+          </div>
+          {isRoyal ? <p className="mt-2 text-sm font-semibold text-yellow-100">Exclusive Rewards Available</p> : null}
+        </div>
+        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${isRoyal ? "bg-yellow-300 text-[#111827]" : "bg-orange-50 text-[#F97316]"}`}>
+          {visits} Visits
+        </span>
+      </div>
+      <div className="relative mt-5">
+        <div className="flex items-center justify-between text-xs font-semibold">
+          <span className={isRoyal ? "text-white/75" : "text-[#6B7280]"}>
+            {tier.nextTier ? `Progress to ${tier.nextTier.toUpperCase()}` : "Top tier progress"}
+          </span>
+          <span className={isRoyal ? "text-yellow-200" : "text-[#111827]"}>{tier.progressPercent}%</span>
+        </div>
+        <div className={`mt-2 h-3 overflow-hidden rounded-full ${isRoyal ? "bg-white/15" : "bg-orange-100"}`}>
+          <div
+            className="h-full rounded-full"
+            style={{
+              width: `${tier.progressPercent}%`,
+              background: isRoyal ? "linear-gradient(90deg, #FDE68A, #F59E0B)" : `linear-gradient(90deg, ${branding.secondaryColor}, ${branding.primaryColor})`,
+            }}
+          />
+        </div>
+        <p className={`mt-3 text-sm font-semibold ${isRoyal ? "text-yellow-100" : "text-[#111827]"}`}>
+          {remainingText}
+        </p>
+      </div>
+    </div>
   );
 }
 

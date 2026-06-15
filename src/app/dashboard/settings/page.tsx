@@ -1,8 +1,9 @@
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { StatusBadge } from "@/components/StatusBadge";
-import { saveAbusePolicyAction, saveCooldownRuleAction } from "@/app/dashboard/actions";
+import { saveAbusePolicyAction, saveCooldownRuleAction, saveCustomerTierSettingsAction } from "@/app/dashboard/actions";
 import { getBusinessOwnerContext, getCurrentPlan, getCurrentSubscription } from "@/lib/business-owner";
+import { customerTierCriteriaLabels, isTierSystemEnabledForPlan, normalizeTierConfig } from "@/lib/customer-tiers";
 import { formatDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { businessTypeLabels } from "@/lib/roles";
@@ -22,6 +23,8 @@ export default async function BusinessSettingsPage({
   const remainingDays = getSubscriptionRemainingDays(subscription);
   const trialDays = getTrialRemainingDays(subscription);
   const communicationSettings = business.communicationSettings;
+  const tierConfig = normalizeTierConfig(business.tierSetting);
+  const tierEnabled = isTierSystemEnabledForPlan(plan?.name);
   const cooldownRule = await prisma.cooldownRule.findFirst({
     where: { businessId: user.businessId, active: true },
     orderBy: { updatedAt: "desc" },
@@ -49,6 +52,57 @@ export default async function BusinessSettingsPage({
           <Item label="Loyalty program limit" value={(plan?.maxLoyaltyPrograms ?? 1).toString()} />
           <Item label="Management scope" value="Business profile, branches, staff, customers, and programs" />
         </div>
+      </section>
+      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-[#111827]">Customer tiers</h2>
+            <p className="mt-2 text-sm text-[#6B7280]">
+              Configure Member, Premium, Elite, and Royal VIP thresholds. Public customer cards never show spend values.
+            </p>
+          </div>
+          <span className={`w-fit rounded-md px-2 py-1 text-xs font-semibold ${tierEnabled ? "bg-emerald-50 text-emerald-700" : "bg-zinc-100 text-zinc-700"}`}>
+            {tierEnabled ? "Enabled" : "Starter disabled"}
+          </span>
+        </div>
+        {!tierEnabled ? (
+          <div className="mt-5 rounded-md border border-dashed border-[#E5E7EB] bg-[#FAFAFA] p-4">
+            <p className="text-sm font-semibold text-[#111827]">Tier system disabled on Starter.</p>
+            <p className="mt-2 text-sm leading-6 text-[#6B7280]">
+              Upgrade to Growth or higher to enable Member, Premium, Elite, and Royal VIP tiers. White Label custom tier names, colors, and icons are future-ready.
+            </p>
+          </div>
+        ) : (
+          <form action={saveCustomerTierSettingsAction} className="mt-5 grid gap-4">
+            <CsrfInput scope="dashboard:customer-tiers" />
+            <label className="space-y-2">
+              <span className="text-sm font-medium text-[#111827]">Tier criteria</span>
+              <select name="criteria" defaultValue={tierConfig.criteria} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100">
+                {Object.entries(customerTierCriteriaLabels).map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+            </label>
+            <div className="grid gap-4 md:grid-cols-3">
+              <Input name="premiumVisits" label="Premium visits" type="number" min="0" defaultValue={tierConfig.premiumVisits.toString()} />
+              <Input name="eliteVisits" label="Elite visits" type="number" min="0" defaultValue={tierConfig.eliteVisits.toString()} />
+              <Input name="royalVipVisits" label="Royal VIP visits" type="number" min="0" defaultValue={tierConfig.royalVipVisits.toString()} />
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              <Input name="premiumSpend" label="Premium spend threshold" type="number" min="0" defaultValue={tierConfig.premiumSpend.toString()} />
+              <Input name="eliteSpend" label="Elite spend threshold" type="number" min="0" defaultValue={tierConfig.eliteSpend.toString()} />
+              <Input name="royalVipSpend" label="Royal VIP spend threshold" type="number" min="0" defaultValue={tierConfig.royalVipSpend.toString()} />
+            </div>
+            <p className="rounded-md bg-orange-50 px-3 py-2 text-sm text-[#9A3412]">
+              Spend-based criteria are configuration-ready for future sales capture. Current loyalty visits are counted from stamp issuance transactions.
+            </p>
+            <div>
+              <button type="submit" className="h-11 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">
+                Save tier settings
+              </button>
+            </div>
+          </form>
+        )}
       </section>
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
         <div>

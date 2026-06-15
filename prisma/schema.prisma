@@ -184,6 +184,12 @@ enum ReferralEventType {
   REWARD_PENDING
 }
 
+enum CustomerTierCriteria {
+  VISITS_ONLY
+  SPEND_ONLY
+  VISITS_AND_SPEND
+}
+
 model User {
   id           Int          @id @default(autoincrement())
   uuid         String       @unique @default(uuid()) @db.Uuid
@@ -273,8 +279,28 @@ model Business {
   auditEvents AuditEvent[]
   cooldownRules CooldownRule[]
   cooldownEvents CooldownEvent[]
+  tierSetting CustomerTierSetting?
 
   @@map("businesses")
+}
+
+model CustomerTierSetting {
+  id                 Int                  @id @default(autoincrement())
+  businessId         Int                  @unique @map("business_id")
+  criteria           CustomerTierCriteria @default(VISITS_ONLY)
+  premiumVisits      Int                  @default(10) @map("premium_visits")
+  eliteVisits        Int                  @default(25) @map("elite_visits")
+  royalVipVisits     Int                  @default(50) @map("royal_vip_visits")
+  premiumSpend       Decimal              @default(0) @map("premium_spend") @db.Decimal(10, 2)
+  eliteSpend         Decimal              @default(0) @map("elite_spend") @db.Decimal(10, 2)
+  royalVipSpend      Decimal              @default(0) @map("royal_vip_spend") @db.Decimal(10, 2)
+  createdAt          DateTime             @default(now()) @map("created_at")
+  updatedAt          DateTime             @updatedAt @map("updated_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@map("customer_tier_settings")
 }
 
 model Branch {

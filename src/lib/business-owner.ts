@@ -21,6 +21,7 @@ export async function getBusinessOwnerContext() {
     where: { id: user.businessId },
     include: {
       branding: true,
+      tierSetting: true,
       communicationSettings: true,
       branches: { orderBy: { createdAt: "asc" } },
       users: {

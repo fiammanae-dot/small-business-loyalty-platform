@@ -69,3 +69,33 @@ test("business dashboard does not duplicate referral reporting after cleanup", (
   assert.doesNotMatch(dashboard, /Referral Rewards Granted/);
   assert.doesNotMatch(dashboard, /TopReferrers/);
 });
+
+test("business owner referral center exposes referral reporting and detail visibility", () => {
+  const referralCenter = read("src/app/dashboard/referrals/page.tsx");
+  const referralDetail = read("src/app/dashboard/referrals/[id]/page.tsx");
+
+  for (const expected of [
+    "Referral Center",
+    "Pending referrals",
+    "Qualified referrals",
+    "Rewards granted",
+    "Top referrers",
+    "businessId: user.businessId",
+    "referralCode",
+  ]) {
+    assert.match(referralCenter, new RegExp(expected));
+  }
+
+  for (const expected of [
+    "Referral details",
+    "Reward grants",
+    "First stamp qualification",
+    "Referral event history",
+    "uuid: id, businessId: user.businessId",
+  ]) {
+    assert.match(referralDetail, new RegExp(expected));
+  }
+
+  assert.doesNotMatch(referralCenter, /approve/i);
+  assert.doesNotMatch(referralDetail, /approve/i);
+});
