@@ -20,7 +20,7 @@ export default async function StaffCustomerSuccessPage({
             cardToken: token,
             businessId: user.businessId,
           },
-          include: { business: true },
+          include: { business: true, globalCustomer: true },
         })
       : null;
   const cardUrl = membership ? await getCardUrl(membership.cardToken) : null;
@@ -34,7 +34,14 @@ export default async function StaffCustomerSuccessPage({
             <p className="text-sm font-semibold text-[#111827]">Public card URL</p>
             <p className="mt-2 break-all text-sm text-[#6B7280]">{cardUrl}</p>
             <div className="mt-4">
-              <CardShareActions cardUrl={cardUrl} businessName={membership.business.name} showWallet={false} />
+              <CardShareActions
+                cardUrl={cardUrl}
+                businessName={membership.business.name}
+                customerName={`${membership.globalCustomer.firstName} ${membership.globalCustomer.lastName ?? ""}`.trim()}
+                recipientPhone={membership.globalCustomer.normalizedPhone}
+                auditMembershipUuid={membership.uuid}
+                showWallet={false}
+              />
             </div>
             <a
               href={cardUrl}

@@ -82,9 +82,6 @@ test("public customer card shows tiers without exposing spend or internal analyt
     "Customer tier",
     "tier.badgeLabel",
     "tier.badgeIcon",
-    "Visits",
-    "Progress to",
-    "visit",
     "Exclusive Rewards Available",
     "Scan this card",
   ]) {
@@ -97,6 +94,10 @@ test("public customer card shows tiers without exposing spend or internal analyt
     "Customer value score",
     "Risk score",
     "lifetimeSpend",
+    "tier.visitsRemaining",
+    "tier.progressPercent",
+    "Progress to",
+    "Top tier progress",
   ]) {
     assert.doesNotMatch(card, new RegExp(forbidden));
   }

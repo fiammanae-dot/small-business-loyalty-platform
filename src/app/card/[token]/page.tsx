@@ -137,7 +137,7 @@ export default async function PublicCustomerCardPage({
             </div>
           </div>
 
-          <TierProgressPanel tier={tier} visits={lifetimeVisits} branding={branding} />
+          <TierBadgePanel tier={tier} />
 
           {primaryProgram ? (
             <PrimaryRewardPanel
@@ -167,6 +167,9 @@ export default async function PublicCustomerCardPage({
             <CardShareActions
               cardUrl={cardUrl}
               businessName={membership.business.name}
+              customerName={customerName}
+              recipientPhone={customer.normalizedPhone}
+              whatsappLabel="Share via WhatsApp"
               buttonColor={branding.buttonColor}
             />
           </div>
@@ -231,19 +234,8 @@ export default async function PublicCustomerCardPage({
   );
 }
 
-function TierProgressPanel({
-  tier,
-  visits,
-  branding,
-}: {
-  tier: ReturnType<typeof calculateCustomerTier>;
-  visits: number;
-  branding: ReturnType<typeof resolveBranding>;
-}) {
+function TierBadgePanel({ tier }: { tier: ReturnType<typeof calculateCustomerTier> }) {
   const isVip = tier.isVip;
-  const remainingText = tier.nextTier
-    ? `${tier.visitsRemaining} visit${tier.visitsRemaining === 1 ? "" : "s"} remaining`
-    : "Top Tier Member";
 
   return (
     <div
@@ -263,29 +255,6 @@ function TierProgressPanel({
           </div>
           {isVip ? <p className="mt-2 text-sm font-semibold text-yellow-100">Exclusive Rewards Available</p> : null}
         </div>
-        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${isVip ? "bg-yellow-300 text-[#111827]" : "bg-orange-50 text-[#F97316]"}`}>
-          {visits} Visits
-        </span>
-      </div>
-      <div className="relative mt-5">
-        <div className="flex items-center justify-between text-xs font-semibold">
-          <span className={isVip ? "text-white/75" : "text-[#6B7280]"}>
-            {tier.nextTier ? `Progress to ${tier.nextTier.toUpperCase()}` : "Top tier progress"}
-          </span>
-          <span className={isVip ? "text-yellow-200" : "text-[#111827]"}>{tier.progressPercent}%</span>
-        </div>
-        <div className={`mt-2 h-3 overflow-hidden rounded-full ${isVip ? "bg-white/15" : "bg-orange-100"}`}>
-          <div
-            className="h-full rounded-full"
-            style={{
-              width: `${tier.progressPercent}%`,
-              background: isVip ? "linear-gradient(90deg, #FDE68A, #F59E0B)" : `linear-gradient(90deg, ${branding.secondaryColor}, ${branding.primaryColor})`,
-            }}
-          />
-        </div>
-        <p className={`mt-3 text-sm font-semibold ${isVip ? "text-yellow-100" : "text-[#111827]"}`}>
-          {remainingText}
-        </p>
       </div>
     </div>
   );

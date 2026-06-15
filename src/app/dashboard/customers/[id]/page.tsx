@@ -30,6 +30,7 @@ import { calculateCustomerTier } from "@/lib/customer-tiers";
 import { customerSourceLabels, getBusinessCustomerOrRedirect } from "@/lib/customers";
 import { engagementEventLabels } from "@/lib/engagement";
 import { formatDate, formatDateTime } from "@/lib/format";
+import { formatUaePhoneDisplay } from "@/lib/phone";
 import { deliveryStatusLabels, messageChannelLabels } from "@/lib/messages";
 import { prisma } from "@/lib/prisma";
 import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
@@ -244,7 +245,7 @@ export default async function CustomerProfilePage({
             <div className="min-w-0">
               <p className="text-sm font-semibold text-[#F97316]">Customer profile</p>
               <h2 className="mt-1 text-2xl font-semibold text-[#111827]">{customerName}</h2>
-              <p className="mt-1 text-sm text-[#6B7280]">{customer.phone}</p>
+              <p className="mt-1 text-sm text-[#6B7280]">{formatUaePhoneDisplay(customer.normalizedPhone)}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <StatusBadge status={membership.status} />
                 <span className="rounded-md bg-orange-50 px-2 py-1 text-xs font-semibold text-[#F97316]">{customerSourceLabels[membership.source]}</span>
@@ -287,6 +288,8 @@ export default async function CustomerProfilePage({
             <CustomerCardPanel
               cardUrl={cardUrl}
               businessName={membership.business.name}
+              customerName={customerName}
+              customerPhone={customer.normalizedPhone}
               cardToken={membership.cardToken}
               cardStatus={membership.cardStatus}
               cardCreatedAt={membership.cardCreatedAt}
@@ -365,6 +368,8 @@ export default async function CustomerProfilePage({
           <CustomerCardPanel
             cardUrl={cardUrl}
             businessName={membership.business.name}
+            customerName={customerName}
+            customerPhone={customer.normalizedPhone}
             cardToken={membership.cardToken}
             cardStatus={membership.cardStatus}
             cardCreatedAt={membership.cardCreatedAt}
@@ -748,6 +753,8 @@ function ReferralSummaryPanel({ membershipUuid, referralCode }: { membershipUuid
 function CustomerCardPanel({
   cardUrl,
   businessName,
+  customerName,
+  customerPhone,
   cardToken,
   cardStatus,
   cardCreatedAt,
@@ -757,6 +764,8 @@ function CustomerCardPanel({
 }: {
   cardUrl: string;
   businessName: string;
+  customerName: string;
+  customerPhone: string;
   cardToken: string;
   cardStatus: string;
   cardCreatedAt: Date;
@@ -794,7 +803,14 @@ function CustomerCardPanel({
         </form>
       </div>
       <div className="mt-4">
-        <CardShareActions cardUrl={cardUrl} businessName={businessName} showWallet={false} />
+        <CardShareActions
+          cardUrl={cardUrl}
+          businessName={businessName}
+          customerName={customerName}
+          recipientPhone={customerPhone}
+          auditMembershipUuid={membershipUuid}
+          showWallet={false}
+        />
       </div>
     </section>
   );

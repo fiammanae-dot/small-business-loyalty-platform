@@ -20,6 +20,7 @@ import {
   getString as getCustomerString,
   parseBirthday,
 } from "@/lib/customers";
+import { normalizePhone } from "@/lib/phone";
 
 const profileSchema = z.object({
   name: z.string().trim().min(1, "Business name is required."),
@@ -608,9 +609,10 @@ export async function updateCustomerAction(formData: FormData) {
   const user = await requireBusinessOwner();
   const membershipUuid = getString(formData, "membershipUuid");
   const path = `/dashboard/customers/${membershipUuid}/edit`;
-  const identity = customerIdentitySchema.omit({ phone: true }).safeParse({
+  const identity = customerIdentitySchema.safeParse({
     firstName: getCustomerString(formData, "firstName"),
     lastName: getCustomerString(formData, "lastName"),
+    phone: getCustomerString(formData, "phone"),
     email: getCustomerString(formData, "email"),
     birthday: getCustomerString(formData, "birthday"),
   });
@@ -627,6 +629,10 @@ export async function updateCustomerAction(formData: FormData) {
   if (!membershipUuid) fail("/dashboard/customers", "Customer not found.");
   if (!identity.success) fail(path, identity.error.issues[0]?.message ?? "Validation failed.");
   if (!membership.success) fail(path, membership.error.issues[0]?.message ?? "Validation failed.");
+  const normalizedPhone = normalizePhone(identity.data.phone);
+  if (!normalizedPhone) {
+    fail(path, "Enter a valid UAE mobile number, for example 0501234567 or +971501234567.");
+  }
 
   const existing = await prisma.businessCustomerMembership.findFirst({
     where: { uuid: membershipUuid, businessId: user.businessId },
@@ -634,12 +640,31 @@ export async function updateCustomerAction(formData: FormData) {
   });
   if (!existing) fail("/dashboard/customers", "Customer not found.");
 
+  const phoneOwner = await prisma.globalCustomer.findUnique({
+    where: { normalizedPhone },
+    select: { id: true },
+  });
+  if (phoneOwner && phoneOwner.id !== existing.globalCustomerId) {
+    const existingBusinessMembership = await prisma.businessCustomerMembership.findUnique({
+      where: {
+        businessId_globalCustomerId: {
+          businessId: user.businessId,
+          globalCustomerId: phoneOwner.id,
+        },
+      },
+      select: { id: true },
+    });
+    fail(path, existingBusinessMembership ? "This phone number is already enrolled in your business." : "This phone number is already used by another customer.");
+  }
+
   await prisma.$transaction([
     prisma.globalCustomer.update({
       where: { id: existing.globalCustomerId },
       data: {
         firstName: identity.data.firstName,
         lastName: identity.data.lastName || null,
+        phone: normalizedPhone,
+        normalizedPhone,
         email: identity.data.email || null,
         birthday: parseBirthday(identity.data.birthday),
       },

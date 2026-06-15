@@ -3,6 +3,7 @@ import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { getBusinessCustomerOrRedirect } from "@/lib/customers";
+import { formatUaePhoneDisplay } from "@/lib/phone";
 import { updateCustomerAction } from "@/app/dashboard/actions";
 
 export default async function EditCustomerPage({
@@ -28,7 +29,7 @@ export default async function EditCustomerPage({
           <div className="grid gap-4 md:grid-cols-2">
             <Input name="firstName" label="First name" defaultValue={customer.firstName} required />
             <Input name="lastName" label="Last name" defaultValue={customer.lastName ?? ""} />
-            <Input name="phone" label="Phone" defaultValue={customer.phone} disabled />
+            <Input name="phone" label="Phone" defaultValue={formatUaePhoneDisplay(customer.normalizedPhone)} required />
             <Input name="email" label="Email" type="email" defaultValue={customer.email ?? ""} />
             <Input
               name="birthday"

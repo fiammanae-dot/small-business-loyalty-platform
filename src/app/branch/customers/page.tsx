@@ -1,8 +1,11 @@
 import Link from "next/link";
+import { CardShareActions } from "@/components/CardShareActions";
 import { DashboardShell } from "@/components/DashboardShell";
 import { StatusBadge } from "@/components/StatusBadge";
+import { getCardUrl } from "@/lib/customer-cards";
 import { customerSourceLabels } from "@/lib/customers";
 import { formatDate } from "@/lib/format";
+import { formatUaePhoneDisplay, normalizePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 
@@ -14,6 +17,7 @@ export default async function BranchCustomersPage({
   const user = await requireRole("BRANCH_MANAGER");
   const params = await searchParams;
   const query = params.q?.trim();
+  const normalizedQueryPhone = query ? normalizePhone(query) : null;
 
   if (!user.businessId || !user.branchId) {
     return (
@@ -32,14 +36,23 @@ export default async function BranchCustomersPage({
               { globalCustomer: { firstName: { contains: query, mode: "insensitive" } } },
               { globalCustomer: { lastName: { contains: query, mode: "insensitive" } } },
               { globalCustomer: { phone: { contains: query, mode: "insensitive" } } },
+              { globalCustomer: { normalizedPhone: { contains: query, mode: "insensitive" } } },
+              ...(normalizedQueryPhone ? [{ globalCustomer: { normalizedPhone: normalizedQueryPhone } }] : []),
               { globalCustomer: { email: { contains: query, mode: "insensitive" } } },
             ],
           }
         : {}),
     },
-    include: { globalCustomer: true, createdBranch: true },
+    include: { globalCustomer: true, createdBranch: true, business: true },
     orderBy: { joinedAt: "desc" },
   });
+  const customerRows = await Promise.all(
+    customers.map(async (membership) => ({
+      ...membership,
+      cardUrl: await getCardUrl(membership.cardToken),
+      customerName: `${membership.globalCustomer.firstName} ${membership.globalCustomer.lastName ?? ""}`.trim(),
+    })),
+  );
 
   return (
     <DashboardShell user={user} eyebrow="Branch Manager" title="Business customers">
@@ -68,16 +81,29 @@ export default async function BranchCustomersPage({
               </tr>
             </thead>
             <tbody>
-              {customers.map((membership) => (
+              {customerRows.map((membership) => (
                 <tr key={membership.id}>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 font-semibold">{membership.globalCustomer.firstName} {membership.globalCustomer.lastName ?? ""}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{membership.globalCustomer.phone}</td>
+                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatUaePhoneDisplay(membership.globalCustomer.normalizedPhone)}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{membership.globalCustomer.email ?? "-"}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4"><StatusBadge status={membership.status} /></td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(membership.joinedAt)}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{membership.createdBranch?.name ?? "-"}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{customerSourceLabels[membership.source]}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4"><Link href={`/branch/customers/${membership.uuid}`} className="font-semibold text-[#F97316]">View</Link></td>
+                  <td className="border-b border-[#E5E7EB] px-3 py-4">
+                    <div className="flex flex-col gap-3">
+                      <Link href={`/branch/customers/${membership.uuid}`} className="font-semibold text-[#F97316]">View</Link>
+                      <CardShareActions
+                        cardUrl={membership.cardUrl}
+                        businessName={membership.business.name}
+                        customerName={membership.customerName}
+                        recipientPhone={membership.globalCustomer.normalizedPhone}
+                        auditMembershipUuid={membership.uuid}
+                        showCopy={false}
+                        showWallet={false}
+                      />
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>

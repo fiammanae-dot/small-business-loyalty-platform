@@ -138,7 +138,9 @@ export async function enrollCustomerForBusiness({
   if (membership.data.createdBranchId && !branch) fail(path, "Created branch must belong to your business.");
 
   const normalizedPhone = normalizePhone(identity.data.phone);
-  if (!normalizedPhone || normalizedPhone === "+") fail(path, "Phone is required.");
+  if (!normalizedPhone) {
+    fail(path, "Enter a valid UAE mobile number, for example 0501234567 or +971501234567.");
+  }
 
   try {
     const result = await prisma.$transaction(async (tx) => {
@@ -151,7 +153,7 @@ export async function enrollCustomerForBusiness({
           data: {
             firstName: identity.data.firstName,
             lastName: identity.data.lastName || null,
-            phone: identity.data.phone,
+            phone: normalizedPhone,
             normalizedPhone,
             email: identity.data.email || null,
             birthday: parseBirthday(identity.data.birthday),

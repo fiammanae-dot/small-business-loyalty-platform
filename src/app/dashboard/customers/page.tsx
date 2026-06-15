@@ -1,9 +1,12 @@
 import Link from "next/link";
+import { CardShareActions } from "@/components/CardShareActions";
 import { DashboardShell } from "@/components/DashboardShell";
 import { StatusBadge } from "@/components/StatusBadge";
+import { getCardUrl } from "@/lib/customer-cards";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { customerSourceLabels } from "@/lib/customers";
 import { formatDate } from "@/lib/format";
+import { formatUaePhoneDisplay, normalizePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 
 export default async function CustomersPage({
@@ -18,9 +21,10 @@ export default async function CustomersPage({
     success?: string;
   }>;
 }) {
-  const { user } = await getBusinessOwnerContext();
+  const { user, business } = await getBusinessOwnerContext();
   const params = await searchParams;
   const query = params.q?.trim();
+  const normalizedQueryPhone = query ? normalizePhone(query) : null;
   const status = ["ACTIVE", "INACTIVE", "BLOCKED"].includes(params.status ?? "") ? params.status : undefined;
   const source = ["STAFF", "OWNER", "IMPORT", "SELF_SIGNUP"].includes(params.source ?? "") ? params.source : undefined;
   const consent = ["yes", "no"].includes(params.consent ?? "") ? params.consent : undefined;
@@ -38,6 +42,7 @@ export default async function CustomersPage({
               { globalCustomer: { lastName: { contains: query, mode: "insensitive" } } },
               { globalCustomer: { phone: { contains: query, mode: "insensitive" } } },
               { globalCustomer: { normalizedPhone: { contains: query, mode: "insensitive" } } },
+              ...(normalizedQueryPhone ? [{ globalCustomer: { normalizedPhone: normalizedQueryPhone } }] : []),
               { globalCustomer: { email: { contains: query, mode: "insensitive" } } },
               { cardToken: { contains: query, mode: "insensitive" } },
               { referralCode: { contains: query, mode: "insensitive" } },
@@ -49,6 +54,13 @@ export default async function CustomersPage({
     include: { globalCustomer: true, createdBranch: true },
     orderBy: { joinedAt: "desc" },
   });
+  const customerRows = await Promise.all(
+    customers.map(async (membership) => ({
+      ...membership,
+      cardUrl: await getCardUrl(membership.cardToken),
+      customerName: `${membership.globalCustomer.firstName} ${membership.globalCustomer.lastName ?? ""}`.trim(),
+    })),
+  );
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Customers">
@@ -91,12 +103,12 @@ export default async function CustomersPage({
         ) : null}
 
         <div className="mt-6 grid gap-3 lg:hidden">
-          {customers.map((membership) => (
+          {customerRows.map((membership) => (
             <article key={membership.id} className="rounded-md border border-[#E5E7EB] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="font-semibold text-[#111827]">{membership.globalCustomer.firstName} {membership.globalCustomer.lastName ?? ""}</h3>
-                  <p className="mt-1 text-sm text-[#6B7280]">{membership.globalCustomer.phone}</p>
+                  <p className="mt-1 text-sm text-[#6B7280]">{formatUaePhoneDisplay(membership.globalCustomer.normalizedPhone)}</p>
                   <p className="mt-1 text-sm text-[#6B7280]">{membership.globalCustomer.email ?? "No email"}</p>
                 </div>
                 <StatusBadge status={membership.status} />
@@ -110,6 +122,17 @@ export default async function CustomersPage({
               <div className="mt-4 flex gap-3">
                 <Link href={`/dashboard/customers/${membership.uuid}`} className="font-semibold text-[#F97316]">View</Link>
                 <Link href={`/dashboard/customers/${membership.uuid}/edit`} className="font-semibold text-[#F97316]">Edit</Link>
+              </div>
+              <div className="mt-4">
+                <CardShareActions
+                  cardUrl={membership.cardUrl}
+                  businessName={business.name}
+                  customerName={membership.customerName}
+                  recipientPhone={membership.globalCustomer.normalizedPhone}
+                  auditMembershipUuid={membership.uuid}
+                  showCopy={false}
+                  showWallet={false}
+                />
               </div>
             </article>
           ))}
@@ -125,12 +148,12 @@ export default async function CustomersPage({
               </tr>
             </thead>
             <tbody>
-              {customers.map((membership) => (
+              {customerRows.map((membership) => (
                 <tr key={membership.id} className="align-top">
                   <td className="border-b border-[#E5E7EB] px-3 py-4 font-semibold text-[#111827]">
                     {membership.globalCustomer.firstName} {membership.globalCustomer.lastName ?? ""}
                   </td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{membership.globalCustomer.phone}</td>
+                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatUaePhoneDisplay(membership.globalCustomer.normalizedPhone)}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{membership.globalCustomer.email ?? "-"}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{membership.marketingConsent ? "Yes" : "No"}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4"><StatusBadge status={membership.status} /></td>
@@ -138,9 +161,20 @@ export default async function CustomersPage({
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{membership.createdBranch?.name ?? "-"}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{customerSourceLabels[membership.source]}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4">
-                    <div className="flex gap-3">
-                      <Link href={`/dashboard/customers/${membership.uuid}`} className="font-semibold text-[#F97316]">View</Link>
-                      <Link href={`/dashboard/customers/${membership.uuid}/edit`} className="font-semibold text-[#F97316]">Edit</Link>
+                    <div className="flex flex-col gap-3">
+                      <div className="flex gap-3">
+                        <Link href={`/dashboard/customers/${membership.uuid}`} className="font-semibold text-[#F97316]">View</Link>
+                        <Link href={`/dashboard/customers/${membership.uuid}/edit`} className="font-semibold text-[#F97316]">Edit</Link>
+                      </div>
+                      <CardShareActions
+                        cardUrl={membership.cardUrl}
+                        businessName={business.name}
+                        customerName={membership.customerName}
+                        recipientPhone={membership.globalCustomer.normalizedPhone}
+                        auditMembershipUuid={membership.uuid}
+                        showCopy={false}
+                        showWallet={false}
+                      />
                     </div>
                   </td>
                 </tr>

@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { getCardUrl, getShortCardToken } from "@/lib/customer-cards";
 import { customerSourceLabels, getBusinessCustomerOrRedirect } from "@/lib/customers";
 import { formatDate } from "@/lib/format";
+import { formatUaePhoneDisplay } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
 import { getScanQrDataUrl, getScanUrl } from "@/lib/scan";
@@ -62,7 +63,7 @@ export default async function BranchCustomerProfilePage({
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <h2 className="text-2xl font-semibold text-[#111827]">{customer.firstName} {customer.lastName ?? ""}</h2>
-            <p className="mt-2 text-sm text-[#6B7280]">{customer.phone}</p>
+            <p className="mt-2 text-sm text-[#6B7280]">{formatUaePhoneDisplay(customer.normalizedPhone)}</p>
             {membership.programMemberships.some((programMembership) => progressValue(programMembership.earnedStamps, programMembership.bonusStamps) >= programMembership.loyaltyProgram.requiredStamps) ? (
               <p className="mt-3 inline-flex rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">Reward Ready</p>
             ) : null}
@@ -100,7 +101,14 @@ export default async function BranchCustomerProfilePage({
           <Info label="Last viewed" value={membership.cardLastViewedAt ? formatDate(membership.cardLastViewedAt) : "-"} />
         </div>
         <div className="mt-5">
-          <CardShareActions cardUrl={cardUrl} businessName={membership.business.name} showCopy={false} showWallet={false} />
+          <CardShareActions
+            cardUrl={cardUrl}
+            businessName={membership.business.name}
+            customerName={`${customer.firstName} ${customer.lastName ?? ""}`.trim()}
+            recipientPhone={customer.normalizedPhone}
+            auditMembershipUuid={membership.uuid}
+            showWallet={false}
+          />
         </div>
       </section>
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5">

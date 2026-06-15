@@ -3,6 +3,7 @@ import "server-only";
 import { randomBytes } from "crypto";
 import type { BusinessBranding } from "@prisma/client";
 import { getRequestBaseUrl } from "@/lib/app-url";
+import { formatUaePhoneDisplay } from "@/lib/phone";
 
 export const defaultCardBranding = {
   primaryColor: "#F97316",
@@ -18,13 +19,7 @@ export function generateCardToken() {
 }
 
 export function maskPhoneNumber(phone: string) {
-  const compact = phone.replace(/[\s\-()]/g, "");
-  if (compact.length <= 6) return compact;
-
-  const prefixLength = compact.startsWith("+") ? 4 : 3;
-  const prefix = compact.slice(0, prefixLength);
-  const suffix = compact.slice(-3);
-  return `${prefix}${"*".repeat(Math.max(4, compact.length - prefixLength - 3))}${suffix}`;
+  return formatUaePhoneDisplay(phone);
 }
 
 export function getShortCardToken(token: string) {

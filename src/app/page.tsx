@@ -18,6 +18,7 @@ import { getBusinessDisplayName, getBusinessTypeDisplayName } from "@/lib/busine
 import { getBusinessOwnerContext, getCurrentPlan, getCurrentSubscription } from "@/lib/business-owner";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { formatUaePhoneDisplay, normalizePhone } from "@/lib/phone";
 import { progressValue } from "@/lib/programs";
 import { businessTypeLabels } from "@/lib/roles";
 import { redirectAuthenticatedUser } from "@/lib/session";
@@ -32,6 +33,7 @@ export default async function BusinessDashboard({
   const { user, business } = await getBusinessOwnerContext();
   const params = await searchParams;
   const customerSearch = params.customerSearch?.trim() ?? "";
+  const normalizedCustomerSearchPhone = customerSearch ? normalizePhone(customerSearch) : null;
   const plan = getCurrentPlan(business);
   const subscription = getCurrentSubscription(business);
   const todayStart = new Date();
@@ -126,6 +128,7 @@ export default async function BusinessDashboard({
                 { globalCustomer: { lastName: { contains: customerSearch, mode: "insensitive" } } },
                 { globalCustomer: { phone: { contains: customerSearch, mode: "insensitive" } } },
                 { globalCustomer: { normalizedPhone: { contains: customerSearch, mode: "insensitive" } } },
+                ...(normalizedCustomerSearchPhone ? [{ globalCustomer: { normalizedPhone: normalizedCustomerSearchPhone } }] : []),
                 { globalCustomer: { email: { contains: customerSearch, mode: "insensitive" } } },
                 { cardToken: { contains: customerSearch, mode: "insensitive" } },
                 { referralCode: { contains: customerSearch, mode: "insensitive" } },
@@ -139,7 +142,7 @@ export default async function BusinessDashboard({
         cardToken: true,
         referralCode: true,
         status: true,
-        globalCustomer: { select: { firstName: true, lastName: true, phone: true, email: true } },
+        globalCustomer: { select: { firstName: true, lastName: true, phone: true, normalizedPhone: true, email: true } },
         createdBranch: { select: { name: true } },
         programMemberships: {
           take: 1,
@@ -423,7 +426,7 @@ function CustomerSearchPanel({
                 <div className="min-w-0">
                   <p className="truncate font-semibold text-[#111827]">{getCustomerName(result.globalCustomer)}</p>
                   <p className="mt-1 text-sm text-[#6B7280]">
-                    {result.globalCustomer.phone}
+                    {formatUaePhoneDisplay(result.globalCustomer.normalizedPhone)}
                     {result.globalCustomer.email ? ` - ${result.globalCustomer.email}` : ""}
                   </p>
                   <CustomerSearchResultMeta result={result} />

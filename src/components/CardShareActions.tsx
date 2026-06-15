@@ -1,10 +1,16 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { auditLoyaltyCardWhatsAppShare } from "@/app/card-share-actions";
+import { formatUaePhoneForWhatsApp } from "@/lib/phone";
 
 type CardShareActionsProps = {
   cardUrl: string;
   businessName: string;
+  customerName?: string;
+  recipientPhone?: string | null;
+  auditMembershipUuid?: string;
+  whatsappLabel?: string;
   showCopy?: boolean;
   showWallet?: boolean;
   buttonColor?: string;
@@ -13,15 +19,29 @@ type CardShareActionsProps = {
 export function CardShareActions({
   cardUrl,
   businessName,
+  customerName = "Customer",
+  recipientPhone,
+  auditMembershipUuid,
+  whatsappLabel = "Send via WhatsApp",
   showCopy = true,
   showWallet = true,
   buttonColor = "#F97316",
 }: CardShareActionsProps) {
   const [message, setMessage] = useState("");
+  const [sharing, setSharing] = useState(false);
+  const whatsappPhone = useMemo(
+    () => (recipientPhone ? formatUaePhoneForWhatsApp(recipientPhone) : null),
+    [recipientPhone],
+  );
+  const shareText = useMemo(
+    () =>
+      `Hello ${customerName},\n\nWelcome to ${businessName}!\nYour Loyalty Card is ready.\n\nOpen your card here:\n${cardUrl}\n\nYou can save this message for future visits and present the QR code when earning stamps or redeeming rewards.\n\nThank you for joining our loyalty program.`,
+    [businessName, cardUrl, customerName],
+  );
   const whatsappUrl = useMemo(() => {
-    const text = `Hi, here is my loyalty card for ${businessName}:\n${cardUrl}`;
-    return `https://wa.me/?text=${encodeURIComponent(text)}`;
-  }, [businessName, cardUrl]);
+    if (!whatsappPhone) return null;
+    return `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(shareText)}`;
+  }, [shareText, whatsappPhone]);
 
   async function copyLink() {
     try {
@@ -36,9 +56,29 @@ export function CardShareActions({
     setMessage("Wallet integration coming soon.");
   }
 
+  async function shareViaWhatsApp() {
+    if (!whatsappUrl) {
+      setMessage(recipientPhone ? "Customer phone number is invalid." : "Customer phone number required.");
+      return;
+    }
+
+    setSharing(true);
+    try {
+      if (auditMembershipUuid) {
+        await auditLoyaltyCardWhatsAppShare(auditMembershipUuid);
+      }
+      window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+      setMessage("WhatsApp message prepared.");
+    } catch {
+      setMessage("WhatsApp share could not be logged. Please try again.");
+    } finally {
+      setSharing(false);
+    }
+  }
+
   return (
     <div className="space-y-3">
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className={`grid gap-3 ${showCopy ? "sm:grid-cols-2" : ""}`}>
         {showCopy ? (
           <button
             type="button"
@@ -48,16 +88,21 @@ export function CardShareActions({
             Copy card link
           </button>
         ) : null}
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="rounded-md px-4 py-3 text-center text-sm font-semibold text-white"
-          style={{ backgroundColor: buttonColor }}
+        <button
+          type="button"
+          onClick={shareViaWhatsApp}
+          disabled={!whatsappUrl || sharing}
+          className="rounded-md px-4 py-3 text-center text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-600"
+          style={whatsappUrl && !sharing ? { backgroundColor: buttonColor } : undefined}
         >
-          Share via WhatsApp
-        </a>
+          {sharing ? "Preparing WhatsApp..." : whatsappLabel}
+        </button>
       </div>
+      {!whatsappUrl ? (
+        <p className="text-center text-sm font-medium text-[#9A3412]">
+          {recipientPhone ? "Customer phone number is invalid." : "Customer phone number required."}
+        </p>
+      ) : null}
 
       {showWallet ? (
         <div className="grid gap-3 sm:grid-cols-2">
