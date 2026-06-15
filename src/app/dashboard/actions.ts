@@ -10,7 +10,6 @@ import { prisma } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit";
 import { requireBusinessOwner } from "@/lib/business-owner";
 import { validateCsrfForm } from "@/lib/csrf";
-import { isTierSystemEnabledForPlan } from "@/lib/customer-tiers";
 import { requireUsableSubscription } from "@/lib/commercial-access";
 import { commerciallyUsableStatuses, limitReachedMessage } from "@/lib/subscriptions";
 import {
@@ -72,26 +71,16 @@ const abusePolicySchema = z.object({
 
 const customerTierSettingsSchema = z
   .object({
-    criteria: z.enum(["VISITS_ONLY", "SPEND_ONLY", "VISITS_AND_SPEND"]),
-    premiumVisits: z.coerce.number().int().min(0, "Premium visits cannot be negative."),
-    eliteVisits: z.coerce.number().int().min(0, "Elite visits cannot be negative."),
-    royalVipVisits: z.coerce.number().int().min(0, "Royal VIP visits cannot be negative."),
-    premiumSpend: z.coerce.number().min(0, "Premium spend cannot be negative."),
-    eliteSpend: z.coerce.number().min(0, "Elite spend cannot be negative."),
-    royalVipSpend: z.coerce.number().min(0, "Royal VIP spend cannot be negative."),
+    premiumVisits: z.coerce.number().int().min(0, "Silver visits cannot be negative."),
+    eliteVisits: z.coerce.number().int().min(0, "Gold visits cannot be negative."),
+    royalVipVisits: z.coerce.number().int().min(0, "VIP visits cannot be negative."),
   })
   .superRefine((data, ctx) => {
     if (data.eliteVisits < data.premiumVisits) {
-      ctx.addIssue({ code: "custom", path: ["eliteVisits"], message: "Elite visits must be greater than or equal to Premium visits." });
+      ctx.addIssue({ code: "custom", path: ["eliteVisits"], message: "Gold visits must be greater than or equal to Silver visits." });
     }
     if (data.royalVipVisits < data.eliteVisits) {
-      ctx.addIssue({ code: "custom", path: ["royalVipVisits"], message: "Royal VIP visits must be greater than or equal to Elite visits." });
-    }
-    if (data.eliteSpend < data.premiumSpend) {
-      ctx.addIssue({ code: "custom", path: ["eliteSpend"], message: "Elite spend must be greater than or equal to Premium spend." });
-    }
-    if (data.royalVipSpend < data.eliteSpend) {
-      ctx.addIssue({ code: "custom", path: ["royalVipSpend"], message: "Royal VIP spend must be greater than or equal to Elite spend." });
+      ctx.addIssue({ code: "custom", path: ["royalVipVisits"], message: "VIP visits must be greater than or equal to Gold visits." });
     }
   });
 
@@ -455,35 +444,31 @@ export async function updateBrandingAction() {
 export async function saveCustomerTierSettingsAction(formData: FormData) {
   validateActionSecurity(formData, "dashboard:customer-tiers", "/dashboard/settings");
   const user = await requireBusinessOwner();
-  const subscription = await prisma.businessSubscription.findFirst({
-    where: { businessId: user.businessId, status: { in: commerciallyUsableStatuses } },
-    orderBy: { createdAt: "desc" },
-    include: { subscriptionPlan: true },
-  });
-
-  if (!isTierSystemEnabledForPlan(subscription?.subscriptionPlan.name)) {
-    fail("/dashboard/settings", "Customer tiers require Growth plan or higher.");
-  }
-
   const parsed = customerTierSettingsSchema.safeParse({
-    criteria: getString(formData, "criteria"),
     premiumVisits: getString(formData, "premiumVisits") || "10",
     eliteVisits: getString(formData, "eliteVisits") || "25",
     royalVipVisits: getString(formData, "royalVipVisits") || "50",
-    premiumSpend: getString(formData, "premiumSpend") || "0",
-    eliteSpend: getString(formData, "eliteSpend") || "0",
-    royalVipSpend: getString(formData, "royalVipSpend") || "0",
   });
 
   if (!parsed.success) fail("/dashboard/settings", parsed.error.issues[0]?.message ?? "Validation failed.");
+
+  const tierData = {
+    criteria: "VISITS_ONLY" as const,
+    premiumVisits: parsed.data.premiumVisits,
+    eliteVisits: parsed.data.eliteVisits,
+    royalVipVisits: parsed.data.royalVipVisits,
+    premiumSpend: 0,
+    eliteSpend: 0,
+    royalVipSpend: 0,
+  };
 
   const setting = await prisma.customerTierSetting.upsert({
     where: { businessId: user.businessId },
     create: {
       businessId: user.businessId,
-      ...parsed.data,
+      ...tierData,
     },
-    update: parsed.data,
+    update: tierData,
     select: { id: true },
   });
 
@@ -493,7 +478,7 @@ export async function saveCustomerTierSettingsAction(formData: FormData) {
     action: "CUSTOMER_TIER_SETTINGS_UPDATED",
     entityType: "customer_tier_setting",
     entityId: setting.id,
-    metadata: parsed.data,
+    metadata: tierData,
   });
 
   revalidatePath("/dashboard/settings");

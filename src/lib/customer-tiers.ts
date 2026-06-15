@@ -1,6 +1,6 @@
 import type { CustomerTierCriteria } from "@prisma/client";
 
-export type CustomerTierName = "Member" | "Premium" | "Elite" | "Royal VIP";
+export type CustomerTierName = "Bronze" | "Silver" | "Gold" | "VIP";
 
 export type CustomerTierConfig = {
   criteria: CustomerTierCriteria;
@@ -24,14 +24,14 @@ export const defaultCustomerTierConfig: CustomerTierConfig = {
 
 export const customerTierCriteriaLabels: Record<CustomerTierCriteria, string> = {
   VISITS_ONLY: "Visits only",
-  SPEND_ONLY: "Spend only",
-  VISITS_AND_SPEND: "Visits + Spend",
+  SPEND_ONLY: "Visits only",
+  VISITS_AND_SPEND: "Visits only",
 };
 
-const tierOrder: CustomerTierName[] = ["Member", "Premium", "Elite", "Royal VIP"];
+const tierOrder: CustomerTierName[] = ["Bronze", "Silver", "Gold", "VIP"];
 
-export function isTierSystemEnabledForPlan(planName?: string | null) {
-  return Boolean(planName && planName.toLowerCase() !== "starter");
+export function isTierSystemEnabledForPlan(_planName?: string | null) {
+  return true;
 }
 
 export function normalizeTierConfig(config?: Partial<CustomerTierConfig> | null): CustomerTierConfig {
@@ -56,13 +56,14 @@ export function calculateCustomerTier({
   config?: Partial<CustomerTierConfig> | null;
 }) {
   const normalized = normalizeTierConfig(config);
-  const tier = resolveTier(visits, spend, normalized);
+  void spend;
+  const tier = resolveTier(visits, normalized);
   const nextTier = getNextTier(tier);
   const currentThreshold = getTierThreshold(tier, normalized);
   const nextThreshold = nextTier ? getTierThreshold(nextTier, normalized) : currentThreshold;
-  const currentScore = getCriterionScore(visits, spend, normalized);
-  const baselineScore = getThresholdScore(currentThreshold, normalized);
-  const nextScore = getThresholdScore(nextThreshold, normalized);
+  const currentScore = visits;
+  const baselineScore = currentThreshold.visits;
+  const nextScore = nextThreshold.visits;
   const progressSpan = Math.max(nextScore - baselineScore, 1);
   const progressInTier = Math.max(currentScore - baselineScore, 0);
   const progressPercent = nextTier ? Math.min(100, Math.round((progressInTier / progressSpan) * 100)) : 100;
@@ -72,24 +73,25 @@ export function calculateCustomerTier({
     nextTier,
     progressPercent,
     visitsRemaining: nextTier ? Math.max(nextThreshold.visits - visits, 0) : 0,
-    spendRemaining: nextTier ? Math.max(nextThreshold.spend - spend, 0) : 0,
-    isRoyalVip: tier === "Royal VIP",
-    criteria: normalized.criteria,
+    spendRemaining: 0,
+    isRoyalVip: tier === "VIP",
+    isVip: tier === "VIP",
+    badgeLabel: `${tier.toUpperCase()} MEMBER`,
+    badgeIcon: tier === "VIP" ? "👑" : tier === "Gold" ? "🥇" : tier === "Silver" ? "🥈" : "🥉",
+    criteria: "VISITS_ONLY" as CustomerTierCriteria,
   };
 }
 
-function resolveTier(visits: number, spend: number, config: CustomerTierConfig): CustomerTierName {
-  if (meetsThreshold(visits, spend, config, "Royal VIP")) return "Royal VIP";
-  if (meetsThreshold(visits, spend, config, "Elite")) return "Elite";
-  if (meetsThreshold(visits, spend, config, "Premium")) return "Premium";
-  return "Member";
+function resolveTier(visits: number, config: CustomerTierConfig): CustomerTierName {
+  if (meetsThreshold(visits, config, "VIP")) return "VIP";
+  if (meetsThreshold(visits, config, "Gold")) return "Gold";
+  if (meetsThreshold(visits, config, "Silver")) return "Silver";
+  return "Bronze";
 }
 
-function meetsThreshold(visits: number, spend: number, config: CustomerTierConfig, tier: CustomerTierName) {
+function meetsThreshold(visits: number, config: CustomerTierConfig, tier: CustomerTierName) {
   const threshold = getTierThreshold(tier, config);
-  if (config.criteria === "VISITS_ONLY") return visits >= threshold.visits;
-  if (config.criteria === "SPEND_ONLY") return spend >= threshold.spend;
-  return visits >= threshold.visits && spend >= threshold.spend;
+  return visits >= threshold.visits;
 }
 
 function getNextTier(tier: CustomerTierName) {
@@ -97,20 +99,8 @@ function getNextTier(tier: CustomerTierName) {
 }
 
 function getTierThreshold(tier: CustomerTierName, config: CustomerTierConfig) {
-  if (tier === "Royal VIP") return { visits: config.royalVipVisits, spend: config.royalVipSpend };
-  if (tier === "Elite") return { visits: config.eliteVisits, spend: config.eliteSpend };
-  if (tier === "Premium") return { visits: config.premiumVisits, spend: config.premiumSpend };
+  if (tier === "VIP") return { visits: config.royalVipVisits, spend: 0 };
+  if (tier === "Gold") return { visits: config.eliteVisits, spend: 0 };
+  if (tier === "Silver") return { visits: config.premiumVisits, spend: 0 };
   return { visits: 0, spend: 0 };
-}
-
-function getCriterionScore(visits: number, spend: number, config: CustomerTierConfig) {
-  if (config.criteria === "VISITS_ONLY") return visits;
-  if (config.criteria === "SPEND_ONLY") return spend;
-  return visits + spend;
-}
-
-function getThresholdScore(threshold: { visits: number; spend: number }, config: CustomerTierConfig) {
-  if (config.criteria === "VISITS_ONLY") return threshold.visits;
-  if (config.criteria === "SPEND_ONLY") return threshold.spend;
-  return threshold.visits + threshold.spend;
 }

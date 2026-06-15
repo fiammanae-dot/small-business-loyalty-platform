@@ -6,7 +6,7 @@ function read(path) {
   return readFileSync(path, "utf8");
 }
 
-test("customer tier schema stores configurable criteria and thresholds", () => {
+test("customer tier schema stores configurable visit thresholds", () => {
   const schema = read("prisma/schema.prisma");
   const migration = read("prisma/migrations/0021_customer_tier_system/migration.sql");
 
@@ -32,40 +32,46 @@ test("customer tier schema stores configurable criteria and thresholds", () => {
   assert.match(migration, /royal_vip_visits" INTEGER NOT NULL DEFAULT 50/);
 });
 
-test("tier helper supports all criteria modes and plan gating", () => {
+test("tier helper uses simplified visit-only tiers on every plan", () => {
   const helper = read("src/lib/customer-tiers.ts");
 
   for (const expected of [
-    "Member",
-    "Premium",
-    "Elite",
-    "Royal VIP",
+    "Bronze",
+    "Silver",
+    "Gold",
+    "VIP",
     "VISITS_ONLY",
-    "SPEND_ONLY",
-    "VISITS_AND_SPEND",
     "premiumVisits: 10",
     "eliteVisits: 25",
     "royalVipVisits: 50",
     "isTierSystemEnabledForPlan",
-    "planName.toLowerCase() !== \"starter\"",
+    "return true",
     "calculateCustomerTier",
+    "badgeLabel",
+    "badgeIcon",
   ]) {
     assert.match(helper, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }
+
+  assert.doesNotMatch(helper, /planName\.toLowerCase\(\) !== "starter"/);
 });
 
-test("business owner settings expose tier criteria and Starter plan gating", () => {
+test("business owner settings expose visit thresholds without plan gating", () => {
   const settings = read("src/app/dashboard/settings/page.tsx");
   const actions = read("src/app/dashboard/actions.ts");
 
   assert.match(settings, /Customer tiers/);
-  assert.match(settings, /Tier criteria/);
-  assert.match(settings, /Premium visits/);
-  assert.match(settings, /Elite visits/);
-  assert.match(settings, /Royal VIP visits/);
-  assert.match(settings, /Tier system disabled on Starter/);
+  assert.match(settings, /Bronze, Silver, Gold, and VIP/);
+  assert.match(settings, /Silver visits/);
+  assert.match(settings, /Gold visits/);
+  assert.match(settings, /VIP visits/);
+  assert.match(settings, /Tiers are available on every plan/);
+  assert.doesNotMatch(settings, /Tier criteria/);
+  assert.doesNotMatch(settings, /spend threshold/);
+  assert.doesNotMatch(settings, /Tier system disabled on Starter/);
   assert.match(actions, /saveCustomerTierSettingsAction/);
-  assert.match(actions, /Customer tiers require Growth plan or higher/);
+  assert.match(actions, /criteria: "VISITS_ONLY"/);
+  assert.doesNotMatch(actions, /Customer tiers require Growth plan or higher/);
   assert.match(actions, /CUSTOMER_TIER_SETTINGS_UPDATED/);
 });
 
@@ -74,7 +80,8 @@ test("public customer card shows tiers without exposing spend or internal analyt
 
   for (const expected of [
     "Customer tier",
-    "ROYAL VIP",
+    "tier.badgeLabel",
+    "tier.badgeIcon",
     "Visits",
     "Progress to",
     "visit",
@@ -95,13 +102,16 @@ test("public customer card shows tiers without exposing spend or internal analyt
   }
 });
 
-test("business owner customer profile shows owner-only tier and spend details", () => {
+test("business owner customer profile shows simplified tier details", () => {
   const profile = read("src/app/dashboard/customers/[id]/page.tsx");
 
   assert.match(profile, /Current tier/);
-  assert.match(profile, /Lifetime spend/);
-  assert.match(profile, /Criteria used/);
+  assert.match(profile, /Visits completed/);
+  assert.match(profile, /Next tier/);
   assert.match(profile, /Tier progress/);
   assert.match(profile, /Top Tier Member/);
   assert.match(profile, /Rewards redeemed/);
+  assert.doesNotMatch(profile, /Customer tiers are disabled on Starter/);
+  assert.doesNotMatch(profile, /Lifetime spend/);
+  assert.doesNotMatch(profile, /Criteria used/);
 });

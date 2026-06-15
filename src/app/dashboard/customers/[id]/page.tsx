@@ -26,7 +26,7 @@ import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { activityHref, staffProfileHref } from "@/lib/alert-investigation";
 import { alertTypeLabel } from "@/lib/alert-labels";
 import { getCardUrl, getShortCardToken } from "@/lib/customer-cards";
-import { calculateCustomerTier, customerTierCriteriaLabels, isTierSystemEnabledForPlan } from "@/lib/customer-tiers";
+import { calculateCustomerTier } from "@/lib/customer-tiers";
 import { customerSourceLabels, getBusinessCustomerOrRedirect } from "@/lib/customers";
 import { engagementEventLabels } from "@/lib/engagement";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -158,12 +158,9 @@ export default async function CustomerProfilePage({
   const sentManualMessagesCount = messages.filter((message) => message.status === "SENT_MANUALLY").length;
   const cancelledMessagesCount = messages.filter((message) => message.status === "CANCELLED").length;
   const lastMessageDate = messages[0]?.createdAt ?? null;
-  const lifetimeSpend = 0;
-  const currentPlanName = business.subscriptions[0]?.subscriptionPlan.name ?? null;
-  const tierEnabled = isTierSystemEnabledForPlan(currentPlanName);
   const customerTier = calculateCustomerTier({
     visits: stampTransactions.length,
-    spend: lifetimeSpend,
+    spend: 0,
     config: business.tierSetting,
   });
 
@@ -254,7 +251,9 @@ export default async function CustomerProfilePage({
                 <span className={`rounded-md px-2 py-1 text-xs font-semibold ${membership.marketingConsent ? "bg-emerald-50 text-emerald-700" : "bg-zinc-100 text-zinc-700"}`}>
                   {membership.marketingConsent ? "Marketing consent" : "No marketing consent"}
                 </span>
-                {tierEnabled ? <span className="rounded-md bg-yellow-50 px-2 py-1 text-xs font-semibold text-yellow-700">{customerTier.tier}</span> : null}
+                <span className="rounded-md bg-yellow-50 px-2 py-1 text-xs font-semibold text-yellow-700">
+                  {customerTier.badgeIcon} {customerTier.badgeLabel}
+                </span>
                 {rewardsReady > 0 ? <span className="rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">Reward Ready</span> : null}
               </div>
             </div>
@@ -331,32 +330,30 @@ export default async function CustomerProfilePage({
               <Sparkles className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <InsightMetric icon={Crown} label="Current tier" value={tierEnabled ? customerTier.tier : "Disabled"} />
-              <InsightMetric icon={CreditCard} label="Lifetime spend" value={`AED ${lifetimeSpend.toFixed(2)}`} />
-              <InsightMetric icon={Sparkles} label="Criteria used" value={tierEnabled ? customerTierCriteriaLabels[customerTier.criteria] : "Starter plan"} />
+              <InsightMetric icon={Crown} label="Current tier" value={`${customerTier.badgeIcon} ${customerTier.badgeLabel}`} />
+              <InsightMetric icon={History} label="Visits completed" value={stampTransactions.length.toString()} />
+              <InsightMetric icon={Sparkles} label="Next tier" value={customerTier.nextTier ?? "Top tier"} />
               <InsightMetric icon={Gift} label="Rewards redeemed" value={rewardRedemptions.length.toString()} />
               <InsightMetric icon={Gift} label="Bonus stamps" value={totalBonusStamps.toString()} />
               <InsightMetric icon={Users} label="Active programs" value={activePrograms.toString()} />
               <InsightMetric icon={CalendarDays} label="Customer since" value={formatDate(membership.joinedAt)} />
             </div>
-            <div className={`mt-4 rounded-md border p-4 ${customerTier.isRoyalVip && tierEnabled ? "border-yellow-300 bg-[#111827] text-white" : "border-[#E5E7EB] bg-[#FAFAFA] text-[#111827]"}`}>
+            <div className={`mt-4 rounded-md border p-4 ${customerTier.isVip ? "border-yellow-300 bg-[#111827] text-white" : "border-[#E5E7EB] bg-[#FAFAFA] text-[#111827]"}`}>
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className={`text-sm font-semibold ${customerTier.isRoyalVip && tierEnabled ? "text-yellow-200" : "text-[#F97316]"}`}>
+                  <p className={`text-sm font-semibold ${customerTier.isVip ? "text-yellow-200" : "text-[#F97316]"}`}>
                     Tier progress
                   </p>
                   <p className="mt-1 text-sm">
-                    {tierEnabled
-                      ? customerTier.nextTier
-                        ? `${customerTier.visitsRemaining} visit${customerTier.visitsRemaining === 1 ? "" : "s"} remaining to ${customerTier.nextTier}`
-                        : "Top Tier Member with exclusive rewards available"
-                      : "Customer tiers are disabled on Starter."}
+                    {customerTier.nextTier
+                      ? `${customerTier.visitsRemaining} visit${customerTier.visitsRemaining === 1 ? "" : "s"} remaining to ${customerTier.nextTier}`
+                      : "Top Tier Member with exclusive rewards available"}
                   </p>
                 </div>
-                <p className="text-lg font-semibold">{tierEnabled ? `${customerTier.progressPercent}%` : "0%"}</p>
+                <p className="text-lg font-semibold">{customerTier.progressPercent}%</p>
               </div>
-              <div className={`mt-3 h-2 overflow-hidden rounded-full ${customerTier.isRoyalVip && tierEnabled ? "bg-white/15" : "bg-orange-100"}`}>
-                <div className={`h-full rounded-full ${customerTier.isRoyalVip && tierEnabled ? "bg-yellow-300" : "bg-[#F97316]"}`} style={{ width: `${tierEnabled ? customerTier.progressPercent : 0}%` }} />
+              <div className={`mt-3 h-2 overflow-hidden rounded-full ${customerTier.isVip ? "bg-white/15" : "bg-orange-100"}`}>
+                <div className={`h-full rounded-full ${customerTier.isVip ? "bg-yellow-300" : "bg-[#F97316]"}`} style={{ width: `${customerTier.progressPercent}%` }} />
               </div>
             </div>
           </div>
