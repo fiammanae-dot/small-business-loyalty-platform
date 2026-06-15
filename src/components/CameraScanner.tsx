@@ -1,5 +1,6 @@
 "use client";
 
+import jsQR from "jsqr";
 import { Camera, CheckCircle2, ClipboardType, RotateCcw, ShieldAlert, Square, Video, Zap } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -20,6 +21,7 @@ type ScannerState =
   | "camera-active"
   | "camera-blocked"
   | "barcode-unsupported"
+  | "qr-fallback"
   | "no-camera"
   | "manual-fallback"
   | "scan-detected"
@@ -53,7 +55,9 @@ export function CameraScanner({ backHref }: { backHref: string }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const detectorRef = useRef<InstanceType<BarcodeDetectorConstructor> | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationRef = useRef<number | null>(null);
+  const lastDecodeAttemptRef = useRef(0);
   const [manualValue, setManualValue] = useState("");
   const [message, setMessage] = useState("");
   const [isScanning, setIsScanning] = useState(false);
@@ -71,6 +75,8 @@ export function CameraScanner({ backHref }: { backHref: string }) {
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
     detectorRef.current = null;
+    canvasRef.current = null;
+    lastDecodeAttemptRef.current = 0;
     if (videoRef.current) videoRef.current.srcObject = null;
     setIsScanning(false);
     setIsCameraOpen(false);
@@ -175,30 +181,45 @@ export function CameraScanner({ backHref }: { backHref: string }) {
       return;
     }
 
-    if (!window.BarcodeDetector) {
-      setScannerState("barcode-unsupported");
-      setMessage("Camera scanning is not supported by this browser. You can still paste the scan token manually.");
-      return;
-    }
-
     try {
-      detectorRef.current = new window.BarcodeDetector({ formats: ["qr_code"] });
+      if (window.BarcodeDetector) {
+        detectorRef.current = new window.BarcodeDetector({ formats: ["qr_code"] });
+        setScannerState("camera-active");
+        setMessage("Camera scanner active. Point the camera at the customer QR code.");
+      } else {
+        detectorRef.current = null;
+        canvasRef.current = document.createElement("canvas");
+        setScannerState("qr-fallback");
+        setMessage("Camera active. Using browser-compatible QR scanning for this device.");
+      }
       setIsScanning(true);
-      setScannerState("camera-active");
       scanLoop();
     } catch (error) {
       console.warn("LoyaltyBase scanner detector error", error);
-      setScannerState("scan-failed");
-      setMessage("Scanner could not read QR codes in this browser. Paste the scan token or customer card link below.");
+      detectorRef.current = null;
+      canvasRef.current = document.createElement("canvas");
+      setIsScanning(true);
+      setScannerState("qr-fallback");
+      setMessage("Native QR scanning is unavailable. Using browser-compatible QR scanning instead.");
+      scanLoop();
     }
   }
 
   async function scanLoop() {
-    if (!videoRef.current || !detectorRef.current) return;
+    if (!videoRef.current) return;
+    const video = videoRef.current;
+    const now = performance.now();
 
     try {
-      const codes = await detectorRef.current.detect(videoRef.current);
-      const qrValue = codes[0]?.rawValue;
+      let qrValue = "";
+      if (detectorRef.current) {
+        const codes = await detectorRef.current.detect(video);
+        qrValue = codes[0]?.rawValue ?? "";
+      } else if (now - lastDecodeAttemptRef.current > 250) {
+        lastDecodeAttemptRef.current = now;
+        qrValue = detectQrFromVideoFrame(video);
+      }
+
       if (qrValue) {
         setScannerState("scan-detected");
         setMessage("Scan detected. Opening secure validation...");
@@ -212,6 +233,27 @@ export function CameraScanner({ backHref }: { backHref: string }) {
     }
 
     animationRef.current = requestAnimationFrame(scanLoop);
+  }
+
+  function detectQrFromVideoFrame(video: HTMLVideoElement) {
+    if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || !video.videoWidth || !video.videoHeight) {
+      return "";
+    }
+
+    const canvas = canvasRef.current ?? document.createElement("canvas");
+    canvasRef.current = canvas;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) return "";
+
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+      inversionAttempts: "attemptBoth",
+    });
+
+    return code?.data ?? "";
   }
 
   async function switchCamera() {
@@ -243,7 +285,8 @@ export function CameraScanner({ backHref }: { backHref: string }) {
         <ScannerStatus label="Camera permission pending" active={scannerState === "permission-pending"} />
         <ScannerStatus label="Camera active" active={scannerState === "camera-active"} positive />
         <ScannerStatus label="Camera blocked" active={scannerState === "camera-blocked"} danger />
-        <ScannerStatus label="BarcodeDetector unsupported" active={scannerState === "barcode-unsupported"} />
+        <ScannerStatus label="Native BarcodeDetector unavailable" active={scannerState === "qr-fallback"} />
+        <ScannerStatus label="Browser QR fallback active" active={scannerState === "qr-fallback"} positive />
         <ScannerStatus label="No camera found" active={scannerState === "no-camera"} danger />
         <ScannerStatus label="Using manual entry fallback" active={scannerState === "manual-fallback" || scannerState === "barcode-unsupported"} />
         <ScannerStatus label="Scan detected" active={scannerState === "scan-detected"} positive />

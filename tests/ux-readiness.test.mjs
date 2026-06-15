@@ -20,6 +20,8 @@ test("business dashboard includes beta readiness polish without changing loyalty
     "Setup almost complete",
     "PrimaryAction",
     "SummaryTile",
+    "Add Staff",
+    "/dashboard/staff",
   ]) {
     assert.match(dashboard, new RegExp(expected));
   }

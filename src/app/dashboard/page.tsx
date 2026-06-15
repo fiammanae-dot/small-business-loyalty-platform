@@ -7,6 +7,7 @@ import {
   ShieldAlert,
   Store,
   TicketCheck,
+  UserCog,
   UserPlus,
   Users,
 } from "lucide-react";
@@ -294,11 +295,12 @@ function MainActions() {
           <h2 className="mt-1 text-xl font-semibold text-[#111827]">Quick Actions</h2>
         </div>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <PrimaryAction href="/dashboard/customers/new" icon={UserPlus} label="Add Customer" />
         <PrimaryAction href="/dashboard/scanner" icon={ScanLine} label="Open Scanner" featured />
         <PrimaryAction href="/dashboard/customers?reward=ready" icon={Gift} label="Redeem Reward" />
         <PrimaryAction href="/dashboard/customers" icon={Users} label="View Customers" />
+        <PrimaryAction href="/dashboard/staff" icon={UserCog} label="Add Staff" />
       </div>
     </section>
   );
