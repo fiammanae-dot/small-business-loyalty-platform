@@ -73,10 +73,10 @@ test("alert governance remains available while dashboard shows one compact alert
   const notifications = read("src/app/dashboard/notifications/page.tsx");
 
   for (const expected of [
-    "AlertsSummary",
-    "Risk summary",
-    "Review Alerts",
-    "SeverityRow",
+    "alertCount",
+    "SummaryTile",
+    "href=\"/dashboard/notifications\"",
+    "label=\"Alerts\"",
   ]) {
     assert.match(dashboard, new RegExp(expected));
   }

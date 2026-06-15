@@ -1,10 +1,9 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import type React from "react";
 import {
   CheckCircle2,
   Gift,
   ScanLine,
-  Search,
   ShieldAlert,
   Store,
   TicketCheck,
@@ -18,7 +17,6 @@ import { getBusinessDisplayName, getBusinessTypeDisplayName } from "@/lib/busine
 import { getBusinessOwnerContext, getCurrentPlan, getCurrentSubscription } from "@/lib/business-owner";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { progressValue } from "@/lib/programs";
 import { businessTypeLabels } from "@/lib/roles";
 import { getSubscriptionRemainingDays, subscriptionDisplayDate } from "@/lib/subscriptions";
 
@@ -28,8 +26,7 @@ export default async function BusinessDashboard({
   searchParams: Promise<{ customerSearch?: string }>;
 }) {
   const { user, business } = await getBusinessOwnerContext();
-  const params = await searchParams;
-  const customerSearch = params.customerSearch?.trim() ?? "";
+  await searchParams;
   const plan = getCurrentPlan(business);
   const subscription = getCurrentSubscription(business);
   const todayStart = new Date();
@@ -49,7 +46,6 @@ export default async function BusinessDashboard({
     staffCount,
     stampCount,
     redemptionCount,
-    customerSearchResults,
   ] = await Promise.all([
     prisma.businessCustomerMembership.count({ where: { businessId: user.businessId, createdAt: { gte: todayStart } } }),
     prisma.stampTransaction.aggregate({
@@ -114,45 +110,6 @@ export default async function BusinessDashboard({
     prisma.user.count({ where: { businessId: user.businessId, role: { in: ["BRANCH_MANAGER", "STAFF"] } } }),
     prisma.stampTransaction.count({ where: { businessId: user.businessId } }),
     prisma.rewardRedemption.count({ where: { businessId: user.businessId } }),
-    prisma.businessCustomerMembership.findMany({
-      where: {
-        businessId: user.businessId,
-        ...(customerSearch
-          ? {
-              OR: [
-                { globalCustomer: { firstName: { contains: customerSearch, mode: "insensitive" } } },
-                { globalCustomer: { lastName: { contains: customerSearch, mode: "insensitive" } } },
-                { globalCustomer: { phone: { contains: customerSearch, mode: "insensitive" } } },
-                { globalCustomer: { normalizedPhone: { contains: customerSearch, mode: "insensitive" } } },
-                { globalCustomer: { email: { contains: customerSearch, mode: "insensitive" } } },
-                { cardToken: { contains: customerSearch, mode: "insensitive" } },
-                { referralCode: { contains: customerSearch, mode: "insensitive" } },
-                { programMemberships: { some: { loyaltyProgram: { name: { contains: customerSearch, mode: "insensitive" } } } } },
-              ],
-            }
-          : { id: -1 }),
-      },
-      select: {
-        uuid: true,
-        cardToken: true,
-        referralCode: true,
-        status: true,
-        globalCustomer: { select: { firstName: true, lastName: true, phone: true, email: true } },
-        createdBranch: { select: { name: true } },
-        programMemberships: {
-          take: 1,
-          orderBy: { enrolledAt: "desc" },
-          select: {
-            earnedStamps: true,
-            bonusStamps: true,
-            status: true,
-            loyaltyProgram: { select: { name: true, requiredStamps: true, rewardName: true } },
-          },
-        },
-      },
-      orderBy: { joinedAt: "desc" },
-      take: 6,
-    }),
   ]);
 
   const totalOpenAlerts = highAlerts + mediumAlerts + lowAlerts;
@@ -235,8 +192,6 @@ export default async function BusinessDashboard({
         branchCount={branchCount}
         alertCount={totalOpenAlerts}
         logoUrl={business.branding?.logoUrl}
-        customerSearch={customerSearch}
-        customerSearchResults={customerSearchResults}
         onboardingPercent={onboardingPercent}
         onboardingItems={onboardingItems}
       />
@@ -250,15 +205,11 @@ export default async function BusinessDashboard({
         rewardReadyCustomers={rewardsReadyTotal}
       />
 
-      <section className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
-        <RecentCustomers customers={recentCustomers} />
-        <ProgramPerformance programs={programPerformance} />
-      </section>
+      <RecentActivity items={recentActivity} />
 
-      <section className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
-        <AlertsSummary high={highAlerts} medium={mediumAlerts} low={lowAlerts} />
-        <RecentActivity items={recentActivity} />
-      </section>
+      <RecentCustomers customers={recentCustomers} />
+
+      <ProgramPerformance programs={programPerformance} />
     </DashboardShell>
   );
 }
@@ -276,8 +227,6 @@ function HeaderSummary({
   branchCount,
   alertCount,
   logoUrl,
-  customerSearch,
-  customerSearchResults,
   onboardingPercent,
   onboardingItems,
 }: {
@@ -293,8 +242,6 @@ function HeaderSummary({
   branchCount: number;
   alertCount: number;
   logoUrl?: string | null;
-  customerSearch: string;
-  customerSearchResults: CustomerSearchResult[];
   onboardingPercent: number;
   onboardingItems: Array<{ label: string; complete: boolean; href: string }>;
 }) {
@@ -329,13 +276,10 @@ function HeaderSummary({
         </div>
       </div>
 
-      <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <CustomerSearchPanel query={customerSearch} results={customerSearchResults} />
-        <div className="grid gap-2">
-          <InfoChip label="Subscription expiry" value={expiryDate ? formatDate(expiryDate) : "-"} />
-          <InfoChip label="Remaining days" value={remainingDays === null ? "-" : remainingDays.toString()} />
-          <OnboardingSummary percent={onboardingPercent} items={onboardingItems} />
-        </div>
+      <div className="mt-4 grid gap-3 md:grid-cols-[repeat(2,minmax(0,220px))_minmax(260px,1fr)]">
+        <InfoChip label="Subscription expiry" value={expiryDate ? formatDate(expiryDate) : "-"} />
+        <InfoChip label="Remaining days" value={remainingDays === null ? "-" : remainingDays.toString()} />
+        <OnboardingSummary percent={onboardingPercent} items={onboardingItems} />
       </div>
     </section>
   );
@@ -347,14 +291,14 @@ function MainActions() {
       <div className="mb-3 flex items-center justify-between gap-4">
         <div>
           <p className="text-sm font-semibold text-[#F97316]">Main actions</p>
-          <h2 className="mt-1 text-xl font-semibold text-[#111827]">Run daily operations quickly</h2>
+          <h2 className="mt-1 text-xl font-semibold text-[#111827]">Quick Actions</h2>
         </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <PrimaryAction href="#customer-search" icon={Search} label="Search Customer" />
         <PrimaryAction href="/dashboard/customers/new" icon={UserPlus} label="Add Customer" />
         <PrimaryAction href="/dashboard/scanner" icon={ScanLine} label="Open Scanner" featured />
         <PrimaryAction href="/dashboard/customers?reward=ready" icon={Gift} label="Redeem Reward" />
+        <PrimaryAction href="/dashboard/customers" icon={Users} label="View Customers" />
       </div>
     </section>
   );
@@ -378,89 +322,6 @@ function TodayPerformance({
       <PerformanceCard href="/dashboard/customers?reward=redeemed" icon={CheckCircle2} label="Rewards redeemed today" value={rewardsRedeemedToday.toString()} />
       <PerformanceCard href="/dashboard/customers?reward=ready" icon={Gift} label="Reward-ready customers" value={rewardReadyCustomers.toString()} />
     </section>
-  );
-}
-
-function CustomerSearchPanel({
-  query,
-  results,
-}: {
-  query: string;
-  results: CustomerSearchResult[];
-}) {
-  return (
-    <div id="customer-search" className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3">
-      <form action="/dashboard" className="flex flex-col gap-2 sm:flex-row">
-        <label htmlFor="customerSearch" className="sr-only">
-          Search customer
-        </label>
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" aria-hidden="true" />
-          <input
-            id="customerSearch"
-            name="customerSearch"
-            defaultValue={query}
-            placeholder="Search name, phone, card ID, or referral code"
-            className="h-11 w-full rounded-md border border-[#E5E7EB] bg-white pl-10 pr-3 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
-          />
-        </div>
-        <button type="submit" className="h-11 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">
-          Search
-        </button>
-        {query ? (
-          <Link href="/dashboard" className="inline-flex h-11 items-center justify-center rounded-md border border-[#E5E7EB] bg-white px-4 text-sm font-semibold text-[#111827]">
-            Clear
-          </Link>
-        ) : null}
-      </form>
-      {query ? (
-        <div className="mt-3 grid gap-2">
-          {results.length ? (
-            results.map((result) => (
-              <Link key={result.uuid} href={`/dashboard/customers/${result.uuid}`} className="flex items-center justify-between gap-3 rounded-md border border-[#E5E7EB] bg-white p-3 transition hover:border-[#F97316] hover:bg-orange-50">
-                <div className="min-w-0">
-                  <p className="truncate font-semibold text-[#111827]">{getCustomerName(result.globalCustomer)}</p>
-                  <p className="mt-1 text-sm text-[#6B7280]">
-                    {result.globalCustomer.phone}
-                    {result.globalCustomer.email ? ` - ${result.globalCustomer.email}` : ""}
-                  </p>
-                  <CustomerSearchResultMeta result={result} />
-                </div>
-                <span className="shrink-0 text-sm font-semibold text-[#F97316]">Open</span>
-              </Link>
-            ))
-          ) : (
-            <p className="rounded-md border border-dashed border-[#E5E7EB] bg-white p-3 text-sm text-[#6B7280]">No customers match this search.</p>
-          )}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function CustomerSearchResultMeta({ result }: { result: CustomerSearchResult }) {
-  const program = result.programMemberships[0];
-  const progress = program ? progressValue(program.earnedStamps, program.bonusStamps) : null;
-  const rewardStatus = program && progress !== null && progress >= program.loyaltyProgram.requiredStamps ? "Reward Ready" : result.status;
-
-  return (
-    <div className="mt-2 flex flex-wrap gap-2 text-xs font-semibold">
-      <span className="rounded-full bg-[#F3F4F6] px-2 py-1 text-[#374151]">{result.createdBranch?.name ?? "No branch"}</span>
-      <span className="rounded-full bg-orange-50 px-2 py-1 text-[#C2410C]">{result.referralCode ?? result.cardToken.slice(0, 12)}</span>
-      {program ? (
-        <>
-          <span className="rounded-full bg-blue-50 px-2 py-1 text-blue-700">{program.loyaltyProgram.name}</span>
-          <span className="rounded-full bg-emerald-50 px-2 py-1 text-emerald-700">
-            {progress} / {program.loyaltyProgram.requiredStamps} stamps
-          </span>
-          <span className="rounded-full bg-purple-50 px-2 py-1 text-purple-700">
-            {rewardStatus} - {program.loyaltyProgram.rewardName}
-          </span>
-        </>
-      ) : (
-        <span className="rounded-full bg-[#F3F4F6] px-2 py-1 text-[#6B7280]">No program yet</span>
-      )}
-    </div>
   );
 }
 
@@ -548,26 +409,6 @@ function ProgramPerformance({
         ) : (
           <EmptyState text="No loyalty programs yet." href="/dashboard/programs/new" action="Create Program" />
         )}
-      </div>
-    </SectionCard>
-  );
-}
-
-function AlertsSummary({ high, medium, low }: { high: number; medium: number; low: number }) {
-  const total = high + medium + low;
-
-  return (
-    <SectionCard
-      eyebrow="Alerts"
-      title="Risk summary"
-      icon={ShieldAlert}
-      tone={total > 0 ? "alert" : "default"}
-      action={<Link href="/dashboard/notifications" className="text-sm font-semibold text-[#F97316]">Review Alerts</Link>}
-    >
-      <div className="grid gap-2">
-        <SeverityRow label="High" value={high} colorClass="bg-red-500" textClass="text-red-700" />
-        <SeverityRow label="Medium" value={medium} colorClass="bg-orange-500" textClass="text-orange-700" />
-        <SeverityRow label="Low" value={low} colorClass="bg-emerald-500" textClass="text-emerald-700" />
       </div>
     </SectionCard>
   );
@@ -750,18 +591,6 @@ function InfoChip({ label, value }: { label: string; value: string }) {
   );
 }
 
-function SeverityRow({ label, value, colorClass, textClass }: { label: string; value: number; colorClass: string; textClass: string }) {
-  return (
-    <Link href={`/dashboard/notifications?severity=${label.toUpperCase()}`} className="flex items-center justify-between rounded-md border border-[#E5E7EB] px-3 py-3 transition hover:border-[#F97316] hover:bg-orange-50">
-      <div className="flex items-center gap-3">
-        <span className={`h-2.5 w-2.5 rounded-full ${colorClass}`} />
-        <span className="text-sm font-medium text-[#111827]">{label}</span>
-      </div>
-      <span className={`text-lg font-semibold ${textClass}`}>{value}</span>
-    </Link>
-  );
-}
-
 function EmptyState({ text, href, action }: { text: string; href: string; action: string }) {
   return (
     <div className="rounded-md border border-dashed border-[#E5E7EB] p-4 text-sm text-[#6B7280]">
@@ -786,17 +615,4 @@ function getInitials(name: string) {
     .join("");
 }
 
-type CustomerSearchResult = {
-  uuid: string;
-  cardToken: string;
-  referralCode: string | null;
-  status: string;
-  globalCustomer: { firstName: string; lastName: string | null; phone: string; email: string | null };
-  createdBranch: { name: string } | null;
-  programMemberships: Array<{
-    earnedStamps: number;
-    bonusStamps: number;
-    status: string;
-    loyaltyProgram: { name: string; requiredStamps: number; rewardName: string };
-  }>;
-};
+

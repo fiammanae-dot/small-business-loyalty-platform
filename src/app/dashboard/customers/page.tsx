@@ -40,6 +40,7 @@ export default async function CustomersPage({
               { globalCustomer: { normalizedPhone: { contains: query, mode: "insensitive" } } },
               { globalCustomer: { email: { contains: query, mode: "insensitive" } } },
               { cardToken: { contains: query, mode: "insensitive" } },
+              { referralCode: { contains: query, mode: "insensitive" } },
               { programMemberships: { some: { loyaltyProgram: { name: { contains: query, mode: "insensitive" } } } } },
             ],
           }
@@ -67,7 +68,7 @@ export default async function CustomersPage({
           <input
             name="q"
             defaultValue={params.q ?? ""}
-            placeholder="Search name, phone, card number, program"
+            placeholder="Search name, phone, card number, referral code, program"
             className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100 md:col-span-2"
           />
           <Select name="status" label="Status" value={params.status} options={[["", "All statuses"], ["ACTIVE", "Active"], ["INACTIVE", "Inactive"], ["BLOCKED", "Blocked"]]} />

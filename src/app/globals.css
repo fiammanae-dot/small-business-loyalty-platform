@@ -1,13 +1,30 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #111827;
+  --background: #FFFFFF;
+  --foreground: #1E293B;
+  --primary-orange: #F97316;
+  --dark-orange: #EA580C;
+  --light-orange: #FED7AA;
+  --light-gray: #F8FAFC;
+  --medium-gray: #E2E8F0;
+  
+  /* ألوان الحالات والتحذيرات */
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --error: #EF4444;
+  --info: #3B82F6;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary-orange);
+  --color-primary-hover: var(--dark-orange);
+  --color-primary-light: var(--light-orange);
+  --color-muted-bg: var(--light-gray);
+  --color-muted-border: var(--medium-gray);
+  
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -400,7 +417,7 @@ input {
 
 @keyframes customer-card-progress-glow {
   0%,
-  100% {
+  100 {
     filter: saturate(1);
   }
 
@@ -556,7 +573,7 @@ input {
   82%,
   94% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0 scale(1));
   }
 }
 

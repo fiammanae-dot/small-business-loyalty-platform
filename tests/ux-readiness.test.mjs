@@ -16,10 +16,10 @@ test("business dashboard includes beta readiness polish without changing loyalty
     "TodayPerformance",
     "RecentCustomers",
     "ProgramPerformance",
-    "AlertsSummary",
     "RecentActivity",
     "Setup almost complete",
     "PrimaryAction",
+    "SummaryTile",
   ]) {
     assert.match(dashboard, new RegExp(expected));
   }
@@ -33,15 +33,22 @@ test("customer profile includes customer 360 engagement and message summaries", 
   const profile = read("src/app/dashboard/customers/[id]/page.tsx");
 
   for (const expected of [
-    "Customer risk summary",
-    "Customer insights",
+    "Customer 360",
+    "KpiCard",
+    "TabLink",
+    "ProfileSummaryCard",
+    "LoyaltyOverviewPanel",
+    "LatestActivityPreview",
     "Communication history",
     "Manual delivery history",
     "Marketing Consent Status",
     "Last Message Prepared",
-    "Customer profile sections",
-    "#programs",
-    "#messages",
+    "Profile",
+    "Loyalty",
+    "Activity",
+    "Alerts",
+    "Messages",
+    "Redemptions",
   ]) {
     assert.match(profile, new RegExp(expected));
   }
@@ -51,7 +58,7 @@ test("customer and program lists include mobile card views and helpful empty sta
   const customers = read("src/app/dashboard/customers/page.tsx");
   const programs = read("src/app/dashboard/programs/page.tsx");
 
-  assert.match(customers, /Search name, phone, card number, program/);
+  assert.match(customers, /Search name, phone, card number, referral code, program/);
   assert.match(customers, /Create your first customer/);
   assert.match(customers, /lg:hidden/);
   assert.match(programs, /Create your first loyalty program/);

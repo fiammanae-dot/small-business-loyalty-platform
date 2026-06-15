@@ -81,20 +81,18 @@ test("high-risk pages no longer use native selects for large record datasets", (
 });
 
 test("business owner customer search is ready for customer volume and direct navigation", () => {
-  const dashboard = read("src/app/dashboard/page.tsx");
+  const customers = read("src/app/dashboard/customers/page.tsx");
 
   for (const expected of [
-    "Search name, phone, card ID, or referral code",
+    "Search name, phone, card number, referral code, program",
     "globalCustomer: { email",
     "programMemberships: {",
     "loyaltyProgram: { name",
     "createdBranch",
-    "CustomerSearchResultMeta",
-    "progressValue",
-    "Reward Ready",
-    "href={`/dashboard/customers/${result.uuid}`}",
+    "referralCode",
+    "href={`/dashboard/customers/${membership.uuid}`}",
   ]) {
-    assert.ok(dashboard.includes(expected), `Dashboard customer search missing: ${expected}`);
+    assert.ok(customers.includes(expected), `Customers page search missing: ${expected}`);
   }
 });
 

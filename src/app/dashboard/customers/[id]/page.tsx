@@ -52,7 +52,7 @@ export default async function CustomerProfilePage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ success?: string; alert?: string; highlightTransaction?: string }>;
+  searchParams: Promise<{ success?: string; alert?: string; highlightTransaction?: string; tab?: string }>;
 }) {
   const { user, business } = await getBusinessOwnerContext();
   const { id } = await params;
@@ -220,42 +220,41 @@ export default async function CustomerProfilePage({
     })),
   ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 30);
   const timelineGroups = groupTimeline(timeline);
+  const openAlerts = openHighAlerts + openMediumAlerts + openLowAlerts;
+  const hasReferralTab = Boolean(membership.referralCode);
+  const activeTab = resolveCustomerTab(qs.tab, hasReferralTab);
+  const tabs = [
+    ["overview", "Overview"],
+    ["profile", "Profile"],
+    ["loyalty", "Loyalty"],
+    ["activity", "Activity"],
+    ["alerts", "Alerts"],
+    ["messages", "Messages"],
+    ["redemptions", "Redemptions"],
+    ...(hasReferralTab ? [["referrals", "Referrals"]] : []),
+  ] as const;
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Customer 360">
       {qs.success ? <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{qs.success}</p> : null}
 
-      <nav className="sticky top-0 z-20 -mx-4 border-y border-[#E5E7EB] bg-white/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8" aria-label="Customer profile sections">
-        <div className="flex gap-2 overflow-x-auto text-sm">
-          {[
-            ["Overview", "#overview"],
-            ["Programs", "#programs"],
-            ["Activity", "#activity"],
-            ["Alerts", "#alerts"],
-            ["Engagement", "#engagement"],
-            ["Messages", "#messages"],
-            ["Redemptions", "#redemptions"],
-          ].map(([label, href]) => (
-            <a key={href} href={href} className="shrink-0 rounded-md border border-[#E5E7EB] px-3 py-2 font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]">
-              {label}
-            </a>
-          ))}
-        </div>
-      </nav>
-
-      <section id="overview" className="scroll-mt-24 rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+      <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start gap-4">
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-orange-50 text-[#F97316]">
-              <UserRound className="h-7 w-7" aria-hidden="true" />
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-orange-50 text-[#F97316]">
+              <UserRound className="h-6 w-6" aria-hidden="true" />
             </span>
-            <div>
+            <div className="min-w-0">
               <p className="text-sm font-semibold text-[#F97316]">Customer profile</p>
-              <h2 className="mt-1 text-3xl font-semibold text-[#111827]">{customerName}</h2>
-              <p className="mt-2 text-sm text-[#6B7280]">{customer.phone}</p>
+              <h2 className="mt-1 text-2xl font-semibold text-[#111827]">{customerName}</h2>
+              <p className="mt-1 text-sm text-[#6B7280]">{customer.phone}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <StatusBadge status={membership.status} />
                 <span className="rounded-md bg-orange-50 px-2 py-1 text-xs font-semibold text-[#F97316]">{customerSourceLabels[membership.source]}</span>
+                <span className={`rounded-md px-2 py-1 text-xs font-semibold ${membership.marketingConsent ? "bg-emerald-50 text-emerald-700" : "bg-zinc-100 text-zinc-700"}`}>
+                  {membership.marketingConsent ? "Marketing consent" : "No marketing consent"}
+                </span>
+                {tierEnabled ? <span className="rounded-md bg-yellow-50 px-2 py-1 text-xs font-semibold text-yellow-700">{customerTier.tier}</span> : null}
                 {rewardsReady > 0 ? <span className="rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">Reward Ready</span> : null}
               </div>
             </div>
@@ -265,104 +264,124 @@ export default async function CustomerProfilePage({
             <Link href={`/dashboard/customers/${membership.uuid}/edit`} className="rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">Edit customer</Link>
           </div>
         </div>
-
-        <div className="mt-6 grid gap-4 md:grid-cols-4">
-          <Info label="Email" value={customer.email ?? "-"} />
-          <Info label="Birthday" value={customer.birthday ? formatDate(customer.birthday) : "-"} />
-          <Info label="Card issued branch" value={membership.createdBranch?.name ?? "-"} />
-          <Info label="Card issued by" value={membership.createdByUser?.name ?? "-"} />
-          <Info label="Card issued date" value={formatDate(membership.joinedAt)} />
-          <Info label="Marketing consent" value={membership.marketingConsent ? "Yes" : "No"} />
-          <Info label="Notes" value={membership.notes ?? "-"} wide />
-        </div>
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
-        <div className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold text-[#F97316]">Customer risk summary</p>
-              <h2 className="mt-1 text-xl font-semibold text-[#111827]">Open alert exposure</h2>
-            </div>
-            <AlertTriangle className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
-          </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            <RiskMetric label="Open High Alerts" value={openHighAlerts} tone="high" />
-            <RiskMetric label="Open Medium Alerts" value={openMediumAlerts} tone="medium" />
-            <RiskMetric label="Open Low Alerts" value={openLowAlerts} tone="low" />
-          </div>
-          <div className="mt-4 flex flex-col gap-3 rounded-md border border-[#E5E7EB] p-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm text-[#6B7280]">Last Alert Date</p>
-              <p className="mt-1 text-sm font-semibold text-[#111827]">{lastAlertDate ? formatDateTime(lastAlertDate) : "-"}</p>
-            </div>
-            <Link href="/dashboard/notifications" className="inline-flex items-center justify-center gap-2 rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">
-              <Bell className="h-4 w-4" aria-hidden="true" />
-              Review Open Alerts
-            </Link>
-          </div>
-        </div>
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <KpiCard icon={History} label="Lifetime visits" value={stampTransactions.length.toString()} />
+        <KpiCard icon={TicketCheck} label="Earned stamps" value={totalEarnedStamps.toString()} />
+        <KpiCard icon={Gift} label="Rewards ready" value={rewardsReady.toString()} />
+        <KpiCard icon={CalendarDays} label="Last activity" value={lastActivityDate ? formatDate(lastActivityDate) : "-"} />
+        <KpiCard icon={ShieldAlert} label="Open alerts" value={openAlerts.toString()} tone={openAlerts > 0 ? "alert" : "default"} />
+      </section>
 
-        <div className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-4">
+      <nav className="sticky top-0 z-20 -mx-4 border-y border-[#E5E7EB] bg-white/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8" aria-label="Customer profile tabs">
+        <div className="flex gap-2 overflow-x-auto text-sm">
+          {tabs.map(([tab, label]) => (
+            <TabLink key={tab} href={`/dashboard/customers/${membership.uuid}?tab=${tab}`} label={label} active={activeTab === tab} />
+          ))}
+        </div>
+      </nav>
+
+      {activeTab === "overview" ? (
+        <section className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
+          <div className="grid gap-5">
+            <CustomerCardPanel
+              cardUrl={cardUrl}
+              businessName={membership.business.name}
+              cardToken={membership.cardToken}
+              cardStatus={membership.cardStatus}
+              cardCreatedAt={membership.cardCreatedAt}
+              cardLastViewedAt={membership.cardLastViewedAt}
+              membershipUuid={membership.uuid}
+              nextCardStatus={nextCardStatus}
+            />
+            <ProfileSummaryCard membership={membership} customer={customer} />
+          </div>
+          <div className="grid gap-5">
+            <LoyaltyOverviewPanel programCards={programCards} />
+            <LatestActivityPreview items={timeline.slice(0, 5)} customerUuid={membership.uuid} />
+          </div>
+        </section>
+      ) : null}
+
+      {activeTab === "profile" ? (
+        <section className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
+          <div className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
             <div>
-              <p className="text-sm font-semibold text-[#F97316]">Customer insights</p>
-              <h2 className="mt-1 text-xl font-semibold text-[#111827]">Loyalty health</h2>
+              <p className="text-sm font-semibold text-[#F97316]">Profile details</p>
+              <h2 className="mt-1 text-xl font-semibold text-[#111827]">Customer information</h2>
             </div>
-            <Sparkles className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              <Info label="Email" value={customer.email ?? "-"} />
+              <Info label="Birthday" value={customer.birthday ? formatDate(customer.birthday) : "-"} />
+              <Info label="Card issued branch" value={membership.createdBranch?.name ?? "-"} />
+              <Info label="Card issued by" value={membership.createdByUser?.name ?? "-"} />
+              <Info label="Card issued date" value={formatDate(membership.joinedAt)} />
+              <Info label="Marketing consent" value={membership.marketingConsent ? "Yes" : "No"} />
+              <Info label="Notes" value={membership.notes ?? "-"} wide />
+            </div>
           </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <InsightMetric icon={History} label="Lifetime visits" value={stampTransactions.length.toString()} />
-            <InsightMetric icon={Crown} label="Current tier" value={tierEnabled ? customerTier.tier : "Disabled"} />
-            <InsightMetric icon={CreditCard} label="Lifetime spend" value={`AED ${lifetimeSpend.toFixed(2)}`} />
-            <InsightMetric icon={Sparkles} label="Criteria used" value={tierEnabled ? customerTierCriteriaLabels[customerTier.criteria] : "Starter plan"} />
-            <InsightMetric icon={TicketCheck} label="Earned stamps" value={totalEarnedStamps.toString()} />
-            <InsightMetric icon={Gift} label="Bonus stamps" value={totalBonusStamps.toString()} />
-            <InsightMetric icon={Sparkles} label="Total progress" value={totalProgress.toString()} />
-            <InsightMetric icon={Users} label="Active programs" value={activePrograms.toString()} />
-            <InsightMetric icon={Gift} label="Rewards ready" value={rewardsReady.toString()} />
-            <InsightMetric icon={Gift} label="Rewards redeemed" value={rewardRedemptions.length.toString()} />
-            <InsightMetric icon={CalendarDays} label="Last activity" value={lastActivityDate ? formatDate(lastActivityDate) : "-"} />
-            <InsightMetric icon={CalendarDays} label="Customer since" value={formatDate(membership.joinedAt)} />
-          </div>
-          <div className={`mt-4 rounded-md border p-4 ${customerTier.isRoyalVip && tierEnabled ? "border-yellow-300 bg-[#111827] text-white" : "border-[#E5E7EB] bg-[#FAFAFA] text-[#111827]"}`}>
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+
+          <div className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-4">
               <div>
-                <p className={`text-sm font-semibold ${customerTier.isRoyalVip && tierEnabled ? "text-yellow-200" : "text-[#F97316]"}`}>
-                  Tier progress
-                </p>
-                <p className="mt-1 text-sm">
-                  {tierEnabled
-                    ? customerTier.nextTier
-                      ? `${customerTier.visitsRemaining} visit${customerTier.visitsRemaining === 1 ? "" : "s"} remaining to ${customerTier.nextTier}`
-                      : "Top Tier Member with exclusive rewards available"
-                    : "Customer tiers are disabled on Starter."}
-                </p>
+                <p className="text-sm font-semibold text-[#F97316]">Customer insights</p>
+                <h2 className="mt-1 text-xl font-semibold text-[#111827]">Owner-only details</h2>
               </div>
-              <p className="text-lg font-semibold">{tierEnabled ? `${customerTier.progressPercent}%` : "0%"}</p>
+              <Sparkles className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
             </div>
-            <div className={`mt-3 h-2 overflow-hidden rounded-full ${customerTier.isRoyalVip && tierEnabled ? "bg-white/15" : "bg-orange-100"}`}>
-              <div className={`h-full rounded-full ${customerTier.isRoyalVip && tierEnabled ? "bg-yellow-300" : "bg-[#F97316]"}`} style={{ width: `${tierEnabled ? customerTier.progressPercent : 0}%` }} />
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <InsightMetric icon={Crown} label="Current tier" value={tierEnabled ? customerTier.tier : "Disabled"} />
+              <InsightMetric icon={CreditCard} label="Lifetime spend" value={`AED ${lifetimeSpend.toFixed(2)}`} />
+              <InsightMetric icon={Sparkles} label="Criteria used" value={tierEnabled ? customerTierCriteriaLabels[customerTier.criteria] : "Starter plan"} />
+              <InsightMetric icon={Gift} label="Rewards redeemed" value={rewardRedemptions.length.toString()} />
+              <InsightMetric icon={Gift} label="Bonus stamps" value={totalBonusStamps.toString()} />
+              <InsightMetric icon={Users} label="Active programs" value={activePrograms.toString()} />
+              <InsightMetric icon={CalendarDays} label="Customer since" value={formatDate(membership.joinedAt)} />
+            </div>
+            <div className={`mt-4 rounded-md border p-4 ${customerTier.isRoyalVip && tierEnabled ? "border-yellow-300 bg-[#111827] text-white" : "border-[#E5E7EB] bg-[#FAFAFA] text-[#111827]"}`}>
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className={`text-sm font-semibold ${customerTier.isRoyalVip && tierEnabled ? "text-yellow-200" : "text-[#F97316]"}`}>
+                    Tier progress
+                  </p>
+                  <p className="mt-1 text-sm">
+                    {tierEnabled
+                      ? customerTier.nextTier
+                        ? `${customerTier.visitsRemaining} visit${customerTier.visitsRemaining === 1 ? "" : "s"} remaining to ${customerTier.nextTier}`
+                        : "Top Tier Member with exclusive rewards available"
+                      : "Customer tiers are disabled on Starter."}
+                  </p>
+                </div>
+                <p className="text-lg font-semibold">{tierEnabled ? `${customerTier.progressPercent}%` : "0%"}</p>
+              </div>
+              <div className={`mt-3 h-2 overflow-hidden rounded-full ${customerTier.isRoyalVip && tierEnabled ? "bg-white/15" : "bg-orange-100"}`}>
+                <div className={`h-full rounded-full ${customerTier.isRoyalVip && tierEnabled ? "bg-yellow-300" : "bg-[#F97316]"}`} style={{ width: `${tierEnabled ? customerTier.progressPercent : 0}%` }} />
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
-      <section id="programs" className="scroll-mt-24 grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
-        <CustomerCardPanel
-          cardUrl={cardUrl}
-          businessName={membership.business.name}
-          cardToken={membership.cardToken}
-          cardStatus={membership.cardStatus}
-          cardCreatedAt={membership.cardCreatedAt}
-          cardLastViewedAt={membership.cardLastViewedAt}
-          membershipUuid={membership.uuid}
-          nextCardStatus={nextCardStatus}
-        />
-        <LoyaltyProgramsPanel programCards={programCards} />
-      </section>
+      {activeTab === "loyalty" ? (
+        <section className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+          <CustomerCardPanel
+            cardUrl={cardUrl}
+            businessName={membership.business.name}
+            cardToken={membership.cardToken}
+            cardStatus={membership.cardStatus}
+            cardCreatedAt={membership.cardCreatedAt}
+            cardLastViewedAt={membership.cardLastViewedAt}
+            membershipUuid={membership.uuid}
+            nextCardStatus={nextCardStatus}
+          />
+          <LoyaltyProgramsPanel programCards={programCards} />
+        </section>
+      ) : null}
 
-      <section id="engagement" className="scroll-mt-24 rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+      {activeTab === "messages" ? (
+      <>
+      <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <p className="text-sm font-semibold text-[#F97316]">Engagement</p>
@@ -383,7 +402,7 @@ export default async function CustomerProfilePage({
         </div>
       </section>
 
-      <section id="messages" className="scroll-mt-24 rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+      <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <p className="text-sm font-semibold text-[#F97316]">Messages</p>
@@ -420,8 +439,12 @@ export default async function CustomerProfilePage({
           {messages.length === 0 ? <p className="text-sm text-[#6B7280]">No prepared messages for this customer.</p> : null}
         </div>
       </section>
+      </>
+      ) : null}
 
-      <section id="activity" className="scroll-mt-24 rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+      {activeTab === "activity" ? (
+      <>
+      <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-sm font-semibold text-[#F97316]">Activity timeline</p>
@@ -444,7 +467,7 @@ export default async function CustomerProfilePage({
         </div>
       </section>
 
-      <section id="redemptions" className="scroll-mt-24 rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+      <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <h2 className="text-lg font-semibold text-[#111827]">Stamp issuance history</h2>
         <div className="mt-5 overflow-x-auto">
           <table className="w-full min-w-[920px] border-separate border-spacing-0 text-left text-sm">
@@ -484,8 +507,11 @@ export default async function CustomerProfilePage({
           {stampTransactions.length === 0 ? <p className="py-8 text-center text-sm text-[#6B7280]">No stamp issuance history yet.</p> : null}
         </div>
       </section>
+      </>
+      ) : null}
 
-      <section id="alerts" className="scroll-mt-24 rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+      {activeTab === "redemptions" ? (
+      <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <h2 className="text-lg font-semibold text-[#111827]">Redemption History</h2>
         <div className="mt-5 overflow-x-auto">
           <table className="w-full min-w-[760px] border-separate border-spacing-0 text-left text-sm">
@@ -511,7 +537,34 @@ export default async function CustomerProfilePage({
           {rewardRedemptions.length === 0 ? <p className="py-8 text-center text-sm text-[#6B7280]">No reward redemptions yet.</p> : null}
         </div>
       </section>
+      ) : null}
 
+      {activeTab === "alerts" ? (
+      <>
+      <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-[#F97316]">Customer risk summary</p>
+            <h2 className="mt-1 text-xl font-semibold text-[#111827]">Open alert exposure</h2>
+          </div>
+          <AlertTriangle className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+        </div>
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <RiskMetric label="Open High Alerts" value={openHighAlerts} tone="high" />
+          <RiskMetric label="Open Medium Alerts" value={openMediumAlerts} tone="medium" />
+          <RiskMetric label="Open Low Alerts" value={openLowAlerts} tone="low" />
+        </div>
+        <div className="mt-4 flex flex-col gap-3 rounded-md border border-[#E5E7EB] p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm text-[#6B7280]">Last Alert Date</p>
+            <p className="mt-1 text-sm font-semibold text-[#111827]">{lastAlertDate ? formatDateTime(lastAlertDate) : "-"}</p>
+          </div>
+          <Link href="/dashboard/notifications" className="inline-flex items-center justify-center gap-2 rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">
+            <Bell className="h-4 w-4" aria-hidden="true" />
+            Review Open Alerts
+          </Link>
+        </div>
+      </section>
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <h2 className="text-lg font-semibold text-[#111827]">Generated alerts history</h2>
         <div className="mt-5 grid gap-3">
@@ -541,7 +594,157 @@ export default async function CustomerProfilePage({
           {generatedAlerts.length === 0 ? <p className="text-sm text-[#6B7280]">No generated alerts for this customer.</p> : null}
         </div>
       </section>
+      </>
+      ) : null}
+
+      {activeTab === "referrals" ? (
+        <ReferralSummaryPanel membershipUuid={membership.uuid} referralCode={membership.referralCode} />
+      ) : null}
     </DashboardShell>
+  );
+}
+
+function KpiCard({ icon: Icon, label, value, tone = "default" }: { icon: LucideIcon; label: string; value: string; tone?: "default" | "alert" }) {
+  return (
+    <div className={`rounded-md border p-4 shadow-sm ${tone === "alert" ? "border-orange-200 bg-orange-50" : "border-[#E5E7EB] bg-white"}`}>
+      <Icon className={`h-5 w-5 ${tone === "alert" ? "text-orange-700" : "text-[#F97316]"}`} aria-hidden="true" />
+      <p className="mt-3 text-sm text-[#6B7280]">{label}</p>
+      <p className="mt-1 text-xl font-semibold text-[#111827]">{value}</p>
+    </div>
+  );
+}
+
+function TabLink({ href, label, active }: { href: string; label: string; active: boolean }) {
+  return (
+    <Link
+      href={href}
+      className={`shrink-0 rounded-md border px-3 py-2 font-semibold transition ${
+        active ? "border-[#F97316] bg-orange-50 text-[#F97316]" : "border-[#E5E7EB] text-[#111827] hover:border-[#F97316] hover:text-[#F97316]"
+      }`}
+    >
+      {label}
+    </Link>
+  );
+}
+
+function ProfileSummaryCard({
+  membership,
+  customer,
+}: {
+  membership: Awaited<ReturnType<typeof getBusinessCustomerOrRedirect>>;
+  customer: Awaited<ReturnType<typeof getBusinessCustomerOrRedirect>>["globalCustomer"];
+}) {
+  return (
+    <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold text-[#F97316]">Profile summary</p>
+          <h2 className="mt-1 text-xl font-semibold text-[#111827]">Member details</h2>
+        </div>
+        <UserRound className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+      </div>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <Info label="Email" value={customer.email ?? "-"} />
+        <Info label="Customer since" value={formatDate(membership.joinedAt)} />
+        <Info label="Card issued branch" value={membership.createdBranch?.name ?? "-"} />
+        <Info label="Card issued by" value={membership.createdByUser?.name ?? "-"} />
+      </div>
+    </section>
+  );
+}
+
+function LoyaltyOverviewPanel({
+  programCards,
+}: {
+  programCards: Array<{
+    programMembership: Awaited<ReturnType<typeof getBusinessCustomerOrRedirect>>["programMemberships"][number];
+    scanUrl: string;
+    qrCode: string;
+    nextScanStatus: string;
+    membershipUuid: string;
+  }>;
+}) {
+  const visiblePrograms = programCards.slice(0, 3);
+  return (
+    <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold text-[#F97316]">Active loyalty progress</p>
+          <h2 className="mt-1 text-xl font-semibold text-[#111827]">Programs</h2>
+        </div>
+        <Link href="?tab=loyalty" className="text-sm font-semibold text-[#F97316]">View loyalty tab</Link>
+      </div>
+      <div className="mt-5 grid gap-3">
+        {visiblePrograms.map(({ programMembership }) => {
+          const progress = progressValue(programMembership.earnedStamps, programMembership.bonusStamps);
+          const required = programMembership.loyaltyProgram.requiredStamps;
+          const progressPercent = Math.min(100, Math.round((progress / required) * 100));
+          const isRewardReady = progress >= required && programMembership.status !== "COMPLETED";
+          return (
+            <article key={programMembership.id} className="rounded-md border border-[#E5E7EB] p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-semibold text-[#111827]">{programMembership.loyaltyProgram.name}</p>
+                  <p className="mt-1 text-sm text-[#6B7280]">Reward: {programMembership.loyaltyProgram.rewardName}</p>
+                </div>
+                {isRewardReady ? <span className="rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">Reward Ready</span> : null}
+              </div>
+              <div className="mt-4 flex items-center justify-between text-sm">
+                <span className="font-semibold text-[#111827]">{progress} / {required}</span>
+                <span className="text-[#6B7280]">{progressPercent}%</span>
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-orange-100">
+                <div className="h-full rounded-full bg-[#F97316]" style={{ width: `${progressPercent}%` }} />
+              </div>
+            </article>
+          );
+        })}
+        {programCards.length === 0 ? <p className="text-sm text-[#6B7280]">No program enrollments yet.</p> : null}
+      </div>
+    </section>
+  );
+}
+
+function LatestActivityPreview({ items, customerUuid }: { items: TimelineItem[]; customerUuid: string }) {
+  return (
+    <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold text-[#F97316]">Latest activity</p>
+          <h2 className="mt-1 text-xl font-semibold text-[#111827]">Recent movement</h2>
+        </div>
+        <Link href={`/dashboard/customers/${customerUuid}?tab=activity`} className="text-sm font-semibold text-[#F97316]">View all</Link>
+      </div>
+      <div className="mt-5 grid gap-3">
+        {items.map((item) => (
+          <TimelineRow key={item.id} item={item} compact />
+        ))}
+        {items.length === 0 ? <p className="text-sm text-[#6B7280]">No activity yet.</p> : null}
+      </div>
+    </section>
+  );
+}
+
+function ReferralSummaryPanel({ membershipUuid, referralCode }: { membershipUuid: string; referralCode: string | null }) {
+  return (
+    <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-[#F97316]">Referrals</p>
+          <h2 className="mt-1 text-xl font-semibold text-[#111827]">Referral investigation</h2>
+          <p className="mt-2 text-sm leading-6 text-[#6B7280]">
+            Referral performance is managed in the Referral Center. Use the referral code to filter this customer's referral activity.
+          </p>
+        </div>
+        <Link href={`/dashboard/referrals?search=${encodeURIComponent(referralCode ?? membershipUuid)}`} className="rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">
+          Open Referral Center
+        </Link>
+      </div>
+      <div className="mt-5 grid gap-3 md:grid-cols-2">
+        <Info label="Referral code" value={referralCode ?? "-"} />
+        <Info label="Customer profile" value={membershipUuid} />
+      </div>
+    </section>
   );
 }
 
@@ -690,10 +893,10 @@ function LoyaltyProgramsPanel({
   );
 }
 
-function TimelineRow({ item }: { item: TimelineItem }) {
+function TimelineRow({ item, compact = false }: { item: TimelineItem; compact?: boolean }) {
   const Icon = item.icon;
   return (
-    <div className={`rounded-md border p-4 ${item.highlighted ? "border-[#F97316] bg-orange-50" : "border-[#E5E7EB] bg-white"}`}>
+    <div className={`rounded-md border ${compact ? "p-3" : "p-4"} ${item.highlighted ? "border-[#F97316] bg-orange-50" : "border-[#E5E7EB] bg-white"}`}>
       <div className="flex gap-3">
         <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md ${item.tone === "alert" ? "bg-red-50 text-red-600" : item.tone === "success" ? "bg-emerald-50 text-emerald-700" : "bg-orange-50 text-[#F97316]"}`}>
           <Icon className="h-4 w-4" aria-hidden="true" />
@@ -803,4 +1006,10 @@ function startOfDay(value: Date) {
   const date = new Date(value);
   date.setHours(0, 0, 0, 0);
   return date;
+}
+
+function resolveCustomerTab(tab: string | undefined, hasReferralTab: boolean) {
+  const allowed = ["overview", "profile", "loyalty", "activity", "alerts", "messages", "redemptions"];
+  if (hasReferralTab) allowed.push("referrals");
+  return allowed.includes(tab ?? "") ? tab! : "overview";
 }
