@@ -1,7 +1,7 @@
 "use client";
 
 import jsQR from "jsqr";
-import { Camera, CheckCircle2, ClipboardType, RotateCcw, ShieldAlert, Square, Video, Zap } from "lucide-react";
+import { Camera, ClipboardType, RotateCcw, Square, Video, Zap } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -281,19 +281,6 @@ export function CameraScanner({ backHref }: { backHref: string }) {
         </div>
       ) : null}
 
-      <div className="mt-4 grid gap-2 sm:grid-cols-3">
-        <ScannerStatus label="Camera permission pending" active={scannerState === "permission-pending"} />
-        <ScannerStatus label="Camera active" active={scannerState === "camera-active"} positive />
-        <ScannerStatus label="Camera blocked" active={scannerState === "camera-blocked"} danger />
-        <ScannerStatus label="Native BarcodeDetector unavailable" active={scannerState === "qr-fallback"} />
-        <ScannerStatus label="Browser QR fallback active" active={scannerState === "qr-fallback"} positive />
-        <ScannerStatus label="No camera found" active={scannerState === "no-camera"} danger />
-        <ScannerStatus label="Using manual entry fallback" active={scannerState === "manual-fallback" || scannerState === "barcode-unsupported"} />
-        <ScannerStatus label="Scan detected" active={scannerState === "scan-detected"} positive />
-        <ScannerStatus label="Scan failed" active={scannerState === "scan-failed"} danger />
-        <ScannerStatus label="HTTPS or localhost ready" active={typeof window !== "undefined" ? isLocalOrSecure() : true} positive />
-      </div>
-
       <div className="mt-5 overflow-hidden rounded-md border border-[#111827] bg-[#111827]">
         <video ref={videoRef} className="aspect-[3/4] w-full object-cover sm:aspect-video" muted playsInline />
       </div>
@@ -337,30 +324,5 @@ export function CameraScanner({ backHref }: { backHref: string }) {
         </p>
       </div>
     </section>
-  );
-}
-
-function ScannerStatus({
-  label,
-  active,
-  positive = false,
-  danger = false,
-}: {
-  label: string;
-  active: boolean;
-  positive?: boolean;
-  danger?: boolean;
-}) {
-  const activeClass = danger
-    ? "border-red-200 bg-red-50 text-red-700"
-    : positive
-      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-      : "border-orange-200 bg-orange-50 text-[#9A3412]";
-
-  return (
-    <div className={`flex min-h-10 items-center gap-2 rounded-md border px-3 text-xs font-semibold ${active ? activeClass : "border-[#E5E7EB] bg-[#FAFAFA] text-[#6B7280]"}`}>
-      {danger ? <ShieldAlert className="h-3.5 w-3.5" aria-hidden="true" /> : <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />}
-      {label}
-    </div>
   );
 }

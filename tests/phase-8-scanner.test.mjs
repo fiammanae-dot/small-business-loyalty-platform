@@ -27,22 +27,15 @@ test("camera scanner supports camera controls, manual paste, and safe invalid QR
     "Invalid loyalty QR code.",
     "This QR code is not a LoyaltyBase customer card.",
     "Camera access is required to scan customer cards.",
-    "Camera permission pending",
-    "Camera active",
-    "Camera blocked",
-    "Native BarcodeDetector unavailable",
-    "Browser QR fallback active",
     "Camera active. Using browser-compatible QR scanning for this device.",
-    "No camera found",
-    "Using manual entry fallback",
-    "Scan detected",
-    "Scan failed",
-    "HTTPS or localhost ready",
     "LoyaltyBase scanner camera error",
     "router.push(`/scan/${encodeURIComponent(result.token)}`)",
   ]) {
     assert.match(scanner, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }
+
+  assert.doesNotMatch(scanner, /function ScannerStatus/);
+  assert.doesNotMatch(scanner, /<ScannerStatus/);
 });
 
 test("scan result page keeps validation flow and improves scan experience", () => {
