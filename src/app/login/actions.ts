@@ -45,6 +45,7 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
     passwordHash: string;
     role: UserRole;
     status: RecordStatus;
+    forcePasswordChange: boolean;
   } | null;
 
   try {
@@ -56,6 +57,7 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
         passwordHash: true,
         role: true,
         status: true,
+        forcePasswordChange: true,
       },
     });
   } catch (error) {
@@ -82,6 +84,10 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
     return { error: INVALID_LOGIN_MESSAGE };
   }
 
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { lastLoginAt: new Date() },
+  });
   await createSession({ id: user.id, role: user.role });
-  redirect(roleHomePath[user.role]);
+  redirect(user.forcePasswordChange ? "/change-password" : roleHomePath[user.role]);
 }

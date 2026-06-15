@@ -1,6 +1,7 @@
 "use server";
 
 import bcrypt from "bcryptjs";
+import { randomInt } from "crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -48,6 +49,10 @@ const staffSchema = z.object({
   password: z.string().min(8, "Staff password is required."),
   role: z.enum(["BRANCH_MANAGER", "STAFF"]),
   branchId: z.coerce.number().int().positive("Assigned branch is required."),
+});
+
+const staffPasswordResetSchema = z.object({
+  staffUserId: z.coerce.number().int().positive("Staff user not found."),
 });
 
 const cooldownRuleSchema = z.object({
@@ -105,6 +110,27 @@ function validateActionSecurity(formData: FormData, scope: string, path: string)
   } catch {
     fail(path, "Security check failed. Please refresh and try again.");
   }
+}
+
+function generateTemporaryPassword() {
+  const groups = [
+    "ABCDEFGHJKLMNPQRSTUVWXYZ",
+    "abcdefghijkmnopqrstuvwxyz",
+    "23456789",
+    "!@#$%^&*",
+  ];
+  const allCharacters = groups.join("");
+  const characters = [
+    ...groups.map((group) => group[randomInt(group.length)]),
+    ...Array.from({ length: 12 }, () => allCharacters[randomInt(allCharacters.length)]),
+  ];
+
+  for (let index = characters.length - 1; index > 0; index -= 1) {
+    const swapIndex = randomInt(index + 1);
+    [characters[index], characters[swapIndex]] = [characters[swapIndex], characters[index]];
+  }
+
+  return characters.join("");
 }
 
 export async function updateBusinessProfileAction(formData: FormData) {
@@ -337,6 +363,88 @@ export async function toggleStaffStatusAction(formData: FormData) {
   });
 
   revalidatePath("/dashboard/staff");
+}
+
+export type StaffPasswordResetState = {
+  error?: string;
+  temporaryPassword?: string;
+  targetName?: string;
+  targetEmail?: string;
+};
+
+export async function resetStaffPasswordAction(
+  _state: StaffPasswordResetState,
+  formData: FormData,
+): Promise<StaffPasswordResetState> {
+  try {
+    validateCsrfForm(formData, "dashboard:staff");
+  } catch {
+    return { error: "Security check failed. Please refresh and try again." };
+  }
+
+  const owner = await requireBusinessOwner();
+  const parsed = staffPasswordResetSchema.safeParse({
+    staffUserId: getString(formData, "staffUserId"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Staff user not found." };
+  }
+
+  const staffUser = await prisma.user.findFirst({
+    where: {
+      id: parsed.data.staffUserId,
+      businessId: owner.businessId,
+      role: { in: ["BRANCH_MANAGER", "STAFF"] },
+    },
+    select: { id: true, name: true, email: true, role: true, branchId: true },
+  });
+
+  if (!staffUser) {
+    return { error: "Only Branch Managers and Staff Users in your business can be reset." };
+  }
+
+  const temporaryPassword = generateTemporaryPassword();
+  const passwordHash = await bcrypt.hash(temporaryPassword, 12);
+  const changedAt = new Date();
+
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({
+      where: { id: staffUser.id },
+      data: {
+        passwordHash,
+        forcePasswordChange: true,
+        passwordChangedAt: changedAt,
+        sessionVersion: { increment: 1 },
+      },
+    });
+
+    await logAuditEvent({
+      tx,
+      actorUserId: owner.id,
+      businessId: owner.businessId,
+      branchId: staffUser.branchId,
+      action: "STAFF_PASSWORD_RESET",
+      entityType: "user",
+      entityId: staffUser.id,
+      metadata: {
+        targetRole: staffUser.role,
+        targetEmail: staffUser.email,
+        forcedLogout: true,
+        forcePasswordChange: true,
+        temporaryPasswordDisplayedOnce: true,
+      },
+    });
+  });
+
+  revalidatePath("/dashboard/staff");
+  revalidatePath(`/dashboard/staff/${staffUser.id}`);
+
+  return {
+    temporaryPassword,
+    targetName: staffUser.name,
+    targetEmail: staffUser.email,
+  };
 }
 
 export async function updateBrandingAction() {

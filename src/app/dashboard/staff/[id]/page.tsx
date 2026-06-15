@@ -67,6 +67,14 @@ export default async function StaffDetailPage({
 
   if (!staffUser) notFound();
 
+  const failedLoginAttempts = await prisma.failedLoginAudit.count({
+    where: {
+      emailAttempted: staffUser.email,
+      outcome: { in: ["FAILED", "LOCKED"] },
+      createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+    },
+  });
+
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Staff profile">
       <div>
@@ -83,6 +91,16 @@ export default async function StaffDetailPage({
           <Info label="Branch" value={staffUser.branch?.name ?? "-"} />
           <Info label="Status" value={<StatusBadge status={staffUser.status} />} />
           <Info label="Created" value={formatDateTime(staffUser.createdAt)} />
+        </div>
+      </section>
+
+      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
+        <h2 className="text-lg font-semibold text-[#111827]">Account security</h2>
+        <div className="mt-4 grid gap-4 md:grid-cols-4">
+          <Info label="Last login" value={staffUser.lastLoginAt ? formatDateTime(staffUser.lastLoginAt) : "-"} />
+          <Info label="Password last changed" value={formatDateTime(staffUser.passwordChangedAt)} />
+          <Info label="Failed login attempts (24h)" value={failedLoginAttempts} />
+          <Info label="Password change required" value={staffUser.forcePasswordChange ? "Yes" : "No"} />
         </div>
       </section>
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const protectedPrefixes = ["/dashboard", "/platform", "/branch", "/staff", "/scan"];
+const protectedPrefixes = ["/dashboard", "/platform", "/branch", "/staff", "/scan", "/change-password"];
 
 function applyNoStoreHeaders(response: NextResponse) {
   response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
@@ -22,5 +22,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/platform/:path*", "/branch/:path*", "/staff/:path*", "/scan/:path*"],
+  matcher: ["/dashboard/:path*", "/platform/:path*", "/branch/:path*", "/staff/:path*", "/scan/:path*", "/change-password"],
 };

@@ -27,6 +27,7 @@ export type AuthUser = {
   role: UserRole;
   businessId: number | null;
   branchId: number | null;
+  forcePasswordChange: boolean;
 };
 
 function base64UrlEncode(value: string) {
@@ -157,6 +158,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
         email: true,
         role: true,
         sessionVersion: true,
+        forcePasswordChange: true,
         businessId: true,
         branchId: true,
       },
@@ -174,6 +176,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       role: user.role,
       businessId: user.businessId,
       branchId: user.branchId,
+      forcePasswordChange: user.forcePasswordChange,
     };
   } catch (error) {
     console.error("Session database lookup failed", error);
@@ -190,6 +193,10 @@ export async function requireRole(role: UserRole) {
 
   if (user.role !== role) {
     redirect(roleHomePath[user.role]);
+  }
+
+  if (user.forcePasswordChange) {
+    redirect("/change-password");
   }
 
   return user;

@@ -56,11 +56,13 @@ test("protected app routes emit no-store cache headers", () => {
     '"/branch"',
     '"/staff"',
     '"/scan"',
+    '"/change-password"',
     '"/dashboard/:path*"',
     '"/platform/:path*"',
     '"/branch/:path*"',
     '"/staff/:path*"',
     '"/scan/:path*"',
+    '"/change-password"',
   ]) {
     assert.match(proxy, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }

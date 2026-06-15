@@ -9,6 +9,7 @@ export const devFallbackUser: AuthUser = {
   role: "PLATFORM_OWNER",
   businessId: null,
   branchId: null,
+  forcePasswordChange: false,
 };
 
 export function isDevAuthFallbackEnabled() {

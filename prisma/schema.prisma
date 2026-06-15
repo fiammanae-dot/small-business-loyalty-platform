@@ -197,6 +197,9 @@ model User {
   email        String       @unique
   passwordHash String       @map("password_hash")
   sessionVersion Int        @default(1) @map("session_version")
+  forcePasswordChange Boolean @default(false) @map("force_password_change")
+  passwordChangedAt DateTime @default(now()) @map("password_changed_at")
+  lastLoginAt  DateTime?    @map("last_login_at")
   role         UserRole
   businessId   Int?         @map("business_id")
   branchId     Int?         @map("branch_id")

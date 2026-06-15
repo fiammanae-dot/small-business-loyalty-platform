@@ -2,9 +2,12 @@ import { DashboardShell } from "@/components/DashboardShell";
 import Link from "next/link";
 import { CsrfInput } from "@/components/CsrfInput";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
+import { StaffPasswordResetAction } from "@/components/StaffPasswordResetAction";
 import { StatusBadge } from "@/components/StatusBadge";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
+import { createCsrfToken } from "@/lib/csrf";
 import { formatDate } from "@/lib/format";
+import { prisma } from "@/lib/prisma";
 import { roleLabels } from "@/lib/roles";
 import { createStaffUserAction, toggleStaffStatusAction } from "@/app/dashboard/actions";
 
@@ -15,6 +18,21 @@ export default async function StaffUsersPage({
 }) {
   const { user, business } = await getBusinessOwnerContext();
   const params = await searchParams;
+  const resetCsrfToken = createCsrfToken("dashboard:staff");
+  const staffEmails = business.users.map((staffUser) => staffUser.email);
+  const failedSince = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const failedLoginCounts = staffEmails.length
+    ? await prisma.failedLoginAudit.groupBy({
+        by: ["emailAttempted"],
+        where: {
+          emailAttempted: { in: staffEmails },
+          outcome: { in: ["FAILED", "LOCKED"] },
+          createdAt: { gte: failedSince },
+        },
+        _count: { _all: true },
+      })
+    : [];
+  const failedAttemptsByEmail = new Map(failedLoginCounts.map((item) => [item.emailAttempted, item._count._all]));
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Staff users">
@@ -59,7 +77,7 @@ export default async function StaffUsersPage({
           <table className="w-full min-w-[860px] border-separate border-spacing-0 text-left text-sm">
             <thead>
               <tr className="text-[#6B7280]">
-                {["Name", "Email", "Role", "Branch", "Status", "Created", "Actions"].map((heading) => (
+                {["Name", "Email", "Role", "Branch", "Status", "Security", "Created", "Actions"].map((heading) => (
                   <th key={heading} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">{heading}</th>
                 ))}
               </tr>
@@ -78,16 +96,25 @@ export default async function StaffUsersPage({
                     <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{roleLabels[staffUser.role]}</td>
                     <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{staffUser.branch?.name ?? "-"}</td>
                     <td className="border-b border-[#E5E7EB] px-3 py-4"><StatusBadge status={staffUser.status} /></td>
+                    <td className="border-b border-[#E5E7EB] px-3 py-4 text-xs text-[#6B7280]">
+                      <p>Last login: {staffUser.lastLoginAt ? formatDate(staffUser.lastLoginAt) : "-"}</p>
+                      <p>Password changed: {formatDate(staffUser.passwordChangedAt)}</p>
+                      <p>Failed attempts 24h: {failedAttemptsByEmail.get(staffUser.email) ?? 0}</p>
+                      {staffUser.forcePasswordChange ? <p className="font-semibold text-[#F97316]">Password change required</p> : null}
+                    </td>
                     <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(staffUser.createdAt)}</td>
                     <td className="border-b border-[#E5E7EB] px-3 py-4">
-                      <form action={toggleStaffStatusAction}>
-                        <CsrfInput scope="dashboard:staff" />
-                        <input type="hidden" name="staffUserId" value={staffUser.id} />
-                        <input type="hidden" name="nextStatus" value={nextStatus} />
-                        <button type="submit" className="text-sm font-semibold text-[#F97316]">
-                          {nextStatus === "ACTIVE" ? "Enable" : "Disable"}
-                        </button>
-                      </form>
+                      <div className="flex flex-col gap-2">
+                        <StaffPasswordResetAction staffUserId={staffUser.id} staffName={staffUser.name} csrfToken={resetCsrfToken} />
+                        <form action={toggleStaffStatusAction}>
+                          <CsrfInput scope="dashboard:staff" />
+                          <input type="hidden" name="staffUserId" value={staffUser.id} />
+                          <input type="hidden" name="nextStatus" value={nextStatus} />
+                          <button type="submit" className="text-sm font-semibold text-[#F97316]">
+                            {nextStatus === "ACTIVE" ? "Enable" : "Disable"}
+                          </button>
+                        </form>
+                      </div>
                     </td>
                   </tr>
                 );
