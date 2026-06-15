@@ -169,7 +169,7 @@ export default async function ScanResultPage({
   const cardNumber = businessMembership.cardToken.length > 12 ? `${businessMembership.cardToken.slice(0, 8)}...${businessMembership.cardToken.slice(-4)}` : businessMembership.cardToken;
 
   return (
-    <DashboardShell user={authUser} eyebrow={roleEyebrow(authUser.role)} title="Scan result">
+    <DashboardShell user={authUser} eyebrow={roleEyebrow(authUser.role)} title="Scan result" hideWelcomeMessage>
       <ScanStatusBanner tone="green" title="Valid Customer" description="This loyalty QR belongs to your business and is ready for service." />
 
       {rewardReady ? (
@@ -183,6 +183,13 @@ export default async function ScanResultPage({
       {qs.error ? (
         <ScanStatusBanner tone="red" title="Action blocked" description={qs.error} />
       ) : null}
+
+      <StampIssuanceSection
+        token={token}
+        progress={progress}
+        requiredStamps={program.requiredStamps}
+        canOverrideCooldown={authUser.role !== "STAFF"}
+      />
 
       {issuedTransaction ? (
         <section className="rounded-md border border-emerald-200 bg-emerald-50 p-5">
@@ -290,65 +297,6 @@ export default async function ScanResultPage({
         </div>
       </section>
 
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
-        <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-[#F97316]">Stamp issuance</p>
-            <h2 className="mt-2 text-lg font-semibold text-[#111827]">Add earned stamps</h2>
-            <p className="mt-2 text-sm leading-6 text-[#6B7280]">Only earned stamps are updated. Bonus stamps remain unchanged.</p>
-          </div>
-          <div className="rounded-md border border-[#E5E7EB] bg-white p-3 text-sm text-[#6B7280]">
-            Current progress: <span className="font-semibold text-[#111827]">{progress} / {program.requiredStamps}</span>
-          </div>
-        </div>
-        <form action={issueStampAction} className="mt-6 grid gap-4 rounded-md border-2 border-orange-200 bg-orange-50 p-4 md:grid-cols-[minmax(260px,0.8fr)_1fr_auto] md:items-end">
-          <CsrfInput scope="scan:stamp" />
-          <IdempotencyInput scope="stamp" />
-          <input type="hidden" name="scanToken" value={token} />
-          <label className="grid gap-2 text-sm font-semibold text-[#111827]">
-            Stamp Quantity
-            <div className="grid grid-cols-5 gap-2">
-              {[1, 2, 3, 4, 5].map((quantity) => (
-                <label key={quantity} className="cursor-pointer">
-                  <input className="peer sr-only" type="radio" name="quantity" value={quantity} defaultChecked={quantity === 1} />
-                  <span className="flex min-h-12 items-center justify-center rounded-md border border-[#E5E7EB] bg-white text-sm font-semibold text-[#111827] transition peer-checked:border-[#F97316] peer-checked:bg-[#F97316] peer-checked:text-white">
-                    +{quantity}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </label>
-          <label className="grid gap-2 text-sm font-semibold text-[#111827]">
-            Reason for multiple stamps
-            <textarea
-              name="reason"
-              rows={3}
-              className="rounded-md border border-[#E5E7EB] px-3 py-2 text-sm font-normal outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
-              placeholder="Required for +2 to +5 stamps so managers can review unusual activity. Example: Customer purchased multiple items."
-            />
-          </label>
-          <button type="submit" className="h-12 rounded-md bg-[#F97316] px-6 text-base font-semibold text-white shadow-sm transition hover:bg-orange-600">
-            Add Stamp
-          </button>
-          {authUser.role !== "STAFF" ? (
-            <div className="rounded-md border border-orange-200 bg-white p-3 md:col-span-3">
-              <label className="flex items-center gap-2 text-sm font-semibold text-[#111827]">
-                <input type="checkbox" name="overrideCooldown" className="h-4 w-4 rounded border-[#E5E7EB]" />
-                Override cooldown rule
-              </label>
-              <label className="mt-3 grid gap-2 text-sm font-semibold text-[#111827]">
-                Override reason
-                <input
-                  name="overrideReason"
-                  className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm font-normal outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
-                  placeholder="Required when overriding a cooldown violation"
-                />
-              </label>
-            </div>
-          ) : null}
-        </form>
-      </section>
-
       {authUser.role !== "STAFF" ? (
         <section className={`rounded-md border p-5 ${rewardReady ? "border-emerald-200 bg-emerald-50" : "border-[#E5E7EB] bg-white"}`}>
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -400,7 +348,7 @@ function ScanMessage({
   description?: string;
 }) {
   return (
-    <DashboardShell user={user} eyebrow={roleEyebrow(user.role)} title="Scan result">
+    <DashboardShell user={user} eyebrow={roleEyebrow(user.role)} title="Scan result" hideWelcomeMessage>
       <ScanStatusBanner tone="red" title={title} description={description ?? "Ask the customer to show a current loyalty QR for this business."} />
     </DashboardShell>
   );
@@ -426,6 +374,79 @@ function ScanStatusBanner({
     <section className={`rounded-md border p-5 ${classes}`}>
       <h2 className="text-xl font-semibold">{title}</h2>
       <p className="mt-2 text-sm leading-6">{description}</p>
+    </section>
+  );
+}
+
+function StampIssuanceSection({
+  token,
+  progress,
+  requiredStamps,
+  canOverrideCooldown,
+}: {
+  token: string;
+  progress: number;
+  requiredStamps: number;
+  canOverrideCooldown: boolean;
+}) {
+  return (
+    <section className="rounded-md border-2 border-orange-200 bg-white p-5 shadow-sm">
+      <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-[#F97316]">Stamp issuance</p>
+          <h2 className="mt-2 text-lg font-semibold text-[#111827]">Add earned stamps</h2>
+          <p className="mt-2 text-sm leading-6 text-[#6B7280]">Only earned stamps are updated. Bonus stamps remain unchanged.</p>
+        </div>
+        <div className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3 text-sm text-[#6B7280]">
+          Current progress: <span className="font-semibold text-[#111827]">{progress} / {requiredStamps}</span>
+        </div>
+      </div>
+      <form action={issueStampAction} className="mt-6 grid gap-4 rounded-md border-2 border-orange-200 bg-orange-50 p-4 md:grid-cols-[minmax(260px,0.8fr)_1fr_auto] md:items-end">
+        <CsrfInput scope="scan:stamp" />
+        <IdempotencyInput scope="stamp" />
+        <input type="hidden" name="scanToken" value={token} />
+        <label className="grid gap-2 text-sm font-semibold text-[#111827]">
+          Stamp Quantity
+          <div className="grid grid-cols-5 gap-2">
+            {[1, 2, 3, 4, 5].map((quantity) => (
+              <label key={quantity} className="cursor-pointer">
+                <input className="peer sr-only" type="radio" name="quantity" value={quantity} defaultChecked={quantity === 1} />
+                <span className="flex min-h-12 items-center justify-center rounded-md border border-[#E5E7EB] bg-white text-sm font-semibold text-[#111827] transition peer-checked:border-[#F97316] peer-checked:bg-[#F97316] peer-checked:text-white">
+                  +{quantity}
+                </span>
+              </label>
+            ))}
+          </div>
+        </label>
+        <label className="grid gap-2 text-sm font-semibold text-[#111827]">
+          Reason for multiple stamps
+          <textarea
+            name="reason"
+            rows={3}
+            className="rounded-md border border-[#E5E7EB] px-3 py-2 text-sm font-normal outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+            placeholder="Required for +2 to +5 stamps so managers can review unusual activity. Example: Customer purchased multiple items."
+          />
+        </label>
+        <button type="submit" className="h-12 rounded-md bg-[#F97316] px-6 text-base font-semibold text-white shadow-sm transition hover:bg-orange-600">
+          Add Stamp
+        </button>
+        {canOverrideCooldown ? (
+          <div className="rounded-md border border-orange-200 bg-white p-3 md:col-span-3">
+            <label className="flex items-center gap-2 text-sm font-semibold text-[#111827]">
+              <input type="checkbox" name="overrideCooldown" className="h-4 w-4 rounded border-[#E5E7EB]" />
+              Override cooldown rule
+            </label>
+            <label className="mt-3 grid gap-2 text-sm font-semibold text-[#111827]">
+              Override reason
+              <input
+                name="overrideReason"
+                className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm font-normal outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+                placeholder="Required when overriding a cooldown violation"
+              />
+            </label>
+          </div>
+        ) : null}
+      </form>
     </section>
   );
 }

@@ -28,6 +28,7 @@ type DashboardShellProps = {
   eyebrow: string;
   children: ReactNode;
   headerAside?: ReactNode;
+  hideWelcomeMessage?: boolean;
 };
 
 const navItems = [
@@ -51,7 +52,7 @@ const platformNavItems: Array<{ href: string; label: string; icon: LucideIcon }>
   { href: "/platform/settings", label: "Settings", icon: Settings },
 ];
 
-export async function DashboardShell({ user, title, eyebrow, children, headerAside }: DashboardShellProps) {
+export async function DashboardShell({ user, title, eyebrow, children, headerAside, hideWelcomeMessage = false }: DashboardShellProps) {
   const demoModeEnabled = await isDemoModeEnabled();
   const displayName = getDisplayUserName(user);
 
@@ -124,9 +125,11 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
             <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#111827] sm:text-4xl">
               {title}
             </h1>
-            <p className="mt-2 max-w-2xl text-base leading-7 text-[#6B7280]">
-              Welcome, {displayName}. Use your workspace to manage the tools available to your role.
-            </p>
+            {!hideWelcomeMessage ? (
+              <p className="mt-2 max-w-2xl text-base leading-7 text-[#6B7280]">
+                Welcome, {displayName}. Use your workspace to manage the tools available to your role.
+              </p>
+            ) : null}
           </div>
           {headerAside ?? (
           <div className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
