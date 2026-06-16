@@ -4,7 +4,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import Link from "next/link";
 import { saveAbusePolicyAction, saveCooldownRuleAction, saveCustomerTierSettingsAction } from "@/app/dashboard/actions";
 import { getBusinessOwnerContext, getCurrentPlan, getCurrentSubscription } from "@/lib/business-owner";
-import { normalizeTierConfig } from "@/lib/customer-tiers";
+import { normalizeTierConfig, tierMaintenanceModeLabels, tierQualificationWindowLabels } from "@/lib/customer-tiers";
 import { formatDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { businessTypeLabels } from "@/lib/roles";
@@ -84,7 +84,7 @@ export default async function BusinessSettingsPage({
           <div>
             <h2 className="text-lg font-semibold text-[#111827]">Customer tiers</h2>
             <p className="mt-2 text-sm text-[#6B7280]">
-              Configure Bronze, Silver, Gold, and VIP visit thresholds. Tiers are available on every plan.
+              Configure visit-based Bronze, Silver, Gold, and VIP grades. Tiers are available on every plan.
             </p>
           </div>
           <span className="w-fit rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">
@@ -94,12 +94,41 @@ export default async function BusinessSettingsPage({
         <form action={saveCustomerTierSettingsAction} className="mt-5 grid gap-4">
           <CsrfInput scope="dashboard:customer-tiers" />
           <div className="grid gap-4 md:grid-cols-3">
-            <Input name="premiumVisits" label="Silver visits" type="number" min="0" defaultValue={tierConfig.premiumVisits.toString()} />
-            <Input name="eliteVisits" label="Gold visits" type="number" min="0" defaultValue={tierConfig.eliteVisits.toString()} />
-            <Input name="royalVipVisits" label="VIP visits" type="number" min="0" defaultValue={tierConfig.royalVipVisits.toString()} />
+            <label className="space-y-2">
+              <span className="text-sm font-medium text-[#111827]">Tier calculation method</span>
+              <select name="criteria" defaultValue="VISITS_ONLY" disabled className="h-11 w-full rounded-md border border-[#E5E7EB] bg-[#FAFAFA] px-3 text-sm text-[#6B7280]">
+                <option value="VISITS_ONLY">Visits only</option>
+              </select>
+            </label>
+            <label className="space-y-2">
+              <span className="text-sm font-medium text-[#111827]">Qualification window</span>
+              <select name="tierQualificationWindow" defaultValue={tierConfig.tierQualificationWindow} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100">
+                {Object.entries(tierQualificationWindowLabels).map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+            </label>
+            <label className="space-y-2">
+              <span className="text-sm font-medium text-[#111827]">Maintenance mode</span>
+              <select name="tierMaintenanceMode" defaultValue={tierConfig.tierMaintenanceMode} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100">
+                {Object.entries(tierMaintenanceModeLabels).map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+            </label>
           </div>
-          <p className="rounded-md bg-orange-50 px-3 py-2 text-sm text-[#9A3412]">
-            Bronze starts at 0 visits. Public customer cards show visit progress only and never show spend or internal analytics.
+          <div className="grid gap-4 md:grid-cols-3">
+            <Input name="silverVisitRequirement" label="Silver visit requirement" type="number" min="1" defaultValue={tierConfig.silverVisitRequirement.toString()} />
+            <Input name="goldVisitRequirement" label="Gold visit requirement" type="number" min="1" defaultValue={tierConfig.goldVisitRequirement.toString()} />
+            <Input name="vipVisitRequirement" label="VIP visit requirement" type="number" min="1" defaultValue={tierConfig.vipVisitRequirement.toString()} />
+          </div>
+          <div className="grid gap-3 rounded-md bg-orange-50 px-3 py-3 text-sm text-[#9A3412] md:grid-cols-3">
+            <p>Silver: {tierConfig.silverVisitRequirement} visits in {tierQualificationWindowLabels[tierConfig.tierQualificationWindow].toLowerCase()}</p>
+            <p>Gold: {tierConfig.goldVisitRequirement} visits in {tierQualificationWindowLabels[tierConfig.tierQualificationWindow].toLowerCase()}</p>
+            <p>VIP: {tierConfig.vipVisitRequirement} visits in {tierQualificationWindowLabels[tierConfig.tierQualificationWindow].toLowerCase()}</p>
+          </div>
+          <p className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] px-3 py-2 text-sm text-[#6B7280]">
+            Bronze is automatic when a customer joins. Public customer cards show visits, tier progress, rewards, and QR code only. Spend and internal analytics are never shown on the customer card.
           </p>
           <div>
             <button type="submit" className="h-11 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">

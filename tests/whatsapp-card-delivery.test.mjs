@@ -67,4 +67,8 @@ test("card delivery controls are available on registration success, profiles, li
   }
 
   assert.match(publicCard, /whatsappLabel="Share via WhatsApp"/);
+  assert.match(publicCard, /Save Your Card/);
+  assert.match(publicCard, /Last Updated:/);
+  assert.match(publicCard, /always shows your latest stamps, reward status, tier, and QR code/);
+  assert.match(customerList, /whatsappLabel="Send via WhatsApp"/);
 });

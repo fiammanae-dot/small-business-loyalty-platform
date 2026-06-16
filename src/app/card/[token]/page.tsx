@@ -17,7 +17,7 @@ import {
   resolveBranding,
 } from "@/lib/customer-cards";
 import { calculateCustomerTier } from "@/lib/customer-tiers";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
 import { businessTypeLabels } from "@/lib/roles";
@@ -65,7 +65,14 @@ export default async function PublicCustomerCardPage({
     })),
   );
   const primaryProgram = programCards[0] ?? null;
-  const [pendingReferrals, qualifiedReferrals, referralRewards, lifetimeVisits] = await Promise.all([
+  const lastUpdatedAt = [
+    membership.updatedAt,
+    membership.cardLastViewedAt,
+    ...membership.programMemberships.map((programMembership) => programMembership.updatedAt),
+  ]
+    .filter(Boolean)
+    .sort((a, b) => b!.getTime() - a!.getTime())[0] ?? membership.updatedAt;
+  const [pendingReferrals, qualifiedReferrals, referralRewards, visitEvents] = await Promise.all([
     prisma.referral.count({
       where: { businessId: membership.businessId, referrerMembershipId: membership.id, status: "PENDING" },
     }),
@@ -77,18 +84,25 @@ export default async function PublicCustomerCardPage({
       _sum: { bonusStamps: true },
       _count: { id: true },
     }),
-    prisma.stampTransaction.count({
+    prisma.stampTransaction.findMany({
       where: {
         businessId: membership.businessId,
         customerProgramMembership: { businessCustomerMembershipId: membership.id },
       },
+      select: { createdAt: true },
     }),
   ]);
   const tier = calculateCustomerTier({
-    visits: lifetimeVisits,
-    spend: 0,
+    visitEvents: visitEvents.map((visit) => visit.createdAt),
     config: membership.business.tierSetting,
+    achievedTier: membership.currentTier,
   });
+  if (membership.currentTier !== tier.storedTier) {
+    await prisma.businessCustomerMembership.update({
+      where: { id: membership.id },
+      data: { currentTier: tier.storedTier, tierUpdatedAt: new Date() },
+    });
+  }
 
   return (
     <main
@@ -139,6 +153,10 @@ export default async function PublicCustomerCardPage({
 
           <TierBadgePanel tier={tier} />
 
+          <div className="relative mt-4 rounded-2xl bg-white/15 px-4 py-3 text-sm font-semibold text-white ring-1 ring-white/20">
+            Last Updated: {formatDateTime(lastUpdatedAt)}
+          </div>
+
           {primaryProgram ? (
             <PrimaryRewardPanel
               programMembership={primaryProgram.programMembership}
@@ -158,10 +176,10 @@ export default async function PublicCustomerCardPage({
         <section className="rounded-3xl border border-[#E5E7EB] bg-white p-4 shadow-sm">
           <div className="flex items-center gap-2">
             <QrCode className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
-            <h2 className="text-base font-semibold text-[#111827]">Share your card</h2>
+            <h2 className="text-base font-semibold text-[#111827]">Save Your Card</h2>
           </div>
           <p className="mt-2 text-sm leading-6 text-[#6B7280]">
-            Save, copy, or share this card so staff can scan it when you visit.
+            This link stays the same and always shows your latest stamps, reward status, tier, and QR code.
           </p>
           <div className="mt-4">
             <CardShareActions
@@ -170,6 +188,7 @@ export default async function PublicCustomerCardPage({
               customerName={customerName}
               recipientPhone={customer.normalizedPhone}
               whatsappLabel="Share via WhatsApp"
+              showWallet={false}
               buttonColor={branding.buttonColor}
             />
           </div>
@@ -437,4 +456,5 @@ type ProgramMembershipView = {
     requiredStamps: number;
     rewardName: string;
   };
+  updatedAt: Date;
 };

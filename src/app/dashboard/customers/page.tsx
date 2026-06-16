@@ -123,6 +123,7 @@ export default async function CustomersPage({
                   customerName={membership.customerName}
                   recipientPhone={membership.globalCustomer.normalizedPhone}
                   auditMembershipUuid={membership.uuid}
+                  whatsappLabel="Send via WhatsApp"
                   showCopy={false}
                   showWallet={false}
                 />
@@ -165,6 +166,7 @@ export default async function CustomersPage({
                         customerName={membership.customerName}
                         recipientPhone={membership.globalCustomer.normalizedPhone}
                         auditMembershipUuid={membership.uuid}
+                        whatsappLabel="Send via WhatsApp"
                         showCopy={false}
                         showWallet={false}
                       />

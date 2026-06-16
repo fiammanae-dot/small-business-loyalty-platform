@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { CsrfInput } from "@/components/CsrfInput";
+import { IdleSessionTimeout } from "@/components/IdleSessionTimeout";
 import { isDemoModeEnabled } from "@/lib/platform-settings";
 import type { AuthUser } from "@/lib/session";
 import { getDisplayUserName, roleHomePath, roleLabels } from "@/lib/roles";
@@ -58,6 +59,7 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
 
   return (
     <div className="min-h-screen bg-white text-[#111827]">
+      <IdleSessionTimeout />
       <header className="border-b border-[#E5E7EB] bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-4">

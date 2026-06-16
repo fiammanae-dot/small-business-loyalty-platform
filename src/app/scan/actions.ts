@@ -6,6 +6,8 @@ import { requireActiveBranch, requireUsableSubscription } from "@/lib/commercial
 import { createAbuseAlert } from "@/lib/alert-engine";
 import { enforceStampCooldown } from "@/lib/cooldowns";
 import { validateCsrfForm } from "@/lib/csrf";
+import { createCustomerNotification } from "@/lib/customer-notifications";
+import { calculateCustomerTier, isTierUpgrade } from "@/lib/customer-tiers";
 import { createEngagementEventIfAllowed, createProgramEngagementEvents } from "@/lib/engagement";
 import { prisma } from "@/lib/prisma";
 import { progressValue } from "@/lib/programs";
@@ -231,7 +233,78 @@ export async function issueStampAction(formData: FormData) {
       });
     }
 
+    const previousProgress = progressValue(programMembership.earnedStamps, programMembership.bonusStamps);
     const updatedProgress = progressValue(updatedMembership.earnedStamps, updatedMembership.bonusStamps);
+    await createCustomerNotification({
+      tx,
+      businessId: user.businessId as number,
+      customerId: programMembership.businessCustomerMembershipId,
+      notificationType: "NEW_STAMP_EARNED",
+      metadata: {
+        quantity: data.quantity,
+        quantity_plural: data.quantity === 1 ? "" : "s",
+        programName: updatedMembership.loyaltyProgram.name,
+        rewardName: updatedMembership.loyaltyProgram.rewardName,
+        progress: updatedProgress,
+        required_stamps: updatedMembership.loyaltyProgram.requiredStamps,
+        branchName,
+      },
+    });
+
+    const [tierSetting, tierVisitEvents] = await Promise.all([
+      tx.customerTierSetting.findUnique({ where: { businessId: user.businessId as number } }),
+      tx.stampTransaction.findMany({
+        where: {
+          businessId: user.businessId as number,
+          customerProgramMembership: { businessCustomerMembershipId: programMembership.businessCustomerMembershipId },
+        },
+        select: { createdAt: true },
+      }),
+    ]);
+    const tier = calculateCustomerTier({
+      visitEvents: tierVisitEvents.map((visit) => visit.createdAt),
+      config: tierSetting,
+      achievedTier: businessMembership.currentTier,
+      now,
+    });
+    const upgradedTier = isTierUpgrade(businessMembership.currentTier, tier.tier);
+    if (businessMembership.currentTier !== tier.storedTier) {
+      await tx.businessCustomerMembership.update({
+        where: { id: programMembership.businessCustomerMembershipId },
+        data: { currentTier: tier.storedTier, tierUpdatedAt: now },
+      });
+    }
+    if (upgradedTier) {
+      await createCustomerNotification({
+        tx,
+        businessId: user.businessId as number,
+        customerId: programMembership.businessCustomerMembershipId,
+        notificationType: "TIER_UPGRADED",
+        metadata: {
+          tier_name: tier.badgeLabel,
+          qualifyingVisits: tier.qualifyingVisits,
+        },
+      });
+    }
+    if (
+      previousProgress < updatedMembership.loyaltyProgram.requiredStamps &&
+      updatedProgress >= updatedMembership.loyaltyProgram.requiredStamps
+    ) {
+      await createCustomerNotification({
+        tx,
+        businessId: user.businessId as number,
+        customerId: programMembership.businessCustomerMembershipId,
+        notificationType: "REWARD_AVAILABLE",
+        metadata: {
+          programName: updatedMembership.loyaltyProgram.name,
+          reward_name: updatedMembership.loyaltyProgram.rewardName,
+          rewardName: updatedMembership.loyaltyProgram.rewardName,
+          progress: updatedProgress,
+          required_stamps: updatedMembership.loyaltyProgram.requiredStamps,
+        },
+      });
+    }
+
     await qualifyReferralFromFirstStamp({
       tx,
       businessId: user.businessId as number,

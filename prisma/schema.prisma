@@ -168,6 +168,20 @@ enum MessageDeliveryStatus {
   FAILED
 }
 
+enum CustomerNotificationType {
+  NEW_STAMP_EARNED
+  TIER_UPGRADED
+  REWARD_AVAILABLE
+  REFERRAL_REWARD_EARNED
+}
+
+enum CustomerNotificationDeliveryStatus {
+  READY
+  SENT_MANUALLY
+  CANCELLED
+  FAILED
+}
+
 enum ReferralStatus {
   PENDING
   QUALIFIED
@@ -191,8 +205,26 @@ enum ReferralEventType {
 
 enum CustomerTierCriteria {
   VISITS_ONLY
-  SPEND_ONLY
-  VISITS_AND_SPEND
+}
+
+enum CustomerTierQualificationWindow {
+  LIFETIME
+  DAYS_30
+  DAYS_60
+  DAYS_90
+  MONTHS_12
+}
+
+enum CustomerTierMaintenanceMode {
+  PERMANENT
+  DYNAMIC
+}
+
+enum CustomerTierName {
+  BRONZE
+  SILVER
+  GOLD
+  VIP
 }
 
 model User {
@@ -279,8 +311,10 @@ model Business {
   invoiceAuditLogs InvoiceAuditLog[]
   engagementEvents EngagementEvent[]
   messageTemplates MessageTemplate[]
+  customerNotificationTemplates CustomerNotificationTemplate[]
   communicationSettings BusinessCommunicationSettings?
   messageDeliveryQueue MessageDeliveryQueue[]
+  customerNotifications CustomerNotification[]
   referrals Referral[]
   referralRewards ReferralReward[]
   referralEvents ReferralEvent[]
@@ -293,17 +327,16 @@ model Business {
 }
 
 model CustomerTierSetting {
-  id                 Int                  @id @default(autoincrement())
-  businessId         Int                  @unique @map("business_id")
-  criteria           CustomerTierCriteria @default(VISITS_ONLY)
-  premiumVisits      Int                  @default(10) @map("premium_visits")
-  eliteVisits        Int                  @default(25) @map("elite_visits")
-  royalVipVisits     Int                  @default(50) @map("royal_vip_visits")
-  premiumSpend       Decimal              @default(0) @map("premium_spend") @db.Decimal(10, 2)
-  eliteSpend         Decimal              @default(0) @map("elite_spend") @db.Decimal(10, 2)
-  royalVipSpend      Decimal              @default(0) @map("royal_vip_spend") @db.Decimal(10, 2)
-  createdAt          DateTime             @default(now()) @map("created_at")
-  updatedAt          DateTime             @updatedAt @map("updated_at")
+  id                      Int                             @id @default(autoincrement())
+  businessId              Int                             @unique @map("business_id")
+  criteria                CustomerTierCriteria            @default(VISITS_ONLY)
+  tierQualificationWindow CustomerTierQualificationWindow @default(DAYS_90) @map("tier_qualification_window")
+  tierMaintenanceMode     CustomerTierMaintenanceMode     @default(DYNAMIC) @map("tier_maintenance_mode")
+  silverVisitRequirement  Int                             @default(5) @map("silver_visit_requirement")
+  goldVisitRequirement    Int                             @default(15) @map("gold_visit_requirement")
+  vipVisitRequirement     Int                             @default(30) @map("vip_visit_requirement")
+  createdAt               DateTime                        @default(now()) @map("created_at")
+  updatedAt               DateTime                        @updatedAt @map("updated_at")
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
@@ -532,6 +565,8 @@ model BusinessCustomerMembership {
   cardLastViewedAt DateTime?                @map("card_last_viewed_at")
   referralCode     String?                  @unique @map("referral_code")
   referralEnabled  Boolean                  @default(true) @map("referral_enabled")
+  currentTier      CustomerTierName         @default(BRONZE) @map("current_tier")
+  tierUpdatedAt    DateTime?                @map("tier_updated_at")
   notes            String?
   joinedAt         DateTime                 @default(now()) @map("joined_at")
   createdAt        DateTime                 @default(now()) @map("created_at")
@@ -544,6 +579,7 @@ model BusinessCustomerMembership {
   programMemberships CustomerProgramMembership[]
   engagementEvents EngagementEvent[]
   messageDeliveryQueue MessageDeliveryQueue[]
+  customerNotifications CustomerNotification[]
   referralsMade Referral[] @relation("ReferralReferrer")
   referralsReceived Referral[] @relation("ReferralReferredMembership")
 
@@ -904,6 +940,44 @@ model MessageTemplate {
 
   @@index([businessId, templateType, active])
   @@map("message_templates")
+}
+
+model CustomerNotificationTemplate {
+  id                 Int                      @id @default(autoincrement())
+  businessId         Int?                     @map("business_id")
+  notificationType   CustomerNotificationType @map("notification_type")
+  title              String
+  message            String
+  active             Boolean                  @default(true)
+  createdAt          DateTime                 @default(now()) @map("created_at")
+
+  business Business? @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, notificationType, active])
+  @@map("customer_notification_templates")
+}
+
+model CustomerNotification {
+  id                           Int                                @id @default(autoincrement())
+  uuid                         String                             @unique @default(uuid()) @db.Uuid
+  businessId                   Int                                @map("business_id")
+  businessCustomerMembershipId Int                                @map("business_customer_membership_id")
+  notificationType             CustomerNotificationType           @map("notification_type")
+  channel                      CommunicationChannel               @default(WHATSAPP)
+  title                        String
+  messageBody                  String                             @map("message_body")
+  deliveryStatus               CustomerNotificationDeliveryStatus @default(READY) @map("delivery_status")
+  metadata                     Json                               @default("{}")
+  createdAt                    DateTime                           @default(now()) @map("created_at")
+  updatedAt                    DateTime                           @updatedAt @map("updated_at")
+
+  business                   Business                   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessCustomerMembership BusinessCustomerMembership @relation(fields: [businessCustomerMembershipId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, notificationType, createdAt])
+  @@index([businessCustomerMembershipId, createdAt])
+  @@index([businessId, deliveryStatus, createdAt])
+  @@map("customer_notifications")
 }
 
 model BusinessCommunicationSettings {

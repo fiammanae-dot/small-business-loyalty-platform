@@ -4,6 +4,7 @@ import { randomBytes } from "crypto";
 import type { Prisma } from "@prisma/client";
 import { getBaseUrl } from "@/lib/customer-cards";
 import { logAuditEvent } from "@/lib/audit";
+import { createCustomerNotification } from "@/lib/customer-notifications";
 
 export function generateReferralCode() {
   return `ref_${randomBytes(18).toString("base64url")}`;
@@ -235,6 +236,18 @@ export async function qualifyReferralFromFirstStamp({
           bonusStamps,
           referrerProgramMembershipId: referrerProgramMembership.id,
         },
+      },
+    });
+    await createCustomerNotification({
+      tx,
+      businessId,
+      customerId: referral.referrerMembershipId,
+      notificationType: "REFERRAL_REWARD_EARNED",
+      metadata: {
+        loyaltyProgramId,
+        loyaltyProgramName: program.name,
+        bonus_stamps: bonusStamps,
+        bonus_plural: bonusStamps === 1 ? "" : "s",
       },
     });
     await logAuditEvent({

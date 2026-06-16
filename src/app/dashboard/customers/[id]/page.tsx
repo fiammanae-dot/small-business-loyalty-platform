@@ -160,10 +160,16 @@ export default async function CustomerProfilePage({
   const cancelledMessagesCount = messages.filter((message) => message.status === "CANCELLED").length;
   const lastMessageDate = messages[0]?.createdAt ?? null;
   const customerTier = calculateCustomerTier({
-    visits: stampTransactions.length,
-    spend: 0,
+    visitEvents: stampTransactions.map((transaction) => transaction.createdAt),
     config: business.tierSetting,
+    achievedTier: membership.currentTier,
   });
+  if (membership.currentTier !== customerTier.storedTier) {
+    await prisma.businessCustomerMembership.update({
+      where: { id: membership.id },
+      data: { currentTier: customerTier.storedTier, tierUpdatedAt: new Date() },
+    });
+  }
 
   const timeline: TimelineItem[] = [
     {
@@ -335,7 +341,7 @@ export default async function CustomerProfilePage({
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <InsightMetric icon={Crown} label="Current tier" value={`${customerTier.badgeIcon} ${customerTier.badgeLabel}`} />
-              <InsightMetric icon={History} label="Visits completed" value={stampTransactions.length.toString()} />
+              <InsightMetric icon={History} label="Visits completed" value={customerTier.qualifyingVisits.toString()} />
               <InsightMetric icon={Sparkles} label="Next tier" value={customerTier.nextTier ?? "Top tier"} />
               <InsightMetric icon={Gift} label="Rewards redeemed" value={rewardRedemptions.length.toString()} />
               <InsightMetric icon={Gift} label="Bonus stamps" value={totalBonusStamps.toString()} />

@@ -72,16 +72,18 @@ const abusePolicySchema = z.object({
 
 const customerTierSettingsSchema = z
   .object({
-    premiumVisits: z.coerce.number().int().min(0, "Silver visits cannot be negative."),
-    eliteVisits: z.coerce.number().int().min(0, "Gold visits cannot be negative."),
-    royalVipVisits: z.coerce.number().int().min(0, "VIP visits cannot be negative."),
+    tierQualificationWindow: z.enum(["LIFETIME", "DAYS_30", "DAYS_60", "DAYS_90", "MONTHS_12"]),
+    tierMaintenanceMode: z.enum(["PERMANENT", "DYNAMIC"]),
+    silverVisitRequirement: z.coerce.number().int().positive("Silver visits must be greater than 0."),
+    goldVisitRequirement: z.coerce.number().int().positive("Gold visits must be greater than 0."),
+    vipVisitRequirement: z.coerce.number().int().positive("VIP visits must be greater than 0."),
   })
   .superRefine((data, ctx) => {
-    if (data.eliteVisits < data.premiumVisits) {
-      ctx.addIssue({ code: "custom", path: ["eliteVisits"], message: "Gold visits must be greater than or equal to Silver visits." });
+    if (data.goldVisitRequirement <= data.silverVisitRequirement) {
+      ctx.addIssue({ code: "custom", path: ["goldVisitRequirement"], message: "Gold visits must be greater than Silver visits." });
     }
-    if (data.royalVipVisits < data.eliteVisits) {
-      ctx.addIssue({ code: "custom", path: ["royalVipVisits"], message: "VIP visits must be greater than or equal to Gold visits." });
+    if (data.vipVisitRequirement <= data.goldVisitRequirement) {
+      ctx.addIssue({ code: "custom", path: ["vipVisitRequirement"], message: "VIP visits must be greater than Gold visits." });
     }
   });
 
@@ -446,21 +448,22 @@ export async function saveCustomerTierSettingsAction(formData: FormData) {
   validateActionSecurity(formData, "dashboard:customer-tiers", "/dashboard/settings");
   const user = await requireBusinessOwner();
   const parsed = customerTierSettingsSchema.safeParse({
-    premiumVisits: getString(formData, "premiumVisits") || "10",
-    eliteVisits: getString(formData, "eliteVisits") || "25",
-    royalVipVisits: getString(formData, "royalVipVisits") || "50",
+    tierQualificationWindow: getString(formData, "tierQualificationWindow") || "DAYS_90",
+    tierMaintenanceMode: getString(formData, "tierMaintenanceMode") || "DYNAMIC",
+    silverVisitRequirement: getString(formData, "silverVisitRequirement") || "5",
+    goldVisitRequirement: getString(formData, "goldVisitRequirement") || "15",
+    vipVisitRequirement: getString(formData, "vipVisitRequirement") || "30",
   });
 
   if (!parsed.success) fail("/dashboard/settings", parsed.error.issues[0]?.message ?? "Validation failed.");
 
   const tierData = {
     criteria: "VISITS_ONLY" as const,
-    premiumVisits: parsed.data.premiumVisits,
-    eliteVisits: parsed.data.eliteVisits,
-    royalVipVisits: parsed.data.royalVipVisits,
-    premiumSpend: 0,
-    eliteSpend: 0,
-    royalVipSpend: 0,
+    tierQualificationWindow: parsed.data.tierQualificationWindow,
+    tierMaintenanceMode: parsed.data.tierMaintenanceMode,
+    silverVisitRequirement: parsed.data.silverVisitRequirement,
+    goldVisitRequirement: parsed.data.goldVisitRequirement,
+    vipVisitRequirement: parsed.data.vipVisitRequirement,
   };
 
   const setting = await prisma.customerTierSetting.upsert({
