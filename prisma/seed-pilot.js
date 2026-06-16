@@ -55,32 +55,31 @@ function normalizePhone(phone) {
 
 const subscriptionPlans = [
   {
+    code: "STARTER",
     name: "Starter",
     maxBranches: 1,
     maxLoyaltyPrograms: 1,
-    features: ["Basic customer database", "QR loyalty card", "Manual message preparation"],
-    priceMonthly: "29.00",
+    monthlyPrice: "100.00",
+    annualPrice: "1000.00",
+    billingCycleSupport: ["MONTHLY", "YEARLY"],
   },
   {
+    code: "GROWTH",
     name: "Growth",
     maxBranches: 3,
-    maxLoyaltyPrograms: 10,
-    features: ["Multiple branches", "Multiple loyalty programs", "Customer engagement", "Manual message outbox"],
-    priceMonthly: "79.00",
+    maxLoyaltyPrograms: 5,
+    monthlyPrice: "200.00",
+    annualPrice: "2000.00",
+    billingCycleSupport: ["MONTHLY", "YEARLY"],
   },
   {
-    name: "Multi-Branch",
+    code: "MULTI_BRANCH",
+    name: "Multi Branch",
     maxBranches: 10,
-    maxLoyaltyPrograms: 25,
-    features: ["Multiple branches", "Multiple loyalty programs", "Multi-branch reporting readiness"],
-    priceMonthly: "0.00",
-  },
-  {
-    name: "Premium",
-    maxBranches: 25,
-    maxLoyaltyPrograms: 50,
-    features: ["Everything in Multi-Branch", "Advanced reporting readiness", "Priority support readiness"],
-    priceMonthly: "0.00",
+    maxLoyaltyPrograms: 15,
+    monthlyPrice: "0.00",
+    annualPrice: "1000.00",
+    billingCycleSupport: ["YEARLY"],
   },
 ];
 
@@ -279,7 +278,7 @@ async function main() {
 
   for (const plan of subscriptionPlans) {
     await prisma.subscriptionPlan.upsert({
-      where: { name: plan.name },
+      where: { code: plan.code },
       update: plan,
       create: plan,
     });
@@ -404,6 +403,7 @@ async function main() {
         where: { id: existingActiveSubscription.id },
         data: {
           subscriptionPlanId: plan.id,
+          billingCycle: plan.code === "MULTI_BRANCH" ? "YEARLY" : "YEARLY",
           startDate: new Date(),
           expiryDate: null,
           renewalDate: null,
@@ -415,6 +415,7 @@ async function main() {
         data: {
           businessId: business.id,
           subscriptionPlanId: plan.id,
+          billingCycle: plan.code === "MULTI_BRANCH" ? "YEARLY" : "YEARLY",
           status: "ACTIVE",
           startDate: new Date(),
         },

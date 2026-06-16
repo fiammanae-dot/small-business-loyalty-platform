@@ -22,7 +22,7 @@ export default async function NewInvoicePage({
     prisma.business.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
     prisma.businessSubscription.findMany({
       orderBy: { createdAt: "desc" },
-      include: { business: { select: { name: true } }, subscriptionPlan: { select: { name: true, priceMonthly: true } } },
+      include: { business: { select: { name: true } }, subscriptionPlan: { select: { name: true, code: true, monthlyPrice: true, annualPrice: true } } },
     }),
   ]);
 

@@ -1,11 +1,11 @@
-import type { BusinessBranding, BusinessCommunicationSettings, BusinessType, RecordStatus, SubscriptionPlan } from "@prisma/client";
+import type { BillingCycle, BusinessBranding, BusinessCommunicationSettings, BusinessType, RecordStatus, SubscriptionPlan } from "@prisma/client";
 import { CsrfInput } from "@/components/CsrfInput";
-import { SearchableCombobox } from "@/components/SearchableCombobox";
+import { PlanBillingCycleFields } from "@/components/PlanBillingCycleFields";
 import { businessTypeOptions, statusOptions } from "@/lib/platform-options";
 
 type BusinessFormProps = {
   action: (formData: FormData) => Promise<void>;
-  plans: Array<Pick<SubscriptionPlan, "id" | "name">>;
+  plans: Array<Pick<SubscriptionPlan, "id" | "code" | "name" | "monthlyPrice" | "annualPrice" | "billingCycleSupport">>;
   error?: string;
   mode: "create" | "edit";
   business?: {
@@ -17,6 +17,7 @@ type BusinessFormProps = {
     branding: BusinessBranding | null;
     communicationSettings?: BusinessCommunicationSettings | null;
     subscriptionPlanId?: number;
+    billingCycle?: BillingCycle;
   };
 };
 
@@ -94,14 +95,18 @@ export function BusinessForm({ action, plans, error, mode, business }: BusinessF
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
         <StepHeading step={mode === "create" ? 4 : undefined} title="Subscription Plan" />
-        <div className="mt-5 max-w-sm">
-          <SearchableCombobox
-            label="Plan"
-            name="subscriptionPlanId"
-            defaultValue={business?.subscriptionPlanId?.toString()}
-            placeholder="Search plans"
-            required
-            options={plans.map((plan) => ({ value: plan.id.toString(), label: plan.name, description: "Subscription plan" }))}
+        <div className="mt-5 max-w-3xl">
+          <PlanBillingCycleFields
+            plans={plans.map((plan) => ({
+              id: plan.id,
+              code: plan.code,
+              name: plan.name,
+              monthlyPrice: plan.monthlyPrice.toString(),
+              annualPrice: plan.annualPrice.toString(),
+              billingCycleSupport: plan.billingCycleSupport,
+            }))}
+            defaultPlanId={business?.subscriptionPlanId?.toString()}
+            defaultBillingCycle={business?.billingCycle}
           />
         </div>
       </section>

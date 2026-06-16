@@ -21,6 +21,7 @@ import { formatDate } from "@/lib/format";
 import { formatMoney, getInvoiceDisplayStatus } from "@/lib/billing";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
+import { formatBillingCycle } from "@/lib/subscription-plans";
 import { getSubscriptionRemainingDays, getTrialRemainingDays } from "@/lib/subscriptions";
 
 type BillingParams = {
@@ -281,26 +282,28 @@ function AdvancedSubscriptionTable({ subscriptions }: { subscriptions: Subscript
       <table className="w-full min-w-[1320px] border-separate border-spacing-0 text-left text-sm">
         <thead>
           <tr className="text-[#6B7280]">
-            {["Business", "Plan", "Status", "Start Date", "Expiry Date", "Renewal Date", "Days Remaining", "Monthly Value", "Annual Value", "Trial Status", "Created By", "Actions"].map((heading) => (
+            {["Business", "Plan", "Billing", "Status", "Start Date", "Expiry Date", "Renewal Date", "Days Remaining", "Monthly Value", "Annual Value", "Trial Status", "Created By", "Actions"].map((heading) => (
               <th key={heading} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">{heading}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {subscriptions.map((subscription) => {
-            const monthly = Number(subscription.subscriptionPlan.priceMonthly);
+            const annual = getAnnualSubscriptionValue(subscription);
+            const monthly = annual / 12;
             const remaining = getSubscriptionRemainingDays(subscription);
             return (
               <tr key={subscription.id} className="align-top">
                 <td className="border-b border-[#E5E7EB] px-3 py-4 font-semibold text-[#111827]">{subscription.business.name}</td>
                 <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{subscription.subscriptionPlan.name}</td>
+                <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatBillingCycle(subscription.billingCycle)}</td>
                 <td className="border-b border-[#E5E7EB] px-3 py-4"><LifecycleBadge status={deriveLifecycleStatus(subscription)} /></td>
                 <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(subscription.startDate)}</td>
                 <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{subscription.expiryDate ? formatDate(subscription.expiryDate) : "-"}</td>
                 <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{subscription.renewalDate ? formatDate(subscription.renewalDate) : "-"}</td>
                 <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{remaining === null ? "-" : remaining}</td>
                 <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatMoney(monthly)}</td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatMoney(monthly * 12)}</td>
+                <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatMoney(annual)}</td>
                 <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{getTrialRemainingDays(subscription) === null ? "Not trial" : `${getTrialRemainingDays(subscription)} days left`}</td>
                 <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{subscription.auditLogs[0]?.user?.name ?? "System"}</td>
                 <td className="border-b border-[#E5E7EB] px-3 py-4">
@@ -503,7 +506,7 @@ function BillingAlerts({ subscriptions, invoices, payments, now }: { subscriptio
         ))}
         {alerts.length === 0 ? <EmptyText text="No billing alerts require attention." /> : null}
         <div className="rounded-md border border-dashed border-[#E5E7EB] p-3 text-sm text-[#6B7280]">
-          Future billing notification types: plan upgraded, plan downgraded, payment reminders, and automated renewal notices.
+          Billing reminders and renewal notices can be managed manually from Subscription Management.
         </div>
       </div>
     </Panel>
@@ -515,7 +518,7 @@ function matchesSubscriptionFilters(subscription: SubscriptionRow, params: Billi
   if (params.plan && subscription.subscriptionPlanId !== Number(params.plan)) return false;
   if (params.status && deriveLifecycleStatus(subscription) !== params.status && subscription.status !== params.status) return false;
   if (subscription.createdAt < dateRange.from || subscription.createdAt > dateRange.to) return false;
-  const monthly = Number(subscription.subscriptionPlan.priceMonthly);
+  const monthly = getAnnualSubscriptionValue(subscription) / 12;
   if (params.revenueMin && monthly < Number(params.revenueMin)) return false;
   if (params.revenueMax && monthly > Number(params.revenueMax)) return false;
   if (params.trial === "trial" && subscription.status !== "TRIAL") return false;
@@ -528,6 +531,14 @@ function matchesSubscriptionFilters(subscription: SubscriptionRow, params: Billi
     if (params.renewal === "overdue" && (days === null || days >= 0)) return false;
   }
   return true;
+}
+
+function getAnnualSubscriptionValue(subscription: SubscriptionRow) {
+  if (subscription.billingCycle === "MONTHLY") {
+    return Number(subscription.subscriptionPlan.monthlyPrice) * 12;
+  }
+
+  return Number(subscription.subscriptionPlan.annualPrice);
 }
 
 function matchesInvoiceFilters(invoice: InvoiceRow, params: BillingParams, dateRange: { from: Date; to: Date }) {

@@ -21,6 +21,7 @@ type SearchableComboboxProps = {
   loading?: boolean;
   required?: boolean;
   maxVisibleOptions?: number;
+  onValueChange?: (value: string) => void;
 };
 
 export function SearchableCombobox({
@@ -33,6 +34,7 @@ export function SearchableCombobox({
   loading = false,
   required = false,
   maxVisibleOptions = 80,
+  onValueChange,
 }: SearchableComboboxProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -61,6 +63,7 @@ export function SearchableCombobox({
   function selectOption(option: ComboboxOption) {
     if (option.disabled) return;
     setSelectedValue(option.value);
+    onValueChange?.(option.value);
     setQuery("");
     setOpen(false);
     setActiveIndex(0);
@@ -68,6 +71,7 @@ export function SearchableCombobox({
 
   function clearSelection() {
     setSelectedValue("");
+    onValueChange?.("");
     setQuery("");
     setActiveIndex(0);
     setOpen(false);

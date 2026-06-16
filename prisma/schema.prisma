@@ -35,6 +35,11 @@ enum SubscriptionStatus {
   CANCELLED
 }
 
+enum BillingCycle {
+  MONTHLY
+  YEARLY
+}
+
 enum SubscriptionAuditAction {
   PLAN_CHANGED
   STATUS_CHANGED
@@ -352,11 +357,13 @@ model BusinessBranding {
 
 model SubscriptionPlan {
   id                 Int      @id @default(autoincrement())
+  code               String   @unique
   name               String   @unique
+  monthlyPrice       Decimal  @map("monthly_price") @db.Decimal(10, 2)
+  annualPrice        Decimal  @map("annual_price") @db.Decimal(10, 2)
   maxBranches        Int      @map("max_branches")
   maxLoyaltyPrograms Int      @map("max_loyalty_programs")
-  features           Json
-  priceMonthly       Decimal  @map("price_monthly") @db.Decimal(10, 2)
+  billingCycleSupport Json     @map("billing_cycle_support")
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 
@@ -370,6 +377,7 @@ model BusinessSubscription {
   businessId         Int                @map("business_id")
   subscriptionPlanId Int                @map("subscription_plan_id")
   status             SubscriptionStatus @default(ACTIVE)
+  billingCycle       BillingCycle       @default(YEARLY) @map("billing_cycle")
   startDate          DateTime           @map("start_date")
   trialStartDate     DateTime?          @map("trial_start_date")
   trialEndDate       DateTime?          @map("trial_end_date")

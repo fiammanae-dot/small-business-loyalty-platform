@@ -14,7 +14,7 @@ export default async function NewBusinessPage({
   const params = await searchParams;
   const plans = await prisma.subscriptionPlan.findMany({
     orderBy: { maxBranches: "asc" },
-    select: { id: true, name: true },
+    select: { id: true, code: true, name: true, monthlyPrice: true, annualPrice: true, billingCycleSupport: true },
   });
 
   return (

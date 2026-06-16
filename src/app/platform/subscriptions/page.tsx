@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
+import { formatBillingCycle, formatPlanPrice } from "@/lib/subscription-plans";
 import { getSubscriptionRemainingDays, getTrialRemainingDays } from "@/lib/subscriptions";
 import { extendSubscriptionAction, startTrialAction, updateSubscriptionStatusAction } from "@/app/platform/subscriptions/actions";
 
@@ -95,7 +96,7 @@ export default async function PlatformSubscriptionsPage({
                 emptyLabel="No plans found."
                 options={[
                   { value: "", label: "All plans", description: "Show every subscription plan" },
-                  ...plans.map((plan) => ({ value: plan.id.toString(), label: plan.name, description: "Subscription plan" })),
+                  ...plans.map((plan) => ({ value: plan.id.toString(), label: plan.name, description: formatPlanPrice(plan) })),
                 ]}
               />
             </div>
@@ -128,7 +129,7 @@ export default async function PlatformSubscriptionsPage({
           <table className="w-full min-w-[1080px] border-separate border-spacing-0 text-left text-sm">
             <thead>
               <tr className="text-[#6B7280]">
-                {["Business", "Plan", "Status", "Trial", "Expiry", "Renewal", "Remaining", "Last audit", "Actions"].map((heading) => (
+                {["Business", "Plan", "Billing", "Status", "Trial", "Expiry", "Renewal", "Remaining", "Last audit", "Actions"].map((heading) => (
                   <th key={heading} className="border-b border-[#E5E7EB] px-3 py-2 font-semibold">
                     {heading}
                   </th>
@@ -174,6 +175,7 @@ function SubscriptionRow({ subscription }: { subscription: SubscriptionWithListD
         </div>
       </td>
       <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{subscription.subscriptionPlan.name}</td>
+      <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{formatBillingCycle(subscription.billingCycle)}</td>
       <td className="border-b border-[#E5E7EB] px-3 py-3">
         <StatusBadge status={subscription.status} />
       </td>
@@ -213,7 +215,7 @@ function SubscriptionCard({ subscription }: { subscription: SubscriptionWithList
           <Link href={`/platform/businesses/${subscription.business.uuid}`} className="font-semibold text-[#111827] hover:text-[#F97316]">
             {subscription.business.name}
           </Link>
-          <p className="mt-1 text-sm text-[#6B7280]">{subscription.subscriptionPlan.name}</p>
+          <p className="mt-1 text-sm text-[#6B7280]">{subscription.subscriptionPlan.name} · {formatBillingCycle(subscription.billingCycle)}</p>
         </div>
         <StatusBadge status={subscription.status} />
       </div>

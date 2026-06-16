@@ -11,12 +11,10 @@ import {
   FileSpreadsheet,
   FileText,
   Filter,
-  Globe2,
   Palette,
   Search,
   Settings,
   ShieldCheck,
-  Store,
   Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -32,7 +30,6 @@ type TenantParams = {
   status?: string;
   plan?: string;
   health?: string;
-  whiteLabel?: string;
 };
 
 type TenantRecord = Prisma.BusinessGetPayload<{
@@ -56,8 +53,6 @@ type DecoratedTenant = TenantRecord & {
   subscriptionStatus: SubscriptionStatus | "UNASSIGNED";
   tenantHealth: "Healthy" | "Attention Needed" | "At Risk";
   healthReasons: string[];
-  whiteLabelEnabled: boolean;
-  customDomainActive: boolean;
 };
 
 const activeAlertStatuses: ActivityAlertStatus[] = ["OPEN", "ASSIGNED", "UNDER_REVIEW", "ESCALATED"];
@@ -96,8 +91,6 @@ export default async function PlatformTenantCenterPage({
   const trialTenants = tenants.filter((tenant) => tenant.subscriptionStatus === "TRIAL");
   const suspendedTenants = tenants.filter((tenant) => tenant.subscriptionStatus === "SUSPENDED");
   const expiredTenants = tenants.filter((tenant) => tenant.subscriptionStatus === "EXPIRED");
-  const whiteLabelEnabled = tenants.filter((tenant) => tenant.whiteLabelEnabled);
-  const customDomainsActive = tenants.filter((tenant) => tenant.customDomainActive);
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Tenant Center">
@@ -107,8 +100,6 @@ export default async function PlatformTenantCenterPage({
         <KpiCard icon={Activity} label="Trial Tenants" value={trialTenants.length.toString()} />
         <KpiCard icon={AlertTriangle} label="Suspended Tenants" value={suspendedTenants.length.toString()} tone={suspendedTenants.length > 0 ? "danger" : "default"} />
         <KpiCard icon={AlertTriangle} label="Expired Tenants" value={expiredTenants.length.toString()} tone={expiredTenants.length > 0 ? "danger" : "default"} />
-        <KpiCard icon={Palette} label="White Label Enabled" value={whiteLabelEnabled.length.toString()} />
-        <KpiCard icon={Globe2} label="Custom Domains Active" value={customDomainsActive.length.toString()} />
         <KpiCard icon={Users} label="Total Customers Across Platform" value={totalCustomers.toString()} />
       </section>
 
@@ -127,7 +118,7 @@ export default async function PlatformTenantCenterPage({
             <ExportButton href="/platform/tenant-center?export=pdf" icon={<FileText className="h-4 w-4" />} label="PDF" />
           </div>
         </div>
-        <form className="grid gap-3 lg:grid-cols-5">
+        <form className="grid gap-3 lg:grid-cols-4">
           <label className="relative lg:col-span-2">
             <span className="sr-only">Search tenants</span>
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" aria-hidden="true" />
@@ -158,11 +149,6 @@ export default async function PlatformTenantCenterPage({
             <option value="Attention Needed">Attention Needed</option>
             <option value="At Risk">At Risk</option>
           </select>
-          <select name="whiteLabel" defaultValue={params.whiteLabel ?? ""} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm">
-            <option value="">All white-label states</option>
-            <option value="enabled">White label enabled</option>
-            <option value="disabled">White label not configured</option>
-          </select>
           <button type="submit" className="h-10 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">Apply</button>
           <Link href="/platform/tenant-center" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">Clear Filters</Link>
         </form>
@@ -190,7 +176,7 @@ export default async function PlatformTenantCenterPage({
           </div>
         </Panel>
 
-        <Panel title="White Label Management" icon={Palette}>
+        <Panel title="Tenant Branding" icon={Palette}>
           <div className="grid gap-3">
             {filteredTenants.slice(0, 6).map((tenant) => (
               <div key={tenant.uuid} className="rounded-md border border-[#E5E7EB] p-3">
@@ -206,11 +192,10 @@ export default async function PlatformTenantCenterPage({
                 </div>
                 <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
                   <ConfigLine label="Business Logo" value={tenant.branding?.logoUrl ? "Configured" : "Not configured"} />
-                  <ConfigLine label="Favicon" value="Future-ready" />
                   <ColorLine label="Primary Color" value={tenant.branding?.primaryColor ?? "#F97316"} />
                   <ColorLine label="Secondary Color" value={tenant.branding?.secondaryColor ?? "#FDBA74"} />
-                  <ConfigLine label="Login Welcome Message" value="Future-ready" />
-                  <ConfigLine label="Custom Footer Text" value="Future-ready" />
+                  <ColorLine label="Button Color" value={tenant.branding?.buttonColor ?? "#F97316"} />
+                  <ConfigLine label="Customer Card Branding" value="Uses saved business branding" />
                 </div>
               </div>
             ))}
@@ -218,20 +203,10 @@ export default async function PlatformTenantCenterPage({
         </Panel>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-3">
-        <Panel title="Custom Login Experience" icon={Store}>
-          <div className="grid gap-2">
-            <ConfigLine label="Custom Login Logo" value="Uses tenant logo when configured" />
-            <ConfigLine label="Background Image" value="Future-ready" />
-            <ConfigLine label="Welcome Text" value="Future-ready" />
-            <ConfigLine label="Support Email" value="Future-ready" />
-            <ConfigLine label="Support Phone" value="Future-ready" />
-          </div>
-        </Panel>
-
+      <section className="grid gap-4 xl:grid-cols-2">
         <Panel title="Customer Experience Branding" icon={Palette}>
           <div className="grid gap-2">
-            <ConfigLine label="Customer Portal" value="Uses saved business branding" />
+            <ConfigLine label="Customer Card" value="Uses saved business branding" />
             <ConfigLine label="QR Page" value="Uses saved business branding" />
             <ConfigLine label="Reward Page" value="Uses saved business branding" />
             <ConfigLine label="Enrollment Page" value="Uses saved business branding" />
@@ -244,41 +219,12 @@ export default async function PlatformTenantCenterPage({
             <ConfigLine label="Allow referrals" value="Enabled by platform policy" />
             <ConfigLine label="Allow rewards" value="Enabled by platform policy" />
             <ConfigLine label="Allow QR scans" value="Enabled by platform policy" />
-            <ConfigLine label="Allow campaigns" value="Future-ready" />
             <ConfigLine label="Allow messaging" value="Prepared-message mode" />
-            <ConfigLine label="Allow custom domains" value="Future-ready" />
-            <ConfigLine label="Allow white label" value="Managed by System Administrator" />
           </div>
         </Panel>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
-        <Panel title="Custom Domain Management" icon={Globe2}>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] border-separate border-spacing-0 text-left text-sm">
-              <thead>
-                <tr className="text-[#6B7280]">
-                  {["Business", "Default URL", "Custom Domain", "Domain Verification Status", "SSL Status", "Activation Status"].map((heading) => (
-                    <th key={heading} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">{heading}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredTenants.slice(0, 12).map((tenant) => (
-                  <tr key={tenant.uuid}>
-                    <td className="border-b border-[#E5E7EB] px-3 py-4 font-semibold text-[#111827]">{tenant.name}</td>
-                    <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">rewards.loyaltybase.ae/{slugify(tenant.name)}</td>
-                    <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">Not configured</td>
-                    <td className="border-b border-[#E5E7EB] px-3 py-4"><SmallBadge label="Pending setup" tone="neutral" /></td>
-                    <td className="border-b border-[#E5E7EB] px-3 py-4"><SmallBadge label="Future-ready" tone="neutral" /></td>
-                    <td className="border-b border-[#E5E7EB] px-3 py-4"><SmallBadge label="Inactive" tone="neutral" /></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Panel>
-
+      <section>
         <Panel title="Tenant Resource Monitoring" icon={Activity}>
           <div className="grid gap-3 md:grid-cols-2">
             {filteredTenants.slice(0, 10).map((tenant) => (
@@ -302,7 +248,7 @@ export default async function PlatformTenantCenterPage({
 
       <Panel title="Tenant Audit History" icon={FileText}>
         <div className="mb-4 grid gap-2 text-sm md:grid-cols-3 xl:grid-cols-6">
-          {["Brand changes", "Plan changes", "Subscription changes", "Domain changes", "Owner changes", "Status changes"].map((label) => (
+          {["Brand changes", "Plan changes", "Subscription changes", "Owner changes", "Status changes", "Billing changes"].map((label) => (
             <div key={label} className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] px-3 py-2 font-semibold text-[#6B7280]">{label}</div>
           ))}
         </div>
@@ -340,17 +286,6 @@ function decorateTenant(business: TenantRecord, now: Date): DecoratedTenant {
   if (healthReasons.length === 0) healthReasons.push("No tenant health issues detected");
 
   const tenantHealth = getTenantHealth({ subscriptionStatus: subscription?.status, inactiveStaff, expiredTrial, openAlerts });
-  const whiteLabelEnabled = Boolean(
-    business.branding?.logoUrl ||
-    (business.branding && (
-      business.branding.primaryColor !== "#F97316" ||
-      business.branding.secondaryColor !== "#FDBA74" ||
-      business.branding.backgroundColor !== "#FFFFFF" ||
-      business.branding.textColor !== "#111827" ||
-      business.branding.buttonColor !== "#F97316"
-    )),
-  );
-
   return {
     ...business,
     ownerName: owner?.name ?? "Unassigned",
@@ -359,8 +294,6 @@ function decorateTenant(business: TenantRecord, now: Date): DecoratedTenant {
     subscriptionStatus: subscription?.status ?? "UNASSIGNED",
     tenantHealth,
     healthReasons,
-    whiteLabelEnabled,
-    customDomainActive: false,
   };
 }
 
@@ -395,8 +328,6 @@ function matchesTenantFilters(tenant: DecoratedTenant, params: TenantParams) {
   }
   if (params.plan && tenant.planName !== params.plan) return false;
   if (params.health && tenant.tenantHealth !== params.health) return false;
-  if (params.whiteLabel === "enabled" && !tenant.whiteLabelEnabled) return false;
-  if (params.whiteLabel === "disabled" && tenant.whiteLabelEnabled) return false;
   return true;
 }
 
@@ -571,8 +502,4 @@ function titleCase(value: string) {
 
 function formatAction(value: string) {
   return titleCase(value);
-}
-
-function slugify(value: string) {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "tenant";
 }

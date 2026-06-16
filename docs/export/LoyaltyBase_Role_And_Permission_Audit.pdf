@@ -1,0 +1,146 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+3 0 obj
+<< /Length 3426 >>
+stream
+BT /F2 9 Tf 54 24 Td (LoyaltyBase Audit Documentation) Tj ET
+BT /F2 9 Tf 485.28 24 Td (Page 1) Tj ET
+BT /F2 22 Tf 54 787.89 Td (LoyaltyBase Role & Permission Audit) Tj ET
+BT /F1 11 Tf 54 757.89 Td (Complete read-only audit of System Administrator, Business Owner, Branch Manager, and) Tj ET
+BT /F1 11 Tf 54 742.89 Td (Staff roles.) Tj ET
+BT /F1 10 Tf 54 723.89 Td (Generated from read-only LoyaltyBase audits. No code or database changes are represented) Tj ET
+BT /F1 10 Tf 54 708.89 Td (in this document.) Tj ET
+BT /F2 16 Tf 54 679.89 Td (Table of Contents) Tj ET
+BT /F1 10 Tf 54 657.89 Td (1. Validation Summary) Tj ET
+BT /F1 10 Tf 54 643.89 Td (2. System Administrator) Tj ET
+BT /F1 10 Tf 54 629.89 Td (3. Business Owner) Tj ET
+BT /F1 10 Tf 54 615.89 Td (4. Branch Manager) Tj ET
+BT /F1 10 Tf 54 601.89 Td (5. Staff) Tj ET
+BT /F1 10 Tf 54 587.89 Td (6. Hidden URL and Tenant Isolation) Tj ET
+BT /F1 10 Tf 54 573.89 Td (7. Final Summary Matrix) Tj ET
+BT /F2 16 Tf 54 549.89 Td (Validation Summary) Tj ET
+BT /F2 8.5 Tf 54 527.89 Td (Check | Result) Tj ET
+BT /F1 8 Tf 54 515.89 Td (--------|---------) Tj ET
+BT /F1 8 Tf 54 504.89 Td (npm test | Passed - 106/106) Tj ET
+BT /F1 8 Tf 54 493.89 Td (npm run lint | Passed) Tj ET
+BT /F1 8 Tf 54 482.89 Td (npm run build | Passed with existing Next.js config warnings) Tj ET
+BT /F1 10 Tf 54 466.89 Td (The audit inspected route guards, dashboards, role mappings, action files, and automated) Tj ET
+BT /F1 10 Tf 54 451.89 Td (tests. No code or database records were modified.) Tj ET
+BT /F2 16 Tf 54 422.89 Td (System Administrator) Tj ET
+BT /F1 10 Tf 54 400.89 Td (Internal role key PLATFORM_OWNER is displayed publicly as System Administrator.) Tj ET
+BT /F1 10 Tf 54 381.89 Td (Sidebar: Dashboard, Businesses, Plans, Subscriptions, Invoices, Users, Analytics, Audit) Tj ET
+BT /F1 10 Tf 54 366.89 Td (Center, Billing Center, Tenant Center, Settings.) Tj ET
+BT /F1 10 Tf 54 347.89 Td (Dashboard visibility includes businesses, active subscriptions, monthly revenue, open) Tj ET
+BT /F1 10 Tf 54 332.89 Td (alerts, customers, programs, failed logins, platform health, and recent activity.) Tj ET
+BT /F1 10 Tf 54 313.89 Td (Permissions include full platform administration for businesses, plans, subscriptions,) Tj ET
+BT /F1 10 Tf 54 298.89 Td (invoices, users, analytics, audit, billing, tenant, settings, database view, and launch) Tj ET
+BT /F1 10 Tf 54 283.89 Td (readiness.) Tj ET
+BT /F1 10 Tf 54 264.89 Td (Verdict: PASS WITH WARNINGS. Access is powerful by design; keep customer PII out of) Tj ET
+BT /F1 10 Tf 54 249.89 Td (aggregate platform analytics where possible.) Tj ET
+BT /F2 16 Tf 54 220.89 Td (Business Owner) Tj ET
+BT /F1 10 Tf 54 198.89 Td (Pages include Dashboard, Customers, Programs, Branches, Staff, Notifications, Referrals,) Tj ET
+BT /F1 10 Tf 54 183.89 Td (Messages, Billing, Profile, Settings, and Scanner.) Tj ET
+BT /F1 10 Tf 54 164.89 Td (Can view, search, create, and edit customers; view history, referrals, tiers, public) Tj ET
+BT /F1 10 Tf 54 149.89 Td (cards; share/copy cards; disable cards and scan tokens. No delete action found.) Tj ET
+BT /F1 10 Tf 54 130.89 Td (Can view, create, and edit loyalty programs; enroll customers; manage program customers;) Tj ET
+BT /F1 10 Tf 54 115.88999999999999 Td (create/edit/disable branches; manage Branch Managers and Staff; reset Staff/Branch) Tj ET
+BT /F1 10 Tf 54 100.88999999999999 Td (Manager passwords.) Tj ET
+endstream
+endobj
+4 0 obj
+<< /Length 3872 >>
+stream
+BT /F2 9 Tf 54 24 Td (LoyaltyBase Audit Documentation) Tj ET
+BT /F2 9 Tf 485.28 24 Td (Page 2) Tj ET
+BT /F1 10 Tf 54 787.89 Td (Can open scanner, scan cards, issue stamps, redeem rewards, and use manual token) Tj ET
+BT /F1 10 Tf 54 772.89 Td (fallback.) Tj ET
+BT /F1 10 Tf 54 753.89 Td (Verdict: PASS.) Tj ET
+BT /F2 16 Tf 54 724.89 Td (Branch Manager) Tj ET
+BT /F1 10 Tf 54 702.89 Td (Pages include Branch dashboard, Business customers, Programs, and Scanner.) Tj ET
+BT /F1 10 Tf 54 683.89 Td (Can view/search same-business customers, open customer profiles, enroll customers, view) Tj ET
+BT /F1 10 Tf 54 668.89 Td (loyalty progress, public card, QR/scan URL, and redemption history. No edit/delete) Tj ET
+BT /F1 10 Tf 54 653.89 Td (action found.) Tj ET
+BT /F1 10 Tf 54 634.89 Td (Can view active business programs and enroll customers. Cannot create, edit, disable, or) Tj ET
+BT /F1 10 Tf 54 619.89 Td (delete programs.) Tj ET
+BT /F1 10 Tf 54 600.89 Td (Can scan cards, issue stamps, redeem rewards, and use manual token fallback. Verdict:) Tj ET
+BT /F1 10 Tf 54 585.89 Td (PASS WITH WARNINGS because same-business customer visibility is broader than branch-only) Tj ET
+BT /F1 10 Tf 54 570.89 Td (visibility.) Tj ET
+BT /F2 16 Tf 54 541.89 Td (Staff) Tj ET
+BT /F1 10 Tf 54 519.89 Td (Pages include Staff dashboard, Enroll customer, Programs, and Scanner.) Tj ET
+BT /F1 10 Tf 54 500.89 Td (Can enroll/create customers for assigned branch and open cards after enrollment. Can) Tj ET
+BT /F1 10 Tf 54 485.89 Td (view active programs. Cannot edit/delete customers or programs.) Tj ET
+BT /F1 10 Tf 54 466.89 Td (Can scan cards and issue stamps. Cannot redeem rewards. Verdict: PASS.) Tj ET
+BT /F2 16 Tf 54 437.89 Td (Hidden URL and Tenant Isolation) Tj ET
+BT /F1 10 Tf 54 415.89 Td (System Administrator routes require platform role. Business Owner routes require) Tj ET
+BT /F1 10 Tf 54 400.89 Td (business owner context. Branch Manager routes require branch manager role. Staff routes) Tj ET
+BT /F1 10 Tf 54 385.89 Td (require staff role.) Tj ET
+BT /F1 10 Tf 54 366.89 Td (Business Owner queries use businessId. Branch Manager customer access is same-business) Tj ET
+BT /F1 10 Tf 54 351.89 Td (scoped. Staff enrollment and scanner use assigned businessId and branchId.) Tj ET
+BT /F1 10 Tf 54 336.89 Td (Wrong-business scans and redemptions are blocked.) Tj ET
+BT /F1 10 Tf 54 317.89 Td (Warning: automated route coverage exists for important groups, but not every nested page) Tj ET
+BT /F1 10 Tf 54 302.89 Td (individually.) Tj ET
+BT /F2 16 Tf 54 273.89 Td (Final Summary Matrix) Tj ET
+BT /F2 8.5 Tf 54 251.89 Td (Feature | System Admin | Business Owner | Branch Manager | Staff) Tj ET
+BT /F1 8 Tf 54 239.89 Td (----------|----------------|------------------|------------------|--------) Tj ET
+BT /F1 8 Tf 54 228.89 Td (Platform admin | Full | No | No | No) Tj ET
+BT /F1 8 Tf 54 217.89 Td (Business dashboard | No | Full | No | No) Tj ET
+BT /F1 8 Tf 54 206.89 Td (Branch dashboard | No | No | Full | No) Tj ET
+BT /F1 8 Tf 54 195.89 Td (Staff dashboard | No | No | No | Full) Tj ET
+BT /F1 8 Tf 54 184.89 Td (View customers | Aggregate/no ops | Full business | Same business | Limited) Tj ET
+BT /F1 8 Tf 54 173.89 Td (Create customers | No | Yes | Yes | Yes) Tj ET
+BT /F1 8 Tf 54 162.89 Td (Edit customers | No | Yes | No | No) Tj ET
+BT /F1 8 Tf 54 151.89 Td (Delete customers | No | No action | No | No) Tj ET
+BT /F1 8 Tf 54 140.89 Td (Programs | Platform plans only | Create/edit | View/enroll | View only) Tj ET
+BT /F1 8 Tf 54 129.89 Td (Referrals | Aggregate/audit | Full center | No center | No center) Tj ET
+BT /F1 8 Tf 54 118.88999999999999 Td (Users | Platform users | Branch/Staff users | No | No) Tj ET
+BT /F1 8 Tf 54 107.88999999999999 Td (Scanner/stamps | No | Yes | Yes | Yes) Tj ET
+BT /F1 8 Tf 54 96.88999999999999 Td (Reward redemption | No | Yes | Yes | No) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Length 262 >>
+stream
+BT /F2 9 Tf 54 24 Td (LoyaltyBase Audit Documentation) Tj ET
+BT /F2 9 Tf 485.28 24 Td (Page 3) Tj ET
+BT /F1 8 Tf 54 787.89 Td (Billing/subscriptions | Full | Own read-only | No | No) Tj ET
+BT /F1 8 Tf 54 776.89 Td (Settings | Platform | Business | No | No) Tj ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 9 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 3 0 R >>
+endobj
+7 0 obj
+<< /Type /Page /Parent 9 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 4 0 R >>
+endobj
+8 0 obj
+<< /Type /Page /Parent 9 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 5 0 R >>
+endobj
+9 0 obj
+<< /Type /Pages /Kids [6 0 R 7 0 R 8 0 R] /Count 3 >>
+endobj
+10 0 obj
+<< /Type /Catalog /Pages 9 0 R >>
+endobj
+xref
+0 11
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000000154 00000 n 
+0000003632 00000 n 
+0000007556 00000 n 
+0000007869 00000 n 
+0000008011 00000 n 
+0000008153 00000 n 
+0000008295 00000 n 
+0000008364 00000 n 
+trailer
+<< /Size 11 /Root 10 0 R >>
+startxref
+8414
+%%EOF

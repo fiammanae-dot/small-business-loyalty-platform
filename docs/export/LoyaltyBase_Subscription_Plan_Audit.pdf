@@ -1,0 +1,158 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+3 0 obj
+<< /Length 3395 >>
+stream
+BT /F2 9 Tf 54 24 Td (LoyaltyBase Audit Documentation) Tj ET
+BT /F2 9 Tf 485.28 24 Td (Page 1) Tj ET
+BT /F2 22 Tf 54 787.89 Td (LoyaltyBase Subscription Plan Audit) Tj ET
+BT /F1 11 Tf 54 757.89 Td (Read-only audit of subscription plans, limits, feature descriptions, UI visibility, and) Tj ET
+BT /F1 11 Tf 54 742.89 Td (enforcement.) Tj ET
+BT /F1 10 Tf 54 723.89 Td (Generated from read-only LoyaltyBase audits. No code or database changes are represented) Tj ET
+BT /F1 10 Tf 54 708.89 Td (in this document.) Tj ET
+BT /F2 16 Tf 54 679.89 Td (Table of Contents) Tj ET
+BT /F1 10 Tf 54 657.89 Td (1. Validation Summary) Tj ET
+BT /F1 10 Tf 54 643.89 Td (2. Plan Inventory) Tj ET
+BT /F1 10 Tf 54 629.89 Td (3. Database Plan Records) Tj ET
+BT /F1 10 Tf 54 615.89 Td (4. Seed Definitions) Tj ET
+BT /F1 10 Tf 54 601.89 Td (5. Plan Features) Tj ET
+BT /F1 10 Tf 54 587.89 Td (6. Plan Limits) Tj ET
+BT /F1 10 Tf 54 573.89 Td (7. Enforcement Audit) Tj ET
+BT /F1 10 Tf 54 559.89 Td (8. Final Recommendation) Tj ET
+BT /F2 16 Tf 54 535.89 Td (Validation Summary) Tj ET
+BT /F2 8.5 Tf 54 513.89 Td (Check | Result) Tj ET
+BT /F1 8 Tf 54 501.89 Td (--------|---------) Tj ET
+BT /F1 8 Tf 54 490.89 Td (npm test | Passed - 106/106) Tj ET
+BT /F1 8 Tf 54 479.89 Td (npm run lint | Passed) Tj ET
+BT /F1 8 Tf 54 468.89 Td (npm run build | Passed with existing Next.js config warnings) Tj ET
+BT /F1 10 Tf 54 452.89 Td (The audit inspected the database, Prisma schema, seed files, UI pages, subscription) Tj ET
+BT /F1 10 Tf 54 437.89 Td (enforcement logic, and tests. No code or database records were modified.) Tj ET
+BT /F2 16 Tf 54 408.89 Td (Plan Inventory) Tj ET
+BT /F2 8.5 Tf 54 386.89 Td (Plan | Internal Code | DB ID | Monthly Price | Annual Price | Status | Visible) Tj ET
+BT /F1 8 Tf 54 374.89 Td (-------|-----------------|---------|-----------------|----------------|----------|----------) Tj ET
+BT /F1 8 Tf 54 363.89 Td (Starter | Not modeled; uses name | 1 | AED 29 | Not modeled | Not modeled | Not modeled) Tj ET
+BT /F1 8 Tf 54 352.89 Td (Growth | Not modeled; uses name | 2 | AED 79 | Not modeled | Not modeled | Not modeled) Tj ET
+BT /F1 8 Tf 54 341.89 Td (Multi-Branch | Not modeled; uses name | 3 | AED 0 | Not modeled | Not modeled | Not modeled) Tj ET
+BT /F1 8 Tf 54 330.89 Td (Premium | Not modeled; uses name | 4 | AED 0 | Not modeled | Not modeled | Not modeled) Tj ET
+BT /F1 10 Tf 54 314.89 Td (subscription_plans does not include code, active, visible, or annual_price columns. The) Tj ET
+BT /F1 10 Tf 54 299.89 Td (unique identifier is currently name.) Tj ET
+BT /F2 16 Tf 54 270.89 Td (Database Plan Records) Tj ET
+BT /F2 8.5 Tf 54 248.89 Td (ID | Name | Branch Limit | Program Limit | Monthly Price | Subscriptions) Tj ET
+BT /F1 8 Tf 54 236.89 Td (-----|--------|----------------|-----------------|-----------------|----------------) Tj ET
+BT /F1 8 Tf 54 225.89 Td (1 | Starter | 1 | 1 | AED 29 | 1) Tj ET
+BT /F1 8 Tf 54 214.89 Td (2 | Growth | 3 | 10 | AED 79 | 0) Tj ET
+BT /F1 8 Tf 54 203.89 Td (3 | Multi-Branch | 10 | 25 | AED 0 | 0) Tj ET
+BT /F1 8 Tf 54 192.89 Td (4 | Premium | 25 | 50 | AED 0 | 0) Tj ET
+BT /F2 16 Tf 54 166.89 Td (Seed Definitions) Tj ET
+BT /F1 10 Tf 54 144.89 Td (The same four plans are defined in src/lib/seed-data.ts, prisma/seed.js, and) Tj ET
+BT /F1 10 Tf 54 129.89 Td (prisma/seed-pilot.js. Values are currently aligned, but duplication creates drift risk.) Tj ET
+endstream
+endobj
+4 0 obj
+<< /Length 4858 >>
+stream
+BT /F2 9 Tf 54 24 Td (LoyaltyBase Audit Documentation) Tj ET
+BT /F2 9 Tf 485.28 24 Td (Page 2) Tj ET
+BT /F2 16 Tf 54 787.89 Td (Plan Features) Tj ET
+BT /F2 8.5 Tf 54 765.89 Td (Feature | Starter | Growth | Multi-Branch | Premium) Tj ET
+BT /F1 8 Tf 54 753.89 Td (----------|-----------|----------|----------------|----------) Tj ET
+BT /F1 8 Tf 54 742.89 Td (Customers | Enabled | Enabled | Enabled | Enabled) Tj ET
+BT /F1 8 Tf 54 731.89 Td (Programs | 1 max | 10 max | 25 max | 50 max) Tj ET
+BT /F1 8 Tf 54 720.89 Td (Branches | 1 max | 3 max | 10 max | 25 max) Tj ET
+BT /F1 8 Tf 54 709.89 Td (Users/Staff | No plan limit | No plan limit | No plan limit | No plan limit) Tj ET
+BT /F1 8 Tf 54 698.89 Td (Referrals | Enabled | Enabled | Enabled | Enabled) Tj ET
+BT /F1 8 Tf 54 687.89 Td (Customer tiers | Enabled | Enabled | Enabled | Enabled) Tj ET
+BT /F1 8 Tf 54 676.89 Td (Reports | Enabled | Enabled | Enabled | Enabled) Tj ET
+BT /F1 8 Tf 54 665.89 Td (Exports | Enabled | Enabled | Enabled | Enabled) Tj ET
+BT /F1 8 Tf 54 654.89 Td (Branding | System Admin managed | Same | Same | Same) Tj ET
+BT /F1 8 Tf 54 643.89 Td (Custom domain | Future-ready UI | Future-ready UI | Future-ready UI | Future-ready UI) Tj ET
+BT /F1 8 Tf 54 632.89 Td (White label | Future-ready UI | Future-ready UI | Future-ready UI | Future-ready UI) Tj ET
+BT /F1 10 Tf 54 616.89 Td (Key issue: Growth says Referral program, but referrals are not gated by plan. Starter) Tj ET
+BT /F1 10 Tf 54 601.89 Td (also has referrals available.) Tj ET
+BT /F2 16 Tf 54 572.89 Td (Plan Limits) Tj ET
+BT /F2 8.5 Tf 54 550.89 Td (Limit | Starter | Growth | Multi-Branch | Premium) Tj ET
+BT /F1 8 Tf 54 538.89 Td (--------|-----------|----------|----------------|----------) Tj ET
+BT /F1 8 Tf 54 527.89 Td (Businesses | No limit modeled | No limit modeled | No limit modeled | No limit modeled) Tj ET
+BT /F1 8 Tf 54 516.89 Td (Branches | 1 | 3 | 10 | 25) Tj ET
+BT /F1 8 Tf 54 505.89 Td (Staff | No limit modeled | No limit modeled | No limit modeled | No limit modeled) Tj ET
+BT /F1 8 Tf 54 494.89 Td (Customers | No limit modeled | No limit modeled | No limit modeled | No limit modeled) Tj ET
+BT /F1 8 Tf 54 483.89 Td (Programs | 1 | 10 | 25 | 50) Tj ET
+BT /F1 8 Tf 54 472.89 Td (Referrals | No limit modeled | No limit modeled | No limit modeled | No limit modeled) Tj ET
+BT /F2 16 Tf 54 446.89 Td (Enforcement Audit) Tj ET
+BT /F2 8.5 Tf 54 424.89 Td (Restriction | Status | Finding) Tj ET
+BT /F1 8 Tf 54 412.89 Td (--------------|----------|----------) Tj ET
+BT /F1 8 Tf 54 401.89 Td (Branch creation blocked at limit | Implemented | Business Owner branch action checks maxBranches) Tj ET
+BT /F1 8 Tf 54 390.89 Td (Program creation blocked at limit | Implemented | Program action checks maxLoyaltyPrograms) Tj ET
+BT /F1 8 Tf 54 379.89 Td (Staff creation blocked by plan | Not implemented | No staff/user limit exists) Tj ET
+BT /F1 8 Tf 54 368.89 Td (Customer creation blocked by plan | Not implemented | No customer limit exists) Tj ET
+BT /F1 8 Tf 54 357.89 Td (Referral hidden by plan | Not implemented | Referrals available for all plans) Tj ET
+BT /F1 8 Tf 54 346.89 Td (Tier hidden by plan | Not implemented | Tests confirm no Starter gating) Tj ET
+BT /F1 8 Tf 54 335.89 Td (Custom domain by plan | Not implemented | Tenant Center says future-ready) Tj ET
+BT /F1 8 Tf 54 324.89 Td (White label by plan | Not implemented | Future-ready only) Tj ET
+BT /F1 8 Tf 54 313.89 Td (Subscription usable status | Implemented | Only TRIAL and ACTIVE are commercially usable) Tj ET
+BT /F2 16 Tf 54 287.89 Td (Final Recommendation) Tj ET
+BT /F1 10 Tf 54 265.89 Td (Four plans exist. Starter and Growth are closest to production-ready, although feature) Tj ET
+BT /F1 10 Tf 54 250.89 Td (text should match actual capability. Multi-Branch and Premium are not fully) Tj ET
+BT /F1 10 Tf 54 235.89 Td (production-ready because price is AED 0 and several listed features are future or) Tj ET
+BT /F1 10 Tf 54 220.89 Td (overlapping.) Tj ET
+BT /F1 10 Tf 54 201.89 Td (For pilot and first commercial launch, simplify public packaging to three plans and keep) Tj ET
+BT /F1 10 Tf 54 186.89 Td (Enterprise or White Label as manual/internal.) Tj ET
+BT /F2 8.5 Tf 54 167.89 Td (Feature | Starter | Growth | Scale | Enterprise/White Label) Tj ET
+BT /F1 8 Tf 54 155.89 Td (----------|-----------|----------|---------|-----------------) Tj ET
+BT /F1 8 Tf 54 144.89 Td (Branches | 1 | 3 | 10 | Custom) Tj ET
+BT /F1 8 Tf 54 133.89 Td (Programs | 1 | 10 | 25 | Custom) Tj ET
+BT /F1 8 Tf 54 122.88999999999999 Td (Staff | Basic limit recommended | Higher limit recommended | Higher limit recommended | Custom) Tj ET
+BT /F1 8 Tf 54 111.88999999999999 Td (Customers | Fair-use/unlimited | Unlimited | Unlimited | Custom) Tj ET
+BT /F1 8 Tf 54 100.88999999999999 Td (Referrals | Basic or disabled | Enabled | Enabled | Enabled) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Length 517 >>
+stream
+BT /F2 9 Tf 54 24 Td (LoyaltyBase Audit Documentation) Tj ET
+BT /F2 9 Tf 485.28 24 Td (Page 3) Tj ET
+BT /F1 8 Tf 54 787.89 Td (Customer tiers | Enabled | Enabled | Enabled | Custom tiers later) Tj ET
+BT /F1 8 Tf 54 776.89 Td (Reports | Basic | Standard | Advanced | Custom) Tj ET
+BT /F1 8 Tf 54 765.89 Td (Branding | Standard | Standard | Standard | White label) Tj ET
+BT /F1 8 Tf 54 754.89 Td (Custom domain | No | No | Optional | Yes) Tj ET
+BT /F1 8 Tf 54 743.89 Td (Price | Paid | Paid | Paid | Quote/manual) Tj ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 9 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 3 0 R >>
+endobj
+7 0 obj
+<< /Type /Page /Parent 9 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 4 0 R >>
+endobj
+8 0 obj
+<< /Type /Page /Parent 9 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 5 0 R >>
+endobj
+9 0 obj
+<< /Type /Pages /Kids [6 0 R 7 0 R 8 0 R] /Count 3 >>
+endobj
+10 0 obj
+<< /Type /Catalog /Pages 9 0 R >>
+endobj
+xref
+0 11
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000000154 00000 n 
+0000003601 00000 n 
+0000008511 00000 n 
+0000009079 00000 n 
+0000009221 00000 n 
+0000009363 00000 n 
+0000009505 00000 n 
+0000009574 00000 n 
+trailer
+<< /Size 11 /Root 10 0 R >>
+startxref
+9624
+%%EOF

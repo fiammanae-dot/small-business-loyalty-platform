@@ -45,7 +45,13 @@ test("high-risk dynamic selectors use the reusable combobox", () => {
   ];
 
   for (const file of files) {
-    assert.match(read(file), /SearchableCombobox/, `${file} should use SearchableCombobox`);
+    const source = read(file);
+    if (file === "src/components/BusinessForm.tsx") {
+      assert.match(source, /PlanBillingCycleFields/, `${file} should use the plan combobox wrapper`);
+      assert.match(read("src/components/PlanBillingCycleFields.tsx"), /SearchableCombobox/, "PlanBillingCycleFields should use SearchableCombobox");
+    } else {
+      assert.match(source, /SearchableCombobox/, `${file} should use SearchableCombobox`);
+    }
   }
 });
 

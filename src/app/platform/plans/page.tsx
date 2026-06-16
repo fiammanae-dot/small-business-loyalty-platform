@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { CreditCard, Package, Search, Star, TrendingUp } from "lucide-react";
+import { CreditCard, GitBranch, Package, Search, Star, TrendingUp } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
+import { formatBillingCycle, formatPlanPrice, getBillingCycleSupport } from "@/lib/subscription-plans";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 
@@ -12,11 +13,13 @@ type PlanSearchParams = {
 
 type PlanMetric = {
   id: number;
+  code: string;
   name: string;
   maxBranches: number;
   maxLoyaltyPrograms: number;
-  priceMonthly: number;
-  features: string[];
+  monthlyPrice: number;
+  annualPrice: number;
+  billingCycles: string[];
   businessesUsingPlan: number;
   activeSubscriptions: number;
   monthlyRevenue: number;
@@ -72,18 +75,20 @@ export default async function PlatformPlansPage({
       const planActiveSubscriptions = plan.subscriptions.filter((subscription) => subscription.status === "ACTIVE" || subscription.status === "TRIAL").length;
       return {
         id: plan.id,
+        code: plan.code,
         name: plan.name,
         maxBranches: plan.maxBranches,
         maxLoyaltyPrograms: plan.maxLoyaltyPrograms,
-        priceMonthly: Number(plan.priceMonthly),
-        features: normalizeFeatures(plan.features),
+        monthlyPrice: Number(plan.monthlyPrice),
+        annualPrice: Number(plan.annualPrice),
+        billingCycles: getBillingCycleSupport(plan).map(formatBillingCycle),
         businessesUsingPlan,
         activeSubscriptions: planActiveSubscriptions,
         monthlyRevenue: revenueByPlan.get(plan.id) ?? 0,
         adoptionPercent: totalBusinesses > 0 ? Math.round((businessesUsingPlan / totalBusinesses) * 100) : 0,
       };
     })
-    .filter((plan) => !query || plan.name.toLowerCase().includes(query))
+    .filter((plan) => !query || plan.name.toLowerCase().includes(query) || plan.code.toLowerCase().includes(query))
     .sort((a, b) => {
       if (sort === "businesses") return b.businessesUsingPlan - a.businessesUsingPlan || a.name.localeCompare(b.name);
       if (sort === "revenue") return b.monthlyRevenue - a.monthlyRevenue || a.name.localeCompare(b.name);
@@ -101,7 +106,7 @@ export default async function PlatformPlansPage({
           <div>
             <p className="text-sm font-semibold text-[#F97316]">Subscription catalog</p>
             <h2 className="mt-1 text-xl font-semibold text-[#111827]">Plan performance</h2>
-            <p className="mt-1 text-sm text-[#6B7280]">Monitor plan adoption, active subscriptions, and monthly revenue.</p>
+            <p className="mt-1 text-sm text-[#6B7280]">Plans differ only by price, branch limit, loyalty program limit, and billing cycle.</p>
           </div>
           <form className="grid gap-2 sm:grid-cols-[1fr_220px_auto_auto]">
             <label className="relative">
@@ -110,7 +115,7 @@ export default async function PlatformPlansPage({
               <input
                 name="q"
                 defaultValue={params.q ?? ""}
-                placeholder="Search plan name"
+                placeholder="Search plan name or code"
                 className="h-10 w-full rounded-md border border-[#E5E7EB] bg-white pl-9 pr-3 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
               />
             </label>
@@ -135,7 +140,7 @@ export default async function PlatformPlansPage({
         </div>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-2">
+      <section className="grid gap-4 xl:grid-cols-3">
         {planMetrics.map((plan) => (
           <PlanCard key={plan.id} plan={plan} />
         ))}
@@ -157,10 +162,10 @@ export default async function PlatformPlansPage({
           <p className="text-sm font-semibold text-[#6B7280]">Showing {planMetrics.length} plans</p>
         </div>
         <div className="mt-5 overflow-x-auto">
-          <table className="w-full min-w-[980px] border-separate border-spacing-0 text-left text-sm">
+          <table className="w-full min-w-[1040px] border-separate border-spacing-0 text-left text-sm">
             <thead>
               <tr className="text-[#6B7280]">
-                {["Plan Name", "Max Branches", "Max Loyalty Programs", "Businesses Using Plan", "Active Subscriptions", "Monthly Revenue", "Utilization"].map((heading) => (
+                {["Plan", "Code", "Billing Cycles", "Max Branches", "Max Loyalty Programs", "Businesses", "Active Subscriptions", "Monthly Revenue", "Utilization"].map((heading) => (
                   <th key={heading} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">
                     {heading}
                   </th>
@@ -170,7 +175,12 @@ export default async function PlatformPlansPage({
             <tbody>
               {planMetrics.map((plan) => (
                 <tr key={plan.id} className="align-top">
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 font-semibold text-[#111827]">{plan.name}</td>
+                  <td className="border-b border-[#E5E7EB] px-3 py-4">
+                    <p className="font-semibold text-[#111827]">{plan.name}</p>
+                    <p className="mt-1 text-xs text-[#6B7280]">{formatPlanPrice(plan)}</p>
+                  </td>
+                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{plan.code}</td>
+                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{plan.billingCycles.join(", ")}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{plan.maxBranches}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{plan.maxLoyaltyPrograms}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{plan.businessesUsingPlan}</td>
@@ -207,21 +217,22 @@ function PlanCard({ plan }: { plan: PlanMetric }) {
   return (
     <article className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-md bg-orange-50 text-[#F97316]">
-              <Package className="h-5 w-5" aria-hidden="true" />
-            </span>
-            <div>
-              <h3 className="text-lg font-semibold text-[#111827]">{plan.name}</h3>
-              <p className="text-sm text-[#6B7280]">AED {plan.priceMonthly.toFixed(2)} monthly</p>
-            </div>
+        <div className="flex items-center gap-3">
+          <span className="flex h-11 w-11 items-center justify-center rounded-md bg-orange-50 text-[#F97316]">
+            <Package className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div>
+            <h3 className="text-lg font-semibold text-[#111827]">{plan.name}</h3>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{plan.code}</p>
           </div>
         </div>
         <span className="inline-flex rounded-md bg-orange-50 px-3 py-2 text-xs font-semibold text-[#F97316]">
           {plan.activeSubscriptions} active
         </span>
       </div>
+
+      <p className="mt-5 text-sm font-semibold text-[#111827]">{formatPlanPrice(plan)}</p>
+      <p className="mt-1 text-xs text-[#6B7280]">Billing: {plan.billingCycles.join(", ")}</p>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-3">
         <PlanStat label="Businesses" value={plan.businessesUsingPlan.toString()} />
@@ -236,16 +247,6 @@ function PlanCard({ plan }: { plan: PlanMetric }) {
         </div>
         <UtilizationBar percent={plan.adoptionPercent} />
       </div>
-
-      <div className="mt-5">
-        <p className="text-sm font-semibold text-[#111827]">Included features</p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {plan.features.slice(0, 5).map((feature) => (
-            <span key={feature} className="rounded-md bg-[#FAFAFA] px-2 py-1 text-xs font-semibold text-[#6B7280]">{feature}</span>
-          ))}
-          {plan.features.length === 0 ? <span className="text-sm text-[#6B7280]">No feature list configured.</span> : null}
-        </div>
-      </div>
     </article>
   );
 }
@@ -253,7 +254,10 @@ function PlanCard({ plan }: { plan: PlanMetric }) {
 function PlanStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{label}</p>
+      <div className="flex items-center gap-2">
+        <GitBranch className="h-3.5 w-3.5 text-[#F97316]" aria-hidden="true" />
+        <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{label}</p>
+      </div>
       <p className="mt-2 text-xl font-semibold text-[#111827]">{value}</p>
     </div>
   );
@@ -268,14 +272,4 @@ function UtilizationBar({ percent }: { percent: number }) {
       <p className="mt-1 text-xs text-[#6B7280]">{percent}% of businesses</p>
     </div>
   );
-}
-
-function normalizeFeatures(features: unknown) {
-  if (Array.isArray(features)) {
-    return features.map((feature) => String(feature));
-  }
-  if (features && typeof features === "object") {
-    return Object.values(features).map((feature) => String(feature));
-  }
-  return [];
 }

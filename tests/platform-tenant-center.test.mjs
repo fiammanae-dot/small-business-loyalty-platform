@@ -6,7 +6,7 @@ function read(path) {
   return readFileSync(path, "utf8");
 }
 
-test("tenant center provides white-label, domain, tenant health, resource, audit, and export management views", () => {
+test("tenant center provides tenant health, branding, resource, audit, and export management views", () => {
   const page = read("src/app/platform/tenant-center/page.tsx");
   const shell = read("src/components/DashboardShell.tsx");
 
@@ -17,8 +17,6 @@ test("tenant center provides white-label, domain, tenant health, resource, audit
     "Trial Tenants",
     "Suspended Tenants",
     "Expired Tenants",
-    "White Label Enabled",
-    "Custom Domains Active",
     "Total Customers Across Platform",
     "Tenant Directory",
     "Business Name",
@@ -36,32 +34,18 @@ test("tenant center provides white-label, domain, tenant health, resource, audit
     "Archive",
     "Transfer Ownership",
     "Tenant Health Score",
-    "White Label Management",
+    "Tenant Branding",
     "Business Logo",
-    "Favicon",
     "Primary Color",
     "Secondary Color",
-    "Brand Name",
-    "Login Welcome Message",
-    "Custom Footer Text",
-    "Custom Login Experience",
-    "Custom Login Logo",
-    "Background Image",
-    "Welcome Text",
-    "Support Email",
-    "Support Phone",
+    "Button Color",
+    "Customer Card Branding",
     "Customer Experience Branding",
-    "Customer Portal",
+    "Customer Card",
     "QR Page",
     "Reward Page",
     "Enrollment Page",
     "Referral Page",
-    "Custom Domain Management",
-    "Default URL",
-    "Custom Domain",
-    "Domain Verification Status",
-    "SSL Status",
-    "Activation Status",
     "Tenant Resource Monitoring",
     "QR Scans",
     "Enrollments",
@@ -71,17 +55,14 @@ test("tenant center provides white-label, domain, tenant health, resource, audit
     "Brand changes",
     "Plan changes",
     "Subscription changes",
-    "Domain changes",
     "Owner changes",
     "Status changes",
+    "Billing changes",
     "Tenant Settings",
     "Allow referrals",
     "Allow rewards",
     "Allow QR scans",
-    "Allow campaigns",
     "Allow messaging",
-    "Allow custom domains",
-    "Allow white label",
     "CSV",
     "Excel",
     "PDF",
@@ -93,6 +74,7 @@ test("tenant center provides white-label, domain, tenant health, resource, audit
   assert.match(shell, /\/platform\/tenant-center/);
   assert.match(shell, /Tenant Center/);
   assert.match(shell, /Layers3/);
+  assert.doesNotMatch(page, /White Label|white-label|Custom Domain|custom domains|Future-ready/);
 });
 
 test("tenant center does not introduce loyalty, scan, reward, referral, or cooldown mutations", () => {

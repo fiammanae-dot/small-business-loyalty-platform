@@ -5,48 +5,31 @@ const { Pool } = require("pg");
 
 const subscriptionPlans = [
   {
+    code: "STARTER",
     name: "Starter",
     maxBranches: 1,
     maxLoyaltyPrograms: 1,
-    features: ["Basic customer database", "QR loyalty card", "WhatsApp reminder"],
-    priceMonthly: "29.00",
+    monthlyPrice: "100.00",
+    annualPrice: "1000.00",
+    billingCycleSupport: ["MONTHLY", "YEARLY"],
   },
   {
+    code: "GROWTH",
     name: "Growth",
     maxBranches: 3,
-    maxLoyaltyPrograms: 10,
-    features: [
-      "Multiple loyalty programs",
-      "Referral program",
-      "Customer segments",
-      "Birthday rewards",
-      "Basic analytics",
-    ],
-    priceMonthly: "79.00",
+    maxLoyaltyPrograms: 5,
+    monthlyPrice: "200.00",
+    annualPrice: "2000.00",
+    billingCycleSupport: ["MONTHLY", "YEARLY"],
   },
   {
-    name: "Multi-Branch",
+    code: "MULTI_BRANCH",
+    name: "Multi Branch",
     maxBranches: 10,
-    maxLoyaltyPrograms: 25,
-    features: [
-      "Multiple branches",
-      "Multiple loyalty programs",
-      "Referral program support (future)",
-      "Birthday rewards (future)",
-      "Multi-branch reporting (future)",
-    ],
-    priceMonthly: "0.00",
-  },
-  {
-    name: "Premium",
-    maxBranches: 25,
-    maxLoyaltyPrograms: 50,
-    features: [
-      "Everything in Multi-Branch",
-      "Advanced reporting (future)",
-      "Priority support (future)",
-    ],
-    priceMonthly: "0.00",
+    maxLoyaltyPrograms: 15,
+    monthlyPrice: "0.00",
+    annualPrice: "1000.00",
+    billingCycleSupport: ["YEARLY"],
   },
 ];
 
@@ -98,19 +81,23 @@ async function main() {
 
   for (const plan of subscriptionPlans) {
     await prisma.subscriptionPlan.upsert({
-      where: { name: plan.name },
+      where: { code: plan.code },
       update: {
-        maxBranches: plan.maxBranches,
-        maxLoyaltyPrograms: plan.maxLoyaltyPrograms,
-        features: plan.features,
-        priceMonthly: plan.priceMonthly,
-      },
-      create: {
         name: plan.name,
         maxBranches: plan.maxBranches,
         maxLoyaltyPrograms: plan.maxLoyaltyPrograms,
-        features: plan.features,
-        priceMonthly: plan.priceMonthly,
+        monthlyPrice: plan.monthlyPrice,
+        annualPrice: plan.annualPrice,
+        billingCycleSupport: plan.billingCycleSupport,
+      },
+      create: {
+        code: plan.code,
+        name: plan.name,
+        maxBranches: plan.maxBranches,
+        maxLoyaltyPrograms: plan.maxLoyaltyPrograms,
+        monthlyPrice: plan.monthlyPrice,
+        annualPrice: plan.annualPrice,
+        billingCycleSupport: plan.billingCycleSupport,
       },
     });
   }

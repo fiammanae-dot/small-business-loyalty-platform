@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-const migration = readFileSync("prisma/migrations/0013_database_rules_tenant_isolation/migration.sql", "utf8");
+const tenantRulesMigration = readFileSync("prisma/migrations/0013_database_rules_tenant_isolation/migration.sql", "utf8");
+const planRefactorMigration = readFileSync("prisma/migrations/0023_subscription_plan_single_source/migration.sql", "utf8");
 const nextConfig = readFileSync("next.config.ts", "utf8");
 
 test("database check constraints protect loyalty, stamp, invoice, payment, and plan rules", () => {
@@ -17,15 +18,16 @@ test("database check constraints protect loyalty, stamp, invoice, payment, and p
     "payments_amount_min_check",
     "subscription_plans_max_branches_min_check",
     "subscription_plans_max_loyalty_programs_min_check",
-    "subscription_plans_price_monthly_min_check",
+    "subscription_plans_monthly_price_min_check",
+    "subscription_plans_annual_price_min_check",
   ]) {
-    assert.match(migration, new RegExp(expected));
+    assert.match(`${tenantRulesMigration}\n${planRefactorMigration}`, new RegExp(expected));
   }
 });
 
 test("one active or trial subscription per business is enforced with partial unique index", () => {
-  assert.match(migration, /business_subscriptions_one_active_or_trial_per_business_idx/);
-  assert.match(migration, /WHERE "status" IN \('TRIAL', 'ACTIVE'\)/);
+  assert.match(tenantRulesMigration, /business_subscriptions_one_active_or_trial_per_business_idx/);
+  assert.match(tenantRulesMigration, /WHERE "status" IN \('TRIAL', 'ACTIVE'\)/);
 });
 
 test("tenant branch consistency triggers are installed", () => {
@@ -36,7 +38,7 @@ test("tenant branch consistency triggers are installed", () => {
     "scan_events_prevent_branch_business_mismatch",
     "reward_redemptions_prevent_branch_business_mismatch",
   ]) {
-    assert.match(migration, new RegExp(expected));
+    assert.match(tenantRulesMigration, new RegExp(expected));
   }
 });
 

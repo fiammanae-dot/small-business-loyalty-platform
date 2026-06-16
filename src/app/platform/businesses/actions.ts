@@ -4,11 +4,12 @@ import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import type { BusinessType, RecordStatus } from "@prisma/client";
+import type { BillingCycle, BusinessType, RecordStatus } from "@prisma/client";
 import { validateCsrfForm } from "@/lib/csrf";
 import { prisma } from "@/lib/prisma";
 import { createDefaultAbusePolicies } from "@/lib/alert-engine";
 import { requireRole } from "@/lib/session";
+import { getSubscriptionPeriodEnd, isBillingCycleSupported } from "@/lib/subscription-plans";
 
 const colorSchema = z.string().trim().regex(/^#[0-9A-Fa-f]{6}$/, "Use a hex color like #F97316.");
 
@@ -31,6 +32,7 @@ const createBusinessSchema = z.object({
   ownerEmail: z.string().trim().email("Owner email must be valid."),
   temporaryPassword: z.string().min(8, "Temporary password must be at least 8 characters."),
   subscriptionPlanId: z.coerce.number().int().positive("Subscription plan is required."),
+  billingCycle: z.enum(["MONTHLY", "YEARLY"]),
   logoUrl: z.string().trim().url("Logo URL must be valid.").optional().or(z.literal("")),
   primaryColor: colorSchema.default("#F97316"),
   secondaryColor: colorSchema.default("#FDBA74"),
@@ -59,6 +61,7 @@ const updateBusinessSchema = z.object({
   ]),
   status: z.enum(["ACTIVE", "INACTIVE"]),
   subscriptionPlanId: z.coerce.number().int().positive("Subscription plan is required."),
+  billingCycle: z.enum(["MONTHLY", "YEARLY"]),
   logoUrl: z.string().trim().url("Logo URL must be valid.").optional().or(z.literal("")),
   primaryColor: colorSchema,
   secondaryColor: colorSchema,
@@ -107,6 +110,7 @@ export async function createBusinessAction(formData: FormData) {
     ownerEmail: getString(formData, "ownerEmail").toLowerCase(),
     temporaryPassword: getString(formData, "temporaryPassword"),
     subscriptionPlanId: getString(formData, "subscriptionPlanId"),
+    billingCycle: getString(formData, "billingCycle") || "YEARLY",
     logoUrl: getString(formData, "logoUrl"),
     primaryColor: getString(formData, "primaryColor") || "#F97316",
     secondaryColor: getString(formData, "secondaryColor") || "#FDBA74",
@@ -138,11 +142,15 @@ export async function createBusinessAction(formData: FormData) {
 
   const plan = await prisma.subscriptionPlan.findUnique({
     where: { id: data.subscriptionPlanId },
-    select: { id: true },
+    select: { id: true, code: true, billingCycleSupport: true },
   });
 
   if (!plan) {
     redirectWithError("/platform/businesses/new", "Subscription plan is required.");
+  }
+
+  if (!isBillingCycleSupported(plan, data.billingCycle as BillingCycle)) {
+    redirectWithError("/platform/businesses/new", "Selected billing cycle is not supported by this plan.");
   }
 
   const passwordHash = await bcrypt.hash(data.temporaryPassword, 12);
@@ -195,13 +203,13 @@ export async function createBusinessAction(formData: FormData) {
     await createDefaultAbusePolicies(tx, createdBusiness.id);
 
     const now = new Date();
-    const renewalDate = new Date(now);
-    renewalDate.setFullYear(now.getFullYear() + 1);
+    const renewalDate = getSubscriptionPeriodEnd(now, data.billingCycle as BillingCycle);
 
     const subscription = await tx.businessSubscription.create({
       data: {
         businessId: createdBusiness.id,
         subscriptionPlanId: data.subscriptionPlanId,
+        billingCycle: data.billingCycle as BillingCycle,
         status: "ACTIVE",
         startDate: now,
         expiryDate: renewalDate,
@@ -252,6 +260,7 @@ export async function updateBusinessAction(formData: FormData) {
     businessType: getString(formData, "businessType"),
     status: getString(formData, "status"),
     subscriptionPlanId: getString(formData, "subscriptionPlanId"),
+    billingCycle: getString(formData, "billingCycle") || "YEARLY",
     logoUrl: getString(formData, "logoUrl"),
     primaryColor: getString(formData, "primaryColor"),
     secondaryColor: getString(formData, "secondaryColor"),
@@ -277,11 +286,15 @@ export async function updateBusinessAction(formData: FormData) {
   const data = parsed.data;
   const plan = await prisma.subscriptionPlan.findUnique({
     where: { id: data.subscriptionPlanId },
-    select: { id: true },
+    select: { id: true, code: true, billingCycleSupport: true },
   });
 
   if (!plan) {
     redirectWithError(`/platform/businesses/${businessUuid}/edit`, "Subscription plan is required.");
+  }
+
+  if (!isBillingCycleSupported(plan, data.billingCycle as BillingCycle)) {
+    redirectWithError(`/platform/businesses/${businessUuid}/edit`, "Selected billing cycle is not supported by this plan.");
   }
 
   await prisma.$transaction(async (tx) => {
@@ -341,18 +354,21 @@ export async function updateBusinessAction(formData: FormData) {
     const currentSubscription = await tx.businessSubscription.findFirst({
       where: { businessId: data.businessId, status: { in: ["TRIAL", "ACTIVE"] } },
       orderBy: { createdAt: "desc" },
-      select: { id: true, subscriptionPlanId: true },
+      select: { id: true, subscriptionPlanId: true, billingCycle: true },
     });
 
     if (!currentSubscription) {
+      const now = new Date();
+      const periodEnd = getSubscriptionPeriodEnd(now, data.billingCycle as BillingCycle);
       const createdSubscription = await tx.businessSubscription.create({
         data: {
           businessId: data.businessId,
           subscriptionPlanId: data.subscriptionPlanId,
+          billingCycle: data.billingCycle as BillingCycle,
           status: "ACTIVE",
-          startDate: new Date(),
-          expiryDate: oneYearFromNow(),
-          renewalDate: oneYearFromNow(),
+          startDate: now,
+          expiryDate: periodEnd,
+          renewalDate: periodEnd,
         },
       });
       await tx.subscriptionAuditLog.create({
@@ -365,7 +381,7 @@ export async function updateBusinessAction(formData: FormData) {
           newValue: "ACTIVE",
         },
       });
-    } else if (currentSubscription.subscriptionPlanId !== data.subscriptionPlanId) {
+    } else if (currentSubscription.subscriptionPlanId !== data.subscriptionPlanId || currentSubscription.billingCycle !== data.billingCycle) {
       await tx.businessSubscription.update({
         where: { id: currentSubscription.id },
         data: { status: "CANCELLED", endDate: new Date() },
@@ -376,18 +392,21 @@ export async function updateBusinessAction(formData: FormData) {
           businessSubscriptionId: currentSubscription.id,
           userId: platformUser.id,
           action: "PLAN_CHANGED",
-          previousValue: currentSubscription.subscriptionPlanId.toString(),
-          newValue: data.subscriptionPlanId.toString(),
+          previousValue: `${currentSubscription.subscriptionPlanId}:${currentSubscription.billingCycle}`,
+          newValue: `${data.subscriptionPlanId}:${data.billingCycle}`,
         },
       });
+      const now = new Date();
+      const periodEnd = getSubscriptionPeriodEnd(now, data.billingCycle as BillingCycle);
       const newSubscription = await tx.businessSubscription.create({
         data: {
           businessId: data.businessId,
           subscriptionPlanId: data.subscriptionPlanId,
+          billingCycle: data.billingCycle as BillingCycle,
           status: "ACTIVE",
-          startDate: new Date(),
-          expiryDate: oneYearFromNow(),
-          renewalDate: oneYearFromNow(),
+          startDate: now,
+          expiryDate: periodEnd,
+          renewalDate: periodEnd,
         },
       });
       await tx.subscriptionAuditLog.create({
@@ -406,12 +425,6 @@ export async function updateBusinessAction(formData: FormData) {
   revalidatePath("/platform/businesses");
   revalidatePath(`/platform/businesses/${businessUuid}`);
   redirect(`/platform/businesses/${businessUuid}`);
-}
-
-function oneYearFromNow() {
-  const now = new Date();
-  now.setFullYear(now.getFullYear() + 1);
-  return now;
 }
 
 export async function toggleBusinessStatusAction(formData: FormData) {

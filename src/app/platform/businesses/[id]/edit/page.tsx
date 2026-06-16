@@ -31,7 +31,7 @@ export default async function EditBusinessPage({
     }),
     prisma.subscriptionPlan.findMany({
       orderBy: { maxBranches: "asc" },
-      select: { id: true, name: true },
+      select: { id: true, code: true, name: true, monthlyPrice: true, annualPrice: true, billingCycleSupport: true },
     }),
   ]);
 
@@ -58,6 +58,7 @@ export default async function EditBusinessPage({
           branding: business.branding,
           communicationSettings: business.communicationSettings,
           subscriptionPlanId: business.subscriptions[0]?.subscriptionPlanId,
+          billingCycle: business.subscriptions[0]?.billingCycle,
         }}
       />
     </DashboardShell>

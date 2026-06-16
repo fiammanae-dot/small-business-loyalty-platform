@@ -5,6 +5,7 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatDate } from "@/lib/format";
 import { formatMoney, getInvoiceDisplayStatus } from "@/lib/billing";
+import { formatBillingCycle } from "@/lib/subscription-plans";
 import { prisma } from "@/lib/prisma";
 import { businessTypeLabels, roleLabels } from "@/lib/roles";
 import { requireRole } from "@/lib/session";
@@ -102,8 +103,9 @@ export default async function BusinessDetailPage({ params }: { params: Promise<{
             Open Billing Center
           </Link>
         </div>
-        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
           <InfoMetric label="Current Plan" value={currentSubscription?.subscriptionPlan.name ?? "Unassigned"} />
+          <InfoMetric label="Billing Cycle" value={currentSubscription ? formatBillingCycle(currentSubscription.billingCycle) : "Unassigned"} />
           <InfoMetric label="Subscription Status" value={currentSubscription?.status.replaceAll("_", " ") ?? "Unassigned"} />
           <InfoMetric label="Renewal Date" value={currentSubscription?.renewalDate ? formatDate(currentSubscription.renewalDate) : "-"} />
           <InfoMetric label="Lifetime Revenue" value={formatMoney(lifetimeRevenue)} />

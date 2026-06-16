@@ -120,31 +120,24 @@ async function main() {
   const passwordHash = await bcrypt.hash(demoPassword, 12);
 
   const growthPlan = await prisma.subscriptionPlan.upsert({
-    where: { name: "Growth" },
+    where: { code: "GROWTH" },
     update: {
-      maxBranches: 3,
-      maxLoyaltyPrograms: 10,
-      features: [
-        "Multiple loyalty programs",
-        "Referral program",
-        "Customer segments",
-        "Birthday rewards",
-        "Basic analytics",
-      ],
-      priceMonthly: "79.00",
-    },
-    create: {
+      code: "GROWTH",
       name: "Growth",
       maxBranches: 3,
-      maxLoyaltyPrograms: 10,
-      features: [
-        "Multiple loyalty programs",
-        "Referral program",
-        "Customer segments",
-        "Birthday rewards",
-        "Basic analytics",
-      ],
-      priceMonthly: "79.00",
+      maxLoyaltyPrograms: 5,
+      monthlyPrice: "200.00",
+      annualPrice: "2000.00",
+      billingCycleSupport: ["MONTHLY", "YEARLY"],
+    },
+    create: {
+      code: "GROWTH",
+      name: "Growth",
+      maxBranches: 3,
+      maxLoyaltyPrograms: 5,
+      monthlyPrice: "200.00",
+      annualPrice: "2000.00",
+      billingCycleSupport: ["MONTHLY", "YEARLY"],
     },
   });
 
