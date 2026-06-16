@@ -190,15 +190,15 @@ export default async function ReferralsPage({
             </div>
           </section>
 
-          <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
-            <h2 className="text-lg font-semibold text-[#111827]">How referrals qualify</h2>
+          <details className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
+            <summary className="cursor-pointer text-lg font-semibold text-[#111827]">How referrals qualify</summary>
             <ol className="mt-4 grid gap-3 text-sm text-[#6B7280]">
               <li className="rounded-md bg-[#FAFAFA] p-3"><strong className="text-[#111827]">1.</strong> Customer shares referral link.</li>
               <li className="rounded-md bg-[#FAFAFA] p-3"><strong className="text-[#111827]">2.</strong> Staff enrolls the referred customer with that code.</li>
               <li className="rounded-md bg-[#FAFAFA] p-3"><strong className="text-[#111827]">3.</strong> Referral stays pending until the first valid stamp.</li>
               <li className="rounded-md bg-[#FAFAFA] p-3"><strong className="text-[#111827]">4.</strong> Reward is granted automatically after qualification.</li>
             </ol>
-          </section>
+          </details>
         </aside>
       </section>
     </DashboardShell>

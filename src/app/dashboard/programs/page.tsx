@@ -77,12 +77,12 @@ export default async function ProgramsPage({
             Create Program
           </Link>
         </div>
-        <div className="mt-5 grid gap-3 md:grid-cols-3">
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
           <KpiCard icon={<Gift className="h-5 w-5" />} label="Active Programs" value={activeCount} />
           <KpiCard icon={<Trophy className="h-5 w-5" />} label="Reward Ready" value={rewardReadyCount} />
           <KpiCard icon={<Users className="h-5 w-5" />} label="Inactive Programs" value={inactiveCount} />
         </div>
-        <form className="mt-5 grid gap-3 rounded-md border border-[#E5E7EB] bg-zinc-50 p-3 lg:grid-cols-[1.5fr_1fr_1fr_1fr_auto_auto] lg:items-center">
+        <form className="mt-4 grid gap-3 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3 lg:grid-cols-[1.5fr_1fr_1fr_1fr_auto_auto] lg:items-center">
           <label className="relative">
             <span className="sr-only">Search programs</span>
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" aria-hidden="true" />

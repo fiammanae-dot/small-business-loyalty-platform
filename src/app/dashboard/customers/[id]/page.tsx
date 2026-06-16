@@ -296,6 +296,7 @@ export default async function CustomerProfilePage({
               cardLastViewedAt={membership.cardLastViewedAt}
               membershipUuid={membership.uuid}
               nextCardStatus={nextCardStatus}
+              compact
             />
             <ProfileSummaryCard membership={membership} customer={customer} />
           </div>
@@ -761,6 +762,7 @@ function CustomerCardPanel({
   cardLastViewedAt,
   membershipUuid,
   nextCardStatus,
+  compact = false,
 }: {
   cardUrl: string;
   businessName: string;
@@ -772,6 +774,7 @@ function CustomerCardPanel({
   cardLastViewedAt: Date | null;
   membershipUuid: string;
   nextCardStatus: string;
+  compact?: boolean;
 }) {
   return (
     <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
@@ -779,30 +782,44 @@ function CustomerCardPanel({
         <div>
           <p className="text-sm font-semibold text-[#F97316]">Customer card</p>
           <h2 className="mt-1 text-xl font-semibold text-[#111827]">Public member card</h2>
-          <p className="mt-2 text-sm text-[#6B7280]">Card number: {getShortCardToken(cardToken)}</p>
+          {!compact ? <p className="mt-2 text-sm text-[#6B7280]">Card number: {getShortCardToken(cardToken)}</p> : null}
         </div>
         <CreditCard className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
       </div>
-      <div className="mt-5 grid gap-3 sm:grid-cols-3">
-        <Info label="Card status" value={cardStatus.toLowerCase()} />
-        <Info label="Created" value={formatDate(cardCreatedAt)} />
-        <Info label="Last viewed" value={cardLastViewedAt ? formatDate(cardLastViewedAt) : "-"} />
-      </div>
-      <p className="mt-4 break-all rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3 text-xs text-[#6B7280]">{cardUrl}</p>
+      {!compact ? (
+        <>
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <Info label="Card status" value={cardStatus.toLowerCase()} />
+            <Info label="Created" value={formatDate(cardCreatedAt)} />
+            <Info label="Last viewed" value={cardLastViewedAt ? formatDate(cardLastViewedAt) : "-"} />
+          </div>
+          <p className="mt-4 break-all rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3 text-xs text-[#6B7280]">{cardUrl}</p>
+        </>
+      ) : (
+        <p className="mt-4 rounded-md border border-orange-100 bg-orange-50 px-3 py-2 text-sm text-[#9A3412]">
+          Use this secure public card link for customer visits, stamps, rewards, and QR scans.
+        </p>
+      )}
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         <a href={cardUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">
           Open public card
         </a>
-        <form action={toggleCustomerCardAction}>
-          <CsrfInput scope="dashboard:customers" />
-          <input type="hidden" name="membershipUuid" value={membershipUuid} />
-          <input type="hidden" name="nextStatus" value={nextCardStatus} />
-          <button type="submit" className="w-full rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]">
-            {nextCardStatus === "ACTIVE" ? "Enable card" : "Disable card"}
-          </button>
-        </form>
+        {compact ? (
+          <Link href={`/dashboard/customers/${membershipUuid}?tab=loyalty`} className="inline-flex items-center justify-center rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]">
+            Card tools
+          </Link>
+        ) : (
+          <form action={toggleCustomerCardAction}>
+            <CsrfInput scope="dashboard:customers" />
+            <input type="hidden" name="membershipUuid" value={membershipUuid} />
+            <input type="hidden" name="nextStatus" value={nextCardStatus} />
+            <button type="submit" className="w-full rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]">
+              {nextCardStatus === "ACTIVE" ? "Enable card" : "Disable card"}
+            </button>
+          </form>
+        )}
       </div>
-      <div className="mt-4">
+      {!compact ? <div className="mt-4">
         <CardShareActions
           cardUrl={cardUrl}
           businessName={businessName}
@@ -811,7 +828,7 @@ function CustomerCardPanel({
           auditMembershipUuid={membershipUuid}
           showWallet={false}
         />
-      </div>
+      </div> : null}
     </section>
   );
 }

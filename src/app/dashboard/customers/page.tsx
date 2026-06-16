@@ -76,7 +76,7 @@ export default async function CustomersPage({
           </Link>
         </div>
 
-        <form className="mt-5 grid gap-3 md:grid-cols-5">
+        <form className="mt-5 grid gap-3 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3 md:grid-cols-5">
           <input
             name="q"
             defaultValue={params.q ?? ""}
@@ -93,14 +93,7 @@ export default async function CustomersPage({
             Clear search
           </Link>
         </form>
-        {query ? (
-          <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
-            <span className="text-[#6B7280]">Recent search:</span>
-            <Link href={`/dashboard/customers?q=${encodeURIComponent(query)}`} className="rounded-md bg-orange-50 px-3 py-1 font-semibold text-[#F97316]">
-              {query}
-            </Link>
-          </div>
-        ) : null}
+        <p className="mt-4 text-sm font-semibold text-[#6B7280]">Showing {customerRows.length} customers</p>
 
         <div className="mt-6 grid gap-3 lg:hidden">
           {customerRows.map((membership) => (

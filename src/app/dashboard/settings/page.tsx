@@ -1,6 +1,7 @@
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { StatusBadge } from "@/components/StatusBadge";
+import Link from "next/link";
 import { saveAbusePolicyAction, saveCooldownRuleAction, saveCustomerTierSettingsAction } from "@/app/dashboard/actions";
 import { getBusinessOwnerContext, getCurrentPlan, getCurrentSubscription } from "@/lib/business-owner";
 import { normalizeTierConfig } from "@/lib/customer-tiers";
@@ -13,7 +14,7 @@ import { messageChannelLabels } from "@/lib/messages";
 export default async function BusinessSettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; success?: string }>;
+  searchParams: Promise<{ error?: string; success?: string; tab?: string }>;
 }) {
   const { user, business } = await getBusinessOwnerContext();
   const params = await searchParams;
@@ -32,6 +33,7 @@ export default async function BusinessSettingsPage({
     where: { businessId: user.businessId },
     orderBy: { ruleType: "asc" },
   });
+  const activeTab = resolveSettingsTab(params.tab);
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Business settings">
@@ -40,19 +42,44 @@ export default async function BusinessSettingsPage({
           {params.error ?? params.success}
         </p>
       ) : null}
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
+      <nav className="flex gap-2 overflow-x-auto rounded-md border border-[#E5E7EB] bg-white p-2 text-sm" aria-label="Business settings tabs">
+        {[
+          ["overview", "Overview"],
+          ["tiers", "Customer Tiers"],
+          ["alerts", "Alert Policies"],
+          ["cooldowns", "Cooldowns"],
+          ["subscription", "Subscription"],
+          ["communications", "Communications"],
+        ].map(([tab, label]) => (
+          <Link
+            key={tab}
+            href={`/dashboard/settings?tab=${tab}`}
+            className={`shrink-0 rounded-md px-3 py-2 font-semibold ${activeTab === tab ? "bg-orange-50 text-[#F97316]" : "text-[#111827] hover:bg-[#FAFAFA]"}`}
+          >
+            {label}
+          </Link>
+        ))}
+      </nav>
+
+      {activeTab === "overview" ? <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
         <h2 className="text-lg font-semibold text-[#111827]">Read-only setup</h2>
         <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Item label="Business ID" value={business.id.toString()} />
-          <Item label="Business UUID" value={business.uuid} />
           <Item label="Business type" value={businessTypeLabels[business.businessType]} />
           <Item label="Current plan" value={plan?.name ?? "Unassigned"} />
           <Item label="Branch limit" value={(plan?.maxBranches ?? 1).toString()} />
           <Item label="Loyalty program limit" value={(plan?.maxLoyaltyPrograms ?? 1).toString()} />
           <Item label="Management scope" value="Business profile, branches, staff, customers, and programs" />
         </div>
-      </section>
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
+        <details className="mt-4">
+          <summary className="cursor-pointer text-sm font-semibold text-[#F97316]">Advanced identifiers</summary>
+          <div className="mt-3 grid gap-4 md:grid-cols-2">
+            <Item label="Business ID" value={business.id.toString()} />
+            <Item label="Business UUID" value={business.uuid} />
+          </div>
+        </details>
+      </section> : null}
+
+      {activeTab === "tiers" ? <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-[#111827]">Customer tiers</h2>
@@ -80,8 +107,9 @@ export default async function BusinessSettingsPage({
             </button>
           </div>
         </form>
-      </section>
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
+      </section> : null}
+
+      {activeTab === "alerts" ? <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
         <div>
           <h2 className="text-lg font-semibold text-[#111827]">Alert policies</h2>
           <p className="mt-2 text-sm text-[#6B7280]">Tune abuse-monitoring thresholds and severity for this business.</p>
@@ -115,8 +143,9 @@ export default async function BusinessSettingsPage({
           ))}
           {abusePolicies.length === 0 ? <p className="rounded-md border border-dashed border-[#E5E7EB] p-4 text-sm text-[#6B7280]">Default alert policies will be created by the Phase 12B migration.</p> : null}
         </div>
-      </section>
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
+      </section> : null}
+
+      {activeTab === "cooldowns" ? <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
         <div>
           <h2 className="text-lg font-semibold text-[#111827]">Cooldown policy</h2>
           <p className="mt-2 text-sm text-[#6B7280]">Control abuse-monitoring limits for stamp issuance. Overrides are available only to Business Owners and Branch Managers.</p>
@@ -137,8 +166,9 @@ export default async function BusinessSettingsPage({
             </button>
           </div>
         </form>
-      </section>
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
+      </section> : null}
+
+      {activeTab === "subscription" ? <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-[#111827]">Subscription</h2>
@@ -155,8 +185,9 @@ export default async function BusinessSettingsPage({
           <Item label="Branch usage" value={`${business._count.branches} / ${plan?.maxBranches ?? 1}`} />
           <Item label="Program usage" value={`${business._count.loyaltyPrograms} / ${plan?.maxLoyaltyPrograms ?? 1}`} />
         </div>
-      </section>
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
+      </section> : null}
+
+      {activeTab === "communications" ? <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
         <h2 className="text-lg font-semibold text-[#111827]">Communication channels</h2>
         <p className="mt-2 text-sm text-[#6B7280]">Provider-level channel settings are managed by the System Administrator. Messages are prepared manually only.</p>
         <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -168,9 +199,14 @@ export default async function BusinessSettingsPage({
           <Item label="Sender email" value={communicationSettings?.senderEmail ?? "Not set"} />
           <Item label="Sender name" value={communicationSettings?.senderName ?? "Not set"} />
         </div>
-      </section>
+      </section> : null}
     </DashboardShell>
   );
+}
+
+function resolveSettingsTab(tab?: string) {
+  const allowed = ["overview", "tiers", "alerts", "cooldowns", "subscription", "communications"];
+  return allowed.includes(tab ?? "") ? tab! : "overview";
 }
 
 function Input({

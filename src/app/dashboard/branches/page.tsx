@@ -28,6 +28,20 @@ export default async function BranchesPage({
               Your current plan allows up to {maxBranches} branch(es).
             </p>
           </div>
+          <details className="group">
+            <summary className="inline-flex h-10 cursor-pointer list-none items-center justify-center rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">
+              Add branch
+            </summary>
+            <div className="absolute right-6 z-20 mt-2 w-[min(920px,calc(100vw-3rem))] rounded-md border border-[#E5E7EB] bg-white p-4 shadow-xl">
+              {limitReached ? (
+                <p className="rounded-md border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-orange-700">
+                  Your current plan allows up to {maxBranches} branch(es).
+                </p>
+              ) : (
+                <BranchForm submitLabel="Add branch" />
+              )}
+            </div>
+          </details>
         </div>
         <div className="mt-5 grid gap-4">
           {business.branches.map((branch) => {
@@ -50,55 +64,67 @@ export default async function BranchesPage({
                     </button>
                   </form>
                 </div>
-                <form action={saveBranchAction} className="mt-5 grid gap-3 md:grid-cols-5">
-                  <CsrfInput scope="dashboard:branches" />
-                  <input type="hidden" name="branchId" value={branch.id} />
-                  <Input name="name" label="Branch name" defaultValue={branch.name} />
-                  <Input name="country" label="Country" defaultValue={branch.country} />
-                  <Input name="city" label="City" defaultValue={branch.city} />
-                  <Input name="address" label="Address" defaultValue={branch.address} />
-                  <label className="space-y-2">
-                    <span className="text-sm font-medium text-[#111827]">Status</span>
-                    <select name="status" defaultValue={branch.status} className="h-10 w-full rounded-md border border-[#E5E7EB] px-3 text-sm">
-                      {statusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                    </select>
-                  </label>
-                  <button type="submit" className="h-10 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white md:col-start-5">
-                    Save branch
-                  </button>
-                </form>
+                <details className="mt-4">
+                  <summary className="cursor-pointer text-sm font-semibold text-[#F97316]">Edit branch details</summary>
+                  <div className="mt-4 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
+                    <BranchForm
+                      branchId={branch.id}
+                      name={branch.name}
+                      country={branch.country}
+                      city={branch.city}
+                      address={branch.address}
+                      status={branch.status}
+                      submitLabel="Save branch"
+                    />
+                  </div>
+                </details>
               </article>
             );
           })}
+          {business.branches.length === 0 ? (
+            <p className="rounded-md border border-dashed border-[#E5E7EB] p-4 text-sm text-[#6B7280]">No branches yet. Use Add branch to create your first location.</p>
+          ) : null}
         </div>
       </section>
-
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
-        <h2 className="text-lg font-semibold text-[#111827]">Add branch</h2>
-        {limitReached ? (
-          <p className="mt-3 rounded-md border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-orange-700">
-            Your current plan allows up to {maxBranches} branch(es).
-          </p>
-        ) : (
-          <form action={saveBranchAction} className="mt-5 grid gap-4 md:grid-cols-5">
-            <CsrfInput scope="dashboard:branches" />
-            <Input name="name" label="Branch name" />
-            <Input name="country" label="Country" />
-            <Input name="city" label="City" />
-            <Input name="address" label="Address" />
-            <label className="space-y-2">
-              <span className="text-sm font-medium text-[#111827]">Status</span>
-              <select name="status" defaultValue="ACTIVE" className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm">
-                {statusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-              </select>
-            </label>
-            <button type="submit" className="h-11 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white md:col-start-5">
-              Add branch
-            </button>
-          </form>
-        )}
-      </section>
     </DashboardShell>
+  );
+}
+
+function BranchForm({
+  branchId,
+  name,
+  country,
+  city,
+  address,
+  status = "ACTIVE",
+  submitLabel,
+}: {
+  branchId?: number;
+  name?: string;
+  country?: string;
+  city?: string;
+  address?: string;
+  status?: "ACTIVE" | "INACTIVE";
+  submitLabel: string;
+}) {
+  return (
+    <form action={saveBranchAction} className="grid gap-3 md:grid-cols-5">
+      <CsrfInput scope="dashboard:branches" />
+      {branchId ? <input type="hidden" name="branchId" value={branchId} /> : null}
+      <Input name="name" label="Branch name" defaultValue={name} />
+      <Input name="country" label="Country" defaultValue={country} />
+      <Input name="city" label="City" defaultValue={city} />
+      <Input name="address" label="Address" defaultValue={address} />
+      <label className="space-y-2">
+        <span className="text-sm font-medium text-[#111827]">Status</span>
+        <select name="status" defaultValue={status} className="h-10 w-full rounded-md border border-[#E5E7EB] px-3 text-sm">
+          {statusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+        </select>
+      </label>
+      <button type="submit" className="h-10 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white md:col-start-5">
+        {submitLabel}
+      </button>
+    </form>
   );
 }
 

@@ -38,41 +38,20 @@ export default async function StaffUsersPage({
     <DashboardShell user={user} eyebrow="Business Owner" title="Staff users">
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
         <Message error={params.error} success={params.success} />
-        <h2 className="text-lg font-semibold text-[#111827]">Create staff user</h2>
-        <form action={createStaffUserAction} className="mt-5 grid gap-4 md:grid-cols-3">
-          <CsrfInput scope="dashboard:staff" />
-          <Input label="Full name" name="name" />
-          <Input label="Email" name="email" type="email" />
-          <Input label="Temporary password" name="password" type="password" />
-          <label className="space-y-2">
-            <span className="text-sm font-medium text-[#111827]">Role</span>
-            <select name="role" className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm">
-              <option value="BRANCH_MANAGER">Branch Manager</option>
-              <option value="STAFF">Staff</option>
-            </select>
-          </label>
-          <SearchableCombobox
-            label="Branch assignment"
-            name="branchId"
-            placeholder="Search branches"
-            emptyLabel="No branches found."
-            required
-            options={business.branches.map((branch) => ({
-              value: branch.id.toString(),
-              label: branch.name,
-              description: business.name,
-              badge: branch.status === "ACTIVE" ? "Active" : "Inactive",
-              disabled: branch.status !== "ACTIVE",
-            }))}
-          />
-          <button type="submit" className="h-11 self-end rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">
-            Add user
-          </button>
-        </form>
-      </section>
-
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
-        <h2 className="text-lg font-semibold text-[#111827]">Staff list</h2>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-[#111827]">Staff list</h2>
+            <p className="mt-1 text-sm text-[#6B7280]">Create and manage Branch Manager and Staff access.</p>
+          </div>
+          <details className="group">
+            <summary className="inline-flex h-10 cursor-pointer list-none items-center justify-center rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">
+              Add user
+            </summary>
+            <div className="absolute right-6 z-20 mt-2 w-[min(920px,calc(100vw-3rem))] rounded-md border border-[#E5E7EB] bg-white p-4 shadow-xl">
+              <StaffCreateForm businessName={business.name} branches={business.branches} />
+            </div>
+          </details>
+        </div>
         <div className="mt-6 overflow-x-auto">
           <table className="w-full min-w-[860px] border-separate border-spacing-0 text-left text-sm">
             <thead>
@@ -104,7 +83,7 @@ export default async function StaffUsersPage({
                     </td>
                     <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(staffUser.createdAt)}</td>
                     <td className="border-b border-[#E5E7EB] px-3 py-4">
-                      <div className="flex flex-col gap-2">
+                      <div className="flex flex-wrap items-center gap-3">
                         <StaffPasswordResetAction staffUserId={staffUser.id} staffName={staffUser.name} csrfToken={resetCsrfToken} />
                         <form action={toggleStaffStatusAction}>
                           <CsrfInput scope="dashboard:staff" />
@@ -125,6 +104,47 @@ export default async function StaffUsersPage({
         </div>
       </section>
     </DashboardShell>
+  );
+}
+
+function StaffCreateForm({
+  businessName,
+  branches,
+}: {
+  businessName: string;
+  branches: Array<{ id: number; name: string; status: "ACTIVE" | "INACTIVE" }>;
+}) {
+  return (
+    <form action={createStaffUserAction} className="grid gap-4 md:grid-cols-3">
+      <CsrfInput scope="dashboard:staff" />
+      <Input label="Full name" name="name" />
+      <Input label="Email" name="email" type="email" />
+      <Input label="Temporary password" name="password" type="password" />
+      <label className="space-y-2">
+        <span className="text-sm font-medium text-[#111827]">Role</span>
+        <select name="role" className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm">
+          <option value="BRANCH_MANAGER">Branch Manager</option>
+          <option value="STAFF">Staff</option>
+        </select>
+      </label>
+      <SearchableCombobox
+        label="Branch assignment"
+        name="branchId"
+        placeholder="Search branches"
+        emptyLabel="No branches found."
+        required
+        options={branches.map((branch) => ({
+          value: branch.id.toString(),
+          label: branch.name,
+          description: businessName,
+          badge: branch.status === "ACTIVE" ? "Active" : "Inactive",
+          disabled: branch.status !== "ACTIVE",
+        }))}
+      />
+      <button type="submit" className="h-11 self-end rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">
+        Add user
+      </button>
+    </form>
   );
 }
 
