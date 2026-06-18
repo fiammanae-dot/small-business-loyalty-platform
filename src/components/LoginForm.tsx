@@ -1,6 +1,7 @@
 "use client";
 
 import { Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import type { LoginState } from "@/app/login/actions";
 import { loginAction } from "@/app/login/actions";
@@ -68,6 +69,10 @@ export function LoginForm({ csrfToken }: { csrfToken: string }) {
       >
         {isPending ? "Signing in..." : "Sign in"}
       </button>
+
+      <Link href="/forgot-password" className="block text-center text-sm font-semibold text-[#F97316] hover:text-[#EA580C]">
+        Forgot Password?
+      </Link>
     </form>
   );
 }
