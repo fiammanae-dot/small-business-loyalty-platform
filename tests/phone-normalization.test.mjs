@@ -45,9 +45,8 @@ test("customer creation stores normalized phone and uses it for duplicate detect
 test("customer search accepts local and international UAE phone formats", () => {
   const dashboardCustomers = read("src/app/dashboard/customers/page.tsx");
   const branchCustomers = read("src/app/branch/customers/page.tsx");
-  const dashboard = read("src/app/page.tsx");
 
-  for (const source of [dashboardCustomers, branchCustomers, dashboard]) {
+  for (const source of [dashboardCustomers, branchCustomers]) {
     assert.match(source, /normalizePhone/);
     assert.match(source, /normalizedPhone/);
     assert.match(source, /formatUaePhoneDisplay/);

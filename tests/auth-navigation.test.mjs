@@ -6,13 +6,17 @@ function read(path) {
   return readFileSync(path, "utf8");
 }
 
-test("authenticated root and login requests redirect through role home paths", () => {
+test("public root stays a marketing homepage while login redirects authenticated users", () => {
   const home = read("src/app/page.tsx");
   const login = read("src/app/login/page.tsx");
   const session = read("src/lib/session.ts");
   const roles = read("src/lib/roles.ts");
 
-  assert.match(home, /await redirectAuthenticatedUser\(\)/);
+  assert.doesNotMatch(home, /redirectAuthenticatedUser/);
+  assert.doesNotMatch(home, /DashboardShell/);
+  assert.doesNotMatch(home, /getBusinessOwnerContext/);
+  assert.match(home, /HeroSection/);
+  assert.match(home, /FeaturesSection/);
   assert.match(login, /await redirectAuthenticatedUser\(\)/);
   assert.match(session, /redirect\(roleHomePath\[user\.role\]\)/);
 

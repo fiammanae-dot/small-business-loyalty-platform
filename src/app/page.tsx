@@ -1,807 +1,348 @@
 import Link from "next/link";
-import type React from "react";
 import {
+  ArrowRight,
+  BarChart3,
   CheckCircle2,
+  CircleHelp,
   Gift,
+  MessageSquare,
+  QrCode,
   ScanLine,
-  Search,
-  ShieldAlert,
+  ShieldCheck,
+  Sparkles,
   Store,
-  TicketCheck,
-  UserPlus,
   Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { DashboardShell } from "@/components/DashboardShell";
-import { StatusBadge } from "@/components/StatusBadge";
-import { getBusinessDisplayName, getBusinessTypeDisplayName } from "@/lib/business-display";
-import { getBusinessOwnerContext, getCurrentPlan, getCurrentSubscription } from "@/lib/business-owner";
-import { formatDate, formatDateTime } from "@/lib/format";
-import { prisma } from "@/lib/prisma";
-import { formatUaePhoneDisplay, normalizePhone } from "@/lib/phone";
-import { progressValue } from "@/lib/programs";
-import { businessTypeLabels } from "@/lib/roles";
-import { redirectAuthenticatedUser } from "@/lib/session";
-import { getSubscriptionRemainingDays, subscriptionDisplayDate } from "@/lib/subscriptions";
 
-export default async function BusinessDashboard({
-  searchParams,
-}: {
-  searchParams: Promise<{ customerSearch?: string }>;
-}) {
-  await redirectAuthenticatedUser();
-  const { user, business } = await getBusinessOwnerContext();
-  const params = await searchParams;
-  const customerSearch = params.customerSearch?.trim() ?? "";
-  const normalizedCustomerSearchPhone = customerSearch ? normalizePhone(customerSearch) : null;
-  const plan = getCurrentPlan(business);
-  const subscription = getCurrentSubscription(business);
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
+const features = [
+  {
+    title: "Digital stamp cards",
+    description: "Create clean loyalty programs that customers can open from any phone.",
+    icon: Gift,
+  },
+  {
+    title: "QR scanner operations",
+    description: "Staff scan customer cards, issue stamps, and keep branch activity organized.",
+    icon: ScanLine,
+  },
+  {
+    title: "Customer retention insights",
+    description: "Track repeat visits, reward-ready customers, referrals, and program activity.",
+    icon: BarChart3,
+  },
+  {
+    title: "Fraud and risk alerts",
+    description: "Detect unusual stamp activity, cooldown violations, and suspicious behavior.",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Referral growth",
+    description: "Let loyal customers invite new customers and qualify rewards after real activity.",
+    icon: Users,
+  },
+  {
+    title: "Message preparation",
+    description: "Prepare WhatsApp-ready loyalty messages without sending real provider traffic yet.",
+    icon: MessageSquare,
+  },
+];
 
-  const [
-    newCustomersToday,
-    stampsToday,
-    redemptionsToday,
-    loyaltyPrograms,
-    highAlerts,
-    mediumAlerts,
-    lowAlerts,
-    recentCustomers,
-    recentStamps,
-    programRows,
-    staffCount,
-    stampCount,
-    redemptionCount,
-    customerSearchResults,
-  ] = await Promise.all([
-    prisma.businessCustomerMembership.count({ where: { businessId: user.businessId, createdAt: { gte: todayStart } } }),
-    prisma.stampTransaction.aggregate({
-      where: { businessId: user.businessId, createdAt: { gte: todayStart } },
-      _sum: { quantity: true },
-    }),
-    prisma.rewardRedemption.count({ where: { businessId: user.businessId, redeemedAt: { gte: todayStart } } }),
-    prisma.loyaltyProgram.count({ where: { businessId: user.businessId } }),
-    prisma.activityAlert.count({ where: { businessId: user.businessId, status: "OPEN", severity: "HIGH" } }),
-    prisma.activityAlert.count({ where: { businessId: user.businessId, status: "OPEN", severity: "MEDIUM" } }),
-    prisma.activityAlert.count({ where: { businessId: user.businessId, status: "OPEN", severity: "LOW" } }),
-    prisma.businessCustomerMembership.findMany({
-      where: { businessId: user.businessId },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      select: {
-        uuid: true,
-        createdAt: true,
-        status: true,
-        globalCustomer: { select: { firstName: true, lastName: true } },
-        createdBranch: { select: { name: true } },
-      },
-    }),
-    prisma.stampTransaction.findMany({
-      where: { businessId: user.businessId },
-      orderBy: { createdAt: "desc" },
-      take: 6,
-      select: {
-        createdAt: true,
-        quantity: true,
-        branch: { select: { name: true } },
-        customerProgramMembership: {
-          select: {
-            loyaltyProgram: { select: { name: true } },
-            businessCustomerMembership: {
-              select: { uuid: true, globalCustomer: { select: { firstName: true, lastName: true } } },
-            },
-          },
-        },
-      },
-    }),
-    prisma.loyaltyProgram.findMany({
-      where: { businessId: user.businessId },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      select: {
-        id: true,
-        name: true,
-        requiredStamps: true,
-        rewardName: true,
-        memberships: {
-          select: {
-            earnedStamps: true,
-            bonusStamps: true,
-            status: true,
-            stampTransactions: { select: { quantity: true } },
-            rewardRedemptions: { select: { id: true } },
-          },
-        },
-      },
-    }),
-    prisma.user.count({ where: { businessId: user.businessId, role: { in: ["BRANCH_MANAGER", "STAFF"] } } }),
-    prisma.stampTransaction.count({ where: { businessId: user.businessId } }),
-    prisma.rewardRedemption.count({ where: { businessId: user.businessId } }),
-    prisma.businessCustomerMembership.findMany({
-      where: {
-        businessId: user.businessId,
-        ...(customerSearch
-          ? {
-              OR: [
-                { globalCustomer: { firstName: { contains: customerSearch, mode: "insensitive" } } },
-                { globalCustomer: { lastName: { contains: customerSearch, mode: "insensitive" } } },
-                { globalCustomer: { phone: { contains: customerSearch, mode: "insensitive" } } },
-                { globalCustomer: { normalizedPhone: { contains: customerSearch, mode: "insensitive" } } },
-                ...(normalizedCustomerSearchPhone ? [{ globalCustomer: { normalizedPhone: normalizedCustomerSearchPhone } }] : []),
-                { globalCustomer: { email: { contains: customerSearch, mode: "insensitive" } } },
-                { cardToken: { contains: customerSearch, mode: "insensitive" } },
-                { referralCode: { contains: customerSearch, mode: "insensitive" } },
-                { programMemberships: { some: { loyaltyProgram: { name: { contains: customerSearch, mode: "insensitive" } } } } },
-              ],
-            }
-          : { id: -1 }),
-      },
-      select: {
-        uuid: true,
-        cardToken: true,
-        referralCode: true,
-        status: true,
-        globalCustomer: { select: { firstName: true, lastName: true, phone: true, normalizedPhone: true, email: true } },
-        createdBranch: { select: { name: true } },
-        programMemberships: {
-          take: 1,
-          orderBy: { enrolledAt: "desc" },
-          select: {
-            earnedStamps: true,
-            bonusStamps: true,
-            status: true,
-            loyaltyProgram: { select: { name: true, requiredStamps: true, rewardName: true } },
-          },
-        },
-      },
-      orderBy: { joinedAt: "desc" },
-      take: 6,
-    }),
-  ]);
+const steps = [
+  "Create a loyalty program",
+  "Enroll a customer",
+  "Scan QR and add stamps",
+  "Unlock and redeem rewards",
+];
 
-  const totalOpenAlerts = highAlerts + mediumAlerts + lowAlerts;
-  const customerCount = business._count.customerMemberships;
-  const branchCount = business._count.branches;
-  const expiryDate = subscriptionDisplayDate(subscription);
-  const remainingDays = getSubscriptionRemainingDays(subscription);
-  const businessDisplayName = getBusinessDisplayName(business.name);
-  const businessTypeDisplayName = getBusinessTypeDisplayName(businessTypeLabels[business.businessType]);
-  const programPerformance = programRows.map((program) => {
-    const memberCount = program.memberships.length;
-    const averageProgress =
-      memberCount === 0
-        ? 0
-        : program.memberships.reduce((sum, membership) => sum + membership.earnedStamps + membership.bonusStamps, 0) /
-          memberCount;
-    const rewardReady = program.memberships.filter(
-      (membership) => membership.status !== "COMPLETED" && membership.earnedStamps + membership.bonusStamps >= program.requiredStamps,
-    ).length;
-    const totalStampsIssued = program.memberships.reduce(
-      (sum, membership) =>
-        sum + membership.stampTransactions.reduce((stampSum, transaction) => stampSum + transaction.quantity, 0),
-      0,
-    );
+const faqs = [
+  {
+    question: "Is LoyaltyBase ready for real pilot businesses?",
+    answer: "Yes. It supports controlled pilot operations with business setup, staff accounts, customer cards, scanner workflows, referrals, rewards, billing visibility, and audit trails.",
+  },
+  {
+    question: "Does the homepage require login?",
+    answer: "No. This page is public. Business users sign in through the Login button and then access their correct workspace.",
+  },
+  {
+    question: "Does LoyaltyBase send WhatsApp or SMS automatically?",
+    answer: "No. Message and WhatsApp flows are prepared for manual sharing today, with provider-ready foundations for future integrations.",
+  },
+  {
+    question: "Which businesses is it designed for?",
+    answer: "Coffee shops, restaurants, salons, barbershops, gyms, retail stores, car care centers, and service businesses with repeat customers.",
+  },
+];
 
-    return {
-      id: program.id,
-      name: program.name,
-      members: memberCount,
-      progressPercent: Math.min(100, Math.round((averageProgress / program.requiredStamps) * 100)),
-      rewardReady,
-      rewardsEarned: program.memberships.reduce((sum, membership) => sum + membership.rewardRedemptions.length, 0),
-      totalStampsIssued,
-      rewardName: program.rewardName,
-    };
-  });
-  const rewardsReadyTotal = programPerformance.reduce((sum, program) => sum + program.rewardReady, 0);
-  const recentActivity = [
-    ...recentCustomers.map((membership) => ({
-      type: "Customer enrolled",
-      title: getCustomerName(membership.globalCustomer),
-      meta: membership.createdBranch?.name ?? "No branch",
-      createdAt: membership.createdAt,
-      icon: Users,
-      href: `/dashboard/customers/${membership.uuid}`,
-    })),
-    ...recentStamps.map((stamp) => ({
-      type: `${stamp.quantity} stamp${stamp.quantity === 1 ? "" : "s"} issued`,
-      title: getCustomerName(stamp.customerProgramMembership.businessCustomerMembership.globalCustomer),
-      meta: `${stamp.customerProgramMembership.loyaltyProgram.name} - ${stamp.branch?.name ?? "No branch"}`,
-      createdAt: stamp.createdAt,
-      icon: TicketCheck,
-      href: `/dashboard/customers/${stamp.customerProgramMembership.businessCustomerMembership.uuid}`,
-    })),
-  ]
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-    .slice(0, 6);
-  const onboardingItems = [
-    { label: "Create first branch", complete: branchCount > 0, href: "/dashboard/branches" },
-    { label: "Create first staff member", complete: staffCount > 0, href: "/dashboard/staff" },
-    { label: "Create first loyalty program", complete: loyaltyPrograms > 0, href: "/dashboard/programs/new" },
-    { label: "Create first customer", complete: customerCount > 0, href: "/dashboard/customers/new" },
-    { label: "Issue first stamp", complete: stampCount > 0, href: "/dashboard/customers" },
-    { label: "Redeem first reward", complete: redemptionCount > 0, href: "/dashboard/customers" },
-  ];
-  const onboardingPercent = Math.round((onboardingItems.filter((item) => item.complete).length / onboardingItems.length) * 100);
-
+export default function HomePage() {
   return (
-    <DashboardShell user={user} eyebrow="Business Owner" title="Business dashboard">
-      <HeaderSummary
-        businessName={businessDisplayName}
-        businessType={businessTypeDisplayName}
-        planName={plan?.name ?? "Unassigned"}
-        status={business.status}
-        subscriptionStatus={subscription?.status}
-        expiryDate={expiryDate}
-        remainingDays={remainingDays}
-        customerCount={customerCount}
-        programCount={loyaltyPrograms}
-        branchCount={branchCount}
-        alertCount={totalOpenAlerts}
-        logoUrl={business.branding?.logoUrl}
-        customerSearch={customerSearch}
-        customerSearchResults={customerSearchResults}
-        onboardingPercent={onboardingPercent}
-        onboardingItems={onboardingItems}
-      />
-
-      <MainActions />
-
-      <TodayPerformance
-        newCustomersToday={newCustomersToday}
-        stampsIssuedToday={stampsToday._sum.quantity ?? 0}
-        rewardsRedeemedToday={redemptionsToday}
-        rewardReadyCustomers={rewardsReadyTotal}
-      />
-
-      <section className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
-        <RecentCustomers customers={recentCustomers} />
-        <ProgramPerformance programs={programPerformance} />
-      </section>
-
-      <section className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
-        <AlertsSummary high={highAlerts} medium={mediumAlerts} low={lowAlerts} />
-        <RecentActivity items={recentActivity} />
-      </section>
-    </DashboardShell>
+    <main className="min-h-screen bg-white text-[#1E293B]">
+      <PublicHeader />
+      <HeroSection />
+      <TrustSection />
+      <FeaturesSection />
+      <HowItWorksSection />
+      <PricingTeaserSection />
+      <FaqSection />
+      <Footer />
+    </main>
   );
 }
 
-function HeaderSummary({
-  businessName,
-  businessType,
-  planName,
-  status,
-  subscriptionStatus,
-  expiryDate,
-  remainingDays,
-  customerCount,
-  programCount,
-  branchCount,
-  alertCount,
-  logoUrl,
-  customerSearch,
-  customerSearchResults,
-  onboardingPercent,
-  onboardingItems,
-}: {
-  businessName: string;
-  businessType: string;
-  planName: string;
-  status: "ACTIVE" | "INACTIVE";
-  subscriptionStatus?: "TRIAL" | "ACTIVE" | "SUSPENDED" | "EXPIRED" | "CANCELLED";
-  expiryDate?: Date | null;
-  remainingDays: number | null;
-  customerCount: number;
-  programCount: number;
-  branchCount: number;
-  alertCount: number;
-  logoUrl?: string | null;
-  customerSearch: string;
-  customerSearchResults: CustomerSearchResult[];
-  onboardingPercent: number;
-  onboardingItems: Array<{ label: string; complete: boolean; href: string }>;
-}) {
+function PublicHeader() {
   return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
-      <div className="grid gap-4 xl:grid-cols-[minmax(260px,0.9fr)_minmax(0,1.25fr)] xl:items-start">
-        <div className="flex gap-4">
-          <div
-            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md border border-orange-100 bg-orange-50 bg-cover bg-center text-base font-bold text-[#F97316]"
-            style={logoUrl ? { backgroundImage: `url(${logoUrl})` } : undefined}
-            aria-label="Business logo"
-          >
-            {!logoUrl ? getInitials(businessName) : null}
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase text-[#F97316]">Operations control panel</p>
-            <h2 className="mt-1 truncate text-2xl font-semibold text-[#111827]">{businessName}</h2>
-            <p className="mt-1 text-sm text-[#6B7280]">{businessType}</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <StatusBadge status={status} />
-              {subscriptionStatus ? <StatusBadge status={subscriptionStatus} /> : null}
-              <span className="rounded-md bg-orange-50 px-2 py-1 text-xs font-semibold text-[#F97316]">{planName} Plan</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <SummaryTile href="/dashboard/customers" icon={Users} label="Customers" value={customerCount.toString()} />
-          <SummaryTile href="/dashboard/programs" icon={Gift} label="Programs" value={programCount.toString()} />
-          <SummaryTile href="/dashboard/branches" icon={Store} label="Branches" value={branchCount.toString()} />
-          <SummaryTile href="/dashboard/notifications" icon={ShieldAlert} label="Alerts" value={alertCount.toString()} tone={alertCount > 0 ? "alert" : "default"} />
-        </div>
-      </div>
-
-      <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <CustomerSearchPanel query={customerSearch} results={customerSearchResults} />
-        <div className="grid gap-2">
-          <InfoChip label="Subscription expiry" value={expiryDate ? formatDate(expiryDate) : "-"} />
-          <InfoChip label="Remaining days" value={remainingDays === null ? "-" : remainingDays.toString()} />
-          <OnboardingSummary percent={onboardingPercent} items={onboardingItems} />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function MainActions() {
-  return (
-    <section>
-      <div className="mb-3 flex items-center justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold text-[#F97316]">Main actions</p>
-          <h2 className="mt-1 text-xl font-semibold text-[#111827]">Run daily operations quickly</h2>
-        </div>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <PrimaryAction href="#customer-search" icon={Search} label="Search Customer" />
-        <PrimaryAction href="/dashboard/customers/new" icon={UserPlus} label="Add Customer" />
-        <PrimaryAction href="/dashboard/scanner" icon={ScanLine} label="Open Scanner" featured />
-        <PrimaryAction href="/dashboard/customers?reward=ready" icon={Gift} label="Redeem Reward" />
-      </div>
-    </section>
-  );
-}
-
-function TodayPerformance({
-  newCustomersToday,
-  stampsIssuedToday,
-  rewardsRedeemedToday,
-  rewardReadyCustomers,
-}: {
-  newCustomersToday: number;
-  stampsIssuedToday: number;
-  rewardsRedeemedToday: number;
-  rewardReadyCustomers: number;
-}) {
-  return (
-    <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-      <PerformanceCard href="/dashboard/customers" icon={Users} label="New customers today" value={newCustomersToday.toString()} />
-      <PerformanceCard href="/dashboard/customers" icon={TicketCheck} label="Stamps issued today" value={stampsIssuedToday.toString()} />
-      <PerformanceCard href="/dashboard/customers?reward=redeemed" icon={CheckCircle2} label="Rewards redeemed today" value={rewardsRedeemedToday.toString()} />
-      <PerformanceCard href="/dashboard/customers?reward=ready" icon={Gift} label="Reward-ready customers" value={rewardReadyCustomers.toString()} />
-    </section>
-  );
-}
-
-function CustomerSearchPanel({
-  query,
-  results,
-}: {
-  query: string;
-  results: CustomerSearchResult[];
-}) {
-  return (
-    <div id="customer-search" className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3">
-      <form action="/dashboard" className="flex flex-col gap-2 sm:flex-row">
-        <label htmlFor="customerSearch" className="sr-only">
-          Search customer
-        </label>
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" aria-hidden="true" />
-          <input
-            id="customerSearch"
-            name="customerSearch"
-            defaultValue={query}
-            placeholder="Search name, phone, card ID, or referral code"
-            className="h-11 w-full rounded-md border border-[#E5E7EB] bg-white pl-10 pr-3 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
-          />
-        </div>
-        <button type="submit" className="h-11 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">
-          Search
-        </button>
-        {query ? (
-          <Link href="/dashboard" className="inline-flex h-11 items-center justify-center rounded-md border border-[#E5E7EB] bg-white px-4 text-sm font-semibold text-[#111827]">
-            Clear
+    <header className="sticky top-0 z-30 border-b border-[#E5E7EB] bg-white/95 backdrop-blur">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+        <Link href="/" className="flex items-center gap-3" aria-label="LoyaltyBase homepage">
+          <span className="flex h-10 w-10 items-center justify-center rounded-md bg-[#F97316] text-sm font-bold text-white">
+            LB
+          </span>
+          <span className="text-base font-semibold text-[#111827]">LoyaltyBase</span>
+        </Link>
+        <nav className="hidden items-center gap-6 text-sm font-semibold text-[#64748B] md:flex" aria-label="Homepage navigation">
+          <a href="#features" className="transition hover:text-[#F97316]">
+            Features
+          </a>
+          <a href="#how-it-works" className="transition hover:text-[#F97316]">
+            How it works
+          </a>
+          <a href="#pricing" className="transition hover:text-[#F97316]">
+            Pricing
+          </a>
+          <a href="#faq" className="transition hover:text-[#F97316]">
+            FAQ
+          </a>
+        </nav>
+        <div className="flex items-center gap-2">
+          <Link href="/login" className="rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#EA580C]">
+            Login
           </Link>
-        ) : null}
-      </form>
-      {query ? (
-        <div className="mt-3 grid gap-2">
-          {results.length ? (
-            results.map((result) => (
-              <Link key={result.uuid} href={`/dashboard/customers/${result.uuid}`} className="flex items-center justify-between gap-3 rounded-md border border-[#E5E7EB] bg-white p-3 transition hover:border-[#F97316] hover:bg-orange-50">
-                <div className="min-w-0">
-                  <p className="truncate font-semibold text-[#111827]">{getCustomerName(result.globalCustomer)}</p>
-                  <p className="mt-1 text-sm text-[#6B7280]">
-                    {formatUaePhoneDisplay(result.globalCustomer.normalizedPhone)}
-                    {result.globalCustomer.email ? ` - ${result.globalCustomer.email}` : ""}
-                  </p>
-                  <CustomerSearchResultMeta result={result} />
-                </div>
-                <span className="shrink-0 text-sm font-semibold text-[#F97316]">Open</span>
-              </Link>
-            ))
-          ) : (
-            <p className="rounded-md border border-dashed border-[#E5E7EB] bg-white p-3 text-sm text-[#6B7280]">No customers match this search.</p>
-          )}
+          <a href="mailto:hello@loyaltybase.ae?subject=LoyaltyBase%20Pilot%20Request" className="hidden rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#EA580C] sm:inline-flex">
+            Start Pilot
+          </a>
         </div>
-      ) : null}
-    </div>
+      </div>
+    </header>
   );
 }
 
-function CustomerSearchResultMeta({ result }: { result: CustomerSearchResult }) {
-  const program = result.programMemberships[0];
-  const progress = program ? progressValue(program.earnedStamps, program.bonusStamps) : null;
-  const rewardStatus = program && progress !== null && progress >= program.loyaltyProgram.requiredStamps ? "Reward Ready" : result.status;
-
+function HeroSection() {
   return (
-    <div className="mt-2 flex flex-wrap gap-2 text-xs font-semibold">
-      <span className="rounded-full bg-[#F3F4F6] px-2 py-1 text-[#374151]">{result.createdBranch?.name ?? "No branch"}</span>
-      <span className="rounded-full bg-orange-50 px-2 py-1 text-[#C2410C]">{result.referralCode ?? result.cardToken.slice(0, 12)}</span>
-      {program ? (
-        <>
-          <span className="rounded-full bg-blue-50 px-2 py-1 text-blue-700">{program.loyaltyProgram.name}</span>
-          <span className="rounded-full bg-emerald-50 px-2 py-1 text-emerald-700">
-            {progress} / {program.loyaltyProgram.requiredStamps} stamps
+    <section className="overflow-hidden border-b border-orange-100 bg-gradient-to-b from-orange-50/70 to-white">
+      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_460px] lg:items-center lg:px-8 lg:py-20">
+        <div>
+          <span className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1 text-sm font-semibold text-[#EA580C] shadow-sm">
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
+            Loyalty operations for growing businesses
           </span>
-          <span className="rounded-full bg-purple-50 px-2 py-1 text-purple-700">
-            {rewardStatus} - {program.loyaltyProgram.rewardName}
-          </span>
-        </>
-      ) : (
-        <span className="rounded-full bg-[#F3F4F6] px-2 py-1 text-[#6B7280]">No program yet</span>
-      )}
-    </div>
-  );
-}
-
-function RecentCustomers({
-  customers,
-}: {
-  customers: Array<{
-    uuid: string;
-    createdAt: Date;
-    status: "ACTIVE" | "INACTIVE" | "BLOCKED";
-    globalCustomer: { firstName: string; lastName: string | null };
-    createdBranch: { name: string } | null;
-  }>;
-}) {
-  return (
-    <SectionCard
-      eyebrow="Customers"
-      title="Recent customers"
-      icon={Users}
-      action={<Link href="/dashboard/customers" className="text-sm font-semibold text-[#F97316]">View All Customers</Link>}
-    >
-      <div className="grid gap-2">
-        {customers.length ? (
-          customers.map((customer) => (
-            <Link key={customer.uuid} href={`/dashboard/customers/${customer.uuid}`} className="flex items-center justify-between gap-3 rounded-md border border-[#E5E7EB] p-3 transition hover:border-[#F97316] hover:bg-orange-50">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-[#111827]">{getCustomerName(customer.globalCustomer)}</p>
-                <p className="mt-1 text-xs text-[#6B7280]">
-                  {customer.createdBranch?.name ?? "No branch"} - {formatDateTime(customer.createdAt)}
-                </p>
-              </div>
-              <StatusBadge status={customer.status} />
+          <h1 className="mt-6 max-w-4xl text-4xl font-semibold tracking-tight text-[#111827] sm:text-5xl lg:text-6xl">
+            Turn occasional customers into loyal regulars.
+          </h1>
+          <p className="mt-5 max-w-2xl text-lg leading-8 text-[#64748B]">
+            Create digital stamp cards, reward repeat visits, grow customer retention, and track loyalty performance across every branch.
+          </p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Link href="/login" className="inline-flex items-center justify-center gap-2 rounded-md bg-[#F97316] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#EA580C]">
+              Login
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
-          ))
-        ) : (
-          <EmptyState text="No customers yet." href="/dashboard/customers/new" action="Add Customer" />
-        )}
+            <a href="mailto:hello@loyaltybase.ae?subject=LoyaltyBase%20Demo%20Request" className="inline-flex items-center justify-center rounded-md border border-[#E5E7EB] bg-white px-5 py-3 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#EA580C]">
+              Request Demo / Start Pilot
+            </a>
+          </div>
+        </div>
+        <LoyaltyCardPreview />
       </div>
-    </SectionCard>
+    </section>
   );
 }
 
-function ProgramPerformance({
-  programs,
-}: {
-  programs: Array<{
-    id: number;
-    name: string;
-    members: number;
-    progressPercent: number;
-    rewardReady: number;
-    rewardsEarned: number;
-    totalStampsIssued: number;
-    rewardName: string;
-  }>;
-}) {
+function LoyaltyCardPreview() {
   return (
-    <SectionCard eyebrow="Programs" title="Loyalty program performance" icon={Gift}>
-      <div className="grid gap-3">
-        {programs.length ? (
-          programs.map((program) => (
-            <Link key={program.id} href={`/dashboard/programs/${program.id}`} className="rounded-md border border-[#E5E7EB] p-3 transition hover:border-[#F97316] hover:bg-orange-50">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <p className="font-semibold text-[#111827]">{program.name}</p>
-                  <p className="mt-1 text-xs text-[#6B7280]">Reward: {program.rewardName}</p>
-                </div>
-                <div className="flex flex-wrap gap-2 text-xs font-semibold">
-                  <span className="rounded-full bg-[#F3F4F6] px-2 py-1 text-[#374151]">{program.members} members</span>
-                  <span className="rounded-full bg-orange-50 px-2 py-1 text-[#C2410C]">{program.rewardReady} reward ready</span>
-                  <span className="rounded-full bg-emerald-50 px-2 py-1 text-emerald-700">{program.totalStampsIssued} stamps</span>
-                </div>
-              </div>
-              <div className="mt-3">
-                <div className="flex items-center justify-between text-xs font-semibold text-[#6B7280]">
-                  <span>Average completion</span>
-                  <span>{program.progressPercent}%</span>
-                </div>
-                <div className="mt-2 h-2 rounded-full bg-orange-100">
-                  <div className="h-2 rounded-full bg-[#F97316]" style={{ width: `${program.progressPercent}%` }} />
-                </div>
-              </div>
-            </Link>
-          ))
-        ) : (
-          <EmptyState text="No loyalty programs yet." href="/dashboard/programs/new" action="Create Program" />
-        )}
-      </div>
-    </SectionCard>
-  );
-}
-
-function AlertsSummary({ high, medium, low }: { high: number; medium: number; low: number }) {
-  const total = high + medium + low;
-
-  return (
-    <SectionCard
-      eyebrow="Alerts"
-      title="Risk summary"
-      icon={ShieldAlert}
-      tone={total > 0 ? "alert" : "default"}
-      action={<Link href="/dashboard/notifications" className="text-sm font-semibold text-[#F97316]">Review Alerts</Link>}
-    >
-      <div className="grid gap-2">
-        <SeverityRow label="High" value={high} colorClass="bg-red-500" textClass="text-red-700" />
-        <SeverityRow label="Medium" value={medium} colorClass="bg-orange-500" textClass="text-orange-700" />
-        <SeverityRow label="Low" value={low} colorClass="bg-emerald-500" textClass="text-emerald-700" />
-      </div>
-    </SectionCard>
-  );
-}
-
-function RecentActivity({
-  items,
-}: {
-  items: Array<{ type: string; title: string; meta: string; createdAt: Date; icon: LucideIcon; href: string }>;
-}) {
-  return (
-    <SectionCard eyebrow="Activity" title="Recent customer and stamp activity" icon={TicketCheck}>
-      <div className="grid gap-2">
-        {items.length ? (
-          items.map((item, index) => (
-            <Link key={`${item.type}-${item.createdAt.toISOString()}-${index}`} href={item.href} className="flex gap-3 rounded-md border border-[#E5E7EB] p-3 transition hover:border-[#F97316] hover:bg-orange-50">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-orange-50 text-[#F97316]">
-                <item.icon className="h-4 w-4" aria-hidden="true" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-sm font-semibold text-[#111827]">{item.type}</p>
-                  <p className="text-xs text-[#6B7280]">{formatDateTime(item.createdAt)}</p>
-                </div>
-                <p className="mt-1 truncate text-sm text-[#111827]">{item.title}</p>
-                <p className="mt-1 text-xs text-[#6B7280]">{item.meta}</p>
-              </div>
-            </Link>
-          ))
-        ) : (
-          <p className="rounded-md border border-dashed border-[#E5E7EB] p-4 text-sm text-[#6B7280]">No recent customer or stamp activity yet.</p>
-        )}
-      </div>
-    </SectionCard>
-  );
-}
-
-function OnboardingSummary({
-  percent,
-  items,
-}: {
-  percent: number;
-  items: Array<{ label: string; complete: boolean; href: string }>;
-}) {
-  if (percent > 80) {
-    return (
-      <div className="rounded-md border border-orange-100 bg-orange-50 p-3">
-        <div className="flex items-center justify-between gap-3">
+    <div className="rounded-[28px] border border-orange-100 bg-white p-5 shadow-2xl shadow-orange-100">
+      <div className="rounded-[22px] bg-[#111827] p-5 text-white">
+        <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-[#9A3412]">Setup almost complete - {percent}%</p>
-            <p className="mt-1 text-xs text-[#C2410C]">Finish the remaining setup items when ready.</p>
+            <p className="text-sm font-semibold text-orange-200">Coffee Club</p>
+            <h2 className="mt-2 text-2xl font-semibold">Mina Hanna</h2>
           </div>
-          <Link href="/dashboard/settings" className="shrink-0 rounded-md bg-white px-3 py-2 text-xs font-semibold text-[#F97316] shadow-sm">
-            View Details
-          </Link>
+          <span className="rounded-full bg-[#F97316] px-3 py-1 text-xs font-bold uppercase">Gold Member</span>
+        </div>
+        <div className="mt-8">
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-sm text-orange-100">Stamp progress</p>
+              <p className="mt-1 text-4xl font-semibold">8/10</p>
+            </div>
+            <Gift className="h-10 w-10 text-[#FDBA74]" aria-hidden="true" />
+          </div>
+          <div className="mt-4 h-3 rounded-full bg-white/15">
+            <div className="h-3 w-4/5 rounded-full bg-[#F97316]" />
+          </div>
+          <p className="mt-3 text-sm text-orange-100">2 stamps away from a free coffee</p>
+        </div>
+        <div className="mt-8 grid grid-cols-[1fr_auto] items-center gap-4 rounded-2xl bg-white p-4 text-[#111827]">
+          <div>
+            <p className="text-sm font-semibold text-[#EA580C]">Reward Preview</p>
+            <p className="mt-1 text-lg font-semibold">Free Coffee</p>
+            <p className="mt-1 text-sm text-[#64748B]">Show QR code to earn or redeem.</p>
+          </div>
+          <div className="flex h-20 w-20 items-center justify-center rounded-md border border-[#E5E7EB] bg-[#FAFAFA]">
+            <QrCode className="h-12 w-12 text-[#111827]" aria-hidden="true" />
+          </div>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
+function TrustSection() {
   return (
-    <div className="rounded-md border border-[#E5E7EB] bg-white p-3">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-sm font-semibold text-[#111827]">Onboarding checklist</p>
-          <p className="mt-1 text-xs text-[#6B7280]">{percent}% complete</p>
-        </div>
-        <div className="h-2 w-24 rounded-full bg-orange-100">
-          <div className="h-2 rounded-full bg-[#F97316]" style={{ width: `${percent}%` }} />
-        </div>
+    <section className="border-b border-[#E5E7EB] bg-white py-10">
+      <div className="mx-auto grid max-w-7xl gap-4 px-4 sm:px-6 md:grid-cols-4 lg:px-8">
+        <TrustMetric value="Multi-branch" label="Built for growing operations" />
+        <TrustMetric value="QR-first" label="Fast staff scanner workflow" />
+        <TrustMetric value="Audit-ready" label="Activity, alerts, and controls" />
+        <TrustMetric value="Pilot-ready" label="Designed for real validation" />
       </div>
-      <div className="mt-3 grid gap-2">
-        {items.map((item) => (
-          <Link key={item.label} href={item.href} className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-[#111827] transition hover:bg-orange-50">
-            <CheckCircle2 className={`h-4 w-4 ${item.complete ? "text-emerald-600" : "text-[#D1D5DB]"}`} aria-hidden="true" />
-            {item.label}
-          </Link>
+    </section>
+  );
+}
+
+function FeaturesSection() {
+  return (
+    <section id="features" className="bg-white py-16">
+      <SectionHeading eyebrow="Features" title="Everything needed to run a loyalty program day to day" />
+      <div className="mx-auto mt-10 grid max-w-7xl gap-4 px-4 sm:px-6 md:grid-cols-2 lg:grid-cols-3 lg:px-8">
+        {features.map((feature) => (
+          <FeatureCard key={feature.title} {...feature} />
         ))}
       </div>
-    </div>
+    </section>
   );
 }
 
-function SummaryTile({
-  href,
-  icon: Icon,
-  label,
-  value,
-  tone = "default",
-}: {
-  href: string;
-  icon: LucideIcon;
-  label: string;
-  value: string;
-  tone?: "default" | "alert";
-}) {
+function HowItWorksSection() {
   return (
-    <Link href={href} className={`rounded-md border p-3 transition hover:border-[#F97316] hover:bg-orange-50 ${tone === "alert" ? "border-red-200 bg-red-50" : "border-[#E5E7EB] bg-[#FAFAFA]"}`}>
-      <div className="flex items-center justify-between gap-3">
-        <Icon className={`h-5 w-5 ${tone === "alert" ? "text-red-600" : "text-[#F97316]"}`} aria-hidden="true" />
-        <p className={`text-2xl font-semibold ${tone === "alert" ? "text-red-700" : "text-[#111827]"}`}>{value}</p>
+    <section id="how-it-works" className="bg-[#FAFAFA] py-16">
+      <SectionHeading eyebrow="How it works" title="A simple flow your team can use every day" />
+      <div className="mx-auto mt-10 grid max-w-7xl gap-4 px-4 sm:px-6 md:grid-cols-2 lg:grid-cols-4 lg:px-8">
+        {steps.map((step, index) => (
+          <div key={step} className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+            <span className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-50 text-sm font-bold text-[#F97316]">
+              {index + 1}
+            </span>
+            <h3 className="mt-5 text-lg font-semibold text-[#111827]">{step}</h3>
+            <p className="mt-3 text-sm leading-6 text-[#64748B]">
+              {index === 0 && "Set the reward, stamp target, and bonus stamp rules."}
+              {index === 1 && "Create a customer profile and share the digital card."}
+              {index === 2 && "Use the scanner or manual fallback to record visits."}
+              {index === 3 && "Redeem the reward and restart the next loyalty cycle."}
+            </p>
+          </div>
+        ))}
       </div>
-      <p className="mt-2 text-xs font-semibold uppercase text-[#6B7280]">{label}</p>
-    </Link>
+    </section>
   );
 }
 
-function PerformanceCard({ href, icon: Icon, label, value }: { href: string; icon: LucideIcon; label: string; value: string }) {
+function PricingTeaserSection() {
   return (
-    <Link href={href} className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:border-[#F97316] hover:bg-orange-50">
-      <div className="flex items-center justify-between gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-50 text-[#F97316]">
-          <Icon className="h-5 w-5" aria-hidden="true" />
-        </span>
-        <p className="text-3xl font-semibold text-[#111827]">{value}</p>
-      </div>
-      <p className="mt-3 text-sm font-semibold text-[#111827]">{label}</p>
-    </Link>
-  );
-}
-
-function PrimaryAction({ href, icon: Icon, label, featured = false }: { href: string; icon: LucideIcon; label: string; featured?: boolean }) {
-  return (
-    <Link
-      href={href}
-      className={`flex min-h-24 items-center gap-4 rounded-md border p-4 shadow-sm transition ${
-        featured
-          ? "border-[#F97316] bg-[#F97316] text-white hover:bg-orange-600"
-          : "border-[#E5E7EB] bg-white text-[#111827] hover:border-[#F97316] hover:bg-orange-50"
-      }`}
-    >
-      <span className={`flex h-12 w-12 items-center justify-center rounded-md ${featured ? "bg-white/15" : "bg-orange-50 text-[#F97316]"}`}>
-        <Icon className="h-6 w-6" aria-hidden="true" />
-      </span>
-      <span className="text-lg font-semibold">{label}</span>
-    </Link>
-  );
-}
-
-function SectionCard({
-  eyebrow,
-  title,
-  icon: Icon,
-  action,
-  children,
-  tone = "default",
-}: {
-  eyebrow: string;
-  title: string;
-  icon: LucideIcon;
-  action?: React.ReactNode;
-  children: React.ReactNode;
-  tone?: "default" | "alert";
-}) {
-  return (
-    <div className={`rounded-md border bg-white p-4 shadow-sm ${tone === "alert" ? "border-red-200 ring-1 ring-red-100" : "border-[#E5E7EB]"}`}>
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div>
-          <p className={`text-sm font-semibold ${tone === "alert" ? "text-red-600" : "text-[#F97316]"}`}>{eyebrow}</p>
-          <h2 className="mt-1 text-xl font-semibold text-[#111827]">{title}</h2>
+    <section id="pricing" className="bg-white py-16">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="rounded-2xl border border-orange-100 bg-orange-50 p-6 sm:p-8 lg:grid lg:grid-cols-[1fr_360px] lg:items-center lg:gap-8">
+          <div>
+            <p className="text-sm font-semibold uppercase text-[#EA580C]">Pricing teaser</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[#111827]">Start small, grow by branch.</h2>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-[#64748B]">
+              LoyaltyBase supports Starter, Growth, and Multi Branch plans. All plans include customers, programs, referrals, tiers, reports, CSV exports, and branding.
+            </p>
+          </div>
+          <div className="mt-6 rounded-md bg-white p-5 shadow-sm lg:mt-0">
+            <p className="text-sm font-semibold text-[#64748B]">Starter from</p>
+            <p className="mt-2 text-4xl font-semibold text-[#111827]">AED 100</p>
+            <p className="mt-1 text-sm text-[#64748B]">per month</p>
+            <Link href="/login" className="mt-5 inline-flex w-full items-center justify-center rounded-md bg-[#F97316] px-4 py-3 text-sm font-semibold text-white hover:bg-[#EA580C]">
+              Open Dashboard
+            </Link>
+          </div>
         </div>
+      </div>
+    </section>
+  );
+}
+
+function FaqSection() {
+  return (
+    <section id="faq" className="bg-[#FAFAFA] py-16">
+      <SectionHeading eyebrow="FAQ" title="Questions before your first pilot" />
+      <div className="mx-auto mt-10 grid max-w-4xl gap-4 px-4 sm:px-6 lg:px-8">
+        {faqs.map((faq) => (
+          <div key={faq.question} className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+            <div className="flex gap-3">
+              <CircleHelp className="mt-1 h-5 w-5 shrink-0 text-[#F97316]" aria-hidden="true" />
+              <div>
+                <h3 className="font-semibold text-[#111827]">{faq.question}</h3>
+                <p className="mt-2 text-sm leading-6 text-[#64748B]">{faq.answer}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="border-t border-[#E5E7EB] bg-white">
+      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm text-[#64748B] sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
         <div className="flex items-center gap-3">
-          {action}
-          <span className={`flex h-10 w-10 items-center justify-center rounded-md ${tone === "alert" ? "bg-red-50 text-red-600" : "bg-orange-50 text-[#F97316]"}`}>
-            <Icon className="h-5 w-5" aria-hidden="true" />
+          <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[#F97316] text-xs font-bold text-white">
+            LB
           </span>
+          <span className="font-semibold text-[#111827]">LoyaltyBase</span>
+        </div>
+        <p>Digital loyalty operations for small businesses.</p>
+        <div className="flex gap-4">
+          <Link href="/login" className="font-semibold text-[#EA580C]">
+            Login
+          </Link>
+          <a href="mailto:hello@loyaltybase.ae" className="font-semibold text-[#EA580C]">
+            Request Demo
+          </a>
         </div>
       </div>
-      {children}
+    </footer>
+  );
+}
+
+function SectionHeading({ eyebrow, title }: { eyebrow: string; title: string }) {
+  return (
+    <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
+      <p className="text-sm font-semibold uppercase text-[#EA580C]">{eyebrow}</p>
+      <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[#111827] sm:text-4xl">{title}</h2>
     </div>
   );
 }
 
-function InfoChip({ label, value }: { label: string; value: string }) {
+function TrustMetric({ value, label }: { value: string; label: string }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-md bg-[#FAFAFA] px-3 py-2">
-      <span className="text-xs font-semibold uppercase text-[#6B7280]">{label}</span>
-      <span className="text-sm font-semibold text-[#111827]">{value}</span>
+    <div className="rounded-md border border-[#E5E7EB] bg-white p-4 text-center shadow-sm">
+      <p className="text-lg font-semibold text-[#111827]">{value}</p>
+      <p className="mt-1 text-sm text-[#64748B]">{label}</p>
     </div>
   );
 }
 
-function SeverityRow({ label, value, colorClass, textClass }: { label: string; value: number; colorClass: string; textClass: string }) {
+function FeatureCard({ title, description, icon: Icon }: { title: string; description: string; icon: LucideIcon }) {
   return (
-    <Link href={`/dashboard/notifications?severity=${label.toUpperCase()}`} className="flex items-center justify-between rounded-md border border-[#E5E7EB] px-3 py-3 transition hover:border-[#F97316] hover:bg-orange-50">
-      <div className="flex items-center gap-3">
-        <span className={`h-2.5 w-2.5 rounded-full ${colorClass}`} />
-        <span className="text-sm font-medium text-[#111827]">{label}</span>
-      </div>
-      <span className={`text-lg font-semibold ${textClass}`}>{value}</span>
-    </Link>
-  );
-}
-
-function EmptyState({ text, href, action }: { text: string; href: string; action: string }) {
-  return (
-    <div className="rounded-md border border-dashed border-[#E5E7EB] p-4 text-sm text-[#6B7280]">
-      <p>{text}</p>
-      <Link href={href} className="mt-3 inline-flex rounded-md bg-[#F97316] px-3 py-2 text-sm font-semibold text-white">
-        {action}
-      </Link>
+    <div className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm transition hover:border-orange-200 hover:shadow-md">
+      <span className="flex h-11 w-11 items-center justify-center rounded-md bg-orange-50 text-[#F97316]">
+        <Icon className="h-5 w-5" aria-hidden="true" />
+      </span>
+      <h3 className="mt-5 text-lg font-semibold text-[#111827]">{title}</h3>
+      <p className="mt-3 text-sm leading-6 text-[#64748B]">{description}</p>
     </div>
   );
 }
-
-function getCustomerName(customer: { firstName: string; lastName?: string | null }) {
-  return `${customer.firstName} ${customer.lastName ?? ""}`.trim();
-}
-
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
-}
-
-type CustomerSearchResult = {
-  uuid: string;
-  cardToken: string;
-  referralCode: string | null;
-  status: string;
-  globalCustomer: { firstName: string; lastName: string | null; phone: string; email: string | null };
-  createdBranch: { name: string } | null;
-  programMemberships: Array<{
-    earnedStamps: number;
-    bonusStamps: number;
-    status: string;
-    loyaltyProgram: { name: string; requiredStamps: number; rewardName: string };
-  }>;
-};
