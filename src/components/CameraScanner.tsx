@@ -266,7 +266,7 @@ export function CameraScanner({ backHref }: { backHref: string }) {
     <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm sm:p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-sm font-semibold text-[#F97316]">Camera scanner</p>
+          <p className="text-sm font-semibold text-[#F97316] business-text">Camera scanner</p>
           <h2 className="mt-1 text-xl font-semibold text-[#111827]">Scan customer QR</h2>
           <p className="mt-2 text-sm leading-6 text-[#6B7280]">Point the camera at a LoyaltyBase customer card QR code.</p>
         </div>
@@ -276,7 +276,7 @@ export function CameraScanner({ backHref }: { backHref: string }) {
       </div>
 
       {message ? (
-        <div className="mt-4 rounded-md border border-orange-200 bg-orange-50 px-3 py-2 text-sm font-semibold text-[#9A3412]">
+        <div className="mt-4 rounded-md border border-orange-200 business-border-soft bg-orange-50 business-bg-soft px-3 py-2 text-sm font-semibold text-[#9A3412] business-text-strong">
           {message}
         </div>
       ) : null}
@@ -286,11 +286,11 @@ export function CameraScanner({ backHref }: { backHref: string }) {
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-4">
-        <button type="button" onClick={testCamera} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-[#FED7AA] bg-orange-50 px-4 text-sm font-semibold text-[#9A3412]">
+        <button type="button" onClick={testCamera} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-[#FED7AA] business-border-soft bg-orange-50 business-bg-soft px-4 text-sm font-semibold text-[#9A3412] business-text-strong">
           <Video className="h-4 w-4" aria-hidden="true" />
           Test Camera
         </button>
-        <button type="button" onClick={() => startCamera()} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">
+        <button type="button" onClick={() => startCamera()} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-[#F97316] business-button px-4 text-sm font-semibold text-white">
           <Camera className="h-4 w-4" aria-hidden="true" />
           Start Camera
         </button>
@@ -310,7 +310,7 @@ export function CameraScanner({ backHref }: { backHref: string }) {
           <input
             value={manualValue}
             onChange={(event) => setManualValue(event.target.value)}
-            className="min-h-12 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm font-normal outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+            className="min-h-12 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm font-normal outline-none business-ring focus:ring-0"
             placeholder="scan_... or https://domain.com/scan/scan_..."
           />
         </label>
@@ -319,7 +319,7 @@ export function CameraScanner({ backHref }: { backHref: string }) {
           Validate QR
         </button>
         <p className="mt-3 flex items-center gap-2 text-xs text-[#6B7280]">
-          <Zap className="h-3.5 w-3.5 text-[#F97316]" aria-hidden="true" />
+          <Zap className="h-3.5 w-3.5 text-[#F97316] business-text" aria-hidden="true" />
           Camera scan and manual paste both use the existing secure scan validation flow.
         </p>
       </div>

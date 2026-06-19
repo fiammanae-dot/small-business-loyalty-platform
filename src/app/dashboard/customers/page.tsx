@@ -71,7 +71,7 @@ export default async function CustomersPage({
             <h2 className="text-lg font-semibold text-[#111827]">Business customer memberships</h2>
             <p className="text-sm text-[#6B7280]">Only customers enrolled in your business are shown.</p>
           </div>
-          <Link href="/dashboard/customers/new" className="rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">
+          <Link href="/dashboard/customers/new" className="rounded-md bg-[#F97316] business-button px-4 py-2 text-sm font-semibold text-white">
             Enroll customer
           </Link>
         </div>
@@ -81,12 +81,12 @@ export default async function CustomersPage({
             name="q"
             defaultValue={params.q ?? ""}
             placeholder="Search name, phone, card number, referral code, program"
-            className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100 md:col-span-2"
+            className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0 business-border  md:col-span-2"
           />
           <Select name="status" label="Status" value={params.status} options={[["", "All statuses"], ["ACTIVE", "Active"], ["INACTIVE", "Inactive"], ["BLOCKED", "Blocked"]]} />
           <Select name="consent" label="Marketing consent" value={params.consent} options={[["", "All consent"], ["yes", "Consented"], ["no", "No consent"]]} />
           <Select name="source" label="Source" value={params.source} options={[["", "All sources"], ["OWNER", "Owner"], ["STAFF", "Staff"], ["IMPORT", "Import"], ["SELF_SIGNUP", "Self signup"]]} />
-          <button type="submit" className="h-10 rounded-md border border-[#F97316] px-4 text-sm font-semibold text-[#F97316] md:col-start-5">
+          <button type="submit" className="h-10 rounded-md border border-[#F97316] business-border px-4 text-sm font-semibold text-[#F97316] business-text md:col-start-5">
             Apply filters
           </button>
           <Link href="/dashboard/customers" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] md:col-start-4">
@@ -113,8 +113,8 @@ export default async function CustomersPage({
                 <p>Source: {customerSourceLabels[membership.source]}</p>
               </div>
               <div className="mt-4 flex gap-3">
-                <Link href={`/dashboard/customers/${membership.uuid}`} className="font-semibold text-[#F97316]">View</Link>
-                <Link href={`/dashboard/customers/${membership.uuid}/edit`} className="font-semibold text-[#F97316]">Edit</Link>
+                <Link href={`/dashboard/customers/${membership.uuid}`} className="font-semibold text-[#F97316] business-text">View</Link>
+                <Link href={`/dashboard/customers/${membership.uuid}/edit`} className="font-semibold text-[#F97316] business-text">Edit</Link>
               </div>
               <div className="mt-4">
                 <CardShareActions
@@ -157,8 +157,8 @@ export default async function CustomersPage({
                   <td className="border-b border-[#E5E7EB] px-3 py-4">
                     <div className="flex flex-col gap-3">
                       <div className="flex gap-3">
-                        <Link href={`/dashboard/customers/${membership.uuid}`} className="font-semibold text-[#F97316]">View</Link>
-                        <Link href={`/dashboard/customers/${membership.uuid}/edit`} className="font-semibold text-[#F97316]">Edit</Link>
+                        <Link href={`/dashboard/customers/${membership.uuid}`} className="font-semibold text-[#F97316] business-text">View</Link>
+                        <Link href={`/dashboard/customers/${membership.uuid}/edit`} className="font-semibold text-[#F97316] business-text">Edit</Link>
                       </div>
                       <CardShareActions
                         cardUrl={membership.cardUrl}
@@ -180,7 +180,7 @@ export default async function CustomersPage({
             <div className="py-10 text-center">
               <p className="text-sm font-semibold text-[#111827]">Create your first customer.</p>
               <p className="mt-2 text-sm text-[#6B7280]">Enroll a customer to start issuing cards, stamps, and engagement events.</p>
-              <Link href="/dashboard/customers/new" className="mt-4 inline-flex rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">
+              <Link href="/dashboard/customers/new" className="mt-4 inline-flex rounded-md bg-[#F97316] business-button px-4 py-2 text-sm font-semibold text-white">
                 Enroll customer
               </Link>
             </div>

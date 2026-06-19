@@ -32,13 +32,13 @@ export default async function BranchProgramDetailPage({ params }: { params: Prom
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <p className="text-sm font-semibold text-[#F97316]">{businessTypeLabels[program.businessType]}</p>
+            <p className="text-sm font-semibold business-text">{businessTypeLabels[program.businessType]}</p>
             <h2 className="mt-2 text-2xl font-semibold text-[#111827]">{program.name}</h2>
             <p className="mt-2 text-sm text-[#6B7280]">{program.description ?? "No description."}</p>
           </div>
           <div className="flex gap-3">
             <Link href="/branch/programs" className="rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]">Back</Link>
-            <Link href={`/branch/programs/${program.uuid}/customers`} className="rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">Customers</Link>
+            <Link href={`/branch/programs/${program.uuid}/customers`} className="rounded-md business-button px-4 py-2 text-sm font-semibold text-white">Customers</Link>
           </div>
         </div>
         <div className="mt-6 grid gap-4 md:grid-cols-3">

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 
@@ -25,11 +25,11 @@ export function CopyButton({ value, label = "Copy link", copiedLabel = "Copied."
       <button
         type="button"
         onClick={copy}
-        className="rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]"
+        className="rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827] transition business-hover"
       >
         {label}
       </button>
-      {message ? <p className="mt-2 text-xs font-medium text-[#F97316]">{message}</p> : null}
+      {message ? <p className="mt-2 text-xs font-medium business-text">{message}</p> : null}
     </div>
   );
 }

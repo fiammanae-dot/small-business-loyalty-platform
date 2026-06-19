@@ -170,7 +170,7 @@ export default async function NotificationsPage({
       <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-sm font-semibold text-[#F97316]">Fraud and risk investigation</p>
+            <p className="text-sm font-semibold business-text">Fraud and risk investigation</p>
             <h2 className="mt-1 text-2xl font-semibold text-[#111827]">Alert Center</h2>
             <p className="mt-1 text-sm text-[#6B7280]">Investigate suspicious activity without leaving the alert workspace.</p>
           </div>
@@ -191,13 +191,13 @@ export default async function NotificationsPage({
       <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold text-[#F97316]">Branch Risk Overview</p>
+            <p className="text-sm font-semibold business-text">Branch Risk Overview</p>
             <h2 className="mt-1 text-lg font-semibold text-[#111827]">Branch exposure</h2>
           </div>
         </div>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {branchRisks.map((branch) => (
-            <Link key={branch.id} href={filterHref(params, { branch: branch.id.toString(), status: selectedStatus })} className="rounded-md border border-[#E5E7EB] p-3 transition hover:border-[#F97316] hover:bg-orange-50">
+            <Link key={branch.id} href={filterHref(params, { branch: branch.id.toString(), status: selectedStatus })} className="rounded-md border border-[#E5E7EB] p-3 transition business-hover">
               <div className="flex items-center justify-between gap-3">
                 <p className="font-semibold text-[#111827]">{branch.name}</p>
                 <SeverityBadge severity={branch.highestSeverity} />
@@ -270,7 +270,7 @@ export default async function NotificationsPage({
           <input type="date" name="to" defaultValue={params.to ?? ""} className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm" />
           <input type="number" min="0" max="100" name="riskMin" defaultValue={params.riskMin ?? ""} placeholder="Risk min" className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm" />
           <input type="number" min="0" max="100" name="riskMax" defaultValue={params.riskMax ?? ""} placeholder="Risk max" className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm" />
-          <button type="submit" className="h-10 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">Apply</button>
+          <button type="submit" className="h-10 rounded-md business-button px-4 text-sm font-semibold text-white">Apply</button>
           <Link href="/dashboard/notifications" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] bg-white px-4 text-sm font-semibold text-[#111827]">
             Clear Filters
           </Link>
@@ -281,7 +281,7 @@ export default async function NotificationsPage({
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap gap-2">
             {workflowTabs.map((tab) => (
-              <Link key={tab} href={filterHref(params, { status: tab })} className={`rounded-md px-3 py-2 text-sm font-semibold ${selectedStatus === tab ? "bg-[#F97316] text-white" : "bg-[#F3F4F6] text-[#374151] hover:bg-orange-50 hover:text-[#F97316]"}`}>
+              <Link key={tab} href={filterHref(params, { status: tab })} className={`rounded-md px-3 py-2 text-sm font-semibold ${selectedStatus === tab ? "business-button text-white" : "bg-[#F3F4F6] text-[#374151] business-hover"}`}>
                 {tab.replaceAll("_", " ")}
               </Link>
             ))}
@@ -291,7 +291,7 @@ export default async function NotificationsPage({
 
         <div className="mb-4 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3">
           <div className="mb-3 flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+            <BarChart3 className="h-5 w-5 business-text" aria-hidden="true" />
             <div>
               <h3 className="font-semibold text-[#111827]">Alert analytics</h3>
               <p className="text-sm text-[#6B7280]">Alerts by Day, Alerts by Severity, Alerts by Category, and Top Alert Sources.</p>
@@ -315,7 +315,7 @@ export default async function NotificationsPage({
           <div className="py-8 text-center">
             <p className="text-sm font-semibold text-[#111827]">No alerts match these filters.</p>
             <p className="mt-2 text-sm text-[#6B7280]">Clear filters or select another workflow tab.</p>
-            <Link href="/dashboard/notifications" className="mt-4 inline-flex rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">Clear Filters</Link>
+            <Link href="/dashboard/notifications" className="mt-4 inline-flex rounded-md business-button px-4 py-2 text-sm font-semibold text-white">Clear Filters</Link>
           </div>
         ) : null}
       </section>
@@ -337,7 +337,7 @@ function AlertCard({
   const canManage = !["RESOLVED", "DISMISSED", "REVIEWED"].includes(alert.status);
 
   return (
-    <details className="group rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm open:ring-1 open:ring-orange-100">
+    <details className="group rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm open:ring-1 open:ring-[var(--business-primary-border)]">
       <summary className="flex cursor-pointer list-none flex-col gap-3">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -458,7 +458,7 @@ function ActionForm({
         <input type="hidden" name="alertId" value={alert.id} />
         <input type="hidden" name="priority" value={alert.priority} />
         <input type="hidden" name="assignedToUserId" value={alert.assignedToUser?.id ?? ""} />
-        <button name="status" value={compactAction} className={`rounded-md px-3 py-2 text-xs font-semibold ${compactAction === "RESOLVED" ? "border border-emerald-200 text-emerald-700" : "bg-[#F97316] text-white"}`}>
+        <button name="status" value={compactAction} className={`rounded-md px-3 py-2 text-xs font-semibold ${compactAction === "RESOLVED" ? "border border-emerald-200 text-emerald-700" : "business-button text-white"}`}>
           {label}
         </button>
       </form>
@@ -488,10 +488,10 @@ function ActionForm({
       <select name="priority" defaultValue={alert.priority} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-xs">
         {severityValues.map((priority) => <option key={priority} value={priority}>{priority}</option>)}
       </select>
-      <textarea name="reviewNote" rows={2} className="rounded-md border border-[#E5E7EB] px-3 py-2 text-xs outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100" placeholder="Review note" />
-      <input name="escalationReason" className="rounded-md border border-[#E5E7EB] px-3 py-2 text-xs outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100" placeholder="Escalation reason" />
+      <textarea name="reviewNote" rows={2} className="rounded-md border border-[#E5E7EB] px-3 py-2 text-xs outline-none business-ring focus:ring-0" placeholder="Review note" />
+      <input name="escalationReason" className="rounded-md border border-[#E5E7EB] px-3 py-2 text-xs outline-none business-ring focus:ring-0" placeholder="Escalation reason" />
       <div className="grid grid-cols-2 gap-2">
-        <button name="status" value="ASSIGNED" className="rounded-md bg-[#F97316] px-3 py-2 text-xs font-semibold text-white">Assign</button>
+        <button name="status" value="ASSIGNED" className="rounded-md business-button px-3 py-2 text-xs font-semibold text-white">Assign</button>
         <button name="status" value="UNDER_REVIEW" className="rounded-md border border-[#E5E7EB] px-3 py-2 text-xs font-semibold text-[#111827]">Review</button>
         <button name="status" value="ESCALATED" className="rounded-md border border-red-200 px-3 py-2 text-xs font-semibold text-red-700">Escalate</button>
         <button name="status" value="RESOLVED" className="rounded-md border border-emerald-200 px-3 py-2 text-xs font-semibold text-emerald-700">Resolve</button>
@@ -537,7 +537,7 @@ function InvestigationPanel({ title, children }: { title: string; children: Reac
 function TimelineItem({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
     <div className="flex items-center gap-3 rounded-md bg-[#FAFAFA] p-2">
-      <span className="text-[#F97316]">{icon}</span>
+      <span className="business-text">{icon}</span>
       <div>
         <p className="font-semibold text-[#111827]">{label}</p>
         <p className="text-xs text-[#6B7280]">{value}</p>
@@ -548,7 +548,7 @@ function TimelineItem({ icon, label, value }: { icon: ReactNode; label: string; 
 
 function InvestigationLink({ href, label }: { href: string; label: string }) {
   return (
-    <Link href={href} className="inline-flex rounded-md border border-[#E5E7EB] px-2 py-1 text-xs font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]">
+    <Link href={href} className="inline-flex rounded-md border border-[#E5E7EB] px-2 py-1 text-xs font-semibold text-[#111827] transition business-hover">
       {label}
     </Link>
   );
@@ -569,10 +569,10 @@ function SeverityBadge({ severity }: { severity: string }) {
 function FilterSummary({ href, icon, label, value, tone = "default" }: { href: string; icon?: ReactNode; label: string; value: number; tone?: "default" | "red" | "orange" | "green" }) {
   const toneClass = tone === "red" ? "text-red-700" : tone === "orange" ? "text-orange-700" : tone === "green" ? "text-emerald-700" : "text-[#111827]";
   return (
-    <Link href={href} className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3 transition hover:border-[#F97316] hover:bg-orange-50">
+    <Link href={href} className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3 transition business-hover">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-[#6B7280]">{label}</p>
-        {icon ? <span className="text-[#F97316]">{icon}</span> : null}
+        {icon ? <span className="business-text">{icon}</span> : null}
       </div>
       <p className={`mt-1 text-2xl font-semibold ${toneClass}`}>{value}</p>
     </Link>
@@ -592,7 +592,7 @@ function MiniChart({ title, rows }: { title: string; rows: Array<{ label: string
               <strong className="text-[#111827]">{row.value}</strong>
             </div>
             <div className="mt-1 h-2 rounded-full bg-[#F3F4F6]">
-              <div className="h-2 rounded-full bg-[#F97316]" style={{ width: `${Math.max(6, (row.value / max) * 100)}%` }} />
+              <div className="h-2 rounded-full business-button" style={{ width: `${Math.max(6, (row.value / max) * 100)}%` }} />
             </div>
           </div>
         )) : <p className="text-sm text-[#6B7280]">No alert data yet.</p>}

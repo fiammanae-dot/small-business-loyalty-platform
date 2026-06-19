@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { randomBytes } from "crypto";
 import QRCode from "qrcode";
@@ -39,10 +39,11 @@ export function extractScanToken(value: string) {
     const url = new URL(trimmed);
     const parts = url.pathname.split("/").filter(Boolean);
     const scanIndex = parts.indexOf("scan");
-    const token = scanIndex >= 0 ? parts[scanIndex + 1] : "";
+    const cardIndex = parts.indexOf("card");
+    const token = scanIndex >= 0 ? parts[scanIndex + 1] : cardIndex >= 0 ? parts[cardIndex + 1] : "";
     return token?.match(/^[A-Za-z0-9_-]{3,160}$/) ? token : "";
   } catch {
-    const fallbackMatch = trimmed.match(/\/scan\/([A-Za-z0-9_-]{3,160})/);
+    const fallbackMatch = trimmed.match(/\/(?:scan|card)\/([A-Za-z0-9_-]{3,160})/);
     return fallbackMatch?.[1] ?? "";
   }
 }

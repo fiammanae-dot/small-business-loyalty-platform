@@ -135,7 +135,7 @@ export default async function BusinessActivityPage() {
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm font-semibold text-[#F97316]">Customer activity timeline</p>
+            <p className="text-sm font-semibold business-text">Customer activity timeline</p>
             <h2 className="mt-1 text-2xl font-semibold text-[#111827]">Recent business activity</h2>
             <p className="mt-2 text-sm text-[#6B7280]">
               Review customer enrollments, stamps, reward redemptions, and referrals in one operational timeline.
@@ -156,7 +156,7 @@ export default async function BusinessActivityPage() {
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <div className="mb-4 flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-50 text-[#F97316]">
+          <span className="flex h-10 w-10 items-center justify-center rounded-md business-bg-soft business-text">
             <History className="h-5 w-5" aria-hidden="true" />
           </span>
           <div>
@@ -184,7 +184,7 @@ function ActivityMetric({ label, value, icon: Icon }: { label: string; value: st
   return (
     <div className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
       <div className="flex items-center justify-between gap-3">
-        <Icon className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+        <Icon className="h-5 w-5 business-text" aria-hidden="true" />
         <p className="text-2xl font-semibold text-[#111827]">{value}</p>
       </div>
       <p className="mt-2 text-xs font-semibold uppercase text-[#6B7280]">{label}</p>
@@ -195,7 +195,7 @@ function ActivityMetric({ label, value, icon: Icon }: { label: string; value: st
 function ActivityRow({ item }: { item: ActivityItem }) {
   const content = (
     <>
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-orange-50 text-[#F97316]">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md business-bg-soft business-text">
         <item.icon className="h-4 w-4" aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1">
@@ -211,7 +211,7 @@ function ActivityRow({ item }: { item: ActivityItem }) {
 
   if (item.href) {
     return (
-      <Link href={item.href} className="flex gap-3 rounded-md border border-[#E5E7EB] p-3 transition hover:border-[#F97316] hover:bg-orange-50">
+      <Link href={item.href} className="flex gap-3 rounded-md border border-[#E5E7EB] p-3 transition business-hover">
         {content}
       </Link>
     );

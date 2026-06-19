@@ -56,7 +56,7 @@ export default async function BusinessSettingsPage({
           <Link
             key={tab}
             href={`/dashboard/settings?tab=${tab}`}
-            className={`shrink-0 rounded-md px-3 py-2 font-semibold ${activeTab === tab ? "bg-orange-50 text-[#F97316]" : "text-[#111827] hover:bg-[#FAFAFA]"}`}
+            className={`shrink-0 rounded-md px-3 py-2 font-semibold ${activeTab === tab ? "bg-orange-50 business-bg-soft text-[#F97316] business-text" : "text-[#111827] hover:bg-[#FAFAFA]"}`}
           >
             {label}
           </Link>
@@ -73,7 +73,7 @@ export default async function BusinessSettingsPage({
           <Item label="Management scope" value="Business profile, branches, staff, customers, and programs" />
         </div>
         <details className="mt-4">
-          <summary className="cursor-pointer text-sm font-semibold text-[#F97316]">Advanced identifiers</summary>
+          <summary className="cursor-pointer text-sm font-semibold text-[#F97316] business-text">Advanced identifiers</summary>
           <div className="mt-3 grid gap-4 md:grid-cols-2">
             <Item label="Business ID" value={business.id.toString()} />
             <Item label="Business UUID" value={business.uuid} />
@@ -104,7 +104,7 @@ export default async function BusinessSettingsPage({
             </label>
             <label className="space-y-2">
               <span className="text-sm font-medium text-[#111827]">Qualification window</span>
-              <select name="tierQualificationWindow" defaultValue={tierConfig.tierQualificationWindow} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100">
+              <select name="tierQualificationWindow" defaultValue={tierConfig.tierQualificationWindow} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0 business-border ">
                 {Object.entries(tierQualificationWindowLabels).map(([value, label]) => (
                   <option key={value} value={value}>{label}</option>
                 ))}
@@ -112,7 +112,7 @@ export default async function BusinessSettingsPage({
             </label>
             <label className="space-y-2">
               <span className="text-sm font-medium text-[#111827]">Maintenance mode</span>
-              <select name="tierMaintenanceMode" defaultValue={tierConfig.tierMaintenanceMode} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100">
+              <select name="tierMaintenanceMode" defaultValue={tierConfig.tierMaintenanceMode} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0 business-border ">
                 {Object.entries(tierMaintenanceModeLabels).map(([value, label]) => (
                   <option key={value} value={value}>{label}</option>
                 ))}
@@ -124,7 +124,7 @@ export default async function BusinessSettingsPage({
             <Input name="goldVisitRequirement" label="Gold visit requirement" type="number" min="1" defaultValue={tierConfig.goldVisitRequirement.toString()} />
             <Input name="vipVisitRequirement" label="VIP visit requirement" type="number" min="1" defaultValue={tierConfig.vipVisitRequirement.toString()} />
           </div>
-          <div className="grid gap-3 rounded-md bg-orange-50 px-3 py-3 text-sm text-[#9A3412] md:grid-cols-3">
+          <div className="grid gap-3 rounded-md bg-orange-50 business-bg-soft px-3 py-3 text-sm text-[#9A3412] business-text-strong md:grid-cols-3">
             <p>Silver: {tierConfig.silverVisitRequirement} visits in {tierQualificationWindowLabels[tierConfig.tierQualificationWindow].toLowerCase()}</p>
             <p>Gold: {tierConfig.goldVisitRequirement} visits in {tierQualificationWindowLabels[tierConfig.tierQualificationWindow].toLowerCase()}</p>
             <p>VIP: {tierConfig.vipVisitRequirement} visits in {tierQualificationWindowLabels[tierConfig.tierQualificationWindow].toLowerCase()}</p>
@@ -133,7 +133,7 @@ export default async function BusinessSettingsPage({
             Bronze is automatic when a customer joins. Public customer cards show visits, tier progress, rewards, and QR code only. Spend and internal analytics are never shown on the customer card.
           </p>
           <div>
-            <button type="submit" className="h-11 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">
+            <button type="submit" className="h-11 rounded-md bg-[#F97316] business-button px-4 text-sm font-semibold text-white">
               Save tier settings
             </button>
           </div>
@@ -161,15 +161,15 @@ export default async function BusinessSettingsPage({
               type="checkbox"
               name="soundEffectsEnabled"
               defaultChecked={scannerSoundEffectsEnabled}
-              className="h-5 w-5 rounded border-[#E5E7EB] text-[#F97316]"
+              className="h-5 w-5 rounded border-[#E5E7EB] text-[#F97316] business-text"
               aria-label="Scanner Sound Effects"
             />
           </label>
-          <p className="rounded-md border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-[#9A3412]">
+          <p className="rounded-md border border-orange-200 business-border-soft bg-orange-50 business-bg-soft px-3 py-2 text-sm text-[#9A3412] business-text-strong">
             Sounds play only after scanner interaction or scan form submission so mobile browsers can allow audio. Keep this on for busy counters where staff need instant feedback.
           </p>
           <div>
-            <button type="submit" className="h-11 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">
+            <button type="submit" className="h-11 rounded-md bg-[#F97316] business-button px-4 text-sm font-semibold text-white">
               Save scanner settings
             </button>
           </div>
@@ -203,7 +203,7 @@ export default async function BusinessSettingsPage({
                 <input type="checkbox" name="enabled" defaultChecked={policy.enabled} className="h-4 w-4 rounded border-[#E5E7EB]" />
                 Enabled
               </label>
-              <button type="submit" className="h-11 rounded-md border border-[#F97316] px-4 text-sm font-semibold text-[#F97316]">
+              <button type="submit" className="h-11 rounded-md border border-[#F97316] business-border px-4 text-sm font-semibold text-[#F97316] business-text">
                 Save
               </button>
             </form>
@@ -228,7 +228,7 @@ export default async function BusinessSettingsPage({
             Generate alerts for violations
           </label>
           <div className="flex items-end">
-            <button type="submit" className="h-11 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">
+            <button type="submit" className="h-11 rounded-md bg-[#F97316] business-button px-4 text-sm font-semibold text-white">
               Save cooldown policy
             </button>
           </div>
@@ -294,7 +294,7 @@ function Input({
   return (
     <label className="space-y-2">
       <span className="text-sm font-medium text-[#111827]">{label}</span>
-      <input name={name} type={type} min={min} max={max} defaultValue={defaultValue} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100" />
+      <input name={name} type={type} min={min} max={max} defaultValue={defaultValue} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0 business-border " />
     </label>
   );
 }

@@ -63,13 +63,13 @@ export default async function BranchCustomersPage({
             <h2 className="text-lg font-semibold text-[#111827]">Business customers</h2>
             <p className="text-sm text-[#6B7280]">Search and open customers across this business. Origin branch is preserved for history.</p>
           </div>
-          <Link href="/branch/customers/new" className="rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">
+          <Link href="/branch/customers/new" className="rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
             Enroll customer
           </Link>
         </div>
         <form className="mt-5 flex gap-3">
-          <input name="q" defaultValue={params.q ?? ""} placeholder="Search name, phone, email" className="h-10 flex-1 rounded-md border border-[#E5E7EB] px-3 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100" />
-          <button type="submit" className="rounded-md border border-[#F97316] px-4 text-sm font-semibold text-[#F97316]">Search</button>
+          <input name="q" defaultValue={params.q ?? ""} placeholder="Search name, phone, email" className="h-10 flex-1 rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0" />
+          <button type="submit" className="rounded-md border business-border px-4 text-sm font-semibold business-text">Search</button>
         </form>
         <div className="mt-6 overflow-x-auto">
           <table className="w-full min-w-[820px] border-separate border-spacing-0 text-left text-sm">
@@ -92,7 +92,7 @@ export default async function BranchCustomersPage({
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{customerSourceLabels[membership.source]}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4">
                     <div className="flex flex-col gap-3">
-                      <Link href={`/branch/customers/${membership.uuid}`} className="font-semibold text-[#F97316]">View</Link>
+                      <Link href={`/branch/customers/${membership.uuid}`} className="font-semibold business-text">View</Link>
                       <CardShareActions
                         cardUrl={membership.cardUrl}
                         businessName={membership.business.name}

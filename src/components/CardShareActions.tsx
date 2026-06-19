@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { auditLoyaltyCardWhatsAppShare } from "@/app/card-share-actions";
@@ -25,7 +25,7 @@ export function CardShareActions({
   whatsappLabel = "Send via WhatsApp",
   showCopy = true,
   showWallet = true,
-  buttonColor = "#F97316",
+  buttonColor,
 }: CardShareActionsProps) {
   const [message, setMessage] = useState("");
   const [sharing, setSharing] = useState(false);
@@ -83,7 +83,7 @@ export function CardShareActions({
           <button
             type="button"
             onClick={copyLink}
-            className="rounded-md border border-[#E5E7EB] bg-white px-4 py-3 text-sm font-semibold text-[#111827]"
+            className="rounded-md border border-[#E5E7EB] bg-white px-4 py-3 text-sm font-semibold text-[#111827] transition business-hover"
           >
             Copy card link
           </button>
@@ -92,8 +92,8 @@ export function CardShareActions({
           type="button"
           onClick={shareViaWhatsApp}
           disabled={!whatsappUrl || sharing}
-          className="rounded-md px-4 py-3 text-center text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-600"
-          style={whatsappUrl && !sharing ? { backgroundColor: buttonColor } : undefined}
+          className="rounded-md px-4 py-3 text-center text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-600 business-button"
+          style={whatsappUrl && !sharing && buttonColor ? { backgroundColor: buttonColor } : undefined}
         >
           {sharing ? "Preparing WhatsApp..." : whatsappLabel}
         </button>
@@ -116,14 +116,14 @@ export function CardShareActions({
           <button
             type="button"
             onClick={walletSoon}
-            className="rounded-md border border-[#E5E7EB] bg-white px-4 py-3 text-sm font-semibold text-[#111827]"
+            className="rounded-md border border-[#E5E7EB] bg-white px-4 py-3 text-sm font-semibold text-[#111827] transition business-hover"
           >
             Add to Google Wallet
           </button>
         </div>
       ) : null}
 
-      {message ? <p className="text-center text-sm font-medium text-[#F97316]">{message}</p> : null}
+      {message ? <p className="text-center text-sm font-medium business-text">{message}</p> : null}
     </div>
   );
 }

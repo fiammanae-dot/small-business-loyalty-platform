@@ -123,11 +123,11 @@ export default async function PublicCustomerCardPage({
         {primaryProgram ? (
           <>
             <LoyaltyProgressSection programMembership={primaryProgram.programMembership} branding={branding} />
-            <RewardStatusSection programMembership={primaryProgram.programMembership} />
+            <RewardStatusSection programMembership={primaryProgram.programMembership} branding={branding} />
           </>
         ) : (
-          <section className="rounded-[28px] border border-orange-100 bg-white p-5 shadow-sm">
-            <p className="text-sm font-semibold uppercase tracking-wide text-[#F97316]">Loyalty progress</p>
+          <section className="rounded-[28px] border bg-white p-5 shadow-sm" style={{ borderColor: withAlpha(branding.primaryColor, 0.18) }}>
+            <p className="text-sm font-semibold uppercase tracking-wide" style={{ color: branding.textColor }}>Loyalty progress</p>
             <h2 className="mt-2 text-xl font-bold text-[#1E293B]">No active loyalty program yet</h2>
             <p className="mt-2 text-sm leading-6 text-[#64748B]">
               Ask staff to enroll this card into a loyalty program before earning stamps.
@@ -142,7 +142,7 @@ export default async function PublicCustomerCardPage({
             referralUrl={referralUrl}
             referralCode={membership.referralCode}
             businessName={membership.business.name}
-            buttonColor={branding.buttonColor}
+            branding={branding}
             pendingReferrals={pendingReferrals}
             qualifiedReferrals={qualifiedReferrals}
             rewardsEarned={`${referralRewards._sum.bonusStamps ?? 0} stamps`}
@@ -151,7 +151,7 @@ export default async function PublicCustomerCardPage({
 
         <section className="rounded-[28px] border border-[#E5E7EB] bg-white p-5 shadow-sm">
           <div className="flex items-center gap-2">
-            <QrCode className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+            <QrCode className="h-5 w-5" style={{ color: branding.primaryColor }} aria-hidden="true" />
             <h2 className="text-base font-semibold text-[#1E293B]">Save Your Card</h2>
           </div>
           <p className="mt-2 text-sm leading-6 text-[#64748B]">
@@ -176,7 +176,7 @@ export default async function PublicCustomerCardPage({
         {programCards.length > 1 ? (
           <section className="rounded-[28px] border border-[#E5E7EB] bg-white p-5 shadow-sm">
             <div className="flex items-center gap-2">
-              <Gift className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+              <Gift className="h-5 w-5" style={{ color: branding.primaryColor }} aria-hidden="true" />
               <h2 className="text-base font-semibold text-[#1E293B]">Additional programs</h2>
             </div>
             <div className="mt-4 grid gap-3">
@@ -185,13 +185,14 @@ export default async function PublicCustomerCardPage({
                   key={programMembership.id}
                   programMembership={programMembership}
                   qrCode={qrCode}
+                  branding={branding}
                 />
               ))}
             </div>
           </section>
         ) : null}
 
-        <WalletPlaceholderSection />
+        <WalletPlaceholderSection branding={branding} />
       </div>
     </main>
   );
@@ -214,7 +215,7 @@ function LoyaltyWalletCard({
   qrCode: string | null;
   rewardReady: boolean;
 }) {
-  const tierTone = getTierTone(tier.badgeLabel);
+  const tierTone = getTierTone(tier.badgeLabel, branding);
 
   return (
     <section
@@ -272,7 +273,10 @@ function LoyaltyWalletCard({
           {qrCode ? (
             <Image src={qrCode} alt={`${businessName} customer card QR code`} width={178} height={178} unoptimized priority />
           ) : (
-            <div className="flex h-[178px] w-[178px] items-center justify-center rounded-2xl bg-orange-50 text-sm font-bold text-[#F97316]">
+            <div
+              className="flex h-[178px] w-[178px] items-center justify-center rounded-2xl text-sm font-bold"
+              style={{ backgroundColor: withAlpha(branding.primaryColor, 0.1), color: branding.primaryColor }}
+            >
               QR pending
             </div>
           )}
@@ -300,10 +304,13 @@ function LoyaltyProgressSection({
     <section className="rounded-[28px] border border-[#E5E7EB] bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#F97316]">Loyalty Progress</p>
+          <p className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: branding.textColor }}>Loyalty Progress</p>
           <h2 className="mt-2 text-2xl font-black text-[#1E293B]">{programMembership.loyaltyProgram.name}</h2>
         </div>
-        <span className={`rounded-full px-3 py-1 text-xs font-bold ${rewardReady ? "bg-green-50 text-green-700" : "bg-orange-50 text-[#EA580C]"}`}>
+        <span
+          className={`rounded-full px-3 py-1 text-xs font-bold ${rewardReady ? "bg-green-50 text-green-700" : ""}`}
+          style={rewardReady ? undefined : { backgroundColor: withAlpha(branding.primaryColor, 0.1), color: branding.primaryColor }}
+        >
           {rewardReady ? "Complete" : `${remaining} left`}
         </span>
       </div>
@@ -324,7 +331,7 @@ function LoyaltyProgressSection({
             <span>Next Reward</span>
             <span>{completion}%</span>
           </div>
-          <div className="mt-3 h-4 overflow-hidden rounded-full bg-orange-100">
+          <div className="mt-3 h-4 overflow-hidden rounded-full" style={{ backgroundColor: withAlpha(branding.secondaryColor, 0.18) }}>
             <div
               className="customer-card-progress h-full rounded-full"
               style={{
@@ -343,7 +350,13 @@ function LoyaltyProgressSection({
   );
 }
 
-function RewardStatusSection({ programMembership }: { programMembership: ProgramMembershipView }) {
+function RewardStatusSection({
+  programMembership,
+  branding,
+}: {
+  programMembership: ProgramMembershipView;
+  branding: ReturnType<typeof resolveBranding>;
+}) {
   const progress = progressValue(programMembership.earnedStamps, programMembership.bonusStamps);
   const required = programMembership.loyaltyProgram.requiredStamps;
   const remaining = Math.max(required - progress, 0);
@@ -351,20 +364,18 @@ function RewardStatusSection({ programMembership }: { programMembership: Program
 
   return (
     <section
-      className={`overflow-hidden rounded-[28px] border p-5 shadow-sm ${
-        rewardReady ? "border-green-200 bg-green-50" : "border-orange-100 bg-white"
-      }`}
+      className={`overflow-hidden rounded-[28px] border p-5 shadow-sm ${rewardReady ? "border-green-200 bg-green-50" : "bg-white"}`}
+      style={rewardReady ? undefined : { borderColor: withAlpha(branding.primaryColor, 0.18) }}
     >
       <div className="flex items-start gap-4">
         <span
-          className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-3xl ${
-            rewardReady ? "bg-green-100 text-green-700" : "bg-orange-50 text-[#F97316]"
-          }`}
+          className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-3xl ${rewardReady ? "bg-green-100 text-green-700" : ""}`}
+          style={rewardReady ? undefined : { backgroundColor: withAlpha(branding.primaryColor, 0.1), color: branding.primaryColor }}
         >
           {rewardReady ? <CheckCircle2 className="h-7 w-7" aria-hidden="true" /> : <Gift className="h-7 w-7" aria-hidden="true" />}
         </span>
         <div>
-          <p className={`text-xs font-black uppercase tracking-[0.18em] ${rewardReady ? "text-green-700" : "text-[#F97316]"}`}>
+          <p className={`text-xs font-black uppercase tracking-[0.18em] ${rewardReady ? "text-green-700" : ""}`} style={rewardReady ? undefined : { color: branding.textColor }}>
             Reward Status
           </p>
           <h2 className="mt-2 text-3xl font-black text-[#1E293B]">
@@ -389,15 +400,15 @@ function TierStatusSection({
   branding: ReturnType<typeof resolveBranding>;
 }) {
   const { visitsRemaining: remainingVisits, progressPercent: tierCompletion, nextTier } = tier;
-  const tierTone = getTierTone(tier.badgeLabel);
+  const tierTone = getTierTone(tier.badgeLabel, branding);
 
   return (
-    <section className={`rounded-[28px] border p-5 shadow-sm ${tierTone.card}`}>
+    <section className={`rounded-[28px] border p-5 shadow-sm ${tierTone.card}`} style={tierTone.style}>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className={`text-xs font-black uppercase tracking-[0.18em] ${tierTone.label}`}>Customer tier</p>
+          <p className={`text-xs font-black uppercase tracking-[0.18em] ${tierTone.label}`} style={tierTone.labelStyle}>Customer tier</p>
           <div className="mt-3 flex items-center gap-3">
-            <span className={`flex h-12 w-12 items-center justify-center rounded-2xl text-2xl ${tierTone.icon}`} aria-hidden="true">
+            <span className={`flex h-12 w-12 items-center justify-center rounded-2xl text-2xl ${tierTone.icon}`} style={tierTone.iconStyle} aria-hidden="true">
               {tier.badgeIcon}
             </span>
             <div>
@@ -406,7 +417,7 @@ function TierStatusSection({
             </div>
           </div>
         </div>
-        <Sparkles className={`h-6 w-6 ${tierTone.sparkle}`} aria-hidden="true" />
+        <Sparkles className={`h-6 w-6 ${tierTone.sparkle}`} style={tierTone.sparkleStyle} aria-hidden="true" />
       </div>
 
       {!tier.isVip && nextTier ? (
@@ -415,7 +426,7 @@ function TierStatusSection({
             <span>Next Tier</span>
             <span>{nextTier}</span>
           </div>
-          <div className="mt-3 h-3 overflow-hidden rounded-full bg-orange-100">
+          <div className="mt-3 h-3 overflow-hidden rounded-full" style={{ backgroundColor: withAlpha(branding.secondaryColor, 0.18) }}>
             <div
               className="h-full rounded-full"
               style={{
@@ -442,7 +453,7 @@ function ReferralCardSection({
   referralUrl,
   referralCode,
   businessName,
-  buttonColor,
+  branding,
   pendingReferrals,
   qualifiedReferrals,
   rewardsEarned,
@@ -450,7 +461,7 @@ function ReferralCardSection({
   referralUrl: string;
   referralCode: string | null;
   businessName: string;
-  buttonColor: string;
+  branding: ReturnType<typeof resolveBranding>;
   pendingReferrals: number;
   qualifiedReferrals: number;
   rewardsEarned: string;
@@ -458,7 +469,7 @@ function ReferralCardSection({
   return (
     <section className="rounded-[28px] border border-[#E5E7EB] bg-white p-5 shadow-sm">
       <div className="flex items-center gap-2">
-        <Sparkles className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+        <Sparkles className="h-5 w-5" style={{ color: branding.primaryColor }} aria-hidden="true" />
         <h2 className="text-base font-black text-[#1E293B]">Refer a friend</h2>
       </div>
       <p className="mt-2 text-sm leading-6 text-[#64748B]">
@@ -466,8 +477,8 @@ function ReferralCardSection({
       </p>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-2xl bg-orange-50 p-4">
-          <p className="text-xs font-black uppercase tracking-wide text-[#F97316]">Referral Code</p>
+        <div className="rounded-2xl p-4" style={{ backgroundColor: withAlpha(branding.primaryColor, 0.08) }}>
+          <p className="text-xs font-black uppercase tracking-wide" style={{ color: branding.textColor }}>Referral Code</p>
           <p className="mt-2 break-all font-mono text-lg font-black text-[#1E293B]">{referralCode}</p>
         </div>
         <div className="rounded-2xl bg-[#F8FAFC] p-4">
@@ -486,17 +497,17 @@ function ReferralCardSection({
       </div>
 
       <div className="mt-4">
-        <ReferralShareActions referralUrl={referralUrl} businessName={businessName} buttonColor={buttonColor} />
+        <ReferralShareActions referralUrl={referralUrl} businessName={businessName} buttonColor={branding.buttonColor} />
       </div>
     </section>
   );
 }
 
-function WalletPlaceholderSection() {
+function WalletPlaceholderSection({ branding }: { branding: ReturnType<typeof resolveBranding> }) {
   return (
     <section className="rounded-[28px] border border-[#E5E7EB] bg-white p-5 shadow-sm">
       <div className="flex items-center gap-2">
-        <WalletCards className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+        <WalletCards className="h-5 w-5" style={{ color: branding.primaryColor }} aria-hidden="true" />
         <h2 className="text-base font-black text-[#1E293B]">Wallet Area</h2>
       </div>
       <p className="mt-2 text-sm leading-6 text-[#64748B]">Save-to-wallet support is being prepared for a future release.</p>
@@ -504,7 +515,8 @@ function WalletPlaceholderSection() {
         <button
           type="button"
           disabled
-          className="flex items-center justify-center gap-2 rounded-2xl border border-[#E5E7EB] bg-[#F8FAFC] px-4 py-3 text-sm font-bold text-[#94A3B8]"
+          className="flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-bold"
+          style={{ borderColor: withAlpha(branding.primaryColor, 0.16), backgroundColor: withAlpha(branding.primaryColor, 0.04), color: withAlpha(branding.textColor, 0.68) }}
         >
           <WalletCards className="h-4 w-4" aria-hidden="true" />
           Add to Apple Wallet
@@ -513,7 +525,8 @@ function WalletPlaceholderSection() {
         <button
           type="button"
           disabled
-          className="flex items-center justify-center gap-2 rounded-2xl border border-[#E5E7EB] bg-[#F8FAFC] px-4 py-3 text-sm font-bold text-[#94A3B8]"
+          className="flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-bold"
+          style={{ borderColor: withAlpha(branding.secondaryColor, 0.16), backgroundColor: withAlpha(branding.secondaryColor, 0.04), color: withAlpha(branding.textColor, 0.68) }}
         >
           <Copy className="h-4 w-4" aria-hidden="true" />
           Add to Google Wallet
@@ -524,7 +537,7 @@ function WalletPlaceholderSection() {
   );
 }
 
-function getTierTone(label: string) {
+function getTierTone(label: string, branding?: ReturnType<typeof resolveBranding>) {
   const normalized = label.toUpperCase();
   if (normalized.includes("VIP")) {
     return {
@@ -555,20 +568,26 @@ function getTierTone(label: string) {
   }
 
   return {
-    card: "border-orange-100 bg-orange-50",
-    icon: "bg-orange-100 text-[#EA580C]",
-    label: "text-[#EA580C]",
+    card: "border bg-white",
+    icon: "",
+    label: "",
     pill: "bg-white/25 text-white ring-white/30",
-    sparkle: "text-[#F97316]",
+    sparkle: "",
+    style: branding ? { borderColor: withAlpha(branding.primaryColor, 0.18), backgroundColor: withAlpha(branding.primaryColor, 0.06) } : undefined,
+    iconStyle: branding ? { backgroundColor: withAlpha(branding.primaryColor, 0.12), color: branding.primaryColor } : undefined,
+    labelStyle: branding ? { color: branding.textColor } : undefined,
+    sparkleStyle: branding ? { color: branding.primaryColor } : undefined,
   };
 }
 
 function ProgramRewardCard({
   programMembership,
   qrCode,
+  branding,
 }: {
   programMembership: ProgramMembershipView;
   qrCode: string;
+  branding: ReturnType<typeof resolveBranding>;
 }) {
   const progress = progressValue(programMembership.earnedStamps, programMembership.bonusStamps);
   const required = programMembership.loyaltyProgram.requiredStamps;
@@ -583,14 +602,17 @@ function ProgramRewardCard({
           <p className="font-semibold text-[#111827]">{programMembership.loyaltyProgram.name}</p>
           <p className="mt-1 text-sm text-[#6B7280]">Reward: {programMembership.loyaltyProgram.rewardName}</p>
         </div>
-        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${rewardReady ? "bg-green-50 text-green-700" : "bg-orange-50 text-[#F97316]"}`}>
+        <span
+          className={`rounded-full px-3 py-1 text-xs font-semibold ${rewardReady ? "bg-green-50 text-green-700" : ""}`}
+          style={rewardReady ? undefined : { backgroundColor: withAlpha(branding.primaryColor, 0.1), color: branding.primaryColor }}
+        >
           {rewardReady ? "Ready" : `${remaining} left`}
         </span>
       </div>
       <div className="mt-4 flex items-center gap-3">
         <p className="text-2xl font-bold text-[#111827]">{progress}/{required}</p>
-        <div className="h-2 flex-1 overflow-hidden rounded-full bg-orange-100">
-          <div className="h-full rounded-full bg-[#F97316]" style={{ width: `${completion}%` }} />
+        <div className="h-2 flex-1 overflow-hidden rounded-full" style={{ backgroundColor: withAlpha(branding.secondaryColor, 0.18) }}>
+          <div className="h-full rounded-full" style={{ width: `${completion}%`, background: `linear-gradient(90deg, ${branding.secondaryColor}, ${branding.primaryColor})` }} />
         </div>
       </div>
       <div className="mt-4 flex items-center gap-3 rounded-2xl bg-[#FAFAFA] p-3">
@@ -616,7 +638,7 @@ function CardUnavailable() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-white px-4">
       <section className="w-full max-w-sm rounded-md border border-[#E5E7EB] bg-white p-6 text-center shadow-sm">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-md bg-orange-100 text-sm font-bold text-[#F97316]">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-md bg-[#FFF7ED] text-sm font-bold text-[#F97316]">
           LB
         </div>
         <h1 className="mt-5 text-2xl font-semibold text-[#111827]">Card not available</h1>
@@ -626,6 +648,15 @@ function CardUnavailable() {
       </section>
     </main>
   );
+}
+
+function withAlpha(hexColor: string, alpha: number) {
+  const normalized = hexColor.replace("#", "");
+  if (!/^[0-9A-Fa-f]{6}$/.test(normalized)) return hexColor;
+  const r = Number.parseInt(normalized.slice(0, 2), 16);
+  const g = Number.parseInt(normalized.slice(2, 4), 16);
+  const b = Number.parseInt(normalized.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 type ProgramMembershipView = {

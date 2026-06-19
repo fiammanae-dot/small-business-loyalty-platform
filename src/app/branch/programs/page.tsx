@@ -26,11 +26,11 @@ export default async function BranchProgramsPage() {
         <h2 className="text-lg font-semibold text-[#111827]">Available programs</h2>
         <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {programs.map((program) => (
-            <Link key={program.id} href={`/branch/programs/${program.uuid}`} className="rounded-md border border-[#E5E7EB] p-4 transition hover:border-[#F97316]">
+            <Link key={program.id} href={`/branch/programs/${program.uuid}`} className="rounded-md border border-[#E5E7EB] p-4 transition business-hover">
               <h3 className="font-semibold text-[#111827]">{program.name}</h3>
               <p className="mt-2 text-sm text-[#6B7280]">{progressValue(0, program.startingBonusStamps)} / {program.requiredStamps} starting progress</p>
               <p className="mt-2 text-sm text-[#6B7280]">Reward: {program.rewardName}</p>
-              <p className="mt-2 text-sm text-[#F97316]">{program._count.memberships} enrolled</p>
+              <p className="mt-2 text-sm business-text">{program._count.memberships} enrolled</p>
             </Link>
           ))}
         </div>

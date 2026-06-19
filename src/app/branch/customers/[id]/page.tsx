@@ -86,12 +86,12 @@ export default async function BranchCustomerProfilePage({
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <p className="text-sm font-semibold text-[#F97316]">Customer card</p>
+            <p className="text-sm font-semibold business-text">Customer card</p>
             <h2 className="mt-2 text-lg font-semibold text-[#111827]">Public member card</h2>
             <p className="mt-2 break-all text-sm text-[#6B7280]">{cardUrl}</p>
             <p className="mt-2 text-sm text-[#6B7280]">Card number: {getShortCardToken(membership.cardToken)}</p>
           </div>
-          <a href={cardUrl} target="_blank" rel="noreferrer" className="rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">
+          <a href={cardUrl} target="_blank" rel="noreferrer" className="rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
             Open public card
           </a>
         </div>
@@ -114,7 +114,7 @@ export default async function BranchCustomerProfilePage({
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm font-semibold text-[#F97316]">Loyalty programs</p>
+            <p className="text-sm font-semibold business-text">Loyalty programs</p>
             <h2 className="mt-2 text-lg font-semibold text-[#111827]">Customer progress</h2>
           </div>
           <Link href="/branch/programs" className="rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]">
@@ -140,7 +140,7 @@ export default async function BranchCustomerProfilePage({
               <div className="mt-4 rounded-md border border-[#E5E7EB] bg-white p-3">
                 <p className="break-all text-xs text-[#6B7280]">{scanUrl}</p>
                 <Image src={qrCode} alt={`${programMembership.loyaltyProgram.name} scan QR`} width={160} height={160} unoptimized className="mt-4 rounded-md border border-[#E5E7EB]" />
-                <a href={scanUrl} target="_blank" rel="noreferrer" className="mt-4 inline-flex rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">
+                <a href={scanUrl} target="_blank" rel="noreferrer" className="mt-4 inline-flex rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
                   Open scan URL
                 </a>
               </div>

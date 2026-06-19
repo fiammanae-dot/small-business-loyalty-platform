@@ -43,7 +43,7 @@ export default async function MessageDetailPage({
       {qs.error ? <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{qs.error}</p> : null}
       {qs.success ? <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{qs.success}</p> : null}
       <div>
-        <Link href="/dashboard/messages" className="text-sm font-semibold text-[#F97316]">Back to message outbox</Link>
+        <Link href="/dashboard/messages" className="text-sm font-semibold business-text">Back to message outbox</Link>
       </div>
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
@@ -71,7 +71,7 @@ export default async function MessageDetailPage({
           {whatsAppLink ? (
             <>
               <CopyButton value={whatsAppLink} label="Copy WhatsApp Link" copiedLabel="WhatsApp link copied." />
-              <a href={whatsAppLink} target="_blank" rel="noreferrer" className="rounded-md border border-[#F97316] px-4 py-2 text-sm font-semibold text-[#F97316]">
+              <a href={whatsAppLink} target="_blank" rel="noreferrer" className="rounded-md border business-border px-4 py-2 text-sm font-semibold business-text">
                 Open WhatsApp Link
               </a>
             </>
@@ -105,7 +105,7 @@ function MessageActionForm({
       <input type="hidden" name="messageUuid" value={uuid} />
       <button
         type="submit"
-        className={primary ? "rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white" : "rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]"}
+        className={primary ? "rounded-md business-button px-4 py-2 text-sm font-semibold text-white" : "rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]"}
       >
         {label}
       </button>

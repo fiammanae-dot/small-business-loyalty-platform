@@ -205,7 +205,7 @@ export default async function CustomerProfilePage({
       <section className="sticky top-0 z-30 -mx-4 border-y border-[#E5E7EB] bg-white/95 px-4 py-3 shadow-sm backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex min-w-0 items-start gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-orange-50 text-[#F97316]">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md business-bg-soft business-text">
               <UserRound className="h-6 w-6" aria-hidden="true" />
             </span>
             <div className="min-w-0">
@@ -227,7 +227,7 @@ export default async function CustomerProfilePage({
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap xl:justify-end">
-            <a href={cardUrl} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center justify-center rounded-md bg-[#F97316] px-3 text-sm font-semibold text-white">
+            <a href={cardUrl} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center justify-center rounded-md business-button px-3 text-sm font-semibold text-white">
               Open Card
             </a>
             <CopyButton value={cardUrl} label="Copy Card Link" copiedLabel="Card link copied." />
@@ -317,10 +317,10 @@ export default async function CustomerProfilePage({
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-[#F97316]">Activity timeline</p>
+            <p className="text-sm font-semibold business-text">Activity timeline</p>
             <h2 className="mt-1 text-xl font-semibold text-[#111827]">Customer history</h2>
           </div>
-          <History className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+          <History className="h-5 w-5 business-text" aria-hidden="true" />
         </div>
         <div className="mt-5 grid gap-6">
           {timelineGroups.map((group) => (
@@ -353,16 +353,16 @@ export default async function CustomerProfilePage({
                 const isSuspicious = transaction.quantity >= 3;
                 const isHighlighted = highlightedTransactionId === transaction.id;
                 return (
-                  <tr key={transaction.id} className={isHighlighted || isSuspicious ? "bg-orange-50" : ""}>
+                  <tr key={transaction.id} className={isHighlighted ? "business-bg-soft" : isSuspicious ? "bg-orange-50" : ""}>
                     <AuditCell highlighted={isHighlighted || isSuspicious}>
-                      <Link href={activityHref(transaction.id, highlightedAlertId ?? undefined) ?? "#"} className="font-semibold text-[#F97316]">
+                      <Link href={activityHref(transaction.id, highlightedAlertId ?? undefined) ?? "#"} className="font-semibold business-text">
                         #{transaction.id}
                       </Link>
                       {isSuspicious ? <p className="mt-1 text-xs font-semibold text-orange-700">Suspicious quantity</p> : null}
                     </AuditCell>
                     <AuditCell highlighted={isHighlighted || isSuspicious}>{transaction.quantity}</AuditCell>
                     <AuditCell highlighted={isHighlighted || isSuspicious}>
-                      <Link href={staffProfileHref(transaction.issuedByUserId, highlightedAlertId ?? undefined, transaction.id) ?? "#"} className="font-semibold text-[#F97316]">
+                      <Link href={staffProfileHref(transaction.issuedByUserId, highlightedAlertId ?? undefined, transaction.id) ?? "#"} className="font-semibold business-text">
                         {transaction.issuedByUser.name}
                       </Link>
                     </AuditCell>
@@ -393,8 +393,8 @@ export default async function CustomerProfilePage({
 
 function KpiCard({ icon: Icon, label, value, tone = "default" }: { icon: LucideIcon; label: string; value: string; tone?: "default" | "alert" }) {
   return (
-    <div className={`rounded-md border p-4 shadow-sm ${tone === "alert" ? "border-orange-200 bg-orange-50" : "border-[#E5E7EB] bg-white"}`}>
-      <Icon className={`h-5 w-5 ${tone === "alert" ? "text-orange-700" : "text-[#F97316]"}`} aria-hidden="true" />
+    <div className={`rounded-md border p-4 shadow-sm ${tone === "alert" ? "business-border-soft business-bg-soft" : "border-[#E5E7EB] bg-white"}`}>
+      <Icon className={`h-5 w-5 ${tone === "alert" ? "business-text-strong" : "business-text"}`} aria-hidden="true" />
       <p className="mt-3 text-sm text-[#6B7280]">{label}</p>
       <p className="mt-1 text-xl font-semibold text-[#111827]">{value}</p>
     </div>
@@ -406,7 +406,7 @@ function TabLink({ href, label, active }: { href: string; label: string; active:
     <Link
       href={href}
       className={`shrink-0 rounded-md border px-3 py-2 font-semibold transition ${
-        active ? "border-[#F97316] bg-orange-50 text-[#F97316]" : "border-[#E5E7EB] text-[#111827] hover:border-[#F97316] hover:text-[#F97316]"
+        active ? "business-border business-bg-soft business-text" : "border-[#E5E7EB] text-[#111827] business-hover"
       }`}
     >
       {label}
@@ -425,10 +425,10 @@ function ProfileSummaryCard({
     <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold text-[#F97316]">Profile summary</p>
+          <p className="text-sm font-semibold business-text">Profile summary</p>
           <h2 className="mt-1 text-xl font-semibold text-[#111827]">Member details</h2>
         </div>
-        <UserRound className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+        <UserRound className="h-5 w-5 business-text" aria-hidden="true" />
       </div>
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         <Info label="Email" value={customer.email ?? "-"} />
@@ -456,10 +456,10 @@ function LoyaltyOverviewPanel({
     <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold text-[#F97316]">Active loyalty progress</p>
+          <p className="text-sm font-semibold business-text">Active loyalty progress</p>
           <h2 className="mt-1 text-xl font-semibold text-[#111827]">Programs</h2>
         </div>
-        <Link href="?tab=programs" className="text-sm font-semibold text-[#F97316]">View programs</Link>
+        <Link href="?tab=programs" className="text-sm font-semibold business-text">View programs</Link>
       </div>
       <div className="mt-5 grid gap-3">
         {visiblePrograms.map(({ programMembership }) => {
@@ -480,8 +480,8 @@ function LoyaltyOverviewPanel({
                 <span className="font-semibold text-[#111827]">{progress} / {required}</span>
                 <span className="text-[#6B7280]">{progressPercent}%</span>
               </div>
-              <div className="mt-2 h-2 overflow-hidden rounded-full bg-orange-100">
-                <div className="h-full rounded-full bg-[#F97316]" style={{ width: `${progressPercent}%` }} />
+              <div className="mt-2 h-2 overflow-hidden rounded-full business-secondary-bg-soft">
+                <div className="h-full rounded-full business-button" style={{ width: `${progressPercent}%` }} />
               </div>
             </article>
           );
@@ -497,10 +497,10 @@ function LatestActivityPreview({ items, customerUuid }: { items: TimelineItem[];
     <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold text-[#F97316]">Latest activity</p>
+          <p className="text-sm font-semibold business-text">Latest activity</p>
           <h2 className="mt-1 text-xl font-semibold text-[#111827]">Recent movement</h2>
         </div>
-        <Link href={`/dashboard/customers/${customerUuid}?tab=activity`} className="text-sm font-semibold text-[#F97316]">View all</Link>
+        <Link href={`/dashboard/customers/${customerUuid}?tab=activity`} className="text-sm font-semibold business-text">View all</Link>
       </div>
       <div className="mt-5 grid gap-3">
         {items.map((item) => (
@@ -529,10 +529,10 @@ function TierDetailsPanel({
     <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold text-[#F97316]">Tier details</p>
+          <p className="text-sm font-semibold business-text">Tier details</p>
           <h2 className="mt-1 text-xl font-semibold text-[#111827]">Customer grade</h2>
         </div>
-        <Sparkles className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+        <Sparkles className="h-5 w-5 business-text" aria-hidden="true" />
       </div>
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         <InsightMetric icon={Crown} label="Current tier" value={`${customerTier.badgeIcon} ${customerTier.badgeLabel}`} />
@@ -546,7 +546,7 @@ function TierDetailsPanel({
       <div className={`mt-4 rounded-md border p-4 ${customerTier.isVip ? "border-yellow-300 bg-[#111827] text-white" : "border-[#E5E7EB] bg-[#FAFAFA] text-[#111827]"}`}>
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className={`text-sm font-semibold ${customerTier.isVip ? "text-yellow-200" : "text-[#F97316]"}`}>Tier progress</p>
+            <p className={`text-sm font-semibold ${customerTier.isVip ? "text-yellow-200" : "business-text"}`}>Tier progress</p>
             <p className="mt-1 text-sm">
               {customerTier.nextTier
                 ? `${customerTier.visitsRemaining} visit${customerTier.visitsRemaining === 1 ? "" : "s"} remaining to ${customerTier.nextTier}`
@@ -555,8 +555,8 @@ function TierDetailsPanel({
           </div>
           <p className="text-lg font-semibold">{customerTier.progressPercent}%</p>
         </div>
-        <div className={`mt-3 h-2 overflow-hidden rounded-full ${customerTier.isVip ? "bg-white/15" : "bg-orange-100"}`}>
-          <div className={`h-full rounded-full ${customerTier.isVip ? "bg-yellow-300" : "bg-[#F97316]"}`} style={{ width: `${customerTier.progressPercent}%` }} />
+        <div className={`mt-3 h-2 overflow-hidden rounded-full ${customerTier.isVip ? "bg-white/15" : "business-secondary-bg-soft"}`}>
+          <div className={`h-full rounded-full ${customerTier.isVip ? "bg-yellow-300" : "business-button"}`} style={{ width: `${customerTier.progressPercent}%` }} />
         </div>
       </div>
     </section>
@@ -568,13 +568,13 @@ function ReferralSummaryPanel({ membershipUuid, referralCode, compact = false }:
     <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
-          <p className="text-sm font-semibold text-[#F97316]">Referrals</p>
+          <p className="text-sm font-semibold business-text">Referrals</p>
           <h2 className="mt-1 text-xl font-semibold text-[#111827]">Referral investigation</h2>
           <p className="mt-2 text-sm leading-6 text-[#6B7280]">
             Referral performance is managed in the Referral Center. Use the referral code to filter this customer's referral activity.
           </p>
         </div>
-        <Link href={`/dashboard/referrals?search=${encodeURIComponent(referralCode ?? membershipUuid)}`} className="rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">
+        <Link href={`/dashboard/referrals?search=${encodeURIComponent(referralCode ?? membershipUuid)}`} className="rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
           Open Referral Center
         </Link>
       </div>
@@ -614,14 +614,14 @@ function RewardsPanel({
   return (
     <section className="grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">
       <div className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
-        <p className="text-sm font-semibold text-[#F97316]">Available rewards</p>
+        <p className="text-sm font-semibold business-text">Available rewards</p>
         <h2 className="mt-1 text-xl font-semibold text-[#111827]">Ready to redeem</h2>
         <div className="mt-5 grid gap-3">
           {availableRewards.map(({ programMembership }) => (
             <article key={programMembership.id} className="rounded-md border border-emerald-200 bg-emerald-50 p-4">
               <p className="font-semibold text-emerald-900">{programMembership.loyaltyProgram.rewardName}</p>
               <p className="mt-1 text-sm text-emerald-800">{programMembership.loyaltyProgram.name}</p>
-              <Link href="/dashboard/scanner" className="mt-3 inline-flex rounded-md bg-[#F97316] px-3 py-2 text-sm font-semibold text-white">
+              <Link href="/dashboard/scanner" className="mt-3 inline-flex rounded-md business-button px-3 py-2 text-sm font-semibold text-white">
                 Redeem Reward
               </Link>
             </article>
@@ -631,7 +631,7 @@ function RewardsPanel({
       </div>
 
       <div className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
-        <p className="text-sm font-semibold text-[#F97316]">Reward history</p>
+        <p className="text-sm font-semibold business-text">Reward history</p>
         <h2 className="mt-1 text-xl font-semibold text-[#111827]">Redeemed rewards</h2>
         <div className="mt-5 grid gap-3">
           {rewardRedemptions.map((redemption) => (
@@ -684,11 +684,11 @@ function CustomerCardPanel({
     <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold text-[#F97316]">Customer card</p>
+          <p className="text-sm font-semibold business-text">Customer card</p>
           <h2 className="mt-1 text-xl font-semibold text-[#111827]">Public member card</h2>
           {!compact ? <p className="mt-2 text-sm text-[#6B7280]">Card number: {getShortCardToken(cardToken)}</p> : null}
         </div>
-        <CreditCard className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+        <CreditCard className="h-5 w-5 business-text" aria-hidden="true" />
       </div>
       {!compact ? (
         <>
@@ -700,12 +700,12 @@ function CustomerCardPanel({
           <p className="mt-4 break-all rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3 text-xs text-[#6B7280]">{cardUrl}</p>
         </>
       ) : (
-        <p className="mt-4 rounded-md border border-orange-100 bg-orange-50 px-3 py-2 text-sm text-[#9A3412]">
+        <p className="mt-4 rounded-md border business-border-soft business-bg-soft px-3 py-2 text-sm business-text-strong">
           Use this secure public card link for customer visits, stamps, rewards, and QR scans.
         </p>
       )}
       <div className="mt-4 grid gap-3 md:grid-cols-2">
-        <a href={cardUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">
+        <a href={cardUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
           Open public card
         </a>
         {compact ? (
@@ -752,10 +752,10 @@ function LoyaltyProgramsPanel({
     <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold text-[#F97316]">Loyalty programs</p>
+          <p className="text-sm font-semibold business-text">Loyalty programs</p>
           <h2 className="mt-1 text-xl font-semibold text-[#111827]">Program progress</h2>
         </div>
-        <Gift className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+        <Gift className="h-5 w-5 business-text" aria-hidden="true" />
       </div>
       <div className="mt-5 grid gap-4">
         {programCards.map(({ programMembership, scanUrl, qrCode, nextScanStatus, membershipUuid }) => {
@@ -778,8 +778,8 @@ function LoyaltyProgramsPanel({
                       <span className="font-semibold text-[#111827]">{progress} / {required}</span>
                       <span className="text-[#6B7280]">{progressPercent}%</span>
                     </div>
-                    <div className="mt-2 h-2 rounded-full bg-orange-100">
-                      <div className="h-2 rounded-full bg-[#F97316]" style={{ width: `${progressPercent}%` }} />
+                    <div className="mt-2 h-2 rounded-full business-secondary-bg-soft">
+                      <div className="h-2 rounded-full business-button" style={{ width: `${progressPercent}%` }} />
                     </div>
                     <p className="mt-2 text-sm text-[#6B7280]">
                       {isRewardReady ? "Reward Ready" : `${remaining} stamp${remaining === 1 ? "" : "s"} remaining until reward`}
@@ -804,7 +804,7 @@ function LoyaltyProgramsPanel({
                 <p className="mt-2 break-all text-xs text-[#6B7280]">{scanUrl}</p>
                 <div className="mt-4 flex flex-wrap items-start gap-3">
                   <CopyButton value={scanUrl} label="Copy scan URL" copiedLabel="Scan URL copied." />
-                  <a href={scanUrl} target="_blank" rel="noreferrer" className="rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">
+                  <a href={scanUrl} target="_blank" rel="noreferrer" className="rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
                     Open scan URL
                   </a>
                   <form action={toggleProgramScanTokenAction}>
@@ -830,16 +830,16 @@ function LoyaltyProgramsPanel({
 function TimelineRow({ item, compact = false }: { item: TimelineItem; compact?: boolean }) {
   const Icon = item.icon;
   return (
-    <div className={`rounded-md border ${compact ? "p-3" : "p-4"} ${item.highlighted ? "border-[#F97316] bg-orange-50" : "border-[#E5E7EB] bg-white"}`}>
+    <div className={`rounded-md border ${compact ? "p-3" : "p-4"} ${item.highlighted ? "business-border business-bg-soft" : "border-[#E5E7EB] bg-white"}`}>
       <div className="flex gap-3">
-        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md ${item.tone === "alert" ? "bg-red-50 text-red-600" : item.tone === "success" ? "bg-emerald-50 text-emerald-700" : "bg-orange-50 text-[#F97316]"}`}>
+        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md ${item.tone === "alert" ? "bg-red-50 text-red-600" : item.tone === "success" ? "bg-emerald-50 text-emerald-700" : "business-bg-soft business-text"}`}>
           <Icon className="h-4 w-4" aria-hidden="true" />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-1 md:flex-row md:items-start md:justify-between">
             <div>
               {item.href ? (
-                <Link href={item.href} className="font-semibold text-[#111827] transition hover:text-[#F97316]">
+                <Link href={item.href} className="font-semibold text-[#111827] transition business-hover business-text">
                   {item.title}
                 </Link>
               ) : (
@@ -868,7 +868,7 @@ function RiskMetric({ label, value, tone }: { label: string; value: number; tone
 function InsightMetric({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
     <div className="rounded-md border border-[#E5E7EB] p-4">
-      <Icon className="h-4 w-4 text-[#F97316]" aria-hidden="true" />
+      <Icon className="h-4 w-4 business-text" aria-hidden="true" />
       <p className="mt-3 text-sm text-[#6B7280]">{label}</p>
       <p className="mt-1 text-lg font-semibold text-[#111827]">{value}</p>
     </div>
@@ -891,7 +891,7 @@ function StatusPill({ status }: { status: string }) {
 
 function AuditCell({ children, highlighted }: { children: React.ReactNode; highlighted: boolean }) {
   return (
-    <td className={`border-b px-3 py-4 text-[#6B7280] ${highlighted ? "border-[#F97316]" : "border-[#E5E7EB]"}`}>
+    <td className={`border-b px-3 py-4 text-[#6B7280] ${highlighted ? "business-border" : "border-[#E5E7EB]"}`}>
       {children}
     </td>
   );

@@ -44,7 +44,7 @@ export default async function StaffUsersPage({
             <p className="mt-1 text-sm text-[#6B7280]">Create and manage Branch Manager and Staff access.</p>
           </div>
           <details className="group">
-            <summary className="inline-flex h-10 cursor-pointer list-none items-center justify-center rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">
+            <summary className="inline-flex h-10 cursor-pointer list-none items-center justify-center rounded-md bg-[#F97316] business-button px-4 text-sm font-semibold text-white">
               Add user
             </summary>
             <div className="absolute right-6 z-20 mt-2 w-[min(920px,calc(100vw-3rem))] rounded-md border border-[#E5E7EB] bg-white p-4 shadow-xl">
@@ -67,7 +67,7 @@ export default async function StaffUsersPage({
                 return (
                   <tr key={staffUser.id} className="align-top">
                     <td className="border-b border-[#E5E7EB] px-3 py-4 font-semibold">
-                      <Link href={`/dashboard/staff/${staffUser.id}`} className="text-[#111827] transition hover:text-[#F97316]">
+                      <Link href={`/dashboard/staff/${staffUser.id}`} className="text-[#111827] transition business-hover business-text">
                         {staffUser.name}
                       </Link>
                     </td>
@@ -79,7 +79,7 @@ export default async function StaffUsersPage({
                       <p>Last login: {staffUser.lastLoginAt ? formatDate(staffUser.lastLoginAt) : "-"}</p>
                       <p>Password changed: {formatDate(staffUser.passwordChangedAt)}</p>
                       <p>Failed attempts 24h: {failedAttemptsByEmail.get(staffUser.email) ?? 0}</p>
-                      {staffUser.forcePasswordChange ? <p className="font-semibold text-[#F97316]">Password change required</p> : null}
+                      {staffUser.forcePasswordChange ? <p className="font-semibold text-[#F97316] business-text">Password change required</p> : null}
                     </td>
                     <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(staffUser.createdAt)}</td>
                     <td className="border-b border-[#E5E7EB] px-3 py-4">
@@ -89,7 +89,7 @@ export default async function StaffUsersPage({
                           <CsrfInput scope="dashboard:staff" />
                           <input type="hidden" name="staffUserId" value={staffUser.id} />
                           <input type="hidden" name="nextStatus" value={nextStatus} />
-                          <button type="submit" className="text-sm font-semibold text-[#F97316]">
+                          <button type="submit" className="text-sm font-semibold text-[#F97316] business-text">
                             {nextStatus === "ACTIVE" ? "Enable" : "Disable"}
                           </button>
                         </form>
@@ -141,7 +141,7 @@ function StaffCreateForm({
           disabled: branch.status !== "ACTIVE",
         }))}
       />
-      <button type="submit" className="h-11 self-end rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">
+      <button type="submit" className="h-11 self-end rounded-md bg-[#F97316] business-button px-4 text-sm font-semibold text-white">
         Add user
       </button>
     </form>
@@ -152,7 +152,7 @@ function Input({ label, name, type = "text" }: { label: string; name: string; ty
   return (
     <label className="space-y-2">
       <span className="text-sm font-medium text-[#111827]">{label}</span>
-      <input name={name} type={type} required className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100" />
+      <input name={name} type={type} required className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0 business-border " />
     </label>
   );
 }

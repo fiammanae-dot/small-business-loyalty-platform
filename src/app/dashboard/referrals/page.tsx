@@ -112,7 +112,7 @@ export default async function ReferralsPage({
       <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-sm font-semibold text-[#F97316]">Referral performance</p>
+            <p className="text-sm font-semibold text-[#F97316] business-text">Referral performance</p>
             <h2 className="mt-1 text-2xl font-semibold text-[#111827]">Customer referral tracking</h2>
             <p className="mt-1 text-sm text-[#6B7280]">Monitor pending referrals, qualified referrals, reward grants, and top referrers.</p>
           </div>
@@ -153,7 +153,7 @@ export default async function ReferralsPage({
                 <option value="CANCELLED">Cancelled</option>
               </select>
               <div className="flex gap-2">
-                <button type="submit" className="h-10 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">Apply</button>
+                <button type="submit" className="h-10 rounded-md bg-[#F97316] business-button px-4 text-sm font-semibold text-white">Apply</button>
                 <Link href="/dashboard/referrals" className="inline-flex h-10 items-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">Clear</Link>
               </div>
             </form>
@@ -167,7 +167,7 @@ export default async function ReferralsPage({
               <div className="rounded-md border border-dashed border-[#E5E7EB] p-8 text-center">
                 <p className="font-semibold text-[#111827]">No referrals match these filters.</p>
                 <p className="mt-2 text-sm text-[#6B7280]">Referral records appear here after customers share their card referral link and staff enroll a referred customer.</p>
-                <Link href="/dashboard/referrals" className="mt-4 inline-flex rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">Clear filters</Link>
+                <Link href="/dashboard/referrals" className="mt-4 inline-flex rounded-md bg-[#F97316] business-button px-4 py-2 text-sm font-semibold text-white">Clear filters</Link>
               </div>
             ) : null}
           </div>
@@ -180,7 +180,7 @@ export default async function ReferralsPage({
               {topReferrers.map((row) => {
                 const membership = referrerById.get(row.referrerMembershipId);
                 return (
-                  <Link key={row.referrerMembershipId} href={membership ? `/dashboard/customers/${membership.uuid}` : "/dashboard/referrals"} className="rounded-md border border-[#E5E7EB] p-3 transition hover:border-[#F97316] hover:bg-orange-50">
+                  <Link key={row.referrerMembershipId} href={membership ? `/dashboard/customers/${membership.uuid}` : "/dashboard/referrals"} className="rounded-md border border-[#E5E7EB] p-3 transition business-hover">
                     <p className="font-semibold text-[#111827]">{membership ? customerName(membership.globalCustomer) : `Customer #${row.referrerMembershipId}`}</p>
                     <p className="mt-1 text-sm text-[#6B7280]">{row._count.id} referral{row._count.id === 1 ? "" : "s"}</p>
                   </Link>
@@ -210,12 +210,12 @@ function ReferralCard({ referral }: { referral: ReferralRow }) {
   const referred = referral.referredMembership?.globalCustomer ?? referral.referredGlobalCustomer;
 
   return (
-    <article className="rounded-md border border-[#E5E7EB] p-4 transition hover:border-[#F97316]">
+    <article className="rounded-md border border-[#E5E7EB] p-4 transition business-hover">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <StatusPill status={referral.status} />
-            <span className="rounded-md bg-orange-50 px-2 py-1 text-xs font-semibold text-[#C2410C]">{referral.referralCode}</span>
+            <span className="rounded-md bg-orange-50 business-bg-soft px-2 py-1 text-xs font-semibold text-[#C2410C] business-text-strong">{referral.referralCode}</span>
           </div>
           <h3 className="mt-3 text-lg font-semibold text-[#111827]">
             {customerName(referral.referrerMembership.globalCustomer)} referred {referred ? customerName(referred) : "a customer"}
@@ -229,7 +229,7 @@ function ReferralCard({ referral }: { referral: ReferralRow }) {
           {referral.rejectionReason ? <p className="mt-2 text-sm font-semibold text-red-700">{referral.rejectionReason}</p> : null}
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
-          <Link href={`/dashboard/referrals/${referral.uuid}`} className="rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">View details</Link>
+          <Link href={`/dashboard/referrals/${referral.uuid}`} className="rounded-md bg-[#F97316] business-button px-4 py-2 text-sm font-semibold text-white">View details</Link>
           <Link href={`/dashboard/customers/${referral.referrerMembership.uuid}`} className="rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]">Referrer</Link>
           {referral.referredMembership ? (
             <Link href={`/dashboard/customers/${referral.referredMembership.uuid}`} className="rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]">Referred</Link>
@@ -241,9 +241,9 @@ function ReferralCard({ referral }: { referral: ReferralRow }) {
 }
 
 function Kpi({ href, icon: Icon, label, value, tone = "default" }: { href: string; icon: LucideIcon; label: string; value: string; tone?: "default" | "success" | "warning" }) {
-  const toneClass = tone === "success" ? "bg-emerald-50 text-emerald-700" : tone === "warning" ? "bg-orange-50 text-orange-700" : "bg-orange-50 text-[#F97316]";
+  const toneClass = tone === "success" ? "bg-emerald-50 text-emerald-700" : tone === "warning" ? "bg-orange-50 business-bg-soft text-orange-700" : "bg-orange-50 business-bg-soft text-[#F97316] business-text";
   return (
-    <Link href={href} className="rounded-md border border-[#E5E7EB] p-4 transition hover:border-[#F97316] hover:bg-orange-50">
+    <Link href={href} className="rounded-md border border-[#E5E7EB] p-4 transition business-hover">
       <div className={`flex h-10 w-10 items-center justify-center rounded-md ${toneClass}`}>
         <Icon className="h-5 w-5" aria-hidden="true" />
       </div>
@@ -259,7 +259,7 @@ function StatusPill({ status }: { status: string }) {
       ? "bg-emerald-50 text-emerald-700"
       : status === "REJECTED" || status === "EXPIRED" || status === "CANCELLED"
         ? "bg-red-50 text-red-700"
-        : "bg-orange-50 text-[#C2410C]";
+        : "bg-orange-50 business-bg-soft text-[#C2410C] business-text-strong";
   return <span className={`rounded-md px-2 py-1 text-xs font-semibold ${classes}`}>{friendlyStatus(status)}</span>;
 }
 

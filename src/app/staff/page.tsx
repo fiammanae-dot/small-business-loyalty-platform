@@ -39,10 +39,10 @@ export default async function StaffDashboard() {
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm font-semibold text-[#F97316]">Today&apos;s Activity</p>
+            <p className="text-sm font-semibold text-[#F97316] business-text">Today&apos;s Activity</p>
             <h2 className="mt-1 text-xl font-semibold text-[#111827]">Service summary</h2>
           </div>
-          <Link href="/staff/scanner" className="inline-flex items-center justify-center gap-2 rounded-md bg-[#F97316] px-4 py-3 text-sm font-semibold text-white">
+          <Link href="/staff/scanner" className="inline-flex items-center justify-center gap-2 rounded-md bg-[#F97316] business-button px-4 py-3 text-sm font-semibold text-white">
             <QrCode className="h-4 w-4" aria-hidden="true" />
             Quick Scanner
           </Link>
@@ -60,7 +60,7 @@ export default async function StaffDashboard() {
       </section>
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
-        <p className="text-sm font-semibold text-[#F97316]">Recent Scan Activity</p>
+        <p className="text-sm font-semibold text-[#F97316] business-text">Recent Scan Activity</p>
         <div className="mt-4 grid gap-3">
           {recentScans.map((scan) => (
             <div key={scan.id} className="rounded-md border border-[#E5E7EB] p-3 text-sm">
@@ -77,8 +77,8 @@ export default async function StaffDashboard() {
 
 function Action({ href, icon: Icon, title, description, primary = false }: { href: string; icon: LucideIcon; title: string; description: string; primary?: boolean }) {
   return (
-    <Link href={href} className={`rounded-md border bg-white p-5 transition hover:border-[#F97316] hover:shadow-sm ${primary ? "border-[#F97316]" : "border-[#E5E7EB]"}`}>
-      <span className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-50 text-[#F97316]">
+    <Link href={href} className={`rounded-md border bg-white p-5 transition business-hover hover:shadow-sm ${primary ? "border-[#F97316] business-border" : "border-[#E5E7EB]"}`}>
+      <span className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-50 business-bg-soft text-[#F97316] business-text">
         <Icon className="h-5 w-5" aria-hidden="true" />
       </span>
       <h2 className="mt-4 text-base font-semibold text-[#111827]">{title}</h2>
@@ -90,7 +90,7 @@ function Action({ href, icon: Icon, title, description, primary = false }: { hre
 function Metric({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
     <div className="rounded-md border border-[#E5E7EB] p-4">
-      <Icon className="h-4 w-4 text-[#F97316]" aria-hidden="true" />
+      <Icon className="h-4 w-4 text-[#F97316] business-text" aria-hidden="true" />
       <p className="mt-3 text-sm text-[#6B7280]">{label}</p>
       <p className="mt-1 text-xl font-semibold text-[#111827]">{value}</p>
     </div>

@@ -54,7 +54,7 @@ export default async function ProgramCustomersPage({
             <h2 className="text-lg font-semibold text-[#111827]">Enroll customer</h2>
             <p className="text-sm text-[#6B7280]">Starting bonus stamps: {program.startingBonusStamps}</p>
           </div>
-          <Link href={`/dashboard/programs/${program.uuid}`} className="text-sm font-semibold text-[#F97316]">Back to program</Link>
+          <Link href={`/dashboard/programs/${program.uuid}`} className="text-sm font-semibold business-text">Back to program</Link>
         </div>
         <form action={enrollCustomerInProgramAction} className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto] lg:items-end">
           <CsrfInput scope="dashboard:program-enrollment" />
@@ -72,7 +72,7 @@ export default async function ProgramCustomersPage({
               badge: customer.createdBranch?.name ?? "Business customer",
             }))}
           />
-          <button type="submit" className="h-10 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">
+          <button type="submit" className="h-10 rounded-md business-button px-4 text-sm font-semibold text-white">
             Enroll Customer
           </button>
         </form>

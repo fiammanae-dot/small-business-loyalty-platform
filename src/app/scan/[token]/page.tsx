@@ -1,3 +1,4 @@
+﻿import Link from "next/link";
 import { redirect } from "next/navigation";
 import type React from "react";
 import { CsrfInput } from "@/components/CsrfInput";
@@ -82,8 +83,57 @@ export default async function ScanResultPage({
   }
 
   if (!programMembership) {
+    const cardMembership = await prisma.businessCustomerMembership.findUnique({
+      where: { cardToken: token },
+      include: {
+        globalCustomer: true,
+        business: true,
+        createdBranch: true,
+        programMemberships: {
+          where: {
+            status: "ACTIVE",
+            scanStatus: "ACTIVE",
+            loyaltyProgram: { active: true },
+          },
+          include: { loyaltyProgram: true },
+          orderBy: { enrolledAt: "desc" },
+        },
+      },
+    });
+
+    if (!cardMembership) {
+      await logScan("INVALID");
+      return <ScanMessage user={user} title="Invalid Customer" description="Invalid loyalty QR code." soundEffectsEnabled={scannerSoundEffectsEnabled} />;
+    }
+
+    if (cardMembership.businessId !== authUser.businessId) {
+      await logScan("WRONG_BUSINESS");
+      return <ScanMessage user={user} title="Wrong Business" description="This customer card does not belong to your business." soundEffectsEnabled={scannerSoundEffectsEnabled} />;
+    }
+
+    if (cardMembership.cardStatus !== "ACTIVE" || cardMembership.status !== "ACTIVE") {
+      await logScan("DISABLED");
+      return <ScanMessage user={user} title="Disabled Card" description="This customer card is disabled and cannot be used for scanning." soundEffectsEnabled={scannerSoundEffectsEnabled} />;
+    }
+
+    const activePrograms = cardMembership.programMemberships;
+    if (activePrograms.length === 1) {
+      redirect(`/scan/${activePrograms[0].scanToken}`);
+    }
+
+    if (activePrograms.length > 1) {
+      return (
+        <ProgramSelectionScreen
+          user={authUser}
+          membership={cardMembership}
+          programs={activePrograms}
+          soundEffectsEnabled={scannerSoundEffectsEnabled}
+        />
+      );
+    }
+
     await logScan("INVALID");
-    return <ScanMessage user={user} title="Invalid Customer" description="Invalid loyalty QR code." soundEffectsEnabled={scannerSoundEffectsEnabled} />;
+    return <ScanMessage user={user} title="No Active Program" description="This customer is not enrolled in an active loyalty program." soundEffectsEnabled={scannerSoundEffectsEnabled} />;
   }
 
   const businessMembership = programMembership.businessCustomerMembership;
@@ -374,6 +424,103 @@ function ScanMessage({
   );
 }
 
+function ProgramSelectionScreen({
+  user,
+  membership,
+  programs,
+  soundEffectsEnabled,
+}: {
+  user: NonNullable<Awaited<ReturnType<typeof getCurrentUser>>> & { businessId: number };
+  membership: {
+    cardToken: string;
+    globalCustomer: { firstName: string; lastName: string | null; normalizedPhone: string };
+    business: { name: string };
+    createdBranch: { name: string } | null;
+  };
+  programs: Array<{
+    id: number;
+    scanToken: string;
+    earnedStamps: number;
+    bonusStamps: number;
+    loyaltyProgram: {
+      name: string;
+      requiredStamps: number;
+      rewardName: string;
+    };
+  }>;
+  soundEffectsEnabled: boolean;
+}) {
+  const customer = membership.globalCustomer;
+  const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim();
+  const cardNumber = membership.cardToken.length > 12 ? `${membership.cardToken.slice(0, 8)}...${membership.cardToken.slice(-4)}` : membership.cardToken;
+
+  return (
+    <DashboardShell user={user} eyebrow={roleEyebrow(user.role)} title="Choose loyalty program" hideWelcomeMessage>
+      <ScannerSoundFeedback event={null} enabled={soundEffectsEnabled} />
+      <ScanStatusBanner tone="green" title="Valid Customer" description="This customer belongs to your business. Choose which loyalty program receives the stamp." />
+
+      <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-[#F97316] business-text">Customer validation</p>
+            <h2 className="mt-2 text-2xl font-semibold text-[#111827]">{customerName}</h2>
+            <p className="mt-1 text-sm text-[#6B7280]">{membership.business.name} • {membership.createdBranch?.name ?? "Unassigned"}</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <SummaryItem label="Card Number" value={cardNumber} />
+            <SummaryItem label="Programs Found" value={programs.length.toString()} />
+            <SummaryItem label="Next Step" value="Select program" />
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-[#F97316] business-text">Program selection required</p>
+            <h2 className="mt-1 text-xl font-semibold text-[#111827]">Which program should receive this scan?</h2>
+          </div>
+          <p className="text-sm text-[#6B7280]">Only the selected program will be updated.</p>
+        </div>
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          {programs.map((programMembership) => {
+            const progress = progressValue(programMembership.earnedStamps, programMembership.bonusStamps);
+            const required = programMembership.loyaltyProgram.requiredStamps;
+            const progressPercent = Math.min(100, Math.round((progress / required) * 100));
+            const rewardReady = progress >= required;
+            return (
+              <Link
+                key={programMembership.id}
+                href={`/scan/${programMembership.scanToken}`}
+                className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm transition business-hover"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-[#111827]">{programMembership.loyaltyProgram.name}</h3>
+                    <p className="mt-1 text-sm text-[#6B7280]">Reward: {programMembership.loyaltyProgram.rewardName}</p>
+                  </div>
+                  <span className={`rounded-md px-2 py-1 text-xs font-semibold ${rewardReady ? "bg-emerald-50 text-emerald-700" : "business-bg-soft business-text"}`}>
+                    {rewardReady ? "Reward Ready" : "Active"}
+                  </span>
+                </div>
+                <div className="mt-4">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-semibold text-[#111827]">{progress} / {required}</span>
+                    <span className="text-[#6B7280]">{progressPercent}%</span>
+                  </div>
+                  <div className="mt-2 h-2 rounded-full business-bg-soft">
+                    <div className="h-2 rounded-full business-button" style={{ width: `${progressPercent}%` }} />
+                  </div>
+                  <p className="mt-3 text-sm font-semibold text-[#F97316] business-text">Select this program</p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+    </DashboardShell>
+  );
+}
 function ScanStatusBanner({
   tone,
   title,

@@ -810,3 +810,35 @@ input {
     transform: none;
   }
 }
+.business-theme {
+  --business-primary-soft: color-mix(in srgb, var(--business-primary) 10%, white);
+  --business-secondary-soft: color-mix(in srgb, var(--business-secondary) 16%, white);
+  --business-primary-border: color-mix(in srgb, var(--business-primary) 28%, white);
+  --business-primary-strong: color-mix(in srgb, var(--business-primary) 86%, #111827);
+}
+
+.business-text { color: var(--business-text, #f97316); }
+.business-text-strong { color: var(--business-primary-strong, #9a3412); }
+.business-bg { background-color: var(--business-primary, #f97316); }
+.business-button { background-color: var(--business-button, #f97316); }
+.business-bg-soft { background-color: var(--business-primary-soft, #fff7ed); }
+.business-secondary-bg-soft { background-color: var(--business-secondary-soft, #fff7ed); }
+.business-border { border-color: var(--business-primary, #f97316); }
+.business-border-soft { border-color: var(--business-primary-border, #fed7aa); }
+.business-ring:focus {
+  border-color: var(--business-primary, #f97316);
+  box-shadow: 0 0 0 4px var(--business-primary-soft, #ffedd5);
+}
+.business-hover:hover {
+  border-color: var(--business-primary-border, #fed7aa);
+  background-color: var(--business-primary-soft, #fff7ed);
+  color: var(--business-primary-strong, #9a3412);
+}
+.business-theme .business-progress { background-color: var(--business-primary, #f97316); }
+.business-theme .business-action-primary {
+  background-color: var(--business-button, #f97316);
+  color: #ffffff;
+}
+.business-theme .business-action-primary:hover {
+  filter: brightness(0.95);
+}

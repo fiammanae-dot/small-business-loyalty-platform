@@ -17,9 +17,11 @@ import {
   Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { BusinessBrandingProvider } from "@/components/BusinessBrandingProvider";
 import { CsrfInput } from "@/components/CsrfInput";
 import { IdleSessionTimeout } from "@/components/IdleSessionTimeout";
 import { MobileBusinessNavigation, MobilePlatformNavigation, RoleNavigation } from "@/components/RoleNavigation";
+import { getOperationalBusinessBranding } from "@/lib/business-branding";
 import { isDemoModeEnabled } from "@/lib/platform-settings";
 import type { AuthUser } from "@/lib/session";
 import { getDisplayUserName, roleHomePath, roleLabels } from "@/lib/roles";
@@ -56,18 +58,19 @@ const platformNavItems: Array<{ href: string; label: string; icon: LucideIcon }>
 
 export async function DashboardShell({ user, title, eyebrow, children, headerAside, hideWelcomeMessage = false }: DashboardShellProps) {
   const demoModeEnabled = await isDemoModeEnabled();
+  const businessBranding = await getOperationalBusinessBranding(user);
   const displayName = getDisplayUserName(user);
   const hasSidebar = user.role === "PLATFORM_OWNER" || user.role === "BUSINESS_OWNER";
   const showDefaultAccountCard = !hideWelcomeMessage && user.role !== "BUSINESS_OWNER" && user.role !== "PLATFORM_OWNER";
   const headerPanel = headerAside ?? (showDefaultAccountCard ? (
     <div className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-50 text-[#F97316]">
+        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-50 business-bg-soft text-[#F97316] business-text">
           <FileText className="h-5 w-5" aria-hidden="true" />
         </div>
         <div>
           <p className="text-sm font-semibold text-[#111827]">Welcome back</p>
-          <p className="text-xs font-semibold uppercase text-[#F97316]">{roleLabels[user.role]}</p>
+          <p className="text-xs font-semibold uppercase text-[#F97316] business-text">{roleLabels[user.role]}</p>
         </div>
       </div>
       <div className="mt-4 grid gap-2 text-sm">
@@ -79,23 +82,24 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
   ) : null);
 
   return (
+    <BusinessBrandingProvider branding={businessBranding}>
     <div className="min-h-screen bg-white text-[#111827]">
       <IdleSessionTimeout />
       <header className="border-b border-[#E5E7EB] bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-4">
             <Link href={roleHomePath[user.role]} className="flex items-center gap-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[#F97316] text-sm font-bold text-white">
+              <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[#F97316] text-sm font-bold text-white business-bg">
                 LB
               </span>
               <span className="text-sm font-semibold text-[#111827]">LoyaltyBase</span>
-              {demoModeEnabled ? <span className="rounded-md bg-orange-50 px-2 py-1 text-xs font-semibold text-[#F97316]">Demo</span> : null}
+              {demoModeEnabled ? <span className="rounded-md bg-orange-50 business-bg-soft px-2 py-1 text-xs font-semibold text-[#F97316] business-text">Demo</span> : null}
             </Link>
             <form action="/logout" method="post">
               <CsrfInput scope="logout" />
               <button
                 type="submit"
-                className="rounded-md border border-[#E5E7EB] px-3 py-2 text-sm font-medium text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]"
+                className="rounded-md border border-[#E5E7EB] px-3 py-2 text-sm font-medium text-[#111827] transition business-hover"
               >
                 Logout
               </button>
@@ -121,7 +125,7 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
         }`}
       >
         {demoModeEnabled ? (
-          <div className="rounded-md border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-semibold text-[#C2410C] lg:col-span-2">
+          <div className="rounded-md border border-orange-200 business-border-soft bg-orange-50 business-bg-soft px-4 py-3 text-sm font-semibold text-[#C2410C] business-text-strong lg:col-span-2">
             Demo Mode Active — External communications and selected production actions are restricted.
           </div>
         ) : null}
@@ -154,7 +158,7 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
         <div className={`flex flex-col gap-8 ${hasSidebar ? "" : "lg:col-span-2"}`}>
         <section className={`grid gap-5 lg:items-end ${headerPanel ? "lg:grid-cols-[1fr_300px]" : ""}`}>
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-[#F97316]">{eyebrow}</p>
+            <p className="text-sm font-semibold uppercase tracking-wide text-[#F97316] business-text">{eyebrow}</p>
             <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#111827] sm:text-4xl">
               {title}
             </h1>
@@ -171,6 +175,7 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
         </div>
       </main>
     </div>
+    </BusinessBrandingProvider>
   );
 }
 

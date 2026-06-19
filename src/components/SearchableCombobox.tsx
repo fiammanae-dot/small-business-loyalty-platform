@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, Loader2, Search, X } from "lucide-react";
@@ -93,7 +93,7 @@ export function SearchableCombobox({
               openList();
             }
           }}
-          className="flex h-10 min-w-0 flex-1 items-center justify-between gap-3 rounded-md border border-[#E5E7EB] bg-white px-3 text-left text-sm text-[#111827] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+          className="flex h-10 min-w-0 flex-1 items-center justify-between gap-3 rounded-md border border-[#E5E7EB] bg-white px-3 text-left text-sm text-[#111827] outline-none transition business-ring focus:ring-0"
         >
           <span className="min-w-0">
             <span className={selectedOption ? "block truncate font-semibold text-[#111827]" : "block truncate text-[#6B7280]"}>
@@ -110,7 +110,7 @@ export function SearchableCombobox({
             type="button"
             aria-label={`Clear ${label}`}
             onClick={clearSelection}
-            className="flex h-10 w-10 items-center justify-center rounded-md border border-[#E5E7EB] bg-white text-[#6B7280] transition hover:border-[#F97316] hover:text-[#F97316]"
+            className="flex h-10 w-10 items-center justify-center rounded-md border border-[#E5E7EB] bg-white text-[#6B7280] transition business-hover"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -170,7 +170,7 @@ export function SearchableCombobox({
                     option.disabled
                       ? "cursor-not-allowed opacity-50"
                       : index === activeIndex
-                        ? "bg-orange-50"
+                        ? "business-bg-soft"
                         : "hover:bg-[#FAFAFA]"
                   }`}
                 >
@@ -184,12 +184,12 @@ export function SearchableCombobox({
                       </span>
                     ) : null}
                     {option.badge ? (
-                      <span className="mt-1 inline-flex rounded-md bg-orange-50 px-2 py-0.5 text-xs font-semibold text-[#F97316]">
+                      <span className="mt-1 inline-flex rounded-md business-bg-soft px-2 py-0.5 text-xs font-semibold business-text">
                         <HighlightedText text={option.badge} query={query} />
                       </span>
                     ) : null}
                   </span>
-                  {option.value === selectedValue ? <Check className="mt-1 h-4 w-4 shrink-0 text-[#F97316]" aria-hidden="true" /> : null}
+                  {option.value === selectedValue ? <Check className="mt-1 h-4 w-4 shrink-0 business-text" aria-hidden="true" /> : null}
                 </button>
               ))
             ) : (
@@ -218,7 +218,7 @@ function HighlightedText({ text, query }: { text: string; query: string }) {
   return (
     <>
       {text.slice(0, index)}
-      <mark className="rounded bg-[#FDBA74]/40 px-0.5 text-inherit">{text.slice(index, index + trimmed.length)}</mark>
+      <mark className="rounded business-bg-soft px-0.5 text-inherit">{text.slice(index, index + trimmed.length)}</mark>
       {text.slice(index + trimmed.length)}
     </>
   );

@@ -56,10 +56,10 @@ export default async function MessageOutboxPage({
         </p>
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-[#F97316]">Prepared messages</p>
+            <p className="text-sm font-semibold business-text">Prepared messages</p>
             <h2 className="mt-1 text-xl font-semibold text-[#111827]">Manual delivery queue</h2>
           </div>
-          <MessageSquare className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+          <MessageSquare className="h-5 w-5 business-text" aria-hidden="true" />
         </div>
 
         <div className="mt-5 grid gap-3 md:grid-cols-3">
@@ -76,7 +76,7 @@ export default async function MessageOutboxPage({
               name="q"
               defaultValue={params.q ?? ""}
               placeholder="Search customer, phone, or email"
-              className="h-10 w-full rounded-md border border-[#E5E7EB] bg-white pl-9 pr-3 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+              className="h-10 w-full rounded-md border border-[#E5E7EB] bg-white pl-9 pr-3 text-sm outline-none business-ring focus:ring-0"
             />
           </label>
           <select name="status" defaultValue={params.status ?? ""} className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm">
@@ -93,7 +93,7 @@ export default async function MessageOutboxPage({
             <option value="">All events</option>
             {Object.entries(engagementEventLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
-          <button type="submit" className="h-10 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">Apply</button>
+          <button type="submit" className="h-10 rounded-md business-button px-4 text-sm font-semibold text-white">Apply</button>
           <Link href="/dashboard/messages" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] bg-white px-4 text-sm font-semibold text-[#111827]">
             Clear Filters
           </Link>
@@ -115,7 +115,7 @@ export default async function MessageOutboxPage({
                 </div>
                 <p className="mt-3 text-sm text-[#6B7280]">{messageChannelLabels[message.channel]} - {formatDateTime(message.createdAt)}</p>
                 <p className="mt-3 text-sm leading-6 text-[#6B7280]">{message.messageBody.slice(0, 140)}{message.messageBody.length > 140 ? "..." : ""}</p>
-                <Link href={`/dashboard/messages/${message.uuid}`} className="mt-4 inline-flex font-semibold text-[#F97316]">View</Link>
+                <Link href={`/dashboard/messages/${message.uuid}`} className="mt-4 inline-flex font-semibold business-text">View</Link>
               </article>
             );
           })}
@@ -146,7 +146,7 @@ export default async function MessageOutboxPage({
                     <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{message.messageBody.slice(0, 90)}{message.messageBody.length > 90 ? "..." : ""}</td>
                     <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDateTime(message.createdAt)}</td>
                     <td className="border-b border-[#E5E7EB] px-3 py-4">
-                      <Link href={`/dashboard/messages/${message.uuid}`} className="font-semibold text-[#F97316]">View</Link>
+                      <Link href={`/dashboard/messages/${message.uuid}`} className="font-semibold business-text">View</Link>
                     </td>
                   </tr>
                 );
@@ -164,7 +164,7 @@ function MessageKpi({ icon, label, value }: { icon: ReactNode; label: string; va
   return (
     <div className="rounded-md border border-[#E5E7EB] bg-white p-4">
       <div className="flex items-center gap-3">
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-orange-50 text-[#F97316]">{icon}</span>
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-md business-bg-soft business-text">{icon}</span>
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{label}</p>
           <p className="text-2xl font-semibold text-[#111827]">{value}</p>
@@ -175,7 +175,7 @@ function MessageKpi({ icon, label, value }: { icon: ReactNode; label: string; va
 }
 
 function StatusBadge({ label }: { label: string }) {
-  return <span className="inline-flex rounded-md bg-orange-50 px-2 py-1 text-xs font-semibold text-[#F97316]">{label}</span>;
+  return <span className="inline-flex rounded-md business-bg-soft px-2 py-1 text-xs font-semibold business-text">{label}</span>;
 }
 
 function EmptyMessages({ filtered }: { filtered: boolean }) {
@@ -185,7 +185,7 @@ function EmptyMessages({ filtered }: { filtered: boolean }) {
       <p className="mt-2 text-sm text-[#6B7280]">
         {filtered ? "Clear filters to return to the full message queue." : "Prepare a message from an engagement opportunity when you are ready to contact a customer manually."}
       </p>
-      <Link href={filtered ? "/dashboard/messages" : "/dashboard/engagement"} className="mt-4 inline-flex rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">
+      <Link href={filtered ? "/dashboard/messages" : "/dashboard/engagement"} className="mt-4 inline-flex rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
         {filtered ? "Clear Filters" : "View Engagement"}
       </Link>
     </div>

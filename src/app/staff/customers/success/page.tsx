@@ -47,14 +47,14 @@ export default async function StaffCustomerSuccessPage({
               href={cardUrl}
               target="_blank"
               rel="noreferrer"
-              className="mt-4 inline-flex rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white"
+              className="mt-4 inline-flex rounded-md business-button px-4 py-2 text-sm font-semibold text-white"
             >
               Open card
             </a>
           </div>
         ) : null}
         <div className="mt-5 flex gap-3">
-          <Link href="/staff/customers/new" className="rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">
+          <Link href="/staff/customers/new" className="rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
             Enroll another customer
           </Link>
           <Link href="/staff" className="rounded-md border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-[#111827]">

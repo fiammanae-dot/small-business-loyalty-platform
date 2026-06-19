@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 
 export function ReferralShareActions({
   referralUrl,
   businessName,
-  buttonColor = "#F97316",
+  buttonColor,
 }: {
   referralUrl: string;
   businessName: string;
@@ -32,7 +32,7 @@ export function ReferralShareActions({
         <button
           type="button"
           onClick={copyLink}
-          className="rounded-md border border-[#E5E7EB] bg-white px-4 py-3 text-sm font-semibold text-[#111827]"
+          className="rounded-md border border-[#E5E7EB] bg-white px-4 py-3 text-sm font-semibold text-[#111827] transition business-hover"
         >
           Copy Link
         </button>
@@ -40,13 +40,13 @@ export function ReferralShareActions({
           href={whatsappUrl}
           target="_blank"
           rel="noreferrer"
-          className="rounded-md px-4 py-3 text-center text-sm font-semibold text-white"
-          style={{ backgroundColor: buttonColor }}
+          className="rounded-md px-4 py-3 text-center text-sm font-semibold text-white business-button"
+          style={buttonColor ? { backgroundColor: buttonColor } : undefined}
         >
           Share via WhatsApp
         </a>
       </div>
-      {message ? <p className="text-center text-sm font-medium text-[#F97316]">{message}</p> : null}
+      {message ? <p className="text-center text-sm font-medium business-text">{message}</p> : null}
     </div>
   );
 }

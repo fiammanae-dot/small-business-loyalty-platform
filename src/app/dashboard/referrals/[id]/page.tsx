@@ -52,7 +52,7 @@ export default async function ReferralDetailPage({
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <StatusPill status={referral.status} />
-              <span className="rounded-md bg-orange-50 px-2 py-1 text-xs font-semibold text-[#C2410C]">{referral.referralCode}</span>
+              <span className="rounded-md business-bg-soft px-2 py-1 text-xs font-semibold business-text-strong">{referral.referralCode}</span>
             </div>
             <h2 className="mt-4 text-2xl font-semibold text-[#111827]">
               {customerName(referral.referrerMembership.globalCustomer)} referred {referred ? customerName(referred) : "a customer"}
@@ -60,7 +60,7 @@ export default async function ReferralDetailPage({
             <p className="mt-2 text-sm text-[#6B7280]">Created {formatDateTime(referral.createdAt)}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link href={`/dashboard/customers/${referral.referrerMembership.uuid}`} className="rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">
+            <Link href={`/dashboard/customers/${referral.referrerMembership.uuid}`} className="rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
               View referrer
             </Link>
             {referral.referredMembership ? (
@@ -90,7 +90,7 @@ export default async function ReferralDetailPage({
       <section className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
         <div className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
           <div className="flex items-center gap-2">
-            <Gift className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+            <Gift className="h-5 w-5 business-text" aria-hidden="true" />
             <h2 className="text-lg font-semibold text-[#111827]">Reward grants</h2>
           </div>
           <div className="mt-4 grid gap-3">
@@ -112,7 +112,7 @@ export default async function ReferralDetailPage({
 
         <div className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
           <div className="flex items-center gap-2">
-            <Stamp className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+            <Stamp className="h-5 w-5 business-text" aria-hidden="true" />
             <h2 className="text-lg font-semibold text-[#111827]">First stamp qualification</h2>
           </div>
           {referral.firstStampTransaction ? (
@@ -126,7 +126,7 @@ export default async function ReferralDetailPage({
                 <p>Date: {formatDateTime(referral.firstStampTransaction.createdAt)}</p>
                 <p>Reason: {referral.firstStampTransaction.reason ?? "-"}</p>
               </div>
-              <Link href={`/dashboard/activity/${referral.firstStampTransaction.id}`} className="mt-4 inline-flex rounded-md border border-[#F97316] px-4 py-2 text-sm font-semibold text-[#F97316]">
+              <Link href={`/dashboard/activity/${referral.firstStampTransaction.id}`} className="mt-4 inline-flex rounded-md border business-border px-4 py-2 text-sm font-semibold business-text">
                 View stamp activity
               </Link>
             </div>
@@ -138,7 +138,7 @@ export default async function ReferralDetailPage({
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <div className="flex items-center gap-2">
-          <History className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+          <History className="h-5 w-5 business-text" aria-hidden="true" />
           <h2 className="text-lg font-semibold text-[#111827]">Referral event history</h2>
         </div>
         <div className="mt-5 grid gap-3">
@@ -173,7 +173,7 @@ function CustomerPanel({
   return (
     <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
       <div className="flex items-center gap-2">
-        <Users className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+        <Users className="h-5 w-5 business-text" aria-hidden="true" />
         <h2 className="text-lg font-semibold text-[#111827]">{title}</h2>
       </div>
       {customer ? (
@@ -183,7 +183,7 @@ function CustomerPanel({
           <Info label="Membership" value={membership ? "Linked" : "Not linked"} />
           {membership ? <Info label="Card status" value={membership.cardStatus} /> : null}
           {membership ? (
-            <Link href={`/dashboard/customers/${membership.uuid}`} className="inline-flex w-fit rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">
+            <Link href={`/dashboard/customers/${membership.uuid}`} className="inline-flex w-fit rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
               Open customer profile
             </Link>
           ) : null}
@@ -198,7 +198,7 @@ function CustomerPanel({
 function Info({ icon: Icon, label, value }: { icon?: LucideIcon; label: string; value: string }) {
   return (
     <div className="rounded-md border border-[#E5E7EB] p-4">
-      {Icon ? <Icon className="h-4 w-4 text-[#F97316]" aria-hidden="true" /> : null}
+      {Icon ? <Icon className="h-4 w-4 business-text" aria-hidden="true" /> : null}
       <p className="mt-2 text-sm text-[#6B7280]">{label}</p>
       <p className="mt-1 break-words text-sm font-semibold text-[#111827]">{value}</p>
     </div>

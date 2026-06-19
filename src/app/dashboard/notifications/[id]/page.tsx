@@ -60,7 +60,7 @@ export default async function NotificationDetailPage({
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Alert detail">
       <div>
-        <Link href="/dashboard/notifications" className="text-sm font-semibold text-[#F97316]">
+        <Link href="/dashboard/notifications" className="text-sm font-semibold business-text">
           Back to notifications
         </Link>
       </div>
@@ -80,7 +80,7 @@ export default async function NotificationDetailPage({
             label="Alert type"
             value={
               relatedActivityHref ? (
-                <Link href={relatedActivityHref} className="text-[#F97316]">
+                <Link href={relatedActivityHref} className="business-text">
                   {alertTypeLabel(alert.alertType)}
                 </Link>
               ) : (
@@ -136,14 +136,14 @@ export default async function NotificationDetailPage({
             </label>
             <label className="grid gap-2 text-sm font-semibold text-[#111827]">
               Review note
-              <textarea name="reviewNote" rows={4} className="rounded-md border border-[#E5E7EB] px-3 py-2 text-sm font-normal outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100" />
+              <textarea name="reviewNote" rows={4} className="rounded-md border border-[#E5E7EB] px-3 py-2 text-sm font-normal outline-none business-ring focus:ring-0" />
             </label>
             <label className="grid gap-2 text-sm font-semibold text-[#111827]">
               Escalation reason
-              <input name="escalationReason" className="h-11 rounded-md border border-[#E5E7EB] px-3 text-sm font-normal outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100" />
+              <input name="escalationReason" className="h-11 rounded-md border border-[#E5E7EB] px-3 text-sm font-normal outline-none business-ring focus:ring-0" />
             </label>
             <div className="flex gap-3">
-              <button name="status" value="UNDER_REVIEW" className="rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">
+              <button name="status" value="UNDER_REVIEW" className="rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
                 Under Review
               </button>
               <button name="status" value="ESCALATED" className="rounded-md border border-red-200 px-4 py-2 text-sm font-semibold text-red-700">
@@ -165,7 +165,7 @@ export default async function NotificationDetailPage({
 
 function ActionLink({ href, label }: { href: string; label: string }) {
   return (
-    <Link href={href} className="rounded-md border border-[#F97316] px-4 py-2 text-sm font-semibold text-[#F97316] transition hover:bg-orange-50">
+    <Link href={href} className="rounded-md border business-border px-4 py-2 text-sm font-semibold business-text transition business-hover">
       {label}
     </Link>
   );

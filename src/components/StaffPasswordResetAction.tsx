@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Copy, KeyRound, Mail, X } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
@@ -37,7 +37,7 @@ export function StaffPasswordResetAction({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="text-sm font-semibold text-[#F97316]"
+        className="text-sm font-semibold business-text"
       >
         Reset Password
       </button>
@@ -47,7 +47,7 @@ export function StaffPasswordResetAction({
           <div className="w-full max-w-lg rounded-md border border-[#E5E7EB] bg-white p-5 shadow-xl">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-wide text-[#F97316]">Staff security</p>
+                <p className="text-sm font-semibold uppercase tracking-wide business-text">Staff security</p>
                 <h3 className="mt-1 text-xl font-semibold text-[#111827]">Reset password</h3>
                 <p className="mt-2 text-sm leading-6 text-[#6B7280]">
                   Reset access for {staffName}. The temporary password is shown once, active sessions are logged out, and the user must create a new password at next login.
@@ -57,18 +57,18 @@ export function StaffPasswordResetAction({
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Close reset password modal"
-                className="rounded-md p-2 text-[#6B7280] transition hover:bg-orange-50 hover:text-[#F97316]"
+                className="rounded-md p-2 text-[#6B7280] transition business-hover"
               >
                 <X className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
 
             <div className="mt-5 grid gap-3">
-              <form action={formAction} className="rounded-md border border-[#E5E7EB] bg-orange-50/40 p-4">
+              <form action={formAction} className="rounded-md border border-[#E5E7EB] business-bg-soft p-4">
                 <input type="hidden" name="csrfToken" value={csrfToken} />
                 <input type="hidden" name="staffUserId" value={staffUserId} />
                 <div className="flex items-start gap-3">
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-white text-[#F97316]">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-white business-text">
                     <KeyRound className="h-5 w-5" aria-hidden="true" />
                   </span>
                   <div className="min-w-0 flex-1">
@@ -81,7 +81,7 @@ export function StaffPasswordResetAction({
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="mt-4 h-10 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="mt-4 h-10 rounded-md business-button px-4 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {isPending ? "Resetting..." : "Generate temporary password"}
                 </button>
@@ -122,7 +122,7 @@ export function StaffPasswordResetAction({
                       navigator.clipboard?.writeText(state.temporaryPassword ?? "");
                       toast.success("Temporary password copied.");
                     }}
-                    className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]"
+                    className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827] transition business-hover"
                   >
                     <Copy className="h-4 w-4" aria-hidden="true" />
                     Copy

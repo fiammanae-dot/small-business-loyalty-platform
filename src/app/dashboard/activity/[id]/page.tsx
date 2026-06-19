@@ -52,15 +52,15 @@ export default async function ActivityDetailPage({
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Stamp activity">
       <div className="flex flex-wrap gap-3">
-        <Link href="/dashboard/notifications" className="text-sm font-semibold text-[#F97316]">
+        <Link href="/dashboard/notifications" className="text-sm font-semibold business-text">
           Back to notifications
         </Link>
-        {customerHref ? <Link href={customerHref} className="text-sm font-semibold text-[#F97316]">View customer</Link> : null}
-        {staffHref ? <Link href={staffHref} className="text-sm font-semibold text-[#F97316]">View staff</Link> : null}
+        {customerHref ? <Link href={customerHref} className="text-sm font-semibold business-text">View customer</Link> : null}
+        {staffHref ? <Link href={staffHref} className="text-sm font-semibold business-text">View staff</Link> : null}
       </div>
 
-      <section className="rounded-md border-2 border-[#F97316] bg-white p-5 shadow-sm">
-        <p className="text-sm font-semibold text-[#F97316]">Highlighted alert activity</p>
+      <section className="rounded-md border-2 business-border bg-white p-5 shadow-sm">
+        <p className="text-sm font-semibold business-text">Highlighted alert activity</p>
         <div className="mt-5 grid gap-4 md:grid-cols-3">
           <Info label="Transaction ID" value={`#${transaction.id}`} />
           <Info label="Quantity issued" value={transaction.quantity.toString()} />

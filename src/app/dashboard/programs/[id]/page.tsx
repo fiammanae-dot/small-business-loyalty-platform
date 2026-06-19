@@ -50,13 +50,13 @@ export default async function ProgramDetailPage({
         {qs.success ? <p className="mb-5 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{qs.success}</p> : null}
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <p className="text-sm font-semibold text-[#F97316]">{businessTypeLabels[program.businessType]}</p>
+            <p className="text-sm font-semibold business-text">{businessTypeLabels[program.businessType]}</p>
             <h2 className="mt-2 text-2xl font-semibold text-[#111827]">{program.name}</h2>
             <p className="mt-2 text-sm text-[#6B7280]">{program.description ?? "No description."}</p>
           </div>
           <div className="flex flex-wrap gap-3">
             <Link href="/dashboard/programs" className="rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]">Back</Link>
-            <Link href={`/dashboard/programs/${program.uuid}/edit`} className="rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">Edit Program</Link>
+            <Link href={`/dashboard/programs/${program.uuid}/edit`} className="rounded-md business-button px-4 py-2 text-sm font-semibold text-white">Edit Program</Link>
             <form action={toggleProgramAction}>
               <CsrfInput scope="dashboard:programs" />
               <input type="hidden" name="programUuid" value={program.uuid} />
@@ -99,7 +99,7 @@ export default async function ProgramDetailPage({
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-[#111827]">Enrolled customers</h2>
-          <Link href={`/dashboard/programs/${program.uuid}/customers`} className="text-sm font-semibold text-[#F97316]">Manage customers</Link>
+          <Link href={`/dashboard/programs/${program.uuid}/customers`} className="text-sm font-semibold business-text">Manage customers</Link>
         </div>
         <div className="mt-6 overflow-x-auto">
           <table className="w-full min-w-[820px] border-separate border-spacing-0 text-left text-sm">
@@ -170,8 +170,8 @@ function CompletionMetric({ value }: { value: number }) {
     <div className="rounded-md border border-[#E5E7EB] bg-white p-4">
       <p className="text-sm text-[#6B7280]">Average Completion Rate</p>
       <p className="mt-2 text-lg font-semibold text-[#111827]">{value}%</p>
-      <div className="mt-3 h-2 rounded-full bg-orange-100">
-        <div className="h-2 rounded-full bg-[#F97316]" style={{ width: `${value}%` }} />
+      <div className="mt-3 h-2 rounded-full business-secondary-bg-soft">
+        <div className="h-2 rounded-full business-button" style={{ width: `${value}%` }} />
       </div>
     </div>
   );

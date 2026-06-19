@@ -1,4 +1,4 @@
-import type { BusinessType } from "@prisma/client";
+﻿import type { BusinessType } from "@prisma/client";
 import { CsrfInput } from "@/components/CsrfInput";
 import { businessTypeOptions } from "@/lib/platform-options";
 import { programTemplates } from "@/lib/programs";
@@ -41,8 +41,8 @@ export function ProgramForm({
     <form action={action} className="grid gap-5">
       <CsrfInput scope="dashboard:programs" />
       {defaults.uuid ? <input type="hidden" name="programUuid" value={defaults.uuid} /> : null}
-      <div className="rounded-md border border-orange-200 bg-orange-50 p-4">
-        <p className="text-sm font-semibold text-[#F97316]">Template loaded</p>
+      <div className="rounded-md border business-border-soft business-bg-soft p-4">
+        <p className="text-sm font-semibold business-text">Template loaded</p>
         <p className="mt-1 text-sm text-[#6B7280]">Defaults are editable before saving.</p>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
@@ -70,13 +70,13 @@ export function ProgramForm({
       </div>
       <label className="space-y-2">
         <span className="text-sm font-medium text-[#111827]">Description</span>
-        <textarea name="description" rows={3} defaultValue={defaults.description ?? ""} className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100" />
+        <textarea name="description" rows={3} defaultValue={defaults.description ?? ""} className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none business-ring focus:ring-0" />
       </label>
       <label className="space-y-2">
         <span className="text-sm font-medium text-[#111827]">Reward Description</span>
-        <textarea name="rewardDescription" rows={3} defaultValue={rewardDescription} required className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100" />
+        <textarea name="rewardDescription" rows={3} defaultValue={rewardDescription} required className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none business-ring focus:ring-0" />
       </label>
-      <button type="submit" className="w-fit rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">
+      <button type="submit" className="w-fit rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
         {submitLabel}
       </button>
     </form>
@@ -101,7 +101,7 @@ function Input({
   return (
     <label className="space-y-2">
       <span className="text-sm font-medium text-[#111827]">{label}</span>
-      <input name={name} type={type} min={min} defaultValue={defaultValue} required={required} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100" />
+      <input name={name} type={type} min={min} defaultValue={defaultValue} required={required} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0" />
     </label>
   );
 }
