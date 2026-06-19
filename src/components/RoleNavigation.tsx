@@ -1,0 +1,258 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+import {
+  Bell,
+  Building2,
+  CreditCard,
+  LayoutDashboard,
+  MessageSquare,
+  MoreHorizontal,
+  Palette,
+  QrCode,
+  Settings,
+  Share2,
+  Sparkles,
+  Store,
+  UserPlus,
+  Users,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import type { AuthUser } from "@/lib/session";
+
+type RoleNavigationProps = {
+  role: AuthUser["role"];
+};
+
+type NavigationItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  description?: string;
+  accent?: boolean;
+};
+
+const businessOwnerNavigationGroups: Array<{ label: string; items: NavigationItem[] }> = [
+  {
+    label: "Main",
+    items: [
+      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, description: "Daily overview" },
+      { href: "/dashboard/customers", label: "Customers", icon: Users, description: "Search and manage" },
+      { href: "/dashboard/programs", label: "Programs", icon: Sparkles, description: "Loyalty setup" },
+      { href: "/dashboard/referrals", label: "Referrals", icon: Share2, description: "Referral growth" },
+      { href: "/dashboard/scanner", label: "Scanner", icon: QrCode, description: "Scan customer QR", accent: true },
+    ],
+  },
+  {
+    label: "Management",
+    items: [
+      { href: "/dashboard/staff", label: "Staff", icon: UserPlus, description: "Team access" },
+      { href: "/dashboard/branches", label: "Branches", icon: Building2, description: "Locations" },
+    ],
+  },
+  {
+    label: "Business",
+    items: [
+      { href: "/dashboard/branding", label: "Branding", icon: Palette, description: "Card appearance" },
+      { href: "/dashboard/billing", label: "Billing", icon: CreditCard, description: "Subscription" },
+      { href: "/dashboard/settings", label: "Settings", icon: Settings, description: "Business settings" },
+    ],
+  },
+  {
+    label: "Support",
+    items: [
+      { href: "/dashboard/notifications", label: "Alerts", icon: Bell, description: "Risk and alerts" },
+      { href: "/dashboard/messages", label: "Messages", icon: MessageSquare, description: "Prepared messages" },
+      { href: "/dashboard/profile", label: "Profile", icon: Store, description: "Account profile" },
+    ],
+  },
+];
+
+const mobilePrimaryItems: NavigationItem[] = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/customers", label: "Customers", icon: Users },
+  { href: "/dashboard/scanner", label: "Scanner", icon: QrCode, accent: true },
+  { href: "/dashboard/referrals", label: "Referrals", icon: Share2 },
+];
+
+const mobileMoreItems: NavigationItem[] = [
+  { href: "/dashboard/programs", label: "Programs", icon: Sparkles },
+  { href: "/dashboard/staff", label: "Staff", icon: UserPlus },
+  { href: "/dashboard/branches", label: "Branches", icon: Building2 },
+  { href: "/dashboard/branding", label: "Branding", icon: Palette },
+  { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
+  { href: "/dashboard/settings", label: "Settings", icon: Settings },
+  { href: "/dashboard/notifications", label: "Alerts", icon: Bell },
+  { href: "/dashboard/messages", label: "Messages", icon: MessageSquare },
+  { href: "/dashboard/profile", label: "Profile", icon: Store },
+];
+
+export function RoleNavigation({ role }: RoleNavigationProps) {
+  const pathname = usePathname();
+
+  if (role !== "BUSINESS_OWNER") {
+    return null;
+  }
+
+  return (
+    <aside className="lg:sticky lg:top-6 lg:self-start" aria-label="Business Owner navigation">
+      <div className="rounded-xl border border-[#E5E7EB] bg-white p-3 shadow-sm">
+        <div className="flex items-center gap-3 border-b border-[#F1F5F9] px-2 pb-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-[#F97316]">
+            <Store className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div>
+            <p className="text-sm font-bold text-[#111827]">Business Workspace</p>
+            <p className="text-xs font-medium text-[#64748B]">Daily operations</p>
+          </div>
+        </div>
+
+        <nav className="mt-3 grid gap-4" aria-label="Business navigation">
+          {businessOwnerNavigationGroups.map((group) => (
+            <div key={group.label}>
+              <p className="px-2 pb-2 text-xs font-bold uppercase tracking-wide text-[#94A3B8]">{group.label}</p>
+              <div className="grid gap-1">
+                {group.items.map((item) => (
+                  <NavigationLink key={item.href} item={item} pathname={pathname} />
+                ))}
+              </div>
+            </div>
+          ))}
+        </nav>
+      </div>
+    </aside>
+  );
+}
+
+export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
+  const pathname = usePathname();
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  if (role !== "BUSINESS_OWNER") {
+    return null;
+  }
+
+  const moreActive = mobileMoreItems.some((item) => isActivePath(pathname, item.href));
+
+  return (
+    <div className="lg:hidden">
+      {moreOpen ? (
+        <div className="fixed inset-x-3 bottom-20 z-40 rounded-2xl border border-[#E5E7EB] bg-white p-3 shadow-2xl">
+          <div className="mb-2 flex items-center justify-between px-1">
+            <p className="text-sm font-bold text-[#111827]">More</p>
+            <button
+              type="button"
+              onClick={() => setMoreOpen(false)}
+              className="rounded-full px-3 py-1.5 text-sm font-bold text-[#64748B] hover:bg-orange-50 hover:text-[#F97316]"
+            >
+              Close
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {mobileMoreItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMoreOpen(false)}
+                aria-current={isActivePath(pathname, item.href) ? "page" : undefined}
+                className={`flex min-h-12 items-center gap-3 rounded-xl border px-3 py-3 text-sm font-bold ${
+                  isActivePath(pathname, item.href)
+                    ? "border-orange-200 bg-orange-50 text-[#EA580C]"
+                    : "border-[#E5E7EB] bg-white text-[#475569]"
+                }`}
+              >
+                <item.icon className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      <nav
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E5E7EB] bg-white/95 px-2 pb-2 pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur"
+        aria-label="Mobile business navigation"
+      >
+        <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
+          {mobilePrimaryItems.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={() => setMoreOpen(false)}
+            aria-current={isActivePath(pathname, item.href) ? "page" : undefined}
+            className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition ${
+              isActivePath(pathname, item.href) || item.accent
+                ? "bg-[#F97316] text-white shadow-sm"
+                : "text-[#64748B] hover:bg-orange-50 hover:text-[#F97316]"
+            }`}
+          >
+            <item.icon className="h-5 w-5" aria-hidden="true" />
+            {item.label}
+          </Link>
+          ))}
+          <button
+            type="button"
+            onClick={() => setMoreOpen((current) => !current)}
+            aria-expanded={moreOpen}
+            className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition ${
+              moreOpen || moreActive ? "bg-orange-50 text-[#EA580C]" : "text-[#64748B] hover:bg-orange-50 hover:text-[#F97316]"
+            }`}
+          >
+            <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
+            More
+          </button>
+        </div>
+      </nav>
+    </div>
+  );
+}
+
+function NavigationLink({
+  item,
+  pathname,
+  compact = false,
+}: {
+  item: NavigationItem;
+  pathname: string;
+  compact?: boolean;
+}) {
+  const active = isActivePath(pathname, item.href);
+
+  return (
+    <Link
+      href={item.href}
+      aria-current={active ? "page" : undefined}
+      className={`group flex items-center gap-3 rounded-lg border px-3 transition ${
+        compact ? "py-2" : "py-2.5"
+      } ${
+        active
+          ? "border-orange-200 bg-orange-50 text-[#EA580C]"
+          : item.accent
+            ? "border-orange-100 bg-[#FFF7ED] text-[#EA580C] hover:border-orange-200 hover:bg-orange-50"
+            : "border-transparent text-[#64748B] hover:border-orange-100 hover:bg-orange-50 hover:text-[#EA580C]"
+      }`}
+    >
+      <span
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+          active || item.accent ? "bg-white text-[#F97316] shadow-sm" : "bg-[#F8FAFC] text-[#94A3B8] group-hover:text-[#F97316]"
+        }`}
+      >
+        <item.icon className="h-4 w-4" aria-hidden="true" />
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate text-sm font-bold">{item.label}</span>
+        {!compact && item.description ? <span className="block truncate text-xs font-medium opacity-75">{item.description}</span> : null}
+      </span>
+    </Link>
+  );
+}
+
+function isActivePath(pathname: string, href: string) {
+  if (href === "/dashboard") {
+    return pathname === href;
+  }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
+}

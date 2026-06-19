@@ -19,6 +19,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { CsrfInput } from "@/components/CsrfInput";
 import { IdleSessionTimeout } from "@/components/IdleSessionTimeout";
+import { MobileBusinessNavigation, RoleNavigation } from "@/components/RoleNavigation";
 import { isDemoModeEnabled } from "@/lib/platform-settings";
 import type { AuthUser } from "@/lib/session";
 import { getDisplayUserName, roleHomePath, roleLabels } from "@/lib/roles";
@@ -56,6 +57,7 @@ const platformNavItems: Array<{ href: string; label: string; icon: LucideIcon }>
 export async function DashboardShell({ user, title, eyebrow, children, headerAside, hideWelcomeMessage = false }: DashboardShellProps) {
   const demoModeEnabled = await isDemoModeEnabled();
   const displayName = getDisplayUserName(user);
+  const hasSidebar = user.role === "PLATFORM_OWNER" || user.role === "BUSINESS_OWNER";
 
   return (
     <div className="min-h-screen bg-white text-[#111827]">
@@ -80,17 +82,24 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
               </button>
             </form>
           </div>
-          <nav className="flex gap-2 overflow-x-auto text-sm text-[#6B7280]">
-            {navItems.filter((item) => item.role === user.role).map((item) => (
-              <Link key={item.href} href={item.href} className="rounded-md border border-[#F97316] px-3 py-2 font-semibold text-[#F97316]">
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          {user.role !== "BUSINESS_OWNER" ? (
+            <nav className="flex gap-2 overflow-x-auto text-sm text-[#6B7280]">
+              {navItems.filter((item) => item.role === user.role).map((item) => (
+                <Link key={item.href} href={item.href} className="rounded-md border border-[#F97316] px-3 py-2 font-semibold text-[#F97316]">
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+          ) : null}
         </div>
+        <MobileBusinessNavigation role={user.role} />
       </header>
 
-      <main className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[240px_1fr] lg:px-8">
+      <main
+        className={`mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[240px_1fr] lg:px-8 ${
+          user.role === "BUSINESS_OWNER" ? "pb-24 lg:pb-6" : ""
+        }`}
+      >
         {demoModeEnabled ? (
           <div className="rounded-md border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-semibold text-[#C2410C] lg:col-span-2">
             Demo Mode Active — External communications and selected production actions are restricted.
@@ -120,7 +129,9 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
           </aside>
         ) : null}
 
-        <div className={`flex flex-col gap-8 ${user.role === "PLATFORM_OWNER" ? "" : "lg:col-span-2"}`}>
+        {user.role === "BUSINESS_OWNER" ? <RoleNavigation role={user.role} /> : null}
+
+        <div className={`flex flex-col gap-8 ${hasSidebar ? "" : "lg:col-span-2"}`}>
         <section className="grid gap-5 lg:grid-cols-[1fr_300px] lg:items-end">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-[#F97316]">{eyebrow}</p>

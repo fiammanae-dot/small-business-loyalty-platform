@@ -3,24 +3,19 @@ import { ReferralShareActions } from "@/components/ReferralShareActions";
 import Image from "next/image";
 import {
   CheckCircle2,
+  Copy,
   Gift,
+  Link2,
   QrCode,
-  ShieldCheck,
   Sparkles,
   Stamp,
-  TicketCheck,
+  WalletCards,
 } from "lucide-react";
-import {
-  getCardUrl,
-  getShortCardToken,
-  maskPhoneNumber,
-  resolveBranding,
-} from "@/lib/customer-cards";
+import { getCardUrl, getShortCardToken, resolveBranding } from "@/lib/customer-cards";
 import { calculateCustomerTier } from "@/lib/customer-tiers";
-import { formatDate, formatDateTime } from "@/lib/format";
+import { formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
-import { businessTypeLabels } from "@/lib/roles";
+import { progressValue } from "@/lib/programs";
 import { getScanQrDataUrl } from "@/lib/scan";
 import { getReferralUrl } from "@/lib/referrals";
 
@@ -106,80 +101,64 @@ export default async function PublicCustomerCardPage({
 
   return (
     <main
-      className="min-h-screen px-4 py-5 text-[#111827]"
+      className="min-h-screen px-4 py-5 text-[#1E293B]"
       style={{ backgroundColor: branding.backgroundColor, color: branding.textColor }}
     >
-      <div className="mx-auto flex max-w-md flex-col gap-4">
-        <section
-          className="relative overflow-hidden rounded-[30px] p-5 text-white shadow-2xl"
-          style={{
-            background: `linear-gradient(145deg, ${branding.primaryColor}, ${branding.secondaryColor})`,
-          }}
-        >
-          <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/20 blur-2xl" />
-          <div className="absolute -bottom-12 -left-12 h-36 w-36 rounded-full bg-[#111827]/15 blur-2xl" />
+      <div className="mx-auto flex w-full max-w-lg flex-col gap-4 md:max-w-2xl">
+        <LoyaltyWalletCard
+          businessName={membership.business.name}
+          branding={branding}
+          customerName={customerName}
+          cardNumber={getShortCardToken(membership.cardToken)}
+          tier={tier}
+          qrCode={primaryProgram?.qrCode ?? null}
+          rewardReady={
+            primaryProgram
+              ? progressValue(primaryProgram.programMembership.earnedStamps, primaryProgram.programMembership.bonusStamps) >=
+                primaryProgram.programMembership.loyaltyProgram.requiredStamps
+              : false
+          }
+        />
 
-          <div className="relative flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              {branding.logoUrl ? (
-                <div
-                  aria-label={`${membership.business.name} logo`}
-                  className="h-12 w-12 rounded-2xl bg-white/20 bg-cover bg-center ring-1 ring-white/30"
-                  style={{ backgroundImage: `url(${branding.logoUrl})` }}
-                />
-              ) : (
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-base font-bold text-white ring-1 ring-white/30">
-                  {membership.business.name.slice(0, 2).toUpperCase()}
-                </div>
-              )}
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-white/75">{membership.business.name}</p>
-                <p className="mt-1 text-sm text-white/80">{businessTypeLabels[membership.business.businessType]}</p>
-              </div>
-            </div>
-            <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold ring-1 ring-white/25">
-              Loyalty Card
-            </span>
-          </div>
+        {primaryProgram ? (
+          <>
+            <LoyaltyProgressSection programMembership={primaryProgram.programMembership} branding={branding} />
+            <RewardStatusSection programMembership={primaryProgram.programMembership} />
+          </>
+        ) : (
+          <section className="rounded-[28px] border border-orange-100 bg-white p-5 shadow-sm">
+            <p className="text-sm font-semibold uppercase tracking-wide text-[#F97316]">Loyalty progress</p>
+            <h2 className="mt-2 text-xl font-bold text-[#1E293B]">No active loyalty program yet</h2>
+            <p className="mt-2 text-sm leading-6 text-[#64748B]">
+              Ask staff to enroll this card into a loyalty program before earning stamps.
+            </p>
+          </section>
+        )}
 
-          <div className="relative mt-8">
-            <p className="text-sm font-semibold text-white/75">Hi,</p>
-            <h1 className="mt-1 text-4xl font-bold tracking-tight">{customerName}</h1>
-            <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-sm font-bold ring-1 ring-white/25">
-              <span aria-hidden="true">{tier.badgeIcon}</span>
-              <span>{tier.badgeLabel}</span>
-            </div>
-          </div>
+        <TierStatusSection tier={tier} branding={branding} />
 
-          <TierBadgePanel tier={tier} />
+        {referralUrl ? (
+          <ReferralCardSection
+            referralUrl={referralUrl}
+            referralCode={membership.referralCode}
+            businessName={membership.business.name}
+            buttonColor={branding.buttonColor}
+            pendingReferrals={pendingReferrals}
+            qualifiedReferrals={qualifiedReferrals}
+            rewardsEarned={`${referralRewards._sum.bonusStamps ?? 0} stamps`}
+          />
+        ) : null}
 
-          <div className="relative mt-4 rounded-2xl bg-white/15 px-4 py-3 text-sm font-semibold text-white ring-1 ring-white/20">
-            Last Updated: {formatDateTime(lastUpdatedAt)}
-          </div>
-
-          {primaryProgram ? (
-            <PrimaryRewardPanel
-              programMembership={primaryProgram.programMembership}
-              qrCode={primaryProgram.qrCode}
-              branding={branding}
-            />
-          ) : (
-            <div className="relative mt-6 rounded-3xl bg-white p-5 text-[#111827] shadow-lg">
-              <p className="font-semibold">No active loyalty program yet</p>
-              <p className="mt-2 text-sm leading-6 text-[#6B7280]">
-                Ask staff to enroll this card into a loyalty program before earning stamps.
-              </p>
-            </div>
-          )}
-        </section>
-
-        <section className="rounded-3xl border border-[#E5E7EB] bg-white p-4 shadow-sm">
+        <section className="rounded-[28px] border border-[#E5E7EB] bg-white p-5 shadow-sm">
           <div className="flex items-center gap-2">
             <QrCode className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
-            <h2 className="text-base font-semibold text-[#111827]">Save Your Card</h2>
+            <h2 className="text-base font-semibold text-[#1E293B]">Save Your Card</h2>
           </div>
-          <p className="mt-2 text-sm leading-6 text-[#6B7280]">
+          <p className="mt-2 text-sm leading-6 text-[#64748B]">
             This link stays the same and always shows your latest stamps, reward status, tier, and QR code.
+          </p>
+          <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
+            Last Updated: {formatDateTime(lastUpdatedAt)}
           </p>
           <div className="mt-4">
             <CardShareActions
@@ -195,10 +174,10 @@ export default async function PublicCustomerCardPage({
         </section>
 
         {programCards.length > 1 ? (
-          <section className="rounded-3xl border border-[#E5E7EB] bg-white p-4 shadow-sm">
+          <section className="rounded-[28px] border border-[#E5E7EB] bg-white p-5 shadow-sm">
             <div className="flex items-center gap-2">
-              <TicketCheck className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
-              <h2 className="text-base font-semibold text-[#111827]">Other rewards</h2>
+              <Gift className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+              <h2 className="text-base font-semibold text-[#1E293B]">Additional programs</h2>
             </div>
             <div className="mt-4 grid gap-3">
               {programCards.slice(1).map(({ programMembership, qrCode }) => (
@@ -212,80 +191,103 @@ export default async function PublicCustomerCardPage({
           </section>
         ) : null}
 
-        {referralUrl ? (
-          <section className="rounded-3xl border border-[#E5E7EB] bg-white p-4 shadow-sm">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
-              <h2 className="text-base font-semibold text-[#111827]">Refer a friend</h2>
-            </div>
-            <p className="mt-2 text-sm leading-6 text-[#6B7280]">
-              Share your link. Rewards are granted after your friend joins and earns their first stamp.
-            </p>
-            <div className="mt-4 rounded-2xl bg-orange-50 p-3">
-              <p className="text-xs font-semibold uppercase text-[#F97316]">Referral Link</p>
-              <p className="mt-2 break-all text-sm font-semibold text-[#111827]">{referralUrl}</p>
-            </div>
-            <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-              <Info label="Pending Referrals" value={pendingReferrals.toString()} />
-              <Info label="Qualified Referrals" value={qualifiedReferrals.toString()} />
-              <Info label="Rewards Earned" value={`${referralRewards._sum.bonusStamps ?? 0} stamps`} />
-            </div>
-            <div className="mt-4">
-              <ReferralShareActions referralUrl={referralUrl} businessName={membership.business.name} buttonColor={branding.buttonColor} />
-            </div>
-          </section>
-        ) : null}
-
-        <section className="rounded-3xl border border-[#E5E7EB] bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
-            <h2 className="text-base font-semibold text-[#111827]">Card details</h2>
-          </div>
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <Info label="Card ID" value={getShortCardToken(membership.cardToken)} />
-            <Info label="Member since" value={formatDate(membership.joinedAt)} />
-            <Info label="Status" value="Active" />
-            <Info label="Phone" value={maskPhoneNumber(customer.normalizedPhone)} />
-          </div>
-        </section>
+        <WalletPlaceholderSection />
       </div>
     </main>
   );
 }
 
-function TierBadgePanel({ tier }: { tier: ReturnType<typeof calculateCustomerTier> }) {
-  const isVip = tier.isVip;
+function LoyaltyWalletCard({
+  businessName,
+  branding,
+  customerName,
+  cardNumber,
+  tier,
+  qrCode,
+  rewardReady,
+}: {
+  businessName: string;
+  branding: ReturnType<typeof resolveBranding>;
+  customerName: string;
+  cardNumber: string;
+  tier: ReturnType<typeof calculateCustomerTier>;
+  qrCode: string | null;
+  rewardReady: boolean;
+}) {
+  const tierTone = getTierTone(tier.badgeLabel);
 
   return (
-    <div
-      className={`relative mt-6 overflow-hidden rounded-[26px] p-5 shadow-xl ${
-        isVip ? "bg-[#111827] text-white ring-1 ring-yellow-300/40" : "bg-white text-[#111827]"
-      }`}
+    <section
+      className="relative overflow-hidden rounded-[34px] p-5 text-white shadow-2xl sm:p-6"
+      style={{
+        background: `radial-gradient(circle at 15% 10%, rgba(255,255,255,0.25), transparent 32%), linear-gradient(145deg, ${branding.primaryColor}, ${branding.secondaryColor})`,
+      }}
     >
-      {isVip ? <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-yellow-300/20 blur-2xl" /> : null}
+      <div className="absolute -right-14 -top-14 h-44 w-44 rounded-full bg-white/20 blur-3xl" />
+      <div className="absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-[#1E293B]/25 blur-3xl" />
+      <div className="absolute inset-x-6 top-0 h-px bg-white/40" />
+
       <div className="relative flex items-start justify-between gap-4">
-        <div>
-          <p className={`text-xs font-semibold uppercase tracking-wide ${isVip ? "text-yellow-200" : "text-[#F97316]"}`}>
-            Customer tier
-          </p>
-          <div className="mt-2 flex items-center gap-2">
-            <span className="text-xl" aria-hidden="true">{tier.badgeIcon}</span>
-            <h2 className="text-2xl font-bold tracking-tight">{tier.badgeLabel}</h2>
+        <div className="flex items-center gap-3">
+          {branding.logoUrl ? (
+            <div
+              aria-label={`${businessName} logo`}
+              className="h-14 w-14 rounded-2xl bg-white/20 bg-cover bg-center ring-1 ring-white/35"
+              style={{ backgroundImage: `url(${branding.logoUrl})` }}
+            />
+          ) : (
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20 text-base font-black text-white ring-1 ring-white/35">
+              {businessName.slice(0, 2).toUpperCase()}
+            </div>
+          )}
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/70">LoyaltyBase</p>
+            <h1 className="mt-1 text-lg font-bold leading-tight">{businessName}</h1>
           </div>
-          {isVip ? <p className="mt-2 text-sm font-semibold text-yellow-100">Exclusive Rewards Available</p> : null}
+        </div>
+        <span className="rounded-full bg-white/18 px-3 py-1 text-xs font-bold ring-1 ring-white/25">
+          {rewardReady ? "Reward Ready" : "Live Card"}
+        </span>
+      </div>
+
+      <div className="relative mt-9">
+        <p className="text-sm font-semibold text-white/70">Customer</p>
+        <h2 className="mt-1 text-4xl font-black tracking-tight sm:text-5xl">{customerName}</h2>
+        <div
+          className={`mt-4 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-black ring-1 ${tierTone.pill}`}
+        >
+          <span aria-hidden="true">{tier.badgeIcon}</span>
+          <span>{tier.badgeLabel}</span>
         </div>
       </div>
-    </div>
+
+      <div className="relative mt-7 grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
+        <div className="rounded-3xl bg-white/15 p-4 ring-1 ring-white/20 backdrop-blur">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/65">Card Number</p>
+          <p className="mt-2 font-mono text-2xl font-black tracking-wide">{cardNumber}</p>
+          <p className="mt-2 text-sm font-medium text-white/75">Show this card when earning stamps or redeeming rewards.</p>
+        </div>
+
+        <div className="rounded-[28px] bg-white p-3 text-center shadow-xl">
+          {qrCode ? (
+            <Image src={qrCode} alt={`${businessName} customer card QR code`} width={178} height={178} unoptimized priority />
+          ) : (
+            <div className="flex h-[178px] w-[178px] items-center justify-center rounded-2xl bg-orange-50 text-sm font-bold text-[#F97316]">
+              QR pending
+            </div>
+          )}
+          <p className="mt-2 text-xs font-bold uppercase tracking-wide text-[#64748B]">Scan this card</p>
+        </div>
+      </div>
+    </section>
   );
 }
 
-function PrimaryRewardPanel({
+function LoyaltyProgressSection({
   programMembership,
-  qrCode,
   branding,
 }: {
   programMembership: ProgramMembershipView;
-  qrCode: string;
   branding: ReturnType<typeof resolveBranding>;
 }) {
   const progress = progressValue(programMembership.earnedStamps, programMembership.bonusStamps);
@@ -293,92 +295,272 @@ function PrimaryRewardPanel({
   const remaining = Math.max(required - progress, 0);
   const completion = Math.min(Math.round((progress / required) * 100), 100);
   const rewardReady = progress >= required;
-  const statusLabel = programCustomerStatusLabel({
-    status: programMembership.status,
-    earnedStamps: programMembership.earnedStamps,
-    bonusStamps: programMembership.bonusStamps,
-    requiredStamps: required,
-  });
 
   return (
-    <div className="relative mt-6 rounded-[26px] bg-white p-5 text-[#111827] shadow-xl">
-      <div className="flex items-start justify-between gap-4">
+    <section className="rounded-[28px] border border-[#E5E7EB] bg-white p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-[#6B7280]">{programMembership.loyaltyProgram.name}</p>
-          <div className="mt-2 flex items-end gap-2">
-            <p className="customer-card-counter text-5xl font-bold tracking-tight" style={{ color: branding.primaryColor }}>
-              {progress}/{required}
-            </p>
-            <p className="pb-2 text-sm font-semibold text-[#6B7280]">stamps</p>
-          </div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#F97316]">Loyalty Progress</p>
+          <h2 className="mt-2 text-2xl font-black text-[#1E293B]">{programMembership.loyaltyProgram.name}</h2>
         </div>
-        <span
-          className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${
-            rewardReady ? "bg-green-50 text-green-700" : "bg-orange-50 text-[#F97316]"
-          }`}
-        >
-          {rewardReady ? <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /> : <Stamp className="h-3.5 w-3.5" aria-hidden="true" />}
-          {rewardReady ? "Reward Ready" : statusLabel}
+        <span className={`rounded-full px-3 py-1 text-xs font-bold ${rewardReady ? "bg-green-50 text-green-700" : "bg-orange-50 text-[#EA580C]"}`}>
+          {rewardReady ? "Complete" : `${remaining} left`}
         </span>
       </div>
 
-      <div className="mt-5">
-        <div className="flex items-center justify-between text-xs font-semibold text-[#6B7280]">
-          <span>Progress</span>
-          <span>{completion}%</span>
+      <div className="mt-6 grid gap-4 sm:grid-cols-[auto_1fr] sm:items-center">
+        <div>
+          <div className="mt-2 flex items-end gap-2">
+            <p className="customer-card-counter text-6xl font-black tracking-tight" style={{ color: branding.primaryColor }}>
+              {progress}
+            </p>
+            <p className="pb-3 text-lg font-black text-[#94A3B8]">/{required}</p>
+          </div>
+          <p className="text-sm font-semibold text-[#64748B]">Visits Completed</p>
         </div>
-        <div className="mt-2 h-3 overflow-hidden rounded-full bg-orange-100">
-          <div
-            className="customer-card-progress h-full rounded-full"
-            style={{
-              width: `${completion}%`,
-              background: `linear-gradient(90deg, ${branding.secondaryColor}, ${branding.primaryColor})`,
-            }}
-          />
-        </div>
-      </div>
 
-      <div
-        className={`mt-5 rounded-2xl border p-4 ${
-          rewardReady ? "border-green-200 bg-green-50" : "border-orange-100 bg-orange-50"
-        }`}
-      >
-        <div className="flex items-start gap-3">
-          <span
-            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${
-              rewardReady ? "bg-green-100 text-green-700" : "bg-white text-[#F97316]"
-            }`}
-          >
-            <Gift className="h-5 w-5" aria-hidden="true" />
-          </span>
-          <div>
-            <p className={`text-sm font-semibold ${rewardReady ? "text-green-800" : "text-[#F97316]"}`}>
-              {rewardReady ? "Your reward is ready" : `${remaining} stamp${remaining === 1 ? "" : "s"} remaining`}
-            </p>
-            <h2 className="mt-1 text-xl font-bold text-[#111827]">{programMembership.loyaltyProgram.rewardName}</h2>
-            <p className="mt-1 text-sm leading-6 text-[#6B7280]">
-              {rewardReady
-                ? "Show the QR code below to staff to redeem your reward."
-                : `Keep visiting to unlock ${programMembership.loyaltyProgram.rewardName}.`}
-            </p>
+        <div>
+          <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wide text-[#64748B]">
+            <span>Next Reward</span>
+            <span>{completion}%</span>
+          </div>
+          <div className="mt-3 h-4 overflow-hidden rounded-full bg-orange-100">
+            <div
+              className="customer-card-progress h-full rounded-full"
+              style={{
+                width: `${completion}%`,
+                background: `linear-gradient(90deg, ${branding.secondaryColor}, ${branding.primaryColor})`,
+              }}
+            />
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <Info label="Visits Remaining" value={remaining === 0 ? "Ready now" : remaining.toString()} />
+            <Info label="Next Reward" value={programMembership.loyaltyProgram.rewardName} />
           </div>
         </div>
       </div>
-
-      <div className="mt-5 rounded-[24px] border-2 border-dashed border-orange-200 bg-white p-4 text-center">
-        <div className="mx-auto inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-[#F97316]">
-          <QrCode className="h-3.5 w-3.5" aria-hidden="true" />
-          Scan this card
-        </div>
-        <div className="mx-auto mt-4 flex w-fit rounded-2xl bg-white p-3 shadow-sm ring-1 ring-[#E5E7EB]">
-          <Image src={qrCode} alt={`${programMembership.loyaltyProgram.name} scan QR`} width={220} height={220} unoptimized />
-        </div>
-        <p className="mt-4 text-sm font-semibold text-[#111827]">
-          {rewardReady ? "Show this QR to staff to redeem" : "Show this QR to staff to earn stamps"}
-        </p>
-      </div>
-    </div>
+    </section>
   );
+}
+
+function RewardStatusSection({ programMembership }: { programMembership: ProgramMembershipView }) {
+  const progress = progressValue(programMembership.earnedStamps, programMembership.bonusStamps);
+  const required = programMembership.loyaltyProgram.requiredStamps;
+  const remaining = Math.max(required - progress, 0);
+  const rewardReady = progress >= required;
+
+  return (
+    <section
+      className={`overflow-hidden rounded-[28px] border p-5 shadow-sm ${
+        rewardReady ? "border-green-200 bg-green-50" : "border-orange-100 bg-white"
+      }`}
+    >
+      <div className="flex items-start gap-4">
+        <span
+          className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-3xl ${
+            rewardReady ? "bg-green-100 text-green-700" : "bg-orange-50 text-[#F97316]"
+          }`}
+        >
+          {rewardReady ? <CheckCircle2 className="h-7 w-7" aria-hidden="true" /> : <Gift className="h-7 w-7" aria-hidden="true" />}
+        </span>
+        <div>
+          <p className={`text-xs font-black uppercase tracking-[0.18em] ${rewardReady ? "text-green-700" : "text-[#F97316]"}`}>
+            Reward Status
+          </p>
+          <h2 className="mt-2 text-3xl font-black text-[#1E293B]">
+            {rewardReady ? "Reward Ready" : `${remaining} Visit${remaining === 1 ? "" : "s"} Remaining`}
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-[#64748B]">
+            {rewardReady
+              ? `Show your QR code to staff to redeem ${programMembership.loyaltyProgram.rewardName}.`
+              : `Your next reward is ${programMembership.loyaltyProgram.rewardName}.`}
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TierStatusSection({
+  tier,
+  branding,
+}: {
+  tier: ReturnType<typeof calculateCustomerTier>;
+  branding: ReturnType<typeof resolveBranding>;
+}) {
+  const { visitsRemaining: remainingVisits, progressPercent: tierCompletion, nextTier } = tier;
+  const tierTone = getTierTone(tier.badgeLabel);
+
+  return (
+    <section className={`rounded-[28px] border p-5 shadow-sm ${tierTone.card}`}>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className={`text-xs font-black uppercase tracking-[0.18em] ${tierTone.label}`}>Customer tier</p>
+          <div className="mt-3 flex items-center gap-3">
+            <span className={`flex h-12 w-12 items-center justify-center rounded-2xl text-2xl ${tierTone.icon}`} aria-hidden="true">
+              {tier.badgeIcon}
+            </span>
+            <div>
+              <h2 className="text-2xl font-black text-[#1E293B]">{tier.badgeLabel}</h2>
+              {tier.isVip ? <p className="mt-1 text-sm font-bold text-yellow-700">Exclusive Rewards Available</p> : null}
+            </div>
+          </div>
+        </div>
+        <Sparkles className={`h-6 w-6 ${tierTone.sparkle}`} aria-hidden="true" />
+      </div>
+
+      {!tier.isVip && nextTier ? (
+        <div className="mt-5 rounded-3xl bg-white/80 p-4 ring-1 ring-black/5">
+          <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wide text-[#64748B]">
+            <span>Next Tier</span>
+            <span>{nextTier}</span>
+          </div>
+          <div className="mt-3 h-3 overflow-hidden rounded-full bg-orange-100">
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: `${tierCompletion}%`,
+                background: `linear-gradient(90deg, ${branding.secondaryColor}, ${branding.primaryColor})`,
+              }}
+            />
+          </div>
+          <p className="mt-3 text-sm font-semibold text-[#64748B]">
+            {remainingVisits} visit{remainingVisits === 1 ? "" : "s"} until the next customer level.
+          </p>
+        </div>
+      ) : (
+        <div className="mt-5 rounded-3xl bg-[#1E293B] p-4 text-white">
+          <p className="text-sm font-bold">Top tier member</p>
+          <p className="mt-1 text-sm text-white/75">You are already at the highest LoyaltyBase tier.</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ReferralCardSection({
+  referralUrl,
+  referralCode,
+  businessName,
+  buttonColor,
+  pendingReferrals,
+  qualifiedReferrals,
+  rewardsEarned,
+}: {
+  referralUrl: string;
+  referralCode: string | null;
+  businessName: string;
+  buttonColor: string;
+  pendingReferrals: number;
+  qualifiedReferrals: number;
+  rewardsEarned: string;
+}) {
+  return (
+    <section className="rounded-[28px] border border-[#E5E7EB] bg-white p-5 shadow-sm">
+      <div className="flex items-center gap-2">
+        <Sparkles className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+        <h2 className="text-base font-black text-[#1E293B]">Refer a friend</h2>
+      </div>
+      <p className="mt-2 text-sm leading-6 text-[#64748B]">
+        Share your referral link. Rewards are granted after your friend joins and earns their first stamp.
+      </p>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-2xl bg-orange-50 p-4">
+          <p className="text-xs font-black uppercase tracking-wide text-[#F97316]">Referral Code</p>
+          <p className="mt-2 break-all font-mono text-lg font-black text-[#1E293B]">{referralCode}</p>
+        </div>
+        <div className="rounded-2xl bg-[#F8FAFC] p-4">
+          <p className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-[#64748B]">
+            <Link2 className="h-3.5 w-3.5" aria-hidden="true" />
+            Referral Link
+          </p>
+          <p className="mt-2 line-clamp-2 break-all text-sm font-semibold text-[#1E293B]">{referralUrl}</p>
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+        <Info label="Pending Referrals" value={pendingReferrals.toString()} />
+        <Info label="Qualified Referrals" value={qualifiedReferrals.toString()} />
+        <Info label="Rewards Earned" value={rewardsEarned} />
+      </div>
+
+      <div className="mt-4">
+        <ReferralShareActions referralUrl={referralUrl} businessName={businessName} buttonColor={buttonColor} />
+      </div>
+    </section>
+  );
+}
+
+function WalletPlaceholderSection() {
+  return (
+    <section className="rounded-[28px] border border-[#E5E7EB] bg-white p-5 shadow-sm">
+      <div className="flex items-center gap-2">
+        <WalletCards className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+        <h2 className="text-base font-black text-[#1E293B]">Wallet Area</h2>
+      </div>
+      <p className="mt-2 text-sm leading-6 text-[#64748B]">Save-to-wallet support is being prepared for a future release.</p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <button
+          type="button"
+          disabled
+          className="flex items-center justify-center gap-2 rounded-2xl border border-[#E5E7EB] bg-[#F8FAFC] px-4 py-3 text-sm font-bold text-[#94A3B8]"
+        >
+          <WalletCards className="h-4 w-4" aria-hidden="true" />
+          Add to Apple Wallet
+          <span className="rounded-full bg-white px-2 py-0.5 text-[10px] uppercase tracking-wide text-[#94A3B8]">Coming Soon</span>
+        </button>
+        <button
+          type="button"
+          disabled
+          className="flex items-center justify-center gap-2 rounded-2xl border border-[#E5E7EB] bg-[#F8FAFC] px-4 py-3 text-sm font-bold text-[#94A3B8]"
+        >
+          <Copy className="h-4 w-4" aria-hidden="true" />
+          Add to Google Wallet
+          <span className="rounded-full bg-white px-2 py-0.5 text-[10px] uppercase tracking-wide text-[#94A3B8]">Coming Soon</span>
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function getTierTone(label: string) {
+  const normalized = label.toUpperCase();
+  if (normalized.includes("VIP")) {
+    return {
+      card: "border-yellow-200 bg-gradient-to-br from-yellow-50 via-white to-[#FFF7ED]",
+      icon: "bg-[#1E293B] text-yellow-300",
+      label: "text-yellow-700",
+      pill: "bg-[#1E293B]/80 text-yellow-200 ring-yellow-200/30",
+      sparkle: "text-yellow-500",
+    };
+  }
+  if (normalized.includes("GOLD")) {
+    return {
+      card: "border-yellow-200 bg-yellow-50",
+      icon: "bg-yellow-100 text-yellow-700",
+      label: "text-yellow-700",
+      pill: "bg-yellow-100/90 text-yellow-900 ring-yellow-200",
+      sparkle: "text-yellow-500",
+    };
+  }
+  if (normalized.includes("SILVER")) {
+    return {
+      card: "border-slate-200 bg-slate-50",
+      icon: "bg-slate-200 text-slate-700",
+      label: "text-slate-600",
+      pill: "bg-white/25 text-white ring-white/30",
+      sparkle: "text-slate-500",
+    };
+  }
+
+  return {
+    card: "border-orange-100 bg-orange-50",
+    icon: "bg-orange-100 text-[#EA580C]",
+    label: "text-[#EA580C]",
+    pill: "bg-white/25 text-white ring-white/30",
+    sparkle: "text-[#F97316]",
+  };
 }
 
 function ProgramRewardCard({

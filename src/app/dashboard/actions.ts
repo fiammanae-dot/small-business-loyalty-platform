@@ -261,6 +261,7 @@ export async function toggleBranchStatusAction(formData: FormData) {
   });
 
   revalidatePath("/dashboard/branches");
+  redirect(`/dashboard/branches?success=Branch ${nextStatus === "ACTIVE" ? "enabled" : "disabled"}.`);
 }
 
 export async function createStaffUserAction(formData: FormData) {
@@ -355,6 +356,7 @@ export async function toggleStaffStatusAction(formData: FormData) {
   });
 
   revalidatePath("/dashboard/staff");
+  redirect(`/dashboard/staff?success=Staff user ${nextStatus === "ACTIVE" ? "enabled" : "disabled"}.`);
 }
 
 export type StaffPasswordResetState = {

@@ -52,11 +52,13 @@ test("business owner engagement pages are tenant filtered and preview-only", () 
   assert.doesNotMatch(detailPage, /fetch\(/);
 });
 
-test("customer profile exposes engagement summary without changing loyalty state", () => {
+test("customer profile keeps engagement out of the compact Customer 360 overview", () => {
   const profile = read("src/app/dashboard/customers/[id]/page.tsx");
 
-  assert.match(profile, /Communication history/);
-  assert.match(profile, /Last engagement event/);
-  assert.match(profile, /Reward Ready count/);
-  assert.match(profile, /Rewards Redeemed count/);
+  assert.match(profile, /LatestActivityPreview/);
+  assert.match(profile, /RewardsPanel/);
+  assert.match(profile, /ReferralSummaryPanel/);
+  assert.doesNotMatch(profile, /Communication history/);
+  assert.doesNotMatch(profile, /Last engagement event/);
+  assert.doesNotMatch(profile, /Reward Ready count/);
 });

@@ -1,7 +1,8 @@
 "use client";
 
 import { Copy, KeyRound, Mail, X } from "lucide-react";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { toast } from "sonner";
 import type { StaffPasswordResetState } from "@/app/dashboard/actions";
 import { resetStaffPasswordAction } from "@/app/dashboard/actions";
 
@@ -18,6 +19,18 @@ export function StaffPasswordResetAction({
 }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, isPending] = useActionState(resetStaffPasswordAction, initialState);
+
+  useEffect(() => {
+    if (state.error) {
+      toast.error(state.error);
+    }
+  }, [state.error]);
+
+  useEffect(() => {
+    if (state.temporaryPassword) {
+      toast.success("Temporary password generated. Share it securely.");
+    }
+  }, [state.temporaryPassword]);
 
   return (
     <>
@@ -105,7 +118,10 @@ export function StaffPasswordResetAction({
                   <code className="break-all text-sm font-semibold text-[#111827]">{state.temporaryPassword}</code>
                   <button
                     type="button"
-                    onClick={() => navigator.clipboard?.writeText(state.temporaryPassword ?? "")}
+                    onClick={() => {
+                      navigator.clipboard?.writeText(state.temporaryPassword ?? "");
+                      toast.success("Temporary password copied.");
+                    }}
                     className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]"
                   >
                     <Copy className="h-4 w-4" aria-hidden="true" />

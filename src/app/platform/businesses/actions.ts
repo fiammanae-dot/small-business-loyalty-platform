@@ -445,4 +445,5 @@ export async function toggleBusinessStatusAction(formData: FormData) {
 
   revalidatePath("/platform/businesses");
   revalidatePath(`/platform/businesses/${businessUuid}`);
+  redirect(`/platform/businesses?success=Business ${nextStatus === "ACTIVE" ? "enabled" : "disabled"}.`);
 }

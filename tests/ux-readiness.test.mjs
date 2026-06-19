@@ -30,7 +30,7 @@ test("business dashboard includes beta readiness polish without changing loyalty
   assert.doesNotMatch(dashboard, /Cooldown Monitoring/);
 });
 
-test("customer profile includes customer 360 engagement and message summaries", () => {
+test("customer profile uses compact Customer 360 tabs and operational summaries", () => {
   const profile = read("src/app/dashboard/customers/[id]/page.tsx");
 
   for (const expected of [
@@ -40,18 +40,25 @@ test("customer profile includes customer 360 engagement and message summaries", 
     "ProfileSummaryCard",
     "LoyaltyOverviewPanel",
     "LatestActivityPreview",
-    "Communication history",
-    "Manual delivery history",
-    "Marketing Consent Status",
-    "Last Message Prepared",
-    "Profile",
-    "Loyalty",
+    "TierDetailsPanel",
+    "RewardsPanel",
+    "Open Card",
+    "Copy Card Link",
+    "Share Card",
+    "Enroll Program",
+    "Issue Stamp",
+    "Redeem Reward",
+    "Overview",
     "Activity",
-    "Alerts",
-    "Messages",
-    "Redemptions",
+    "Rewards",
+    "Referrals",
+    "Programs",
   ]) {
     assert.match(profile, new RegExp(expected));
+  }
+
+  for (const removed of ["Communication history", "Manual delivery history", "\\[\"messages\", \"Messages\"\\]", "\\[\"redemptions\", \"Redemptions\"\\]"]) {
+    assert.doesNotMatch(profile, new RegExp(removed));
   }
 });
 
