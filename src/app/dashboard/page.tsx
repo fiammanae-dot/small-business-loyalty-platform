@@ -6,7 +6,6 @@ import {
   Search,
   ScanLine,
   ShieldAlert,
-  Store,
   TicketCheck,
   UserPlus,
   Users,
@@ -40,10 +39,10 @@ export default async function BusinessDashboard({
     mediumAlerts,
     lowAlerts,
     recentCustomers,
-    recentStamps,
     programRows,
     staffCount,
     stampCount,
+    stampEventsToday,
     redemptionCount,
   ] = await Promise.all([
     prisma.businessCustomerMembership.count({ where: { businessId: user.businessId, createdAt: { gte: todayStart } } }),
@@ -68,24 +67,6 @@ export default async function BusinessDashboard({
         createdBranch: { select: { name: true } },
       },
     }),
-    prisma.stampTransaction.findMany({
-      where: { businessId: user.businessId },
-      orderBy: { createdAt: "desc" },
-      take: 6,
-      select: {
-        createdAt: true,
-        quantity: true,
-        branch: { select: { name: true } },
-        customerProgramMembership: {
-          select: {
-            loyaltyProgram: { select: { name: true } },
-            businessCustomerMembership: {
-              select: { uuid: true, globalCustomer: { select: { firstName: true, lastName: true } } },
-            },
-          },
-        },
-      },
-    }),
     prisma.loyaltyProgram.findMany({
       where: { businessId: user.businessId },
       orderBy: { createdAt: "desc" },
@@ -108,6 +89,7 @@ export default async function BusinessDashboard({
     }),
     prisma.user.count({ where: { businessId: user.businessId, role: { in: ["BRANCH_MANAGER", "STAFF"] } } }),
     prisma.stampTransaction.count({ where: { businessId: user.businessId } }),
+    prisma.stampTransaction.count({ where: { businessId: user.businessId, createdAt: { gte: todayStart } } }),
     prisma.rewardRedemption.count({ where: { businessId: user.businessId } }),
   ]);
 
@@ -144,26 +126,8 @@ export default async function BusinessDashboard({
     };
   });
   const rewardsReadyTotal = programPerformance.reduce((sum, program) => sum + program.rewardReady, 0);
-  const recentActivity = [
-    ...recentCustomers.map((membership) => ({
-      type: "Customer enrolled",
-      title: getCustomerName(membership.globalCustomer),
-      meta: membership.createdBranch?.name ?? "No branch",
-      createdAt: membership.createdAt,
-      icon: Users,
-      href: `/dashboard/customers/${membership.uuid}`,
-    })),
-    ...recentStamps.map((stamp) => ({
-      type: `${stamp.quantity} stamp${stamp.quantity === 1 ? "" : "s"} issued`,
-      title: getCustomerName(stamp.customerProgramMembership.businessCustomerMembership.globalCustomer),
-      meta: `${stamp.customerProgramMembership.loyaltyProgram.name} - ${stamp.branch?.name ?? "No branch"}`,
-      createdAt: stamp.createdAt,
-      icon: TicketCheck,
-      href: `/dashboard/customers/${stamp.customerProgramMembership.businessCustomerMembership.uuid}`,
-    })),
-  ]
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-    .slice(0, 6);
+  const stampsIssuedToday = stampsToday._sum.quantity ?? 0;
+  const totalActivitiesToday = newCustomersToday + stampEventsToday + redemptionsToday;
   const onboardingItems = [
     { label: "Create first branch", complete: branchCount > 0, href: "/dashboard/branches" },
     { label: "Create first staff member", complete: staffCount > 0, href: "/dashboard/staff" },
@@ -180,14 +144,6 @@ export default async function BusinessDashboard({
       eyebrow="Business Owner"
       title="Business dashboard"
       hideWelcomeMessage
-      headerAside={
-        <TodayPerformance
-          newCustomersToday={newCustomersToday}
-          stampsIssuedToday={stampsToday._sum.quantity ?? 0}
-          rewardsRedeemedToday={redemptionsToday}
-          rewardReadyCustomers={rewardsReadyTotal}
-        />
-      }
     >
       <CompactCustomerSearch />
 
@@ -200,6 +156,10 @@ export default async function BusinessDashboard({
         programCount={loyaltyPrograms}
         branchCount={branchCount}
         alertCount={totalOpenAlerts}
+        newCustomersToday={newCustomersToday}
+        stampsIssuedToday={stampsIssuedToday}
+        rewardsRedeemedToday={redemptionsToday}
+        rewardReadyCustomers={rewardsReadyTotal}
         logoUrl={business.branding?.logoUrl}
         onboardingPercent={onboardingPercent}
         onboardingItems={onboardingItems}
@@ -207,7 +167,12 @@ export default async function BusinessDashboard({
 
       <MainActions />
 
-      <RecentActivity items={recentActivity} />
+      <RecentActivity
+        totalActivitiesToday={totalActivitiesToday}
+        stampsIssuedToday={stampsIssuedToday}
+        customerEnrollmentsToday={newCustomersToday}
+        rewardsRedeemedToday={redemptionsToday}
+      />
 
       <RecentCustomers customers={recentCustomers} />
 
@@ -225,6 +190,10 @@ function HeaderSummary({
   programCount,
   branchCount,
   alertCount,
+  newCustomersToday,
+  stampsIssuedToday,
+  rewardsRedeemedToday,
+  rewardReadyCustomers,
   logoUrl,
   onboardingPercent,
   onboardingItems,
@@ -237,42 +206,74 @@ function HeaderSummary({
   programCount: number;
   branchCount: number;
   alertCount: number;
+  newCustomersToday: number;
+  stampsIssuedToday: number;
+  rewardsRedeemedToday: number;
+  rewardReadyCustomers: number;
   logoUrl?: string | null;
   onboardingPercent: number;
   onboardingItems: Array<{ label: string; complete: boolean; href: string }>;
 }) {
   return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
-      <div className="grid gap-4 xl:grid-cols-[minmax(260px,0.9fr)_minmax(0,1.25fr)] xl:items-start">
-        <div className="flex gap-4">
+    <section className="rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm">
+      <div className="grid gap-3 xl:grid-cols-[minmax(240px,0.8fr)_minmax(0,1.4fr)] xl:items-center">
+        <div className="flex items-center gap-3">
           <div
-            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md border border-orange-100 bg-orange-50 bg-cover bg-center text-base font-bold text-[#F97316]"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-orange-100 bg-orange-50 bg-cover bg-center text-sm font-bold text-[#F97316]"
             style={logoUrl ? { backgroundImage: `url(${logoUrl})` } : undefined}
             aria-label="Business logo"
           >
             {!logoUrl ? getInitials(businessName) : null}
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase text-[#F97316]">Operations control panel</p>
-            <h2 className="mt-1 truncate text-2xl font-semibold text-[#111827]">{businessName}</h2>
-            <p className="mt-1 text-sm text-[#6B7280]">{businessType}</p>
-            <div className="mt-2 flex flex-wrap gap-2">
+            <h2 className="truncate text-lg font-semibold text-[#111827]">{businessName}</h2>
+            <p className="mt-0.5 text-sm text-[#6B7280]">{businessType}</p>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
               <StatusBadge status={status} />
               <span className="rounded-md bg-orange-50 px-2 py-1 text-xs font-semibold text-[#F97316]">{planName} Plan</span>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <SecondaryBusinessMetric href="/dashboard/customers" label="Customers" value={customerCount} />
+              <SecondaryBusinessMetric href="/dashboard/programs" label="Programs" value={programCount} />
+              <SecondaryBusinessMetric href="/dashboard/branches" label="Branches" value={branchCount} />
+              <SecondaryBusinessMetric href="/dashboard/notifications" label="Alerts" value={alertCount} tone={alertCount > 0 ? "alert" : "default"} />
             </div>
           </div>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <SummaryTile href="/dashboard/customers" icon={Users} label="Customers" value={customerCount.toString()} />
-          <SummaryTile href="/dashboard/programs" icon={Gift} label="Programs" value={programCount.toString()} />
-          <SummaryTile href="/dashboard/branches" icon={Store} label="Branches" value={branchCount.toString()} />
-          <SummaryTile href="/dashboard/notifications" icon={ShieldAlert} label="Alerts" value={alertCount.toString()} tone={alertCount > 0 ? "alert" : "default"} />
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+          <SummaryTile href="/dashboard/customers" icon={UserPlus} label="New Customers Today" value={newCustomersToday.toString()} />
+          <SummaryTile href="/dashboard/activity" icon={TicketCheck} label="Stamps Issued Today" value={stampsIssuedToday.toString()} />
+          <SummaryTile href="/dashboard/activity" icon={Gift} label="Rewards Redeemed Today" value={rewardsRedeemedToday.toString()} />
+          <SummaryTile href="/dashboard/customers?reward=ready" icon={ShieldAlert} label="Reward Ready Customers" value={rewardReadyCustomers.toString()} tone={rewardReadyCustomers > 0 ? "alert" : "default"} />
         </div>
       </div>
 
       {onboardingPercent < 100 ? <div className="mt-4"><OnboardingSummary percent={onboardingPercent} items={onboardingItems} /></div> : null}
     </section>
+  );
+}
+
+function SecondaryBusinessMetric({
+  href,
+  label,
+  value,
+  tone = "default",
+}: {
+  href: string;
+  label: string;
+  value: number;
+  tone?: "default" | "alert";
+}) {
+  return (
+    <Link
+      href={href}
+      className={`rounded-md px-2 py-1 text-xs font-semibold transition ${
+        tone === "alert" ? "bg-red-50 text-red-700 hover:bg-red-100" : "bg-[#F3F4F6] text-[#374151] hover:bg-orange-50 hover:text-[#C2410C]"
+      }`}
+    >
+      {label}: {value}
+    </Link>
   );
 }
 
@@ -297,39 +298,6 @@ function CompactCustomerSearch() {
         </button>
       </div>
     </form>
-  );
-}
-
-function TodayPerformance({
-  newCustomersToday,
-  stampsIssuedToday,
-  rewardsRedeemedToday,
-  rewardReadyCustomers,
-}: {
-  newCustomersToday: number;
-  stampsIssuedToday: number;
-  rewardsRedeemedToday: number;
-  rewardReadyCustomers: number;
-}) {
-  return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
-      <p className="text-sm font-semibold text-[#F97316]">Today's Operations</p>
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <MiniOperation label="New customers" value={newCustomersToday.toString()} />
-        <MiniOperation label="Stamps issued" value={stampsIssuedToday.toString()} />
-        <MiniOperation label="Rewards redeemed" value={rewardsRedeemedToday.toString()} />
-        <MiniOperation label="Reward ready" value={rewardReadyCustomers.toString()} />
-      </div>
-    </section>
-  );
-}
-
-function MiniOperation({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md bg-[#FAFAFA] px-3 py-2">
-      <p className="text-xl font-semibold text-[#111827]">{value}</p>
-      <p className="mt-1 text-xs font-medium text-[#6B7280]">{label}</p>
-    </div>
   );
 }
 
@@ -442,39 +410,39 @@ function ProgramPerformance({
 }
 
 function RecentActivity({
-  items,
+  totalActivitiesToday,
+  stampsIssuedToday,
+  customerEnrollmentsToday,
+  rewardsRedeemedToday,
 }: {
-  items: Array<{ type: string; title: string; meta: string; createdAt: Date; icon: LucideIcon; href: string }>;
+  totalActivitiesToday: number;
+  stampsIssuedToday: number;
+  customerEnrollmentsToday: number;
+  rewardsRedeemedToday: number;
 }) {
   return (
     <SectionCard
       eyebrow="Activity"
-      title="Activity summary"
+      title="Activity preview"
       icon={TicketCheck}
-      action={<Link href="/dashboard/activity" className="text-sm font-semibold text-[#F97316]">View all activity</Link>}
+      action={<Link href="/dashboard/activity" className="text-sm font-semibold text-[#F97316]">View Full Activity</Link>}
     >
-      <div className="grid gap-2">
-        {items.length ? (
-          items.slice(0, 3).map((item, index) => (
-            <Link key={`${item.type}-${item.createdAt.toISOString()}-${index}`} href={item.href} className="flex gap-3 rounded-md border border-[#E5E7EB] p-3 transition hover:border-[#F97316] hover:bg-orange-50">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-orange-50 text-[#F97316]">
-                <item.icon className="h-4 w-4" aria-hidden="true" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-sm font-semibold text-[#111827]">{item.type}</p>
-                  <p className="text-xs text-[#6B7280]">{formatDateTime(item.createdAt)}</p>
-                </div>
-                <p className="mt-1 truncate text-sm text-[#111827]">{item.title}</p>
-                <p className="mt-1 text-xs text-[#6B7280]">{item.meta}</p>
-              </div>
-            </Link>
-          ))
-        ) : (
-          <p className="rounded-md border border-dashed border-[#E5E7EB] p-4 text-sm text-[#6B7280]">No recent customer or stamp activity yet.</p>
-        )}
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <ActivityMetric label="Total activities today" value={totalActivitiesToday} />
+        <ActivityMetric label="Stamps issued today" value={stampsIssuedToday} />
+        <ActivityMetric label="Customer enrollments today" value={customerEnrollmentsToday} />
+        <ActivityMetric label="Rewards redeemed today" value={rewardsRedeemedToday} />
       </div>
     </SectionCard>
+  );
+}
+
+function ActivityMetric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3">
+      <p className="text-2xl font-semibold text-[#111827]">{value}</p>
+      <p className="mt-1 text-xs font-semibold uppercase text-[#6B7280]">{label}</p>
+    </div>
   );
 }
 
@@ -487,16 +455,11 @@ function OnboardingSummary({
 }) {
   if (percent > 80) {
     return (
-      <div className="rounded-md border border-orange-100 bg-orange-50 p-3">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-semibold text-[#9A3412]">Setup almost complete - {percent}%</p>
-            <p className="mt-1 text-xs text-[#C2410C]">Finish the remaining setup items when ready.</p>
-          </div>
-          <Link href="/dashboard/settings" className="shrink-0 rounded-md bg-white px-3 py-2 text-xs font-semibold text-[#F97316] shadow-sm">
-            View Details
-          </Link>
-        </div>
+      <div className="inline-flex w-full max-w-xs items-center justify-between gap-3 rounded-md border border-orange-100 bg-orange-50 px-3 py-2 shadow-sm">
+        <p className="text-sm font-semibold text-[#9A3412]">{percent}% Complete</p>
+        <Link href="/dashboard/settings" className="shrink-0 rounded-md bg-white px-3 py-1.5 text-xs font-semibold text-[#F97316] shadow-sm">
+          Continue Setup
+        </Link>
       </div>
     );
   }
@@ -538,12 +501,12 @@ function SummaryTile({
   tone?: "default" | "alert";
 }) {
   return (
-    <Link href={href} className={`rounded-md border p-3 transition hover:border-[#F97316] hover:bg-orange-50 ${tone === "alert" ? "border-red-200 bg-red-50" : "border-[#E5E7EB] bg-[#FAFAFA]"}`}>
+    <Link href={href} className={`rounded-md border px-3 py-2 transition hover:border-[#F97316] hover:bg-orange-50 ${tone === "alert" ? "border-red-200 bg-red-50" : "border-[#E5E7EB] bg-[#FAFAFA]"}`}>
       <div className="flex items-center justify-between gap-3">
-        <Icon className={`h-5 w-5 ${tone === "alert" ? "text-red-600" : "text-[#F97316]"}`} aria-hidden="true" />
-        <p className={`text-2xl font-semibold ${tone === "alert" ? "text-red-700" : "text-[#111827]"}`}>{value}</p>
+        <Icon className={`h-4 w-4 ${tone === "alert" ? "text-red-600" : "text-[#F97316]"}`} aria-hidden="true" />
+        <p className={`text-xl font-semibold ${tone === "alert" ? "text-red-700" : "text-[#111827]"}`}>{value}</p>
       </div>
-      <p className="mt-2 text-xs font-semibold uppercase text-[#6B7280]">{label}</p>
+      <p className="mt-1 text-xs font-semibold uppercase text-[#6B7280]">{label}</p>
     </Link>
   );
 }

@@ -40,8 +40,6 @@ const businessOwnerNavigationGroups: Array<{ label: string; items: NavigationIte
     items: [
       { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, description: "Daily overview" },
       { href: "/dashboard/customers", label: "Customers", icon: Users, description: "Search and manage" },
-      { href: "/dashboard/programs", label: "Programs", icon: Sparkles, description: "Loyalty setup" },
-      { href: "/dashboard/referrals", label: "Referrals", icon: Share2, description: "Referral growth" },
       { href: "/dashboard/scanner", label: "Scanner", icon: QrCode, description: "Scan customer QR", accent: true },
       { href: "/dashboard/activity", label: "Activity", icon: History, description: "Customer timeline" },
     ],
@@ -49,6 +47,8 @@ const businessOwnerNavigationGroups: Array<{ label: string; items: NavigationIte
   {
     label: "Management",
     items: [
+      { href: "/dashboard/programs", label: "Programs", icon: Sparkles, description: "Loyalty setup" },
+      { href: "/dashboard/referrals", label: "Referrals", icon: Share2, description: "Referral growth" },
       { href: "/dashboard/staff", label: "Staff", icon: UserPlus, description: "Team access" },
       { href: "/dashboard/branches", label: "Branches", icon: Building2, description: "Locations" },
     ],
@@ -65,6 +65,11 @@ const businessOwnerNavigationGroups: Array<{ label: string; items: NavigationIte
     items: [
       { href: "/dashboard/notifications", label: "Alerts", icon: Bell, description: "Risk and alerts" },
       { href: "/dashboard/messages", label: "Messages", icon: MessageSquare, description: "Prepared messages" },
+    ],
+  },
+  {
+    label: "Account",
+    items: [
       { href: "/dashboard/profile", label: "Profile", icon: Store, description: "Account profile" },
     ],
   },
@@ -74,11 +79,12 @@ const mobilePrimaryItems: NavigationItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/customers", label: "Customers", icon: Users },
   { href: "/dashboard/scanner", label: "Scanner", icon: QrCode, accent: true },
-  { href: "/dashboard/referrals", label: "Referrals", icon: Share2 },
+  { href: "/dashboard/activity", label: "Activity", icon: History },
 ];
 
 const mobileMoreItems: NavigationItem[] = [
   { href: "/dashboard/programs", label: "Programs", icon: Sparkles },
+  { href: "/dashboard/referrals", label: "Referrals", icon: Share2 },
   { href: "/dashboard/staff", label: "Staff", icon: UserPlus },
   { href: "/dashboard/branches", label: "Branches", icon: Building2 },
   { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
@@ -108,13 +114,19 @@ export function RoleNavigation({ role }: RoleNavigationProps) {
           </div>
         </div>
 
-        <nav className="mt-3 grid gap-4" aria-label="Business navigation">
+        <nav className="mt-4 grid gap-5" aria-label="Business navigation">
           {businessOwnerNavigationGroups.map((group) => (
             <div key={group.label}>
               <p className="px-2 pb-2 text-xs font-bold uppercase tracking-wide text-[#94A3B8]">{group.label}</p>
               <div className="grid gap-1">
                 {group.items.map((item) => (
-                  <NavigationLink key={item.href} item={item} pathname={pathname} />
+                  item.accent ? (
+                    <div key={item.href} className="my-2 border-y border-orange-100 py-2">
+                      <NavigationLink item={item} pathname={pathname} />
+                    </div>
+                  ) : (
+                    <NavigationLink key={item.href} item={item} pathname={pathname} />
+                  )
                 ))}
               </div>
             </div>
@@ -224,24 +236,26 @@ function NavigationLink({
       href={item.href}
       aria-current={active ? "page" : undefined}
       className={`group flex items-center gap-3 rounded-lg border px-3 transition ${
-        compact ? "py-2" : "py-2.5"
+        item.accent ? "py-3" : compact ? "py-2" : "py-2.5"
       } ${
         active
           ? "border-orange-200 bg-orange-50 text-[#EA580C]"
           : item.accent
-            ? "border-orange-100 bg-[#FFF7ED] text-[#EA580C] hover:border-orange-200 hover:bg-orange-50"
+            ? "border-[#F97316] bg-[#FFF7ED] text-[#EA580C] shadow-sm hover:bg-orange-50"
             : "border-transparent text-[#64748B] hover:border-orange-100 hover:bg-orange-50 hover:text-[#EA580C]"
       }`}
     >
       <span
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+        className={`flex shrink-0 items-center justify-center rounded-lg ${
+          item.accent ? "h-11 w-11" : "h-9 w-9"
+        } ${
           active || item.accent ? "bg-white text-[#F97316] shadow-sm" : "bg-[#F8FAFC] text-[#94A3B8] group-hover:text-[#F97316]"
         }`}
       >
-        <item.icon className="h-4 w-4" aria-hidden="true" />
+        <item.icon className={item.accent ? "h-5 w-5" : "h-4 w-4"} aria-hidden="true" />
       </span>
       <span className="min-w-0">
-        <span className="block truncate text-sm font-bold">{item.label}</span>
+        <span className={`block truncate font-bold ${item.accent ? "text-base" : "text-sm"}`}>{item.label}</span>
         {!compact && item.description ? <span className="block truncate text-xs font-medium opacity-75">{item.description}</span> : null}
       </span>
     </Link>

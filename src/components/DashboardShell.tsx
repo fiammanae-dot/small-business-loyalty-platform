@@ -144,7 +144,7 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
               </p>
             ) : null}
           </div>
-          {headerAside ?? (
+          {headerAside ?? (hideWelcomeMessage || user.role === "BUSINESS_OWNER" ? null : (
           <div className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-50 text-[#F97316]">
@@ -161,7 +161,7 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
               <ShellInfo label="Role" value={roleLabels[user.role]} />
             </div>
           </div>
-          )}
+          ))}
         </section>
 
         {children}

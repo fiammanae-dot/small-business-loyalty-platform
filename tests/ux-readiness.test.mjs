@@ -10,14 +10,17 @@ test("business dashboard includes beta readiness polish without changing loyalty
   const dashboard = read("src/app/dashboard/page.tsx");
 
   for (const expected of [
-    "Operations control panel",
     "HeaderSummary",
     "MainActions",
-    "TodayPerformance",
+    "New Customers Today",
+    "Stamps Issued Today",
+    "Rewards Redeemed Today",
+    "Reward Ready Customers",
+    "SecondaryBusinessMetric",
     "RecentCustomers",
     "ProgramPerformance",
     "RecentActivity",
-    "Setup almost complete",
+    "Continue Setup",
     "PrimaryAction",
     "SummaryTile",
   ]) {
