@@ -58,6 +58,25 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
   const demoModeEnabled = await isDemoModeEnabled();
   const displayName = getDisplayUserName(user);
   const hasSidebar = user.role === "PLATFORM_OWNER" || user.role === "BUSINESS_OWNER";
+  const showDefaultAccountCard = !hideWelcomeMessage && user.role !== "BUSINESS_OWNER" && user.role !== "PLATFORM_OWNER";
+  const headerPanel = headerAside ?? (showDefaultAccountCard ? (
+    <div className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-50 text-[#F97316]">
+          <FileText className="h-5 w-5" aria-hidden="true" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-[#111827]">Welcome back</p>
+          <p className="text-xs font-semibold uppercase text-[#F97316]">{roleLabels[user.role]}</p>
+        </div>
+      </div>
+      <div className="mt-4 grid gap-2 text-sm">
+        <ShellInfo label="Email" value={user.email} />
+        <ShellInfo label="Last Login" value="Current session" />
+        <ShellInfo label="Role" value={roleLabels[user.role]} />
+      </div>
+    </div>
+  ) : null);
 
   return (
     <div className="min-h-screen bg-white text-[#111827]">
@@ -133,7 +152,7 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
         {user.role === "BUSINESS_OWNER" ? <RoleNavigation role={user.role} /> : null}
 
         <div className={`flex flex-col gap-8 ${hasSidebar ? "" : "lg:col-span-2"}`}>
-        <section className="grid gap-5 lg:grid-cols-[1fr_300px] lg:items-end">
+        <section className={`grid gap-5 lg:items-end ${headerPanel ? "lg:grid-cols-[1fr_300px]" : ""}`}>
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-[#F97316]">{eyebrow}</p>
             <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#111827] sm:text-4xl">
@@ -145,24 +164,7 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
               </p>
             ) : null}
           </div>
-          {headerAside ?? (hideWelcomeMessage || user.role === "BUSINESS_OWNER" ? null : (
-          <div className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-50 text-[#F97316]">
-                <FileText className="h-5 w-5" aria-hidden="true" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-[#111827]">Welcome back</p>
-                <p className="text-xs font-semibold uppercase text-[#F97316]">{roleLabels[user.role]}</p>
-              </div>
-            </div>
-            <div className="mt-4 grid gap-2 text-sm">
-              <ShellInfo label="Email" value={user.email} />
-              <ShellInfo label="Last Login" value="Current session" />
-              <ShellInfo label="Role" value={roleLabels[user.role]} />
-            </div>
-          </div>
-          ))}
+          {headerPanel}
         </section>
 
         {children}
