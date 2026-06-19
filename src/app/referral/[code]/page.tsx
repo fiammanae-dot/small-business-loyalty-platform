@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { businessTypeLabels } from "@/lib/roles";
+import { extractReferralCode } from "@/lib/referrals";
 
 export default async function ReferralLandingPage({
   params,
@@ -8,9 +9,15 @@ export default async function ReferralLandingPage({
   params: Promise<{ code: string }>;
 }) {
   const { code } = await params;
+  const referralCode = extractReferralCode(code);
+
+  if (!referralCode) {
+    return <ReferralUnavailable />;
+  }
+
   const referrer = await prisma.businessCustomerMembership.findFirst({
     where: {
-      referralCode: code,
+      referralCode,
       referralEnabled: true,
       status: "ACTIVE",
       business: { status: "ACTIVE" },
@@ -52,14 +59,14 @@ export default async function ReferralLandingPage({
 
         <div className="mt-5 rounded-md border border-[#E5E7EB] p-4">
           <p className="text-xs font-semibold uppercase text-[#6B7280]">Referral code</p>
-          <p className="mt-2 break-all text-lg font-semibold text-[#111827]">{code}</p>
+          <p className="mt-2 break-all text-lg font-semibold text-[#111827]">{referralCode}</p>
         </div>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <Link href={`/staff/customers/new?ref=${encodeURIComponent(code)}`} className="rounded-md px-4 py-3 text-center text-sm font-semibold text-white" style={{ backgroundColor: brandColor }}>
+          <Link href={`/staff/customers/new?ref=${encodeURIComponent(referralCode)}`} className="rounded-md px-4 py-3 text-center text-sm font-semibold text-white" style={{ backgroundColor: brandColor }}>
             Staff enrollment
           </Link>
-          <Link href={`/branch/customers/new?ref=${encodeURIComponent(code)}`} className="rounded-md border border-[#E5E7EB] px-4 py-3 text-center text-sm font-semibold text-[#111827]">
+          <Link href={`/branch/customers/new?ref=${encodeURIComponent(referralCode)}`} className="rounded-md border border-[#E5E7EB] px-4 py-3 text-center text-sm font-semibold text-[#111827]">
             Manager enrollment
           </Link>
         </div>

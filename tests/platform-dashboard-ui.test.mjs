@@ -39,7 +39,7 @@ test("platform dashboard uses SaaS admin hierarchy, KPIs, icons, and recent acti
     "7 Days",
     "30 Days",
     "New Business",
-    "Create Invoice",
+    "Billing Center",
     "Create Plan",
     "Add User",
   ]) {

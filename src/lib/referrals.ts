@@ -1,13 +1,47 @@
 import "server-only";
 
-import { randomBytes } from "crypto";
+import { randomInt } from "crypto";
 import type { Prisma } from "@prisma/client";
 import { getBaseUrl } from "@/lib/customer-cards";
 import { logAuditEvent } from "@/lib/audit";
 import { createCustomerNotification } from "@/lib/customer-notifications";
 
-export function generateReferralCode() {
-  return `ref_${randomBytes(18).toString("base64url")}`;
+type ReferralCodeInput = {
+  tx: TxClient;
+  businessId: number;
+  businessName: string;
+  customerFirstName: string;
+};
+
+export async function generateReferralCode({ tx, businessId, businessName, customerFirstName }: ReferralCodeInput) {
+  const prefix = buildBusinessPrefix(businessName);
+  const customerPart = buildCustomerPart(customerFirstName);
+
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    const code = prefix + "-" + customerPart + randomInt(10, 100).toString();
+    const existingInBusiness = await tx.businessCustomerMembership.findFirst({
+      where: { businessId, referralCode: code },
+      select: { id: true },
+    });
+    const existingGlobally = await tx.businessCustomerMembership.findFirst({
+      where: { referralCode: code },
+      select: { id: true },
+    });
+
+    if (!existingInBusiness && !existingGlobally) return code;
+  }
+
+  throw new Error("Unable to generate a unique referral code for this business.");
+}
+
+export function buildBusinessPrefix(businessName: string) {
+  const cleaned = businessName.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+  return (cleaned || "LBX").slice(0, 3).padEnd(3, "X");
+}
+
+export function buildCustomerPart(customerFirstName: string) {
+  const cleaned = customerFirstName.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+  return (cleaned || "GUEST").slice(0, 10);
 }
 
 export function extractReferralCode(value?: string | null) {
@@ -29,8 +63,11 @@ export function extractReferralCode(value?: string | null) {
 }
 
 function cleanReferralCode(value: string) {
-  const cleaned = value.trim().replace(/[^A-Za-z0-9_-]/g, "");
-  return cleaned.startsWith("ref_") && cleaned.length >= 8 ? cleaned : null;
+  const raw = value.trim().replace(/[^A-Za-z0-9_-]/g, "");
+  if (/^ref_[A-Za-z0-9_-]{8,}$/i.test(raw)) return raw;
+
+  const cleaned = raw.toUpperCase();
+  return /^[A-Z0-9]{3,12}-[A-Z0-9]{2,12}$/.test(cleaned) ? cleaned : null;
 }
 
 export async function getReferralUrl(referralCode: string) {

@@ -3,23 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { Prisma } from "@prisma/client";
 import type { InvoiceStatus, PaymentMethod } from "@prisma/client";
 import { validateCsrfForm } from "@/lib/csrf";
 import { blockDemoModeExternalAction } from "@/lib/platform-settings";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 import { paymentMethods } from "@/lib/billing";
-
-const invoiceSchema = z.object({
-  businessId: z.coerce.number().int().positive("Business is required."),
-  subscriptionId: z.coerce.number().int().positive("Subscription is required."),
-  invoiceDate: z.string().trim().min(1, "Invoice date is required."),
-  dueDate: z.string().trim().min(1, "Due date is required."),
-  amount: z.coerce.number().positive("Amount must be greater than zero."),
-  currency: z.string().trim().min(1, "Currency is required.").max(3, "Use a 3-letter currency code."),
-  notes: z.string().trim().optional(),
-});
 
 const paymentSchema = z.object({
   invoiceUuid: z.string().uuid(),
@@ -46,79 +35,6 @@ function validateSecurity(formData: FormData, path: string) {
   } catch {
     fail(path, "Security check failed. Please refresh and try again.");
   }
-}
-
-function parseDate(value: string) {
-  return new Date(`${value}T00:00:00.000Z`);
-}
-
-async function nextInvoiceNumber(tx: Prisma.TransactionClient) {
-  const year = new Date().getFullYear();
-  const count = await tx.invoice.count({
-    where: {
-      invoiceNumber: {
-        startsWith: `LB-${year}-`,
-      },
-    },
-  });
-  return `LB-${year}-${String(count + 1).padStart(6, "0")}`;
-}
-
-export async function createInvoiceAction(formData: FormData) {
-  validateSecurity(formData, "/platform/invoices/new");
-  const user = await requireRole("PLATFORM_OWNER");
-  const parsed = invoiceSchema.safeParse({
-    businessId: getString(formData, "businessId"),
-    subscriptionId: getString(formData, "subscriptionId"),
-    invoiceDate: getString(formData, "invoiceDate"),
-    dueDate: getString(formData, "dueDate"),
-    amount: getString(formData, "amount"),
-    currency: getString(formData, "currency") || "AED",
-    notes: getString(formData, "notes"),
-  });
-  if (!parsed.success) fail("/platform/invoices/new", parsed.error.issues[0]?.message ?? "Validation failed.");
-
-  const data = parsed.data;
-  const subscription = await prisma.businessSubscription.findFirst({
-    where: { id: data.subscriptionId, businessId: data.businessId },
-    select: { id: true },
-  });
-  if (!subscription) fail("/platform/invoices/new", "Subscription must belong to the selected business.");
-
-  const invoice = await prisma.$transaction(async (tx) => {
-    const created = await tx.invoice.create({
-      data: {
-        businessId: data.businessId,
-        subscriptionId: data.subscriptionId,
-        invoiceNumber: await nextInvoiceNumber(tx),
-        invoiceDate: parseDate(data.invoiceDate),
-        dueDate: parseDate(data.dueDate),
-        amount: data.amount,
-        currency: data.currency.toUpperCase(),
-        status: "DRAFT",
-        notes: data.notes || null,
-        createdByUserId: user.id,
-      },
-      select: { id: true, uuid: true, status: true, businessId: true },
-    });
-
-    await tx.invoiceAuditLog.create({
-      data: {
-        invoiceId: created.id,
-        businessId: created.businessId,
-        userId: user.id,
-        action: "INVOICE_CREATED",
-        previousStatus: null,
-        newStatus: created.status,
-        notes: "Invoice created as draft.",
-      },
-    });
-
-    return created;
-  });
-
-  revalidatePath("/platform/invoices");
-  redirect(`/platform/invoices/${invoice.uuid}`);
 }
 
 export async function updateInvoiceStatusAction(formData: FormData) {

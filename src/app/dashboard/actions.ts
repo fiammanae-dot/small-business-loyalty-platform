@@ -70,6 +70,10 @@ const abusePolicySchema = z.object({
   enabled: z.boolean(),
 });
 
+const scannerSettingsSchema = z.object({
+  soundEffectsEnabled: z.boolean(),
+});
+
 const customerTierSettingsSchema = z
   .object({
     tierQualificationWindow: z.enum(["LIFETIME", "DAYS_30", "DAYS_60", "DAYS_90", "MONTHS_12"]),
@@ -444,6 +448,38 @@ export async function resetStaffPasswordAction(
 export async function updateBrandingAction() {
   await requireBusinessOwner();
   redirect("/dashboard");
+}
+
+export async function saveScannerSettingsAction(formData: FormData) {
+  validateActionSecurity(formData, "dashboard:scanner-settings", "/dashboard/settings");
+  const user = await requireBusinessOwner();
+  const parsed = scannerSettingsSchema.safeParse({
+    soundEffectsEnabled: getCheckbox(formData, "soundEffectsEnabled"),
+  });
+
+  if (!parsed.success) fail("/dashboard/settings", parsed.error.issues[0]?.message ?? "Validation failed.");
+
+  const settings = await prisma.businessScannerSettings.upsert({
+    where: { businessId: user.businessId },
+    create: {
+      businessId: user.businessId,
+      soundEffectsEnabled: parsed.data.soundEffectsEnabled,
+    },
+    update: { soundEffectsEnabled: parsed.data.soundEffectsEnabled },
+    select: { id: true },
+  });
+
+  await logAuditEvent({
+    actorUserId: user.id,
+    businessId: user.businessId,
+    action: "SCANNER_SETTINGS_UPDATED",
+    entityType: "business_scanner_settings",
+    entityId: settings.id,
+    metadata: { soundEffectsEnabled: parsed.data.soundEffectsEnabled },
+  });
+
+  revalidatePath("/dashboard/settings");
+  redirect("/dashboard/settings?tab=scanner&success=Scanner settings saved.");
 }
 
 export async function saveCustomerTierSettingsAction(formData: FormData) {

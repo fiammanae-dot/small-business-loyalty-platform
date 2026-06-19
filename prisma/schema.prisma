@@ -332,6 +332,7 @@ model Business {
   messageTemplates MessageTemplate[]
   customerNotificationTemplates CustomerNotificationTemplate[]
   communicationSettings BusinessCommunicationSettings?
+  scannerSettings BusinessScannerSettings?
   messageDeliveryQueue MessageDeliveryQueue[]
   customerNotifications CustomerNotification[]
   referrals Referral[]
@@ -582,7 +583,7 @@ model BusinessCustomerMembership {
   cardStatus       CardStatus               @default(ACTIVE) @map("card_status")
   cardCreatedAt    DateTime                 @default(now()) @map("card_created_at")
   cardLastViewedAt DateTime?                @map("card_last_viewed_at")
-  referralCode     String?                  @unique @map("referral_code")
+  referralCode     String?                  @map("referral_code")
   referralEnabled  Boolean                  @default(true) @map("referral_enabled")
   currentTier      CustomerTierName         @default(BRONZE) @map("current_tier")
   tierUpdatedAt    DateTime?                @map("tier_updated_at")
@@ -606,7 +607,7 @@ model BusinessCustomerMembership {
   @@index([globalCustomerId])
   @@index([businessId])
   @@index([businessId, status])
-  @@index([businessId, referralCode])
+  @@unique([businessId, referralCode])
   @@index([businessId, createdBranchId, status])
   @@index([createdBranchId])
   @@index([createdByUserId])
@@ -1015,6 +1016,18 @@ model BusinessCommunicationSettings {
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
   @@map("business_communication_settings")
+}
+
+model BusinessScannerSettings {
+  id                  Int      @id @default(autoincrement())
+  businessId          Int      @unique @map("business_id")
+  soundEffectsEnabled Boolean  @default(true) @map("sound_effects_enabled")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@map("business_scanner_settings")
 }
 
 model MessageDeliveryQueue {

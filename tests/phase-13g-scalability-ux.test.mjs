@@ -31,7 +31,6 @@ test("high-risk dynamic selectors use the reusable combobox", () => {
     "src/app/platform/businesses/page.tsx",
     "src/app/platform/users/page.tsx",
     "src/app/platform/invoices/page.tsx",
-    "src/app/platform/invoices/new/page.tsx",
     "src/app/platform/subscriptions/page.tsx",
     "src/app/platform/audit-center/page.tsx",
     "src/app/platform/billing-center/page.tsx",
@@ -57,8 +56,6 @@ test("high-risk dynamic selectors use the reusable combobox", () => {
 
 test("high-risk pages no longer use native selects for large record datasets", () => {
   const disallowed = [
-    ["src/app/platform/invoices/new/page.tsx", "<select name=\"businessId\""],
-    ["src/app/platform/invoices/new/page.tsx", "<select name=\"subscriptionId\""],
     ["src/app/platform/invoices/page.tsx", "<select name=\"business\""],
     ["src/app/platform/invoices/page.tsx", "<select name=\"plan\""],
     ["src/app/platform/users/page.tsx", "<select name=\"business\""],

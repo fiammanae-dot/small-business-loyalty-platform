@@ -23,6 +23,7 @@ export async function getBusinessOwnerContext() {
       branding: true,
       tierSetting: true,
       communicationSettings: true,
+      scannerSettings: true,
       branches: { orderBy: { createdAt: "asc" } },
       users: {
         where: { role: { in: ["BRANCH_MANAGER", "STAFF"] } },

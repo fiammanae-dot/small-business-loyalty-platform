@@ -62,3 +62,29 @@ test("manual scan token parser accepts scan URLs and direct tokens for existing 
   assert.match(scanLib, /\[A-Za-z0-9_-\]\{3,160\}/);
   assert.match(scanLib, /\/scan\//);
 });
+
+
+test("scanner sound effects are configurable and outcome driven", () => {
+  const schema = read("prisma/schema.prisma");
+  const migration = read("prisma/migrations/0028_scanner_sound_settings/migration.sql");
+  const settings = read("src/app/dashboard/settings/page.tsx");
+  const actions = read("src/app/dashboard/actions.ts");
+  const scan = read("src/app/scan/[token]/page.tsx");
+  const sound = read("src/components/ScannerSoundFeedback.tsx");
+
+  assert.match(schema, /model BusinessScannerSettings/);
+  assert.match(schema, /soundEffectsEnabled Boolean\s+@default\(true\)/);
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS "business_scanner_settings"/);
+  assert.match(settings, /Scanner Settings/);
+  assert.match(settings, /Scanner Sound Effects/);
+  assert.match(actions, /saveScannerSettingsAction/);
+  assert.match(actions, /SCANNER_SETTINGS_UPDATED/);
+  assert.match(scan, /ScannerSoundFeedback/);
+  assert.ok(scan.includes('const soundEvent = qs.error'));
+  assert.ok(scan.includes('? "error"'));
+  assert.match(scan, /successProgress !== null && successProgress >= program.requiredStamps/);
+  assert.match(scan, /event="error"/);
+  assert.match(sound, /AudioContext/);
+  assert.match(sound, /webkitAudioContext/);
+  assert.match(sound, /LoyaltyBase scanner sound error/);
+});

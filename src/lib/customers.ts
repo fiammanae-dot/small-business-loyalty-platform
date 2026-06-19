@@ -173,6 +173,19 @@ export async function enrollCustomerForBusiness({
 
       if (existingMembership) return { duplicate: true, uuid: null, cardToken: null };
 
+      const business = await tx.business.findUnique({
+        where: { id: user.businessId },
+        select: { name: true },
+      });
+      if (!business) fail(path, "Business not found.");
+
+      const referralCode = await generateReferralCode({
+        tx,
+        businessId: user.businessId,
+        businessName: business.name,
+        customerFirstName: identity.data.firstName,
+      });
+
       const created = await tx.businessCustomerMembership.create({
         data: {
           globalCustomerId: globalCustomer.id,
@@ -183,7 +196,7 @@ export async function enrollCustomerForBusiness({
           source: membership.data.source,
           status: membership.data.status,
           cardToken: generateCardToken(),
-          referralCode: generateReferralCode(),
+          referralCode,
           referralEnabled: true,
           cardStatus: "ACTIVE",
           cardCreatedAt: new Date(),

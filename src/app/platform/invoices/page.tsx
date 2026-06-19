@@ -61,11 +61,8 @@ export default async function PlatformInvoicesPage({
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-[#111827]">Manual invoice tracking</h2>
-            <p className="text-sm text-[#6B7280]">Create invoices, record offline payments, and track billing status.</p>
+            <p className="text-sm text-[#6B7280]">Review invoices, record offline payments, and track billing status.</p>
           </div>
-          <Link href="/platform/invoices/new" className="inline-flex h-10 items-center justify-center rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">
-            Create invoice
-          </Link>
         </div>
         <div className="mt-5 grid gap-3 md:grid-cols-4">
           <InvoiceKpi label="Total" value={invoiceKpis.total} />
@@ -222,7 +219,7 @@ function InvoiceEmpty() {
   return (
     <div className="py-8 text-center">
       <p className="text-sm font-semibold text-[#111827]">No invoices match these filters.</p>
-      <p className="mt-2 text-sm text-[#6B7280]">Clear filters or create a new manual invoice.</p>
+      <p className="mt-2 text-sm text-[#6B7280]">Clear filters or review subscription billing records.</p>
       <Link href="/platform/invoices" className="mt-4 inline-flex rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">Clear Filters</Link>
     </div>
   );

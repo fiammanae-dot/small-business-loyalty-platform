@@ -2,7 +2,7 @@ import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import Link from "next/link";
-import { saveAbusePolicyAction, saveCooldownRuleAction, saveCustomerTierSettingsAction } from "@/app/dashboard/actions";
+import { saveAbusePolicyAction, saveCooldownRuleAction, saveCustomerTierSettingsAction, saveScannerSettingsAction } from "@/app/dashboard/actions";
 import { getBusinessOwnerContext, getCurrentPlan, getCurrentSubscription } from "@/lib/business-owner";
 import { normalizeTierConfig, tierMaintenanceModeLabels, tierQualificationWindowLabels } from "@/lib/customer-tiers";
 import { formatDate } from "@/lib/format";
@@ -24,6 +24,7 @@ export default async function BusinessSettingsPage({
   const remainingDays = getSubscriptionRemainingDays(subscription);
   const trialDays = getTrialRemainingDays(subscription);
   const communicationSettings = business.communicationSettings;
+  const scannerSoundEffectsEnabled = business.scannerSettings?.soundEffectsEnabled ?? true;
   const tierConfig = normalizeTierConfig(business.tierSetting);
   const cooldownRule = await prisma.cooldownRule.findFirst({
     where: { businessId: user.businessId, active: true },
@@ -46,6 +47,7 @@ export default async function BusinessSettingsPage({
         {[
           ["overview", "Overview"],
           ["tiers", "Customer Tiers"],
+          ["scanner", "Scanner Settings"],
           ["alerts", "Alert Policies"],
           ["cooldowns", "Cooldowns"],
           ["subscription", "Subscription"],
@@ -133,6 +135,42 @@ export default async function BusinessSettingsPage({
           <div>
             <button type="submit" className="h-11 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">
               Save tier settings
+            </button>
+          </div>
+        </form>
+      </section> : null}
+
+      {activeTab === "scanner" ? <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-[#111827]">Scanner settings</h2>
+            <p className="mt-2 text-sm text-[#6B7280]">Control audio feedback for scanner outcomes. Visual success and error messages always remain visible.</p>
+          </div>
+          <span className={`w-fit rounded-md px-2 py-1 text-xs font-semibold ${scannerSoundEffectsEnabled ? "bg-emerald-50 text-emerald-700" : "bg-[#FAFAFA] text-[#6B7280]"}`}>
+            {scannerSoundEffectsEnabled ? "Sound ON" : "Sound OFF"}
+          </span>
+        </div>
+        <form action={saveScannerSettingsAction} className="mt-5 grid gap-4">
+          <CsrfInput scope="dashboard:scanner-settings" />
+          <label className="flex items-center justify-between gap-4 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
+            <span>
+              <span className="block text-sm font-semibold text-[#111827]">Scanner Sound Effects</span>
+              <span className="mt-1 block text-sm text-[#6B7280]">Play a short beep, buzz, or chime after scanner actions.</span>
+            </span>
+            <input
+              type="checkbox"
+              name="soundEffectsEnabled"
+              defaultChecked={scannerSoundEffectsEnabled}
+              className="h-5 w-5 rounded border-[#E5E7EB] text-[#F97316]"
+              aria-label="Scanner Sound Effects"
+            />
+          </label>
+          <p className="rounded-md border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-[#9A3412]">
+            Sounds play only after scanner interaction or scan form submission so mobile browsers can allow audio. Keep this on for busy counters where staff need instant feedback.
+          </p>
+          <div>
+            <button type="submit" className="h-11 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">
+              Save scanner settings
             </button>
           </div>
         </form>
@@ -234,7 +272,7 @@ export default async function BusinessSettingsPage({
 }
 
 function resolveSettingsTab(tab?: string) {
-  const allowed = ["overview", "tiers", "alerts", "cooldowns", "subscription", "communications"];
+  const allowed = ["overview", "tiers", "scanner", "alerts", "cooldowns", "subscription", "communications"];
   return allowed.includes(tab ?? "") ? tab! : "overview";
 }
 

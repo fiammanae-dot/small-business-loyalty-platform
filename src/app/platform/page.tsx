@@ -199,7 +199,7 @@ export default async function PlatformDashboard({
           </div>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             <QuickAction href="/platform/businesses/new" icon={Plus} label="New Business" />
-            <QuickAction href="/platform/invoices/new" icon={Receipt} label="Create Invoice" />
+            <QuickAction href="/platform/billing-center" icon={Receipt} label="Billing Center" />
             <QuickAction href="/platform/plans" icon={Package} label="Create Plan" />
             <QuickAction href="/platform/users" icon={UserPlus} label="Add User" />
           </div>

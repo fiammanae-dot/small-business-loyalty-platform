@@ -3,6 +3,7 @@ import type React from "react";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { IdempotencyInput } from "@/components/IdempotencyInput";
+import { ScannerSoundFeedback } from "@/components/ScannerSoundFeedback";
 import { StatusBadge } from "@/components/StatusBadge";
 import { BRANCH_INACTIVE_MESSAGE, hasUsableSubscription, SUBSCRIPTION_REQUIRED_MESSAGE } from "@/lib/commercial-access";
 import { maskPhoneNumber } from "@/lib/customer-cards";
@@ -30,6 +31,12 @@ export default async function ScanResultPage({
   if (!user.businessId) redirect(roleHomePath[user.role]);
   const authUser = user as typeof user & { businessId: number };
 
+  const scannerSoundSettings = await prisma.businessScannerSettings.findUnique({
+    where: { businessId: authUser.businessId },
+    select: { soundEffectsEnabled: true },
+  });
+  const scannerSoundEffectsEnabled = scannerSoundSettings?.soundEffectsEnabled ?? true;
+
   const scanTimestamp = new Date();
   const scannerBranch = authUser.branchId
     ? await prisma.branch.findFirst({
@@ -39,11 +46,11 @@ export default async function ScanResultPage({
     : null;
 
   if (!(await hasUsableSubscription(authUser.businessId))) {
-    return <ScanMessage user={user} title={SUBSCRIPTION_REQUIRED_MESSAGE} />;
+    return <ScanMessage user={user} title={SUBSCRIPTION_REQUIRED_MESSAGE} soundEffectsEnabled={scannerSoundEffectsEnabled} />;
   }
 
   if ((authUser.role === "STAFF" || authUser.role === "BRANCH_MANAGER") && scannerBranch?.status !== "ACTIVE") {
-    return <ScanMessage user={user} title={BRANCH_INACTIVE_MESSAGE} />;
+    return <ScanMessage user={user} title={BRANCH_INACTIVE_MESSAGE} soundEffectsEnabled={scannerSoundEffectsEnabled} />;
   }
 
   const programMembership = await prisma.customerProgramMembership.findUnique({
@@ -76,19 +83,19 @@ export default async function ScanResultPage({
 
   if (!programMembership) {
     await logScan("INVALID");
-    return <ScanMessage user={user} title="Invalid Customer" description="Invalid loyalty QR code." />;
+    return <ScanMessage user={user} title="Invalid Customer" description="Invalid loyalty QR code." soundEffectsEnabled={scannerSoundEffectsEnabled} />;
   }
 
   const businessMembership = programMembership.businessCustomerMembership;
 
   if (businessMembership.businessId !== authUser.businessId) {
     await logScan("WRONG_BUSINESS", programMembership.id);
-    return <ScanMessage user={user} title="Wrong Business" description="This loyalty QR does not belong to your business." />;
+    return <ScanMessage user={user} title="Wrong Business" description="This loyalty QR does not belong to your business." soundEffectsEnabled={scannerSoundEffectsEnabled} />;
   }
 
   if (programMembership.scanStatus !== "ACTIVE") {
     await logScan("DISABLED", programMembership.id);
-    return <ScanMessage user={user} title="Disabled Card" description="This customer card is disabled and cannot be used for scanning." />;
+    return <ScanMessage user={user} title="Disabled Card" description="This customer card is disabled and cannot be used for scanning." soundEffectsEnabled={scannerSoundEffectsEnabled} />;
   }
 
   if (
@@ -97,7 +104,7 @@ export default async function ScanResultPage({
     businessMembership.status !== "ACTIVE"
   ) {
     await logScan("INVALID", programMembership.id);
-    return <ScanMessage user={user} title="Invalid Customer" description="Invalid or unavailable loyalty QR." />;
+    return <ScanMessage user={user} title="Invalid Customer" description="Invalid or unavailable loyalty QR." soundEffectsEnabled={scannerSoundEffectsEnabled} />;
   }
 
   await prisma.$transaction([
@@ -167,9 +174,19 @@ export default async function ScanResultPage({
     select: { createdAt: true, branch: { select: { name: true } } },
   });
   const cardNumber = businessMembership.cardToken.length > 12 ? `${businessMembership.cardToken.slice(0, 8)}...${businessMembership.cardToken.slice(-4)}` : businessMembership.cardToken;
+  const soundEvent = qs.error
+    ? "error"
+    : redemption
+      ? "success"
+      : issuedTransaction
+        ? successProgress !== null && successProgress >= program.requiredStamps
+          ? "reward"
+          : "success"
+        : null;
 
   return (
     <DashboardShell user={authUser} eyebrow={roleEyebrow(authUser.role)} title="Scan result" hideWelcomeMessage>
+      <ScannerSoundFeedback event={soundEvent as "success" | "error" | "reward" | null} enabled={scannerSoundEffectsEnabled} />
       <ScanStatusBanner tone="green" title="Valid Customer" description="This loyalty QR belongs to your business and is ready for service." />
 
       {rewardReady ? (
@@ -342,13 +359,16 @@ function ScanMessage({
   user,
   title,
   description,
+  soundEffectsEnabled = true,
 }: {
   user: NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>;
   title: string;
   description?: string;
+  soundEffectsEnabled?: boolean;
 }) {
   return (
     <DashboardShell user={user} eyebrow={roleEyebrow(user.role)} title="Scan result" hideWelcomeMessage>
+      <ScannerSoundFeedback event="error" enabled={soundEffectsEnabled} />
       <ScanStatusBanner tone="red" title={title} description={description ?? "Ask the customer to show a current loyalty QR for this business."} />
     </DashboardShell>
   );

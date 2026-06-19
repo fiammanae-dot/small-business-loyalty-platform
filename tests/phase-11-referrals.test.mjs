@@ -17,6 +17,7 @@ test("referral schema stores configurable rewards and first-stamp qualification 
     "referredFirstStampBranchId Int?",
     "ReferralStatus",
     "ReferralEventType",
+    "@@unique([businessId, referralCode])",
   ]) {
     assert.match(schema, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }
@@ -28,7 +29,12 @@ test("customer enrollment creates referral context without public self-registrat
   const referralPage = read("src/app/referral/[code]/page.tsx");
 
   assert.match(customers, /generateReferralCode/);
+  assert.match(customers, /businessName: business.name/);
   assert.match(customers, /createPendingReferralForEnrollment/);
+  assert.match(referrals, /buildBusinessPrefix/);
+  assert.match(referrals, /buildCustomerPart/);
+  assert.match(referrals, /businessId, referralCode: code/);
+  assert.match(referrals, /existingGlobally/);
   assert.match(referrals, /SELF_REFERRAL_BLOCKED/);
   assert.match(referrals, /Self-referrals are blocked/);
   assert.match(referralPage, /Staff enrollment/);
