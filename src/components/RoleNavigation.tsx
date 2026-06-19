@@ -7,15 +7,23 @@ import {
   Bell,
   Building2,
   CreditCard,
+  Database,
   History,
   LayoutDashboard,
   MessageSquare,
   MoreHorizontal,
   QrCode,
+  Receipt,
+  Rocket,
   Settings,
   Share2,
   Sparkles,
   Store,
+  ClipboardList,
+  CircleDollarSign,
+  Package,
+  BarChart3,
+  Layers3,
   UserPlus,
   Users,
 } from "lucide-react";
@@ -92,6 +100,25 @@ const mobileMoreItems: NavigationItem[] = [
   { href: "/dashboard/notifications", label: "Alerts", icon: Bell },
   { href: "/dashboard/messages", label: "Messages", icon: MessageSquare },
   { href: "/dashboard/profile", label: "Profile", icon: Store },
+];
+
+const platformMobilePrimaryItems: NavigationItem[] = [
+  { href: "/platform", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/platform/businesses", label: "Businesses", icon: Building2 },
+  { href: "/platform/billing-center", label: "Billing", icon: CircleDollarSign },
+  { href: "/platform/audit-center", label: "Audit", icon: ClipboardList },
+];
+
+const platformMobileMoreItems: NavigationItem[] = [
+  { href: "/platform/plans", label: "Plans", icon: Package },
+  { href: "/platform/subscriptions", label: "Subscriptions", icon: CreditCard },
+  { href: "/platform/invoices", label: "Invoices", icon: Receipt },
+  { href: "/platform/users", label: "Users", icon: Users },
+  { href: "/platform/health-analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/platform/tenant-center", label: "Tenant Center", icon: Layers3 },
+  { href: "/platform/settings", label: "Settings", icon: Settings },
+  { href: "/platform/database", label: "Database", icon: Database },
+  { href: "/platform/launch-readiness", label: "Launch Readiness", icon: Rocket },
 ];
 
 export function RoleNavigation({ role }: RoleNavigationProps) {
@@ -220,6 +247,91 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
   );
 }
 
+export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
+  const pathname = usePathname();
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  if (role !== "PLATFORM_OWNER") {
+    return null;
+  }
+
+  const moreActive = platformMobileMoreItems.some((item) => isActivePath(pathname, item.href));
+
+  return (
+    <div className="lg:hidden">
+      {moreOpen ? (
+        <div className="fixed inset-x-3 bottom-20 z-40 rounded-2xl border border-[#E5E7EB] bg-white p-3 shadow-2xl">
+          <div className="mb-2 flex items-center justify-between px-1">
+            <p className="text-sm font-bold text-[#111827]">More</p>
+            <button
+              type="button"
+              onClick={() => setMoreOpen(false)}
+              className="rounded-full px-3 py-1.5 text-sm font-bold text-[#64748B] hover:bg-orange-50 hover:text-[#F97316]"
+            >
+              Close
+            </button>
+          </div>
+          <div className="grid max-h-[60vh] grid-cols-2 gap-2 overflow-y-auto pr-1">
+            {platformMobileMoreItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMoreOpen(false)}
+                aria-current={isActivePath(pathname, item.href) ? "page" : undefined}
+                className={`flex min-h-12 items-center gap-3 rounded-xl border px-3 py-3 text-sm font-bold ${
+                  isActivePath(pathname, item.href)
+                    ? "border-orange-200 bg-orange-50 text-[#EA580C]"
+                    : "border-[#E5E7EB] bg-white text-[#475569]"
+                }`}
+              >
+                <item.icon className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+                <span className="min-w-0 truncate">{item.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      <nav
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E5E7EB] bg-white/95 px-2 pb-2 pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur"
+        aria-label="Mobile system administrator navigation"
+      >
+        <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
+          {platformMobilePrimaryItems.map((item) => {
+            const active = isActivePath(pathname, item.href);
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMoreOpen(false)}
+                aria-current={active ? "page" : undefined}
+                className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition ${
+                  active ? "bg-[#F97316] text-white shadow-sm" : "text-[#64748B] hover:bg-orange-50 hover:text-[#F97316]"
+                }`}
+              >
+                <item.icon className="h-5 w-5" aria-hidden="true" />
+                <span className="max-w-full truncate">{item.label}</span>
+              </Link>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => setMoreOpen((current) => !current)}
+            aria-expanded={moreOpen}
+            className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition ${
+              moreOpen || moreActive ? "bg-orange-50 text-[#EA580C]" : "text-[#64748B] hover:bg-orange-50 hover:text-[#F97316]"
+            }`}
+          >
+            <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
+            More
+          </button>
+        </div>
+      </nav>
+    </div>
+  );
+}
+
 function NavigationLink({
   item,
   pathname,
@@ -263,6 +375,10 @@ function NavigationLink({
 }
 
 function isActivePath(pathname: string, href: string) {
+  if (href === "/platform") {
+    return pathname === href;
+  }
+
   if (href === "/dashboard") {
     return pathname === href;
   }

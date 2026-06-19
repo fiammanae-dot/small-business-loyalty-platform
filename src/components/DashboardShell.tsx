@@ -19,7 +19,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { CsrfInput } from "@/components/CsrfInput";
 import { IdleSessionTimeout } from "@/components/IdleSessionTimeout";
-import { MobileBusinessNavigation, RoleNavigation } from "@/components/RoleNavigation";
+import { MobileBusinessNavigation, MobilePlatformNavigation, RoleNavigation } from "@/components/RoleNavigation";
 import { isDemoModeEnabled } from "@/lib/platform-settings";
 import type { AuthUser } from "@/lib/session";
 import { getDisplayUserName, roleHomePath, roleLabels } from "@/lib/roles";
@@ -93,11 +93,12 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
           ) : null}
         </div>
         <MobileBusinessNavigation role={user.role} />
+        <MobilePlatformNavigation role={user.role} />
       </header>
 
       <main
         className={`mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[240px_1fr] lg:px-8 ${
-          user.role === "BUSINESS_OWNER" ? "pb-24 lg:pb-6" : ""
+          user.role === "BUSINESS_OWNER" || user.role === "PLATFORM_OWNER" ? "pb-24 lg:pb-6" : ""
         }`}
       >
         {demoModeEnabled ? (
@@ -107,7 +108,7 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
         ) : null}
 
         {user.role === "PLATFORM_OWNER" ? (
-          <aside className="rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm lg:sticky lg:top-6 lg:self-start">
+          <aside className="hidden rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm lg:sticky lg:top-6 lg:block lg:self-start">
             <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-[#6B7280]">Platform</p>
             <nav className="grid gap-1" aria-label="Platform navigation">
               {platformNavItems.map((item) => (
