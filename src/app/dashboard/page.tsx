@@ -3,6 +3,7 @@ import type React from "react";
 import {
   CheckCircle2,
   Gift,
+  Search,
   ScanLine,
   ShieldAlert,
   Store,
@@ -14,11 +15,10 @@ import type { LucideIcon } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { getBusinessDisplayName, getBusinessTypeDisplayName } from "@/lib/business-display";
-import { getBusinessOwnerContext, getCurrentPlan, getCurrentSubscription } from "@/lib/business-owner";
-import { formatDate, formatDateTime } from "@/lib/format";
+import { getBusinessOwnerContext, getCurrentPlan } from "@/lib/business-owner";
+import { formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { businessTypeLabels } from "@/lib/roles";
-import { getSubscriptionRemainingDays, subscriptionDisplayDate } from "@/lib/subscriptions";
 
 export default async function BusinessDashboard({
   searchParams,
@@ -28,7 +28,6 @@ export default async function BusinessDashboard({
   const { user, business } = await getBusinessOwnerContext();
   await searchParams;
   const plan = getCurrentPlan(business);
-  const subscription = getCurrentSubscription(business);
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
@@ -115,8 +114,6 @@ export default async function BusinessDashboard({
   const totalOpenAlerts = highAlerts + mediumAlerts + lowAlerts;
   const customerCount = business._count.customerMemberships;
   const branchCount = business._count.branches;
-  const expiryDate = subscriptionDisplayDate(subscription);
-  const remainingDays = getSubscriptionRemainingDays(subscription);
   const businessDisplayName = getBusinessDisplayName(business.name);
   const businessTypeDisplayName = getBusinessTypeDisplayName(businessTypeLabels[business.businessType]);
   const programPerformance = programRows.map((program) => {
@@ -178,15 +175,27 @@ export default async function BusinessDashboard({
   const onboardingPercent = Math.round((onboardingItems.filter((item) => item.complete).length / onboardingItems.length) * 100);
 
   return (
-    <DashboardShell user={user} eyebrow="Business Owner" title="Business dashboard">
+    <DashboardShell
+      user={user}
+      eyebrow="Business Owner"
+      title="Business dashboard"
+      hideWelcomeMessage
+      headerAside={
+        <TodayPerformance
+          newCustomersToday={newCustomersToday}
+          stampsIssuedToday={stampsToday._sum.quantity ?? 0}
+          rewardsRedeemedToday={redemptionsToday}
+          rewardReadyCustomers={rewardsReadyTotal}
+        />
+      }
+    >
+      <CompactCustomerSearch />
+
       <HeaderSummary
         businessName={businessDisplayName}
         businessType={businessTypeDisplayName}
         planName={plan?.name ?? "Unassigned"}
         status={business.status}
-        subscriptionStatus={subscription?.status}
-        expiryDate={expiryDate}
-        remainingDays={remainingDays}
         customerCount={customerCount}
         programCount={loyaltyPrograms}
         branchCount={branchCount}
@@ -197,13 +206,6 @@ export default async function BusinessDashboard({
       />
 
       <MainActions />
-
-      <TodayPerformance
-        newCustomersToday={newCustomersToday}
-        stampsIssuedToday={stampsToday._sum.quantity ?? 0}
-        rewardsRedeemedToday={redemptionsToday}
-        rewardReadyCustomers={rewardsReadyTotal}
-      />
 
       <RecentActivity items={recentActivity} />
 
@@ -219,9 +221,6 @@ function HeaderSummary({
   businessType,
   planName,
   status,
-  subscriptionStatus,
-  expiryDate,
-  remainingDays,
   customerCount,
   programCount,
   branchCount,
@@ -234,9 +233,6 @@ function HeaderSummary({
   businessType: string;
   planName: string;
   status: "ACTIVE" | "INACTIVE";
-  subscriptionStatus?: "TRIAL" | "ACTIVE" | "SUSPENDED" | "EXPIRED" | "CANCELLED";
-  expiryDate?: Date | null;
-  remainingDays: number | null;
   customerCount: number;
   programCount: number;
   branchCount: number;
@@ -262,7 +258,6 @@ function HeaderSummary({
             <p className="mt-1 text-sm text-[#6B7280]">{businessType}</p>
             <div className="mt-2 flex flex-wrap gap-2">
               <StatusBadge status={status} />
-              {subscriptionStatus ? <StatusBadge status={subscriptionStatus} /> : null}
               <span className="rounded-md bg-orange-50 px-2 py-1 text-xs font-semibold text-[#F97316]">{planName} Plan</span>
             </div>
           </div>
@@ -276,12 +271,65 @@ function HeaderSummary({
         </div>
       </div>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-[repeat(2,minmax(0,220px))_minmax(260px,1fr)]">
-        <InfoChip label="Subscription expiry" value={expiryDate ? formatDate(expiryDate) : "-"} />
-        <InfoChip label="Remaining days" value={remainingDays === null ? "-" : remainingDays.toString()} />
-        <OnboardingSummary percent={onboardingPercent} items={onboardingItems} />
+      {onboardingPercent < 100 ? <div className="mt-4"><OnboardingSummary percent={onboardingPercent} items={onboardingItems} /></div> : null}
+    </section>
+  );
+}
+
+function CompactCustomerSearch() {
+  return (
+    <form action="/dashboard/customers" className="rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm">
+      <label htmlFor="dashboard-customer-search" className="sr-only">
+        Search customers
+      </label>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#94A3B8]" aria-hidden="true" />
+          <input
+            id="dashboard-customer-search"
+            name="q"
+            placeholder="Quick customer lookup: name, phone, card ID, referral code"
+            className="h-11 w-full rounded-md border border-[#E5E7EB] pl-10 pr-3 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+          />
+        </div>
+        <button type="submit" className="h-11 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">
+          Search
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function TodayPerformance({
+  newCustomersToday,
+  stampsIssuedToday,
+  rewardsRedeemedToday,
+  rewardReadyCustomers,
+}: {
+  newCustomersToday: number;
+  stampsIssuedToday: number;
+  rewardsRedeemedToday: number;
+  rewardReadyCustomers: number;
+}) {
+  return (
+    <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
+      <p className="text-sm font-semibold text-[#F97316]">Today's Operations</p>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <MiniOperation label="New customers" value={newCustomersToday.toString()} />
+        <MiniOperation label="Stamps issued" value={stampsIssuedToday.toString()} />
+        <MiniOperation label="Rewards redeemed" value={rewardsRedeemedToday.toString()} />
+        <MiniOperation label="Reward ready" value={rewardReadyCustomers.toString()} />
       </div>
     </section>
+  );
+}
+
+function MiniOperation({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md bg-[#FAFAFA] px-3 py-2">
+      <p className="text-xl font-semibold text-[#111827]">{value}</p>
+      <p className="mt-1 text-xs font-medium text-[#6B7280]">{label}</p>
+    </div>
   );
 }
 
@@ -300,27 +348,6 @@ function MainActions() {
         <PrimaryAction href="/dashboard/customers?reward=ready" icon={Gift} label="Redeem Reward" />
         <PrimaryAction href="/dashboard/customers" icon={Users} label="View Customers" />
       </div>
-    </section>
-  );
-}
-
-function TodayPerformance({
-  newCustomersToday,
-  stampsIssuedToday,
-  rewardsRedeemedToday,
-  rewardReadyCustomers,
-}: {
-  newCustomersToday: number;
-  stampsIssuedToday: number;
-  rewardsRedeemedToday: number;
-  rewardReadyCustomers: number;
-}) {
-  return (
-    <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-      <PerformanceCard href="/dashboard/customers" icon={Users} label="New customers today" value={newCustomersToday.toString()} />
-      <PerformanceCard href="/dashboard/customers" icon={TicketCheck} label="Stamps issued today" value={stampsIssuedToday.toString()} />
-      <PerformanceCard href="/dashboard/customers?reward=redeemed" icon={CheckCircle2} label="Rewards redeemed today" value={rewardsRedeemedToday.toString()} />
-      <PerformanceCard href="/dashboard/customers?reward=ready" icon={Gift} label="Reward-ready customers" value={rewardReadyCustomers.toString()} />
     </section>
   );
 }
@@ -420,10 +447,15 @@ function RecentActivity({
   items: Array<{ type: string; title: string; meta: string; createdAt: Date; icon: LucideIcon; href: string }>;
 }) {
   return (
-    <SectionCard eyebrow="Activity" title="Recent customer and stamp activity" icon={TicketCheck}>
+    <SectionCard
+      eyebrow="Activity"
+      title="Activity summary"
+      icon={TicketCheck}
+      action={<Link href="/dashboard/activity" className="text-sm font-semibold text-[#F97316]">View all activity</Link>}
+    >
       <div className="grid gap-2">
         {items.length ? (
-          items.map((item, index) => (
+          items.slice(0, 3).map((item, index) => (
             <Link key={`${item.type}-${item.createdAt.toISOString()}-${index}`} href={item.href} className="flex gap-3 rounded-md border border-[#E5E7EB] p-3 transition hover:border-[#F97316] hover:bg-orange-50">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-orange-50 text-[#F97316]">
                 <item.icon className="h-4 w-4" aria-hidden="true" />
@@ -516,20 +548,6 @@ function SummaryTile({
   );
 }
 
-function PerformanceCard({ href, icon: Icon, label, value }: { href: string; icon: LucideIcon; label: string; value: string }) {
-  return (
-    <Link href={href} className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:border-[#F97316] hover:bg-orange-50">
-      <div className="flex items-center justify-between gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-50 text-[#F97316]">
-          <Icon className="h-5 w-5" aria-hidden="true" />
-        </span>
-        <p className="text-3xl font-semibold text-[#111827]">{value}</p>
-      </div>
-      <p className="mt-3 text-sm font-semibold text-[#111827]">{label}</p>
-    </Link>
-  );
-}
-
 function PrimaryAction({ href, icon: Icon, label, featured = false }: { href: string; icon: LucideIcon; label: string; featured?: boolean }) {
   return (
     <Link
@@ -578,15 +596,6 @@ function SectionCard({
         </div>
       </div>
       {children}
-    </div>
-  );
-}
-
-function InfoChip({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between gap-3 rounded-md bg-[#FAFAFA] px-3 py-2">
-      <span className="text-xs font-semibold uppercase text-[#6B7280]">{label}</span>
-      <span className="text-sm font-semibold text-[#111827]">{value}</span>
     </div>
   );
 }

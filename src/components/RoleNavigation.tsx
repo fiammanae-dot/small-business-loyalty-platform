@@ -7,10 +7,10 @@ import {
   Bell,
   Building2,
   CreditCard,
+  History,
   LayoutDashboard,
   MessageSquare,
   MoreHorizontal,
-  Palette,
   QrCode,
   Settings,
   Share2,
@@ -43,6 +43,7 @@ const businessOwnerNavigationGroups: Array<{ label: string; items: NavigationIte
       { href: "/dashboard/programs", label: "Programs", icon: Sparkles, description: "Loyalty setup" },
       { href: "/dashboard/referrals", label: "Referrals", icon: Share2, description: "Referral growth" },
       { href: "/dashboard/scanner", label: "Scanner", icon: QrCode, description: "Scan customer QR", accent: true },
+      { href: "/dashboard/activity", label: "Activity", icon: History, description: "Customer timeline" },
     ],
   },
   {
@@ -55,7 +56,6 @@ const businessOwnerNavigationGroups: Array<{ label: string; items: NavigationIte
   {
     label: "Business",
     items: [
-      { href: "/dashboard/branding", label: "Branding", icon: Palette, description: "Card appearance" },
       { href: "/dashboard/billing", label: "Billing", icon: CreditCard, description: "Subscription" },
       { href: "/dashboard/settings", label: "Settings", icon: Settings, description: "Business settings" },
     ],
@@ -81,7 +81,6 @@ const mobileMoreItems: NavigationItem[] = [
   { href: "/dashboard/programs", label: "Programs", icon: Sparkles },
   { href: "/dashboard/staff", label: "Staff", icon: UserPlus },
   { href: "/dashboard/branches", label: "Branches", icon: Building2 },
-  { href: "/dashboard/branding", label: "Branding", icon: Palette },
   { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
   { href: "/dashboard/notifications", label: "Alerts", icon: Bell },
