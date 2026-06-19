@@ -102,7 +102,7 @@ export function RoleNavigation({ role }: RoleNavigationProps) {
   }
 
   return (
-    <aside className="lg:sticky lg:top-6 lg:self-start" aria-label="Business Owner navigation">
+    <aside className="hidden lg:sticky lg:top-6 lg:block lg:self-start" aria-label="Business Owner navigation">
       <div className="rounded-xl border border-[#E5E7EB] bg-white p-3 shadow-sm">
         <div className="flex items-center gap-3 border-b border-[#F1F5F9] px-2 pb-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-[#F97316]">
