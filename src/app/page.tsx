@@ -14,6 +14,7 @@ import {
   Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { MotionItem, MotionOnScroll, MotionReveal, MotionStagger } from "@/components/HomepageMotion";
 
 const features = [
   {
@@ -130,7 +131,7 @@ function HeroSection() {
   return (
     <section className="overflow-hidden border-b border-orange-100 bg-gradient-to-b from-orange-50/70 to-white">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_460px] lg:items-center lg:px-8 lg:py-20">
-        <div>
+        <MotionReveal>
           <span className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1 text-sm font-semibold text-[#EA580C] shadow-sm">
             <Sparkles className="h-4 w-4" aria-hidden="true" />
             Loyalty operations for growing businesses
@@ -141,16 +142,20 @@ function HeroSection() {
           <p className="mt-5 max-w-2xl text-lg leading-8 text-[#64748B]">
             Create digital stamp cards, reward repeat visits, grow customer retention, and track loyalty performance across every branch.
           </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link href="/login" className="inline-flex items-center justify-center gap-2 rounded-md bg-[#F97316] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#EA580C]">
-              Login
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
-            <a href="mailto:hello@loyaltybase.ae?subject=LoyaltyBase%20Demo%20Request" className="inline-flex items-center justify-center rounded-md border border-[#E5E7EB] bg-white px-5 py-3 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#EA580C]">
-              Request Demo / Start Pilot
-            </a>
-          </div>
-        </div>
+          <MotionStagger className="mt-8 flex flex-col gap-3 sm:flex-row" delay={0.2}>
+            <MotionItem>
+              <Link href="/login" className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#F97316] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#EA580C] sm:w-auto">
+                Login
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </MotionItem>
+            <MotionItem>
+              <a href="mailto:hello@loyaltybase.ae?subject=LoyaltyBase%20Demo%20Request" className="inline-flex w-full items-center justify-center rounded-md border border-[#E5E7EB] bg-white px-5 py-3 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#EA580C] sm:w-auto">
+                Request Demo / Start Pilot
+              </a>
+            </MotionItem>
+          </MotionStagger>
+        </MotionReveal>
         <LoyaltyCardPreview />
       </div>
     </section>
@@ -159,7 +164,7 @@ function HeroSection() {
 
 function LoyaltyCardPreview() {
   return (
-    <div className="rounded-[28px] border border-orange-100 bg-white p-5 shadow-2xl shadow-orange-100">
+    <MotionReveal delay={0.15} className="rounded-[28px] border border-orange-100 bg-white p-5 shadow-2xl shadow-orange-100">
       <div className="rounded-[22px] bg-[#111827] p-5 text-white">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -192,7 +197,7 @@ function LoyaltyCardPreview() {
           </div>
         </div>
       </div>
-    </div>
+    </MotionReveal>
   );
 }
 
@@ -250,7 +255,7 @@ function PricingTeaserSection() {
   return (
     <section id="pricing" className="bg-white py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="rounded-2xl border border-orange-100 bg-orange-50 p-6 sm:p-8 lg:grid lg:grid-cols-[1fr_360px] lg:items-center lg:gap-8">
+        <MotionOnScroll className="rounded-2xl border border-orange-100 bg-orange-50 p-6 sm:p-8 lg:grid lg:grid-cols-[1fr_360px] lg:items-center lg:gap-8">
           <div>
             <p className="text-sm font-semibold uppercase text-[#EA580C]">Pricing teaser</p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[#111827]">Start small, grow by branch.</h2>
@@ -266,7 +271,7 @@ function PricingTeaserSection() {
               Open Dashboard
             </Link>
           </div>
-        </div>
+        </MotionOnScroll>
       </div>
     </section>
   );
@@ -328,21 +333,21 @@ function SectionHeading({ eyebrow, title }: { eyebrow: string; title: string }) 
 
 function TrustMetric({ value, label }: { value: string; label: string }) {
   return (
-    <div className="rounded-md border border-[#E5E7EB] bg-white p-4 text-center shadow-sm">
+    <MotionOnScroll className="rounded-md border border-[#E5E7EB] bg-white p-4 text-center shadow-sm">
       <p className="text-lg font-semibold text-[#111827]">{value}</p>
       <p className="mt-1 text-sm text-[#64748B]">{label}</p>
-    </div>
+    </MotionOnScroll>
   );
 }
 
 function FeatureCard({ title, description, icon: Icon }: { title: string; description: string; icon: LucideIcon }) {
   return (
-    <div className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm transition hover:border-orange-200 hover:shadow-md">
+    <MotionOnScroll className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm transition hover:border-orange-200 hover:shadow-md">
       <span className="flex h-11 w-11 items-center justify-center rounded-md bg-orange-50 text-[#F97316]">
         <Icon className="h-5 w-5" aria-hidden="true" />
       </span>
       <h3 className="mt-5 text-lg font-semibold text-[#111827]">{title}</h3>
       <p className="mt-3 text-sm leading-6 text-[#64748B]">{description}</p>
-    </div>
+    </MotionOnScroll>
   );
 }
