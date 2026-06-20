@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { InvoiceStatus } from "@prisma/client";
+import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
@@ -235,9 +236,20 @@ function StatusForm({ uuid, status, label }: { uuid: string; status: InvoiceStat
       <CsrfInput scope="platform:invoices" />
       <input type="hidden" name="invoiceUuid" value={uuid} />
       <input type="hidden" name="nextStatus" value={status} />
-      <button type="submit" className="w-full rounded-md px-2 py-1 text-left text-xs font-semibold text-[#F97316] hover:bg-orange-50">{label}</button>
+      <ConfirmSubmitButton
+        message={invoiceStatusConfirmationMessage(status)}
+        className="w-full rounded-md px-2 py-1 text-left text-xs font-semibold text-[#F97316] hover:bg-orange-50"
+      >
+        {label}
+      </ConfirmSubmitButton>
     </form>
   );
+}
+
+function invoiceStatusConfirmationMessage(status: InvoiceStatus) {
+  if (status === "PAID") return "Mark this invoice as paid? Confirm payment was received.";
+  if (status === "CANCELLED") return "Cancel this invoice? This cannot be used for payment tracking afterward.";
+  return "Update this invoice status?";
 }
 
 function Message({ error, success }: { error?: string; success?: string }) {

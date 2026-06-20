@@ -16,6 +16,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
 import { CardShareActions } from "@/components/CardShareActions";
+import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CopyButton } from "@/components/CopyButton";
 import { CsrfInput } from "@/components/CsrfInput";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -717,9 +718,18 @@ function CustomerCardPanel({
             <CsrfInput scope="dashboard:customers" />
             <input type="hidden" name="membershipUuid" value={membershipUuid} />
             <input type="hidden" name="nextStatus" value={nextCardStatus} />
-            <button type="submit" className="w-full rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]">
-              {nextCardStatus === "ACTIVE" ? "Enable card" : "Disable card"}
-            </button>
+            {nextCardStatus === "ACTIVE" ? (
+              <button type="submit" className="w-full rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]">
+                Enable card
+              </button>
+            ) : (
+              <ConfirmSubmitButton
+                message="Disable this customer card? The QR code can no longer be scanned."
+                className="w-full rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]"
+              >
+                Disable card
+              </ConfirmSubmitButton>
+            )}
           </form>
         )}
       </div>

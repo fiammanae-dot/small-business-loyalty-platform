@@ -1,3 +1,4 @@
+import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -229,9 +230,12 @@ export default async function BusinessSettingsPage({
             Generate alerts for violations
           </label>
           <div className="flex items-end">
-            <button type="submit" className="h-11 rounded-md bg-[#F97316] business-button px-4 text-sm font-semibold text-white">
+            <ConfirmSubmitButton
+              message="Save cooldown policy? This affects future stamp issuance limits."
+              className="h-11 rounded-md bg-[#F97316] business-button px-4 text-sm font-semibold text-white"
+            >
               Save cooldown policy
-            </button>
+            </ConfirmSubmitButton>
           </div>
         </form>
       </section> : null}

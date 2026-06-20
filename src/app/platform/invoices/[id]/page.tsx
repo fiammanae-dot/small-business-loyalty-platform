@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { InvoiceStatus } from "@prisma/client";
+import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { InvoiceBadge } from "@/components/InvoiceBadge";
@@ -84,7 +85,12 @@ export default async function PlatformInvoiceDetailPage({
                 <span className="text-sm font-medium text-[#111827]">Notes</span>
                 <textarea name="notes" rows={3} className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm" />
               </label>
-              <button type="submit" className="h-11 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">Record Payment</button>
+              <ConfirmSubmitButton
+                message="Record this payment amount against the invoice?"
+                className="h-11 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white"
+              >
+                Record Payment
+              </ConfirmSubmitButton>
             </form>
           )}
         </div>
@@ -139,11 +145,20 @@ function StatusForm({ uuid, status, label }: { uuid: string; status: InvoiceStat
       <CsrfInput scope="platform:invoices" />
       <input type="hidden" name="invoiceUuid" value={uuid} />
       <input type="hidden" name="nextStatus" value={status} />
-      <button type="submit" className="inline-flex h-10 items-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] hover:border-[#F97316] hover:text-[#F97316]">
+      <ConfirmSubmitButton
+        message={invoiceStatusConfirmationMessage(status)}
+        className="inline-flex h-10 items-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] hover:border-[#F97316] hover:text-[#F97316]"
+      >
         {label}
-      </button>
+      </ConfirmSubmitButton>
     </form>
   );
+}
+
+function invoiceStatusConfirmationMessage(status: InvoiceStatus) {
+  if (status === "PAID") return "Mark this invoice as paid? Confirm payment was received.";
+  if (status === "CANCELLED") return "Cancel this invoice? This cannot be used for payment tracking afterward.";
+  return "Update this invoice status?";
 }
 
 function Info({ label, value }: { label: string; value: React.ReactNode }) {

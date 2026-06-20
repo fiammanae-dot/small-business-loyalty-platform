@@ -1,6 +1,7 @@
 ﻿import Link from "next/link";
 import { redirect } from "next/navigation";
 import type React from "react";
+import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { IdempotencyInput } from "@/components/IdempotencyInput";
@@ -394,9 +395,12 @@ export default async function ScanResultPage({
                   placeholder="Optional redemption note"
                 />
               </label>
-              <button type="submit" className="h-11 rounded-md bg-[#F97316] px-5 text-sm font-semibold text-white">
+              <ConfirmSubmitButton
+                message="Redeem this reward now? Earned stamps will reset for this program."
+                className="h-11 rounded-md bg-[#F97316] px-5 text-sm font-semibold text-white"
+              >
                 Confirm Redemption
-              </button>
+              </ConfirmSubmitButton>
             </form>
           ) : null}
         </section>
@@ -594,9 +598,12 @@ function StampIssuanceSection({
             placeholder="Required for +2 to +5 stamps so managers can review unusual activity. Example: Customer purchased multiple items."
           />
         </label>
-        <button type="submit" className="h-12 rounded-md bg-[#F97316] px-6 text-base font-semibold text-white shadow-sm transition hover:bg-orange-600">
+        <ConfirmSubmitButton
+          message="Issue this stamp to this customer and selected program?"
+          className="h-12 rounded-md bg-[#F97316] px-6 text-base font-semibold text-white shadow-sm transition hover:bg-orange-600"
+        >
           Add Stamp
-        </button>
+        </ConfirmSubmitButton>
         {canOverrideCooldown ? (
           <div className="rounded-md border border-orange-200 bg-white p-3 md:col-span-3">
             <label className="flex items-center gap-2 text-sm font-semibold text-[#111827]">

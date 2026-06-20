@@ -1,3 +1,4 @@
+import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { DashboardShell } from "@/components/DashboardShell";
 import Link from "next/link";
 import { CsrfInput } from "@/components/CsrfInput";
@@ -90,9 +91,18 @@ export default async function StaffUsersPage({
                           <CsrfInput scope="dashboard:staff" />
                           <input type="hidden" name="staffUserId" value={staffUser.id} />
                           <input type="hidden" name="nextStatus" value={nextStatus} />
-                          <button type="submit" className="text-sm font-semibold text-[#F97316] business-text">
-                            {nextStatus === "ACTIVE" ? "Enable" : "Disable"}
-                          </button>
+                          {nextStatus === "ACTIVE" ? (
+                            <button type="submit" className="text-sm font-semibold text-[#F97316] business-text">
+                              Enable
+                            </button>
+                          ) : (
+                            <ConfirmSubmitButton
+                              message="Disable this user? They will lose access to the business workspace."
+                              className="text-sm font-semibold text-[#F97316] business-text"
+                            >
+                              Disable
+                            </ConfirmSubmitButton>
+                          )}
                         </form>
                       </div>
                     </td>

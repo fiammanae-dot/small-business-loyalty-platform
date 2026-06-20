@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
@@ -61,9 +62,18 @@ export default async function ProgramDetailPage({
               <CsrfInput scope="dashboard:programs" />
               <input type="hidden" name="programUuid" value={program.uuid} />
               <input type="hidden" name="active" value={nextActive.toString()} />
-              <button type="submit" className="rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]">
-                {nextActive ? "Enable Program" : "Disable Program"}
-              </button>
+              {nextActive ? (
+                <button type="submit" className="rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]">
+                  Enable Program
+                </button>
+              ) : (
+                <ConfirmSubmitButton
+                  message="Disable this loyalty program? Customers will no longer earn stamps for it."
+                  className="rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]"
+                >
+                  Disable Program
+                </ConfirmSubmitButton>
+              )}
             </form>
           </div>
         </div>

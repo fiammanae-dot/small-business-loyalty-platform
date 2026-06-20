@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -59,9 +60,12 @@ export default async function BusinessDetailPage({ params }: { params: Promise<{
           <input type="hidden" name="businessId" value={business.id} />
           <input type="hidden" name="businessUuid" value={business.uuid} />
           <input type="hidden" name="nextStatus" value={nextStatus} />
-          <button type="submit" className="inline-flex h-10 items-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] hover:border-[#F97316] hover:text-[#F97316]">
+          <ConfirmSubmitButton
+            message={nextStatus === "ACTIVE" ? "Enable this business and restore access?" : "Disable this business? Owners, staff, scanners, and customer activity may be blocked."}
+            className="inline-flex h-10 items-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] hover:border-[#F97316] hover:text-[#F97316]"
+          >
             {nextStatus === "ACTIVE" ? "Enable business" : "Disable business"}
-          </button>
+          </ConfirmSubmitButton>
         </form>
       </div>
 

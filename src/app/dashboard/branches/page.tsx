@@ -1,3 +1,4 @@
+import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { DashboardShell } from "@/components/DashboardShell";
 import { CsrfInput } from "@/components/CsrfInput";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -59,9 +60,18 @@ export default async function BranchesPage({
                     <CsrfInput scope="dashboard:branches" />
                     <input type="hidden" name="branchId" value={branch.id} />
                     <input type="hidden" name="nextStatus" value={nextStatus} />
-                    <button type="submit" className="text-sm font-semibold text-[#F97316]">
-                      {nextStatus === "ACTIVE" ? "Enable" : "Disable"}
-                    </button>
+                    {nextStatus === "ACTIVE" ? (
+                      <button type="submit" className="text-sm font-semibold text-[#F97316]">
+                        Enable
+                      </button>
+                    ) : (
+                      <ConfirmSubmitButton
+                        message="Disable this branch? Branch staff and scanner activity may be restricted."
+                        className="text-sm font-semibold text-[#F97316]"
+                      >
+                        Disable
+                      </ConfirmSubmitButton>
+                    )}
                   </form>
                 </div>
                 <details className="mt-4">

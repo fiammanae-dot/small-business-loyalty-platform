@@ -1,6 +1,7 @@
 import type { Prisma, SubscriptionStatus } from "@prisma/client";
 import { ChevronDown, ExternalLink, RotateCcw } from "lucide-react";
 import Link from "next/link";
+import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
@@ -308,11 +309,21 @@ function ActionButton({ subscriptionId, nextStatus, label }: { subscriptionId: n
       <CsrfInput scope="platform:subscriptions" />
       <input type="hidden" name="subscriptionId" value={subscriptionId} />
       <input type="hidden" name="nextStatus" value={nextStatus} />
-      <button type="submit" className="h-8 w-full rounded-md border border-[#E5E7EB] px-3 text-xs font-semibold text-[#111827] hover:border-[#F97316] hover:text-[#F97316]">
+      <ConfirmSubmitButton
+        message={subscriptionConfirmationMessage(nextStatus)}
+        className="h-8 w-full rounded-md border border-[#E5E7EB] px-3 text-xs font-semibold text-[#111827] hover:border-[#F97316] hover:text-[#F97316]"
+      >
         {label}
-      </button>
+      </ConfirmSubmitButton>
     </form>
   );
+}
+
+function subscriptionConfirmationMessage(nextStatus: SubscriptionStatus) {
+  if (nextStatus === "ACTIVE") return "Activate this subscription now?";
+  if (nextStatus === "SUSPENDED") return "Suspend this subscription? Business operations may be restricted.";
+  if (nextStatus === "CANCELLED") return "Cancel this subscription? This may block business access and billing lifecycle changes.";
+  return "Update this subscription status?";
 }
 
 function CompactDateRange({ start, end }: { start: Date | null; end: Date | null }) {
