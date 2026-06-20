@@ -1,7 +1,8 @@
 import type { BusinessType, Prisma, RecordStatus } from "@prisma/client";
-import { Eye, Pencil, Plus, Power, Search, SlidersHorizontal, X } from "lucide-react";
+import { Eye, MoreHorizontal, Pencil, Plus, Power, Search, SlidersHorizontal, X } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
@@ -177,6 +178,12 @@ export default async function BusinessesPage({
     getParam(params, "maxBranches"),
     suspectOnly ? "1" : "",
   ].filter(Boolean).length;
+  const businessSummary = {
+    total: businesses.length,
+    active: businesses.filter((business) => business.status === "ACTIVE").length,
+    inactive: businesses.filter((business) => business.status === "INACTIVE").length,
+    flagged: businesses.filter((business) => isSuspiciousBusinessName(business.name)).length,
+  };
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Businesses">
@@ -195,8 +202,15 @@ export default async function BusinessesPage({
           </Link>
         </div>
 
+        <div className="mt-5 hidden grid-cols-4 gap-3 lg:grid">
+          <BusinessSummaryCard label="Total businesses" value={businessSummary.total} />
+          <BusinessSummaryCard label="Active" value={businessSummary.active} />
+          <BusinessSummaryCard label="Inactive" value={businessSummary.inactive} />
+          <BusinessSummaryCard label="Demo/Test flagged" value={businessSummary.flagged} />
+        </div>
+
         <MobileFilterDrawer activeCount={activeFilterCount}>
-        <form className="mt-6 rounded-md border border-[#E5E7EB] bg-[#F9FAFB] p-4">
+        <form className="mt-6 rounded-md border border-[#E5E7EB] bg-[#F9FAFB] p-4 md:hidden">
           <div className="flex items-center gap-2 text-sm font-semibold text-[#111827]">
             <SlidersHorizontal className="h-4 w-4 text-[#F97316]" />
             Filters
@@ -292,6 +306,113 @@ export default async function BusinessesPage({
                 Apply filters
               </button>
             </div>
+          </div>
+        </form>
+        <form className="mt-6 hidden rounded-md border border-[#E5E7EB] bg-[#F9FAFB] p-4 md:block">
+          <div className="flex items-center gap-2 text-sm font-semibold text-[#111827]">
+            <SlidersHorizontal className="h-4 w-4 text-[#F97316]" />
+            Filters
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-[minmax(260px,1fr)_180px_minmax(220px,260px)_auto_auto] lg:items-end">
+            <label className="text-sm font-medium text-[#111827]">
+              Search
+              <div className="mt-1 flex items-center gap-2 rounded-md border border-[#E5E7EB] bg-white px-3">
+                <Search className="h-4 w-4 text-[#6B7280]" />
+                <input
+                  name="q"
+                  defaultValue={query}
+                  placeholder="Business name"
+                  className="h-10 w-full bg-transparent text-sm outline-none"
+                />
+              </div>
+            </label>
+
+            <SelectField label="Status" name="status" defaultValue={selectedStatus}>
+              <option value="">All statuses</option>
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
+            </SelectField>
+
+            <SearchableCombobox
+              label="Plan"
+              name="plan"
+              defaultValue={selectedPlanId?.toString() ?? ""}
+              placeholder="All plans"
+              emptyLabel="No plans found."
+              options={[
+                { value: "", label: "All plans", description: "Show every subscription plan" },
+                ...plans.map((plan) => ({ value: plan.id.toString(), label: plan.name, description: "Subscription plan" })),
+              ]}
+            />
+
+            <button
+              type="submit"
+              className="inline-flex h-10 items-center justify-center rounded-md bg-[#111827] px-4 text-sm font-semibold text-white transition hover:bg-[#374151]"
+            >
+              Apply
+            </button>
+            <Link
+              href="/platform/businesses"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[#E5E7EB] bg-white px-4 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]"
+            >
+              <X className="h-4 w-4" />
+              Clear
+            </Link>
+          </div>
+
+          <details className="mt-4 rounded-md border border-[#E5E7EB] bg-white">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-[#111827]">
+              <span>Advanced filters</span>
+              <span className="text-xs font-medium text-[#6B7280]">Type, dates, branches, sorting, demo/test</span>
+            </summary>
+            <div className="border-t border-[#E5E7EB] p-4">
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                <SelectField label="Business type" name="type" defaultValue={selectedType}>
+                  <option value="">All types</option>
+                  {validBusinessTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {businessTypeLabels[type]}
+                    </option>
+                  ))}
+                </SelectField>
+
+                <InputField label="Created from" name="createdFrom" type="date" defaultValue={getParam(params, "createdFrom")} />
+                <InputField label="Created to" name="createdTo" type="date" defaultValue={getParam(params, "createdTo")} />
+                <InputField label="Min branches" name="minBranches" type="number" min="0" defaultValue={getParam(params, "minBranches")} />
+                <InputField label="Max branches" name="maxBranches" type="number" min="0" defaultValue={getParam(params, "maxBranches")} />
+
+                <SelectField label="Sort by" name="sort" defaultValue={sort}>
+                  {Object.entries(sortableFields).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </SelectField>
+
+                <SelectField label="Direction" name="direction" defaultValue={direction}>
+                  <option value="desc">Descending</option>
+                  <option value="asc">Ascending</option>
+                </SelectField>
+
+                <label className="flex h-full min-h-10 items-end gap-2 rounded-md border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm font-semibold text-[#111827]">
+                  <input type="checkbox" name="suspect" value="1" defaultChecked={suspectOnly} className="h-4 w-4 rounded border-[#D1D5DB]" />
+                  Demo/Test filter
+                </label>
+              </div>
+            </div>
+          </details>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            <QuickChip href="/platform/businesses" label="All" active={!selectedStatus && !selectedPlanId && !suspectOnly} />
+            <QuickChip href={buildQuickFilterHref({ status: "ACTIVE" })} label="Active" active={selectedStatus === "ACTIVE"} />
+            <QuickChip href={buildQuickFilterHref({ status: "INACTIVE" })} label="Inactive" active={selectedStatus === "INACTIVE"} />
+            {growthPlan ? (
+              <QuickChip href={buildQuickFilterHref({ plan: growthPlan.id.toString() })} label="Growth Plan" active={selectedPlanId === growthPlan.id} />
+            ) : null}
+            {starterPlan ? (
+              <QuickChip href={buildQuickFilterHref({ plan: starterPlan.id.toString() })} label="Starter Plan" active={selectedPlanId === starterPlan.id} />
+            ) : null}
+            <QuickChip href={buildQuickFilterHref({ suspect: "1" })} label="Demo/Test Data" active={suspectOnly} />
           </div>
         </form>
         </MobileFilterDrawer>
@@ -403,6 +524,15 @@ function QuickChip({ href, label, active }: { href: string; label: string; activ
   );
 }
 
+function BusinessSummaryCard({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-md border border-[#E5E7EB] bg-[#F9FAFB] p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{label}</p>
+      <p className="mt-2 text-2xl font-bold text-[#111827]">{value}</p>
+    </div>
+  );
+}
+
 type BusinessWithListData = Prisma.BusinessGetPayload<{
   include: {
     _count: { select: { branches: true } };
@@ -418,21 +548,21 @@ function BusinessRow({ business }: { business: BusinessWithListData }) {
 
   return (
     <tr className="align-top">
-      <td className="border-b border-[#E5E7EB] px-3 py-4">
+      <td className="border-b border-[#E5E7EB] px-3 py-3">
         <div className="flex flex-col gap-2">
           <span className="font-semibold text-[#111827]">{business.name}</span>
           {isSuspiciousBusinessName(business.name) ? <SuspiciousBadge /> : null}
         </div>
       </td>
-      <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{businessTypeLabels[business.businessType]}</td>
-      <td className="border-b border-[#E5E7EB] px-3 py-4">
+      <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{businessTypeLabels[business.businessType]}</td>
+      <td className="border-b border-[#E5E7EB] px-3 py-3">
         <StatusBadge status={business.status} />
       </td>
-      <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{business._count.branches}</td>
-      <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{planName}</td>
-      <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(business.createdAt)}</td>
-      <td className="border-b border-[#E5E7EB] px-3 py-4">
-        <BusinessActions business={business} nextStatus={nextStatus} />
+      <td className="border-b border-[#E5E7EB] px-3 py-3 text-center font-semibold text-[#111827]">{business._count.branches}</td>
+      <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{planName}</td>
+      <td className="whitespace-nowrap border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{formatDate(business.createdAt)}</td>
+      <td className="border-b border-[#E5E7EB] px-3 py-3">
+        <BusinessActions business={business} nextStatus={nextStatus} variant="table" />
       </td>
     </tr>
   );
@@ -463,13 +593,69 @@ function BusinessMobileCard({ business }: { business: BusinessWithListData }) {
         <Detail label="Status" value={business.status === "ACTIVE" ? "Active" : "Inactive"} />
       </dl>
       <div className="mt-4">
-        <BusinessActions business={business} nextStatus={nextStatus} />
+        <BusinessActions business={business} nextStatus={nextStatus} variant="mobile" />
       </div>
     </article>
   );
 }
 
-function BusinessActions({ business, nextStatus }: { business: BusinessWithListData; nextStatus: RecordStatus }) {
+function BusinessActions({
+  business,
+  nextStatus,
+  variant = "mobile",
+}: {
+  business: BusinessWithListData;
+  nextStatus: RecordStatus;
+  variant?: "table" | "mobile";
+}) {
+  const toggleLabel = nextStatus === "ACTIVE" ? "Enable" : "Disable";
+  const toggleMessage =
+    nextStatus === "ACTIVE"
+      ? "Enable this business and restore access?"
+      : "Disable this business? Owners, staff, scanners, and customer activity may be blocked.";
+
+  if (variant === "table") {
+    return (
+      <div className="flex items-center gap-2">
+        <Link
+          className="inline-flex h-9 items-center justify-center gap-1 rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]"
+          href={`/platform/businesses/${business.uuid}`}
+        >
+          <Eye className="h-4 w-4" />
+          View
+        </Link>
+        <details className="relative">
+          <summary className="inline-flex h-9 cursor-pointer list-none items-center justify-center gap-1 rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]">
+            <MoreHorizontal className="h-4 w-4" />
+            More
+          </summary>
+          <div className="absolute right-0 z-20 mt-2 w-44 rounded-md border border-[#E5E7EB] bg-white p-2 shadow-lg">
+            <Link
+              className="flex min-h-10 items-center gap-2 rounded-md px-3 text-sm font-semibold text-[#111827] transition hover:bg-orange-50 hover:text-[#F97316]"
+              href={`/platform/businesses/${business.uuid}/edit`}
+            >
+              <Pencil className="h-4 w-4" />
+              Edit
+            </Link>
+            <form action={toggleBusinessStatusAction} className="mt-1">
+              <CsrfInput scope="platform:businesses" />
+              <input type="hidden" name="businessId" value={business.id} />
+              <input type="hidden" name="businessUuid" value={business.uuid} />
+              <input type="hidden" name="nextStatus" value={nextStatus} />
+              <ConfirmSubmitButton
+                message={toggleMessage}
+                className="flex min-h-10 w-full items-center gap-2 rounded-md px-3 text-left text-sm font-semibold text-[#111827] transition hover:bg-orange-50 hover:text-[#F97316]"
+              >
+                <Power className="h-4 w-4" />
+                {toggleLabel}
+              </ConfirmSubmitButton>
+            </form>
+          </div>
+        </details>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-wrap gap-2">
       <Link
@@ -491,13 +677,13 @@ function BusinessActions({ business, nextStatus }: { business: BusinessWithListD
         <input type="hidden" name="businessId" value={business.id} />
         <input type="hidden" name="businessUuid" value={business.uuid} />
         <input type="hidden" name="nextStatus" value={nextStatus} />
-        <button
-          type="submit"
+        <ConfirmSubmitButton
+          message={toggleMessage}
           className="inline-flex h-9 items-center justify-center gap-1 rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]"
         >
           <Power className="h-4 w-4" />
-          {nextStatus === "ACTIVE" ? "Enable" : "Disable"}
-        </button>
+          {toggleLabel}
+        </ConfirmSubmitButton>
       </form>
     </div>
   );

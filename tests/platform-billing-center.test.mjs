@@ -62,6 +62,12 @@ test("platform business detail includes billing profile without changing busines
     "Renewal Date",
     "Lifetime Revenue",
     "Open Billing Center",
+    "md:hidden",
+    "hidden overflow-x-auto md:block",
+    "grid grid-cols-2 gap-3",
+    "MobileDetail",
+    "min-h-11",
+    "break-words",
   ]) {
     assert.match(businessDetail, new RegExp(expected));
   }
