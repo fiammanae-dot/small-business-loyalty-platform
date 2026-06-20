@@ -13,7 +13,7 @@ export default async function StaffProgramsPage() {
     : [];
 
   return (
-    <DashboardShell user={user} eyebrow="Staff" title="Programs">
+    <DashboardShell user={user} eyebrow="Staff" title="Programs" hideWelcomeMessage>
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
         <h2 className="text-lg font-semibold text-[#111827]">Available programs</h2>
         <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">

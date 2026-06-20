@@ -26,7 +26,7 @@ export default async function StaffCustomerSuccessPage({
   const cardUrl = membership ? await getCardUrl(membership.cardToken) : null;
 
   return (
-    <DashboardShell user={user} eyebrow="Staff" title="Customer enrolled">
+    <DashboardShell user={user} eyebrow="Staff" title="Customer enrolled" hideWelcomeMessage>
       <section className="rounded-md border border-emerald-200 bg-emerald-50 p-5">
         <h2 className="text-lg font-semibold text-emerald-800">Customer enrolled successfully.</h2>
         {cardUrl && membership ? (

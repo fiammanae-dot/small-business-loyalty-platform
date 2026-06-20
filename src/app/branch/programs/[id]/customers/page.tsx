@@ -20,7 +20,7 @@ export default async function BranchProgramCustomersPage({
   const qs = await searchParams;
   if (!user.businessId || !user.branchId) {
     return (
-      <DashboardShell user={user} eyebrow="Branch Manager" title="Program customers">
+      <DashboardShell user={user} eyebrow="Branch Manager" title="Program customers" hideWelcomeMessage>
         <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">Branch assignment is required.</p>
       </DashboardShell>
     );
@@ -37,7 +37,7 @@ export default async function BranchProgramCustomersPage({
   });
   if (!program) {
     return (
-      <DashboardShell user={user} eyebrow="Branch Manager" title="Program not found">
+      <DashboardShell user={user} eyebrow="Branch Manager" title="Program not found" hideWelcomeMessage>
         <p className="rounded-md border border-[#E5E7EB] bg-white p-5 text-sm text-[#6B7280]">Program not found.</p>
       </DashboardShell>
     );
@@ -54,7 +54,7 @@ export default async function BranchProgramCustomersPage({
   });
 
   return (
-    <DashboardShell user={user} eyebrow="Branch Manager" title={`${program.name} customers`}>
+    <DashboardShell user={user} eyebrow="Branch Manager" title={`${program.name} customers`} hideWelcomeMessage>
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
         {qs.error || qs.success ? <p className={`mb-5 rounded-md border px-3 py-2 text-sm ${qs.error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>{qs.error ?? qs.success}</p> : null}
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

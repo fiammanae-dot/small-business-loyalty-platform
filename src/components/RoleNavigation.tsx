@@ -122,6 +122,11 @@ const platformMobileMoreItems: NavigationItem[] = [
   { href: "/platform/launch-readiness", label: "Launch Readiness", icon: Rocket },
 ];
 
+const branchMobileItems: NavigationItem[] = [
+  { href: "/branch/customers/new", label: "Enroll", icon: UserPlus },
+  { href: "/branch/scanner", label: "Scanner", icon: QrCode, accent: true },
+  { href: "/branch/programs", label: "Programs", icon: Gift },
+];
 const staffMobileItems: NavigationItem[] = [
   { href: "/staff/customers/new", label: "Enroll", icon: UserPlus },
   { href: "/staff/scanner", label: "Scanner", icon: QrCode, accent: true },
@@ -179,64 +184,89 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
     return null;
   }
 
-  const moreActive = mobileMoreItems.some((item) => isActivePath(pathname, item.href));
+  const activeMoreItem = mobileMoreItems.find((item) => isActivePath(pathname, item.href));
+  const moreActive = Boolean(activeMoreItem);
 
   return (
     <div className="lg:hidden">
       {moreOpen ? (
-        <div className="fixed inset-x-3 bottom-20 z-40 rounded-2xl border border-[#E5E7EB] bg-white p-3 shadow-2xl">
-          <div className="mb-2 flex items-center justify-between px-1">
-            <p className="text-sm font-bold text-[#111827]">More</p>
-            <button
-              type="button"
-              onClick={() => setMoreOpen(false)}
-              className="rounded-full px-3 py-1.5 text-sm font-bold text-[#64748B] business-hover"
-            >
-              Close
-            </button>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            {mobileMoreItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
+        <>
+          <button
+            type="button"
+            aria-label="Close more menu"
+            className="fixed inset-0 z-30 bg-[#0F172A]/35 backdrop-blur-[1px]"
+            onClick={() => setMoreOpen(false)}
+          />
+          <div className="fixed inset-x-0 bottom-0 z-40 max-h-[82vh] rounded-t-3xl border border-[#E5E7EB] bg-white shadow-2xl">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E5E7EB] bg-white px-4 py-3">
+              <p className="text-base font-bold text-[#111827]">More{activeMoreItem ? ` - ${activeMoreItem.label}` : ""}</p>
+              <button
+                type="button"
                 onClick={() => setMoreOpen(false)}
-                aria-current={isActivePath(pathname, item.href) ? "page" : undefined}
-                className={`flex min-h-12 items-center gap-3 rounded-xl border px-3 py-3 text-sm font-bold ${
-                  isActivePath(pathname, item.href)
-                    ? "border-orange-200 business-border-soft bg-orange-50 business-bg-soft text-[#EA580C] business-text-strong"
-                    : "border-[#E5E7EB] bg-white text-[#475569]"
-                }`}
+                className="rounded-full px-3 py-1.5 text-sm font-bold text-[#64748B] business-hover"
               >
-                <item.icon className="h-5 w-5 text-[#F97316] business-text" aria-hidden="true" />
-                {item.label}
-              </Link>
-            ))}
+                Close
+              </button>
+            </div>
+            <div className="grid max-h-[calc(82vh-56px)] grid-cols-2 gap-2 overflow-y-auto px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3">
+              {mobileMoreItems.map((item) => {
+                const active = isActivePath(pathname, item.href);
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMoreOpen(false)}
+                    aria-current={active ? "page" : undefined}
+                    className={`flex min-h-12 items-center gap-3 rounded-xl border px-3 py-3 text-sm font-bold ${
+                      active
+                        ? "border-orange-200 business-border-soft bg-orange-50 business-bg-soft text-[#EA580C] business-text-strong"
+                        : "border-[#E5E7EB] bg-white text-[#475569] business-hover"
+                    }`}
+                  >
+                    <item.icon className="h-5 w-5 text-[#F97316] business-text" aria-hidden="true" />
+                    <span className="min-w-0 truncate">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
+        </>
+      ) : null}
+
+      {moreActive && !moreOpen ? (
+        <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 flex justify-center px-4">
+          <span className="max-w-[min(22rem,calc(100vw-2rem))] truncate rounded-full border border-orange-200 business-border-soft bg-white px-3 py-1.5 text-xs font-bold text-[#EA580C] business-text-strong shadow-lg">
+            More - {activeMoreItem?.label}
+          </span>
         </div>
       ) : null}
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E5E7EB] bg-white/95 px-2 pb-2 pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E5E7EB] bg-white/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur"
         aria-label="Mobile business navigation"
       >
         <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
-          {mobilePrimaryItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={() => setMoreOpen(false)}
-            aria-current={isActivePath(pathname, item.href) ? "page" : undefined}
-            className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition ${
-              isActivePath(pathname, item.href) || item.accent
-                ? "bg-[#F97316] business-button text-white shadow-sm"
-                : "text-[#64748B] business-hover"
-            }`}
-          >
-            <item.icon className="h-5 w-5" aria-hidden="true" />
-            {item.label}
-          </Link>
-          ))}
+          {mobilePrimaryItems.map((item) => {
+            const active = isActivePath(pathname, item.href);
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMoreOpen(false)}
+                aria-current={active ? "page" : undefined}
+                className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition ${
+                  active || item.accent
+                    ? "bg-[#F97316] business-button text-white shadow-sm"
+                    : "text-[#64748B] business-hover"
+                }`}
+              >
+                <item.icon className="h-5 w-5" aria-hidden="true" />
+                <span className="max-w-full truncate">{item.label}</span>
+              </Link>
+            );
+          })}
           <button
             type="button"
             onClick={() => setMoreOpen((current) => !current)}
@@ -246,14 +276,13 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
             }`}
           >
             <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
-            More
+            <span className="max-w-full truncate">More</span>
           </button>
         </div>
       </nav>
     </div>
   );
 }
-
 export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
@@ -356,6 +385,43 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
   );
 }
 
+export function MobileBranchNavigation({ role }: RoleNavigationProps) {
+  const pathname = usePathname();
+
+  if (role !== "BRANCH_MANAGER") {
+    return null;
+  }
+
+  return (
+    <nav
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E5E7EB] bg-white/95 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur lg:hidden"
+      aria-label="Mobile branch manager navigation"
+    >
+      <div className="mx-auto grid max-w-sm grid-cols-3 gap-2">
+        {branchMobileItems.map((item) => {
+          const active = isActivePath(pathname, item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={active ? "page" : undefined}
+              className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition ${
+                active
+                  ? "bg-[#F97316] business-button text-white shadow-sm"
+                  : item.accent
+                    ? "border border-[#F97316] business-border bg-orange-50 business-bg-soft text-[#EA580C] business-text-strong shadow-sm"
+                    : "text-[#64748B] business-hover"
+              }`}
+            >
+              <item.icon className={item.accent ? "h-6 w-6" : "h-5 w-5"} aria-hidden="true" />
+              <span className="max-w-full truncate">{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
 export function MobileStaffNavigation({ role }: RoleNavigationProps) {
   const pathname = usePathname();
 

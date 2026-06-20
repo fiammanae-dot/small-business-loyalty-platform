@@ -26,7 +26,7 @@ export default async function BranchCustomerProfilePage({
 
   if (!user.businessId || !user.branchId) {
     return (
-      <DashboardShell user={user} eyebrow="Branch Manager" title="Customer profile">
+      <DashboardShell user={user} eyebrow="Branch Manager" title="Customer profile" hideWelcomeMessage>
         <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">Branch assignment is required.</p>
       </DashboardShell>
     );
@@ -57,7 +57,7 @@ export default async function BranchCustomerProfilePage({
   });
 
   return (
-    <DashboardShell user={user} eyebrow="Branch Manager" title="Customer profile">
+    <DashboardShell user={user} eyebrow="Branch Manager" title="Customer profile" hideWelcomeMessage>
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
         {qs.success ? <p className="mb-5 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{qs.success}</p> : null}
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">

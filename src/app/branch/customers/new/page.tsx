@@ -13,7 +13,7 @@ export default async function NewBranchCustomerPage({
   const params = await searchParams;
 
   return (
-    <DashboardShell user={user} eyebrow="Branch Manager" title="Enroll customer">
+    <DashboardShell user={user} eyebrow="Branch Manager" title="Enroll customer" hideWelcomeMessage>
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
         {params.error ? <p className="mb-5 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{params.error}</p> : null}
         <form action={createBranchCustomerAction} className="grid gap-5">

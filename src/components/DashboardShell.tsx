@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import {
   BarChart3,
@@ -20,7 +20,7 @@ import type { LucideIcon } from "lucide-react";
 import { BusinessBrandingProvider } from "@/components/BusinessBrandingProvider";
 import { CsrfInput } from "@/components/CsrfInput";
 import { IdleSessionTimeout } from "@/components/IdleSessionTimeout";
-import { MobileBusinessNavigation, MobilePlatformNavigation, MobileStaffNavigation, RoleNavigation } from "@/components/RoleNavigation";
+import { MobileBranchNavigation, MobileBusinessNavigation, MobilePlatformNavigation, MobileStaffNavigation, RoleNavigation } from "@/components/RoleNavigation";
 import { getOperationalBusinessBranding } from "@/lib/business-branding";
 import { isDemoModeEnabled } from "@/lib/platform-settings";
 import type { AuthUser } from "@/lib/session";
@@ -117,12 +117,13 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
         </div>
         <MobileBusinessNavigation role={user.role} />
         <MobilePlatformNavigation role={user.role} />
+        <MobileBranchNavigation role={user.role} />
         <MobileStaffNavigation role={user.role} />
       </header>
 
       <main
         className={`mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[240px_1fr] lg:px-8 ${
-          user.role === "BUSINESS_OWNER" || user.role === "PLATFORM_OWNER" || user.role === "STAFF" ? "pb-24 lg:pb-6" : ""
+          user.role === "BUSINESS_OWNER" || user.role === "PLATFORM_OWNER" || user.role === "BRANCH_MANAGER" || user.role === "STAFF" ? "pb-24 lg:pb-6" : ""
         }`}
       >
         {demoModeEnabled ? (

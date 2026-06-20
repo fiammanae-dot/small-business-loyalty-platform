@@ -10,7 +10,7 @@ export default async function BranchProgramDetailPage({ params }: { params: Prom
   const { id } = await params;
   if (!user.businessId || !user.branchId) {
     return (
-      <DashboardShell user={user} eyebrow="Branch Manager" title="Program">
+      <DashboardShell user={user} eyebrow="Branch Manager" title="Program" hideWelcomeMessage>
         <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">Branch assignment is required.</p>
       </DashboardShell>
     );
@@ -21,14 +21,14 @@ export default async function BranchProgramDetailPage({ params }: { params: Prom
   });
   if (!program) {
     return (
-      <DashboardShell user={user} eyebrow="Branch Manager" title="Program not found">
+      <DashboardShell user={user} eyebrow="Branch Manager" title="Program not found" hideWelcomeMessage>
         <p className="rounded-md border border-[#E5E7EB] bg-white p-5 text-sm text-[#6B7280]">Program not found.</p>
       </DashboardShell>
     );
   }
 
   return (
-    <DashboardShell user={user} eyebrow="Branch Manager" title={program.name}>
+    <DashboardShell user={user} eyebrow="Branch Manager" title={program.name} hideWelcomeMessage>
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>

@@ -21,7 +21,7 @@ export default async function BranchCustomersPage({
 
   if (!user.businessId || !user.branchId) {
     return (
-      <DashboardShell user={user} eyebrow="Branch Manager" title="Business customers">
+      <DashboardShell user={user} eyebrow="Branch Manager" title="Business customers" hideWelcomeMessage>
         <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">Branch assignment is required.</p>
       </DashboardShell>
     );
@@ -55,7 +55,7 @@ export default async function BranchCustomersPage({
   );
 
   return (
-    <DashboardShell user={user} eyebrow="Branch Manager" title="Business customers">
+    <DashboardShell user={user} eyebrow="Branch Manager" title="Business customers" hideWelcomeMessage>
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
         <Message error={params.error} success={params.success} />
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

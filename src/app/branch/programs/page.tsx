@@ -8,7 +8,7 @@ export default async function BranchProgramsPage() {
   const user = await requireRole("BRANCH_MANAGER");
   if (!user.businessId || !user.branchId) {
     return (
-      <DashboardShell user={user} eyebrow="Branch Manager" title="Programs">
+      <DashboardShell user={user} eyebrow="Branch Manager" title="Programs" hideWelcomeMessage>
         <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">Branch assignment is required.</p>
       </DashboardShell>
     );
@@ -21,7 +21,7 @@ export default async function BranchProgramsPage() {
   });
 
   return (
-    <DashboardShell user={user} eyebrow="Branch Manager" title="Programs">
+    <DashboardShell user={user} eyebrow="Branch Manager" title="Programs" hideWelcomeMessage>
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
         <h2 className="text-lg font-semibold text-[#111827]">Available programs</h2>
         <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
