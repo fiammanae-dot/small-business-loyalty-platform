@@ -28,6 +28,7 @@ import { formatBillingCycle } from "@/lib/subscription-plans";
 import { getSubscriptionRemainingDays, getTrialRemainingDays } from "@/lib/subscriptions";
 
 type BillingParams = {
+  tab?: string;
   business?: string;
   plan?: string;
   status?: string;
@@ -125,7 +126,8 @@ export default async function PlatformBillingCenterPage({
   const overdueRevenue = overdueInvoices.reduce((sum, invoice) => sum + Math.max(0, Number(invoice.amount) - invoice.payments.reduce((paid, payment) => paid + Number(payment.amount), 0)), 0);
   const billingHealth = getBillingHealth({ overdueInvoices: overdueInvoices.length, suspendedAccounts: suspendedAccounts.length, expiringWithin30: expiringWithin30.length });
   const recentMonths = getRecentMonths(now, 6);
-  const activeFilterCount = Object.entries(params).filter(([key, value]) => key !== "export" && Boolean(value)).length;
+  const activeTab = getBillingTab(params.tab);
+  const activeFilterCount = Object.entries(params).filter(([key, value]) => !["export", "tab"].includes(key) && Boolean(value)).length;
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Billing Center">
@@ -140,166 +142,242 @@ export default async function PlatformBillingCenterPage({
         <KpiCard icon={TrendingDown} label="Cancelled Subscriptions" value={cancelledSubscriptions.length.toString()} />
       </PlatformKpiGrid>
 
-        <MobileFilterDrawer activeCount={activeFilterCount}>
-      <section className="sticky top-0 z-10 rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
-        <div className="mb-3 flex items-center gap-2">
-          <Filter className="h-4 w-4 text-[#F97316]" aria-hidden="true" />
-          <h2 className="font-semibold text-[#111827]">Global Filters</h2>
-        </div>
-        <form className="grid gap-3 lg:grid-cols-4 xl:grid-cols-6">
-          <div className="lg:col-span-2">
+      <MobileFilterDrawer activeCount={activeFilterCount}>
+        <section className="sticky top-0 z-10 rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
+          <div className="mb-3 flex items-center gap-2">
+            <Filter className="h-4 w-4 text-[#F97316]" aria-hidden="true" />
+            <h2 className="font-semibold text-[#111827]">Global Filters</h2>
+          </div>
+          <form className="grid gap-3 lg:grid-cols-[minmax(260px,1fr)_180px_minmax(220px,260px)_auto_auto] lg:items-end">
+            <input type="hidden" name="tab" value={activeTab} />
+            <div>
+              <SearchableCombobox
+                label="Business"
+                name="business"
+                defaultValue={params.business ?? ""}
+                placeholder="All businesses"
+                emptyLabel="No businesses found."
+                options={[
+                  { value: "", label: "All businesses", description: "Show billing for every business" },
+                  ...businesses.map((business) => ({ value: business.name, label: business.name, description: "Business" })),
+                ]}
+              />
+            </div>
+            <label className="text-sm font-medium text-[#111827]">
+              Status
+              <select name="status" defaultValue={params.status ?? ""} className="mt-1 h-10 w-full rounded-md border border-[#E5E7EB] px-3 text-sm">
+                <option value="">All statuses</option>
+                {statusOptions.map((status) => <option key={status} value={status}>{status.replaceAll("_", " ")}</option>)}
+              </select>
+            </label>
             <SearchableCombobox
-              label="Business"
-              name="business"
-              defaultValue={params.business ?? ""}
-              placeholder="All businesses"
-              emptyLabel="No businesses found."
+              label="Plan"
+              name="plan"
+              defaultValue={params.plan ?? ""}
+              placeholder="All plans"
+              emptyLabel="No plans found."
               options={[
-                { value: "", label: "All businesses", description: "Show billing for every business" },
-                ...businesses.map((business) => ({ value: business.name, label: business.name, description: "Business" })),
+                { value: "", label: "All plans", description: "Show billing for every plan" },
+                ...plans.map((plan) => ({ value: plan.id.toString(), label: plan.name, description: "Subscription plan" })),
               ]}
             />
-          </div>
-          <SearchableCombobox
-            label="Plan"
-            name="plan"
-            defaultValue={params.plan ?? ""}
-            placeholder="All plans"
-            emptyLabel="No plans found."
-            options={[
-              { value: "", label: "All plans", description: "Show billing for every plan" },
-              ...plans.map((plan) => ({ value: plan.id.toString(), label: plan.name, description: "Subscription plan" })),
-            ]}
-          />
-          <select name="status" defaultValue={params.status ?? ""} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm">
-            <option value="">All statuses</option>
-            {statusOptions.map((status) => <option key={status} value={status}>{status.replaceAll("_", " ")}</option>)}
-          </select>
-          <select name="date" defaultValue={params.date ?? "30d"} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm">
-            <option value="30d">Last 30 Days</option>
-            <option value="7d">Last 7 Days</option>
-            <option value="month">This Month</option>
-            <option value="custom">Custom Range</option>
-          </select>
-          <input type="date" name="from" defaultValue={params.from ?? ""} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm" />
-          <input type="date" name="to" defaultValue={params.to ?? ""} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm" />
-          <input type="number" name="revenueMin" defaultValue={params.revenueMin ?? ""} placeholder="Revenue min" className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm" />
-          <input type="number" name="revenueMax" defaultValue={params.revenueMax ?? ""} placeholder="Revenue max" className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm" />
-          <select name="trial" defaultValue={params.trial ?? ""} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm">
-            <option value="">All trials</option>
-            <option value="trial">Trial only</option>
-            <option value="paid">Paid only</option>
-          </select>
-          <select name="renewal" defaultValue={params.renewal ?? ""} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm">
-            <option value="">All renewals</option>
-            <option value="today">Renewing today</option>
-            <option value="week">Renewing this week</option>
-            <option value="month">Renewing this month</option>
-            <option value="overdue">Overdue renewals</option>
-          </select>
-          <button type="submit" className="h-10 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">Apply</button>
-          <Link href="/platform/billing-center" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">Clear</Link>
-        </form>
-      </section>
+            <button type="submit" className="h-10 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">Apply</button>
+            <Link href={buildBillingTabHref(params, activeTab, true)} className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">Clear</Link>
 
-        </MobileFilterDrawer>
-
-      <MobileAccordionSection title="Financial Exports">
-        <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-sm font-semibold text-[#F97316]">Financial Exports</p>
-              <h2 className="mt-1 text-lg font-semibold text-[#111827]">Filter-aware billing reports</h2>
-            </div>
-            <div className="grid gap-2 sm:grid-cols-3">
-              <ExportButton href={`/platform/billing-center?${buildQuery(params)}&export=csv`} icon={<Download className="h-4 w-4" />} label="CSV" />
-              <ExportButton href={`/platform/billing-center?${buildQuery(params)}&export=excel`} icon={<FileSpreadsheet className="h-4 w-4" />} label="Excel" />
-              <ExportButton href={`/platform/billing-center?${buildQuery(params)}&export=pdf`} icon={<FileText className="h-4 w-4" />} label="PDF" />
-            </div>
-          </div>
-        </section>
-      </MobileAccordionSection>
-
-      <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <MobileAccordionSection title="Revenue Summary Panel" defaultOpen>
-          <Panel title="Revenue Summary Panel">
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              <MiniMetric label="Today Revenue" value={formatMoney(todayRevenue)} />
-              <MiniMetric label="This Month Revenue" value={formatMoney(monthlyRevenue)} />
-              <MiniMetric label="Last Month Revenue" value={formatMoney(lastMonthRevenue)} />
-              <MiniMetric label="Year To Date Revenue" value={formatMoney(ytdRevenue)} />
-              <MiniMetric label="Average Revenue Per Business" value={formatMoney(averageRevenuePerBusiness)} />
-              <MiniMetric label="Highest Revenue Plan" value={highestRevenuePlan} />
-              <MiniMetric label="Lowest Revenue Plan" value={lowestRevenuePlan} />
-            </div>
-          </Panel>
-        </MobileAccordionSection>
-        <MobileAccordionSection title="Billing Health Score">
-          <Panel title="Billing Health Score">
-            <div className="flex flex-col gap-4">
-              <div className={`rounded-md border p-4 ${billingHealth.tone}`}>
-                <p className="text-xs font-semibold uppercase tracking-wide">Billing health</p>
-                <p className="mt-2 text-3xl font-semibold">{billingHealth.label}</p>
-                <p className="mt-2 text-sm">{billingHealth.description}</p>
+            <details className="lg:col-span-5 rounded-md border border-[#E5E7EB] bg-[#FAFAFA]">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 text-sm font-semibold text-[#111827]">
+                <span>Advanced filters</span>
+                <span className="text-xs font-medium text-[#6B7280]">Date, revenue, trial, renewal</span>
+              </summary>
+              <div className="grid gap-3 border-t border-[#E5E7EB] p-4 md:grid-cols-2 xl:grid-cols-4">
+                <label className="text-sm font-medium text-[#111827]">
+                  Date range
+                  <select name="date" defaultValue={params.date ?? "30d"} className="mt-1 h-10 w-full rounded-md border border-[#E5E7EB] px-3 text-sm">
+                    <option value="30d">Last 30 Days</option>
+                    <option value="7d">Last 7 Days</option>
+                    <option value="month">This Month</option>
+                    <option value="custom">Custom Range</option>
+                  </select>
+                </label>
+                <input type="date" name="from" defaultValue={params.from ?? ""} className="h-10 self-end rounded-md border border-[#E5E7EB] px-3 text-sm" aria-label="From date" />
+                <input type="date" name="to" defaultValue={params.to ?? ""} className="h-10 self-end rounded-md border border-[#E5E7EB] px-3 text-sm" aria-label="To date" />
+                <input type="number" name="revenueMin" defaultValue={params.revenueMin ?? ""} placeholder="Revenue min" className="h-10 self-end rounded-md border border-[#E5E7EB] px-3 text-sm" />
+                <input type="number" name="revenueMax" defaultValue={params.revenueMax ?? ""} placeholder="Revenue max" className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm" />
+                <select name="trial" defaultValue={params.trial ?? ""} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm" aria-label="Trial filter">
+                  <option value="">All trials</option>
+                  <option value="trial">Trial only</option>
+                  <option value="paid">Paid only</option>
+                </select>
+                <select name="renewal" defaultValue={params.renewal ?? ""} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm" aria-label="Renewal filter">
+                  <option value="">All renewals</option>
+                  <option value="today">Renewing today</option>
+                  <option value="week">Renewing this week</option>
+                  <option value="month">Renewing this month</option>
+                  <option value="overdue">Overdue renewals</option>
+                </select>
               </div>
-              <div className="grid gap-2 text-sm">
-                <HealthLine label="Outstanding invoices" value={overdueInvoices.length} />
-                <HealthLine label="Suspensions" value={suspendedAccounts.length} />
-                <HealthLine label="Renewals in 30 days" value={expiringWithin30.length} />
+            </details>
+          </form>
+        </section>
+      </MobileFilterDrawer>
+
+      <BillingCenterTabs activeTab={activeTab} params={params} />
+
+      {activeTab === "overview" ? (
+        <div className="grid gap-4">
+          <MobileAccordionSection title="Billing Alerts" defaultOpen>
+            <BillingAlerts subscriptions={subscriptions} invoices={invoices} payments={payments} now={now} />
+          </MobileAccordionSection>
+          <MobileAccordionSection title="Revenue Charts">
+            <Panel title="Revenue Charts">
+              <div className="grid gap-4 xl:grid-cols-2">
+                <Chart title="Monthly Revenue Trend" points={buildRevenueTrend(payments, recentMonths)} money />
+                <Chart title="Subscription Growth Trend" points={buildDateTrend(subscriptions, recentMonths, "createdAt")} />
+                <Chart title="Business Growth Trend" points={buildBusinessGrowth(invoices, recentMonths)} />
+                <Distribution title="Plan Distribution" points={plans.map((plan) => ({ label: plan.name, value: subscriptions.filter((subscription) => subscription.subscriptionPlanId === plan.id).length }))} />
+                <Distribution title="Revenue by Plan" points={revenueByPlan.map((plan) => ({ label: plan.name, value: plan.revenue }))} money />
+                <Chart title="Renewal Forecast" points={buildRenewalForecast(subscriptions, now)} />
               </div>
-            </div>
-          </Panel>
-        </MobileAccordionSection>
-      </section>
+            </Panel>
+          </MobileAccordionSection>
+          <MobileAccordionSection title="Billing Health Score">
+            <Panel title="Billing Health Score">
+              <div className="flex flex-col gap-4">
+                <div className={`rounded-md border p-4 ${billingHealth.tone}`}>
+                  <p className="text-xs font-semibold uppercase tracking-wide">Billing health</p>
+                  <p className="mt-2 text-3xl font-semibold">{billingHealth.label}</p>
+                  <p className="mt-2 text-sm">{billingHealth.description}</p>
+                </div>
+                <div className="grid gap-2 text-sm">
+                  <HealthLine label="Outstanding invoices" value={overdueInvoices.length} />
+                  <HealthLine label="Suspensions" value={suspendedAccounts.length} />
+                  <HealthLine label="Renewals in 30 days" value={expiringWithin30.length} />
+                </div>
+              </div>
+            </Panel>
+          </MobileAccordionSection>
+        </div>
+      ) : null}
 
-      <MobileAccordionSection title="Revenue Charts">
-        <Panel title="Revenue Charts">
-          <div className="grid gap-4 xl:grid-cols-2">
-            <Chart title="Monthly Revenue Trend" points={buildRevenueTrend(payments, recentMonths)} money />
-            <Chart title="Subscription Growth Trend" points={buildDateTrend(subscriptions, recentMonths, "createdAt")} />
-            <Chart title="Business Growth Trend" points={buildBusinessGrowth(invoices, recentMonths)} />
-            <Distribution title="Plan Distribution" points={plans.map((plan) => ({ label: plan.name, value: subscriptions.filter((subscription) => subscription.subscriptionPlanId === plan.id).length }))} />
-            <Distribution title="Revenue by Plan" points={revenueByPlan.map((plan) => ({ label: plan.name, value: plan.revenue }))} money />
-            <Chart title="Renewal Forecast" points={buildRenewalForecast(subscriptions, now)} />
-          </div>
-        </Panel>
-      </MobileAccordionSection>
+      {activeTab === "subscriptions" ? (
+        <div className="grid gap-4">
+          <MobileAccordionSection title="Subscription Management" defaultOpen>
+            <Panel title="Subscription Management">
+              <AdvancedSubscriptionTable subscriptions={filteredSubscriptions} />
+            </Panel>
+          </MobileAccordionSection>
+          <MobileAccordionSection title="Renewal Center">
+            <RenewalCenter subscriptions={subscriptions} now={now} />
+          </MobileAccordionSection>
+          <MobileAccordionSection title="Trial Management">
+            <TrialManagement subscriptions={trialSubscriptions} />
+          </MobileAccordionSection>
+        </div>
+      ) : null}
 
-      <MobileAccordionSection title="Subscription Management">
-        <Panel title="Subscription Management">
-          <AdvancedSubscriptionTable subscriptions={filteredSubscriptions} />
-        </Panel>
-      </MobileAccordionSection>
+      {activeTab === "invoices" ? (
+        <div className="grid gap-4">
+          <MobileAccordionSection title="Invoice Management" defaultOpen>
+            <InvoiceStatusDashboard invoices={invoices} />
+          </MobileAccordionSection>
+          <MobileAccordionSection title="Invoice Table">
+            <InvoiceTable invoices={filteredInvoices} />
+          </MobileAccordionSection>
+          <MobileAccordionSection title="Payment Tracking">
+            <PaymentTracking payments={payments} now={now} monthStart={monthStart} yearStart={yearStart} outstandingRevenue={outstandingRevenue} overdueRevenue={overdueRevenue} />
+          </MobileAccordionSection>
+        </div>
+      ) : null}
 
-      <MobileAccordionSection title="Renewal & Trial Management">
-        <section className="grid gap-4 xl:grid-cols-2">
-          <RenewalCenter subscriptions={subscriptions} now={now} />
-          <TrialManagement subscriptions={trialSubscriptions} />
-        </section>
-      </MobileAccordionSection>
-
-      <MobileAccordionSection title="Plan Performance">
-        <PlanPerformance plans={plans} subscriptions={subscriptions} payments={payments} />
-      </MobileAccordionSection>
-
-      <MobileAccordionSection title="Invoice Management">
-        <section className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
-          <InvoiceStatusDashboard invoices={invoices} />
-          <InvoiceTable invoices={filteredInvoices} />
-        </section>
-      </MobileAccordionSection>
-
-      <MobileAccordionSection title="Payment Tracking & Churn">
-        <section className="grid gap-4 xl:grid-cols-2">
-          <PaymentTracking payments={payments} now={now} monthStart={monthStart} yearStart={yearStart} outstandingRevenue={outstandingRevenue} overdueRevenue={overdueRevenue} />
-          <ChurnAnalytics subscriptions={subscriptions} />
-        </section>
-      </MobileAccordionSection>
-
-      <MobileAccordionSection title="Billing Alerts">
-        <BillingAlerts subscriptions={subscriptions} invoices={invoices} payments={payments} now={now} />
-      </MobileAccordionSection>
+      {activeTab === "analytics" ? (
+        <div className="grid gap-4">
+          <MobileAccordionSection title="Plan Performance" defaultOpen>
+            <PlanPerformance plans={plans} subscriptions={subscriptions} payments={payments} />
+          </MobileAccordionSection>
+          <MobileAccordionSection title="Churn Analytics">
+            <ChurnAnalytics subscriptions={subscriptions} />
+          </MobileAccordionSection>
+          <MobileAccordionSection title="Revenue Summary">
+            <Panel title="Revenue Summary Panel">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <MiniMetric label="Today Revenue" value={formatMoney(todayRevenue)} />
+                <MiniMetric label="This Month Revenue" value={formatMoney(monthlyRevenue)} />
+                <MiniMetric label="Last Month Revenue" value={formatMoney(lastMonthRevenue)} />
+                <MiniMetric label="Year To Date Revenue" value={formatMoney(ytdRevenue)} />
+                <MiniMetric label="Average Revenue Per Business" value={formatMoney(averageRevenuePerBusiness)} />
+                <MiniMetric label="Highest Revenue Plan" value={highestRevenuePlan} />
+                <MiniMetric label="Lowest Revenue Plan" value={lowestRevenuePlan} />
+              </div>
+            </Panel>
+          </MobileAccordionSection>
+          <MobileAccordionSection title="Financial Exports">
+            <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-[#F97316]">Financial Exports</p>
+                  <h2 className="mt-1 text-lg font-semibold text-[#111827]">Filter-aware billing reports</h2>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <ExportButton href={`/platform/billing-center?${buildQuery(params)}&export=csv`} icon={<Download className="h-4 w-4" />} label="CSV" />
+                  <ExportButton href={`/platform/billing-center?${buildQuery(params)}&export=excel`} icon={<FileSpreadsheet className="h-4 w-4" />} label="Excel" />
+                  <ExportButton href={`/platform/billing-center?${buildQuery(params)}&export=pdf`} icon={<FileText className="h-4 w-4" />} label="PDF" />
+                </div>
+              </div>
+            </section>
+          </MobileAccordionSection>
+        </div>
+      ) : null}
     </DashboardShell>
+  );
+}
+
+const billingTabs = [
+  { key: "overview", label: "Overview" },
+  { key: "subscriptions", label: "Subscriptions" },
+  { key: "invoices", label: "Invoices" },
+  { key: "analytics", label: "Analytics" },
+] as const;
+
+type BillingTabKey = (typeof billingTabs)[number]["key"];
+
+function getBillingTab(value?: string): BillingTabKey {
+  return billingTabs.some((tab) => tab.key === value) ? (value as BillingTabKey) : "overview";
+}
+
+function buildBillingTabHref(params: BillingParams, tab: BillingTabKey, clearFilters = false) {
+  const query = new URLSearchParams();
+  query.set("tab", tab);
+  if (!clearFilters) {
+    for (const [key, value] of Object.entries(params)) {
+      if (value && !["tab", "export"].includes(key)) {
+        query.set(key, value);
+      }
+    }
+  }
+  return "/platform/billing-center?" + query.toString();
+}
+
+function BillingCenterTabs({ activeTab, params }: { activeTab: BillingTabKey; params: BillingParams }) {
+  return (
+    <nav className="rounded-md border border-[#E5E7EB] bg-white p-2 shadow-sm" aria-label="Billing Center sections">
+      <div className="grid gap-2 sm:grid-cols-4">
+        {billingTabs.map((tab) => {
+          const active = activeTab === tab.key;
+          return (
+            <Link
+              key={tab.key}
+              href={buildBillingTabHref(params, tab.key)}
+              className={`inline-flex min-h-11 items-center justify-center rounded-md px-4 text-sm font-semibold transition ${
+                active ? "bg-[#F97316] text-white" : "text-[#6B7280] hover:bg-orange-50 hover:text-[#F97316]"
+              }`}
+              aria-current={active ? "page" : undefined}
+            >
+              {tab.label}
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
   );
 }
 

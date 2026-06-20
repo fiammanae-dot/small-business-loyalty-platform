@@ -7,13 +7,10 @@ import {
   Building2,
   CheckCircle2,
   Download,
-  ExternalLink,
   FileSpreadsheet,
   FileText,
   Filter,
-  Palette,
   Search,
-  Settings,
   ShieldCheck,
   Users,
 } from "lucide-react";
@@ -36,7 +33,6 @@ type TenantParams = {
 
 type TenantRecord = Prisma.BusinessGetPayload<{
   include: {
-    branding: true;
     branches: { select: { id: true; name: true; status: true } };
     users: { select: { id: true; name: true; email: true; role: true; status: true } };
     customerMemberships: { select: { id: true } };
@@ -44,7 +40,6 @@ type TenantRecord = Prisma.BusinessGetPayload<{
     scanEvents: { select: { id: true } };
     activityAlerts: { select: { id: true; status: true } };
     subscriptions: { include: { subscriptionPlan: true } };
-    auditEvents: { select: { id: true; action: true; entityType: true; createdAt: true } };
   };
 }>;
 
@@ -71,7 +66,6 @@ export default async function PlatformTenantCenterPage({
   const [businesses, plans, totalCustomers] = await Promise.all([
     prisma.business.findMany({
       include: {
-        branding: true,
         branches: { select: { id: true, name: true, status: true }, orderBy: { name: "asc" } },
         users: { select: { id: true, name: true, email: true, role: true, status: true }, orderBy: { createdAt: "asc" } },
         customerMemberships: { select: { id: true } },
@@ -79,7 +73,6 @@ export default async function PlatformTenantCenterPage({
         scanEvents: { select: { id: true } },
         activityAlerts: { where: { status: { in: activeAlertStatuses } }, select: { id: true, status: true } },
         subscriptions: { orderBy: { createdAt: "desc" }, take: 1, include: { subscriptionPlan: true } },
-        auditEvents: { orderBy: { createdAt: "desc" }, take: 5, select: { id: true, action: true, entityType: true, createdAt: true } },
       },
       orderBy: { createdAt: "desc" },
     }),
@@ -164,71 +157,22 @@ export default async function PlatformTenantCenterPage({
         <TenantDirectory tenants={filteredTenants} />
       </Panel>
 
-      <section className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
-        <Panel title="Tenant Health Score" icon={ShieldCheck}>
-          <div className="grid gap-3">
-            {filteredTenants.slice(0, 8).map((tenant) => (
-              <div key={tenant.uuid} className="rounded-md border border-[#E5E7EB] p-3">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="font-semibold text-[#111827]">{tenant.name}</p>
-                    <p className="mt-1 text-sm text-[#6B7280]">{tenant.healthReasons.join(", ")}</p>
-                  </div>
-                  <HealthBadge health={tenant.tenantHealth} />
+      <Panel title="Tenant Health Score" icon={ShieldCheck}>
+        <div className="grid gap-3">
+          {filteredTenants.slice(0, 8).map((tenant) => (
+            <div key={tenant.uuid} className="rounded-md border border-[#E5E7EB] p-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-semibold text-[#111827]">{tenant.name}</p>
+                  <p className="mt-1 text-sm text-[#6B7280]">{tenant.healthReasons.join(", ")}</p>
                 </div>
+                <HealthBadge health={tenant.tenantHealth} />
               </div>
-            ))}
-            {filteredTenants.length === 0 ? <EmptyState text="No tenants match these filters." /> : null}
-          </div>
-        </Panel>
-
-        <Panel title="Tenant Branding" icon={Palette}>
-          <div className="grid gap-3">
-            {filteredTenants.slice(0, 6).map((tenant) => (
-              <div key={tenant.uuid} className="rounded-md border border-[#E5E7EB] p-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-[#111827]">{tenant.name}</p>
-                    <p className="mt-1 text-sm text-[#6B7280]">Brand Name: {tenant.name}</p>
-                  </div>
-                  <Link href={`/platform/businesses/${tenant.uuid}/edit`} className="inline-flex items-center gap-1 rounded-md border border-[#E5E7EB] px-2 py-1 text-xs font-semibold text-[#111827] hover:border-[#F97316] hover:text-[#F97316]">
-                    Edit
-                    <ExternalLink className="h-3 w-3" aria-hidden="true" />
-                  </Link>
-                </div>
-                <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
-                  <ConfigLine label="Business Logo" value={tenant.branding?.logoUrl ? "Configured" : "Not configured"} />
-                  <ColorLine label="Primary Color" value={tenant.branding?.primaryColor ?? "#F97316"} />
-                  <ColorLine label="Secondary Color" value={tenant.branding?.secondaryColor ?? "#FDBA74"} />
-                  <ColorLine label="Button Color" value={tenant.branding?.buttonColor ?? "#F97316"} />
-                  <ConfigLine label="Customer Card Branding" value="Uses saved business branding" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </Panel>
-      </section>
-
-      <section className="grid gap-4 xl:grid-cols-2">
-        <Panel title="Customer Experience Branding" icon={Palette}>
-          <div className="grid gap-2">
-            <ConfigLine label="Customer Card" value="Uses saved business branding" />
-            <ConfigLine label="QR Page" value="Uses saved business branding" />
-            <ConfigLine label="Reward Page" value="Uses saved business branding" />
-            <ConfigLine label="Enrollment Page" value="Uses saved business branding" />
-            <ConfigLine label="Referral Page" value="Uses saved business branding" />
-          </div>
-        </Panel>
-
-        <Panel title="Tenant Settings" icon={Settings}>
-          <div className="grid gap-2">
-            <ConfigLine label="Allow referrals" value="Enabled by platform policy" />
-            <ConfigLine label="Allow rewards" value="Enabled by platform policy" />
-            <ConfigLine label="Allow QR scans" value="Enabled by platform policy" />
-            <ConfigLine label="Allow messaging" value="Prepared-message mode" />
-          </div>
-        </Panel>
-      </section>
+            </div>
+          ))}
+          {filteredTenants.length === 0 ? <EmptyState text="No tenants match these filters." /> : null}
+        </div>
+      </Panel>
 
       <section>
         <Panel title="Tenant Resource Monitoring" icon={Activity}>
@@ -252,27 +196,6 @@ export default async function PlatformTenantCenterPage({
         </Panel>
       </section>
 
-      <Panel title="Tenant Audit History" icon={FileText}>
-        <div className="mb-4 grid gap-2 text-sm md:grid-cols-3 xl:grid-cols-6">
-          {["Brand changes", "Plan changes", "Subscription changes", "Owner changes", "Status changes", "Billing changes"].map((label) => (
-            <div key={label} className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] px-3 py-2 font-semibold text-[#6B7280]">{label}</div>
-          ))}
-        </div>
-        <div className="grid gap-3">
-          {filteredTenants.flatMap((tenant) => tenant.auditEvents.map((event) => ({ tenant, event }))).slice(0, 12).map(({ tenant, event }) => (
-            <div key={`${tenant.uuid}-${event.id}`} className="rounded-md border border-[#E5E7EB] p-3">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="font-semibold text-[#111827]">{formatAction(event.action)}</p>
-                  <p className="mt-1 text-sm text-[#6B7280]">{tenant.name} - {event.entityType}</p>
-                </div>
-                <p className="text-sm text-[#6B7280]">{formatDate(event.createdAt)}</p>
-              </div>
-            </div>
-          ))}
-          {filteredTenants.every((tenant) => tenant.auditEvents.length === 0) ? <EmptyState text="No tenant audit history is available yet." /> : null}
-        </div>
-      </Panel>
     </DashboardShell>
   );
 }
@@ -473,26 +396,6 @@ function ExportButton({ href, icon, label }: { href: string; icon: ReactNode; la
   return <Link href={href} className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]">{icon}{label}</Link>;
 }
 
-function ConfigLine({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between gap-3 rounded-md bg-[#FAFAFA] px-3 py-2">
-      <span className="text-sm text-[#6B7280]">{label}</span>
-      <span className="text-right text-sm font-semibold text-[#111827]">{value}</span>
-    </div>
-  );
-}
-
-function ColorLine({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between gap-3 rounded-md bg-[#FAFAFA] px-3 py-2">
-      <span className="text-sm text-[#6B7280]">{label}</span>
-      <span className="inline-flex items-center gap-2 text-sm font-semibold text-[#111827]">
-        <span className="h-4 w-4 rounded-full border border-[#E5E7EB]" style={{ backgroundColor: value }} />
-        {value}
-      </span>
-    </div>
-  );
-}
 
 function MetricLine({ label, value }: { label: string; value: string }) {
   return <div className="flex justify-between gap-3"><span className="text-[#6B7280]">{label}</span><strong className="text-right text-[#111827]">{value}</strong></div>;
@@ -506,6 +409,3 @@ function titleCase(value: string) {
   return value.replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function formatAction(value: string) {
-  return titleCase(value);
-}

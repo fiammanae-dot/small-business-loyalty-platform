@@ -6,7 +6,7 @@ function read(path) {
   return readFileSync(path, "utf8");
 }
 
-test("tenant center provides tenant health, branding, resource, audit, and export management views", () => {
+test("tenant center provides operational tenant overview, directory, health, resource, and export views", () => {
   const page = read("src/app/platform/tenant-center/page.tsx");
   const shell = read("src/components/DashboardShell.tsx");
 
@@ -34,35 +34,11 @@ test("tenant center provides tenant health, branding, resource, audit, and expor
     "Archive",
     "Transfer Ownership",
     "Tenant Health Score",
-    "Tenant Branding",
-    "Business Logo",
-    "Primary Color",
-    "Secondary Color",
-    "Button Color",
-    "Customer Card Branding",
-    "Customer Experience Branding",
-    "Customer Card",
-    "QR Page",
-    "Reward Page",
-    "Enrollment Page",
-    "Referral Page",
     "Tenant Resource Monitoring",
     "QR Scans",
     "Enrollments",
     "Storage Usage",
     "Database Usage",
-    "Tenant Audit History",
-    "Brand changes",
-    "Plan changes",
-    "Subscription changes",
-    "Owner changes",
-    "Status changes",
-    "Billing changes",
-    "Tenant Settings",
-    "Allow referrals",
-    "Allow rewards",
-    "Allow QR scans",
-    "Allow messaging",
     "CSV",
     "Excel",
     "PDF",
@@ -75,6 +51,7 @@ test("tenant center provides tenant health, branding, resource, audit, and expor
   assert.match(shell, /Tenant Center/);
   assert.match(shell, /Layers3/);
   assert.doesNotMatch(page, /White Label|white-label|Custom Domain|custom domains|Future-ready/);
+  assert.doesNotMatch(page, /Tenant Branding|Customer Experience Branding|Tenant Settings|Tenant Audit History/);
 });
 
 test("tenant center does not introduce loyalty, scan, reward, referral, or cooldown mutations", () => {
