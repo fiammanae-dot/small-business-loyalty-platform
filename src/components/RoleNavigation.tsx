@@ -257,12 +257,14 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
                 onClick={() => setMoreOpen(false)}
                 aria-current={active ? "page" : undefined}
                 className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition ${
-                  active || item.accent
+                  active
                     ? "bg-[#F97316] business-button text-white shadow-sm"
-                    : "text-[#64748B] business-hover"
+                    : item.accent
+                      ? "border border-[#F97316] business-border bg-orange-50 business-bg-soft text-[#EA580C] business-text-strong shadow-sm"
+                      : "text-[#64748B] business-hover"
                 }`}
               >
-                <item.icon className="h-5 w-5" aria-hidden="true" />
+                <item.icon className={item.accent && !active ? "h-6 w-6" : "h-5 w-5"} aria-hidden="true" />
                 <span className="max-w-full truncate">{item.label}</span>
               </Link>
             );

@@ -115,3 +115,55 @@ Expected clean local baseline after a safe reset:
 - Subscription plans: 3
 
 Never use `prisma migrate reset`, forced database resets, or seed-demo commands against production, Neon, or `loyalty_platform_pilot` unless a separate backup and approval process explicitly allows it.
+## Manual Audit Seed
+
+Use this only for local manual QA when you need a full platform dataset across roles, plans, scanner flows, referrals, alerts, billing, notifications, and customer tiers.
+
+This seed is intentionally separate from `seed-pilot.js`. It must not be used for pilot production onboarding.
+
+Expected test data:
+
+- 1 System Administrator account
+- 3 test businesses:
+  - Coffee shop on `STARTER`
+  - Restaurant on `GROWTH`
+  - Car wash on `MULTI_BRANCH`
+- Branches matching each plan shape
+- Business Owner, Branch Manager, and Staff accounts for each business
+- Customers covering active, new, referral, near reward, reward ready, Bronze, Silver, Gold, and VIP scenarios
+- Active and inactive loyalty programs, including a multi-program restaurant scenario
+- Program memberships with 0, partial, near reward, reward-ready, and redeemed examples
+- Business-specific referral codes and qualified referral examples
+- Scan events, stamp transactions, reward redemption, audit events, notifications, alerts, subscriptions, invoices, and payments
+
+Required environment variables:
+
+```bash
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/loyalty_platform?schema=public"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+MANUAL_AUDIT_SEED_CONFIRM="LOYALTYBASE_MANUAL_AUDIT"
+MANUAL_AUDIT_SEED_PASSWORD="local-manual-audit-password"
+MANUAL_AUDIT_ADMIN_EMAIL="manual.admin@example.test" # optional, defaults to system.admin@manual-audit.loyaltybase.test
+```
+
+Command:
+
+```bash
+npm run prisma:seed-manual-audit
+```
+
+Safety behavior:
+
+- The seed refuses to run unless `MANUAL_AUDIT_SEED_CONFIRM=LOYALTYBASE_MANUAL_AUDIT` is set.
+- The seed refuses to run against `loyalty_platform_pilot`.
+- The seed refuses to run when `APP_ENV=production` or `VERCEL_ENV=production`.
+- The seed does not run migrations and does not reset data.
+- The seed is idempotent for core QA records where the schema provides unique keys.
+
+Recommended local workflow:
+
+1. Confirm `DATABASE_URL` points to a local QA/development database, not pilot or production.
+2. Run migrations separately if needed.
+3. Run `npm run prisma:seed-manual-audit`.
+4. Login with the printed manual audit accounts and the password from `MANUAL_AUDIT_SEED_PASSWORD`.
+5. Use the printed customer card links for card/scanner/manual QA.
