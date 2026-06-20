@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -119,6 +119,12 @@ const platformMobileMoreItems: NavigationItem[] = [
   { href: "/platform/settings", label: "Settings", icon: Settings },
   { href: "/platform/database", label: "Database", icon: Database },
   { href: "/platform/launch-readiness", label: "Launch Readiness", icon: Rocket },
+];
+
+const staffMobileItems: NavigationItem[] = [
+  { href: "/staff/customers/new", label: "Enroll", icon: UserPlus },
+  { href: "/staff/scanner", label: "Scanner", icon: QrCode, accent: true },
+  { href: "/staff/programs", label: "Programs", icon: Gift },
 ];
 
 export function RoleNavigation({ role }: RoleNavigationProps) {
@@ -270,7 +276,7 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
           />
           <div className="fixed inset-x-0 bottom-0 z-40 max-h-[82vh] rounded-t-3xl border border-[#E5E7EB] bg-white shadow-2xl">
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E5E7EB] bg-white px-4 py-3">
-              <p className="text-base font-bold text-[#111827]">More{activeMoreItem ? ` · ${activeMoreItem.label}` : ""}</p>
+              <p className="text-base font-bold text-[#111827]">More{activeMoreItem ? ` Â· ${activeMoreItem.label}` : ""}</p>
               <button
                 type="button"
                 onClick={() => setMoreOpen(false)}
@@ -304,7 +310,7 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
       {moreActive && !moreOpen ? (
         <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 flex justify-center px-4">
           <span className="max-w-[min(22rem,calc(100vw-2rem))] truncate rounded-full border border-orange-200 bg-white px-3 py-1.5 text-xs font-bold text-[#EA580C] shadow-lg">
-            More · {activeMoreItem?.label}
+            More Â· {activeMoreItem?.label}
           </span>
         </div>
       ) : null}
@@ -349,6 +355,43 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
   );
 }
 
+export function MobileStaffNavigation({ role }: RoleNavigationProps) {
+  const pathname = usePathname();
+
+  if (role !== "STAFF") {
+    return null;
+  }
+
+  return (
+    <nav
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E5E7EB] bg-white/95 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur lg:hidden"
+      aria-label="Mobile staff navigation"
+    >
+      <div className="mx-auto grid max-w-sm grid-cols-3 gap-2">
+        {staffMobileItems.map((item) => {
+          const active = isActivePath(pathname, item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={active ? "page" : undefined}
+              className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition ${
+                active
+                  ? "bg-[#F97316] business-button text-white shadow-sm"
+                  : item.accent
+                    ? "border border-[#F97316] business-border bg-orange-50 business-bg-soft text-[#EA580C] business-text-strong shadow-sm"
+                    : "text-[#64748B] business-hover"
+              }`}
+            >
+              <item.icon className={item.accent ? "h-6 w-6" : "h-5 w-5"} aria-hidden="true" />
+              <span className="max-w-full truncate">{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
 function NavigationLink({
   item,
   pathname,

@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import type { ReactNode } from "react";
 import {
   BarChart3,
@@ -20,7 +20,7 @@ import type { LucideIcon } from "lucide-react";
 import { BusinessBrandingProvider } from "@/components/BusinessBrandingProvider";
 import { CsrfInput } from "@/components/CsrfInput";
 import { IdleSessionTimeout } from "@/components/IdleSessionTimeout";
-import { MobileBusinessNavigation, MobilePlatformNavigation, RoleNavigation } from "@/components/RoleNavigation";
+import { MobileBusinessNavigation, MobilePlatformNavigation, MobileStaffNavigation, RoleNavigation } from "@/components/RoleNavigation";
 import { getOperationalBusinessBranding } from "@/lib/business-branding";
 import { isDemoModeEnabled } from "@/lib/platform-settings";
 import type { AuthUser } from "@/lib/session";
@@ -117,16 +117,17 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
         </div>
         <MobileBusinessNavigation role={user.role} />
         <MobilePlatformNavigation role={user.role} />
+        <MobileStaffNavigation role={user.role} />
       </header>
 
       <main
         className={`mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[240px_1fr] lg:px-8 ${
-          user.role === "BUSINESS_OWNER" || user.role === "PLATFORM_OWNER" ? "pb-24 lg:pb-6" : ""
+          user.role === "BUSINESS_OWNER" || user.role === "PLATFORM_OWNER" || user.role === "STAFF" ? "pb-24 lg:pb-6" : ""
         }`}
       >
         {demoModeEnabled ? (
           <div className="rounded-md border border-orange-200 business-border-soft bg-orange-50 business-bg-soft px-4 py-3 text-sm font-semibold text-[#C2410C] business-text-strong lg:col-span-2">
-            Demo Mode Active — External communications and selected production actions are restricted.
+            Demo Mode Active â€” External communications and selected production actions are restricted.
           </div>
         ) : null}
 

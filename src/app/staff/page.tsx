@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { Gift, QrCode, TicketCheck, UserPlus, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
@@ -29,13 +29,7 @@ export default async function StaffDashboard() {
 
   return (
     <DashboardShell user={user} eyebrow="Staff" title="Staff dashboard" hideWelcomeMessage>
-      <section className="grid gap-4 md:grid-cols-3">
-        <Info label="Staff name" value={user.name} />
-        <Info label="Business name" value={branch?.business.name ?? "Unassigned"} />
-        <Info label="Branch name" value={branch?.name ?? "Unassigned"} />
-      </section>
-
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+<section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-semibold text-[#F97316] business-text">Today&apos;s Activity</p>
@@ -53,9 +47,15 @@ export default async function StaffDashboard() {
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
+        <Action href="/staff/scanner" icon={QrCode} title="Scanner" description="Validate customer program QR codes." primary />
         <Action href="/staff/customers/new" icon={UserPlus} title="Enroll customer" description="Create a customer membership for this branch." />
         <Action href="/staff/programs" icon={Gift} title="Programs" description="View available loyalty programs." />
-        <Action href="/staff/scanner" icon={QrCode} title="Scanner" description="Validate customer program QR codes." primary />
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-3">
+        <Info label="Staff name" value={user.name} />
+        <Info label="Business name" value={branch?.business.name ?? "Unassigned"} />
+        <Info label="Branch name" value={branch?.name ?? "Unassigned"} />
       </section>
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
