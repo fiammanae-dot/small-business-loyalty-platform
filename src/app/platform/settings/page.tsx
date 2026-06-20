@@ -26,6 +26,7 @@ import Link from "next/link";
 import packageJson from "../../../../package.json";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
+import { MobileTabSelector } from "@/components/MobileTabSelector";
 import { formatDateTime } from "@/lib/format";
 import { isDemoModeEnabled } from "@/lib/platform-settings";
 import { prisma } from "@/lib/prisma";
@@ -81,7 +82,13 @@ export default async function PlatformSettingsPage({
       {params.success ? <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{params.success}</p> : null}
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm">
-        <div className="flex gap-2 overflow-x-auto" role="tablist" aria-label="Platform settings sections">
+        <MobileTabSelector
+          label="Settings section"
+          activeValue={activeTab}
+          basePath="/platform/settings"
+          options={settingsTabs.map((tab) => ({ value: tab.key, label: tab.label }))}
+        />
+        <div className="hidden gap-2 overflow-x-auto md:flex" role="tablist" aria-label="Platform settings sections">
           {settingsTabs.map((tab) => {
             const active = activeTab === tab.key;
             return (

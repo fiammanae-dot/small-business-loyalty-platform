@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
+import { MobileAccordionSection } from "@/components/MobileAccordionSection";
 import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
 import { PlatformKpiGrid } from "@/components/PlatformKpiGrid";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
@@ -203,81 +204,101 @@ export default async function PlatformBillingCenterPage({
 
         </MobileFilterDrawer>
 
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-[#F97316]">Financial Exports</p>
-            <h2 className="mt-1 text-lg font-semibold text-[#111827]">Filter-aware billing reports</h2>
+      <MobileAccordionSection title="Financial Exports">
+        <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-[#F97316]">Financial Exports</p>
+              <h2 className="mt-1 text-lg font-semibold text-[#111827]">Filter-aware billing reports</h2>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-3">
+              <ExportButton href={`/platform/billing-center?${buildQuery(params)}&export=csv`} icon={<Download className="h-4 w-4" />} label="CSV" />
+              <ExportButton href={`/platform/billing-center?${buildQuery(params)}&export=excel`} icon={<FileSpreadsheet className="h-4 w-4" />} label="Excel" />
+              <ExportButton href={`/platform/billing-center?${buildQuery(params)}&export=pdf`} icon={<FileText className="h-4 w-4" />} label="PDF" />
+            </div>
           </div>
-          <div className="grid gap-2 sm:grid-cols-3">
-            <ExportButton href={`/platform/billing-center?${buildQuery(params)}&export=csv`} icon={<Download className="h-4 w-4" />} label="CSV" />
-            <ExportButton href={`/platform/billing-center?${buildQuery(params)}&export=excel`} icon={<FileSpreadsheet className="h-4 w-4" />} label="Excel" />
-            <ExportButton href={`/platform/billing-center?${buildQuery(params)}&export=pdf`} icon={<FileText className="h-4 w-4" />} label="PDF" />
-          </div>
-        </div>
-      </section>
+        </section>
+      </MobileAccordionSection>
 
       <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <Panel title="Revenue Summary Panel">
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            <MiniMetric label="Today Revenue" value={formatMoney(todayRevenue)} />
-            <MiniMetric label="This Month Revenue" value={formatMoney(monthlyRevenue)} />
-            <MiniMetric label="Last Month Revenue" value={formatMoney(lastMonthRevenue)} />
-            <MiniMetric label="Year To Date Revenue" value={formatMoney(ytdRevenue)} />
-            <MiniMetric label="Average Revenue Per Business" value={formatMoney(averageRevenuePerBusiness)} />
-            <MiniMetric label="Highest Revenue Plan" value={highestRevenuePlan} />
-            <MiniMetric label="Lowest Revenue Plan" value={lowestRevenuePlan} />
+        <MobileAccordionSection title="Revenue Summary Panel" defaultOpen>
+          <Panel title="Revenue Summary Panel">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <MiniMetric label="Today Revenue" value={formatMoney(todayRevenue)} />
+              <MiniMetric label="This Month Revenue" value={formatMoney(monthlyRevenue)} />
+              <MiniMetric label="Last Month Revenue" value={formatMoney(lastMonthRevenue)} />
+              <MiniMetric label="Year To Date Revenue" value={formatMoney(ytdRevenue)} />
+              <MiniMetric label="Average Revenue Per Business" value={formatMoney(averageRevenuePerBusiness)} />
+              <MiniMetric label="Highest Revenue Plan" value={highestRevenuePlan} />
+              <MiniMetric label="Lowest Revenue Plan" value={lowestRevenuePlan} />
+            </div>
+          </Panel>
+        </MobileAccordionSection>
+        <MobileAccordionSection title="Billing Health Score">
+          <Panel title="Billing Health Score">
+            <div className="flex flex-col gap-4">
+              <div className={`rounded-md border p-4 ${billingHealth.tone}`}>
+                <p className="text-xs font-semibold uppercase tracking-wide">Billing health</p>
+                <p className="mt-2 text-3xl font-semibold">{billingHealth.label}</p>
+                <p className="mt-2 text-sm">{billingHealth.description}</p>
+              </div>
+              <div className="grid gap-2 text-sm">
+                <HealthLine label="Outstanding invoices" value={overdueInvoices.length} />
+                <HealthLine label="Suspensions" value={suspendedAccounts.length} />
+                <HealthLine label="Renewals in 30 days" value={expiringWithin30.length} />
+              </div>
+            </div>
+          </Panel>
+        </MobileAccordionSection>
+      </section>
+
+      <MobileAccordionSection title="Revenue Charts">
+        <Panel title="Revenue Charts">
+          <div className="grid gap-4 xl:grid-cols-2">
+            <Chart title="Monthly Revenue Trend" points={buildRevenueTrend(payments, recentMonths)} money />
+            <Chart title="Subscription Growth Trend" points={buildDateTrend(subscriptions, recentMonths, "createdAt")} />
+            <Chart title="Business Growth Trend" points={buildBusinessGrowth(invoices, recentMonths)} />
+            <Distribution title="Plan Distribution" points={plans.map((plan) => ({ label: plan.name, value: subscriptions.filter((subscription) => subscription.subscriptionPlanId === plan.id).length }))} />
+            <Distribution title="Revenue by Plan" points={revenueByPlan.map((plan) => ({ label: plan.name, value: plan.revenue }))} money />
+            <Chart title="Renewal Forecast" points={buildRenewalForecast(subscriptions, now)} />
           </div>
         </Panel>
-        <Panel title="Billing Health Score">
-          <div className="flex flex-col gap-4">
-            <div className={`rounded-md border p-4 ${billingHealth.tone}`}>
-              <p className="text-xs font-semibold uppercase tracking-wide">Billing health</p>
-              <p className="mt-2 text-3xl font-semibold">{billingHealth.label}</p>
-              <p className="mt-2 text-sm">{billingHealth.description}</p>
-            </div>
-            <div className="grid gap-2 text-sm">
-              <HealthLine label="Outstanding invoices" value={overdueInvoices.length} />
-              <HealthLine label="Suspensions" value={suspendedAccounts.length} />
-              <HealthLine label="Renewals in 30 days" value={expiringWithin30.length} />
-            </div>
-          </div>
+      </MobileAccordionSection>
+
+      <MobileAccordionSection title="Subscription Management">
+        <Panel title="Subscription Management">
+          <AdvancedSubscriptionTable subscriptions={filteredSubscriptions} />
         </Panel>
-      </section>
+      </MobileAccordionSection>
 
-      <Panel title="Revenue Charts">
-        <div className="grid gap-4 xl:grid-cols-2">
-          <Chart title="Monthly Revenue Trend" points={buildRevenueTrend(payments, recentMonths)} money />
-          <Chart title="Subscription Growth Trend" points={buildDateTrend(subscriptions, recentMonths, "createdAt")} />
-          <Chart title="Business Growth Trend" points={buildBusinessGrowth(invoices, recentMonths)} />
-          <Distribution title="Plan Distribution" points={plans.map((plan) => ({ label: plan.name, value: subscriptions.filter((subscription) => subscription.subscriptionPlanId === plan.id).length }))} />
-          <Distribution title="Revenue by Plan" points={revenueByPlan.map((plan) => ({ label: plan.name, value: plan.revenue }))} money />
-          <Chart title="Renewal Forecast" points={buildRenewalForecast(subscriptions, now)} />
-        </div>
-      </Panel>
+      <MobileAccordionSection title="Renewal & Trial Management">
+        <section className="grid gap-4 xl:grid-cols-2">
+          <RenewalCenter subscriptions={subscriptions} now={now} />
+          <TrialManagement subscriptions={trialSubscriptions} />
+        </section>
+      </MobileAccordionSection>
 
-      <Panel title="Subscription Management">
-        <AdvancedSubscriptionTable subscriptions={filteredSubscriptions} />
-      </Panel>
+      <MobileAccordionSection title="Plan Performance">
+        <PlanPerformance plans={plans} subscriptions={subscriptions} payments={payments} />
+      </MobileAccordionSection>
 
-      <section className="grid gap-4 xl:grid-cols-2">
-        <RenewalCenter subscriptions={subscriptions} now={now} />
-        <TrialManagement subscriptions={trialSubscriptions} />
-      </section>
+      <MobileAccordionSection title="Invoice Management">
+        <section className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
+          <InvoiceStatusDashboard invoices={invoices} />
+          <InvoiceTable invoices={filteredInvoices} />
+        </section>
+      </MobileAccordionSection>
 
-      <PlanPerformance plans={plans} subscriptions={subscriptions} payments={payments} />
+      <MobileAccordionSection title="Payment Tracking & Churn">
+        <section className="grid gap-4 xl:grid-cols-2">
+          <PaymentTracking payments={payments} now={now} monthStart={monthStart} yearStart={yearStart} outstandingRevenue={outstandingRevenue} overdueRevenue={overdueRevenue} />
+          <ChurnAnalytics subscriptions={subscriptions} />
+        </section>
+      </MobileAccordionSection>
 
-      <section className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
-        <InvoiceStatusDashboard invoices={invoices} />
-        <InvoiceTable invoices={filteredInvoices} />
-      </section>
-
-      <section className="grid gap-4 xl:grid-cols-2">
-        <PaymentTracking payments={payments} now={now} monthStart={monthStart} yearStart={yearStart} outstandingRevenue={outstandingRevenue} overdueRevenue={overdueRevenue} />
-        <ChurnAnalytics subscriptions={subscriptions} />
-      </section>
-
-      <BillingAlerts subscriptions={subscriptions} invoices={invoices} payments={payments} now={now} />
+      <MobileAccordionSection title="Billing Alerts">
+        <BillingAlerts subscriptions={subscriptions} invoices={invoices} payments={payments} now={now} />
+      </MobileAccordionSection>
     </DashboardShell>
   );
 }

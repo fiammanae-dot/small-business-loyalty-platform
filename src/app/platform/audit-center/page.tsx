@@ -248,7 +248,18 @@ export default async function PlatformAuditCenterPage({
             </div>
             <Link href={`/platform/audit-center?${activeQuery}&view=timeline`} className="rounded-md border border-[#E5E7EB] px-3 py-2 text-sm font-semibold text-[#111827]">Timeline View</Link>
           </div>
-          <div className="overflow-x-auto">
+          <div className="grid gap-3 md:hidden">
+            {decoratedEvents.map((event) => (
+              <AuditEventMobileCard key={event.id} event={event} activeQuery={activeQuery} />
+            ))}
+            {decoratedEvents.length === 0 ? (
+              <div className="rounded-md border border-dashed border-[#E5E7EB] bg-[#FAFAFA] p-5 text-center">
+                <p className="text-sm font-semibold text-[#111827]">No audit events found</p>
+                <p className="mt-1 text-sm text-[#6B7280]">Try adjusting filters or clearing the current search.</p>
+              </div>
+            ) : null}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[1180px] border-separate border-spacing-0 text-left text-sm">
               <thead>
                 <tr className="text-[#6B7280]">
@@ -522,6 +533,50 @@ function SeverityBadge({ severity }: { severity: AuditSeverity }) {
 function StatusBadge({ status }: { status: AuditStatus }) {
   const classes = status === "Blocked" ? "bg-red-50 text-red-700" : status === "Failed" ? "bg-orange-50 text-orange-700" : "bg-emerald-50 text-emerald-700";
   return <span className={`inline-flex rounded-md px-2 py-1 text-xs font-semibold ${classes}`}>{status}</span>;
+}
+
+function AuditEventMobileCard({ event, activeQuery }: { event: DecoratedAuditEvent; activeQuery: string }) {
+  const entity = `${event.entityType}${event.entityId ? ` #${event.entityId}` : ""}`;
+  return (
+    <article className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-[#111827]">{event.eventType}</p>
+          <p className="mt-1 text-xs text-[#6B7280]">{formatDateTime(event.createdAt)}</p>
+        </div>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <SeverityBadge severity={event.severity} />
+          <StatusBadge status={event.status} />
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-2 text-sm">
+        <MobileAuditDetail label="User" value={event.actorUser?.name ?? "System"} />
+        <MobileAuditDetail label="Role" value={event.actorUser ? roleLabels[event.actorUser.role] : "-"} />
+        <MobileAuditDetail label="Business" value={event.business?.name ?? "-"} />
+        <MobileAuditDetail label="Branch" value={event.branch?.name ?? "-"} />
+        <MobileAuditDetail label="Action" value={formatAction(event.action)} />
+        <MobileAuditDetail label="Entity" value={entity} />
+        <MobileAuditDetail label="IP Address" value={event.ipAddress} />
+      </div>
+
+      <Link
+        href={`/platform/audit-center?${activeQuery}&event=${event.uuid}`}
+        className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white transition hover:bg-[#EA580C]"
+      >
+        View Details
+      </Link>
+    </article>
+  );
+}
+
+function MobileAuditDetail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="grid grid-cols-[92px_1fr] gap-2 rounded-md bg-[#FAFAFA] px-3 py-2">
+      <span className="text-xs font-semibold uppercase text-[#6B7280]">{label}</span>
+      <span className="min-w-0 break-words text-right font-medium text-[#111827]">{value}</span>
+    </div>
+  );
 }
 
 function AuditDetailsDrawer({ event }: { event: DecoratedAuditEvent | null }) {
