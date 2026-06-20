@@ -93,6 +93,9 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
                 LB
               </span>
               <span className="text-sm font-semibold text-[#111827]">LoyaltyBase</span>
+              {user.role === "PLATFORM_OWNER" ? (
+                <span className="rounded-md bg-orange-50 px-2 py-1 text-[10px] font-semibold text-[#F97316] md:hidden">Mobile UX v2</span>
+              ) : null}
               {demoModeEnabled ? <span className="rounded-md bg-orange-50 business-bg-soft px-2 py-1 text-xs font-semibold text-[#F97316] business-text">Demo</span> : null}
             </Link>
             <form action="/logout" method="post">
