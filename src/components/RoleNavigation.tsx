@@ -255,7 +255,8 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
     return null;
   }
 
-  const moreActive = platformMobileMoreItems.some((item) => isActivePath(pathname, item.href));
+  const activeMoreItem = platformMobileMoreItems.find((item) => isActivePath(pathname, item.href));
+  const moreActive = Boolean(activeMoreItem);
 
   return (
     <div className="lg:hidden">
@@ -269,7 +270,7 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
           />
           <div className="fixed inset-x-0 bottom-0 z-40 max-h-[82vh] rounded-t-3xl border border-[#E5E7EB] bg-white shadow-2xl">
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E5E7EB] bg-white px-4 py-3">
-              <p className="text-base font-bold text-[#111827]">More</p>
+              <p className="text-base font-bold text-[#111827]">More{activeMoreItem ? ` · ${activeMoreItem.label}` : ""}</p>
               <button
                 type="button"
                 onClick={() => setMoreOpen(false)}
@@ -298,6 +299,14 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
             </div>
           </div>
         </>
+      ) : null}
+
+      {moreActive && !moreOpen ? (
+        <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 flex justify-center px-4">
+          <span className="max-w-[min(22rem,calc(100vw-2rem))] truncate rounded-full border border-orange-200 bg-white px-3 py-1.5 text-xs font-bold text-[#EA580C] shadow-lg">
+            More · {activeMoreItem?.label}
+          </span>
+        </div>
       ) : null}
 
       <nav

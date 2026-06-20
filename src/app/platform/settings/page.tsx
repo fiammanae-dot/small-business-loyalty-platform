@@ -81,7 +81,7 @@ export default async function PlatformSettingsPage({
       {params.error ? <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{params.error}</p> : null}
       {params.success ? <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{params.success}</p> : null}
 
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm">
+      <section className="rounded-md border border-[#E5E7EB] bg-white p-1.5 shadow-sm md:p-3">
         <MobileTabSelector
           label="Settings section"
           activeValue={activeTab}
