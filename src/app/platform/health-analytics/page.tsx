@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { BarChart3, Download, FileSpreadsheet, FileText, TrendingUp } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
+import { MobileAccordionSection } from "@/components/MobileAccordionSection";
 import { PlatformKpiGrid } from "@/components/PlatformKpiGrid";
 import { checkDatabaseHealth } from "@/lib/database-health";
 import { formatDateTime } from "@/lib/format";
@@ -231,7 +232,8 @@ export default async function PlatformHealthAnalyticsPage() {
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Health & Analytics">
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+      <MobileAccordionSection title="Analytics Exports">
+        <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-sm font-semibold text-[#F97316]">Analytics exports</p>
@@ -244,9 +246,11 @@ export default async function PlatformHealthAnalyticsPage() {
             <ExportButton href="/platform/health-analytics?export=csv" icon={<Download className="h-4 w-4" />} label="CSV" />
           </div>
         </div>
-      </section>
+        </section>
+      </MobileAccordionSection>
 
-      <Section title="Platform Overview">
+      <MobileAccordionSection title="Platform Overview" defaultOpen>
+        <Section title="Platform Overview">
         <MetricGrid>
           <Metric label="Total Businesses" value={totalBusinesses} />
           <Metric label="Active Businesses" value={activeBusinesses} />
@@ -256,9 +260,11 @@ export default async function PlatformHealthAnalyticsPage() {
           <Metric label="Total Customers" value={totalCustomers} />
           <Metric label="Total Loyalty Programs" value={totalLoyaltyPrograms} />
         </MetricGrid>
-      </Section>
+        </Section>
+      </MobileAccordionSection>
 
-      <Section title="Analytics Trends">
+      <MobileAccordionSection title="Analytics Trends">
+        <Section title="Analytics Trends">
         <div className="grid gap-4 xl:grid-cols-2">
           <ChartCard title="Business growth trend" points={businessGrowthTrend} />
           <ChartCard title="Customer growth trend" points={customerGrowthTrend} />
@@ -266,17 +272,21 @@ export default async function PlatformHealthAnalyticsPage() {
           <ChartCard title="Alert trend" points={alertTrend} tone="alert" />
           <DistributionCard title="Plan distribution" points={planDistribution} />
         </div>
-      </Section>
+        </Section>
+      </MobileAccordionSection>
 
-      <Section title="Top 10 Business Rankings">
+      <MobileAccordionSection title="Top 10 Business Rankings">
+        <Section title="Top 10 Business Rankings">
         <div className="grid gap-4 xl:grid-cols-3">
           <TopBusinessTable title="Top businesses by customers" rows={topBusinessesByCustomers} valueLabel="Customers" />
           <TopBusinessTable title="Top businesses by scans" rows={topBusinessesByScans} valueLabel="Scans" />
           <TopBusinessTable title="Top businesses by enrollments" rows={topBusinessesByEnrollments} valueLabel="Enrollments" />
         </div>
-      </Section>
+        </Section>
+      </MobileAccordionSection>
 
-      <Section title="Loyalty Activity">
+      <MobileAccordionSection title="Loyalty Activity">
+        <Section title="Loyalty Activity">
         <MetricGrid>
           <Metric label="Total Customer Enrollments" value={totalCustomerEnrollments} />
           <Metric label="Total Stamps Issued" value={totalEarnedStamps._sum.quantity ?? 0} />
@@ -285,9 +295,11 @@ export default async function PlatformHealthAnalyticsPage() {
           <Metric label="Total QR Scans" value={totalQrScans} />
           <Metric label="Average Customer Progress" value={`${averageProgress.toFixed(1)}%`} />
         </MetricGrid>
-      </Section>
+        </Section>
+      </MobileAccordionSection>
 
-      <Section title="Subscription Overview">
+      <MobileAccordionSection title="Subscription Overview">
+        <Section title="Subscription Overview">
         <MetricGrid>
           {planRows.map((plan) => (
             <Metric key={plan.id} label={plan.name} value={subscriptionCounts.get(plan.id) ?? 0} />
@@ -295,9 +307,11 @@ export default async function PlatformHealthAnalyticsPage() {
           <Metric label="Total Active Subscriptions" value={totalActiveSubscriptions} />
           <Metric label="Total Inactive Subscriptions" value={totalInactiveSubscriptions} />
         </MetricGrid>
-      </Section>
+        </Section>
+      </MobileAccordionSection>
 
-      <Section title="Security Monitoring">
+      <MobileAccordionSection title="Security Monitoring">
+        <Section title="Security Monitoring">
         <MetricGrid>
           <Metric label="Failed Login Attempts (Last 24 Hours)" value={failedLoginAttempts} />
           <Metric label="Invalid QR Scan Attempts" value={invalidQrScans} />
@@ -305,18 +319,22 @@ export default async function PlatformHealthAnalyticsPage() {
           <Metric label="Suspicious Multi-Stamp Transactions" value={suspiciousMultiStampTransactions} />
           <Metric label="Suspicious Activity Alerts" value={suspiciousActivityAlerts} />
         </MetricGrid>
-      </Section>
+        </Section>
+      </MobileAccordionSection>
 
-      <Section title="Business Growth">
+      <MobileAccordionSection title="Business Growth">
+        <Section title="Business Growth">
         <MetricGrid>
           <Metric label="New Businesses This Month" value={newBusinessesThisMonth} />
           <Metric label="New Customers This Month" value={newCustomersThisMonth} />
           <Metric label="New Loyalty Programs This Month" value={newLoyaltyProgramsThisMonth} />
           <Metric label="New Enrollments This Month" value={newEnrollmentsThisMonth} />
         </MetricGrid>
-      </Section>
+        </Section>
+      </MobileAccordionSection>
 
-      <Section title="Database & Storage Health">
+      <MobileAccordionSection title="Database & Storage Health">
+        <Section title="Database & Storage Health">
         <MetricGrid>
           <HealthMetric label="PostgreSQL Database Status" connected={health.databaseConnected} />
           <HealthMetric label="Prisma Connected" connected={health.prismaConnected} />
@@ -326,10 +344,18 @@ export default async function PlatformHealthAnalyticsPage() {
           <Metric label="QR Asset Storage Usage" value="0 MB" helper="QR codes are generated dynamically." />
           <Metric label="Branding Image Storage Usage" value="0 MB" helper="Logo URLs are stored externally." />
         </MetricGrid>
-      </Section>
+        </Section>
+      </MobileAccordionSection>
 
-      <Section title="Recent Platform Activity">
-        <div className="overflow-x-auto">
+      <MobileAccordionSection title="Recent Platform Activity">
+        <Section title="Recent Platform Activity">
+        <div className="grid gap-3 md:hidden">
+          {recentActivity.map((item, index) => (
+            <RecentActivityCard key={`${item.label}-${item.createdAt.toISOString()}-${index}`} item={item} />
+          ))}
+          {recentActivity.length === 0 ? <p className="rounded-md border border-dashed border-[#E5E7EB] p-4 text-sm text-[#6B7280]">No platform activity yet.</p> : null}
+        </div>
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full min-w-[720px] border-separate border-spacing-0 text-left text-sm">
             <thead>
               <tr className="text-[#6B7280]">
@@ -350,8 +376,19 @@ export default async function PlatformHealthAnalyticsPage() {
           </table>
           {recentActivity.length === 0 ? <p className="py-8 text-center text-sm text-[#6B7280]">No platform activity yet.</p> : null}
         </div>
-      </Section>
+        </Section>
+      </MobileAccordionSection>
     </DashboardShell>
+  );
+}
+
+function RecentActivityCard({ item }: { item: ActivityItem }) {
+  return (
+    <article className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
+      <p className="text-sm font-semibold text-[#111827]">{item.label}</p>
+      <p className="mt-2 text-sm text-[#6B7280]">{item.subject}</p>
+      <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-[#F97316]">{formatDateTime(item.createdAt)}</p>
+    </article>
   );
 }
 

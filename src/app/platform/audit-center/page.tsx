@@ -657,7 +657,13 @@ function SummaryTable({ title, columns, rows }: { title: string; columns: string
   return (
     <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
       <h2 className="text-lg font-semibold text-[#111827]">{title}</h2>
-      <div className="mt-4 overflow-x-auto">
+      <div className="mt-4 grid gap-3 md:hidden">
+        {rows.map((row, index) => (
+          <SummaryMobileCard key={`${title}-mobile-${index}`} columns={columns} row={row} />
+        ))}
+        {rows.length === 0 ? <p className="rounded-md border border-dashed border-[#E5E7EB] p-4 text-sm text-[#6B7280]">No activity summary available yet.</p> : null}
+      </div>
+      <div className="mt-4 hidden overflow-x-auto md:block">
         <table className="w-full min-w-[520px] border-separate border-spacing-0 text-left text-sm">
           <thead>
             <tr className="text-[#6B7280]">
@@ -675,6 +681,19 @@ function SummaryTable({ title, columns, rows }: { title: string; columns: string
         {rows.length === 0 ? <p className="py-8 text-center text-sm text-[#6B7280]">No activity summary available yet.</p> : null}
       </div>
     </section>
+  );
+}
+
+function SummaryMobileCard({ columns, row }: { columns: string[]; row: string[] }) {
+  return (
+    <article className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
+      {row.map((cell, index) => (
+        <div key={`${columns[index]}-${cell}`} className="flex items-center justify-between gap-3 border-b border-[#E5E7EB] py-2 last:border-b-0">
+          <span className="text-xs font-semibold uppercase text-[#6B7280]">{columns[index]}</span>
+          <span className="text-right text-sm font-semibold text-[#111827]">{cell}</span>
+        </div>
+      ))}
+    </article>
   );
 }
 

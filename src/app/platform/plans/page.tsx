@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { CreditCard, GitBranch, Package, Search, Star, TrendingUp } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
+import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
 import { PlatformKpiGrid } from "@/components/PlatformKpiGrid";
 import { formatBillingCycle, formatPlanPrice, getBillingCycleSupport } from "@/lib/subscription-plans";
 import { prisma } from "@/lib/prisma";
@@ -99,6 +100,7 @@ export default async function PlatformPlansPage({
 
   const mostPopularPlan = [...planMetrics].sort((a, b) => b.activeSubscriptions - a.activeSubscriptions)[0]?.name ?? "No plan usage yet";
   const totalMonthlyRevenue = planMetrics.reduce((sum, plan) => sum + plan.monthlyRevenue, 0);
+  const activeFilterCount = [params.q, params.sort].filter(Boolean).length;
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Plans">
@@ -109,28 +111,32 @@ export default async function PlatformPlansPage({
             <h2 className="mt-1 text-xl font-semibold text-[#111827]">Plan performance</h2>
             <p className="mt-1 text-sm text-[#6B7280]">Plans differ only by price, branch limit, loyalty program limit, and billing cycle.</p>
           </div>
-          <form className="grid gap-2 sm:grid-cols-[1fr_220px_auto_auto]">
-            <label className="relative">
-              <span className="sr-only">Search plan name</span>
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" aria-hidden="true" />
-              <input
-                name="q"
-                defaultValue={params.q ?? ""}
-                placeholder="Search plan name or code"
-                className="h-10 w-full rounded-md border border-[#E5E7EB] bg-white pl-9 pr-3 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
-              />
-            </label>
-            <select name="sort" defaultValue={sort} className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm">
-              <option value="activeSubscriptions">Sort by active subscriptions</option>
-              <option value="businesses">Sort by businesses using plan</option>
-              <option value="revenue">Sort by revenue</option>
-              <option value="name">Sort by plan name</option>
-            </select>
-            <button type="submit" className="h-10 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">Apply</button>
-            <Link href="/platform/plans" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">
-              Clear
-            </Link>
-          </form>
+          <div className="lg:min-w-[560px]">
+            <MobileFilterDrawer activeCount={activeFilterCount}>
+              <form className="grid gap-2 sm:grid-cols-[1fr_220px_auto_auto]">
+                <label className="relative">
+                  <span className="sr-only">Search plan name</span>
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" aria-hidden="true" />
+                  <input
+                    name="q"
+                    defaultValue={params.q ?? ""}
+                    placeholder="Search plan name or code"
+                    className="h-10 w-full rounded-md border border-[#E5E7EB] bg-white pl-9 pr-3 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+                  />
+                </label>
+                <select name="sort" defaultValue={sort} className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm">
+                  <option value="activeSubscriptions">Sort by active subscriptions</option>
+                  <option value="businesses">Sort by businesses using plan</option>
+                  <option value="revenue">Sort by revenue</option>
+                  <option value="name">Sort by plan name</option>
+                </select>
+                <button type="submit" className="h-10 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">Apply</button>
+                <Link href="/platform/plans" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">
+                  Clear
+                </Link>
+              </form>
+            </MobileFilterDrawer>
+          </div>
         </div>
 
         <PlatformKpiGrid className="mt-5 md:grid-cols-2 xl:grid-cols-4">
@@ -162,7 +168,13 @@ export default async function PlatformPlansPage({
           </div>
           <p className="text-sm font-semibold text-[#6B7280]">Showing {planMetrics.length} plans</p>
         </div>
-        <div className="mt-5 overflow-x-auto">
+        <div className="mt-5 grid gap-3 md:hidden">
+          {planMetrics.map((plan) => (
+            <PlanAnalysisCard key={plan.id} plan={plan} />
+          ))}
+          {planMetrics.length === 0 ? <p className="rounded-md border border-dashed border-[#E5E7EB] p-4 text-sm text-[#6B7280]">No plan analysis available.</p> : null}
+        </div>
+        <div className="mt-5 hidden overflow-x-auto md:block">
           <table className="w-full min-w-[1040px] border-separate border-spacing-0 text-left text-sm">
             <thead>
               <tr className="text-[#6B7280]">
@@ -249,6 +261,39 @@ function PlanCard({ plan }: { plan: PlanMetric }) {
         <UtilizationBar percent={plan.adoptionPercent} />
       </div>
     </article>
+  );
+}
+
+function PlanAnalysisCard({ plan }: { plan: PlanMetric }) {
+  return (
+    <article className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="font-semibold text-[#111827]">{plan.name}</p>
+          <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{plan.code}</p>
+        </div>
+        <span className="rounded-md bg-orange-50 px-2 py-1 text-xs font-semibold text-[#F97316]">{plan.activeSubscriptions} active</span>
+      </div>
+      <div className="mt-4 grid gap-2 text-sm">
+        <PlanAnalysisRow label="Billing Cycles" value={plan.billingCycles.join(", ")} />
+        <PlanAnalysisRow label="Max Branches" value={plan.maxBranches.toString()} />
+        <PlanAnalysisRow label="Max Programs" value={plan.maxLoyaltyPrograms.toString()} />
+        <PlanAnalysisRow label="Businesses" value={plan.businessesUsingPlan.toString()} />
+        <PlanAnalysisRow label="Monthly Revenue" value={`AED ${plan.monthlyRevenue.toFixed(2)}`} />
+      </div>
+      <div className="mt-4">
+        <UtilizationBar percent={plan.adoptionPercent} />
+      </div>
+    </article>
+  );
+}
+
+function PlanAnalysisRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-md bg-white px-3 py-2">
+      <span className="text-xs font-semibold uppercase text-[#6B7280]">{label}</span>
+      <span className="text-right font-semibold text-[#111827]">{value}</span>
+    </div>
   );
 }
 
