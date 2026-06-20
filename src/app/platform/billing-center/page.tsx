@@ -305,7 +305,14 @@ export default async function PlatformBillingCenterPage({
 
 function AdvancedSubscriptionTable({ subscriptions }: { subscriptions: SubscriptionRow[] }) {
   return (
-    <div className="overflow-x-auto">
+    <>
+      <div className="grid gap-3 md:hidden">
+        {subscriptions.map((subscription) => (
+          <SubscriptionMobileCard key={subscription.id} subscription={subscription} />
+        ))}
+        {subscriptions.length === 0 ? <p className="rounded-md border border-dashed border-[#E5E7EB] py-8 text-center text-sm text-[#6B7280]">No subscriptions match these filters.</p> : null}
+      </div>
+      <div className="hidden overflow-x-auto md:block">
       <table className="w-full min-w-[1320px] border-separate border-spacing-0 text-left text-sm">
         <thead>
           <tr className="text-[#6B7280]">
@@ -350,7 +357,44 @@ function AdvancedSubscriptionTable({ subscriptions }: { subscriptions: Subscript
         </tbody>
       </table>
       {subscriptions.length === 0 ? <p className="py-8 text-center text-sm text-[#6B7280]">No subscriptions match these filters.</p> : null}
-    </div>
+      </div>
+    </>
+  );
+}
+
+function SubscriptionMobileCard({ subscription }: { subscription: SubscriptionRow }) {
+  const annual = getAnnualSubscriptionValue(subscription);
+  const monthly = annual / 12;
+  const remaining = getSubscriptionRemainingDays(subscription);
+  return (
+    <article className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#F97316]">Subscription</p>
+          <h3 className="mt-1 text-base font-semibold text-[#111827]">{subscription.business.name}</h3>
+          <p className="mt-1 text-sm text-[#6B7280]">{subscription.subscriptionPlan.name} - {formatBillingCycle(subscription.billingCycle)}</p>
+        </div>
+        <LifecycleBadge status={deriveLifecycleStatus(subscription)} />
+      </div>
+      <div className="mt-4 grid gap-2 text-sm">
+        <BillingMobileLine label="Expiry" value={subscription.expiryDate ? formatDate(subscription.expiryDate) : "-"} />
+        <BillingMobileLine label="Renewal" value={subscription.renewalDate ? formatDate(subscription.renewalDate) : "-"} />
+        <BillingMobileLine label="Remaining" value={remaining === null ? "-" : `${remaining} day(s)`} />
+        <BillingMobileLine label="Monthly Value" value={formatMoney(monthly)} />
+        <BillingMobileLine label="Annual Value" value={formatMoney(annual)} />
+        <BillingMobileLine label="Trial" value={getTrialRemainingDays(subscription) === null ? "Not trial" : `${getTrialRemainingDays(subscription)} days left`} />
+        <BillingMobileLine label="Created By" value={subscription.auditLogs[0]?.user?.name ?? "System"} />
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <ActionLink href={`/platform/businesses/${subscription.business.uuid}`} label="View" />
+        <ActionLink href={`/platform/businesses/${subscription.business.uuid}/edit`} label="Edit" />
+        <ActionLink href="/platform/subscriptions" label="Suspend" />
+        <ActionLink href="/platform/subscriptions" label="Activate" />
+        <ActionLink href="/platform/subscriptions" label="Cancel" />
+        <ActionLink href={`/platform/businesses/${subscription.business.uuid}/edit`} label="Upgrade" />
+        <ActionLink href={`/platform/businesses/${subscription.business.uuid}/edit`} label="Downgrade" />
+      </div>
+    </article>
   );
 }
 
@@ -451,7 +495,13 @@ function InvoiceStatusDashboard({ invoices }: { invoices: InvoiceRow[] }) {
 function InvoiceTable({ invoices }: { invoices: InvoiceRow[] }) {
   return (
     <Panel title="Invoice Table">
-      <div className="overflow-x-auto">
+      <div className="grid gap-3 md:hidden">
+        {invoices.slice(0, 20).map((invoice) => (
+          <InvoiceMobileCard key={invoice.id} invoice={invoice} />
+        ))}
+        {invoices.length === 0 ? <p className="rounded-md border border-dashed border-[#E5E7EB] py-8 text-center text-sm text-[#6B7280]">No invoices match these filters.</p> : null}
+      </div>
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[920px] border-separate border-spacing-0 text-left text-sm">
           <thead>
             <tr className="text-[#6B7280]">
@@ -478,6 +528,40 @@ function InvoiceTable({ invoices }: { invoices: InvoiceRow[] }) {
         </table>
       </div>
     </Panel>
+  );
+}
+
+function InvoiceMobileCard({ invoice }: { invoice: InvoiceRow }) {
+  return (
+    <article className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#F97316]">Invoice</p>
+          <h3 className="mt-1 text-base font-semibold text-[#111827]">{invoice.invoiceNumber}</h3>
+          <p className="mt-1 text-sm text-[#6B7280]">{invoice.business.name}</p>
+        </div>
+        <LifecycleBadge status={getInvoiceDisplayStatus(invoice)} />
+      </div>
+      <div className="mt-4 grid gap-2 text-sm">
+        <BillingMobileLine label="Plan" value={invoice.subscription.subscriptionPlan.name} />
+        <BillingMobileLine label="Issue Date" value={formatDate(invoice.invoiceDate)} />
+        <BillingMobileLine label="Due Date" value={formatDate(invoice.dueDate)} />
+        <BillingMobileLine label="Amount" value={formatMoney(invoice.amount, invoice.currency)} />
+        <BillingMobileLine label="Payment Date" value={invoice.payments[0] ? formatDate(invoice.payments[0].paidAt) : "-"} />
+      </div>
+      <div className="mt-4">
+        <ActionLink href={`/platform/invoices/${invoice.uuid}`} label="View" />
+      </div>
+    </article>
+  );
+}
+
+function BillingMobileLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-3 rounded-md bg-white px-3 py-2">
+      <span className="shrink-0 text-[#6B7280]">{label}</span>
+      <span className="break-words text-right font-semibold text-[#111827]">{value}</span>
+    </div>
   );
 }
 

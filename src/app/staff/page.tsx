@@ -28,12 +28,11 @@ export default async function StaffDashboard() {
   ]);
 
   return (
-    <DashboardShell user={user} eyebrow="Staff" title="Staff dashboard">
-      <section className="grid gap-4 md:grid-cols-4">
+    <DashboardShell user={user} eyebrow="Staff" title="Staff dashboard" hideWelcomeMessage>
+      <section className="grid gap-4 md:grid-cols-3">
         <Info label="Staff name" value={user.name} />
         <Info label="Business name" value={branch?.business.name ?? "Unassigned"} />
         <Info label="Branch name" value={branch?.name ?? "Unassigned"} />
-        <Info label="Role" value="Staff" />
       </section>
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">

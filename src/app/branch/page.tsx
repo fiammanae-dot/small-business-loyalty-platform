@@ -34,11 +34,10 @@ export default async function BranchDashboard() {
   ]);
 
   return (
-    <DashboardShell user={user} eyebrow="Branch Manager" title="Branch manager dashboard">
-      <section className="grid gap-4 md:grid-cols-3">
+    <DashboardShell user={user} eyebrow="Branch Manager" title="Branch manager dashboard" hideWelcomeMessage>
+      <section className="grid gap-4 md:grid-cols-2">
         <Info label="Branch name" value={branch?.name ?? "Unassigned"} />
         <Info label="Business name" value={branch?.business.name ?? "Unassigned"} />
-        <Info label="Role" value="Branch Manager" />
       </section>
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
@@ -79,7 +78,7 @@ export default async function BranchDashboard() {
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-2">
         <Action href="/branch/customers" icon={Users} title="Business customers" description="Search and open customers across this business." />
         <Action href="/branch/programs" icon={Gift} title="Programs" description="View programs and enroll business customers." />
         <Action href="/branch/scanner" icon={QrCode} title="Scanner" description="Validate customer program QR codes." primary />
