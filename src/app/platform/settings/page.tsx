@@ -78,10 +78,11 @@ export default async function PlatformSettingsPage({
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Platform settings">
-      {params.error ? <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{params.error}</p> : null}
-      {params.success ? <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{params.success}</p> : null}
+      <div className="max-w-full min-w-0 overflow-x-hidden">
+        {params.error ? <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{params.error}</p> : null}
+        {params.success ? <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{params.success}</p> : null}
 
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-1.5 shadow-sm md:p-3">
+      <section className="max-w-full overflow-x-hidden rounded-md border border-[#E5E7EB] bg-white p-0 shadow-none md:p-3 md:shadow-sm">
         <MobileTabSelector
           label="Settings section"
           activeValue={activeTab}
@@ -132,6 +133,7 @@ export default async function PlatformSettingsPage({
       {activeTab === "demo-mode" ? <DemoModeTab demoModeEnabled={demoModeEnabled} /> : null}
 
       {activeTab === "audit-logs" ? <AuditLogsTab auditEvents={auditEvents} /> : null}
+      </div>
     </DashboardShell>
   );
 }
@@ -163,9 +165,9 @@ function GeneralTab({
 }) {
   return (
     <>
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+      <section className="max-w-full overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm md:p-5">
         <SectionHeader icon={Server} title="Environment Information" description="Read-only runtime details for the current LoyaltyBase instance." />
-        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-4 grid min-w-0 gap-3 md:mt-5 md:grid-cols-2 xl:grid-cols-3">
           <InfoCard icon={GitBranch} label="Environment" value={environmentName} />
           <InfoCard icon={Database} label="Current Database" value={databaseName} />
           <InfoCard icon={FlaskConical} label="Demo Mode" value={demoModeEnabled ? "Enabled" : "Disabled"} tone={demoModeEnabled ? "orange" : "gray"} />
@@ -175,9 +177,9 @@ function GeneralTab({
         </div>
       </section>
 
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+      <section className="max-w-full overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm md:p-5">
         <SectionHeader icon={HeartPulse} title="Platform Health Summary" description="Compact operational metrics for the current database." />
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 md:mt-5 lg:grid-cols-4">
           <MetricCard icon={Building2} label="Businesses" value={businesses.toString()} />
           <MetricCard icon={Users} label="Users" value={users.toString()} />
           <MetricCard icon={RadioTower} label="Branches" value={branches.toString()} />
@@ -189,9 +191,9 @@ function GeneralTab({
         </div>
       </section>
 
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+      <section className="max-w-full overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm md:p-5">
         <SectionHeader icon={ShieldCheck} title="Administration Links" description="Common platform administration destinations." />
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
+        <div className="mt-4 grid min-w-0 gap-3 md:grid-cols-2">
           <AdminLink href="/platform/database" label="System Health" description="Open database and Prisma health checks." />
           <AdminLink href="/platform/launch-readiness" label="Launch Readiness" description="Review the platform launch checklist." />
         </div>
@@ -202,9 +204,9 @@ function GeneralTab({
 
 function SecurityTab() {
   return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+    <section className="max-w-full overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm md:p-5">
       <SectionHeader icon={ShieldCheck} title="Security Administration" description="Current platform security posture and future hardening controls." />
-      <div className="mt-5 grid gap-4 lg:grid-cols-3">
+      <div className="mt-4 grid min-w-0 gap-4 md:mt-5 lg:grid-cols-3">
         <RestrictionPanel
           title="Active Protections"
           items={[
@@ -232,9 +234,9 @@ function SecurityTab() {
 
 function NotificationsTab() {
   return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+    <section className="max-w-full overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm md:p-5">
       <SectionHeader icon={Bell} title="Notifications" description="Provider readiness and future communication controls." />
-      <div className="mt-5 grid gap-4 lg:grid-cols-3">
+      <div className="mt-4 grid min-w-0 gap-4 md:mt-5 lg:grid-cols-3">
         <RestrictionPanel
           title="Current Notification Controls"
           items={[
@@ -256,7 +258,7 @@ function NotificationsTab() {
 
 function DemoModeTab({ demoModeEnabled }: { demoModeEnabled: boolean }) {
   return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+    <section className="max-w-full overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm md:p-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <SectionHeader
           icon={FlaskConical}
@@ -272,7 +274,7 @@ function DemoModeTab({ demoModeEnabled }: { demoModeEnabled: boolean }) {
         </form>
       </div>
 
-      <div className="mt-5 grid gap-4 lg:grid-cols-[260px_1fr_1fr]">
+      <div className="mt-4 grid min-w-0 gap-4 md:mt-5 lg:grid-cols-[260px_1fr_1fr]">
         <div className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">Demo Mode Status</p>
           <p className={`mt-3 inline-flex rounded-md px-3 py-2 text-sm font-semibold ${demoModeEnabled ? "bg-orange-50 text-[#F97316]" : "bg-zinc-100 text-zinc-700"}`}>
@@ -321,9 +323,9 @@ function AuditLogsTab({
   }>;
 }) {
   return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+    <section className="max-w-full overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm md:p-5">
       <SectionHeader icon={Activity} title="Audit Logs" description="Recent platform and business audit events. Full audit search and exports can be added later." />
-      <div className="mt-5 grid gap-3 md:hidden">
+      <div className="mt-4 grid min-w-0 gap-3 md:hidden">
         {auditEvents.map((event) => (
           <article key={event.id} className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
             <div className="flex items-start justify-between gap-3">
@@ -342,7 +344,7 @@ function AuditLogsTab({
         ))}
         {auditEvents.length === 0 ? <p className="rounded-md border border-dashed border-[#E5E7EB] py-8 text-center text-sm text-[#6B7280]">No audit events recorded yet.</p> : null}
       </div>
-      <div className="mt-5 hidden overflow-x-auto md:block">
+      <div className="mt-5 hidden max-w-full overflow-x-auto md:block">
         <table className="w-full min-w-[860px] border-separate border-spacing-0 text-left text-sm">
           <thead>
             <tr className="text-[#6B7280]">
@@ -406,13 +408,13 @@ function toTitleCase(value: string) {
 
 function SectionHeader({ icon: Icon, title, description }: { icon: LucideIcon; title: string; description: string }) {
   return (
-    <div className="flex items-start gap-3">
+    <div className="flex min-w-0 items-start gap-3">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-orange-50 text-[#F97316]">
         <Icon className="h-5 w-5" aria-hidden="true" />
       </div>
-      <div>
-        <h2 className="text-lg font-semibold text-[#111827]">{title}</h2>
-        <p className="mt-1 text-sm leading-6 text-[#6B7280]">{description}</p>
+      <div className="min-w-0">
+        <h2 className="break-words text-lg font-semibold text-[#111827]">{title}</h2>
+        <p className="mt-1 break-words text-sm leading-6 text-[#6B7280]">{description}</p>
       </div>
     </div>
   );
@@ -422,12 +424,12 @@ function InfoCard({ icon: Icon, label, value, tone = "gray" }: { icon: LucideIco
   const toneClass = tone === "green" ? "text-emerald-700 bg-emerald-50" : tone === "orange" ? "text-[#F97316] bg-orange-50" : "text-[#6B7280] bg-[#FAFAFA]";
 
   return (
-    <div className="rounded-md border border-[#E5E7EB] p-4">
-      <div className="flex items-center gap-2 text-sm font-medium text-[#6B7280]">
+    <div className="min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] p-4">
+      <div className="flex min-w-0 items-center gap-2 text-sm font-medium text-[#6B7280]">
         <span className={`flex h-8 w-8 items-center justify-center rounded-md ${toneClass}`}>
           <Icon className="h-4 w-4" aria-hidden="true" />
         </span>
-        {label}
+        <span className="min-w-0 break-words">{label}</span>
       </div>
       <p className="mt-3 break-words text-base font-semibold text-[#111827]">{value}</p>
     </div>
@@ -438,28 +440,28 @@ function MetricCard({ icon: Icon, label, value, tone = "gray" }: { icon: LucideI
   const toneClass = tone === "green" ? "bg-emerald-50 text-emerald-700" : tone === "orange" ? "bg-orange-50 text-[#F97316]" : "bg-[#FAFAFA] text-[#6B7280]";
 
   return (
-    <div className="rounded-md border border-[#E5E7EB] p-4">
+    <div className="min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] p-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-medium text-[#6B7280]">{label}</p>
+        <p className="min-w-0 break-words text-sm font-medium text-[#6B7280]">{label}</p>
         <span className={`flex h-8 w-8 items-center justify-center rounded-md ${toneClass}`}>
           <Icon className="h-4 w-4" aria-hidden="true" />
         </span>
       </div>
-      <p className="mt-3 text-2xl font-semibold text-[#111827]">{value}</p>
+      <p className="mt-3 break-words text-2xl font-semibold text-[#111827]">{value}</p>
     </div>
   );
 }
 
 function RestrictionPanel({ title, items }: { title: string; items: Array<{ icon: LucideIcon; label: string }> }) {
   return (
-    <div className="rounded-md border border-[#E5E7EB] p-4">
+    <div className="min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] p-4">
       <p className="text-sm font-semibold text-[#111827]">{title}</p>
-      <div className="mt-3 grid gap-2">
+      <div className="mt-3 grid min-w-0 gap-2">
         {items.map((item) => (
-          <div key={item.label} className="flex items-center gap-2 rounded-md bg-[#FAFAFA] px-3 py-2 text-sm text-[#374151]">
+          <div key={item.label} className="flex min-w-0 items-center gap-2 rounded-md bg-[#FAFAFA] px-3 py-2 text-sm text-[#374151]">
             <CheckCircle2 className="h-4 w-4 shrink-0 text-[#F97316]" aria-hidden="true" />
             <item.icon className="h-4 w-4 shrink-0 text-[#6B7280]" aria-hidden="true" />
-            {item.label}
+            <span className="min-w-0 break-words">{item.label}</span>
           </div>
         ))}
       </div>
@@ -469,11 +471,11 @@ function RestrictionPanel({ title, items }: { title: string; items: Array<{ icon
 
 function PlaceholderPanel({ title, items }: { title: string; items: string[] }) {
   return (
-    <div className="rounded-md border border-dashed border-[#E5E7EB] bg-[#FAFAFA] p-4">
+    <div className="min-w-0 overflow-hidden rounded-md border border-dashed border-[#E5E7EB] bg-[#FAFAFA] p-4">
       <p className="text-sm font-semibold text-[#111827]">{title}</p>
-      <div className="mt-3 grid gap-2">
+      <div className="mt-3 grid min-w-0 gap-2">
         {items.map((item) => (
-          <div key={item} className="rounded-md bg-white px-3 py-2 text-sm text-[#6B7280]">
+          <div key={item} className="min-w-0 break-words rounded-md bg-white px-3 py-2 text-sm text-[#6B7280]">
             {item}
           </div>
         ))}
@@ -484,12 +486,12 @@ function PlaceholderPanel({ title, items }: { title: string; items: string[] }) 
 
 function FutureCapabilitiesPanel({ sections }: { sections: Array<{ title: string; items: string[] }> }) {
   return (
-    <details className="rounded-md border border-dashed border-[#E5E7EB] bg-[#FAFAFA] p-4 lg:col-span-2">
+    <details className="min-w-0 overflow-hidden rounded-md border border-dashed border-[#E5E7EB] bg-[#FAFAFA] p-4 lg:col-span-2">
       <summary className="cursor-pointer list-none text-sm font-semibold text-[#111827]">
         Roadmap / Future Capabilities
         <span className="mt-1 block text-sm font-normal leading-6 text-[#6B7280]">Planned provider and routing options. These are not active platform settings yet.</span>
       </summary>
-      <div className="mt-4 grid gap-3 md:grid-cols-2">
+      <div className="mt-4 grid min-w-0 gap-3 md:grid-cols-2">
         {sections.map((section) => (
           <PlaceholderPanel key={section.title} title={section.title} items={section.items} />
         ))}
@@ -500,17 +502,17 @@ function FutureCapabilitiesPanel({ sections }: { sections: Array<{ title: string
 
 function MobileDetailLine({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-start justify-between gap-3 rounded-md bg-white px-3 py-2">
+    <div className="flex min-w-0 items-start justify-between gap-3 rounded-md bg-white px-3 py-2">
       <span className="shrink-0 text-[#6B7280]">{label}</span>
-      <span className="break-words text-right font-semibold text-[#111827]">{value}</span>
+      <span className="min-w-0 break-words text-right font-semibold text-[#111827]">{value}</span>
     </div>
   );
 }
 function AdminLink({ href, label, description }: { href: string; label: string; description: string }) {
   return (
-    <Link href={href} className="rounded-md border border-[#E5E7EB] p-4 transition hover:border-[#F97316]">
-      <p className="font-semibold text-[#111827]">{label}</p>
-      <p className="mt-1 text-sm text-[#6B7280]">{description}</p>
+    <Link href={href} className="min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] p-4 transition hover:border-[#F97316]">
+      <p className="break-words font-semibold text-[#111827]">{label}</p>
+      <p className="mt-1 break-words text-sm text-[#6B7280]">{description}</p>
     </Link>
   );
 }

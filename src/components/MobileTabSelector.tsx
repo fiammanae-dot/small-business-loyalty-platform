@@ -18,8 +18,8 @@ export function MobileTabSelector({
   const router = useRouter();
 
   return (
-    <label className="block md:hidden">
-      <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{label}</span>
+    <label className="block max-w-full min-w-0 md:hidden">
+      <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{label}</span>
       <select
         value={activeValue}
         onChange={(event) => {
@@ -27,7 +27,7 @@ export function MobileTabSelector({
           query.set(paramName, event.target.value);
           router.push(`${basePath}?${query.toString()}`);
         }}
-        className="min-h-11 w-full rounded-md border border-[#E5E7EB] bg-white px-3 text-sm font-semibold text-[#111827] shadow-sm"
+        className="min-h-11 w-full max-w-full min-w-0 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm font-semibold text-[#111827] shadow-sm"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

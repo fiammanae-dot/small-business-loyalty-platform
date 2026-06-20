@@ -38,12 +38,13 @@ export default async function BusinessSettingsPage({
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Business settings">
+      <div className="max-w-full min-w-0 overflow-x-hidden">
       {params.error || params.success ? (
         <p className={`rounded-md border px-3 py-2 text-sm ${params.error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>
           {params.error ?? params.success}
         </p>
       ) : null}
-      <nav className="flex gap-2 overflow-x-auto rounded-md border border-[#E5E7EB] bg-white p-2 text-sm" aria-label="Business settings tabs">
+      <nav className="max-w-full min-w-0 overflow-x-auto rounded-md border border-[#E5E7EB] bg-white p-1 text-sm md:p-2" aria-label="Business settings tabs">
         {[
           ["overview", "Overview"],
           ["tiers", "Customer Tiers"],
@@ -63,9 +64,9 @@ export default async function BusinessSettingsPage({
         ))}
       </nav>
 
-      {activeTab === "overview" ? <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
+      {activeTab === "overview" ? <section className="max-w-full min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5">
         <h2 className="text-lg font-semibold text-[#111827]">Read-only setup</h2>
-        <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-4 grid min-w-0 gap-3 md:mt-5 md:gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Item label="Business type" value={businessTypeLabels[business.businessType]} />
           <Item label="Current plan" value={plan?.name ?? "Unassigned"} />
           <Item label="Branch limit" value={(plan?.maxBranches ?? 1).toString()} />
@@ -81,11 +82,11 @@ export default async function BusinessSettingsPage({
         </details>
       </section> : null}
 
-      {activeTab === "tiers" ? <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      {activeTab === "tiers" ? <section className="max-w-full min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5">
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-[#111827]">Customer tiers</h2>
-            <p className="mt-2 text-sm text-[#6B7280]">
+            <p className="mt-2 break-words text-sm text-[#6B7280]">
               Configure visit-based Bronze, Silver, Gold, and VIP grades. Tiers are available on every plan.
             </p>
           </div>
@@ -93,43 +94,43 @@ export default async function BusinessSettingsPage({
             Enabled
           </span>
         </div>
-        <form action={saveCustomerTierSettingsAction} className="mt-5 grid gap-4">
+        <form action={saveCustomerTierSettingsAction} className="mt-4 grid min-w-0 gap-3 md:mt-5 md:gap-4">
           <CsrfInput scope="dashboard:customer-tiers" />
-          <div className="grid gap-4 md:grid-cols-3">
-            <label className="space-y-2">
+          <div className="grid min-w-0 gap-3 md:gap-4 md:grid-cols-3">
+            <label className="min-w-0 space-y-1.5 md:space-y-2">
               <span className="text-sm font-medium text-[#111827]">Tier calculation method</span>
-              <select name="criteria" defaultValue="VISITS_ONLY" disabled className="h-11 w-full rounded-md border border-[#E5E7EB] bg-[#FAFAFA] px-3 text-sm text-[#6B7280]">
+              <select name="criteria" defaultValue="VISITS_ONLY" disabled className="h-11 w-full max-w-full min-w-0 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] px-3 text-sm text-[#6B7280]">
                 <option value="VISITS_ONLY">Visits only</option>
               </select>
             </label>
-            <label className="space-y-2">
+            <label className="min-w-0 space-y-1.5 md:space-y-2">
               <span className="text-sm font-medium text-[#111827]">Qualification window</span>
-              <select name="tierQualificationWindow" defaultValue={tierConfig.tierQualificationWindow} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0 business-border ">
+              <select name="tierQualificationWindow" defaultValue={tierConfig.tierQualificationWindow} className="h-11 w-full max-w-full min-w-0 rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0 business-border ">
                 {Object.entries(tierQualificationWindowLabels).map(([value, label]) => (
                   <option key={value} value={value}>{label}</option>
                 ))}
               </select>
             </label>
-            <label className="space-y-2">
+            <label className="min-w-0 space-y-1.5 md:space-y-2">
               <span className="text-sm font-medium text-[#111827]">Maintenance mode</span>
-              <select name="tierMaintenanceMode" defaultValue={tierConfig.tierMaintenanceMode} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0 business-border ">
+              <select name="tierMaintenanceMode" defaultValue={tierConfig.tierMaintenanceMode} className="h-11 w-full max-w-full min-w-0 rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0 business-border ">
                 {Object.entries(tierMaintenanceModeLabels).map(([value, label]) => (
                   <option key={value} value={value}>{label}</option>
                 ))}
               </select>
             </label>
           </div>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid min-w-0 gap-3 md:gap-4 md:grid-cols-3">
             <Input name="silverVisitRequirement" label="Silver visit requirement" type="number" min="1" defaultValue={tierConfig.silverVisitRequirement.toString()} />
             <Input name="goldVisitRequirement" label="Gold visit requirement" type="number" min="1" defaultValue={tierConfig.goldVisitRequirement.toString()} />
             <Input name="vipVisitRequirement" label="VIP visit requirement" type="number" min="1" defaultValue={tierConfig.vipVisitRequirement.toString()} />
           </div>
-          <div className="grid gap-3 rounded-md bg-orange-50 business-bg-soft px-3 py-3 text-sm text-[#9A3412] business-text-strong md:grid-cols-3">
-            <p>Silver: {tierConfig.silverVisitRequirement} visits in {tierQualificationWindowLabels[tierConfig.tierQualificationWindow].toLowerCase()}</p>
-            <p>Gold: {tierConfig.goldVisitRequirement} visits in {tierQualificationWindowLabels[tierConfig.tierQualificationWindow].toLowerCase()}</p>
-            <p>VIP: {tierConfig.vipVisitRequirement} visits in {tierQualificationWindowLabels[tierConfig.tierQualificationWindow].toLowerCase()}</p>
+          <div className="grid min-w-0 gap-2 rounded-md bg-orange-50 business-bg-soft px-3 py-2 text-sm md:gap-3 md:py-3 text-[#9A3412] business-text-strong md:grid-cols-3">
+            <p className="break-words">Silver: {tierConfig.silverVisitRequirement} visits in {tierQualificationWindowLabels[tierConfig.tierQualificationWindow].toLowerCase()}</p>
+            <p className="break-words">Gold: {tierConfig.goldVisitRequirement} visits in {tierQualificationWindowLabels[tierConfig.tierQualificationWindow].toLowerCase()}</p>
+            <p className="break-words">VIP: {tierConfig.vipVisitRequirement} visits in {tierQualificationWindowLabels[tierConfig.tierQualificationWindow].toLowerCase()}</p>
           </div>
-          <p className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] px-3 py-2 text-sm text-[#6B7280]">
+          <p className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] px-3 py-2 text-sm break-words text-[#6B7280]">
             Bronze is automatic when a customer joins. Public customer cards show visits, tier progress, rewards, and QR code only. Spend and internal analytics are never shown on the customer card.
           </p>
           <div>
@@ -140,17 +141,17 @@ export default async function BusinessSettingsPage({
         </form>
       </section> : null}
 
-      {activeTab === "scanner" ? <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      {activeTab === "scanner" ? <section className="max-w-full min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5">
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-[#111827]">Scanner settings</h2>
-            <p className="mt-2 text-sm text-[#6B7280]">Control audio feedback for scanner outcomes. Visual success and error messages always remain visible.</p>
+            <p className="mt-2 break-words text-sm text-[#6B7280]">Control audio feedback for scanner outcomes. Visual success and error messages always remain visible.</p>
           </div>
           <span className={`w-fit rounded-md px-2 py-1 text-xs font-semibold ${scannerSoundEffectsEnabled ? "bg-emerald-50 text-emerald-700" : "bg-[#FAFAFA] text-[#6B7280]"}`}>
             {scannerSoundEffectsEnabled ? "Sound ON" : "Sound OFF"}
           </span>
         </div>
-        <form action={saveScannerSettingsAction} className="mt-5 grid gap-4">
+        <form action={saveScannerSettingsAction} className="mt-4 grid min-w-0 gap-3 md:mt-5 md:gap-4">
           <CsrfInput scope="dashboard:scanner-settings" />
           <label className="flex items-center justify-between gap-4 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
             <span>
@@ -165,7 +166,7 @@ export default async function BusinessSettingsPage({
               aria-label="Scanner Sound Effects"
             />
           </label>
-          <p className="rounded-md border border-orange-200 business-border-soft bg-orange-50 business-bg-soft px-3 py-2 text-sm text-[#9A3412] business-text-strong">
+          <p className="rounded-md border border-orange-200 business-border-soft bg-orange-50 business-bg-soft px-3 py-2 text-sm break-words text-[#9A3412] business-text-strong">
             Sounds play only after scanner interaction or scan form submission so mobile browsers can allow audio. Keep this on for busy counters where staff need instant feedback.
           </p>
           <div>
@@ -176,10 +177,10 @@ export default async function BusinessSettingsPage({
         </form>
       </section> : null}
 
-      {activeTab === "alerts" ? <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
+      {activeTab === "alerts" ? <section className="max-w-full min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5">
         <div>
           <h2 className="text-lg font-semibold text-[#111827]">Alert policies</h2>
-          <p className="mt-2 text-sm text-[#6B7280]">Tune abuse-monitoring thresholds and severity for this business.</p>
+          <p className="mt-2 break-words text-sm text-[#6B7280]">Tune abuse-monitoring thresholds and severity for this business.</p>
         </div>
         <div className="mt-5 grid gap-3">
           {abusePolicies.map((policy) => (
@@ -191,9 +192,9 @@ export default async function BusinessSettingsPage({
                 <p className="mt-1 text-xs text-[#6B7280]">{policy.ruleType.replaceAll("_", " ").toLowerCase()}</p>
               </div>
               <Input name="thresholdValue" label="Threshold" type="number" min="0" defaultValue={policy.thresholdValue.toString()} />
-              <label className="space-y-2">
+              <label className="min-w-0 space-y-1.5 md:space-y-2">
                 <span className="text-sm font-medium text-[#111827]">Severity</span>
-                <select name="severity" defaultValue={policy.severity} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm">
+                <select name="severity" defaultValue={policy.severity} className="h-11 w-full max-w-full min-w-0 rounded-md border border-[#E5E7EB] px-3 text-sm">
                   {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((severity) => (
                     <option key={severity} value={severity}>{severity}</option>
                   ))}
@@ -212,12 +213,12 @@ export default async function BusinessSettingsPage({
         </div>
       </section> : null}
 
-      {activeTab === "cooldowns" ? <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
+      {activeTab === "cooldowns" ? <section className="max-w-full min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5">
         <div>
           <h2 className="text-lg font-semibold text-[#111827]">Cooldown policy</h2>
-          <p className="mt-2 text-sm text-[#6B7280]">Control abuse-monitoring limits for stamp issuance. Overrides are available only to Business Owners and Branch Managers.</p>
+          <p className="mt-2 break-words text-sm text-[#6B7280]">Control abuse-monitoring limits for stamp issuance. Overrides are available only to Business Owners and Branch Managers.</p>
         </div>
-        <form action={saveCooldownRuleAction} className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <form action={saveCooldownRuleAction} className="mt-4 grid min-w-0 gap-3 md:mt-5 md:gap-4 md:grid-cols-2 lg:grid-cols-3">
           <CsrfInput scope="dashboard:cooldowns" />
           <Input name="minimumMinutesBetweenStamps" label="Minimum minutes between stamps" type="number" min="0" defaultValue={(cooldownRule?.minimumMinutesBetweenStamps ?? 0).toString()} />
           <Input name="maximumStampsPerTransaction" label="Maximum stamps per transaction" type="number" min="1" max="5" defaultValue={(cooldownRule?.maximumStampsPerTransaction ?? 5).toString()} />
@@ -235,15 +236,15 @@ export default async function BusinessSettingsPage({
         </form>
       </section> : null}
 
-      {activeTab === "subscription" ? <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      {activeTab === "subscription" ? <section className="max-w-full min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5">
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-[#111827]">Subscription</h2>
-            <p className="text-sm text-[#6B7280]">Plan and lifecycle details are managed by the System Administrator.</p>
+            <p className="break-words text-sm text-[#6B7280]">Plan and lifecycle details are managed by the System Administrator.</p>
           </div>
           {subscription ? <StatusBadge status={subscription.status} /> : null}
         </div>
-        <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-4 grid min-w-0 gap-3 md:mt-5 md:gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Item label="Current plan" value={plan?.name ?? "Unassigned"} />
           <Item label="Renewal date" value={subscription?.renewalDate ? formatDate(subscription.renewalDate) : "Not set"} />
           <Item label="Expiry date" value={expiryDate ? formatDate(expiryDate) : "Not set"} />
@@ -254,10 +255,10 @@ export default async function BusinessSettingsPage({
         </div>
       </section> : null}
 
-      {activeTab === "communications" ? <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
+      {activeTab === "communications" ? <section className="max-w-full min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5">
         <h2 className="text-lg font-semibold text-[#111827]">Communication channels</h2>
-        <p className="mt-2 text-sm text-[#6B7280]">Provider-level channel settings are managed by the System Administrator. Messages are prepared manually only.</p>
-        <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <p className="mt-2 break-words text-sm text-[#6B7280]">Provider-level channel settings are managed by the System Administrator. Messages are prepared manually only.</p>
+        <div className="mt-4 grid min-w-0 gap-3 md:mt-5 md:gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Item label="WhatsApp enabled" value={communicationSettings?.whatsappEnabled ? "Yes" : "No"} />
           <Item label="SMS enabled" value={communicationSettings?.smsEnabled ? "Yes" : "No"} />
           <Item label="Email enabled" value={communicationSettings?.emailEnabled ? "Yes" : "No"} />
@@ -267,6 +268,7 @@ export default async function BusinessSettingsPage({
           <Item label="Sender name" value={communicationSettings?.senderName ?? "Not set"} />
         </div>
       </section> : null}
+      </div>
     </DashboardShell>
   );
 }
@@ -292,17 +294,17 @@ function Input({
   max?: string;
 }) {
   return (
-    <label className="space-y-2">
+    <label className="min-w-0 space-y-1.5 md:space-y-2">
       <span className="text-sm font-medium text-[#111827]">{label}</span>
-      <input name={name} type={type} min={min} max={max} defaultValue={defaultValue} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0 business-border " />
+      <input name={name} type={type} min={min} max={max} defaultValue={defaultValue} className="h-11 w-full max-w-full min-w-0 rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0 business-border " />
     </label>
   );
 }
 
 function Item({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border border-[#E5E7EB] p-4">
-      <p className="text-sm text-[#6B7280]">{label}</p>
+    <div className="min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] p-4">
+      <p className="break-words text-sm text-[#6B7280]">{label}</p>
       <p className="mt-2 break-words text-sm font-semibold text-[#111827]">{value}</p>
     </div>
   );

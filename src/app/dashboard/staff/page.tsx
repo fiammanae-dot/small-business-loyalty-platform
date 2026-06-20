@@ -36,23 +36,24 @@ export default async function StaffUsersPage({
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Staff users">
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
+      <div className="max-w-full min-w-0 overflow-x-hidden">
+      <section className="max-w-full min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5">
         <Message error={params.error} success={params.success} />
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-[#111827]">Staff list</h2>
-            <p className="mt-1 text-sm text-[#6B7280]">Create and manage Branch Manager and Staff access.</p>
+            <p className="mt-1 break-words text-sm text-[#6B7280]">Create and manage Branch Manager and Staff access.</p>
           </div>
           <details className="group">
             <summary className="inline-flex h-10 cursor-pointer list-none items-center justify-center rounded-md bg-[#F97316] business-button px-4 text-sm font-semibold text-white">
               Add user
             </summary>
-            <div className="absolute right-6 z-20 mt-2 w-[min(920px,calc(100vw-3rem))] rounded-md border border-[#E5E7EB] bg-white p-4 shadow-xl">
+            <div className="fixed inset-x-4 z-20 mt-2 max-h-[78vh] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-md border border-[#E5E7EB] bg-white p-4 shadow-xl sm:absolute sm:inset-x-auto sm:right-6 sm:w-[min(920px,calc(100vw-3rem))]">
               <StaffCreateForm businessName={business.name} branches={business.branches} />
             </div>
           </details>
         </div>
-        <div className="mt-6 overflow-x-auto">
+        <div className="mt-4 max-w-full min-w-0 overflow-x-auto md:mt-6">
           <table className="w-full min-w-[860px] border-separate border-spacing-0 text-left text-sm">
             <thead>
               <tr className="text-[#6B7280]">
@@ -103,6 +104,7 @@ export default async function StaffUsersPage({
           {business.users.length === 0 ? <p className="py-8 text-center text-sm text-[#6B7280]">No staff users yet.</p> : null}
         </div>
       </section>
+      </div>
     </DashboardShell>
   );
 }
@@ -115,14 +117,14 @@ function StaffCreateForm({
   branches: Array<{ id: number; name: string; status: "ACTIVE" | "INACTIVE" }>;
 }) {
   return (
-    <form action={createStaffUserAction} className="grid gap-4 md:grid-cols-3">
+    <form action={createStaffUserAction} className="grid min-w-0 gap-3 md:grid-cols-3 md:gap-4">
       <CsrfInput scope="dashboard:staff" />
       <Input label="Full name" name="name" />
       <Input label="Email" name="email" type="email" />
       <Input label="Temporary password" name="password" type="password" />
-      <label className="space-y-2">
+      <label className="min-w-0 space-y-1.5 md:space-y-2">
         <span className="text-sm font-medium text-[#111827]">Role</span>
-        <select name="role" className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm">
+        <select name="role" className="h-11 w-full max-w-full min-w-0 rounded-md border border-[#E5E7EB] px-3 text-sm">
           <option value="BRANCH_MANAGER">Branch Manager</option>
           <option value="STAFF">Staff</option>
         </select>
@@ -150,9 +152,9 @@ function StaffCreateForm({
 
 function Input({ label, name, type = "text" }: { label: string; name: string; type?: string }) {
   return (
-    <label className="space-y-2">
+    <label className="min-w-0 space-y-1.5 md:space-y-2">
       <span className="text-sm font-medium text-[#111827]">{label}</span>
-      <input name={name} type={type} required className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0 business-border " />
+      <input name={name} type={type} required className="h-11 w-full max-w-full min-w-0 rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0 business-border " />
     </label>
   );
 }
