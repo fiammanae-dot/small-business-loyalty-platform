@@ -3,6 +3,7 @@ import { ChevronDown, ExternalLink, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
+import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -67,6 +68,7 @@ export default async function PlatformSubscriptionsPage({
       orderBy: [{ status: "asc" }, { expiryDate: "asc" }],
     }),
   ]);
+  const activeFilterCount = [params.status, params.plan, params.expiry].filter(Boolean).length;
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Subscription management">
@@ -78,6 +80,7 @@ export default async function PlatformSubscriptionsPage({
             <p className="mt-1 text-sm text-[#6B7280]">View lifecycle status, expiry, renewal, and audit activity.</p>
           </div>
 
+          <MobileFilterDrawer activeCount={activeFilterCount}>
           <form className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center xl:justify-end">
             <select name="status" defaultValue={params.status ?? ""} className="h-9 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm text-[#111827]">
               <option value="">All statuses</option>
@@ -116,6 +119,7 @@ export default async function PlatformSubscriptionsPage({
               Clear filters
             </Link>
           </form>
+          </MobileFilterDrawer>
         </div>
       </section>
 

@@ -38,23 +38,34 @@ export function buildPasswordResetEmail({ resetUrl, expiresInMinutes }: Password
 
 export async function sendPasswordResetEmail(message: PasswordResetEmail) {
   const email = buildPasswordResetEmail(message);
-  const providerEndpoint = process.env.PASSWORD_RESET_EMAIL_WEBHOOK_URL;
+  const apiKey = process.env.RESEND_API_KEY;
+  const fromEmail = process.env.PASSWORD_RESET_FROM_EMAIL;
 
-  if (!providerEndpoint) {
+  if (!apiKey) {
     if (process.env.NODE_ENV !== "production") {
-      console.info("Password reset email prepared", {
+      console.info("Password reset email skipped: RESEND_API_KEY is not configured.", {
         to: message.to,
         subject: email.subject,
-        resetUrl: message.resetUrl,
       });
+      return { delivered: false, provider: "resend_not_configured" as const };
     }
-    return { delivered: false, provider: "not_configured" as const };
+    console.error("Password reset email failed: RESEND_API_KEY is missing.");
+    throw new Error("Password reset email provider is not configured.");
   }
 
-  const response = await fetch(providerEndpoint, {
+  if (!fromEmail) {
+    console.error("Password reset email failed: PASSWORD_RESET_FROM_EMAIL is missing.");
+    throw new Error("Password reset sender is not configured.");
+  }
+
+  const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: {
+      authorization: `Bearer ${apiKey}`,
+      "content-type": "application/json",
+    },
     body: JSON.stringify({
+      from: fromEmail,
       to: message.to,
       subject: email.subject,
       text: email.text,
@@ -63,8 +74,11 @@ export async function sendPasswordResetEmail(message: PasswordResetEmail) {
   });
 
   if (!response.ok) {
+    console.error("Password reset email failed: Resend rejected the request.", {
+      status: response.status,
+    });
     throw new Error(`Password reset email provider failed with ${response.status}.`);
   }
 
-  return { delivered: true, provider: "webhook" as const };
+  return { delivered: true, provider: "resend" as const };
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { DashboardShell } from "@/components/DashboardShell";
+import { PlatformKpiGrid } from "@/components/PlatformKpiGrid";
 import { checkDatabaseHealth } from "@/lib/database-health";
 import { requireRole } from "@/lib/session";
 
@@ -10,7 +11,7 @@ export default async function DatabaseHealthPage() {
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Database health check">
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
-        <div className="grid gap-4 md:grid-cols-3">
+        <PlatformKpiGrid className="gap-4 md:grid-cols-3">
           <HealthTile
             label="Database"
             value={health.databaseConnected ? "Database Connected" : "Database Not Connected"}
@@ -21,11 +22,11 @@ export default async function DatabaseHealthPage() {
             value={health.prismaConnected ? "Prisma Connected" : "Prisma Not Connected"}
             connected={health.prismaConnected}
           />
-          <div className="rounded-md border border-[#E5E7EB] p-4">
+          <div className="rounded-md border border-[#E5E7EB] p-3 md:p-4">
             <p className="text-sm font-medium text-[#6B7280]">Last health check timestamp</p>
             <p className="mt-3 text-sm font-semibold text-[#111827]">{health.checkedAt}</p>
           </div>
-        </div>
+        </PlatformKpiGrid>
 
         <div className="mt-6">
           <Link
@@ -50,7 +51,7 @@ function HealthTile({
   connected: boolean;
 }) {
   return (
-    <div className="rounded-md border border-[#E5E7EB] p-4">
+    <div className="rounded-md border border-[#E5E7EB] p-3 md:p-4">
       <p className="text-sm font-medium text-[#6B7280]">{label}</p>
       <div className="mt-3 flex items-center gap-3">
         <span

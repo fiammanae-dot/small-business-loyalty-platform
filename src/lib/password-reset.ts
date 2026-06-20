@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import bcrypt from "bcryptjs";
 import { createHash, randomBytes } from "crypto";
@@ -39,13 +39,29 @@ export function validatePasswordStrength(password: string): PasswordValidationRe
 }
 
 export function getAppBaseUrl() {
-  const configured =
-    process.env.NEXT_PUBLIC_APP_URL ||
-    process.env.APP_URL ||
-    process.env.NEXTAUTH_URL ||
-    "http://localhost:3000";
+  const configured = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || process.env.NEXTAUTH_URL;
 
-  return configured.replace(/\/$/, "");
+  if (!configured) {
+    if (process.env.NODE_ENV === "production") {
+      console.error("Password reset URL failed: NEXT_PUBLIC_APP_URL is missing.");
+      throw new Error("Application URL is not configured.");
+    }
+    console.info("Password reset URL using local development fallback: NEXT_PUBLIC_APP_URL is not configured.");
+    return "http://localhost:3000";
+  }
+
+  try {
+    const url = new URL(configured);
+    if (process.env.NODE_ENV === "production" && url.hostname === "localhost") {
+      console.error("Password reset URL failed: NEXT_PUBLIC_APP_URL points to localhost in production.");
+      throw new Error("Application URL is invalid for production.");
+    }
+    return url.toString().replace(/\/$/, "");
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("production")) throw error;
+    console.error("Password reset URL failed: NEXT_PUBLIC_APP_URL is invalid.");
+    throw new Error("Application URL is invalid.");
+  }
 }
 
 export function buildPasswordResetUrl(token: string) {

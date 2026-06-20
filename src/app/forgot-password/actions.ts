@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { headers } from "next/headers";
 import { z } from "zod";
@@ -47,6 +47,6 @@ export async function forgotPasswordAction(
   }
 
   return {
-    success: "If an active account exists for that email, a password reset link has been sent.",
+    success: "If an account exists for this email, a reset link has been sent.",
   };
 }

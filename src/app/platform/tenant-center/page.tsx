@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
+import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
+import { PlatformKpiGrid } from "@/components/PlatformKpiGrid";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { formatDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -91,18 +93,20 @@ export default async function PlatformTenantCenterPage({
   const trialTenants = tenants.filter((tenant) => tenant.subscriptionStatus === "TRIAL");
   const suspendedTenants = tenants.filter((tenant) => tenant.subscriptionStatus === "SUSPENDED");
   const expiredTenants = tenants.filter((tenant) => tenant.subscriptionStatus === "EXPIRED");
+  const activeFilterCount = [params.q, params.status, params.plan, params.health].filter(Boolean).length;
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Tenant Center">
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <PlatformKpiGrid className="md:grid-cols-2 xl:grid-cols-4">
         <KpiCard icon={Building2} label="Total Tenants" value={tenants.length.toString()} />
         <KpiCard icon={CheckCircle2} label="Active Tenants" value={activeTenants.length.toString()} tone="success" />
         <KpiCard icon={Activity} label="Trial Tenants" value={trialTenants.length.toString()} />
         <KpiCard icon={AlertTriangle} label="Suspended Tenants" value={suspendedTenants.length.toString()} tone={suspendedTenants.length > 0 ? "danger" : "default"} />
         <KpiCard icon={AlertTriangle} label="Expired Tenants" value={expiredTenants.length.toString()} tone={expiredTenants.length > 0 ? "danger" : "default"} />
         <KpiCard icon={Users} label="Total Customers Across Platform" value={totalCustomers.toString()} />
-      </section>
+      </PlatformKpiGrid>
 
+        <MobileFilterDrawer activeCount={activeFilterCount}>
       <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
         <div className="mb-3 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -153,6 +157,8 @@ export default async function PlatformTenantCenterPage({
           <Link href="/platform/tenant-center" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">Clear Filters</Link>
         </form>
       </section>
+
+        </MobileFilterDrawer>
 
       <Panel title="Tenant Directory" icon={Building2}>
         <TenantDirectory tenants={filteredTenants} />
@@ -420,7 +426,7 @@ function TenantDirectory({ tenants }: { tenants: DecoratedTenant[] }) {
 function KpiCard({ icon: Icon, label, value, tone = "default" }: { icon: LucideIcon; label: string; value: string; tone?: "default" | "success" | "danger" }) {
   const iconClass = tone === "danger" ? "bg-red-50 text-red-600" : tone === "success" ? "bg-emerald-50 text-emerald-700" : "bg-orange-50 text-[#F97316]";
   return (
-    <div className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
+    <div className="rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm md:p-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-medium text-[#6B7280]">{label}</p>
         <span className={`flex h-9 w-9 items-center justify-center rounded-md ${iconClass}`}>

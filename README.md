@@ -136,3 +136,25 @@ For local UI preview only, `.env` enables `DEV_AUTH_FALLBACK=true`. This lets th
 - Business Owner: `/dashboard`
 - Branch Manager: `/branch`
 - Staff: `/staff`
+
+## Database Seeding Modes
+
+LoyaltyBase separates clean pilot seeding from local demo seeding.
+
+Clean pilot baseline only:
+
+```bash
+npm run prisma:seed-pilot
+```
+
+Creates only one System Administrator, the official `STARTER`, `GROWTH`, and `MULTI_BRANCH` plans, platform defaults, and global templates. It refuses to run unless `DATABASE_URL` points to `loyalty_platform_pilot`.
+
+Local demo data only:
+
+```bash
+npm run prisma:seed-demo
+```
+
+Creates fake businesses, branches, users, customers, programs, stamp activity, and alerts for local UI testing only.
+
+Full command details and safe local reset guidance live in `docs/operations/database-seeding-guide.md`.

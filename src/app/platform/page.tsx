@@ -18,6 +18,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import packageJson from "../../../package.json";
 import { DashboardShell } from "@/components/DashboardShell";
+import { PlatformKpiGrid } from "@/components/PlatformKpiGrid";
 import { PlatformCards } from "@/components/PlatformCards";
 import { formatDateTime } from "@/lib/format";
 import { isDemoModeEnabled } from "@/lib/platform-settings";
@@ -177,7 +178,7 @@ export default async function PlatformDashboard({
         />
       }
     >
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+      <PlatformKpiGrid className="gap-4 md:grid-cols-2 xl:grid-cols-6">
         <KpiCard icon={Building2} label="Total Businesses" value={totalBusinesses.toString()} trend={`${newBusinessesThisMonth} new this month`} />
         <KpiCard icon={CreditCard} label="Active Subscriptions" value={activeSubscriptions.toString()} />
         <KpiCard
@@ -189,7 +190,7 @@ export default async function PlatformDashboard({
         <KpiCard icon={ShieldAlert} label="Open Alerts" value={openAlerts.toString()} tone={openAlerts > 0 ? "alert" : "default"} href="/platform/health-analytics" />
         <KpiCard icon={Users} label="Total Customers" value={totalCustomers.toString()} trend={`${newCustomersThisMonth} new this month`} />
         <KpiCard icon={BarChart3} label="Total Programs" value={totalPrograms.toString()} trend={`${newProgramsThisMonth} new this month`} />
-      </section>
+      </PlatformKpiGrid>
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -329,7 +330,7 @@ function KpiCard({
   href?: string;
 }) {
   const content = (
-    <div className={`h-full rounded-md border bg-white p-4 shadow-sm transition ${tone === "alert" ? "border-red-200" : "border-[#E5E7EB]"} ${href ? "hover:border-[#F97316]" : ""}`}>
+    <div className={`h-full rounded-md border bg-white p-3 shadow-sm transition md:p-4 ${tone === "alert" ? "border-red-200" : "border-[#E5E7EB]"} ${href ? "hover:border-[#F97316]" : ""}`}>
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-medium text-[#6B7280]">{label}</p>
         <span className={`flex h-9 w-9 items-center justify-center rounded-md ${tone === "alert" ? "bg-red-50 text-red-600" : "bg-orange-50 text-[#F97316]"}`}>

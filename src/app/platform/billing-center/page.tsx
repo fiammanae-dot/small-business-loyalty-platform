@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
+import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
+import { PlatformKpiGrid } from "@/components/PlatformKpiGrid";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { formatDate } from "@/lib/format";
 import { formatMoney, getInvoiceDisplayStatus } from "@/lib/billing";
@@ -122,10 +124,11 @@ export default async function PlatformBillingCenterPage({
   const overdueRevenue = overdueInvoices.reduce((sum, invoice) => sum + Math.max(0, Number(invoice.amount) - invoice.payments.reduce((paid, payment) => paid + Number(payment.amount), 0)), 0);
   const billingHealth = getBillingHealth({ overdueInvoices: overdueInvoices.length, suspendedAccounts: suspendedAccounts.length, expiringWithin30: expiringWithin30.length });
   const recentMonths = getRecentMonths(now, 6);
+  const activeFilterCount = Object.entries(params).filter(([key, value]) => key !== "export" && Boolean(value)).length;
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Billing Center">
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <PlatformKpiGrid className="md:grid-cols-2 xl:grid-cols-4">
         <KpiCard icon={CircleDollarSign} label="Monthly Revenue (MRR)" value={formatMoney(monthlyRevenue)} />
         <KpiCard icon={TrendingUp} label="Annual Revenue Projection (ARR)" value={formatMoney(monthlyRevenue * 12)} />
         <KpiCard icon={CreditCard} label="Active Subscriptions" value={activeSubscriptions.length.toString()} />
@@ -134,8 +137,9 @@ export default async function PlatformBillingCenterPage({
         <KpiCard icon={Receipt} label="Overdue Invoices" value={overdueInvoices.length.toString()} tone={overdueInvoices.length > 0 ? "danger" : "default"} />
         <KpiCard icon={AlertTriangle} label="Suspended Accounts" value={suspendedAccounts.length.toString()} tone={suspendedAccounts.length > 0 ? "danger" : "default"} />
         <KpiCard icon={TrendingDown} label="Cancelled Subscriptions" value={cancelledSubscriptions.length.toString()} />
-      </section>
+      </PlatformKpiGrid>
 
+        <MobileFilterDrawer activeCount={activeFilterCount}>
       <section className="sticky top-0 z-10 rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
         <div className="mb-3 flex items-center gap-2">
           <Filter className="h-4 w-4 text-[#F97316]" aria-hidden="true" />
@@ -196,6 +200,8 @@ export default async function PlatformBillingCenterPage({
           <Link href="/platform/billing-center" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">Clear</Link>
         </form>
       </section>
+
+        </MobileFilterDrawer>
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -662,7 +668,7 @@ function titleCase(value: string) {
 function KpiCard({ icon: Icon, label, value, tone = "default" }: { icon: LucideIcon; label: string; value: string; tone?: "default" | "warn" | "danger" }) {
   const toneClass = tone === "danger" ? "border-red-200 bg-red-50 text-red-700" : tone === "warn" ? "border-orange-200 bg-orange-50 text-[#C2410C]" : "border-[#E5E7EB] bg-white text-[#111827]";
   return (
-    <div className={`rounded-md border p-4 shadow-sm ${toneClass}`}>
+    <div className={`rounded-md border p-3 shadow-sm md:p-4 ${toneClass}`}>
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-medium">{label}</p>
         <Icon className="h-5 w-5" aria-hidden="true" />

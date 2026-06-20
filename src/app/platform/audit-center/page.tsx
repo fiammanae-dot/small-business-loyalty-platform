@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
+import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
+import { PlatformKpiGrid } from "@/components/PlatformKpiGrid";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { formatDateTime } from "@/lib/format";
 import { roleLabels } from "@/lib/roles";
@@ -155,10 +157,11 @@ export default async function PlatformAuditCenterPage({
   const mostActiveBusinesses = summarizeBusinesses(decoratedMetricEvents, businesses);
   const mostActiveUsers = summarizeUsers(decoratedEvents);
   const eventsToday = decoratedMetricEvents.filter((event) => isSameUtcDay(event.createdAt, now));
+  const activeFilterCount = Object.entries(params).filter(([key, value]) => !["event", "export", "view"].includes(key) && Boolean(value)).length;
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Audit Center">
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <PlatformKpiGrid className="md:grid-cols-2 xl:grid-cols-4">
         <KpiLink icon={ClipboardList} label="Total Audit Events" value={kpis.total} href="/platform/audit-center" />
         <KpiLink icon={CalendarClock} label="Last 24 Hours Events" value={kpis.last24Hours} href="/platform/audit-center?date=today" />
         <KpiLink icon={ShieldAlert} label="Security Events" value={kpis.security} href="/platform/audit-center?eventType=Security+Events" tone="alert" />
@@ -167,8 +170,9 @@ export default async function PlatformAuditCenterPage({
         <KpiLink icon={FileText} label="Subscription Actions" value={kpis.subscription} href="/platform/audit-center?eventType=Subscription+Actions" />
         <KpiLink icon={Activity} label="Cooldown Overrides" value={kpis.cooldownOverrides} href="/platform/audit-center?eventType=Cooldown+Actions" />
         <KpiLink icon={XCircle} label="Failed Actions" value={kpis.failed} href="/platform/audit-center?status=Failed" tone="alert" />
-      </section>
+      </PlatformKpiGrid>
 
+        <MobileFilterDrawer activeCount={activeFilterCount}>
       <section className="sticky top-0 z-10 rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
         <div className="mb-3 flex items-center gap-2">
           <Filter className="h-4 w-4 text-[#F97316]" aria-hidden="true" />
@@ -218,6 +222,8 @@ export default async function PlatformAuditCenterPage({
           <Link href="/platform/audit-center" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">Clear</Link>
         </form>
       </section>
+
+        </MobileFilterDrawer>
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -481,7 +487,7 @@ function summarizeUsers(events: DecoratedAuditEvent[]) {
 
 function KpiLink({ icon: Icon, label, value, href, tone = "default" }: { icon: LucideIcon; label: string; value: number; href: string; tone?: "default" | "alert" }) {
   return (
-    <Link href={href} className={`rounded-md border bg-white p-4 shadow-sm transition hover:border-[#F97316] ${tone === "alert" ? "border-red-200" : "border-[#E5E7EB]"}`}>
+    <Link href={href} className={`rounded-md border bg-white p-3 shadow-sm transition md:p-4 hover:border-[#F97316] ${tone === "alert" ? "border-red-200" : "border-[#E5E7EB]"}`}>
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-medium text-[#6B7280]">{label}</p>
         <span className={`flex h-9 w-9 items-center justify-center rounded-md ${tone === "alert" ? "bg-red-50 text-red-600" : "bg-orange-50 text-[#F97316]"}`}>

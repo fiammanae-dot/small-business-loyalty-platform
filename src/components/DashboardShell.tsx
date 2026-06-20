@@ -86,10 +86,10 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
     <div className="min-h-screen bg-white text-[#111827]">
       <IdleSessionTimeout />
       <header className="border-b border-[#E5E7EB] bg-white">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-2.5 sm:px-6 sm:py-4 lg:gap-4 lg:px-8">
           <div className="flex items-center justify-between gap-4">
             <Link href={roleHomePath[user.role]} className="flex items-center gap-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[#F97316] text-sm font-bold text-white business-bg">
+              <span className="flex h-8 w-8 items-center justify-center rounded-md bg-[#F97316] text-xs font-bold text-white business-bg sm:h-9 sm:w-9 sm:text-sm">
                 LB
               </span>
               <span className="text-sm font-semibold text-[#111827]">LoyaltyBase</span>
@@ -99,14 +99,14 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
               <CsrfInput scope="logout" />
               <button
                 type="submit"
-                className="rounded-md border border-[#E5E7EB] px-3 py-2 text-sm font-medium text-[#111827] transition business-hover"
+                className="rounded-md border border-[#E5E7EB] px-3 py-1.5 text-sm font-medium text-[#111827] transition business-hover sm:py-2"
               >
                 Logout
               </button>
             </form>
           </div>
           {user.role !== "BUSINESS_OWNER" ? (
-            <nav className="flex gap-2 overflow-x-auto text-sm text-[#6B7280]">
+            <nav className="hidden gap-2 overflow-x-auto text-sm text-[#6B7280] sm:flex">
               {navItems.filter((item) => item.role === user.role).map((item) => (
                 <Link key={item.href} href={item.href} className="rounded-md border border-[#F97316] px-3 py-2 font-semibold text-[#F97316]">
                   {item.label}

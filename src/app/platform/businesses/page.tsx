@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
+import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatDate } from "@/lib/format";
@@ -165,6 +166,17 @@ export default async function BusinessesPage({
 
   const growthPlan = plans.find((plan) => plan.name.toLowerCase() === "growth");
   const starterPlan = plans.find((plan) => plan.name.toLowerCase() === "starter");
+  const activeFilterCount = [
+    query,
+    selectedType,
+    selectedStatus,
+    selectedPlanId,
+    getParam(params, "createdFrom"),
+    getParam(params, "createdTo"),
+    getParam(params, "minBranches"),
+    getParam(params, "maxBranches"),
+    suspectOnly ? "1" : "",
+  ].filter(Boolean).length;
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Businesses">
@@ -183,6 +195,7 @@ export default async function BusinessesPage({
           </Link>
         </div>
 
+        <MobileFilterDrawer activeCount={activeFilterCount}>
         <form className="mt-6 rounded-md border border-[#E5E7EB] bg-[#F9FAFB] p-4">
           <div className="flex items-center gap-2 text-sm font-semibold text-[#111827]">
             <SlidersHorizontal className="h-4 w-4 text-[#F97316]" />
@@ -281,6 +294,7 @@ export default async function BusinessesPage({
             </div>
           </div>
         </form>
+        </MobileFilterDrawer>
 
         <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm font-semibold text-[#111827]">Showing {businesses.length} businesses</p>

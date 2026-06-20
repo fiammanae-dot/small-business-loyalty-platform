@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { CreditCard, GitBranch, Package, Search, Star, TrendingUp } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
+import { PlatformKpiGrid } from "@/components/PlatformKpiGrid";
 import { formatBillingCycle, formatPlanPrice, getBillingCycleSupport } from "@/lib/subscription-plans";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
@@ -132,12 +133,12 @@ export default async function PlatformPlansPage({
           </form>
         </div>
 
-        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <PlatformKpiGrid className="mt-5 md:grid-cols-2 xl:grid-cols-4">
           <KpiCard icon={<Package className="h-5 w-5" />} label="Total Plans" value={plans.length.toString()} />
           <KpiCard icon={<CreditCard className="h-5 w-5" />} label="Active Subscriptions" value={activeSubscriptions.toString()} />
           <KpiCard icon={<Star className="h-5 w-5" />} label="Most Popular Plan" value={mostPopularPlan} />
           <KpiCard icon={<TrendingUp className="h-5 w-5" />} label="Monthly Revenue" value={totalMonthlyRevenue > 0 ? `AED ${totalMonthlyRevenue.toFixed(2)}` : "No revenue recorded yet"} />
-        </div>
+        </PlatformKpiGrid>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-3">
@@ -201,7 +202,7 @@ export default async function PlatformPlansPage({
 
 function KpiCard({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
-    <div className="rounded-md border border-[#E5E7EB] bg-white p-4">
+    <div className="rounded-md border border-[#E5E7EB] bg-white p-3 md:p-4">
       <div className="flex items-center gap-3">
         <span className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-orange-50 text-[#F97316]">{icon}</span>
         <div className="min-w-0">

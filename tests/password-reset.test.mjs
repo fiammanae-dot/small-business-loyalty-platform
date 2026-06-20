@@ -61,13 +61,13 @@ test("password reset validates password strength, hashes password, and invalidat
   assert.match(resetLib, /sessionVersion: \{ increment: 1 \}/);
 });
 
-test("password reset requests use generic messaging, rate limiting, email template, and audit events", () => {
+test("password reset requests use generic messaging, rate limiting, Resend email template, and audit events", () => {
   const forgotActions = read("src/app/forgot-password/actions.ts");
   const resetActions = read("src/app/reset-password/actions.ts");
   const resetLib = read("src/lib/password-reset.ts");
   const email = read("src/lib/password-reset-email.ts");
 
-  assert.match(forgotActions, /If an active account exists for that email/);
+  assert.match(forgotActions, /If an account exists for this email/);
   assert.match(forgotActions, /headers\(\)/);
   assert.match(resetActions, /headers\(\)/);
 
@@ -82,5 +82,8 @@ test("password reset requests use generic messaging, rate limiting, email templa
   assert.match(email, /Reset Your LoyaltyBase Password/);
   assert.match(email, /Reset Password/);
   assert.match(email, /expires in/);
-  assert.match(email, /PASSWORD_RESET_EMAIL_WEBHOOK_URL/);
+  assert.match(email, /RESEND_API_KEY/);
+  assert.match(email, /PASSWORD_RESET_FROM_EMAIL/);
+  assert.match(email, /https:\/\/api\.resend\.com\/emails/);
+  assert.match(email, /Authorization|authorization/);
 });

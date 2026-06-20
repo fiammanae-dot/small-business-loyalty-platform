@@ -3,6 +3,7 @@ import { RotateCcw, Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { DashboardShell } from "@/components/DashboardShell";
+import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatDate } from "@/lib/format";
@@ -106,6 +107,17 @@ export default async function PlatformUsersPage({
   const sort = Object.keys(sortableFields).includes(params.sort ?? "") ? (params.sort as keyof typeof sortableFields) : "createdAt";
   const direction = params.direction === "asc" ? "asc" : "desc";
   const suspectOnly = params.suspect === "1";
+  const activeFilterCount = [
+    name,
+    email,
+    selectedRole,
+    selectedStatus,
+    selectedBusinessId,
+    selectedBranchId,
+    getParam(params, "createdFrom"),
+    getParam(params, "createdTo"),
+    suspectOnly ? "1" : "",
+  ].filter(Boolean).length;
 
   const createdAt: Prisma.DateTimeFilter = {};
   if (createdFrom) {
@@ -181,6 +193,7 @@ export default async function PlatformUsersPage({
           </div>
         </div>
 
+        <MobileFilterDrawer activeCount={activeFilterCount}>
         <form className="mt-5 rounded-md border border-[#E5E7EB] bg-[#F9FAFB] p-4">
           <div className="flex items-center gap-2 text-sm font-semibold text-[#111827]">
             <SlidersHorizontal className="h-4 w-4 text-[#F97316]" />
@@ -288,6 +301,7 @@ export default async function PlatformUsersPage({
             </div>
           </div>
         </form>
+        </MobileFilterDrawer>
 
         <div className="mt-5 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm font-semibold text-[#111827]">Showing {users.length} users</p>

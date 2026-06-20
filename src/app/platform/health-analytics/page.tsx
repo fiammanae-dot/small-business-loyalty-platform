@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { BarChart3, Download, FileSpreadsheet, FileText, TrendingUp } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
+import { PlatformKpiGrid } from "@/components/PlatformKpiGrid";
 import { checkDatabaseHealth } from "@/lib/database-health";
 import { formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -425,12 +426,12 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 function MetricGrid({ children }: { children: ReactNode }) {
-  return <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">{children}</div>;
+  return <PlatformKpiGrid className="gap-4 md:grid-cols-2 xl:grid-cols-4">{children}</PlatformKpiGrid>;
 }
 
 function Metric({ label, value, helper }: { label: string; value: string | number; helper?: string }) {
   return (
-    <div className="rounded-md border border-[#E5E7EB] bg-white p-4">
+    <div className="rounded-md border border-[#E5E7EB] bg-white p-3 md:p-4">
       <p className="text-sm text-[#6B7280]">{label}</p>
       <p className="mt-2 text-2xl font-semibold text-[#111827]">{value}</p>
       {helper ? <p className="mt-2 text-xs leading-5 text-[#6B7280]">{helper}</p> : null}
@@ -440,7 +441,7 @@ function Metric({ label, value, helper }: { label: string; value: string | numbe
 
 function HealthMetric({ label, connected }: { label: string; connected: boolean }) {
   return (
-    <div className="rounded-md border border-[#E5E7EB] bg-white p-4">
+    <div className="rounded-md border border-[#E5E7EB] bg-white p-3 md:p-4">
       <p className="text-sm text-[#6B7280]">{label}</p>
       <div className="mt-3 flex items-center gap-3">
         <span className={`h-3 w-3 rounded-full ${connected ? "bg-emerald-500" : "bg-red-500"}`} />

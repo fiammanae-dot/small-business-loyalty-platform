@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { InvoiceStatus } from "@prisma/client";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
+import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
 import { InvoiceBadge } from "@/components/InvoiceBadge";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { formatDate } from "@/lib/format";
@@ -47,6 +48,7 @@ export default async function PlatformInvoicesPage({
       orderBy: { createdAt: "desc" },
     }),
   ]);
+  const activeFilterCount = [params.business, params.status, params.due, params.plan].filter(Boolean).length;
   const invoiceKpis = {
     total: invoices.length,
     paid: invoices.filter((invoice) => getInvoiceDisplayStatus(invoice) === "PAID").length,
@@ -70,6 +72,7 @@ export default async function PlatformInvoicesPage({
           <InvoiceKpi label="Overdue" value={invoiceKpis.overdue} tone="text-red-700" />
           <InvoiceKpi label="Outstanding" value={invoiceKpis.outstanding} />
         </div>
+        <MobileFilterDrawer activeCount={activeFilterCount}>
         <form className="mt-5 grid gap-3 rounded-md border border-[#E5E7EB] bg-zinc-50 p-3 lg:grid-cols-[1fr_1fr_1fr_1fr_auto_auto] lg:items-center">
           <SearchableCombobox
             label="Business"
@@ -109,6 +112,7 @@ export default async function PlatformInvoicesPage({
             Clear Filters
           </Link>
         </form>
+        </MobileFilterDrawer>
       </section>
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
