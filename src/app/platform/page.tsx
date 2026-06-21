@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import {  BarChart3,
   Building2,
   CreditCard,  Package,
@@ -156,17 +156,17 @@ export default async function PlatformDashboard({
       title="Platform Operations Center"
     >
       <PlatformKpiGrid className="gap-4 md:grid-cols-2 xl:grid-cols-6">
-        <KpiCard icon={Building2} label="Total Businesses" value={totalBusinesses.toString()} trend={`${newBusinessesThisMonth} new this month`} />
-        <KpiCard icon={CreditCard} label="Active Subscriptions" value={activeSubscriptions.toString()} />
+        <KpiCard icon={Building2} label="Total Businesses" value={totalBusinesses.toString()} trend={`${newBusinessesThisMonth} new this month`} href="/platform/businesses" />
+        <KpiCard icon={CreditCard} label="Active Subscriptions" value={activeSubscriptions.toString()} href="/platform/subscriptions?status=ACTIVE" />
         <KpiCard
           icon={Receipt}
           label="Monthly Revenue"
           value={revenueValue > 0 ? `AED ${revenueValue.toFixed(2)}` : "No revenue recorded yet"}
           trend={revenueValue > 0 ? "Current month" : undefined}
         />
-        <KpiCard icon={ShieldAlert} label="Open Alerts" value={openAlerts.toString()} tone={openAlerts > 0 ? "alert" : "default"} href="/platform/health-analytics" />
-        <KpiCard icon={Users} label="Total Customers" value={totalCustomers.toString()} trend={`${newCustomersThisMonth} new this month`} />
-        <KpiCard icon={BarChart3} label="Total Programs" value={totalPrograms.toString()} trend={`${newProgramsThisMonth} new this month`} />
+        <KpiCard icon={ShieldAlert} label="Open Alerts" value={openAlerts.toString()} tone={openAlerts > 0 ? "alert" : "default"} href="/platform/audit-center?eventType=Alert+Actions" />
+        <KpiCard icon={Users} label="Total Customers" value={totalCustomers.toString()} trend={`${newCustomersThisMonth} new this month`} href="/platform/health-analytics" />
+        <KpiCard icon={BarChart3} label="Total Programs" value={totalPrograms.toString()} trend={`${newProgramsThisMonth} new this month`} href="/platform/health-analytics" />
       </PlatformKpiGrid>
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
@@ -257,7 +257,7 @@ function KpiCard({
   href?: string;
 }) {
   const content = (
-    <div className={`h-full rounded-md border bg-white p-3 shadow-sm transition md:p-4 ${tone === "alert" ? "border-red-200" : "border-[#E5E7EB]"} ${href ? "hover:border-[#F97316]" : ""}`}>
+    <div className={`h-full rounded-md border bg-white p-3 shadow-sm transition md:p-4 ${tone === "alert" ? "border-red-200" : "border-[#E5E7EB]"} ${href ? "cursor-pointer hover:border-[#F97316] hover:shadow-md" : ""}`}>
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-medium text-[#6B7280]">{label}</p>
         <span className={`flex h-9 w-9 items-center justify-center rounded-md ${tone === "alert" ? "bg-red-50 text-red-600" : "bg-orange-50 text-[#F97316]"}`}>
@@ -269,7 +269,7 @@ function KpiCard({
     </div>
   );
 
-  return href ? <Link href={href}>{content}</Link> : content;
+  return href ? <Link href={href} className="block h-full cursor-pointer rounded-md focus:outline-none focus:ring-4 focus:ring-orange-100">{content}</Link> : content;
 }
 
 function QuickAction({ href, icon: Icon, label }: { href: string; icon: LucideIcon; label: string }) {
@@ -366,4 +366,5 @@ function getActivityStart(value: string, now: Date) {
   const hours = value === "24h" ? 24 : value === "30d" ? 24 * 30 : 24 * 7;
   return new Date(now.getTime() - hours * 60 * 60 * 1000);
 }
+
 

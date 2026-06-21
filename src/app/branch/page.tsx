@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { Bell, Gift, QrCode, TicketCheck, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
@@ -43,7 +43,7 @@ export default async function BranchDashboard() {
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <p className="text-sm font-semibold text-[#F97316] business-text">Branch Performance</p>
         <div className="mt-5 grid gap-3 md:grid-cols-4">
-          <Metric icon={Users} label="Customers" value={customers.toString()} />
+          <Metric icon={Users} label="Customers" value={customers.toString()} href="/branch/customers" />
           <Metric icon={TicketCheck} label="Stamps" value={(stamps._sum.quantity ?? 0).toString()} />
           <Metric icon={Gift} label="Rewards" value={rewards.toString()} />
           <Metric icon={Bell} label="Alerts" value={alerts.toString()} />
@@ -62,7 +62,7 @@ export default async function BranchDashboard() {
           </Link>
         </div>
         <div className="mt-5 grid gap-3 md:grid-cols-4">
-          <Metric icon={Users} label="Today's Customers" value={todayCustomers.toString()} />
+          <Metric icon={Users} label="Today's Customers" value={todayCustomers.toString()} href="/branch/customers" />
           <Metric icon={TicketCheck} label="Today's Stamps" value={(todayStamps._sum.quantity ?? 0).toString()} />
           <Metric icon={Gift} label="Today's Rewards Redeemed" value={todayRewards.toString()} />
           <Metric icon={Bell} label="Today's Alerts" value={todayAlerts.toString()} />
@@ -99,16 +99,23 @@ function Action({ href, icon: Icon, title, description, primary = false }: { hre
   );
 }
 
-function Metric({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
-  return (
-    <div className="rounded-md border border-[#E5E7EB] p-4">
+function Metric({ icon: Icon, label, value, href }: { icon: LucideIcon; label: string; value: string; href?: string }) {
+  const content = (
+    <div className={`h-full rounded-md border border-[#E5E7EB] p-4 transition ${href ? "cursor-pointer business-hover hover:shadow-sm" : ""}`}>
       <Icon className="h-4 w-4 text-[#F97316] business-text" aria-hidden="true" />
       <p className="mt-3 text-sm text-[#6B7280]">{label}</p>
       <p className="mt-1 text-xl font-semibold text-[#111827]">{value}</p>
     </div>
   );
-}
 
+  return href ? (
+    <Link href={href} className="block h-full rounded-md focus:outline-none business-ring">
+      {content}
+    </Link>
+  ) : (
+    content
+  );
+}
 function Info({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-md border border-[#E5E7EB] bg-white p-4">
@@ -117,3 +124,4 @@ function Info({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+

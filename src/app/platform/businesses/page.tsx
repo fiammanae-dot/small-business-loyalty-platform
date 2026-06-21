@@ -1,4 +1,4 @@
-import type { BusinessType, Prisma, RecordStatus } from "@prisma/client";
+﻿import type { BusinessType, Prisma, RecordStatus } from "@prisma/client";
 import { Eye, MoreHorizontal, Pencil, Plus, Power, Search, SlidersHorizontal, X } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -203,10 +203,10 @@ export default async function BusinessesPage({
         </div>
 
         <div className="mt-5 hidden grid-cols-4 gap-3 lg:grid">
-          <BusinessSummaryCard label="Total businesses" value={businessSummary.total} />
-          <BusinessSummaryCard label="Active" value={businessSummary.active} />
-          <BusinessSummaryCard label="Inactive" value={businessSummary.inactive} />
-          <BusinessSummaryCard label="Demo/Test flagged" value={businessSummary.flagged} />
+          <BusinessSummaryCard label="Total businesses" value={businessSummary.total} href="/platform/businesses" />
+          <BusinessSummaryCard label="Active" value={businessSummary.active} href="/platform/businesses?status=ACTIVE" />
+          <BusinessSummaryCard label="Inactive" value={businessSummary.inactive} href="/platform/businesses?status=INACTIVE" />
+          <BusinessSummaryCard label="Demo/Test flagged" value={businessSummary.flagged} href="/platform/businesses?suspect=1" />
         </div>
 
         <MobileFilterDrawer activeCount={activeFilterCount}>
@@ -524,15 +524,22 @@ function QuickChip({ href, label, active }: { href: string; label: string; activ
   );
 }
 
-function BusinessSummaryCard({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-md border border-[#E5E7EB] bg-[#F9FAFB] p-4">
+function BusinessSummaryCard({ label, value, href }: { label: string; value: number; href?: string }) {
+  const content = (
+    <div className={`h-full rounded-md border border-[#E5E7EB] bg-[#F9FAFB] p-4 transition ${href ? "cursor-pointer hover:border-[#F97316] hover:bg-white hover:shadow-md" : ""}`}>
       <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{label}</p>
       <p className="mt-2 text-2xl font-bold text-[#111827]">{value}</p>
     </div>
   );
-}
 
+  return href ? (
+    <Link href={href} className="block h-full rounded-md focus:outline-none focus:ring-4 focus:ring-orange-100">
+      {content}
+    </Link>
+  ) : (
+    content
+  );
+}
 type BusinessWithListData = Prisma.BusinessGetPayload<{
   include: {
     _count: { select: { branches: true } };
@@ -705,3 +712,4 @@ function SuspiciousBadge() {
     </span>
   );
 }
+

@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import type { InvoiceStatus, Prisma } from "@prisma/client";
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CsrfInput } from "@/components/CsrfInput";
@@ -41,10 +41,11 @@ export default async function PlatformInvoicesPage({
       where: {
         ...(businessId ? { businessId } : {}),
         ...(planId ? { subscription: { subscriptionPlanId: planId } } : {}),
-        ...(params.status && params.status !== "OVERDUE" && statusValues.includes(params.status as InvoiceStatus)
+        ...(params.status && params.status !== "OVERDUE" && params.status !== "OUTSTANDING" && statusValues.includes(params.status as InvoiceStatus)
           ? { status: params.status as InvoiceStatus }
           : {}),
         ...(params.status === "OVERDUE" ? { dueDate: { lt: now }, status: { notIn: ["PAID", "CANCELLED"] } } : {}),
+        ...(params.status === "OUTSTANDING" ? { status: { notIn: ["PAID", "CANCELLED"] } } : {}),
         ...(params.due === "next30" ? { dueDate: { gte: now, lte: in30Days } } : {}),
         ...(params.due === "past" ? { dueDate: { lt: now } } : {}),
       },
@@ -75,10 +76,10 @@ export default async function PlatformInvoicesPage({
           </div>
         </div>
         <div className="mt-5 grid gap-3 md:grid-cols-4">
-          <InvoiceKpi label="Total Invoices" value={invoiceKpis.total} />
-          <InvoiceKpi label="Paid Invoices" value={invoiceKpis.paid} />
-          <InvoiceKpi label="Outstanding Invoices" value={invoiceKpis.outstanding} />
-          <InvoiceKpi label="Overdue Invoices" value={invoiceKpis.overdue} tone="text-red-700" />
+          <InvoiceKpi label="Total Invoices" value={invoiceKpis.total} href="/platform/invoices" />
+          <InvoiceKpi label="Paid Invoices" value={invoiceKpis.paid} href="/platform/invoices?status=PAID" />
+          <InvoiceKpi label="Outstanding Invoices" value={invoiceKpis.outstanding} href="/platform/invoices?status=OUTSTANDING" />
+          <InvoiceKpi label="Overdue Invoices" value={invoiceKpis.overdue} tone="text-red-700" href="/platform/invoices?status=OVERDUE" />
         </div>
         <MobileFilterDrawer activeCount={activeFilterCount}>
         <form className="mt-5 grid gap-3 rounded-md border border-[#E5E7EB] bg-zinc-50 p-3 lg:grid-cols-[1fr_1fr_1fr_auto_auto] lg:items-center">
@@ -95,6 +96,7 @@ export default async function PlatformInvoicesPage({
           />
           <select name="status" defaultValue={params.status ?? ""} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm">
             <option value="">All statuses</option>
+            <option value="OUTSTANDING">Outstanding</option>
             {statusValues.map((status) => <option key={status} value={status}>{invoiceStatusLabels[status]}</option>)}
           </select>
           <SearchableCombobox
@@ -242,15 +244,22 @@ function InvoiceDetail({ label, value }: { label: string; value: string }) {
 function formatInvoiceBillingCycle(value: string) {
   return value.toLowerCase().replaceAll("_", " ");
 }
-function InvoiceKpi({ label, value, tone = "text-[#111827]" }: { label: string; value: number; tone?: string }) {
-  return (
-    <div className="rounded-md border border-[#E5E7EB] bg-white p-4">
+function InvoiceKpi({ label, value, tone = "text-[#111827]", href }: { label: string; value: number; tone?: string; href?: string }) {
+  const content = (
+    <div className={`h-full rounded-md border border-[#E5E7EB] bg-white p-4 transition ${href ? "cursor-pointer hover:border-[#F97316] hover:shadow-md" : ""}`}>
       <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{label}</p>
       <p className={`mt-2 text-2xl font-semibold ${tone}`}>{value}</p>
     </div>
   );
-}
 
+  return href ? (
+    <Link href={href} className="block h-full rounded-md focus:outline-none focus:ring-4 focus:ring-orange-100">
+      {content}
+    </Link>
+  ) : (
+    content
+  );
+}
 type InvoiceListItem = {
   uuid: string;
   status: InvoiceStatus;
@@ -309,3 +318,9 @@ function Message({ error, success }: { error?: string; success?: string }) {
   if (!error && !success) return null;
   return <p className={`mb-5 rounded-md border px-3 py-2 text-sm ${error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>{error ?? success}</p>;
 }
+
+
+
+
+
+

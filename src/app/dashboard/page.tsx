@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import type React from "react";
 import {
   CheckCircle2,
@@ -428,24 +428,31 @@ function RecentActivity({
       action={<Link href="/dashboard/activity" className="text-sm font-semibold text-[#F97316] business-text">View Full Activity</Link>}
     >
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <ActivityMetric label="Total activities today" value={totalActivitiesToday} />
-        <ActivityMetric label="Stamps issued today" value={stampsIssuedToday} />
-        <ActivityMetric label="Customer enrollments today" value={customerEnrollmentsToday} />
-        <ActivityMetric label="Rewards redeemed today" value={rewardsRedeemedToday} />
+        <ActivityMetric label="Total activities today" value={totalActivitiesToday} href="/dashboard/activity" />
+        <ActivityMetric label="Stamps issued today" value={stampsIssuedToday} href="/dashboard/activity" />
+        <ActivityMetric label="Customer enrollments today" value={customerEnrollmentsToday} href="/dashboard/activity" />
+        <ActivityMetric label="Rewards redeemed today" value={rewardsRedeemedToday} href="/dashboard/activity" />
       </div>
     </SectionCard>
   );
 }
 
-function ActivityMetric({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="min-w-0 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3">
+function ActivityMetric({ label, value, href }: { label: string; value: number; href?: string }) {
+  const content = (
+    <div className={`h-full min-w-0 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3 transition ${href ? "cursor-pointer business-hover hover:shadow-sm" : ""}`}>
       <p className="text-2xl font-semibold text-[#111827]">{value}</p>
       <p className="mt-1 break-words text-xs font-semibold uppercase text-[#6B7280]">{label}</p>
     </div>
   );
-}
 
+  return href ? (
+    <Link href={href} className="block h-full rounded-md focus:outline-none business-ring">
+      {content}
+    </Link>
+  ) : (
+    content
+  );
+}
 function OnboardingSummary({
   percent,
   items,
@@ -586,5 +593,6 @@ function getInitials(name: string) {
     .map((part) => part[0]?.toUpperCase())
     .join("");
 }
+
 
 

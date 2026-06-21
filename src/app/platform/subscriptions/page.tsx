@@ -1,4 +1,4 @@
-import type { Prisma, SubscriptionStatus } from "@prisma/client";
+﻿import type { Prisma, SubscriptionStatus } from "@prisma/client";
 import { ChevronDown, ExternalLink, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
@@ -133,10 +133,10 @@ export default async function PlatformSubscriptionsPage({
       </section>
 
       <PlatformKpiGrid className="md:grid-cols-2 xl:grid-cols-4">
-        <SubscriptionKpiCard label="Active Subscriptions" value={activeSubscriptionCount.toString()} />
-        <SubscriptionKpiCard label="Trial Subscriptions" value={trialSubscriptionCount.toString()} />
-        <SubscriptionKpiCard label="Expiring Within 30 Days" value={expiringWithin30DaysCount.toString()} />
-        <SubscriptionKpiCard label="Suspended Subscriptions" value={suspendedSubscriptionCount.toString()} />
+        <SubscriptionKpiCard label="Active Subscriptions" value={activeSubscriptionCount.toString()} href="/platform/subscriptions?status=ACTIVE" />
+        <SubscriptionKpiCard label="Trial Subscriptions" value={trialSubscriptionCount.toString()} href="/platform/subscriptions?status=TRIAL" />
+        <SubscriptionKpiCard label="Expiring Within 30 Days" value={expiringWithin30DaysCount.toString()} href="/platform/subscriptions?expiry=next30" />
+        <SubscriptionKpiCard label="Suspended Subscriptions" value={suspendedSubscriptionCount.toString()} href="/platform/subscriptions?status=SUSPENDED" />
       </PlatformKpiGrid>
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
@@ -176,12 +176,20 @@ export default async function PlatformSubscriptionsPage({
   );
 }
 
-function SubscriptionKpiCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm md:p-4">
+function SubscriptionKpiCard({ label, value, href }: { label: string; value: string; href?: string }) {
+  const content = (
+    <div className={`h-full rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm transition md:p-4 ${href ? "cursor-pointer hover:border-[#F97316] hover:shadow-md" : ""}`}>
       <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{label}</p>
       <p className="mt-2 text-2xl font-semibold text-[#111827]">{value}</p>
     </div>
+  );
+
+  return href ? (
+    <Link href={href} className="block h-full rounded-md focus:outline-none focus:ring-4 focus:ring-orange-100">
+      {content}
+    </Link>
+  ) : (
+    content
   );
 }
 function SubscriptionRow({ subscription }: { subscription: SubscriptionWithListData }) {
@@ -396,3 +404,4 @@ function Message({ error, success }: { error?: string; success?: string }) {
     </p>
   );
 }
+
