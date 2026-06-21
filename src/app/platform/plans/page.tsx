@@ -24,7 +24,7 @@ type PlanMetric = {
   billingCycles: string[];
   businessesUsingPlan: number;
   activeSubscriptions: number;
-  monthlyRevenue: number;
+  totalRevenue: number;
   adoptionPercent: number;
 };
 
@@ -37,11 +37,7 @@ export default async function PlatformPlansPage({
   const params = await searchParams;
   const query = (params.q ?? "").trim().toLowerCase();
   const sort = params.sort ?? "activeSubscriptions";
-  const monthStart = new Date();
-  monthStart.setUTCDate(1);
-  monthStart.setUTCHours(0, 0, 0, 0);
-
-  const [plans, totalBusinesses, activeSubscriptions, monthlyPayments] = await Promise.all([
+  const [plans, totalBusinesses, activeSubscriptions] = await Promise.all([
     prisma.subscriptionPlan.findMany({
       orderBy: { maxBranches: "asc" },
       include: {
@@ -51,30 +47,17 @@ export default async function PlatformPlansPage({
       },
     }),
     prisma.business.count(),
-    prisma.businessSubscription.count({ where: { status: { in: ["TRIAL", "ACTIVE"] } } }),
-    prisma.payment.findMany({
-      where: { paidAt: { gte: monthStart } },
-      select: {
-        amount: true,
-        invoice: {
-          select: {
-            subscription: { select: { subscriptionPlanId: true } },
-          },
-        },
-      },
-    }),
+    prisma.businessSubscription.count({ where: { status: "ACTIVE" } }),
   ]);
-
-  const revenueByPlan = new Map<number, number>();
-  for (const payment of monthlyPayments) {
-    const planId = payment.invoice.subscription.subscriptionPlanId;
-    revenueByPlan.set(planId, (revenueByPlan.get(planId) ?? 0) + Number(payment.amount));
-  }
 
   const planMetrics = plans
     .map((plan): PlanMetric => {
       const businessesUsingPlan = new Set(plan.subscriptions.map((subscription) => subscription.businessId)).size;
-      const planActiveSubscriptions = plan.subscriptions.filter((subscription) => subscription.status === "ACTIVE" || subscription.status === "TRIAL").length;
+      const activePlanSubscriptions = plan.subscriptions.filter((subscription) => subscription.status === "ACTIVE");
+      const planActiveSubscriptions = activePlanSubscriptions.length;
+      const totalRevenue = activePlanSubscriptions.reduce((sum, subscription) => {
+        return sum + Number(subscription.billingCycle === "YEARLY" ? plan.annualPrice : plan.monthlyPrice);
+      }, 0);
       return {
         id: plan.id,
         code: plan.code,
@@ -86,20 +69,20 @@ export default async function PlatformPlansPage({
         billingCycles: getBillingCycleSupport(plan).map(formatBillingCycle),
         businessesUsingPlan,
         activeSubscriptions: planActiveSubscriptions,
-        monthlyRevenue: revenueByPlan.get(plan.id) ?? 0,
+        totalRevenue,
         adoptionPercent: totalBusinesses > 0 ? Math.round((businessesUsingPlan / totalBusinesses) * 100) : 0,
       };
     })
     .filter((plan) => !query || plan.name.toLowerCase().includes(query) || plan.code.toLowerCase().includes(query))
     .sort((a, b) => {
       if (sort === "businesses") return b.businessesUsingPlan - a.businessesUsingPlan || a.name.localeCompare(b.name);
-      if (sort === "revenue") return b.monthlyRevenue - a.monthlyRevenue || a.name.localeCompare(b.name);
+      if (sort === "revenue") return b.totalRevenue - a.totalRevenue || a.name.localeCompare(b.name);
       if (sort === "name") return a.name.localeCompare(b.name);
       return b.activeSubscriptions - a.activeSubscriptions || a.name.localeCompare(b.name);
     });
 
   const mostPopularPlan = [...planMetrics].sort((a, b) => b.activeSubscriptions - a.activeSubscriptions)[0]?.name ?? "No plan usage yet";
-  const totalMonthlyRevenue = planMetrics.reduce((sum, plan) => sum + plan.monthlyRevenue, 0);
+  const totalPlanRevenue = planMetrics.reduce((sum, plan) => sum + plan.totalRevenue, 0);
   const activeFilterCount = [params.q, params.sort].filter(Boolean).length;
 
   return (
@@ -143,7 +126,7 @@ export default async function PlatformPlansPage({
           <KpiCard icon={<Package className="h-5 w-5" />} label="Total Plans" value={plans.length.toString()} />
           <KpiCard icon={<CreditCard className="h-5 w-5" />} label="Active Subscriptions" value={activeSubscriptions.toString()} />
           <KpiCard icon={<Star className="h-5 w-5" />} label="Most Popular Plan" value={mostPopularPlan} />
-          <KpiCard icon={<TrendingUp className="h-5 w-5" />} label="Monthly Revenue" value={totalMonthlyRevenue > 0 ? `AED ${totalMonthlyRevenue.toFixed(2)}` : "No revenue recorded yet"} />
+          <KpiCard icon={<TrendingUp className="h-5 w-5" />} label="Total Revenue" value={totalPlanRevenue > 0 ? `AED ${totalPlanRevenue.toFixed(2)}` : "No revenue recorded yet"} />
         </PlatformKpiGrid>
       </section>
 
@@ -178,7 +161,7 @@ export default async function PlatformPlansPage({
           <table className="w-full min-w-[1040px] border-separate border-spacing-0 text-left text-sm">
             <thead>
               <tr className="text-[#6B7280]">
-                {["Plan", "Code", "Billing Cycles", "Max Branches", "Max Loyalty Programs", "Businesses", "Active Subscriptions", "Monthly Revenue", "Utilization"].map((heading) => (
+                {["Plan", "Code", "Billing Cycles", "Max Branches", "Max Loyalty Programs", "Businesses", "Active Subscriptions", "Total Revenue", "Utilization"].map((heading) => (
                   <th key={heading} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">
                     {heading}
                   </th>
@@ -198,7 +181,7 @@ export default async function PlatformPlansPage({
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{plan.maxLoyaltyPrograms}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{plan.businessesUsingPlan}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{plan.activeSubscriptions}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">AED {plan.monthlyRevenue.toFixed(2)}</td>
+                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">AED {plan.totalRevenue.toFixed(2)}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4">
                     <UtilizationBar percent={plan.adoptionPercent} />
                   </td>
@@ -279,7 +262,8 @@ function PlanAnalysisCard({ plan }: { plan: PlanMetric }) {
         <PlanAnalysisRow label="Max Branches" value={plan.maxBranches.toString()} />
         <PlanAnalysisRow label="Max Programs" value={plan.maxLoyaltyPrograms.toString()} />
         <PlanAnalysisRow label="Businesses" value={plan.businessesUsingPlan.toString()} />
-        <PlanAnalysisRow label="Monthly Revenue" value={`AED ${plan.monthlyRevenue.toFixed(2)}`} />
+        <PlanAnalysisRow label="Active Subscriptions" value={plan.activeSubscriptions.toString()} />
+        <PlanAnalysisRow label="Total Revenue" value={`AED ${plan.totalRevenue.toFixed(2)}`} />
       </div>
       <div className="mt-4">
         <UtilizationBar percent={plan.adoptionPercent} />

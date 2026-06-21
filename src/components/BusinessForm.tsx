@@ -1,4 +1,5 @@
 import type { BillingCycle, BusinessBranding, BusinessCommunicationSettings, BusinessType, RecordStatus, SubscriptionPlan } from "@prisma/client";
+import { BranchLocationFields } from "@/components/BranchLocationFields";
 import { CsrfInput } from "@/components/CsrfInput";
 import { PlanBillingCycleFields } from "@/components/PlanBillingCycleFields";
 import { businessTypeOptions, statusOptions } from "@/lib/platform-options";
@@ -84,9 +85,8 @@ export function BusinessForm({ action, plans, error, mode, business }: BusinessF
           <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
             <StepHeading step={3} title="First Branch" />
             <div className="mt-5 grid gap-4 md:grid-cols-2">
+              <BranchLocationFields />
               <Field label="Branch name" name="branchName" required />
-              <Field label="Country" name="country" required />
-              <Field label="City" name="city" required />
               <Field label="Address" name="address" required />
             </div>
           </section>

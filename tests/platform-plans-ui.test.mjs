@@ -13,7 +13,7 @@ test("platform plans page exposes KPI cards, search, sorting, plan cards, and de
     "Total Plans",
     "Active Subscriptions",
     "Most Popular Plan",
-    "Monthly Revenue",
+    "Total Revenue",
     "Search plan name",
     "Sort by active subscriptions",
     "Sort by businesses using plan",
@@ -27,4 +27,6 @@ test("platform plans page exposes KPI cards, search, sorting, plan cards, and de
   ]) {
     assert.match(page, new RegExp(expected.replace(/[()"]/g, "\\$&")));
   }
+
+  assert.doesNotMatch(page, /Monthly Revenue/);
 });

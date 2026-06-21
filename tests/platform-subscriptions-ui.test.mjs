@@ -11,11 +11,18 @@ test("platform subscriptions page uses compact toolbar, dropdown actions, badges
 
   for (const expected of [
     "Business subscriptions",
+    "Active Subscriptions",
+    "Trial Subscriptions",
+    "Expiring Within 30 Days",
+    "Suspended Subscriptions",
     "Apply filters",
     "Clear filters",
     "Showing {subscriptions.length} subscriptions",
-    "Manage",
+    "View",
     "More",
+    "Subscription details",
+    "Billing Cycle",
+    "Audit History",
     "Start Trial",
     "Extend",
     "Test/Demo Data",
@@ -26,6 +33,8 @@ test("platform subscriptions page uses compact toolbar, dropdown actions, badges
   }
 
   assert.match(page, /<details className=/);
+  assert.doesNotMatch(page, /min-w-\[1080px\]/);
+  assert.doesNotMatch(page, /overflow-x-auto/);
   assert.match(page, /suspiciousBusinessNamePattern/);
   assert.match(page, /startTrialAction/);
   assert.match(page, /extendSubscriptionAction/);

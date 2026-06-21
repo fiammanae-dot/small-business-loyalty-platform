@@ -5,6 +5,7 @@ import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
+import { PlatformKpiGrid } from "@/components/PlatformKpiGrid";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -70,6 +71,13 @@ export default async function PlatformSubscriptionsPage({
     }),
   ]);
   const activeFilterCount = [params.status, params.plan, params.expiry].filter(Boolean).length;
+  const activeSubscriptionCount = subscriptions.filter((subscription) => subscription.status === "ACTIVE").length;
+  const trialSubscriptionCount = subscriptions.filter((subscription) => subscription.status === "TRIAL").length;
+  const suspendedSubscriptionCount = subscriptions.filter((subscription) => subscription.status === "SUSPENDED").length;
+  const expiringWithin30DaysCount = subscriptions.filter((subscription) => {
+    const remainingDays = getSubscriptionRemainingDays(subscription);
+    return remainingDays !== null && remainingDays >= 0 && remainingDays <= 30;
+  }).length;
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Subscription management">
@@ -124,17 +132,24 @@ export default async function PlatformSubscriptionsPage({
         </div>
       </section>
 
+      <PlatformKpiGrid className="md:grid-cols-2 xl:grid-cols-4">
+        <SubscriptionKpiCard label="Active Subscriptions" value={activeSubscriptionCount.toString()} />
+        <SubscriptionKpiCard label="Trial Subscriptions" value={trialSubscriptionCount.toString()} />
+        <SubscriptionKpiCard label="Expiring Within 30 Days" value={expiringWithin30DaysCount.toString()} />
+        <SubscriptionKpiCard label="Suspended Subscriptions" value={suspendedSubscriptionCount.toString()} />
+      </PlatformKpiGrid>
+
       <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
         <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm font-semibold text-[#111827]">Showing {subscriptions.length} subscriptions</p>
           <p className="text-xs text-[#6B7280]">Use More for lifecycle actions, trial setup, and extensions.</p>
         </div>
 
-        <div className="hidden overflow-x-auto lg:block">
-          <table className="w-full min-w-[1080px] border-separate border-spacing-0 text-left text-sm">
+        <div className="hidden lg:block">
+          <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm">
             <thead>
               <tr className="text-[#6B7280]">
-                {["Business", "Plan", "Billing", "Status", "Trial", "Expiry", "Renewal", "Remaining", "Last audit", "Actions"].map((heading) => (
+                {["Business", "Plan", "Status", "Expiry Date", "Days Remaining", "Actions"].map((heading) => (
                   <th key={heading} className="border-b border-[#E5E7EB] px-3 py-2 font-semibold">
                     {heading}
                   </th>
@@ -161,53 +176,64 @@ export default async function PlatformSubscriptionsPage({
   );
 }
 
+function SubscriptionKpiCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm md:p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{label}</p>
+      <p className="mt-2 text-2xl font-semibold text-[#111827]">{value}</p>
+    </div>
+  );
+}
 function SubscriptionRow({ subscription }: { subscription: SubscriptionWithListData }) {
   const lastAudit = subscription.auditLogs[0];
   const remainingDays = getSubscriptionRemainingDays(subscription);
   const trialDays = getTrialRemainingDays(subscription);
 
   return (
-    <tr className="align-middle">
-      <td className="border-b border-[#E5E7EB] px-3 py-3">
-        <div className="flex flex-col gap-1">
-          <Link href={`/platform/businesses/${subscription.business.uuid}`} className="font-semibold text-[#111827] hover:text-[#F97316]">
-            {subscription.business.name}
-          </Link>
-          <div className="flex flex-wrap gap-1">
-            <CompactBadge label={subscription.business.status === "ACTIVE" ? "Business active" : "Business inactive"} tone={subscription.business.status === "ACTIVE" ? "green" : "gray"} />
-            {isSuspiciousBusinessName(subscription.business.name) ? <CompactBadge label="Test/Demo Data" tone="orange" /> : null}
+    <>
+      <tr className="align-middle">
+        <td className="border-b border-[#E5E7EB] px-3 py-3">
+          <div className="flex min-w-0 flex-col gap-1">
+            <Link href={`/platform/businesses/${subscription.business.uuid}`} className="truncate font-semibold text-[#111827] hover:text-[#F97316]">
+              {subscription.business.name}
+            </Link>
+            <div className="flex flex-wrap gap-1">
+              <CompactBadge label={subscription.business.status === "ACTIVE" ? "Business active" : "Business inactive"} tone={subscription.business.status === "ACTIVE" ? "green" : "gray"} />
+              {isSuspiciousBusinessName(subscription.business.name) ? <CompactBadge label="Test/Demo Data" tone="orange" /> : null}
+            </div>
           </div>
-        </div>
-      </td>
-      <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{subscription.subscriptionPlan.name}</td>
-      <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{formatBillingCycle(subscription.billingCycle)}</td>
-      <td className="border-b border-[#E5E7EB] px-3 py-3">
-        <StatusBadge status={subscription.status} />
-      </td>
-      <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">
-        <CompactDateRange start={subscription.trialStartDate} end={subscription.trialEndDate} />
-        {trialDays === null ? null : <p className="mt-1 text-xs">{trialDays} day(s) left</p>}
-      </td>
-      <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{subscription.expiryDate ? formatDate(subscription.expiryDate) : "-"}</td>
-      <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{subscription.renewalDate ? formatDate(subscription.renewalDate) : "-"}</td>
-      <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{remainingDays === null ? "-" : `${remainingDays} day(s)`}</td>
-      <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">
-        {lastAudit ? (
-          <div className="max-w-[180px]">
-            <p className="truncate font-medium text-[#111827]">{lastAudit.action.replaceAll("_", " ").toLowerCase()}</p>
-            <p className="mt-0.5 text-xs">{formatDateTime(lastAudit.createdAt)}</p>
-          </div>
-        ) : (
-          "-"
-        )}
-      </td>
-      <td className="border-b border-[#E5E7EB] px-3 py-3">
-        <SubscriptionActions subscriptionId={subscription.id} businessUuid={subscription.business.uuid} />
-      </td>
-    </tr>
+        </td>
+        <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{subscription.subscriptionPlan.name}</td>
+        <td className="border-b border-[#E5E7EB] px-3 py-3">
+          <StatusBadge status={subscription.status} />
+        </td>
+        <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{subscription.expiryDate ? formatDate(subscription.expiryDate) : "-"}</td>
+        <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{remainingDays === null ? "-" : `${remainingDays} day(s)`}</td>
+        <td className="border-b border-[#E5E7EB] px-3 py-3">
+          <SubscriptionActions subscriptionId={subscription.id} businessUuid={subscription.business.uuid} />
+        </td>
+      </tr>
+      <tr>
+        <td colSpan={6} className="border-b border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2">
+          <details className="group">
+            <summary className="inline-flex h-9 cursor-pointer list-none items-center gap-2 rounded-md border border-[#E5E7EB] bg-white px-3 text-xs font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]">
+              Subscription details
+              <ChevronDown className="h-3.5 w-3.5 transition group-open:rotate-180" />
+            </summary>
+            <dl className="mt-3 grid gap-3 rounded-md border border-[#E5E7EB] bg-white p-3 text-sm md:grid-cols-2 xl:grid-cols-3">
+              <DetailRow label="Billing Cycle" value={formatBillingCycle(subscription.billingCycle)} />
+              <DetailRow label="Trial Information" value={trialDays === null ? "No active trial" : `${trialDays} day(s) left`} />
+              <DetailRow label="Trial Dates" value={formatNullableDateRange(subscription.trialStartDate, subscription.trialEndDate)} />
+              <DetailRow label="Renewal Date" value={subscription.renewalDate ? formatDate(subscription.renewalDate) : "-"} />
+              <DetailRow label="Created By" value={lastAudit?.user?.name ?? lastAudit?.user?.email ?? "System"} />
+              <DetailRow label="Audit History" value={lastAudit ? `${lastAudit.action.replaceAll("_", " ").toLowerCase()} - ${formatDateTime(lastAudit.createdAt)}` : "No audit activity"} />
+            </dl>
+          </details>
+        </td>
+      </tr>
+    </>
   );
 }
-
 function SubscriptionCard({ subscription }: { subscription: SubscriptionWithListData }) {
   const lastAudit = subscription.auditLogs[0];
   const remainingDays = getSubscriptionRemainingDays(subscription);
@@ -220,7 +246,7 @@ function SubscriptionCard({ subscription }: { subscription: SubscriptionWithList
           <Link href={`/platform/businesses/${subscription.business.uuid}`} className="font-semibold text-[#111827] hover:text-[#F97316]">
             {subscription.business.name}
           </Link>
-          <p className="mt-1 text-sm text-[#6B7280]">{subscription.subscriptionPlan.name} · {formatBillingCycle(subscription.billingCycle)}</p>
+          <p className="mt-1 text-sm text-[#6B7280]">{subscription.subscriptionPlan.name} - {formatBillingCycle(subscription.billingCycle)}</p>
         </div>
         <StatusBadge status={subscription.status} />
       </div>
@@ -258,7 +284,7 @@ function SubscriptionActions({ subscriptionId, businessUuid }: { subscriptionId:
         className="inline-flex h-8 items-center justify-center gap-1 rounded-md bg-[#111827] px-3 text-xs font-semibold text-white hover:bg-[#374151]"
       >
         <ExternalLink className="h-3.5 w-3.5" />
-        Manage
+        View
       </Link>
       <details className="group min-w-fit">
         <summary className="inline-flex h-8 cursor-pointer list-none items-center justify-center gap-1 rounded-md border border-[#E5E7EB] px-3 text-xs font-semibold text-[#111827] hover:border-[#F97316] hover:text-[#F97316]">
@@ -326,20 +352,19 @@ function subscriptionConfirmationMessage(nextStatus: SubscriptionStatus) {
   return "Update this subscription status?";
 }
 
-function CompactDateRange({ start, end }: { start: Date | null; end: Date | null }) {
-  if (!start) {
-    return <>-</>;
-  }
-
-  return (
-    <>
-      {formatDate(start)}
-      <span className="mx-1 text-[#9CA3AF]">to</span>
-      {end ? formatDate(end) : "open"}
-    </>
-  );
+function formatNullableDateRange(start: Date | null, end: Date | null) {
+  if (!start) return "-";
+  return `${formatDate(start)} to ${end ? formatDate(end) : "open"}`;
 }
 
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{label}</dt>
+      <dd className="mt-1 break-words font-semibold text-[#111827]">{value}</dd>
+    </div>
+  );
+}
 function CompactBadge({ label, tone }: { label: string; tone: "green" | "gray" | "orange" }) {
   const classes = {
     green: "border-emerald-200 bg-emerald-50 text-emerald-700",

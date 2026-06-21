@@ -164,7 +164,7 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
             <h1 className="mt-3 break-words text-3xl font-semibold tracking-tight text-[#111827] sm:text-4xl">
               {title}
             </h1>
-            {!hideWelcomeMessage ? (
+            {!hideWelcomeMessage && user.role !== "PLATFORM_OWNER" ? (
               <p className="mt-2 max-w-2xl text-base leading-7 text-[#6B7280]">
                 Welcome, {displayName}. Use your workspace to manage the tools available to your role.
               </p>

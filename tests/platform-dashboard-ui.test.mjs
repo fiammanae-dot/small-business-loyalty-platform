@@ -12,13 +12,7 @@ test("platform dashboard uses SaaS admin hierarchy, KPIs, icons, and recent acti
   const shell = read("src/components/DashboardShell.tsx");
 
   for (const expected of [
-    "Platform Health",
     "Platform Operations Center",
-    "PlatformHealthCard",
-    "Environment",
-    "Database",
-    "Demo Mode",
-    "App Version",
     "No trend data yet",
     "No revenue recorded yet",
     "Quick Actions",
@@ -28,8 +22,6 @@ test("platform dashboard uses SaaS admin hierarchy, KPIs, icons, and recent acti
     "Active Subscriptions",
     "Monthly Revenue",
     "Open Alerts",
-    "Failed Logins \\(24h\\)",
-    "System Status",
     "All Activity",
     "Alerts",
     "Invoices",
@@ -51,6 +43,8 @@ test("platform dashboard uses SaaS admin hierarchy, KPIs, icons, and recent acti
   }
 
   assert.match(cards, /LucideIcon/);
+  assert.doesNotMatch(page, /Platform Health/);
+  assert.doesNotMatch(page, /PlatformHealthCard/);
   assert.doesNotMatch(page, /Platform Health Summary/);
   assert.doesNotMatch(page, /Operational indicators/);
   assert.doesNotMatch(page, /HealthMetric/);

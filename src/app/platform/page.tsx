@@ -1,13 +1,7 @@
 import Link from "next/link";
-import {
-  Activity,
-  BarChart3,
+import {  BarChart3,
   Building2,
-  CreditCard,
-  Database,
-  FlaskConical,
-  HeartPulse,
-  Package,
+  CreditCard,  Package,
   Plus,
   Receipt,
   Settings,
@@ -16,12 +10,10 @@ import {
   Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import packageJson from "../../../package.json";
 import { DashboardShell } from "@/components/DashboardShell";
 import { PlatformKpiGrid } from "@/components/PlatformKpiGrid";
 import { PlatformCards } from "@/components/PlatformCards";
 import { formatDateTime } from "@/lib/format";
-import { isDemoModeEnabled } from "@/lib/platform-settings";
 import { prisma } from "@/lib/prisma";
 import { getDisplayUserName, roleLabels } from "@/lib/roles";
 import { requireRole } from "@/lib/session";
@@ -71,9 +63,6 @@ export default async function PlatformDashboard({
   const now = new Date();
   const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
   const activityStart = getActivityStart(dateFilter, now);
-  const databaseName = getDatabaseName();
-  const environmentName = getEnvironmentName(databaseName);
-  const demoModeEnabled = await isDemoModeEnabled();
 
   const [
     totalBusinesses,
@@ -81,7 +70,6 @@ export default async function PlatformDashboard({
     activeSubscriptions,
     monthlyRevenue,
     openAlerts,
-    failedLogins,
     totalCustomers,
     newCustomersThisMonth,
     totalPrograms,
@@ -100,7 +88,6 @@ export default async function PlatformDashboard({
       _sum: { amount: true },
     }),
     prisma.activityAlert.count({ where: { status: { in: ["OPEN", "ASSIGNED", "UNDER_REVIEW", "ESCALATED"] } } }),
-    prisma.failedLoginAudit.count({ where: { createdAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) }, outcome: { in: ["FAILED", "LOCKED"] } } }),
     prisma.globalCustomer.count(),
     prisma.globalCustomer.count({ where: { createdAt: { gte: monthStart } } }),
     prisma.loyaltyProgram.count(),
@@ -167,16 +154,6 @@ export default async function PlatformDashboard({
       user={user}
       eyebrow="System Administrator"
       title="Platform Operations Center"
-      headerAside={
-        <PlatformHealthCard
-          environment={environmentName}
-          database={databaseName}
-          demoMode={demoModeEnabled}
-          failedLogins24h={failedLogins}
-          appVersion={packageJson.version ?? "Not Available"}
-          systemStatus="Healthy"
-        />
-      }
     >
       <PlatformKpiGrid className="gap-4 md:grid-cols-2 xl:grid-cols-6">
         <KpiCard icon={Building2} label="Total Businesses" value={totalBusinesses.toString()} trend={`${newBusinessesThisMonth} new this month`} />
@@ -261,56 +238,6 @@ export default async function PlatformDashboard({
       </section>
 
     </DashboardShell>
-  );
-}
-
-function PlatformHealthCard({
-  environment,
-  database,
-  demoMode,
-  failedLogins24h,
-  appVersion,
-  systemStatus,
-}: {
-  environment: string;
-  database: string;
-  demoMode: boolean;
-  failedLogins24h: number;
-  appVersion: string;
-  systemStatus: string;
-}) {
-  return (
-    <div className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-50 text-[#F97316]">
-          <HeartPulse className="h-5 w-5" aria-hidden="true" />
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-[#111827]">Platform Health</p>
-          <p className="text-xs font-semibold uppercase text-emerald-700">System Status: Healthy</p>
-        </div>
-      </div>
-      <div className="mt-4 grid gap-2 text-sm">
-        <ShellInfo icon={Activity} label="Environment" value={environment} />
-        <ShellInfo icon={Database} label="Database" value={database} />
-        <ShellInfo icon={FlaskConical} label="Demo Mode" value={demoMode ? "Enabled" : "Disabled"} />
-        <ShellInfo icon={ShieldAlert} label="Failed Logins (24h)" value={failedLogins24h.toString()} />
-        <ShellInfo icon={Package} label="App Version" value={appVersion} />
-        <ShellInfo icon={HeartPulse} label="System Status" value={systemStatus} />
-      </div>
-    </div>
-  );
-}
-
-function ShellInfo({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between gap-3 rounded-md bg-[#FAFAFA] px-3 py-2">
-      <span className="flex items-center gap-2 text-xs font-medium uppercase text-[#6B7280]">
-        <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-        {label}
-      </span>
-      <span className="truncate text-right text-sm font-semibold text-[#111827]">{value}</span>
-    </div>
   );
 }
 
@@ -440,24 +367,3 @@ function getActivityStart(value: string, now: Date) {
   return new Date(now.getTime() - hours * 60 * 60 * 1000);
 }
 
-function getDatabaseName() {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) return "Not Configured";
-  try {
-    return new URL(databaseUrl).pathname.replace("/", "") || "Unknown";
-  } catch {
-    return "Unknown";
-  }
-}
-
-function getEnvironmentName(databaseName: string) {
-  const configured = process.env.APP_ENV ?? process.env.NEXT_PUBLIC_APP_ENV ?? process.env.VERCEL_ENV;
-  if (configured) return toTitleCase(configured);
-  if (databaseName === "loyalty_platform_pilot") return "Pilot";
-  if (process.env.NODE_ENV === "production") return "Production";
-  return "Development";
-}
-
-function toTitleCase(value: string) {
-  return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
-}
