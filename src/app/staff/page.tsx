@@ -1,5 +1,5 @@
 ﻿import Link from "next/link";
-import { Gift, QrCode, TicketCheck, UserPlus, Users } from "lucide-react";
+import { Gift, QrCode, Search, TicketCheck, UserPlus, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
 import { formatDateTime } from "@/lib/format";
@@ -46,8 +46,9 @@ export default async function StaffDashboard() {
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-4">
         <Action href="/staff/scanner" icon={QrCode} title="Scanner" description="Validate customer program QR codes." primary />
+        <Action href="/staff/customers" icon={Search} title="Find customer" description="Search customers by name, phone, or card number." />
         <Action href="/staff/customers/new" icon={UserPlus} title="Enroll customer" description="Create a customer membership for this branch." />
         <Action href="/staff/programs" icon={Gift} title="Programs" description="View available loyalty programs." />
       </section>
@@ -104,3 +105,5 @@ function Info({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+
