@@ -103,7 +103,7 @@ export default async function BranchDashboard() {
       </section>
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
-        <p className="text-sm font-semibold text-[#F97316] business-text">Branch Performance</p>
+        <p className="text-sm font-semibold business-primary">Branch Performance</p>
         <div className="mt-5 grid gap-3 md:grid-cols-4">
           <Metric icon={Users} label="Customers" value={customers.toString()} href="/branch/customers" />
           <Metric icon={TicketCheck} label="Stamps" value={(stamps._sum.quantity ?? 0).toString()} />
@@ -115,10 +115,10 @@ export default async function BranchDashboard() {
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm font-semibold text-[#F97316] business-text">Branch Activity</p>
+            <p className="text-sm font-semibold business-primary">Branch Activity</p>
             <h2 className="mt-1 text-xl font-semibold text-[#111827]">Today&apos;s scan workflow</h2>
           </div>
-          <Link href="/branch/scanner" className="inline-flex items-center justify-center gap-2 rounded-md bg-[#F97316] business-button px-4 py-3 text-sm font-semibold text-white">
+          <Link href="/branch/scanner" className="inline-flex items-center justify-center gap-2 rounded-md business-button px-4 py-3 text-sm font-semibold text-white">
             <QrCode className="h-4 w-4" aria-hidden="true" />
             Open Scanner
           </Link>
@@ -139,11 +139,11 @@ export default async function BranchDashboard() {
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-50 business-bg-soft text-[#F97316] business-text">
+          <span className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-50 business-bg-soft business-primary">
             <UserCheck className="h-5 w-5" aria-hidden="true" />
           </span>
           <div>
-            <p className="text-sm font-semibold text-[#F97316] business-text">Supervisor view</p>
+            <p className="text-sm font-semibold business-primary">Supervisor view</p>
             <h2 className="text-xl font-semibold text-[#111827]">Today&apos;s Staff Activity</h2>
           </div>
         </div>
@@ -213,8 +213,8 @@ function StaffStat({ label, value }: { label: string; value: string }) {
 
 function Action({ href, icon: Icon, title, description, primary = false }: { href: string; icon: LucideIcon; title: string; description: string; primary?: boolean }) {
   return (
-    <Link href={href} className={`rounded-md border bg-white p-5 transition business-hover hover:shadow-sm ${primary ? "border-[#F97316] business-border" : "border-[#E5E7EB]"}`}>
-      <span className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-50 business-bg-soft text-[#F97316] business-text">
+    <Link href={href} className={`rounded-md border bg-white p-5 transition business-hover hover:shadow-sm ${primary ? "business-border" : "border-[#E5E7EB]"}`}>
+      <span className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-50 business-bg-soft business-primary">
         <Icon className="h-5 w-5" aria-hidden="true" />
       </span>
       <h2 className="mt-4 text-base font-semibold text-[#111827]">{title}</h2>
@@ -226,7 +226,7 @@ function Action({ href, icon: Icon, title, description, primary = false }: { hre
 function Metric({ icon: Icon, label, value, href }: { icon: LucideIcon; label: string; value: string; href?: string }) {
   const content = (
     <div className={`h-full rounded-md border border-[#E5E7EB] p-4 transition ${href ? "cursor-pointer business-hover hover:shadow-sm" : ""}`}>
-      <Icon className="h-4 w-4 text-[#F97316] business-text" aria-hidden="true" />
+      <Icon className="h-4 w-4 business-primary" aria-hidden="true" />
       <p className="mt-3 text-sm text-[#6B7280]">{label}</p>
       <p className="mt-1 text-xl font-semibold text-[#111827]">{value}</p>
     </div>

@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -29,6 +29,10 @@ const stampIssueSchema = z
     message: "Reason is required when issuing more than one stamp.",
     path: ["reason"],
   });
+
+const REPEATED_STAMP_WINDOW_MINUTES = 10;
+const REPEATED_STAMP_REASON_THRESHOLD = 3;
+const REPEATED_STAMP_REASON_MESSAGE = "Multiple stamps were issued to this customer in a short time. Please provide a reason.";
 
 function getString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -148,6 +152,22 @@ export async function issueStampAction(formData: FormData) {
     fail(data.scanToken, error instanceof Error ? error.message : "Cooldown rule violation.");
   }
 
+  const repeatedStampWindowStart = new Date(now.getTime() - REPEATED_STAMP_WINDOW_MINUTES * 60 * 1000);
+  const recentRepeatedStamps = await prisma.stampTransaction.aggregate({
+    where: {
+      businessId: user.businessId as number,
+      issuedByUserId: user.id,
+      customerProgramMembershipId: programMembership.id,
+      createdAt: { gte: repeatedStampWindowStart },
+    },
+    _sum: { quantity: true },
+  });
+  const repeatedStampWindowTotal = (recentRepeatedStamps._sum.quantity ?? 0) + data.quantity;
+  const repeatedStampThresholdReached = repeatedStampWindowTotal >= REPEATED_STAMP_REASON_THRESHOLD;
+  if (repeatedStampThresholdReached && !data.reason) {
+    fail(data.scanToken, REPEATED_STAMP_REASON_MESSAGE);
+  }
+
   let transactionId: number;
   try {
     transactionId = await prisma.$transaction(async (tx) => {
@@ -197,6 +217,7 @@ export async function issueStampAction(formData: FormData) {
       alertType: string;
       severity: "LOW" | "MEDIUM" | "HIGH";
       description: string;
+      metadata?: Record<string, string | number | null>;
     }> = [];
 
     if (data.quantity >= 3) {
@@ -212,6 +233,23 @@ export async function issueStampAction(formData: FormData) {
         alertType: "MULTIPLE_STAMPS_QUANTITY_5",
         severity: "MEDIUM",
         description: `${issuedByName} issued the maximum ${data.quantity} stamps to ${customerName} for ${programMembership.loyaltyProgram.name}.`,
+      });
+    }
+
+    if (repeatedStampThresholdReached) {
+      alerts.push({
+        alertType: "REPEATED_STAMPS_SHORT_WINDOW",
+        severity: "MEDIUM",
+        description: `${issuedByName} issued ${repeatedStampWindowTotal} stamps to ${customerName} for ${programMembership.loyaltyProgram.name} within ${REPEATED_STAMP_WINDOW_MINUTES} minutes. Reason: ${data.reason ?? "Not provided"}.`,
+        metadata: {
+          staffUserId: user.id,
+          staffName: issuedByName,
+          customerName,
+          programName: programMembership.loyaltyProgram.name,
+          stampsInWindow: repeatedStampWindowTotal,
+          windowMinutes: REPEATED_STAMP_WINDOW_MINUTES,
+          reason: data.reason ?? null,
+        },
       });
     }
 
@@ -348,7 +386,7 @@ export async function issueStampAction(formData: FormData) {
           severity: alert.severity,
           description: `${alert.description} Branch: ${branchName}.`,
           dedupeScope: `${programMembership.id}:${user.id}:${branchId ?? "none"}`,
-          metadata: { branchName, quantity: data.quantity },
+          metadata: { branchName, quantity: data.quantity, ...(alert.metadata ?? {}) },
         });
       }
     }
@@ -536,3 +574,4 @@ export async function redeemRewardAction(formData: FormData) {
 
   redemptionSuccess(scanToken, redemption.id);
 }
+

@@ -24,7 +24,7 @@ import { MobileBranchNavigation, MobileBusinessNavigation, MobilePlatformNavigat
 import { getOperationalBusinessBranding } from "@/lib/business-branding";
 import { isDemoModeEnabled } from "@/lib/platform-settings";
 import type { AuthUser } from "@/lib/session";
-import { getDisplayUserName, roleHomePath, roleLabels } from "@/lib/roles";
+import { roleHomePath, roleLabels } from "@/lib/roles";
 
 type DashboardShellProps = {
   user: AuthUser;
@@ -59,18 +59,17 @@ const platformNavItems: Array<{ href: string; label: string; icon: LucideIcon }>
 export async function DashboardShell({ user, title, eyebrow, children, headerAside, hideWelcomeMessage = false }: DashboardShellProps) {
   const demoModeEnabled = await isDemoModeEnabled();
   const businessBranding = await getOperationalBusinessBranding(user);
-  const displayName = getDisplayUserName(user);
   const hasSidebar = user.role === "PLATFORM_OWNER" || user.role === "BUSINESS_OWNER";
   const showDefaultAccountCard = !hideWelcomeMessage && user.role !== "BUSINESS_OWNER" && user.role !== "PLATFORM_OWNER";
   const headerPanel = headerAside ?? (showDefaultAccountCard ? (
     <div className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-50 business-bg-soft text-[#F97316] business-text">
+        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-50 business-bg-soft business-primary">
           <FileText className="h-5 w-5" aria-hidden="true" />
         </div>
         <div>
           <p className="truncate text-sm font-semibold text-[#111827]">Welcome back</p>
-          <p className="text-xs font-semibold uppercase text-[#F97316] business-text">{roleLabels[user.role]}</p>
+          <p className="text-xs font-semibold uppercase business-primary">{roleLabels[user.role]}</p>
         </div>
       </div>
       <div className="mt-4 grid gap-2 text-sm">
@@ -93,7 +92,7 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
                 LB
               </span>
               <span className="text-sm font-semibold text-[#111827]">LoyaltyBase</span>
-              {demoModeEnabled ? <span className="rounded-md bg-orange-50 business-bg-soft px-2 py-1 text-xs font-semibold text-[#F97316] business-text">Demo</span> : null}
+              {demoModeEnabled ? <span className="rounded-md bg-orange-50 business-bg-soft px-2 py-1 text-xs font-semibold business-primary">Demo</span> : null}
             </Link>
             <form action="/logout" method="post">
               <CsrfInput scope="logout" />
@@ -108,7 +107,7 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
           {user.role !== "BUSINESS_OWNER" ? (
             <nav className="hidden gap-2 overflow-x-auto text-sm text-[#6B7280] sm:flex">
               {navItems.filter((item) => item.role === user.role).map((item) => (
-                <Link key={item.href} href={item.href} className="rounded-md border border-[#F97316] px-3 py-2 font-semibold text-[#F97316]">
+                <Link key={item.href} href={item.href} className="rounded-md border border-[#F97316] px-3 py-2 font-semibold business-primary">
                   {item.label}
                 </Link>
               ))}
@@ -127,7 +126,7 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
         }`}
       >
         {demoModeEnabled ? (
-          <div className="min-w-0 break-words rounded-md border border-orange-200 business-border-soft bg-orange-50 business-bg-soft px-4 py-3 text-sm font-semibold text-[#C2410C] business-text-strong lg:col-span-2">
+          <div className="min-w-0 break-words rounded-md border border-orange-200 business-border-soft bg-orange-50 business-bg-soft px-4 py-3 text-sm font-semibold business-primary-strong lg:col-span-2">
             Demo Mode Active - External communications and selected production actions are restricted.
           </div>
         ) : null}
@@ -160,15 +159,10 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
         <div className={`flex min-w-0 max-w-full flex-col gap-8 overflow-x-hidden ${hasSidebar ? "" : "lg:col-span-2"}`}>
         <section className={`grid min-w-0 gap-5 lg:items-end ${headerPanel ? "lg:grid-cols-[minmax(0,1fr)_300px]" : ""}`}>
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-[#F97316] business-text">{eyebrow}</p>
+            <p className="text-sm font-semibold uppercase tracking-wide business-primary">{eyebrow}</p>
             <h1 className="mt-3 break-words text-3xl font-semibold tracking-tight text-[#111827] sm:text-4xl">
               {title}
             </h1>
-            {!hideWelcomeMessage && user.role !== "PLATFORM_OWNER" ? (
-              <p className="mt-2 max-w-2xl text-base leading-7 text-[#6B7280]">
-                Welcome, {displayName}. Use your workspace to manage the tools available to your role.
-              </p>
-            ) : null}
           </div>
           {headerPanel}
         </section>
@@ -189,3 +183,5 @@ function ShellInfo({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+

@@ -58,7 +58,7 @@ export default async function BusinessSettingsPage({
           <Link
             key={tab}
             href={`/dashboard/settings?tab=${tab}`}
-            className={`shrink-0 rounded-md px-3 py-2 font-semibold ${activeTab === tab ? "bg-orange-50 business-bg-soft text-[#F97316] business-text" : "text-[#111827] hover:bg-[#FAFAFA]"}`}
+            className={`shrink-0 rounded-md px-3 py-2 font-semibold ${activeTab === tab ? "bg-orange-50 business-bg-soft business-primary" : "text-[#111827] hover:bg-[#FAFAFA]"}`}
           >
             {label}
           </Link>
@@ -75,7 +75,7 @@ export default async function BusinessSettingsPage({
           <Item label="Management scope" value="Business profile, branches, staff, customers, and programs" />
         </div>
         <details className="mt-4">
-          <summary className="cursor-pointer text-sm font-semibold text-[#F97316] business-text">Advanced identifiers</summary>
+          <summary className="cursor-pointer text-sm font-semibold business-primary">Advanced identifiers</summary>
           <div className="mt-3 grid gap-4 md:grid-cols-2">
             <Item label="Business ID" value={business.id.toString()} />
             <Item label="Business UUID" value={business.uuid} />
@@ -126,7 +126,7 @@ export default async function BusinessSettingsPage({
             <Input name="goldVisitRequirement" label="Gold visit requirement" type="number" min="1" defaultValue={tierConfig.goldVisitRequirement.toString()} />
             <Input name="vipVisitRequirement" label="VIP visit requirement" type="number" min="1" defaultValue={tierConfig.vipVisitRequirement.toString()} />
           </div>
-          <div className="grid min-w-0 gap-2 rounded-md bg-orange-50 business-bg-soft px-3 py-2 text-sm md:gap-3 md:py-3 text-[#9A3412] business-text-strong md:grid-cols-3">
+          <div className="grid min-w-0 gap-2 rounded-md bg-orange-50 business-bg-soft px-3 py-2 text-sm md:gap-3 md:py-3 business-primary-strong md:grid-cols-3">
             <p className="break-words">Silver: {tierConfig.silverVisitRequirement} visits in {tierQualificationWindowLabels[tierConfig.tierQualificationWindow].toLowerCase()}</p>
             <p className="break-words">Gold: {tierConfig.goldVisitRequirement} visits in {tierQualificationWindowLabels[tierConfig.tierQualificationWindow].toLowerCase()}</p>
             <p className="break-words">VIP: {tierConfig.vipVisitRequirement} visits in {tierQualificationWindowLabels[tierConfig.tierQualificationWindow].toLowerCase()}</p>
@@ -135,7 +135,7 @@ export default async function BusinessSettingsPage({
             Bronze is automatic when a customer joins. Public customer cards show visits, tier progress, rewards, and QR code only. Spend and internal analytics are never shown on the customer card.
           </p>
           <div>
-            <button type="submit" className="h-11 rounded-md bg-[#F97316] business-button px-4 text-sm font-semibold text-white">
+            <button type="submit" className="h-11 rounded-md business-button px-4 text-sm font-semibold text-white">
               Save tier settings
             </button>
           </div>
@@ -163,15 +163,15 @@ export default async function BusinessSettingsPage({
               type="checkbox"
               name="soundEffectsEnabled"
               defaultChecked={scannerSoundEffectsEnabled}
-              className="h-5 w-5 rounded border-[#E5E7EB] text-[#F97316] business-text"
+              className="h-5 w-5 rounded border-[#E5E7EB] business-primary"
               aria-label="Scanner Sound Effects"
             />
           </label>
-          <p className="rounded-md border border-orange-200 business-border-soft bg-orange-50 business-bg-soft px-3 py-2 text-sm break-words text-[#9A3412] business-text-strong">
+          <p className="rounded-md border border-orange-200 business-border-soft bg-orange-50 business-bg-soft px-3 py-2 text-sm break-words business-primary-strong">
             Sounds play only after scanner interaction or scan form submission so mobile browsers can allow audio. Keep this on for busy counters where staff need instant feedback.
           </p>
           <div>
-            <button type="submit" className="h-11 rounded-md bg-[#F97316] business-button px-4 text-sm font-semibold text-white">
+            <button type="submit" className="h-11 rounded-md business-button px-4 text-sm font-semibold text-white">
               Save scanner settings
             </button>
           </div>
@@ -205,7 +205,7 @@ export default async function BusinessSettingsPage({
                 <input type="checkbox" name="enabled" defaultChecked={policy.enabled} className="h-4 w-4 rounded border-[#E5E7EB]" />
                 Enabled
               </label>
-              <button type="submit" className="h-11 rounded-md border border-[#F97316] business-border px-4 text-sm font-semibold text-[#F97316] business-text">
+              <button type="submit" className="h-11 rounded-md border business-border px-4 text-sm font-semibold business-primary">
                 Save
               </button>
             </form>
@@ -232,7 +232,7 @@ export default async function BusinessSettingsPage({
           <div className="flex items-end">
             <ConfirmSubmitButton
               message="Save cooldown policy? This affects future stamp issuance limits."
-              className="h-11 rounded-md bg-[#F97316] business-button px-4 text-sm font-semibold text-white"
+              className="h-11 rounded-md business-button px-4 text-sm font-semibold text-white"
             >
               Save cooldown policy
             </ConfirmSubmitButton>

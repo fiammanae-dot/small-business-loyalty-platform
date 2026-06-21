@@ -65,7 +65,7 @@ export default async function StaffCustomerProfilePage({
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-[#F97316] business-text">Read-only customer view</p>
+            <p className="text-sm font-semibold business-primary">Read-only customer view</p>
             <h2 className="mt-1 break-words text-2xl font-semibold text-[#111827]">{customerName}</h2>
             <p className="mt-2 text-sm text-[#6B7280]">{formatUaePhoneDisplay(customer.normalizedPhone)}</p>
           </div>
@@ -84,7 +84,7 @@ export default async function StaffCustomerProfilePage({
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
         <div className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
           <div>
-            <p className="text-sm font-semibold text-[#F97316] business-text">Active loyalty programs</p>
+            <p className="text-sm font-semibold business-primary">Active loyalty programs</p>
             <h2 className="mt-1 text-xl font-semibold text-[#111827]">Loyalty progress</h2>
           </div>
           <div className="mt-5 grid gap-4">
@@ -124,7 +124,7 @@ export default async function StaffCustomerProfilePage({
         </div>
 
         <aside className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
-          <p className="text-sm font-semibold text-[#F97316] business-text">Loyalty card QR</p>
+          <p className="text-sm font-semibold business-primary">Loyalty card QR</p>
           <p className="mt-2 break-all text-xs text-[#6B7280]">Card: {getShortCardToken(membership.cardToken)}</p>
           <Image src={cardQrCode} alt={`${customerName} loyalty card QR`} width={220} height={220} unoptimized className="mx-auto mt-4 rounded-md border border-[#E5E7EB]" />
           <p className="mt-4 break-all text-xs text-[#6B7280]">{cardUrl}</p>

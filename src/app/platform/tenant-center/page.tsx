@@ -87,16 +87,17 @@ export default async function PlatformTenantCenterPage({
   const suspendedTenants = tenants.filter((tenant) => tenant.subscriptionStatus === "SUSPENDED");
   const expiredTenants = tenants.filter((tenant) => tenant.subscriptionStatus === "EXPIRED");
   const activeFilterCount = [params.q, params.status, params.plan, params.health].filter(Boolean).length;
+  const exportQuery = buildTenantExportQuery(params);
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Tenant Center">
       <PlatformKpiGrid className="md:grid-cols-2 xl:grid-cols-4">
-        <KpiCard icon={Building2} label="Total Tenants" value={tenants.length.toString()} />
-        <KpiCard icon={CheckCircle2} label="Active Tenants" value={activeTenants.length.toString()} tone="success" />
-        <KpiCard icon={Activity} label="Trial Tenants" value={trialTenants.length.toString()} />
-        <KpiCard icon={AlertTriangle} label="Suspended Tenants" value={suspendedTenants.length.toString()} tone={suspendedTenants.length > 0 ? "danger" : "default"} />
-        <KpiCard icon={AlertTriangle} label="Expired Tenants" value={expiredTenants.length.toString()} tone={expiredTenants.length > 0 ? "danger" : "default"} />
-        <KpiCard icon={Users} label="Total Customers Across Platform" value={totalCustomers.toString()} />
+        <KpiCard icon={Building2} label="Total Tenants" value={tenants.length.toString()} href="/platform/tenant-center" />
+        <KpiCard icon={CheckCircle2} label="Active Tenants" value={activeTenants.length.toString()} tone="success" href="/platform/tenant-center?status=ACTIVE" />
+        <KpiCard icon={Activity} label="Trial Tenants" value={trialTenants.length.toString()} href="/platform/tenant-center?status=TRIAL" />
+        <KpiCard icon={AlertTriangle} label="Suspended Tenants" value={suspendedTenants.length.toString()} tone={suspendedTenants.length > 0 ? "danger" : "default"} href="/platform/tenant-center?status=SUSPENDED" />
+        <KpiCard icon={AlertTriangle} label="Expired Tenants" value={expiredTenants.length.toString()} tone={expiredTenants.length > 0 ? "danger" : "default"} href="/platform/tenant-center?status=EXPIRED" />
+        <KpiCard icon={Users} label="Total Customers Across Platform" value={totalCustomers.toString()} href="/platform/tenant-center" />
       </PlatformKpiGrid>
 
         <MobileFilterDrawer activeCount={activeFilterCount}>
@@ -110,9 +111,9 @@ export default async function PlatformTenantCenterPage({
             <p className="mt-1 text-sm text-[#6B7280]">Showing {filteredTenants.length} tenants</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <ExportButton href="/platform/tenant-center?export=csv" icon={<Download className="h-4 w-4" />} label="CSV" />
-            <ExportButton href="/platform/tenant-center?export=excel" icon={<FileSpreadsheet className="h-4 w-4" />} label="Excel" />
-            <ExportButton href="/platform/tenant-center?export=pdf" icon={<FileText className="h-4 w-4" />} label="PDF" />
+            <ExportButton href={`/platform/tenant-center/export?${exportQuery}&format=csv`} icon={<Download className="h-4 w-4" />} label="CSV" />
+            <ExportButton href={`/platform/tenant-center/export?${exportQuery}&format=excel`} icon={<FileSpreadsheet className="h-4 w-4" />} label="Excel" />
+            <ExportButton href={`/platform/tenant-center/export?${exportQuery}&format=pdf`} icon={<FileText className="h-4 w-4" />} label="PDF" />
           </div>
         </div>
         <form className="grid gap-3 lg:grid-cols-4">
@@ -260,6 +261,14 @@ function matchesTenantFilters(tenant: DecoratedTenant, params: TenantParams) {
   return true;
 }
 
+function buildTenantExportQuery(params: TenantParams) {
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value) query.set(key, value);
+  }
+  return query.toString();
+}
+
 function TenantDirectory({ tenants }: { tenants: DecoratedTenant[] }) {
   return (
     <>
@@ -346,10 +355,10 @@ function TenantDirectory({ tenants }: { tenants: DecoratedTenant[] }) {
   );
 }
 
-function KpiCard({ icon: Icon, label, value, tone = "default" }: { icon: LucideIcon; label: string; value: string; tone?: "default" | "success" | "danger" }) {
+function KpiCard({ icon: Icon, label, value, tone = "default", href }: { icon: LucideIcon; label: string; value: string; tone?: "default" | "success" | "danger"; href?: string }) {
   const iconClass = tone === "danger" ? "bg-red-50 text-red-600" : tone === "success" ? "bg-emerald-50 text-emerald-700" : "bg-orange-50 text-[#F97316]";
-  return (
-    <div className="rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm md:p-4">
+  const content = (
+    <div className="h-full rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm transition md:p-4 hover:border-[#F97316] hover:shadow-md">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-medium text-[#6B7280]">{label}</p>
         <span className={`flex h-9 w-9 items-center justify-center rounded-md ${iconClass}`}>
@@ -357,8 +366,11 @@ function KpiCard({ icon: Icon, label, value, tone = "default" }: { icon: LucideI
         </span>
       </div>
       <p className="mt-3 text-2xl font-semibold text-[#111827]">{value}</p>
+      {href ? <p className="mt-2 text-xs font-semibold text-[#F97316]">View</p> : null}
     </div>
   );
+
+  return href ? <Link href={href} className="block h-full cursor-pointer rounded-md focus:outline-none focus:ring-4 focus:ring-orange-100">{content}</Link> : content;
 }
 
 function Panel({ title, icon: Icon, children }: { title: string; icon: LucideIcon; children: ReactNode }) {
@@ -408,4 +420,7 @@ function EmptyState({ text }: { text: string }) {
 function titleCase(value: string) {
   return value.replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
+
+
+
 

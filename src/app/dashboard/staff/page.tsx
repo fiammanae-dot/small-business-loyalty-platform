@@ -46,7 +46,7 @@ export default async function StaffUsersPage({
             <p className="mt-1 break-words text-sm text-[#6B7280]">Create and manage Branch Manager and Staff access.</p>
           </div>
           <details className="group">
-            <summary className="inline-flex h-10 cursor-pointer list-none items-center justify-center rounded-md bg-[#F97316] business-button px-4 text-sm font-semibold text-white">
+            <summary className="inline-flex h-10 cursor-pointer list-none items-center justify-center rounded-md business-button px-4 text-sm font-semibold text-white">
               Add user
             </summary>
             <div className="fixed inset-x-4 z-20 mt-2 max-h-[78vh] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-md border border-[#E5E7EB] bg-white p-4 shadow-xl sm:absolute sm:inset-x-auto sm:right-6 sm:w-[min(920px,calc(100vw-3rem))]">
@@ -81,7 +81,7 @@ export default async function StaffUsersPage({
                       <p>Last login: {staffUser.lastLoginAt ? formatDate(staffUser.lastLoginAt) : "-"}</p>
                       <p>Password changed: {formatDate(staffUser.passwordChangedAt)}</p>
                       <p>Failed attempts 24h: {failedAttemptsByEmail.get(staffUser.email) ?? 0}</p>
-                      {staffUser.forcePasswordChange ? <p className="font-semibold text-[#F97316] business-text">Password change required</p> : null}
+                      {staffUser.forcePasswordChange ? <p className="font-semibold business-primary">Password change required</p> : null}
                     </td>
                     <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(staffUser.createdAt)}</td>
                     <td className="border-b border-[#E5E7EB] px-3 py-4">
@@ -92,13 +92,13 @@ export default async function StaffUsersPage({
                           <input type="hidden" name="staffUserId" value={staffUser.id} />
                           <input type="hidden" name="nextStatus" value={nextStatus} />
                           {nextStatus === "ACTIVE" ? (
-                            <button type="submit" className="text-sm font-semibold text-[#F97316] business-text">
+                            <button type="submit" className="text-sm font-semibold business-primary">
                               Enable
                             </button>
                           ) : (
                             <ConfirmSubmitButton
                               message="Disable this user? They will lose access to the business workspace."
-                              className="text-sm font-semibold text-[#F97316] business-text"
+                              className="text-sm font-semibold business-primary"
                             >
                               Disable
                             </ConfirmSubmitButton>
@@ -153,7 +153,7 @@ function StaffCreateForm({
           disabled: branch.status !== "ACTIVE",
         }))}
       />
-      <button type="submit" className="h-11 self-end rounded-md bg-[#F97316] business-button px-4 text-sm font-semibold text-white">
+      <button type="submit" className="h-11 self-end rounded-md business-button px-4 text-sm font-semibold text-white">
         Add user
       </button>
     </form>

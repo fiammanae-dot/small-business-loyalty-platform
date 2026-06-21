@@ -232,9 +232,9 @@ export default async function PlatformAuditCenterPage({
             <h2 className="mt-1 text-lg font-semibold text-[#111827]">Filtered audit exports</h2>
           </div>
           <div className="grid gap-2 sm:grid-cols-3">
-            <ExportButton href={`/platform/audit-center?${activeQuery}&export=csv`} icon={<Download className="h-4 w-4" />} label="Export CSV" />
-            <ExportButton href={`/platform/audit-center?${activeQuery}&export=excel`} icon={<FileSpreadsheet className="h-4 w-4" />} label="Export Excel" />
-            <ExportButton href={`/platform/audit-center?${activeQuery}&export=pdf`} icon={<FileText className="h-4 w-4" />} label="Export PDF" />
+            <ExportButton href={`/platform/audit-center/export?${activeQuery}&format=csv`} icon={<Download className="h-4 w-4" />} label="Export CSV" />
+            <ExportButton href={`/platform/audit-center/export?${activeQuery}&format=excel`} icon={<FileSpreadsheet className="h-4 w-4" />} label="Export Excel" />
+            <ExportButton href={`/platform/audit-center/export?${activeQuery}&format=pdf`} icon={<FileText className="h-4 w-4" />} label="Export PDF" />
           </div>
         </div>
       </section>
@@ -498,7 +498,7 @@ function summarizeUsers(events: DecoratedAuditEvent[]) {
 
 function KpiLink({ icon: Icon, label, value, href, tone = "default" }: { icon: LucideIcon; label: string; value: number; href: string; tone?: "default" | "alert" }) {
   return (
-    <Link href={href} className={`rounded-md border bg-white p-3 shadow-sm transition md:p-4 hover:border-[#F97316] ${tone === "alert" ? "border-red-200" : "border-[#E5E7EB]"}`}>
+    <Link href={href} className={`block h-full cursor-pointer rounded-md border bg-white p-3 shadow-sm transition md:p-4 hover:border-[#F97316] hover:shadow-md focus:outline-none focus:ring-4 focus:ring-orange-100 ${tone === "alert" ? "border-red-200" : "border-[#E5E7EB]"}`}>
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-medium text-[#6B7280]">{label}</p>
         <span className={`flex h-9 w-9 items-center justify-center rounded-md ${tone === "alert" ? "bg-red-50 text-red-600" : "bg-orange-50 text-[#F97316]"}`}>
@@ -506,6 +506,7 @@ function KpiLink({ icon: Icon, label, value, href, tone = "default" }: { icon: L
         </span>
       </div>
       <p className="mt-3 text-2xl font-semibold text-[#111827]">{value}</p>
+      <p className="mt-2 text-xs font-semibold text-[#F97316]">View</p>
     </Link>
   );
 }
@@ -705,3 +706,7 @@ function HealthMetric({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+
+
+

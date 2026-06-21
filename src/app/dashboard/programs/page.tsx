@@ -73,7 +73,7 @@ export default async function ProgramsPage({
             <h2 className="text-lg font-semibold text-[#111827]">Programs</h2>
             <p className="text-sm text-[#6B7280]">Manage loyalty program setup and enrolled customers.</p>
           </div>
-          <Link href="/dashboard/programs/new" className="rounded-md bg-[#F97316] business-button px-4 py-2 text-sm font-semibold text-white">
+          <Link href="/dashboard/programs/new" className="rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
             Create Program
           </Link>
         </div>
@@ -108,7 +108,7 @@ export default async function ProgramsPage({
             <option value="desc">Descending</option>
             <option value="asc">Ascending</option>
           </select>
-          <button type="submit" className="h-10 rounded-md bg-[#F97316] business-button px-4 text-sm font-semibold text-white">
+          <button type="submit" className="h-10 rounded-md business-button px-4 text-sm font-semibold text-white">
             Apply
           </button>
           <Link href="/dashboard/programs" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] bg-white px-4 text-sm font-semibold text-[#111827]">
@@ -133,9 +133,9 @@ export default async function ProgramsPage({
                 <p>Created: {formatDate(program.createdAt)}</p>
               </div>
               <div className="mt-4 flex flex-wrap gap-3">
-                <Link href={`/dashboard/programs/${program.uuid}`} className="font-semibold text-[#F97316] business-text">View</Link>
-                <Link href={`/dashboard/programs/${program.uuid}/edit`} className="font-semibold text-[#F97316] business-text">Edit</Link>
-                <Link href={`/dashboard/programs/${program.uuid}/customers`} className="font-semibold text-[#F97316] business-text">Customers</Link>
+                <Link href={`/dashboard/programs/${program.uuid}`} className="font-semibold business-primary">View</Link>
+                <Link href={`/dashboard/programs/${program.uuid}/edit`} className="font-semibold business-primary">Edit</Link>
+                <Link href={`/dashboard/programs/${program.uuid}/customers`} className="font-semibold business-primary">Customers</Link>
               </div>
             </article>
           ))}
@@ -162,9 +162,9 @@ export default async function ProgramsPage({
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(program.createdAt)}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4">
                     <div className="flex gap-3">
-                      <Link href={`/dashboard/programs/${program.uuid}`} className="font-semibold text-[#F97316] business-text">View</Link>
-                      <Link href={`/dashboard/programs/${program.uuid}/edit`} className="font-semibold text-[#F97316] business-text">Edit</Link>
-                      <Link href={`/dashboard/programs/${program.uuid}/customers`} className="font-semibold text-[#F97316] business-text">Customers</Link>
+                      <Link href={`/dashboard/programs/${program.uuid}`} className="font-semibold business-primary">View</Link>
+                      <Link href={`/dashboard/programs/${program.uuid}/edit`} className="font-semibold business-primary">Edit</Link>
+                      <Link href={`/dashboard/programs/${program.uuid}/customers`} className="font-semibold business-primary">Customers</Link>
                     </div>
                   </td>
                 </tr>
@@ -191,7 +191,7 @@ function KpiCard({ icon, label, value }: { icon: ReactNode; label: string; value
   return (
     <div className="rounded-md border border-[#E5E7EB] bg-white p-4">
       <div className="flex items-center gap-3">
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-orange-50 business-bg-soft text-[#F97316] business-text">{icon}</span>
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-orange-50 business-bg-soft business-primary">{icon}</span>
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{label}</p>
           <p className="text-2xl font-semibold text-[#111827]">{value}</p>
@@ -216,7 +216,7 @@ function EmptyPrograms({ filtered }: { filtered: boolean }) {
       <p className="mt-2 text-sm text-[#6B7280]">
         {filtered ? "Clear the filters to see all loyalty programs." : "Set up a simple stamp program so customers can start earning progress."}
       </p>
-      <Link href={filtered ? "/dashboard/programs" : "/dashboard/programs/new"} className="mt-4 inline-flex rounded-md bg-[#F97316] business-button px-4 py-2 text-sm font-semibold text-white">
+      <Link href={filtered ? "/dashboard/programs" : "/dashboard/programs/new"} className="mt-4 inline-flex rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
         {filtered ? "Clear Filters" : "Create Program"}
       </Link>
     </>

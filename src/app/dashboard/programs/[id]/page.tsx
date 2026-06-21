@@ -19,21 +19,31 @@ export default async function ProgramDetailPage({
   const { user } = await getBusinessOwnerContext();
   const { id } = await params;
   const qs = await searchParams;
-  const program = await prisma.loyaltyProgram.findFirst({
+  let program = await prisma.loyaltyProgram.findFirst({
     where: { uuid: id, businessId: user.businessId },
     include: {
       memberships: { include: { businessCustomerMembership: { include: { globalCustomer: true } } } },
       rewardRedemptions: true,
     },
   });
+  if (!program && /^\d+$/.test(id)) {
+    program = await prisma.loyaltyProgram.findFirst({
+      where: { id: Number(id), businessId: user.businessId },
+      include: {
+        memberships: { include: { businessCustomerMembership: { include: { globalCustomer: true } } } },
+        rewardRedemptions: true,
+      },
+    });
+  }
   if (!program) return <NotFound user={user} />;
   const nextActive = !program.active;
+  const safeRequiredStamps = Math.max(program.requiredStamps, 1);
   const enrolledCustomers = program.memberships.length;
   const activeCustomers = program.memberships.filter(
-    (membership) => membership.status === "ACTIVE" && progressValue(membership.earnedStamps, membership.bonusStamps) < program.requiredStamps,
+    (membership) => membership.status === "ACTIVE" && progressValue(membership.earnedStamps, membership.bonusStamps) < safeRequiredStamps,
   ).length;
   const rewardReadyCustomers = program.memberships.filter(
-    (membership) => membership.status !== "COMPLETED" && progressValue(membership.earnedStamps, membership.bonusStamps) >= program.requiredStamps,
+    (membership) => membership.status !== "COMPLETED" && progressValue(membership.earnedStamps, membership.bonusStamps) >= safeRequiredStamps,
   ).length;
   const redeemedRewards = program.rewardRedemptions.length;
   const progressTotal = program.memberships.reduce(
@@ -41,7 +51,7 @@ export default async function ProgramDetailPage({
     0,
   );
   const averageCompletionRate =
-    enrolledCustomers > 0 ? Math.min(100, Math.round((progressTotal / (enrolledCustomers * program.requiredStamps)) * 100)) : 0;
+    enrolledCustomers > 0 ? Math.min(100, Math.round((progressTotal / (enrolledCustomers * safeRequiredStamps)) * 100)) : 0;
   const bonusStampsIssued = program.memberships.reduce((sum, membership) => sum + membership.bonusStamps, 0);
   const earnedStamps = program.memberships.reduce((sum, membership) => sum + membership.earnedStamps, 0);
 
@@ -134,7 +144,7 @@ export default async function ProgramDetailPage({
                       status: membership.status,
                       earnedStamps: membership.earnedStamps,
                       bonusStamps: membership.bonusStamps,
-                      requiredStamps: program.requiredStamps,
+                      requiredStamps: safeRequiredStamps,
                     })}
                   </td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(membership.enrolledAt)}</td>

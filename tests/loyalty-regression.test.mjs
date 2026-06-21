@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
@@ -18,6 +18,15 @@ test("multiple stamp issuance requires a reason and quantity is database bounded
   assert.match(scanActions, /Reason is required when issuing more than one stamp/);
   assert.match(migration, /stamp_transactions_quantity_range_check/);
   assert.match(migration, /"quantity" >= 1 AND "quantity" <= 5/);
+});
+test("repeated single-stamp issuance requires a reason and creates abuse alert context", () => {
+  assert.match(scanActions, /REPEATED_STAMP_WINDOW_MINUTES\s*=\s*10/);
+  assert.match(scanActions, /REPEATED_STAMP_REASON_THRESHOLD\s*=\s*3/);
+  assert.match(scanActions, /Multiple stamps were issued to this customer in a short time\. Please provide a reason\./);
+  assert.match(scanActions, /issuedByUserId:\s*user\.id/);
+  assert.match(scanActions, /customerProgramMembershipId:\s*programMembership\.id/);
+  assert.match(scanActions, /REPEATED_STAMPS_SHORT_WINDOW/);
+  assert.match(scanActions, /stampsInWindow:\s*repeatedStampWindowTotal/);
 });
 
 test("stamp and redemption audit records are immutable", () => {
@@ -48,3 +57,4 @@ test("subscription and inactive branch restrictions guard critical workflows", (
     assert.match(scanActions + read("src/app/scan/[token]/page.tsx"), new RegExp(expected));
   }
 });
+

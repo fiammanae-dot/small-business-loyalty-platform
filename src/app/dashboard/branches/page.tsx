@@ -30,7 +30,7 @@ export default async function BranchesPage({
             </p>
           </div>
           <details className="group">
-            <summary className="inline-flex h-10 cursor-pointer list-none items-center justify-center rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">
+            <summary className="inline-flex h-10 cursor-pointer list-none items-center justify-center rounded-md business-button px-4 text-sm font-semibold text-white">
               Add branch
             </summary>
             <div className="absolute right-6 z-20 mt-2 w-[min(920px,calc(100vw-3rem))] rounded-md border border-[#E5E7EB] bg-white p-4 shadow-xl">
@@ -61,13 +61,13 @@ export default async function BranchesPage({
                     <input type="hidden" name="branchId" value={branch.id} />
                     <input type="hidden" name="nextStatus" value={nextStatus} />
                     {nextStatus === "ACTIVE" ? (
-                      <button type="submit" className="text-sm font-semibold text-[#F97316]">
+                      <button type="submit" className="text-sm font-semibold business-primary">
                         Enable
                       </button>
                     ) : (
                       <ConfirmSubmitButton
                         message="Disable this branch? Branch staff and scanner activity may be restricted."
-                        className="text-sm font-semibold text-[#F97316]"
+                        className="text-sm font-semibold business-primary"
                       >
                         Disable
                       </ConfirmSubmitButton>
@@ -75,7 +75,7 @@ export default async function BranchesPage({
                   </form>
                 </div>
                 <details className="mt-4">
-                  <summary className="cursor-pointer text-sm font-semibold text-[#F97316]">Edit branch details</summary>
+                  <summary className="cursor-pointer text-sm font-semibold business-primary">Edit branch details</summary>
                   <div className="mt-4 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
                     <BranchForm
                       branchId={branch.id}
@@ -131,7 +131,7 @@ function BranchForm({
           {statusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
         </select>
       </label>
-      <button type="submit" className="h-10 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white md:col-start-5">
+      <button type="submit" className="h-10 rounded-md business-button px-4 text-sm font-semibold text-white md:col-start-5">
         {submitLabel}
       </button>
     </form>

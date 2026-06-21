@@ -132,14 +132,14 @@ export default async function PlatformBillingCenterPage({
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Billing Center">
       <PlatformKpiGrid className="md:grid-cols-2 xl:grid-cols-4">
-        <KpiCard icon={CircleDollarSign} label="Monthly Revenue (MRR)" value={formatMoney(monthlyRevenue)} />
+        <KpiCard icon={CircleDollarSign} label="Monthly Revenue (MRR)" value={formatMoney(monthlyRevenue)} href="/platform/billing-center" />
         <KpiCard icon={TrendingUp} label="Annual Revenue Projection (ARR)" value={formatMoney(monthlyRevenue * 12)} />
-        <KpiCard icon={CreditCard} label="Active Subscriptions" value={activeSubscriptions.length.toString()} />
-        <KpiCard icon={CalendarClock} label="Trial Subscriptions" value={trialSubscriptions.length.toString()} />
-        <KpiCard icon={AlertTriangle} label="Expiring Within 30 Days" value={expiringWithin30.length.toString()} tone={expiringWithin30.length > 0 ? "warn" : "default"} />
-        <KpiCard icon={Receipt} label="Overdue Invoices" value={overdueInvoices.length.toString()} tone={overdueInvoices.length > 0 ? "danger" : "default"} />
-        <KpiCard icon={AlertTriangle} label="Suspended Accounts" value={suspendedAccounts.length.toString()} tone={suspendedAccounts.length > 0 ? "danger" : "default"} />
-        <KpiCard icon={TrendingDown} label="Cancelled Subscriptions" value={cancelledSubscriptions.length.toString()} />
+        <KpiCard icon={CreditCard} label="Active Subscriptions" value={activeSubscriptions.length.toString()} href="/platform/subscriptions?status=ACTIVE" />
+        <KpiCard icon={CalendarClock} label="Trial Subscriptions" value={trialSubscriptions.length.toString()} href="/platform/subscriptions?status=TRIAL" />
+        <KpiCard icon={AlertTriangle} label="Expiring Within 30 Days" value={expiringWithin30.length.toString()} tone={expiringWithin30.length > 0 ? "warn" : "default"} href="/platform/subscriptions?expiry=next30" />
+        <KpiCard icon={Receipt} label="Overdue Invoices" value={overdueInvoices.length.toString()} tone={overdueInvoices.length > 0 ? "danger" : "default"} href="/platform/invoices?status=OVERDUE" />
+        <KpiCard icon={AlertTriangle} label="Suspended Accounts" value={suspendedAccounts.length.toString()} tone={suspendedAccounts.length > 0 ? "danger" : "default"} href="/platform/subscriptions?status=SUSPENDED" />
+        <KpiCard icon={TrendingDown} label="Cancelled Subscriptions" value={cancelledSubscriptions.length.toString()} href="/platform/subscriptions?status=CANCELLED" />
       </PlatformKpiGrid>
 
       <MobileFilterDrawer activeCount={activeFilterCount}>
@@ -318,9 +318,9 @@ export default async function PlatformBillingCenterPage({
                   <h2 className="mt-1 text-lg font-semibold text-[#111827]">Filter-aware billing reports</h2>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-3">
-                  <ExportButton href={`/platform/billing-center?${buildQuery(params)}&export=csv`} icon={<Download className="h-4 w-4" />} label="CSV" />
-                  <ExportButton href={`/platform/billing-center?${buildQuery(params)}&export=excel`} icon={<FileSpreadsheet className="h-4 w-4" />} label="Excel" />
-                  <ExportButton href={`/platform/billing-center?${buildQuery(params)}&export=pdf`} icon={<FileText className="h-4 w-4" />} label="PDF" />
+                  <ExportButton href={`/platform/billing-center/export?${buildQuery(params)}&format=csv`} icon={<Download className="h-4 w-4" />} label="CSV" />
+                  <ExportButton href={`/platform/billing-center/export?${buildQuery(params)}&format=excel`} icon={<FileSpreadsheet className="h-4 w-4" />} label="Excel" />
+                  <ExportButton href={`/platform/billing-center/export?${buildQuery(params)}&format=pdf`} icon={<FileText className="h-4 w-4" />} label="PDF" />
                 </div>
               </div>
             </section>
@@ -848,17 +848,20 @@ function titleCase(value: string) {
   return value.replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function KpiCard({ icon: Icon, label, value, tone = "default" }: { icon: LucideIcon; label: string; value: string; tone?: "default" | "warn" | "danger" }) {
+function KpiCard({ icon: Icon, label, value, tone = "default", href }: { icon: LucideIcon; label: string; value: string; tone?: "default" | "warn" | "danger"; href?: string }) {
   const toneClass = tone === "danger" ? "border-red-200 bg-red-50 text-red-700" : tone === "warn" ? "border-orange-200 bg-orange-50 text-[#C2410C]" : "border-[#E5E7EB] bg-white text-[#111827]";
-  return (
-    <div className={`rounded-md border p-3 shadow-sm md:p-4 ${toneClass}`}>
+  const content = (
+    <div className={`h-full rounded-md border p-3 shadow-sm transition md:p-4 ${toneClass} ${href ? "cursor-pointer hover:border-[#F97316] hover:shadow-md" : ""}`}>
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-medium">{label}</p>
         <Icon className="h-5 w-5" aria-hidden="true" />
       </div>
       <p className="mt-3 text-2xl font-semibold">{value}</p>
+      {href ? <p className="mt-2 text-xs font-semibold text-[#F97316]">View</p> : null}
     </div>
   );
+
+  return href ? <Link href={href} className="block h-full rounded-md focus:outline-none focus:ring-4 focus:ring-orange-100">{content}</Link> : content;
 }
 
 function Panel({ title, children }: { title: string; children: ReactNode }) {
@@ -954,3 +957,5 @@ function EmptyText({ text }: { text: string }) {
 function ExportButton({ href, icon, label }: { href: string; icon: ReactNode; label: string }) {
   return <Link href={href} className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] hover:border-[#F97316] hover:text-[#F97316]">{icon}{label}</Link>;
 }
+
+

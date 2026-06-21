@@ -266,7 +266,7 @@ export function CameraScanner({ backHref }: { backHref: string }) {
     <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm sm:p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-sm font-semibold text-[#F97316] business-text">Camera scanner</p>
+          <p className="text-sm font-semibold business-primary">Camera scanner</p>
           <h2 className="mt-1 text-xl font-semibold text-[#111827]">Scan customer QR</h2>
           <p className="mt-2 text-sm leading-6 text-[#6B7280]">Point the camera at a LoyaltyBase customer card QR code.</p>
         </div>
@@ -290,7 +290,7 @@ export function CameraScanner({ backHref }: { backHref: string }) {
           <Video className="h-4 w-4" aria-hidden="true" />
           Test Camera
         </button>
-        <button type="button" onClick={() => startCamera()} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-[#F97316] business-button px-4 text-sm font-semibold text-white">
+        <button type="button" onClick={() => startCamera()} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md business-button px-4 text-sm font-semibold text-white">
           <Camera className="h-4 w-4" aria-hidden="true" />
           Start Camera
         </button>
@@ -319,7 +319,7 @@ export function CameraScanner({ backHref }: { backHref: string }) {
           Validate QR
         </button>
         <p className="mt-3 flex items-center gap-2 text-xs text-[#6B7280]">
-          <Zap className="h-3.5 w-3.5 text-[#F97316] business-text" aria-hidden="true" />
+          <Zap className="h-3.5 w-3.5 business-primary" aria-hidden="true" />
           Camera scan and manual paste both use the existing secure scan validation flow.
         </p>
       </div>

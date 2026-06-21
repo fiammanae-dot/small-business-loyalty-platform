@@ -56,7 +56,7 @@ export default async function StaffCustomerSearchPage({
     <DashboardShell user={user} eyebrow="Staff" title="Find customer" hideWelcomeMessage>
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <div>
-          <p className="text-sm font-semibold text-[#F97316] business-text">Customer lookup</p>
+          <p className="text-sm font-semibold business-primary">Customer lookup</p>
           <h2 className="mt-1 text-xl font-semibold text-[#111827]">Find customer</h2>
           <p className="mt-2 text-sm text-[#6B7280]">Search customers in your business by name, phone number, or card number.</p>
         </div>

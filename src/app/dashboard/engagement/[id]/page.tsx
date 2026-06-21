@@ -46,7 +46,7 @@ export default async function EngagementEventDetailPage({
       {qs.error ? <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{qs.error}</p> : null}
       {qs.success ? <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{qs.success}</p> : null}
       <div>
-        <Link href="/dashboard/engagement" className="text-sm font-semibold text-[#F97316]">Back to engagement center</Link>
+        <Link href="/dashboard/engagement" className="text-sm font-semibold business-primary">Back to engagement center</Link>
       </div>
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5">

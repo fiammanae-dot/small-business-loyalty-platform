@@ -824,6 +824,8 @@ input {
 }
 
 .business-text { color: var(--business-text, #f97316); }
+.business-primary { color: var(--business-primary, #f97316); }
+.business-primary-strong { color: var(--business-primary-strong, #9a3412); }
 .business-text-strong { color: var(--business-primary-strong, #9a3412); }
 .business-bg { background-color: var(--business-primary, #f97316); }
 .business-button { background-color: var(--business-button, #f97316); }

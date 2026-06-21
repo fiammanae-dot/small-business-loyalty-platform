@@ -39,7 +39,7 @@ export default async function BusinessProfilePage({
           <ReadOnly label="Created date" value={formatDate(business.createdAt)} />
           <ReadOnly label="Current business type" value={businessTypeLabels[business.businessType]} />
         </div>
-        <button type="submit" className="mt-6 h-10 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white hover:bg-orange-600">
+        <button type="submit" className="mt-6 h-10 rounded-md business-button px-4 text-sm font-semibold text-white hover:bg-orange-600">
           Save profile
         </button>
       </form>

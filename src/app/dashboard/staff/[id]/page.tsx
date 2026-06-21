@@ -78,7 +78,7 @@ export default async function StaffDetailPage({
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Staff profile">
       <div>
-        <Link href="/dashboard/staff" className="text-sm font-semibold text-[#F97316]">
+        <Link href="/dashboard/staff" className="text-sm font-semibold business-primary">
           Back to staff
         </Link>
       </div>
@@ -118,7 +118,7 @@ export default async function StaffDetailPage({
               >
                 <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <div>
-                    <Link href={activityHref(transaction.id, alertId) ?? "#"} className="font-semibold text-[#F97316]">
+                    <Link href={activityHref(transaction.id, alertId) ?? "#"} className="font-semibold business-primary">
                       Activity #{transaction.id}
                     </Link>
                     <p className="mt-1 text-sm text-[#111827]">
@@ -128,7 +128,7 @@ export default async function StaffDetailPage({
                       {transaction.customerProgramMembership.loyaltyProgram.name} • {transaction.branch?.name ?? "-"} • {formatDateTime(transaction.createdAt)}
                     </p>
                   </div>
-                  <Link href={customerProfileHref(membership.uuid, alertId, transaction.id) ?? "#"} className="text-sm font-semibold text-[#F97316]">
+                  <Link href={customerProfileHref(membership.uuid, alertId, transaction.id) ?? "#"} className="text-sm font-semibold business-primary">
                     View Customer
                   </Link>
                 </div>
@@ -147,14 +147,14 @@ export default async function StaffDetailPage({
             <Link
               key={alert.id}
               href={`/dashboard/notifications/${alert.id}`}
-              className={`rounded-md border p-4 transition hover:border-[#F97316] ${alertId === alert.id ? "border-[#F97316] bg-orange-50" : "border-[#E5E7EB] bg-white"}`}
+              className={`rounded-md border p-4 transition business-hover ${alertId === alert.id ? "border-[#F97316] bg-orange-50" : "border-[#E5E7EB] bg-white"}`}
             >
               <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                 <div>
                   <p className="font-semibold text-[#111827]">{alertTypeLabel(alert.alertType)}</p>
                   <p className="mt-1 text-sm text-[#6B7280]">{alert.description}</p>
                 </div>
-                <p className="text-sm font-semibold text-[#F97316]">{alert.severity}</p>
+                <p className="text-sm font-semibold business-primary">{alert.severity}</p>
               </div>
             </Link>
           ))}

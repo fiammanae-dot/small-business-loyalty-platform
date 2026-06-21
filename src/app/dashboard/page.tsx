@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import type React from "react";
 import {
   CheckCircle2,
@@ -73,6 +73,7 @@ export default async function BusinessDashboard({
       take: 5,
       select: {
         id: true,
+        uuid: true,
         name: true,
         requiredStamps: true,
         rewardName: true,
@@ -116,6 +117,7 @@ export default async function BusinessDashboard({
 
     return {
       id: program.id,
+      uuid: program.uuid,
       name: program.name,
       members: memberCount,
       progressPercent: Math.min(100, Math.round((averageProgress / program.requiredStamps) * 100)),
@@ -219,7 +221,7 @@ function HeaderSummary({
       <div className="grid max-w-full min-w-0 gap-3 xl:grid-cols-[minmax(240px,0.8fr)_minmax(0,1.4fr)] xl:items-center">
         <div className="flex min-w-0 items-center gap-3">
           <div
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-orange-100 business-border-soft bg-orange-50 business-bg-soft bg-cover bg-center text-sm font-bold text-[#F97316] business-text"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-orange-100 business-border-soft bg-orange-50 business-bg-soft bg-cover bg-center text-sm font-bold business-primary"
             style={logoUrl ? { backgroundImage: `url(${logoUrl})` } : undefined}
             aria-label="Business logo"
           >
@@ -230,7 +232,7 @@ function HeaderSummary({
             <p className="mt-0.5 text-sm text-[#6B7280]">{businessType}</p>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               <StatusBadge status={status} />
-              <span className="rounded-md bg-orange-50 business-bg-soft px-2 py-1 text-xs font-semibold text-[#F97316] business-text">{planName} Plan</span>
+              <span className="rounded-md bg-orange-50 business-bg-soft px-2 py-1 text-xs font-semibold business-primary">{planName} Plan</span>
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5">
               <SecondaryBusinessMetric href="/dashboard/customers" label="Customers" value={customerCount} />
@@ -293,7 +295,7 @@ function CompactCustomerSearch() {
             className="h-11 w-full rounded-md border border-[#E5E7EB] pl-10 pr-3 text-sm outline-none business-ring focus:ring-0"
           />
         </div>
-        <button type="submit" className="h-11 rounded-md bg-[#F97316] business-button px-4 text-sm font-semibold text-white">
+        <button type="submit" className="h-11 rounded-md business-button px-4 text-sm font-semibold text-white">
           Search
         </button>
       </div>
@@ -306,7 +308,7 @@ function MainActions() {
     <section>
       <div className="mb-3 flex items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold text-[#F97316] business-text">Main actions</p>
+          <p className="text-sm font-semibold business-primary">Main actions</p>
           <h2 className="mt-1 text-xl font-semibold text-[#111827]">Quick Actions</h2>
         </div>
       </div>
@@ -336,7 +338,7 @@ function RecentCustomers({
       eyebrow="Customers"
       title="Recent customers"
       icon={Users}
-      action={<Link href="/dashboard/customers" className="text-sm font-semibold text-[#F97316] business-text">View All Customers</Link>}
+      action={<Link href="/dashboard/customers" className="text-sm font-semibold business-primary">View All Customers</Link>}
     >
       <div className="grid gap-2">
         {customers.length ? (
@@ -364,6 +366,7 @@ function ProgramPerformance({
 }: {
   programs: Array<{
     id: number;
+    uuid: string;
     name: string;
     members: number;
     progressPercent: number;
@@ -378,7 +381,7 @@ function ProgramPerformance({
       <div className="grid gap-3">
         {programs.length ? (
           programs.map((program) => (
-            <Link key={program.id} href={`/dashboard/programs/${program.id}`} className="rounded-md border border-[#E5E7EB] p-3 transition business-hover">
+            <Link key={program.id} href={`/dashboard/programs/${program.uuid}`} className="rounded-md border border-[#E5E7EB] p-3 transition business-hover">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <p className="font-semibold text-[#111827]">{program.name}</p>
@@ -386,7 +389,7 @@ function ProgramPerformance({
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs font-semibold">
                   <span className="rounded-full bg-[#F3F4F6] px-2 py-1 text-[#374151]">{program.members} members</span>
-                  <span className="rounded-full bg-orange-50 business-bg-soft px-2 py-1 text-[#C2410C] business-text-strong">{program.rewardReady} reward ready</span>
+                  <span className="rounded-full bg-orange-50 business-bg-soft px-2 py-1 business-primary-strong">{program.rewardReady} reward ready</span>
                   <span className="rounded-full bg-emerald-50 px-2 py-1 text-emerald-700">{program.totalStampsIssued} stamps</span>
                 </div>
               </div>
@@ -425,7 +428,7 @@ function RecentActivity({
       eyebrow="Activity"
       title="Activity preview"
       icon={TicketCheck}
-      action={<Link href="/dashboard/activity" className="text-sm font-semibold text-[#F97316] business-text">View Full Activity</Link>}
+      action={<Link href="/dashboard/activity" className="text-sm font-semibold business-primary">View Full Activity</Link>}
     >
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <ActivityMetric label="Total activities today" value={totalActivitiesToday} href="/dashboard/activity" />
@@ -463,8 +466,8 @@ function OnboardingSummary({
   if (percent > 80) {
     return (
       <div className="inline-flex w-full max-w-xs items-center justify-between gap-3 rounded-md border border-orange-100 business-border-soft bg-orange-50 business-bg-soft px-3 py-2 shadow-sm">
-        <p className="text-sm font-semibold text-[#9A3412] business-text-strong">{percent}% Complete</p>
-        <Link href="/dashboard/settings" className="shrink-0 rounded-md bg-white px-3 py-1.5 text-xs font-semibold text-[#F97316] business-text shadow-sm">
+        <p className="text-sm font-semibold business-primary-strong">{percent}% Complete</p>
+        <Link href="/dashboard/settings" className="shrink-0 rounded-md bg-white px-3 py-1.5 text-xs font-semibold business-primary shadow-sm">
           Continue Setup
         </Link>
       </div>
@@ -510,7 +513,7 @@ function SummaryTile({
   return (
     <Link href={href} className={`min-w-0 rounded-md border px-3 py-2 transition business-hover ${tone === "alert" ? "border-red-200 bg-red-50" : "border-[#E5E7EB] bg-[#FAFAFA]"}`}>
       <div className="flex items-center justify-between gap-3">
-        <Icon className={`h-4 w-4 ${tone === "alert" ? "text-red-600" : "text-[#F97316] business-text"}`} aria-hidden="true" />
+        <Icon className={`h-4 w-4 ${tone === "alert" ? "text-red-600" : "business-primary"}`} aria-hidden="true" />
         <p className={`text-xl font-semibold ${tone === "alert" ? "text-red-700" : "text-[#111827]"}`}>{value}</p>
       </div>
       <p className="mt-1 break-words text-xs font-semibold uppercase text-[#6B7280]">{label}</p>
@@ -524,11 +527,11 @@ function PrimaryAction({ href, icon: Icon, label, featured = false }: { href: st
       href={href}
       className={`flex min-h-24 min-w-0 items-center gap-4 rounded-md border p-4 shadow-sm transition ${
         featured
-          ? "border-[#F97316] business-border bg-[#F97316] business-button text-white"
+          ? "business-border business-button text-white"
           : "border-[#E5E7EB] bg-white text-[#111827] business-hover"
       }`}
     >
-      <span className={`flex h-12 w-12 items-center justify-center rounded-md ${featured ? "bg-white/15" : "bg-orange-50 business-bg-soft text-[#F97316] business-text"}`}>
+      <span className={`flex h-12 w-12 items-center justify-center rounded-md ${featured ? "bg-white/15" : "bg-orange-50 business-bg-soft business-primary"}`}>
         <Icon className="h-6 w-6" aria-hidden="true" />
       </span>
       <span className="min-w-0 break-words text-lg font-semibold">{label}</span>
@@ -555,12 +558,12 @@ function SectionCard({
     <div className={`max-w-full min-w-0 overflow-hidden rounded-md border bg-white p-4 shadow-sm ${tone === "alert" ? "border-red-200 ring-1 ring-red-100" : "border-[#E5E7EB]"}`}>
       <div className="mb-4 flex min-w-0 items-start justify-between gap-4">
         <div>
-          <p className={`text-sm font-semibold ${tone === "alert" ? "text-red-600" : "text-[#F97316] business-text"}`}>{eyebrow}</p>
+          <p className={`text-sm font-semibold ${tone === "alert" ? "text-red-600" : "business-primary"}`}>{eyebrow}</p>
           <h2 className="mt-1 text-xl font-semibold text-[#111827]">{title}</h2>
         </div>
         <div className="flex min-w-0 items-center gap-3">
           {action}
-          <span className={`flex h-10 w-10 items-center justify-center rounded-md ${tone === "alert" ? "bg-red-50 text-red-600" : "bg-orange-50 business-bg-soft text-[#F97316] business-text"}`}>
+          <span className={`flex h-10 w-10 items-center justify-center rounded-md ${tone === "alert" ? "bg-red-50 text-red-600" : "bg-orange-50 business-bg-soft business-primary"}`}>
             <Icon className="h-5 w-5" aria-hidden="true" />
           </span>
         </div>
@@ -574,7 +577,7 @@ function EmptyState({ text, href, action }: { text: string; href: string; action
   return (
     <div className="rounded-md border border-dashed border-[#E5E7EB] p-4 text-sm text-[#6B7280]">
       <p>{text}</p>
-      <Link href={href} className="mt-3 inline-flex rounded-md bg-[#F97316] business-button px-3 py-2 text-sm font-semibold text-white">
+      <Link href={href} className="mt-3 inline-flex rounded-md business-button px-3 py-2 text-sm font-semibold text-white">
         {action}
       </Link>
     </div>

@@ -241,9 +241,9 @@ export default async function PlatformHealthAnalyticsPage() {
             <p className="mt-1 text-sm text-[#6B7280]">Export options prepare the current aggregated platform view without customer PII.</p>
           </div>
           <div className="grid gap-2 sm:grid-cols-3">
-            <ExportButton href="/platform/health-analytics?export=pdf" icon={<FileText className="h-4 w-4" />} label="PDF" />
-            <ExportButton href="/platform/health-analytics?export=excel" icon={<FileSpreadsheet className="h-4 w-4" />} label="Excel" />
-            <ExportButton href="/platform/health-analytics?export=csv" icon={<Download className="h-4 w-4" />} label="CSV" />
+            <ExportButton href="/platform/health-analytics/export?format=pdf" icon={<FileText className="h-4 w-4" />} label="PDF" />
+            <ExportButton href="/platform/health-analytics/export?format=excel" icon={<FileSpreadsheet className="h-4 w-4" />} label="Excel" />
+            <ExportButton href="/platform/health-analytics/export?format=csv" icon={<Download className="h-4 w-4" />} label="CSV" />
           </div>
         </div>
         </section>
@@ -569,3 +569,4 @@ function ExportButton({ href, icon, label }: { href: string; icon: ReactNode; la
     </Link>
   );
 }
+

@@ -590,12 +590,12 @@ function StampIssuanceSection({
           </div>
         </label>
         <label className="grid gap-2 text-sm font-semibold text-[#111827]">
-          Reason for multiple stamps
+          Reason for multiple stamps or repeated stamps
           <textarea
             name="reason"
             rows={3}
             className="rounded-md border border-[#E5E7EB] px-3 py-2 text-sm font-normal outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
-            placeholder="Required for +2 to +5 stamps so managers can review unusual activity. Example: Customer purchased multiple items."
+            placeholder="Required for multiple stamps or repeated stamps in a short time. Example: Customer purchased multiple items."
           />
         </label>
         <ConfirmSubmitButton
@@ -648,3 +648,5 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+

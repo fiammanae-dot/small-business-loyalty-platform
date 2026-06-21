@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import {  BarChart3,
   Building2,
   CreditCard,  Package,
@@ -163,10 +163,11 @@ export default async function PlatformDashboard({
           label="Monthly Revenue"
           value={revenueValue > 0 ? `AED ${revenueValue.toFixed(2)}` : "No revenue recorded yet"}
           trend={revenueValue > 0 ? "Current month" : undefined}
+          href="/platform/billing-center"
         />
         <KpiCard icon={ShieldAlert} label="Open Alerts" value={openAlerts.toString()} tone={openAlerts > 0 ? "alert" : "default"} href="/platform/audit-center?eventType=Alert+Actions" />
-        <KpiCard icon={Users} label="Total Customers" value={totalCustomers.toString()} trend={`${newCustomersThisMonth} new this month`} href="/platform/health-analytics" />
-        <KpiCard icon={BarChart3} label="Total Programs" value={totalPrograms.toString()} trend={`${newProgramsThisMonth} new this month`} href="/platform/health-analytics" />
+        <KpiCard icon={Users} label="Total Customers" value={totalCustomers.toString()} trend={`${newCustomersThisMonth} new this month`} href="/platform/tenant-center" />
+        <KpiCard icon={BarChart3} label="Total Programs" value={totalPrograms.toString()} trend={`${newProgramsThisMonth} new this month`} href="/platform/plans" />
       </PlatformKpiGrid>
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
@@ -265,7 +266,10 @@ function KpiCard({
         </span>
       </div>
       <p className={`mt-3 font-semibold text-[#111827] ${value.length > 12 ? "text-base leading-6" : "text-2xl"}`}>{value}</p>
-      <p className="mt-2 text-xs font-medium text-[#6B7280]">{trend ?? "No trend data yet"}</p>
+      <div className="mt-2 flex items-center justify-between gap-2 text-xs font-medium text-[#6B7280]">
+        <span>{trend ?? "No trend data yet"}</span>
+        {href ? <span className="text-[#F97316]">View</span> : null}
+      </div>
     </div>
   );
 
@@ -366,5 +370,7 @@ function getActivityStart(value: string, now: Date) {
   const hours = value === "24h" ? 24 : value === "30d" ? 24 * 30 : 24 * 7;
   return new Date(now.getTime() - hours * 60 * 60 * 1000);
 }
+
+
 
 

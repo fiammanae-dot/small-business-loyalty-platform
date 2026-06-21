@@ -144,7 +144,7 @@ export function RoleNavigation({ role }: RoleNavigationProps) {
     <aside className="hidden lg:sticky lg:top-6 lg:block lg:self-start" aria-label="Business Owner navigation">
       <div className="rounded-xl border border-[#E5E7EB] bg-white p-3 shadow-sm">
         <div className="flex items-center gap-3 border-b border-[#F1F5F9] px-2 pb-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 business-bg-soft text-[#F97316] business-text">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 business-bg-soft business-primary">
             <Store className="h-5 w-5" aria-hidden="true" />
           </span>
           <div>
@@ -220,11 +220,11 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
                     aria-current={active ? "page" : undefined}
                     className={`flex min-h-12 items-center gap-3 rounded-xl border px-3 py-3 text-sm font-bold transition duration-150 active:scale-[0.98] ${
                       active
-                        ? "border-[#F97316] business-border bg-orange-50 business-bg-soft text-[#EA580C] business-text-strong shadow-sm ring-1 ring-orange-200 business-ring"
-                        : "border-[#E5E7EB] bg-white text-[#475569] hover:border-orange-200 hover:bg-orange-50 hover:text-[#EA580C] business-hover"
+                        ? "border-[#F97316] business-border bg-orange-50 business-bg-soft business-primary-strong shadow-sm ring-1 ring-orange-200 business-ring"
+                        : "border-[#E5E7EB] bg-white text-[#475569] business-hover"
                     }`}
                   >
-                    <item.icon className={`h-5 w-5 transition-colors ${active ? "text-[#EA580C] business-text-strong" : "text-[#F97316] business-text"}`} aria-hidden="true" />
+                    <item.icon className={`h-5 w-5 transition-colors ${active ? "business-primary-strong" : "business-primary"}`} aria-hidden="true" />
                     <span className="min-w-0 truncate">{item.label}</span>
                   </Link>
                 );
@@ -236,7 +236,7 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
 
       {moreActive && !moreOpen ? (
         <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 flex justify-center px-4">
-          <span className="max-w-[min(22rem,calc(100vw-2rem))] truncate rounded-full border border-orange-200 business-border-soft bg-white px-3 py-1.5 text-xs font-bold text-[#EA580C] business-text-strong shadow-lg">
+          <span className="max-w-[min(22rem,calc(100vw-2rem))] truncate rounded-full border border-orange-200 business-border-soft bg-white px-3 py-1.5 text-xs font-bold business-primary-strong shadow-lg">
             More - {activeMoreItem?.label}
           </span>
         </div>
@@ -260,7 +260,7 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
                   active
                     ? "bg-[#F97316] business-button text-white shadow-sm"
                     : item.accent
-                      ? "border border-[#F97316] business-border bg-orange-50 business-bg-soft text-[#EA580C] business-text-strong shadow-sm"
+                      ? "border border-[#F97316] business-border bg-orange-50 business-bg-soft business-primary-strong shadow-sm"
                       : "text-[#64748B] business-hover"
                 }`}
               >
@@ -274,7 +274,7 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
             onClick={() => setMoreOpen((current) => !current)}
             aria-expanded={moreOpen}
             className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition ${
-              moreOpen || moreActive ? "bg-orange-50 business-bg-soft text-[#EA580C] business-text-strong" : "text-[#64748B] business-hover"
+              moreOpen || moreActive ? "bg-orange-50 business-bg-soft business-primary-strong" : "text-[#64748B] business-hover"
             }`}
           >
             <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
@@ -415,7 +415,7 @@ export function MobileBranchNavigation({ role }: RoleNavigationProps) {
                 active
                   ? "bg-[#F97316] business-button text-white shadow-sm"
                   : item.accent
-                    ? "border border-[#F97316] business-border bg-orange-50 business-bg-soft text-[#EA580C] business-text-strong shadow-sm"
+                    ? "border border-[#F97316] business-border bg-orange-50 business-bg-soft business-primary-strong shadow-sm"
                     : "text-[#64748B] business-hover"
               }`}
             >
@@ -452,7 +452,7 @@ export function MobileStaffNavigation({ role }: RoleNavigationProps) {
                 active
                   ? "bg-[#F97316] business-button text-white shadow-sm"
                   : item.accent
-                    ? "border border-[#F97316] business-border bg-orange-50 business-bg-soft text-[#EA580C] business-text-strong shadow-sm"
+                    ? "border border-[#F97316] business-border bg-orange-50 business-bg-soft business-primary-strong shadow-sm"
                     : "text-[#64748B] business-hover"
               }`}
             >
@@ -484,9 +484,9 @@ function NavigationLink({
         item.accent ? "py-3" : compact ? "py-2" : "py-2.5"
       } ${
         active
-          ? "border-orange-200 business-border-soft bg-orange-50 business-bg-soft text-[#EA580C] business-text-strong"
+          ? "border-orange-200 business-border-soft bg-orange-50 business-bg-soft business-primary-strong"
           : item.accent
-            ? "border-[#F97316] business-border bg-[#FFF7ED] text-[#EA580C] business-text-strong shadow-sm business-hover business-bg-soft"
+            ? "border-[#F97316] business-border bg-[#FFF7ED] business-primary-strong shadow-sm business-hover business-bg-soft"
             : "border-transparent text-[#64748B] border-transparent text-[#64748B] business-hover"
       }`}
     >
@@ -494,7 +494,7 @@ function NavigationLink({
         className={`flex shrink-0 items-center justify-center rounded-lg ${
           item.accent ? "h-11 w-11" : "h-9 w-9"
         } ${
-          active || item.accent ? "bg-white text-[#F97316] business-text shadow-sm" : "bg-[#F8FAFC] text-[#94A3B8] group-hover:text-[#F97316]"
+          active || item.accent ? "bg-white business-primary shadow-sm" : "bg-[#F8FAFC] text-[#94A3B8] business-primary"
         }`}
       >
         <item.icon className={item.accent ? "h-5 w-5" : "h-4 w-4"} aria-hidden="true" />

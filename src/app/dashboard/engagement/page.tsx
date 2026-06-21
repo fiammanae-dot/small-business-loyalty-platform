@@ -119,7 +119,7 @@ export default async function EngagementCenterPage({
           />
           <input name="from" type="date" defaultValue={params.from ?? ""} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm" />
           <input name="to" type="date" defaultValue={params.to ?? ""} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm" />
-          <button className="h-10 rounded-md border border-[#F97316] px-4 text-sm font-semibold text-[#F97316] md:col-span-5">Apply filters</button>
+          <button className="h-10 rounded-md border border-[#F97316] px-4 text-sm font-semibold business-primary md:col-span-5">Apply filters</button>
         </form>
       </section>
 
@@ -137,14 +137,14 @@ export default async function EngagementCenterPage({
                     <h3 className="font-semibold text-[#111827]">{engagementEventLabels[event.eventType]}</h3>
                     <p className="mt-1 text-sm text-[#6B7280]">{customerName}</p>
                   </div>
-                  <span className="rounded-md bg-orange-50 px-2 py-1 text-xs font-semibold text-[#F97316]">{event.status.toLowerCase()}</span>
+                  <span className="rounded-md bg-orange-50 px-2 py-1 text-xs font-semibold business-primary">{event.status.toLowerCase()}</span>
                 </div>
                 <div className="mt-4 grid gap-2 text-sm text-[#6B7280]">
                   <p>Branch: {event.customer.createdBranch?.name ?? "-"}</p>
                   <p>Program: {programName}</p>
                   <p>Date: {formatDateTime(event.eventDate)}</p>
                 </div>
-                <Link href={`/dashboard/engagement/${event.uuid}`} className="mt-4 inline-flex font-semibold text-[#F97316]">View</Link>
+                <Link href={`/dashboard/engagement/${event.uuid}`} className="mt-4 inline-flex font-semibold business-primary">View</Link>
               </article>
             );
           })}
@@ -172,7 +172,7 @@ export default async function EngagementCenterPage({
                     <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{event.status.toLowerCase()}</td>
                     <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDateTime(event.eventDate)}</td>
                     <td className="border-b border-[#E5E7EB] px-3 py-4">
-                      <Link href={`/dashboard/engagement/${event.uuid}`} className="font-semibold text-[#F97316]">View</Link>
+                      <Link href={`/dashboard/engagement/${event.uuid}`} className="font-semibold business-primary">View</Link>
                     </td>
                   </tr>
                 );
