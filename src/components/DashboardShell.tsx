@@ -69,7 +69,7 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
           <FileText className="h-5 w-5" aria-hidden="true" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-[#111827]">Welcome back</p>
+          <p className="truncate text-sm font-semibold text-[#111827]">Welcome back</p>
           <p className="text-xs font-semibold uppercase text-[#F97316] business-text">{roleLabels[user.role]}</p>
         </div>
       </div>
@@ -83,12 +83,12 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
 
   return (
     <BusinessBrandingProvider branding={businessBranding}>
-    <div className="min-h-screen bg-white text-[#111827]">
+    <div className="min-h-screen max-w-full overflow-x-hidden bg-white text-[#111827]">
       <IdleSessionTimeout />
       <header className="border-b border-[#E5E7EB] bg-white">
-        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-2.5 sm:px-6 sm:py-4 lg:gap-4 lg:px-8">
-          <div className="flex items-center justify-between gap-4">
-            <Link href={roleHomePath[user.role]} className="flex items-center gap-2">
+        <div className="mx-auto flex max-w-7xl min-w-0 flex-col gap-2 px-4 py-2.5 sm:px-6 sm:py-4 lg:gap-4 lg:px-8">
+          <div className="flex min-w-0 items-center justify-between gap-4">
+            <Link href={roleHomePath[user.role]} className="flex min-w-0 items-center gap-2">
               <span className="flex h-8 w-8 items-center justify-center rounded-md bg-[#F97316] text-xs font-bold text-white business-bg sm:h-9 sm:w-9 sm:text-sm">
                 LB
               </span>
@@ -122,13 +122,13 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
       </header>
 
       <main
-        className={`mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[240px_1fr] lg:px-8 ${
+        className={`mx-auto grid w-full max-w-7xl min-w-0 gap-6 overflow-x-hidden px-4 py-6 sm:px-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:px-8 ${
           user.role === "BUSINESS_OWNER" || user.role === "PLATFORM_OWNER" || user.role === "BRANCH_MANAGER" || user.role === "STAFF" ? "pb-24 lg:pb-6" : ""
         }`}
       >
         {demoModeEnabled ? (
-          <div className="rounded-md border border-orange-200 business-border-soft bg-orange-50 business-bg-soft px-4 py-3 text-sm font-semibold text-[#C2410C] business-text-strong lg:col-span-2">
-            Demo Mode Active â€” External communications and selected production actions are restricted.
+          <div className="min-w-0 break-words rounded-md border border-orange-200 business-border-soft bg-orange-50 business-bg-soft px-4 py-3 text-sm font-semibold text-[#C2410C] business-text-strong lg:col-span-2">
+            Demo Mode Active - External communications and selected production actions are restricted.
           </div>
         ) : null}
 
@@ -157,11 +157,11 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
 
         {user.role === "BUSINESS_OWNER" ? <RoleNavigation role={user.role} /> : null}
 
-        <div className={`flex flex-col gap-8 ${hasSidebar ? "" : "lg:col-span-2"}`}>
-        <section className={`grid gap-5 lg:items-end ${headerPanel ? "lg:grid-cols-[1fr_300px]" : ""}`}>
+        <div className={`flex min-w-0 max-w-full flex-col gap-8 overflow-x-hidden ${hasSidebar ? "" : "lg:col-span-2"}`}>
+        <section className={`grid min-w-0 gap-5 lg:items-end ${headerPanel ? "lg:grid-cols-[minmax(0,1fr)_300px]" : ""}`}>
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-[#F97316] business-text">{eyebrow}</p>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#111827] sm:text-4xl">
+            <h1 className="mt-3 break-words text-3xl font-semibold tracking-tight text-[#111827] sm:text-4xl">
               {title}
             </h1>
             {!hideWelcomeMessage ? (

@@ -197,18 +197,18 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
             className="fixed inset-0 z-30 bg-[#0F172A]/35 backdrop-blur-[1px]"
             onClick={() => setMoreOpen(false)}
           />
-          <div className="fixed inset-x-0 bottom-0 z-40 max-h-[82vh] rounded-t-3xl border border-[#E5E7EB] bg-white shadow-2xl">
+          <div className="fixed inset-x-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-40 max-h-[72vh] overflow-hidden rounded-3xl border border-[#E5E7EB] bg-white shadow-2xl">
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E5E7EB] bg-white px-4 py-3">
               <p className="text-base font-bold text-[#111827]">More{activeMoreItem ? ` - ${activeMoreItem.label}` : ""}</p>
               <button
                 type="button"
                 onClick={() => setMoreOpen(false)}
-                className="rounded-full px-3 py-1.5 text-sm font-bold text-[#64748B] business-hover"
+                className="rounded-full px-3 py-1.5 text-sm font-bold text-[#64748B] transition duration-150 active:scale-[0.98] business-hover"
               >
                 Close
               </button>
             </div>
-            <div className="grid max-h-[calc(82vh-56px)] grid-cols-2 gap-2 overflow-y-auto px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3">
+            <div className="grid max-h-[calc(72vh-56px)] grid-cols-2 gap-2 overflow-y-auto px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3">
               {mobileMoreItems.map((item) => {
                 const active = isActivePath(pathname, item.href);
 
@@ -218,13 +218,13 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
                     href={item.href}
                     onClick={() => setMoreOpen(false)}
                     aria-current={active ? "page" : undefined}
-                    className={`flex min-h-12 items-center gap-3 rounded-xl border px-3 py-3 text-sm font-bold ${
+                    className={`flex min-h-12 items-center gap-3 rounded-xl border px-3 py-3 text-sm font-bold transition duration-150 active:scale-[0.98] ${
                       active
-                        ? "border-orange-200 business-border-soft bg-orange-50 business-bg-soft text-[#EA580C] business-text-strong"
-                        : "border-[#E5E7EB] bg-white text-[#475569] business-hover"
+                        ? "border-[#F97316] business-border bg-orange-50 business-bg-soft text-[#EA580C] business-text-strong shadow-sm ring-1 ring-orange-200 business-ring"
+                        : "border-[#E5E7EB] bg-white text-[#475569] hover:border-orange-200 hover:bg-orange-50 hover:text-[#EA580C] business-hover"
                     }`}
                   >
-                    <item.icon className="h-5 w-5 text-[#F97316] business-text" aria-hidden="true" />
+                    <item.icon className={`h-5 w-5 transition-colors ${active ? "text-[#EA580C] business-text-strong" : "text-[#F97316] business-text"}`} aria-hidden="true" />
                     <span className="min-w-0 truncate">{item.label}</span>
                   </Link>
                 );
@@ -306,7 +306,7 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
             className="fixed inset-0 z-30 bg-[#0F172A]/35 backdrop-blur-[1px]"
             onClick={() => setMoreOpen(false)}
           />
-          <div className="fixed inset-x-0 bottom-0 z-40 max-h-[82vh] rounded-t-3xl border border-[#E5E7EB] bg-white shadow-2xl">
+          <div className="fixed inset-x-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-40 max-h-[72vh] overflow-hidden rounded-3xl border border-[#E5E7EB] bg-white shadow-2xl">
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E5E7EB] bg-white px-4 py-3">
               <p className="text-base font-bold text-[#111827]">More{activeMoreItem ? ` - ${activeMoreItem.label}` : ""}</p>
               <button
@@ -317,23 +317,27 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
                 Close
               </button>
             </div>
-            <div className="grid max-h-[calc(82vh-56px)] grid-cols-2 gap-2 overflow-y-auto px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3">
-              {platformMobileMoreItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMoreOpen(false)}
-                  aria-current={isActivePath(pathname, item.href) ? "page" : undefined}
-                  className={`flex min-h-12 items-center gap-3 rounded-xl border px-3 py-3 text-sm font-bold ${
-                    isActivePath(pathname, item.href)
-                      ? "border-orange-200 bg-orange-50 text-[#EA580C]"
-                      : "border-[#E5E7EB] bg-white text-[#475569]"
-                  }`}
-                >
-                  <item.icon className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
-                  <span className="min-w-0 truncate">{item.label}</span>
-                </Link>
-              ))}
+            <div className="grid max-h-[calc(72vh-56px)] grid-cols-2 gap-2 overflow-y-auto px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3">
+              {platformMobileMoreItems.map((item) => {
+                const active = isActivePath(pathname, item.href);
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMoreOpen(false)}
+                    aria-current={active ? "page" : undefined}
+                    className={`flex min-h-12 items-center gap-3 rounded-xl border px-3 py-3 text-sm font-bold transition duration-150 active:scale-[0.98] ${
+                      active
+                        ? "border-[#F97316] bg-orange-50 text-[#EA580C] shadow-sm ring-1 ring-orange-200"
+                        : "border-[#E5E7EB] bg-white text-[#475569] hover:border-orange-200 hover:bg-orange-50 hover:text-[#EA580C]"
+                    }`}
+                  >
+                    <item.icon className={`h-5 w-5 transition-colors ${active ? "text-[#EA580C]" : "text-[#F97316]"}`} aria-hidden="true" />
+                    <span className="min-w-0 truncate">{item.label}</span>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </>

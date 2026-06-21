@@ -215,9 +215,9 @@ function HeaderSummary({
   onboardingItems: Array<{ label: string; complete: boolean; href: string }>;
 }) {
   return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm">
-      <div className="grid gap-3 xl:grid-cols-[minmax(240px,0.8fr)_minmax(0,1.4fr)] xl:items-center">
-        <div className="flex items-center gap-3">
+    <section className="max-w-full min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm">
+      <div className="grid max-w-full min-w-0 gap-3 xl:grid-cols-[minmax(240px,0.8fr)_minmax(0,1.4fr)] xl:items-center">
+        <div className="flex min-w-0 items-center gap-3">
           <div
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-orange-100 business-border-soft bg-orange-50 business-bg-soft bg-cover bg-center text-sm font-bold text-[#F97316] business-text"
             style={logoUrl ? { backgroundImage: `url(${logoUrl})` } : undefined}
@@ -268,7 +268,7 @@ function SecondaryBusinessMetric({
   return (
     <Link
       href={href}
-      className={`rounded-md px-2 py-1 text-xs font-semibold transition ${
+      className={`min-w-0 break-words rounded-md px-2 py-1 text-xs font-semibold transition ${
         tone === "alert" ? "bg-red-50 text-red-700 hover:bg-red-100" : "bg-[#F3F4F6] text-[#374151] business-hover"
       }`}
     >
@@ -279,12 +279,12 @@ function SecondaryBusinessMetric({
 
 function CompactCustomerSearch() {
   return (
-    <form action="/dashboard/customers" className="rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm">
+    <form action="/dashboard/customers" className="max-w-full min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm">
       <label htmlFor="dashboard-customer-search" className="sr-only">
         Search customers
       </label>
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <div className="relative flex-1">
+      <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
+        <div className="relative min-w-0 flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#94A3B8]" aria-hidden="true" />
           <input
             id="dashboard-customer-search"
@@ -341,7 +341,7 @@ function RecentCustomers({
       <div className="grid gap-2">
         {customers.length ? (
           customers.map((customer) => (
-            <Link key={customer.uuid} href={`/dashboard/customers/${customer.uuid}`} className="flex items-center justify-between gap-3 rounded-md border border-[#E5E7EB] p-3 transition business-hover">
+            <Link key={customer.uuid} href={`/dashboard/customers/${customer.uuid}`} className="flex min-w-0 items-center justify-between gap-3 rounded-md border border-[#E5E7EB] p-3 transition business-hover">
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-[#111827]">{getCustomerName(customer.globalCustomer)}</p>
                 <p className="mt-1 text-xs text-[#6B7280]">
@@ -439,9 +439,9 @@ function RecentActivity({
 
 function ActivityMetric({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3">
+    <div className="min-w-0 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3">
       <p className="text-2xl font-semibold text-[#111827]">{value}</p>
-      <p className="mt-1 text-xs font-semibold uppercase text-[#6B7280]">{label}</p>
+      <p className="mt-1 break-words text-xs font-semibold uppercase text-[#6B7280]">{label}</p>
     </div>
   );
 }
@@ -501,12 +501,12 @@ function SummaryTile({
   tone?: "default" | "alert";
 }) {
   return (
-    <Link href={href} className={`rounded-md border px-3 py-2 transition business-hover ${tone === "alert" ? "border-red-200 bg-red-50" : "border-[#E5E7EB] bg-[#FAFAFA]"}`}>
+    <Link href={href} className={`min-w-0 rounded-md border px-3 py-2 transition business-hover ${tone === "alert" ? "border-red-200 bg-red-50" : "border-[#E5E7EB] bg-[#FAFAFA]"}`}>
       <div className="flex items-center justify-between gap-3">
         <Icon className={`h-4 w-4 ${tone === "alert" ? "text-red-600" : "text-[#F97316] business-text"}`} aria-hidden="true" />
         <p className={`text-xl font-semibold ${tone === "alert" ? "text-red-700" : "text-[#111827]"}`}>{value}</p>
       </div>
-      <p className="mt-1 text-xs font-semibold uppercase text-[#6B7280]">{label}</p>
+      <p className="mt-1 break-words text-xs font-semibold uppercase text-[#6B7280]">{label}</p>
     </Link>
   );
 }
@@ -515,7 +515,7 @@ function PrimaryAction({ href, icon: Icon, label, featured = false }: { href: st
   return (
     <Link
       href={href}
-      className={`flex min-h-24 items-center gap-4 rounded-md border p-4 shadow-sm transition ${
+      className={`flex min-h-24 min-w-0 items-center gap-4 rounded-md border p-4 shadow-sm transition ${
         featured
           ? "border-[#F97316] business-border bg-[#F97316] business-button text-white"
           : "border-[#E5E7EB] bg-white text-[#111827] business-hover"
@@ -524,7 +524,7 @@ function PrimaryAction({ href, icon: Icon, label, featured = false }: { href: st
       <span className={`flex h-12 w-12 items-center justify-center rounded-md ${featured ? "bg-white/15" : "bg-orange-50 business-bg-soft text-[#F97316] business-text"}`}>
         <Icon className="h-6 w-6" aria-hidden="true" />
       </span>
-      <span className="text-lg font-semibold">{label}</span>
+      <span className="min-w-0 break-words text-lg font-semibold">{label}</span>
     </Link>
   );
 }
@@ -545,13 +545,13 @@ function SectionCard({
   tone?: "default" | "alert";
 }) {
   return (
-    <div className={`rounded-md border bg-white p-4 shadow-sm ${tone === "alert" ? "border-red-200 ring-1 ring-red-100" : "border-[#E5E7EB]"}`}>
-      <div className="mb-4 flex items-start justify-between gap-4">
+    <div className={`max-w-full min-w-0 overflow-hidden rounded-md border bg-white p-4 shadow-sm ${tone === "alert" ? "border-red-200 ring-1 ring-red-100" : "border-[#E5E7EB]"}`}>
+      <div className="mb-4 flex min-w-0 items-start justify-between gap-4">
         <div>
           <p className={`text-sm font-semibold ${tone === "alert" ? "text-red-600" : "text-[#F97316] business-text"}`}>{eyebrow}</p>
           <h2 className="mt-1 text-xl font-semibold text-[#111827]">{title}</h2>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           {action}
           <span className={`flex h-10 w-10 items-center justify-center rounded-md ${tone === "alert" ? "bg-red-50 text-red-600" : "bg-orange-50 business-bg-soft text-[#F97316] business-text"}`}>
             <Icon className="h-5 w-5" aria-hidden="true" />
