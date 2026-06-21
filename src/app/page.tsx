@@ -2,7 +2,6 @@ import Link from "next/link";
 import {
   ArrowRight,
   BarChart3,
-  CheckCircle2,
   CircleHelp,
   Gift,
   MessageSquare,
@@ -10,7 +9,6 @@ import {
   ScanLine,
   ShieldCheck,
   Sparkles,
-  Store,
   Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -62,8 +60,8 @@ const faqs = [
     answer: "Yes. It supports controlled pilot operations with business setup, staff accounts, customer cards, scanner workflows, referrals, rewards, billing visibility, and audit trails.",
   },
   {
-    question: "Does the homepage require login?",
-    answer: "No. This page is public. Business users sign in through the Login button and then access their correct workspace.",
+    question: "Does the homepage require an account?",
+    answer: "No. This page is public and focused on prospective businesses evaluating LoyaltyBase for a pilot.",
   },
   {
     question: "Does LoyaltyBase send WhatsApp or SMS automatically?",
@@ -94,33 +92,27 @@ function PublicHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-[#E5E7EB] bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-3" aria-label="LoyaltyBase homepage">
-          <span className="flex h-10 w-10 items-center justify-center rounded-md bg-[#F97316] text-sm font-bold text-white">
+        <Link href="/" className="flex min-w-0 items-center gap-3" aria-label="LoyaltyBase homepage">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#F97316] text-sm font-bold text-white">
             LB
           </span>
-          <span className="text-base font-semibold text-[#111827]">LoyaltyBase</span>
+          <span className="truncate text-base font-semibold text-[#111827]">LoyaltyBase</span>
         </Link>
         <nav className="hidden items-center gap-6 text-sm font-semibold text-[#64748B] md:flex" aria-label="Homepage navigation">
-          <a href="#features" className="transition hover:text-[#F97316]">
-            Features
-          </a>
-          <a href="#how-it-works" className="transition hover:text-[#F97316]">
-            How it works
-          </a>
-          <a href="#pricing" className="transition hover:text-[#F97316]">
-            Pricing
-          </a>
-          <a href="#faq" className="transition hover:text-[#F97316]">
-            FAQ
-          </a>
+          <Link href="/" className="transition hover:text-[#F97316]">
+            Home
+          </Link>
+          <Link href="/benefits" className="transition hover:text-[#F97316]">
+            Benefits
+          </Link>
+          <Link href="/request-demo" className="transition hover:text-[#F97316]">
+            Request Demo
+          </Link>
         </nav>
         <div className="flex items-center gap-2">
-          <Link href="/login" className="rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#EA580C]">
-            Login
+          <Link href="/request-demo" className="rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#EA580C]">
+            Request Demo
           </Link>
-          <a href="mailto:hello@loyaltybase.ae?subject=LoyaltyBase%20Pilot%20Request" className="hidden rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#EA580C] sm:inline-flex">
-            Start Pilot
-          </a>
         </div>
       </div>
     </header>
@@ -130,7 +122,7 @@ function PublicHeader() {
 function HeroSection() {
   return (
     <section className="overflow-hidden border-b border-orange-100 bg-gradient-to-b from-orange-50/70 to-white">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_460px] lg:items-center lg:px-8 lg:py-20">
+      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,1fr)_460px] lg:items-center lg:px-8 lg:py-20">
         <MotionReveal>
           <span className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1 text-sm font-semibold text-[#EA580C] shadow-sm">
             <Sparkles className="h-4 w-4" aria-hidden="true" />
@@ -144,15 +136,15 @@ function HeroSection() {
           </p>
           <MotionStagger className="mt-8 flex flex-col gap-3 sm:flex-row" delay={0.2}>
             <MotionItem>
-              <Link href="/login" className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#F97316] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#EA580C] sm:w-auto">
-                Login
+              <Link href="/request-demo" className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#F97316] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#EA580C] sm:w-auto">
+                Request a Demo
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             </MotionItem>
             <MotionItem>
-              <a href="mailto:hello@loyaltybase.ae?subject=LoyaltyBase%20Demo%20Request" className="inline-flex w-full items-center justify-center rounded-md border border-[#E5E7EB] bg-white px-5 py-3 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#EA580C] sm:w-auto">
-                Request Demo / Start Pilot
-              </a>
+              <Link href="/benefits" className="inline-flex w-full items-center justify-center rounded-md border border-[#E5E7EB] bg-white px-5 py-3 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#EA580C] sm:w-auto">
+                View Benefits
+              </Link>
             </MotionItem>
           </MotionStagger>
         </MotionReveal>
@@ -186,8 +178,8 @@ function LoyaltyCardPreview() {
           </div>
           <p className="mt-3 text-sm text-orange-100">2 stamps away from a free coffee</p>
         </div>
-        <div className="mt-8 grid grid-cols-[1fr_auto] items-center gap-4 rounded-2xl bg-white p-4 text-[#111827]">
-          <div>
+        <div className="mt-8 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 rounded-2xl bg-white p-4 text-[#111827]">
+          <div className="min-w-0">
             <p className="text-sm font-semibold text-[#EA580C]">Reward Preview</p>
             <p className="mt-1 text-lg font-semibold">Free Coffee</p>
             <p className="mt-1 text-sm text-[#64748B]">Show QR code to earn or redeem.</p>
@@ -255,9 +247,9 @@ function PricingTeaserSection() {
   return (
     <section id="pricing" className="bg-white py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <MotionOnScroll className="rounded-2xl border border-orange-100 bg-orange-50 p-6 sm:p-8 lg:grid lg:grid-cols-[1fr_360px] lg:items-center lg:gap-8">
+        <MotionOnScroll className="rounded-2xl border border-orange-100 bg-orange-50 p-6 sm:p-8 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center lg:gap-8">
           <div>
-            <p className="text-sm font-semibold uppercase text-[#EA580C]">Pricing teaser</p>
+            <p className="text-sm font-semibold uppercase text-[#EA580C]">Simple pricing</p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[#111827]">Start small, grow by branch.</h2>
             <p className="mt-4 max-w-2xl text-base leading-7 text-[#64748B]">
               LoyaltyBase supports Starter, Growth, and Multi Branch plans. All plans include customers, programs, referrals, tiers, reports, CSV exports, and branding.
@@ -267,8 +259,8 @@ function PricingTeaserSection() {
             <p className="text-sm font-semibold text-[#64748B]">Starter from</p>
             <p className="mt-2 text-4xl font-semibold text-[#111827]">AED 100</p>
             <p className="mt-1 text-sm text-[#64748B]">per month</p>
-            <Link href="/login" className="mt-5 inline-flex w-full items-center justify-center rounded-md bg-[#F97316] px-4 py-3 text-sm font-semibold text-white hover:bg-[#EA580C]">
-              Open Dashboard
+            <Link href="/request-demo" className="mt-5 inline-flex w-full items-center justify-center rounded-md bg-[#F97316] px-4 py-3 text-sm font-semibold text-white hover:bg-[#EA580C]">
+              Request Pilot Access
             </Link>
           </div>
         </MotionOnScroll>
@@ -301,22 +293,22 @@ function FaqSection() {
 function Footer() {
   return (
     <footer className="border-t border-[#E5E7EB] bg-white">
-      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm text-[#64748B] sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
-        <div className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[#F97316] text-xs font-bold text-white">
-            LB
-          </span>
-          <span className="font-semibold text-[#111827]">LoyaltyBase</span>
+      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm text-[#64748B] sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[#F97316] text-xs font-bold text-white">
+              LB
+            </span>
+            <span className="font-semibold text-[#111827]">LoyaltyBase</span>
+          </div>
+          <div className="flex flex-wrap gap-4">
+            <Link href="/" className="font-semibold text-[#64748B] hover:text-[#EA580C]">Home</Link>
+            <Link href="/benefits" className="font-semibold text-[#64748B] hover:text-[#EA580C]">Benefits</Link>
+            <Link href="/request-demo" className="font-semibold text-[#EA580C]">Request Demo</Link>
+          </div>
         </div>
-        <p>Digital loyalty operations for small businesses.</p>
-        <div className="flex gap-4">
-          <Link href="/login" className="font-semibold text-[#EA580C]">
-            Login
-          </Link>
-          <a href="mailto:hello@loyaltybase.ae" className="font-semibold text-[#EA580C]">
-            Request Demo
-          </a>
-        </div>
+        <p>Digital loyalty operations for UAE and GCC small businesses.</p>
+        <p className="text-xs text-[#94A3B8]">Existing users can access their workspace through the direct login page.</p>
       </div>
     </footer>
   );
