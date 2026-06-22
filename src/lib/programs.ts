@@ -65,6 +65,7 @@ export const programSchema = z
     requiredStamps: z.coerce.number().int().min(1, "Required stamps must be at least 1."),
     startingBonusStamps: z.coerce.number().int().min(0, "Starting bonus stamps cannot be negative."),
     referralRewardBonusStamps: z.coerce.number().int().min(0, "Referral reward bonus stamps cannot be negative."),
+    cardTheme: z.enum(["BUSINESS_DEFAULT", "COFFEE_CAFE", "RESTAURANT", "BEAUTY_SALON", "AUTOMOTIVE", "RETAIL_GENERAL"]).default("BUSINESS_DEFAULT"),
     rewardName: z.string().trim().min(1, "Reward name is required."),
     rewardDescription: z.string().trim().min(1, "Reward description is required."),
     active: z.boolean(),
@@ -107,3 +108,4 @@ export function programCustomerStatusLabel({
   if (progressValue(earnedStamps, bonusStamps) >= requiredStamps) return "Reward Ready";
   return "Active";
 }
+

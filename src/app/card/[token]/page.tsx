@@ -12,6 +12,7 @@ import {
   WalletCards,
 } from "lucide-react";
 import { getCardUrl, getShortCardToken, resolveBranding } from "@/lib/customer-cards";
+import { resolveCardThemeColors } from "@/lib/card-themes";
 import { calculateCustomerTier } from "@/lib/customer-tiers";
 import { formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -60,6 +61,10 @@ export default async function PublicCustomerCardPage({
     })),
   );
   const primaryProgram = programCards[0] ?? null;
+  const primaryCardTheme = resolveCardThemeColors({
+    cardTheme: primaryProgram?.programMembership.loyaltyProgram.cardTheme,
+    branding,
+  });
   const lastUpdatedAt = [
     membership.updatedAt,
     membership.cardLastViewedAt,
@@ -112,6 +117,7 @@ export default async function PublicCustomerCardPage({
           cardNumber={getShortCardToken(membership.cardToken)}
           tier={tier}
           qrCode={primaryProgram?.qrCode ?? null}
+          cardTheme={primaryCardTheme}
           rewardReady={
             primaryProgram
               ? progressValue(primaryProgram.programMembership.earnedStamps, primaryProgram.programMembership.bonusStamps) >=
@@ -122,8 +128,8 @@ export default async function PublicCustomerCardPage({
 
         {primaryProgram ? (
           <>
-            <LoyaltyProgressSection programMembership={primaryProgram.programMembership} branding={branding} />
-            <RewardStatusSection programMembership={primaryProgram.programMembership} branding={branding} />
+            <LoyaltyProgressSection programMembership={primaryProgram.programMembership} branding={branding} cardTheme={primaryCardTheme} />
+            <RewardStatusSection programMembership={primaryProgram.programMembership} branding={branding} cardTheme={primaryCardTheme} />
           </>
         ) : (
           <section className="rounded-[28px] border bg-white p-5 shadow-sm" style={{ borderColor: withAlpha(branding.primaryColor, 0.18) }}>
@@ -151,7 +157,7 @@ export default async function PublicCustomerCardPage({
 
         <section className="rounded-[28px] border border-[#E5E7EB] bg-white p-5 shadow-sm">
           <div className="flex items-center gap-2">
-            <QrCode className="h-5 w-5" style={{ color: branding.primaryColor }} aria-hidden="true" />
+            <QrCode className="h-5 w-5" style={{ color: cardTheme.accent }} aria-hidden="true" />
             <h2 className="text-base font-semibold text-[#1E293B]">Save Your Card</h2>
           </div>
           <p className="mt-2 text-sm leading-6 text-[#64748B]">
@@ -205,6 +211,7 @@ function LoyaltyWalletCard({
   cardNumber,
   tier,
   qrCode,
+  cardTheme,
   rewardReady,
 }: {
   businessName: string;
@@ -213,6 +220,7 @@ function LoyaltyWalletCard({
   cardNumber: string;
   tier: ReturnType<typeof calculateCustomerTier>;
   qrCode: string | null;
+  cardTheme: ReturnType<typeof resolveCardThemeColors>;
   rewardReady: boolean;
 }) {
   const tierTone = getTierTone(tier.badgeLabel, branding);
@@ -221,7 +229,7 @@ function LoyaltyWalletCard({
     <section
       className="relative overflow-hidden rounded-[34px] p-5 text-white shadow-2xl sm:p-6"
       style={{
-        background: `radial-gradient(circle at 15% 10%, rgba(255,255,255,0.25), transparent 32%), linear-gradient(145deg, ${branding.primaryColor}, ${branding.secondaryColor})`,
+        background: `radial-gradient(circle at 15% 10%, rgba(255,255,255,0.25), transparent 32%), linear-gradient(145deg, ${cardTheme.accent}, ${cardTheme.secondary})`,
       }}
     >
       <div className="absolute -right-14 -top-14 h-44 w-44 rounded-full bg-white/20 blur-3xl" />
@@ -246,9 +254,12 @@ function LoyaltyWalletCard({
             <h1 className="mt-1 text-lg font-bold leading-tight">{businessName}</h1>
           </div>
         </div>
-        <span className="rounded-full bg-white/18 px-3 py-1 text-xs font-bold ring-1 ring-white/25">
-          {rewardReady ? "Reward Ready" : "Live Card"}
-        </span>
+        <div className="flex flex-col items-end gap-2">
+          <span className="rounded-full bg-white/18 px-3 py-1 text-xs font-bold ring-1 ring-white/25">
+            {rewardReady ? "Reward Ready" : "Live Card"}
+          </span>
+          <span className="rounded-full bg-white/15 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-white/80 ring-1 ring-white/20">{cardTheme.label}</span>
+        </div>
       </div>
 
       <div className="relative mt-9">
@@ -275,7 +286,7 @@ function LoyaltyWalletCard({
           ) : (
             <div
               className="flex h-[178px] w-[178px] items-center justify-center rounded-2xl text-sm font-bold"
-              style={{ backgroundColor: withAlpha(branding.primaryColor, 0.1), color: branding.primaryColor }}
+              style={{ backgroundColor: withAlpha(cardTheme.accent, 0.1), color: cardTheme.accent }}
             >
               QR pending
             </div>
@@ -290,9 +301,11 @@ function LoyaltyWalletCard({
 function LoyaltyProgressSection({
   programMembership,
   branding,
+  cardTheme,
 }: {
   programMembership: ProgramMembershipView;
   branding: ReturnType<typeof resolveBranding>;
+  cardTheme: ReturnType<typeof resolveCardThemeColors>;
 }) {
   const progress = progressValue(programMembership.earnedStamps, programMembership.bonusStamps);
   const required = programMembership.loyaltyProgram.requiredStamps;
@@ -331,12 +344,12 @@ function LoyaltyProgressSection({
             <span>Next Reward</span>
             <span>{completion}%</span>
           </div>
-          <div className="mt-3 h-4 overflow-hidden rounded-full" style={{ backgroundColor: withAlpha(branding.secondaryColor, 0.18) }}>
+          <div className="mt-3 h-4 overflow-hidden rounded-full" style={{ backgroundColor: withAlpha(cardTheme.secondary, 0.18) }}>
             <div
               className="customer-card-progress h-full rounded-full"
               style={{
                 width: `${completion}%`,
-                background: `linear-gradient(90deg, ${branding.secondaryColor}, ${branding.primaryColor})`,
+                background: `linear-gradient(90deg, ${cardTheme.secondary}, ${cardTheme.accent})`,
               }}
             />
           </div>
@@ -353,9 +366,11 @@ function LoyaltyProgressSection({
 function RewardStatusSection({
   programMembership,
   branding,
+  cardTheme,
 }: {
   programMembership: ProgramMembershipView;
   branding: ReturnType<typeof resolveBranding>;
+  cardTheme: ReturnType<typeof resolveCardThemeColors>;
 }) {
   const progress = progressValue(programMembership.earnedStamps, programMembership.bonusStamps);
   const required = programMembership.loyaltyProgram.requiredStamps;
@@ -594,9 +609,10 @@ function ProgramRewardCard({
   const remaining = Math.max(required - progress, 0);
   const completion = Math.min(Math.round((progress / required) * 100), 100);
   const rewardReady = progress >= required;
+  const cardTheme = resolveCardThemeColors({ cardTheme: programMembership.loyaltyProgram.cardTheme, branding });
 
   return (
-    <div className="rounded-2xl border border-[#E5E7EB] p-4">
+    <div className="rounded-2xl border p-4" style={{ borderColor: withAlpha(cardTheme.accent, 0.18), backgroundColor: withAlpha(cardTheme.accent, 0.03) }}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-semibold text-[#111827]">{programMembership.loyaltyProgram.name}</p>
@@ -668,6 +684,8 @@ type ProgramMembershipView = {
     name: string;
     requiredStamps: number;
     rewardName: string;
+    cardTheme: import("@prisma/client").CardTheme;
   };
   updatedAt: Date;
 };
+

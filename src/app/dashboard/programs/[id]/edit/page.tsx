@@ -41,6 +41,7 @@ export default async function EditProgramPage({
             requiredStamps: program.requiredStamps,
             startingBonusStamps: program.startingBonusStamps,
             referralRewardBonusStamps: program.referralRewardBonusStamps,
+            cardTheme: program.cardTheme,
             rewardName: program.rewardName,
             rewardDescription: program.rewardDescription,
             active: program.active,
@@ -53,3 +54,4 @@ export default async function EditProgramPage({
     </DashboardShell>
   );
 }
+

@@ -39,6 +39,7 @@ function programData(formData: FormData) {
     requiredStamps: getString(formData, "requiredStamps"),
     startingBonusStamps: getString(formData, "startingBonusStamps") || "0",
     referralRewardBonusStamps: getString(formData, "referralRewardBonusStamps") || "1",
+    cardTheme: getString(formData, "cardTheme") || "BUSINESS_DEFAULT",
     rewardName: getString(formData, "rewardName"),
     rewardDescription: getString(formData, "rewardDescription"),
     active: getString(formData, "active") === "true",
@@ -78,6 +79,7 @@ export async function createProgramAction(formData: FormData) {
       requiredStamps: parsed.data.requiredStamps,
       startingBonusStamps: parsed.data.startingBonusStamps,
       referralRewardBonusStamps: parsed.data.referralRewardBonusStamps,
+      cardTheme: parsed.data.cardTheme,
       rewardName: parsed.data.rewardName,
       rewardDescription: parsed.data.rewardDescription,
       active: parsed.data.active,
@@ -125,6 +127,7 @@ export async function updateProgramAction(formData: FormData) {
       requiredStamps: parsed.data.requiredStamps,
       startingBonusStamps: parsed.data.startingBonusStamps,
       referralRewardBonusStamps: parsed.data.referralRewardBonusStamps,
+      cardTheme: parsed.data.cardTheme,
       rewardName: parsed.data.rewardName,
       rewardDescription: parsed.data.rewardDescription,
       active: parsed.data.active,
@@ -231,3 +234,4 @@ export async function enrollCustomerInProgramAction(formData: FormData) {
   revalidatePath(path);
   redirect(`${path}?success=Customer enrolled.`);
 }
+
