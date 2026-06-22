@@ -2,6 +2,7 @@ import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { StatusBadge } from "@/components/StatusBadge";
+import { SettingsMobileSectionSelect } from "@/components/SettingsMobileSectionSelect";
 import Link from "next/link";
 import { saveAbusePolicyAction, saveCooldownRuleAction, saveCustomerTierSettingsAction, saveScannerSettingsAction } from "@/app/dashboard/actions";
 import { getBusinessOwnerContext, getCurrentPlan, getCurrentSubscription } from "@/lib/business-owner";
@@ -36,25 +37,27 @@ export default async function BusinessSettingsPage({
     orderBy: { ruleType: "asc" },
   });
   const activeTab = resolveSettingsTab(params.tab);
+  const settingsTabs = [
+    { tab: "overview", label: "Overview", mobileLabel: "Overview" },
+    { tab: "tiers", label: "Customer Tiers", mobileLabel: "Customer Tiers" },
+    { tab: "scanner", label: "Scanner Settings", mobileLabel: "Scanner" },
+    { tab: "alerts", label: "Alert Policies", mobileLabel: "Alert Policies" },
+    { tab: "cooldowns", label: "Cooldowns", mobileLabel: "Cooldowns" },
+    { tab: "subscription", label: "Subscription", mobileLabel: "Subscription" },
+    { tab: "communications", label: "Communications", mobileLabel: "Communications" },
+  ];
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Business settings">
-      <div className="max-w-full min-w-0 overflow-x-hidden">
+      <div className="max-w-full min-w-0 overflow-x-hidden pb-28 md:pb-0">
       {params.error || params.success ? (
         <p className={`rounded-md border px-3 py-2 text-sm ${params.error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>
           {params.error ?? params.success}
         </p>
       ) : null}
-      <nav className="max-w-full min-w-0 overflow-x-auto rounded-md border border-[#E5E7EB] bg-white p-1 text-sm md:p-2" aria-label="Business settings tabs">
-        {[
-          ["overview", "Overview"],
-          ["tiers", "Customer Tiers"],
-          ["scanner", "Scanner Settings"],
-          ["alerts", "Alert Policies"],
-          ["cooldowns", "Cooldowns"],
-          ["subscription", "Subscription"],
-          ["communications", "Communications"],
-        ].map(([tab, label]) => (
+      <SettingsMobileSectionSelect tabs={settingsTabs} activeTab={activeTab} />
+      <nav className="hidden max-w-full min-w-0 overflow-x-auto rounded-md border border-[#E5E7EB] bg-white p-2 text-sm md:flex" aria-label="Business settings tabs">
+        {settingsTabs.map(({ tab, label }) => (
           <Link
             key={tab}
             href={`/dashboard/settings?tab=${tab}`}
