@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 export type PasswordResetEmail = {
   to: string;
@@ -9,27 +9,94 @@ export type PasswordResetEmail = {
 export function buildPasswordResetEmail({ resetUrl, expiresInMinutes }: PasswordResetEmail) {
   const subject = "Reset Your LoyaltyBase Password";
   const text = [
-    "Reset your LoyaltyBase password",
+    "LoyaltyBase",
+    "Customer Loyalty Platform",
     "",
-    "We received a request to reset your password.",
-    `This link expires in ${expiresInMinutes} minutes.`,
+    "Reset Your Password",
     "",
-    resetUrl,
+    "We received a request to reset the password for your LoyaltyBase account.",
+    "Use the link below to create a new password and return to your workspace.",
     "",
-    "If you did not request this reset, you can ignore this email. Your password will not change unless the link is used.",
+    "Reset Password: " + resetUrl,
+    "",
+    "This reset link expires in " + expiresInMinutes + " minutes.",
+    "",
+    "If you did not request this password reset, you can safely ignore this email.",
+    "",
+    "LoyaltyBase",
+    "Customer Loyalty Platform",
+    "support@loyaltybase.app",
   ].join("\n");
 
   const html = `
-    <div style="font-family: Arial, sans-serif; color: #1E293B; line-height: 1.6;">
-      <h1 style="color: #1E293B;">Reset your LoyaltyBase password</h1>
-      <p>We received a request to reset your password.</p>
-      <p>This link expires in <strong>${expiresInMinutes} minutes</strong>.</p>
-      <p>
-        <a href="${resetUrl}" style="display: inline-block; background: #F97316; color: #ffffff; padding: 12px 18px; border-radius: 8px; text-decoration: none; font-weight: 700;">
-          Reset Password
-        </a>
-      </p>
-      <p style="color: #64748B;">If you did not request this reset, you can ignore this email. Your password will not change unless the link is used.</p>
+    <div style="margin:0; padding:0; background:#F8FAFC; font-family:Arial, Helvetica, sans-serif; color:#1E293B;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse; background:#F8FAFC; margin:0; padding:0;">
+        <tr>
+          <td align="center" style="padding:32px 16px;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse; max-width:560px; background:#FFFFFF; border:1px solid #E2E8F0; border-radius:16px; overflow:hidden;">
+              <tr>
+                <td style="padding:28px 28px 12px 28px; text-align:center;">
+                  <div style="display:inline-block; width:48px; height:48px; border-radius:14px; background:#FFF7ED; color:#F97316; font-size:24px; font-weight:800; line-height:48px; text-align:center;">
+                    LB
+                  </div>
+                  <p style="margin:12px 0 0 0; color:#F97316; font-size:13px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase;">
+                    LoyaltyBase
+                  </p>
+                  <p style="margin:4px 0 0 0; color:#64748B; font-size:13px;">
+                    Customer Loyalty Platform
+                  </p>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:12px 28px 8px 28px; text-align:center;">
+                  <h1 style="margin:0; color:#1E293B; font-size:28px; line-height:1.2; font-weight:800;">
+                    Reset Your Password
+                  </h1>
+                  <p style="margin:16px 0 0 0; color:#475569; font-size:16px; line-height:1.6;">
+                    We received a request to reset the password for your LoyaltyBase account. Use the button below to create a new password and return to your workspace.
+                  </p>
+                </td>
+              </tr>
+              <tr>
+                <td align="center" style="padding:22px 28px 10px 28px;">
+                  <a href="${resetUrl}" style="display:inline-block; min-width:220px; background:#F97316; color:#FFFFFF; padding:14px 22px; border-radius:10px; text-decoration:none; font-size:16px; font-weight:800; text-align:center;">
+                    Reset Password
+                  </a>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:16px 28px 4px 28px;">
+                  <div style="background:#FFF7ED; border:1px solid #FED7AA; border-radius:12px; padding:14px 16px; text-align:center;">
+                    <p style="margin:0; color:#9A3412; font-size:14px; line-height:1.5;">
+                      This reset link expires in <strong>${expiresInMinutes} minutes</strong>.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:18px 28px 28px 28px;">
+                  <p style="margin:0; color:#64748B; font-size:14px; line-height:1.6; text-align:center;">
+                    If you did not request this password reset, you can safely ignore this email.
+                  </p>
+                </td>
+              </tr>
+              <tr>
+                <td style="background:#F8FAFC; padding:20px 28px; text-align:center; border-top:1px solid #E2E8F0;">
+                  <p style="margin:0; color:#1E293B; font-size:14px; font-weight:800;">LoyaltyBase</p>
+                  <p style="margin:4px 0 0 0; color:#64748B; font-size:13px;">Customer Loyalty Platform</p>
+                  <p style="margin:8px 0 0 0; color:#64748B; font-size:13px;">
+                    <a href="mailto:support@loyaltybase.app" style="color:#EA580C; text-decoration:none;">support@loyaltybase.app</a>
+                  </p>
+                </td>
+              </tr>
+            </table>
+            <p style="max-width:560px; margin:16px auto 0 auto; color:#94A3B8; font-size:12px; line-height:1.5; text-align:center;">
+              If the button does not work, copy and paste this link into your browser:<br />
+              <span style="word-break:break-all;">${resetUrl}</span>
+            </p>
+          </td>
+        </tr>
+      </table>
     </div>
   `;
 
