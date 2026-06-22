@@ -3,6 +3,7 @@ import { ProgramForm } from "@/components/ProgramForm";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { prisma } from "@/lib/prisma";
 import { updateProgramAction } from "@/app/dashboard/programs/actions";
+import { resolveBranding } from "@/lib/customer-cards";
 
 export default async function EditProgramPage({
   params,
@@ -11,9 +12,10 @@ export default async function EditProgramPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ error?: string }>;
 }) {
-  const { user } = await getBusinessOwnerContext();
+  const { user, business } = await getBusinessOwnerContext();
   const { id } = await params;
   const qs = await searchParams;
+  const branding = resolveBranding(business.branding);
   const program = await prisma.loyaltyProgram.findFirst({
     where: { uuid: id, businessId: user.businessId },
   });
@@ -49,6 +51,8 @@ export default async function EditProgramPage({
             endDate: program.endDate,
           }}
           submitLabel="Save Program"
+          businessName={business.name}
+          branding={branding}
         />
       </section>
     </DashboardShell>

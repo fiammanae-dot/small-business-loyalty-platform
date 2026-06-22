@@ -1,8 +1,17 @@
 ﻿import type { BusinessType, CardTheme } from "@prisma/client";
 import { CsrfInput } from "@/components/CsrfInput";
 import { businessTypeOptions } from "@/lib/platform-options";
-import { cardThemeOptions } from "@/lib/card-themes";
+import { CardThemePreviewSelector } from "@/components/CardThemePreviewSelector";
 import { programTemplates } from "@/lib/programs";
+
+type ProgramPreviewBranding = {
+  primaryColor: string;
+  secondaryColor: string;
+  backgroundColor: string;
+  textColor: string;
+  buttonColor: string;
+  logoUrl: string | null;
+};
 
 type ProgramDefaults = {
   uuid?: string;
@@ -25,10 +34,14 @@ export function ProgramForm({
   action,
   defaults,
   submitLabel,
+  businessName,
+  branding,
 }: {
   action: (formData: FormData) => void | Promise<void>;
   defaults: ProgramDefaults;
   submitLabel: string;
+  businessName: string;
+  branding: ProgramPreviewBranding;
 }) {
   const template = defaults.businessType !== "OTHER" ? programTemplates[defaults.businessType] : null;
   const name = defaults.name ?? template?.name ?? "";
@@ -48,30 +61,7 @@ export function ProgramForm({
         <p className="text-sm font-semibold business-text">Template loaded</p>
         <p className="mt-1 text-sm text-[#6B7280]">Defaults are editable before saving.</p>
       </div>
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-4">
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-semibold text-[#111827]">Loyalty card theme</p>
-          <p className="text-sm text-[#6B7280]">Choose how the public customer card should feel. Custom theme editing is reserved for a future release.</p>
-        </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {cardThemeOptions.map((theme) => (
-            <label key={theme.value} className="group cursor-pointer rounded-2xl border border-[#E5E7EB] bg-white p-3 transition hover:border-[var(--business-primary,#F97316)] hover:bg-[var(--business-primary-soft,#FFF7ED)]">
-              <input type="radio" name="cardTheme" value={theme.value} defaultChecked={cardTheme === theme.value} className="sr-only peer" />
-              <div className="rounded-xl border p-3 peer-checked:ring-2 peer-checked:ring-[var(--business-primary,#F97316)]" style={{ borderColor: theme.accent, backgroundColor: theme.surface }}>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs font-black uppercase tracking-wide" style={{ color: theme.accent }}>{theme.motif}</span>
-                  <span className="h-6 w-6 rounded-full" style={{ background: `linear-gradient(135deg, ${theme.accent}, ${theme.secondary})` }} />
-                </div>
-                <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/70">
-                  <div className="h-full w-2/3 rounded-full" style={{ background: `linear-gradient(90deg, ${theme.secondary}, ${theme.accent})` }} />
-                </div>
-              </div>
-              <span className="mt-3 block text-sm font-bold text-[#111827]">{theme.label}</span>
-              <span className="mt-1 block text-xs leading-5 text-[#6B7280]">{theme.description}</span>
-            </label>
-          ))}
-        </div>
-      </section>
+      <CardThemePreviewSelector selectedTheme={cardTheme} businessName={businessName} branding={branding} />
 
       <div className="grid gap-4 md:grid-cols-2">
         <Input name="name" label="Program Name" defaultValue={name} required />

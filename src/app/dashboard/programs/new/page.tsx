@@ -2,6 +2,7 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { ProgramForm } from "@/components/ProgramForm";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { createProgramAction } from "@/app/dashboard/programs/actions";
+import { resolveBranding } from "@/lib/customer-cards";
 
 export default async function NewProgramPage({
   searchParams,
@@ -10,6 +11,7 @@ export default async function NewProgramPage({
 }) {
   const { user, business } = await getBusinessOwnerContext();
   const params = await searchParams;
+  const branding = resolveBranding(business.branding);
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Create program">
@@ -19,6 +21,8 @@ export default async function NewProgramPage({
           action={createProgramAction}
           defaults={{ businessType: business.businessType, active: true }}
           submitLabel="Create Program"
+          businessName={business.name}
+          branding={branding}
         />
       </section>
     </DashboardShell>

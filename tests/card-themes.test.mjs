@@ -32,9 +32,11 @@ test("loyalty programs store a selected card theme with business default support
 test("program create and edit flows expose visual card theme previews", () => {
   const themes = read("src/lib/card-themes.ts");
   const form = read("src/components/ProgramForm.tsx");
+  const preview = read("src/components/CardThemePreviewSelector.tsx");
   const programs = read("src/lib/programs.ts");
   const actions = read("src/app/dashboard/programs/actions.ts");
   const editPage = read("src/app/dashboard/programs/[id]/edit/page.tsx");
+  const newPage = read("src/app/dashboard/programs/new/page.tsx");
 
   assert.match(themes, /cardThemeOptions/);
   assert.match(themes, /Coffee & Cafe/);
@@ -42,13 +44,23 @@ test("program create and edit flows expose visual card theme previews", () => {
   assert.match(themes, /Beauty & Salon/);
   assert.match(themes, /Automotive/);
   assert.match(themes, /Retail & General/);
-  assert.match(form, /Loyalty card theme/);
-  assert.match(form, /type="radio" name="cardTheme"/);
-  assert.match(form, /cardThemeOptions\.map/);
+  assert.match(form, /CardThemePreviewSelector/);
+  assert.match(form, /businessName={businessName}/);
+  assert.match(form, /branding={branding}/);
+  assert.match(preview, /Loyalty card theme/);
+  assert.match(preview, /Preview card/);
+  assert.match(preview, /type="button"/);
+  assert.match(preview, /role="dialog"/);
+  assert.match(preview, /aria-modal="true"/);
+  assert.match(preview, /Sample referral section/);
+  assert.match(preview, /cardThemeOptions\.map/);
   assert.match(programs, /cardTheme: z\.enum/);
   assert.match(actions, /cardTheme: getString\(formData, "cardTheme"\) \|\| "BUSINESS_DEFAULT"/);
   assert.match(actions, /cardTheme: parsed\.data\.cardTheme/);
   assert.match(editPage, /cardTheme: program\.cardTheme/);
+  assert.match(editPage, /businessName=\{business.name\}/);
+  assert.match(newPage, /businessName=\{business.name\}/);
+  assert.match(newPage, /resolveBranding\(business.branding\)/);
 });
 
 test("public customer card renders selected program theme without replacing core card sections", () => {
