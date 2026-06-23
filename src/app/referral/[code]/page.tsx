@@ -1,4 +1,7 @@
-import { CopyReferralCodeButton } from "@/components/CopyReferralCodeButton";
+import QRCode from "qrcode";
+import { ReferralInviteActions } from "@/components/ReferralInviteActions";
+import { getBaseUrl } from "@/lib/customer-cards";
+import { fromStoredTier } from "@/lib/customer-tiers";
 import { businessTypeLabels } from "@/lib/roles";
 import { extractReferralCode, resolveReferralLandingReferrer } from "@/lib/referrals";
 
@@ -21,40 +24,90 @@ export default async function ReferralLandingPage({
   }
 
   const brandColor = referrer.business.branding?.buttonColor ?? "#F97316";
+  const referralUrl = `${await getBaseUrl()}/referral/${encodeURIComponent(referralCode)}`;
+  const referralQrDataUrl = await QRCode.toDataURL(referralUrl, {
+    errorCorrectionLevel: "M",
+    margin: 2,
+    width: 280,
+    color: {
+      dark: "#111827",
+      light: "#FFFFFF",
+    },
+  });
+  const referrerName = `${referrer.globalCustomer.firstName} ${referrer.globalCustomer.lastName ?? ""}`.trim();
+  const referrerTier = fromStoredTier(referrer.currentTier);
+  const displayReferralId = friendlyReferralId(referralCode);
+  const initials = referrer.business.name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase() || "LB";
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-white px-4 py-8 text-[#111827]">
-      <section className="w-full max-w-lg rounded-md border border-[#E5E7EB] bg-white p-6 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-md text-sm font-bold text-white" style={{ backgroundColor: brandColor }}>
-            {referrer.business.name.slice(0, 2).toUpperCase()}
+    <main className="min-h-screen bg-[#FFF7ED] px-4 py-6 text-[#111827] sm:py-10">
+      <section className="mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-[#FED7AA] bg-white shadow-sm">
+        <div className="px-5 py-6 text-white" style={{ backgroundColor: brandColor }}>
+          <div className="flex items-center gap-3">
+            {referrer.business.branding?.logoUrl ? (
+              <img
+                src={referrer.business.branding.logoUrl}
+                alt={`${referrer.business.name} logo`}
+                className="h-14 w-14 rounded-xl bg-white object-cover p-1"
+              />
+            ) : (
+              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 text-base font-bold text-white">
+                {initials}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-wide text-white/80">Referral invitation</p>
+              <h1 className="mt-1 break-words text-2xl font-semibold leading-tight">{referrer.business.name}</h1>
+              <p className="mt-1 text-sm text-white/85">{businessTypeLabels[referrer.business.businessType]}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-semibold" style={{ color: brandColor }}>Loyalty referral</p>
-            <h1 className="text-2xl font-semibold">{referrer.business.name}</h1>
-            <p className="text-sm text-[#6B7280]">{businessTypeLabels[referrer.business.businessType]}</p>
+        </div>
+
+        <div className="px-5 py-6">
+          <div className="rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-4 text-center">
+            <p className="text-sm text-[#6B7280]">You have been invited by</p>
+            <p className="mt-1 text-xl font-semibold text-[#111827]">{referrerName}</p>
+            {referrerTier ? (
+              <p className="mt-2 inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white" style={{ backgroundColor: brandColor }}>
+                {referrerTier} member
+              </p>
+            ) : null}
           </div>
-        </div>
 
-        <div className="mt-6 rounded-md p-4" style={{ backgroundColor: `${brandColor}14` }}>
-          <p className="text-xs font-semibold uppercase text-[#6B7280]">Referred by</p>
-          <p className="mt-2 text-lg font-semibold text-[#111827]">
-            {referrer.globalCustomer.firstName} {referrer.globalCustomer.lastName ?? ""}
+          <p className="mt-5 text-center text-base leading-7 text-[#374151]">
+            You have been invited to join this loyalty program. Show this referral QR to staff when visiting the branch.
           </p>
-          <p className="mt-3 text-sm leading-6 text-[#111827]">
-            Show this referral code to staff when joining the loyalty program.
-          </p>
-        </div>
 
-        <div className="mt-5 rounded-md border border-[#E5E7EB] p-4">
-          <p className="text-xs font-semibold uppercase text-[#6B7280]">Referral code</p>
-          <p className="mt-2 break-all text-lg font-semibold text-[#111827]">{referralCode}</p>
-        </div>
+          <div className="mt-5 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-center shadow-sm">
+            <img src={referralQrDataUrl} alt="Referral invitation QR code" className="mx-auto h-64 w-64 max-w-full rounded-xl" />
+            <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-[#6B7280]">Referral ID</p>
+            <p className="mt-1 text-2xl font-bold tracking-wide text-[#111827]">{displayReferralId}</p>
+          </div>
 
-        <CopyReferralCodeButton referralCode={referralCode} brandColor={brandColor} />
+          <ReferralInviteActions
+            referralUrl={referralUrl}
+            businessName={referrer.business.name}
+            referrerName={referrerName}
+            brandColor={brandColor}
+          />
+        </div>
       </section>
     </main>
   );
+}
+
+function friendlyReferralId(referralCode: string) {
+  let hash = 0;
+  for (const character of referralCode) {
+    hash = (hash * 31 + character.charCodeAt(0)) % 10000;
+  }
+  return `RF-${hash.toString().padStart(4, "0")}`;
 }
 
 function ReferralUnavailable() {
