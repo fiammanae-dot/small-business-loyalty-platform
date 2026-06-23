@@ -2,12 +2,20 @@ import Link from "next/link";
 import {
   ArrowRight,
   BarChart3,
+  Car,
+  CheckCircle2,
   CircleHelp,
+  Coffee,
   Gift,
   MessageSquare,
+  QrCode,
   ScanLine,
+  Scissors,
   ShieldCheck,
+  ShoppingBag,
   Sparkles,
+  Store,
+  Utensils,
   Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -54,6 +62,44 @@ const steps = [
   "Unlock and redeem rewards",
 ];
 
+const customerJourney = [
+  { title: "Join by QR", description: "Customers scan or receive a secure loyalty card link.", icon: QrCode },
+  { title: "Open digital card", description: "No app download. The card opens on any mobile browser.", icon: Gift },
+  { title: "Staff adds stamp", description: "Your team scans the card and records each visit quickly.", icon: ScanLine },
+  { title: "Reward unlocked", description: "Customers see when the next reward is ready.", icon: CheckCircle2 },
+  { title: "Customer returns again", description: "Simple rewards keep repeat visits easy to remember.", icon: Users },
+];
+
+const localBusinesses = [
+  { name: "Coffee shops", icon: Coffee },
+  { name: "Restaurants", icon: Utensils },
+  { name: "Barbershops", icon: Scissors },
+  { name: "Beauty salons", icon: Sparkles },
+  { name: "Car care centers", icon: Car },
+  { name: "Retail stores", icon: ShoppingBag },
+];
+
+const pricingPlans = [
+  {
+    name: "Starter",
+    price: "AED 100/month",
+    limits: ["1 branch", "1 program"],
+  },
+  {
+    name: "Growth",
+    price: "AED 200/month",
+    limits: ["3 branches", "5 programs"],
+    featured: true,
+  },
+  {
+    name: "Multi Branch",
+    price: "AED 1000/year per branch",
+    limits: ["10 branches", "15 programs"],
+  },
+];
+
+const includedPlanFeatures = ["Referrals", "Customer tiers", "Reports", "CSV exports", "Branding"];
+
 const faqs = [
   {
     question: "Is LoyaltyBase ready for real pilot businesses?",
@@ -78,7 +124,9 @@ export default function HomePage() {
     <main className="min-h-screen bg-white text-[#1E293B]">
       <PublicHeader />
       <HeroSection />
+      <CustomerJourneySection />
       <TrustSection />
+      <LocalBusinessSection />
       <FeaturesSection />
       <HowItWorksSection />
       <PricingTeaserSection />
@@ -173,14 +221,55 @@ function LoyaltyCardPreview() {
   );
 }
 
+function CustomerJourneySection() {
+  return (
+    <section className="border-b border-orange-100 bg-white py-14">
+      <SectionHeading eyebrow="Customer journey" title="How customers use LoyaltyBase" />
+      <div className="mx-auto mt-10 grid max-w-7xl gap-4 px-4 sm:px-6 md:grid-cols-5 lg:px-8">
+        {customerJourney.map((item, index) => (
+          <MotionOnScroll key={item.title} delay={index * 0.04} className="relative rounded-2xl border border-orange-100 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-orange-50 text-[#F97316]">
+              <item.icon className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <p className="mt-5 text-sm font-bold uppercase tracking-[0.14em] text-[#EA580C]">Step {index + 1}</p>
+            <h3 className="mt-2 text-lg font-semibold text-[#111827]">{item.title}</h3>
+            <p className="mt-3 text-sm leading-6 text-[#64748B]">{item.description}</p>
+          </MotionOnScroll>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function TrustSection() {
   return (
-    <section className="border-b border-[#E5E7EB] bg-white py-10">
+    <section className="border-b border-[#E5E7EB] bg-[#FFF7ED] py-12">
       <div className="mx-auto grid max-w-7xl gap-4 px-4 sm:px-6 md:grid-cols-4 lg:px-8">
-        <TrustMetric value="Multi-branch" label="Built for growing operations" />
-        <TrustMetric value="QR-first" label="Fast staff scanner workflow" />
-        <TrustMetric value="Audit-ready" label="Activity, alerts, and controls" />
-        <TrustMetric value="Pilot-ready" label="Designed for real validation" />
+        <TrustMetric value="No customer app required" label="Customers open their card instantly from a link, QR, or WhatsApp message." />
+        <TrustMetric value="QR scanner ready" label="Staff can issue stamps and redeem rewards with a simple scan workflow." />
+        <TrustMetric value="Customer retention focused" label="Bring people back with progress, rewards, referrals, and tiers." />
+        <TrustMetric value="Multi-branch support" label="Keep customers, programs, staff, and activity organized as you grow." />
+      </div>
+    </section>
+  );
+}
+
+function LocalBusinessSection() {
+  return (
+    <section className="bg-white py-16">
+      <SectionHeading eyebrow="Local businesses" title="Built for local businesses" />
+      <div className="mx-auto mt-10 grid max-w-7xl gap-4 px-4 sm:px-6 md:grid-cols-2 lg:grid-cols-3 lg:px-8">
+        {localBusinesses.map((business) => (
+          <MotionOnScroll key={business.name} className="flex items-center gap-4 rounded-2xl border border-[#E5E7EB] bg-white p-5 shadow-sm transition hover:border-orange-200 hover:shadow-md">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-50 text-[#F97316]">
+              <business.icon className="h-6 w-6" aria-hidden="true" />
+            </span>
+            <div>
+              <h3 className="font-semibold text-[#111827]">{business.name}</h3>
+              <p className="mt-1 text-sm text-[#64748B]">Simple loyalty tools for repeat customer visits.</p>
+            </div>
+          </MotionOnScroll>
+        ))}
       </div>
     </section>
   );
@@ -226,24 +315,42 @@ function HowItWorksSection() {
 function PricingTeaserSection() {
   return (
     <section id="pricing" className="bg-white py-16">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <MotionOnScroll className="rounded-2xl border border-orange-100 bg-orange-50 p-6 sm:p-8 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center lg:gap-8">
-          <div>
-            <p className="text-sm font-semibold uppercase text-[#EA580C]">Simple pricing</p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[#111827]">Start small, grow by branch.</h2>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-[#64748B]">
-              LoyaltyBase supports Starter, Growth, and Multi Branch plans. All plans include customers, programs, referrals, tiers, reports, CSV exports, and branding.
-            </p>
-          </div>
-          <div className="mt-6 rounded-md bg-white p-5 shadow-sm lg:mt-0">
-            <p className="text-sm font-semibold text-[#64748B]">Starter from</p>
-            <p className="mt-2 text-4xl font-semibold text-[#111827]">AED 100</p>
-            <p className="mt-1 text-sm text-[#64748B]">per month</p>
-            <Link href="/request-demo" className="mt-5 inline-flex w-full items-center justify-center rounded-md bg-[#F97316] px-4 py-3 text-sm font-semibold text-white hover:bg-[#EA580C]">
-              Request Pilot Access
+      <SectionHeading eyebrow="Simple pricing" title="Start small, grow by branch" />
+      <div className="mx-auto mt-10 grid max-w-7xl gap-5 px-4 sm:px-6 lg:grid-cols-3 lg:px-8">
+        {pricingPlans.map((plan) => (
+          <MotionOnScroll key={plan.name} className={`rounded-3xl border p-6 shadow-sm ${plan.featured ? "border-orange-200 bg-orange-50 shadow-orange-100" : "border-[#E5E7EB] bg-white"}`}>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-2xl font-semibold text-[#111827]">{plan.name}</h3>
+                <p className="mt-3 text-3xl font-semibold text-[#EA580C]">{plan.price}</p>
+              </div>
+              {plan.featured && (
+                <span className="rounded-full bg-[#F97316] px-3 py-1 text-xs font-bold uppercase text-white">Popular</span>
+              )}
+            </div>
+            <div className="mt-6 grid gap-2">
+              {plan.limits.map((limit) => (
+                <p key={limit} className="rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-[#475569] shadow-sm">
+                  {limit}
+                </p>
+              ))}
+            </div>
+            <div className="mt-6 border-t border-orange-100 pt-5">
+              <p className="text-sm font-semibold text-[#111827]">Included in every plan</p>
+              <ul className="mt-4 grid gap-3 text-sm text-[#64748B]">
+                {includedPlanFeatures.map((feature) => (
+                  <li key={feature} className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-[#F97316]" aria-hidden="true" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <Link href="/request-demo" className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-gradient-to-r from-[#F97316] to-[#EA580C] px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-100 transition hover:brightness-95">
+              Request Demo
             </Link>
-          </div>
-        </MotionOnScroll>
+          </MotionOnScroll>
+        ))}
       </div>
     </section>
   );
@@ -305,9 +412,9 @@ function SectionHeading({ eyebrow, title }: { eyebrow: string; title: string }) 
 
 function TrustMetric({ value, label }: { value: string; label: string }) {
   return (
-    <MotionOnScroll className="rounded-md border border-[#E5E7EB] bg-white p-4 text-center shadow-sm">
+    <MotionOnScroll className="rounded-2xl border border-orange-100 bg-white p-5 text-center shadow-sm">
       <p className="text-lg font-semibold text-[#111827]">{value}</p>
-      <p className="mt-1 text-sm text-[#64748B]">{label}</p>
+      <p className="mt-3 text-sm leading-6 text-[#64748B]">{label}</p>
     </MotionOnScroll>
   );
 }

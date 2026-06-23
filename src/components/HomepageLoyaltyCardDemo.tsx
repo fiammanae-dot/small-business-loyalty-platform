@@ -17,6 +17,10 @@ export function HomepageLoyaltyCardDemo() {
 
   return (
     <div className="relative rounded-[32px] border border-orange-100 bg-white/85 p-4 shadow-2xl shadow-orange-200/50 backdrop-blur">
+      <div className="absolute -left-3 bottom-12 z-10 hidden rotate-[-3deg] rounded-2xl border border-orange-100 bg-white px-4 py-3 shadow-xl shadow-orange-200/40 sm:block" aria-hidden="true">
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#EA580C]">Reward Ready</p>
+        <p className="mt-1 text-sm font-semibold text-[#111827]">Free Coffee</p>
+      </div>
       <div className="absolute -right-4 -top-5 hidden rounded-full bg-[#FDBA74]/30 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-[#9A3412] sm:block" aria-hidden="true">
         Live demo
       </div>
