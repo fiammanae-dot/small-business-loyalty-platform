@@ -37,6 +37,7 @@ test("customer enrollment creates referral context without public self-registrat
   assert.match(referrals, /existingGlobally/);
   assert.match(referrals, /SELF_REFERRAL_BLOCKED/);
   assert.match(referrals, /Self-referrals are blocked/);
+  assert.match(referrals, /findActiveReferralReferrerForEnrollment/);
   assert.match(referralPage, /Staff enrollment/);
   assert.doesNotMatch(referralPage, /create.*Customer/i);
 });
@@ -65,6 +66,8 @@ test("public customer card exposes referral link and aggregate referral stats on
   ]) {
     assert.match(card, new RegExp(expected));
   }
+
+  assert.match(card, /membership\.referralCode && membership\.referralEnabled \? await getReferralUrl/);
 });
 
 test("business dashboard does not duplicate referral reporting after cleanup", () => {
@@ -104,4 +107,17 @@ test("business owner referral center exposes referral reporting and detail visib
 
   assert.doesNotMatch(referralCenter, /approve/i);
   assert.doesNotMatch(referralDetail, /approve/i);
+});
+
+test("public referral landing resolves active business membership referral codes", () => {
+  const referrals = read("src/lib/referrals.ts");
+  const referralPage = read("src/app/referral/[code]/page.tsx");
+
+  assert.match(referrals, /resolveReferralLandingReferrer/);
+  assert.match(referrals, /activeReferralMembershipWhere/);
+  assert.match(referrals, /referrerMembership/);
+  assert.match(referrals, /referralEnabled/);
+  assert.match(referrals, /business\.status !== "ACTIVE"/);
+  assert.match(referralPage, /resolveReferralLandingReferrer\(referralCode\)/);
+  assert.doesNotMatch(referralPage, /businessCustomerMembership\.findFirst/);
 });

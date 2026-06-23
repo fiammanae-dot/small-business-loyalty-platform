@@ -45,7 +45,7 @@ export default async function PublicCustomerCardPage({
   const customer = membership.globalCustomer;
   const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim();
   const cardUrl = await getCardUrl(token);
-  const referralUrl = membership.referralCode ? await getReferralUrl(membership.referralCode) : null;
+  const referralUrl = membership.referralCode && membership.referralEnabled ? await getReferralUrl(membership.referralCode) : null;
   const programCards = await Promise.all(
     membership.programMemberships.map(async (programMembership) => ({
       programMembership,

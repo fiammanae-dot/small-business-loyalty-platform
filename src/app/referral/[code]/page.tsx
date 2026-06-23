@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
 import { businessTypeLabels } from "@/lib/roles";
-import { extractReferralCode } from "@/lib/referrals";
+import { extractReferralCode, resolveReferralLandingReferrer } from "@/lib/referrals";
 
 export default async function ReferralLandingPage({
   params,
@@ -15,18 +14,7 @@ export default async function ReferralLandingPage({
     return <ReferralUnavailable />;
   }
 
-  const referrer = await prisma.businessCustomerMembership.findFirst({
-    where: {
-      referralCode,
-      referralEnabled: true,
-      status: "ACTIVE",
-      business: { status: "ACTIVE" },
-    },
-    include: {
-      business: { include: { branding: true } },
-      globalCustomer: true,
-    },
-  });
+  const referrer = await resolveReferralLandingReferrer(referralCode);
 
   if (!referrer) {
     return <ReferralUnavailable />;

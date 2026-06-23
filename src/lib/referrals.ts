@@ -2,6 +2,7 @@ import "server-only";
 
 import { randomInt } from "crypto";
 import type { Prisma } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { getBaseUrl } from "@/lib/customer-cards";
 import { logAuditEvent } from "@/lib/audit";
 import { createCustomerNotification } from "@/lib/customer-notifications";
@@ -74,8 +75,99 @@ export async function getReferralUrl(referralCode: string) {
   return `${await getBaseUrl()}/referral/${encodeURIComponent(referralCode)}`;
 }
 
+export async function resolveReferralLandingReferrer(referralCode: string) {
+  const directReferrer = await prisma.businessCustomerMembership.findFirst({
+    where: activeReferralMembershipWhere(referralCode),
+    include: referralLandingInclude(),
+  });
+
+  if (directReferrer) return directReferrer;
+
+  const referral = await prisma.referral.findFirst({
+    where: { referralCode },
+    orderBy: { createdAt: "desc" },
+    include: {
+      referrerMembership: {
+        include: referralLandingInclude(),
+      },
+    },
+  });
+  const referrer = referral?.referrerMembership;
+
+  if (
+    !referrer ||
+    referrer.referralCode !== referralCode ||
+    !referrer.referralEnabled ||
+    referrer.status !== "ACTIVE" ||
+    referrer.business.status !== "ACTIVE"
+  ) {
+    return null;
+  }
+
+  return referrer;
+}
+
+function activeReferralMembershipWhere(referralCode: string) {
+  return {
+    referralCode,
+    referralEnabled: true,
+    status: "ACTIVE" as const,
+    business: { status: "ACTIVE" as const },
+  };
+}
+
+function referralLandingInclude() {
+  return {
+    business: { include: { branding: true } },
+    globalCustomer: true,
+  };
+}
 type TxClient = Prisma.TransactionClient;
 
+async function findActiveReferralReferrerForEnrollment({
+  tx,
+  businessId,
+  referralCode,
+}: {
+  tx: TxClient;
+  businessId: number;
+  referralCode: string;
+}) {
+  const directReferrer = await tx.businessCustomerMembership.findFirst({
+    where: {
+      businessId,
+      referralCode,
+      referralEnabled: true,
+      status: "ACTIVE",
+    },
+    select: { id: true, globalCustomerId: true },
+  });
+
+  if (directReferrer) return directReferrer;
+
+  const referral = await tx.referral.findFirst({
+    where: { businessId, referralCode },
+    orderBy: { createdAt: "desc" },
+    select: {
+      referrerMembership: {
+        select: {
+          id: true,
+          globalCustomerId: true,
+          referralEnabled: true,
+          status: true,
+          businessId: true,
+        },
+      },
+    },
+  });
+  const referrer = referral?.referrerMembership;
+
+  if (!referrer || referrer.businessId !== businessId || !referrer.referralEnabled || referrer.status !== "ACTIVE") {
+    return null;
+  }
+
+  return { id: referrer.id, globalCustomerId: referrer.globalCustomerId };
+}
 export async function createPendingReferralForEnrollment({
   tx,
   businessId,
@@ -91,18 +183,7 @@ export async function createPendingReferralForEnrollment({
 }) {
   if (!referralCode) return;
 
-  const referrer = await tx.businessCustomerMembership.findFirst({
-    where: {
-      businessId,
-      referralCode,
-      referralEnabled: true,
-      status: "ACTIVE",
-    },
-    select: {
-      id: true,
-      globalCustomerId: true,
-    },
-  });
+  const referrer = await findActiveReferralReferrerForEnrollment({ tx, businessId, referralCode });
 
   if (!referrer) return;
 
