@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
@@ -68,6 +68,7 @@ test("public customer card renders selected program theme without replacing core
 
   assert.match(publicCard, /resolveCardThemeColors/);
   assert.match(publicCard, /primaryCardTheme/);
+  assert.doesNotMatch(publicCard, /style=\{\{ color: cardTheme\.accent \}\}/);
   assert.match(publicCard, /cardTheme\.label/);
   assert.match(publicCard, /LoyaltyProgressSection/);
   assert.match(publicCard, /RewardStatusSection/);
@@ -76,3 +77,5 @@ test("public customer card renders selected program theme without replacing core
   assert.match(publicCard, /WalletPlaceholderSection/);
   assert.match(publicCard, /getScanQrDataUrl/);
 });
+
+
