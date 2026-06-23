@@ -38,9 +38,10 @@ test("customer enrollment creates referral context without public self-registrat
   assert.match(referrals, /SELF_REFERRAL_BLOCKED/);
   assert.match(referrals, /Self-referrals are blocked/);
   assert.match(referrals, /findActiveReferralReferrerForEnrollment/);
-  assert.match(referralPage, /Join the loyalty program and complete your first visit to unlock this referral reward/);
+  assert.match(referralPage, /Join the loyalty program and complete your first visit\. Both you and/);
+  assert.match(referralPage, /READY TO SHOW IN STORE/);
   assert.match(referralPage, /Show this QR code to staff/);
-  assert.match(referralPage, /Staff can scan the QR code or use this referral ID/);
+  assert.match(referralPage, /Staff can scan this QR code or enter Referral ID \{displayReferralId\} during enrollment/);
   assert.match(referralPage, /How it works/);
   assert.match(referralPage, /Visit the branch/);
   assert.match(referralPage, /Your referral reward is activated/);
@@ -48,6 +49,8 @@ test("customer enrollment creates referral context without public self-registrat
   assert.match(referralPage, /ReferralInviteActions/);
   assert.match(referralPage, /friendlyReferralId/);
   assert.match(referralPage, /QRCode\.toDataURL/);
+  assert.match(referralPage, /ReferralRegistered/);
+  assert.match(referralPage, /This referral has already been used and is linked to a customer account/);
   assert.doesNotMatch(referralPage, /Staff enrollment/);
   assert.doesNotMatch(referralPage, /Manager enrollment/);
   assert.doesNotMatch(referralPage, /Copy Referral Code/);
