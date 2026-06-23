@@ -9,7 +9,7 @@ import { validateCsrfForm } from "@/lib/csrf";
 import { isLoginTemporarilyLocked, LOGIN_LOCKOUT_MESSAGE, recordFailedLogin } from "@/lib/login-protection";
 import { prisma } from "@/lib/prisma";
 import { roleHomePath } from "@/lib/roles";
-import { createSession } from "@/lib/session";
+import { createSession, INACTIVE_BUSINESS_ACCESS_MESSAGE, isBusinessScopedRole } from "@/lib/session";
 
 const loginSchema = z.object({
   email: z.string().trim().email(),
@@ -46,6 +46,8 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
     role: UserRole;
     status: RecordStatus;
     forcePasswordChange: boolean;
+    businessId: number | null;
+    business: { status: RecordStatus } | null;
   } | null;
 
   try {
@@ -58,6 +60,12 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
         role: true,
         status: true,
         forcePasswordChange: true,
+        businessId: true,
+        business: {
+          select: {
+            status: true,
+          },
+        },
       },
     });
   } catch (error) {
@@ -82,6 +90,10 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
       return { error: LOGIN_LOCKOUT_MESSAGE };
     }
     return { error: INVALID_LOGIN_MESSAGE };
+  }
+
+  if (isBusinessScopedRole(user.role) && (!user.businessId || user.business?.status !== "ACTIVE")) {
+    return { error: INACTIVE_BUSINESS_ACCESS_MESSAGE };
   }
 
   await prisma.user.update({

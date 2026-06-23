@@ -3,7 +3,7 @@ import "server-only";
 import { createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import type { UserRole } from "@prisma/client";
+import type { RecordStatus, UserRole } from "@prisma/client";
 import { devFallbackUser, isDevAuthFallbackEnabled } from "@/lib/dev-auth";
 import { prisma } from "@/lib/prisma";
 import { roleHomePath } from "@/lib/roles";
@@ -11,6 +11,8 @@ import { getSessionSecret } from "@/lib/secrets";
 
 const SESSION_COOKIE = "loyalty_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
+export const INACTIVE_BUSINESS_ACCESS_MESSAGE =
+  "Your business account is currently inactive. Please contact LoyaltyBase support.";
 
 type SessionPayload = {
   userId: number;
@@ -26,9 +28,19 @@ export type AuthUser = {
   email: string;
   role: UserRole;
   businessId: number | null;
+  businessStatus: RecordStatus | null;
   branchId: number | null;
   forcePasswordChange: boolean;
 };
+
+export function isBusinessScopedRole(role: UserRole) {
+  return role === "BUSINESS_OWNER" || role === "BRANCH_MANAGER" || role === "STAFF";
+}
+
+export function hasActiveBusinessAccess(user: Pick<AuthUser, "role" | "businessId" | "businessStatus">) {
+  if (!isBusinessScopedRole(user.role)) return true;
+  return Boolean(user.businessId && user.businessStatus === "ACTIVE");
+}
 
 function base64UrlEncode(value: string) {
   return Buffer.from(value).toString("base64url");
@@ -160,6 +172,11 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
         sessionVersion: true,
         forcePasswordChange: true,
         businessId: true,
+        business: {
+          select: {
+            status: true,
+          },
+        },
         branchId: true,
       },
     });
@@ -175,6 +192,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       email: user.email,
       role: user.role,
       businessId: user.businessId,
+      businessStatus: user.business?.status ?? null,
       branchId: user.branchId,
       forcePasswordChange: user.forcePasswordChange,
     };
@@ -193,6 +211,10 @@ export async function requireRole(role: UserRole) {
 
   if (user.role !== role) {
     redirect(roleHomePath[user.role]);
+  }
+
+  if (!hasActiveBusinessAccess(user)) {
+    redirect("/business-inactive");
   }
 
   if (user.forcePasswordChange) {

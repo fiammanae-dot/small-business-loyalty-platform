@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -14,7 +14,7 @@ import { progressValue } from "@/lib/programs";
 import { qualifyReferralFromFirstStamp } from "@/lib/referrals";
 import { isRewardReady } from "@/lib/rewards";
 import { roleHomePath } from "@/lib/roles";
-import { getCurrentUser } from "@/lib/session";
+import { getCurrentUser, hasActiveBusinessAccess, INACTIVE_BUSINESS_ACCESS_MESSAGE } from "@/lib/session";
 
 const stampIssueSchema = z
   .object({
@@ -63,6 +63,7 @@ export async function issueStampAction(formData: FormData) {
   if (!user) redirect("/login");
   if (!["BUSINESS_OWNER", "BRANCH_MANAGER", "STAFF"].includes(user.role)) redirect(roleHomePath[user.role]);
   if (!user.businessId) redirect(roleHomePath[user.role]);
+  if (!hasActiveBusinessAccess(user)) fail(token, INACTIVE_BUSINESS_ACCESS_MESSAGE);
   await requireUsableSubscription(user.businessId).catch((error) => fail(token, error.message));
   if (user.branchId) {
     await requireActiveBranch(user.branchId, user.businessId).catch((error) => fail(token, error.message));
@@ -419,6 +420,7 @@ export async function redeemRewardAction(formData: FormData) {
   if (!user) redirect("/login");
   if (!["BUSINESS_OWNER", "BRANCH_MANAGER"].includes(user.role)) redirect(roleHomePath[user.role]);
   if (!user.businessId) redirect(roleHomePath[user.role]);
+  if (!hasActiveBusinessAccess(user)) fail(scanToken, INACTIVE_BUSINESS_ACCESS_MESSAGE);
   await requireUsableSubscription(user.businessId).catch((error) => fail(scanToken, error.message));
   if (user.branchId) {
     await requireActiveBranch(user.branchId, user.businessId).catch((error) => fail(scanToken, error.message));

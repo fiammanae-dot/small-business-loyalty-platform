@@ -8,6 +8,7 @@ export const devFallbackUser: AuthUser = {
   email: process.env.DEV_AUTH_EMAIL ?? "",
   role: "PLATFORM_OWNER",
   businessId: null,
+  businessStatus: null,
   branchId: null,
   forcePasswordChange: false,
 };

@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import type React from "react";
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
@@ -14,7 +14,7 @@ import { prisma } from "@/lib/prisma";
 import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
 import { isRewardReady } from "@/lib/rewards";
 import { roleHomePath } from "@/lib/roles";
-import { getCurrentUser } from "@/lib/session";
+import { getCurrentUser, hasActiveBusinessAccess } from "@/lib/session";
 import { issueStampAction, redeemRewardAction } from "@/app/scan/actions";
 
 export default async function ScanResultPage({
@@ -31,6 +31,7 @@ export default async function ScanResultPage({
   if (!user) redirect("/login");
   if (user.role !== "STAFF" && user.role !== "BRANCH_MANAGER" && user.role !== "BUSINESS_OWNER") redirect(roleHomePath[user.role]);
   if (!user.businessId) redirect(roleHomePath[user.role]);
+  if (!hasActiveBusinessAccess(user)) redirect("/business-inactive");
   const authUser = user as typeof user & { businessId: number };
 
   const scannerSoundSettings = await prisma.businessScannerSettings.findUnique({
@@ -468,7 +469,7 @@ function ProgramSelectionScreen({
           <div>
             <p className="text-sm font-semibold text-[#F97316] business-text">Customer validation</p>
             <h2 className="mt-2 text-2xl font-semibold text-[#111827]">{customerName}</h2>
-            <p className="mt-1 text-sm text-[#6B7280]">{membership.business.name} • {membership.createdBranch?.name ?? "Unassigned"}</p>
+            <p className="mt-1 text-sm text-[#6B7280]">{membership.business.name} � {membership.createdBranch?.name ?? "Unassigned"}</p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <SummaryItem label="Card Number" value={cardNumber} />

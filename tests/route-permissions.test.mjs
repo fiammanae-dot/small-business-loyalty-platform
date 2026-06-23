@@ -60,3 +60,26 @@ test("role redirects prevent cross-role route access through requireRole helper"
   assert.match(session, /if \(user\.role !== role\)/);
   assert.match(session, /redirect\(roleHomePath\[user\.role\]\)/);
 });
+
+
+test("inactive business access is blocked for operational roles", () => {
+  const session = read("src/lib/session.ts");
+  const login = read("src/app/login/actions.ts");
+  const scanActions = read("src/app/scan/actions.ts");
+  const scanPage = read("src/app/scan/[token]/page.tsx");
+  const blockedPage = read("src/app/business-inactive/page.tsx");
+
+  assert.match(session, /INACTIVE_BUSINESS_ACCESS_MESSAGE/);
+  assert.match(session, /isBusinessScopedRole/);
+  assert.match(session, /hasActiveBusinessAccess/);
+  assert.match(session, /businessStatus: user\.business\?\.status/);
+  assert.match(session, /business-inactive/);
+  assert.match(login, /INACTIVE_BUSINESS_ACCESS_MESSAGE/);
+  assert.match(login, /isBusinessScopedRole/);
+  assert.match(login, /INACTIVE_BUSINESS_ACCESS_MESSAGE/);
+  assert.match(scanActions, /hasActiveBusinessAccess/);
+  assert.match(scanActions, /INACTIVE_BUSINESS_ACCESS_MESSAGE/);
+  assert.match(scanPage, /hasActiveBusinessAccess/);
+  assert.match(scanPage, /business-inactive/);
+  assert.match(blockedPage, /INACTIVE_BUSINESS_ACCESS_MESSAGE/);
+});
