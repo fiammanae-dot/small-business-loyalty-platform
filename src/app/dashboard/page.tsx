@@ -16,6 +16,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { getBusinessDisplayName, getBusinessTypeDisplayName } from "@/lib/business-display";
 import { getBusinessOwnerContext, getCurrentPlan } from "@/lib/business-owner";
 import { formatDateTime } from "@/lib/format";
+import { getPlanComplianceSummary } from "@/lib/plan-compliance";
 import { prisma } from "@/lib/prisma";
 import { businessTypeLabels } from "@/lib/roles";
 
@@ -94,6 +95,11 @@ export default async function BusinessDashboard({
     prisma.rewardRedemption.count({ where: { businessId: user.businessId } }),
   ]);
 
+  const planCompliance = await getPlanComplianceSummary({
+    businessId: user.businessId,
+    planCode: plan?.code,
+    recordAuditEvent: true,
+  });
   const totalOpenAlerts = highAlerts + mediumAlerts + lowAlerts;
   const customerCount = business._count.customerMemberships;
   const branchCount = business._count.branches;
@@ -240,6 +246,7 @@ function HeaderSummary({
               <SecondaryBusinessMetric href="/dashboard/branches" label="Branches" value={branchCount} />
               <SecondaryBusinessMetric href="/dashboard/notifications" label="Alerts" value={alertCount} tone={alertCount > 0 ? "alert" : "default"} />
             </div>
+            <PlanComplianceCard compliance={planCompliance} />
           </div>
         </div>
 
@@ -256,6 +263,21 @@ function HeaderSummary({
   );
 }
 
+function PlanComplianceCard({ compliance }: { compliance: Awaited<ReturnType<typeof getPlanComplianceSummary>> }) {
+  const warning = compliance.status === "POTENTIAL_MULTI_BRANCH";
+  return (
+    <div className={`mt-3 rounded-md border px-3 py-2 text-xs ${warning ? "border-orange-200 bg-orange-50 text-orange-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="font-semibold">Plan Compliance Status</p>
+        <p className="font-bold">{warning ? "Potential Multi-Branch Activity Detected" : "Compliant"}</p>
+      </div>
+      <p className="mt-1">
+        Compliance score: {compliance.score}/100 - Detection count: {compliance.detectionCount}
+      </p>
+      {compliance.lastDetectedIssue ? <p className="mt-1">Last detected issue: {compliance.lastDetectedIssue}</p> : null}
+    </div>
+  );
+}
 function SecondaryBusinessMetric({
   href,
   label,

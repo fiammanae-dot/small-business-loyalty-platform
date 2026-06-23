@@ -421,6 +421,17 @@ input {
   }
 }
 
+@keyframes homepage-soft-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
 @keyframes customer-card-progress-glow {
   0%,
   100 {
@@ -849,4 +860,14 @@ input {
 }
 .business-theme .business-action-primary:hover {
   filter: brightness(0.95);
+}
+
+.animate-float {
+  animation: homepage-soft-float 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float {
+    animation: none;
+  }
 }

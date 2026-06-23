@@ -143,6 +143,7 @@ export default async function PlatformAuditCenterPage({
     subscription: decoratedMetricEvents.filter((event) => event.eventType === "Subscription Actions").length,
     cooldownOverrides: decoratedMetricEvents.filter((event) => event.action.includes("COOLDOWN") && event.action.includes("OVERRIDE")).length,
     failed: decoratedMetricEvents.filter((event) => event.status === "Failed" || event.status === "Blocked").length,
+    compliance: decoratedMetricEvents.filter((event) => event.action === "POSSIBLE_MULTI_BRANCH_USAGE").length,
   };
   const securityCounts = {
     failedLoginAttempts: await prisma.failedLoginAudit.count({ where: { outcome: { in: ["FAILED", "LOCKED"] } } }),
@@ -170,6 +171,7 @@ export default async function PlatformAuditCenterPage({
         <KpiLink icon={FileText} label="Subscription Actions" value={kpis.subscription} href="/platform/audit-center?eventType=Subscription+Actions" />
         <KpiLink icon={Activity} label="Cooldown Overrides" value={kpis.cooldownOverrides} href="/platform/audit-center?eventType=Cooldown+Actions" />
         <KpiLink icon={XCircle} label="Failed Actions" value={kpis.failed} href="/platform/audit-center?status=Failed" tone="alert" />
+        <KpiLink icon={ShieldAlert} label="Plan Compliance Warnings" value={kpis.compliance} href="/platform/audit-center?eventType=Compliance+Events" tone={kpis.compliance > 0 ? "alert" : "default"} />
       </PlatformKpiGrid>
 
         <MobileFilterDrawer activeCount={activeFilterCount}>
@@ -390,6 +392,7 @@ function decorateAuditEvent<T extends AuditEventWithRelations>(event: T): T & { 
 
 function classifyEventType(action: string, entityType: string) {
   const value = `${action} ${entityType}`.toUpperCase();
+  if (value.includes("POSSIBLE_MULTI_BRANCH_USAGE") || value.includes("COMPLIANCE")) return "Compliance Events";
   if (value.includes("CUSTOMER")) return "Customer Actions";
   if (value.includes("PROGRAM")) return "Program Actions";
   if (value.includes("BUSINESS")) return "Business Actions";
@@ -413,7 +416,7 @@ function inferSeverity(action: string, metadata: unknown): AuditSeverity {
   if (explicit && severityOptions.includes(explicit as AuditSeverity)) return explicit as AuditSeverity;
   if (action.includes("CRITICAL")) return "CRITICAL";
   if (action.includes("BLOCKED") || action.includes("PERMISSION") || action.includes("FAILED")) return "HIGH";
-  if (action.includes("COOLDOWN") || action.includes("ALERT") || action.includes("DEMO_MODE")) return "MEDIUM";
+  if (action.includes("POSSIBLE_MULTI_BRANCH_USAGE") || action.includes("COOLDOWN") || action.includes("ALERT") || action.includes("DEMO_MODE")) return "MEDIUM";
   if (action.includes("UPDATED") || action.includes("CHANGED")) return "LOW";
   return "INFO";
 }

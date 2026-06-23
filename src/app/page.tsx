@@ -5,13 +5,13 @@ import {
   CircleHelp,
   Gift,
   MessageSquare,
-  QrCode,
   ScanLine,
   ShieldCheck,
   Sparkles,
   Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { HomepageLoyaltyCardDemo } from "@/components/HomepageLoyaltyCardDemo";
 import { MotionItem, MotionOnScroll, MotionReveal, MotionStagger } from "@/components/HomepageMotion";
 
 const features = [
@@ -121,32 +121,43 @@ function PublicHeader() {
 
 function HeroSection() {
   return (
-    <section className="overflow-hidden border-b border-orange-100 bg-gradient-to-b from-orange-50/70 to-white">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,1fr)_460px] lg:items-center lg:px-8 lg:py-20">
+    <section className="relative overflow-hidden border-b border-orange-100 bg-[radial-gradient(circle_at_top_left,#FED7AA_0,transparent_32%),linear-gradient(135deg,#FFF7ED_0%,#FFFFFF_48%,#FFEDD5_100%)]">
+      <div className="pointer-events-none absolute left-8 top-24 hidden h-24 w-24 animate-float rounded-full border border-orange-200/70 bg-white/35 lg:block" aria-hidden="true" />
+      <div className="pointer-events-none absolute bottom-12 right-12 hidden h-32 w-32 rounded-full bg-orange-200/25 blur-2xl lg:block" aria-hidden="true" />
+      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,1fr)_480px] lg:items-center lg:px-8 lg:py-20">
         <MotionReveal>
-          <span className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1 text-sm font-semibold text-[#EA580C] shadow-sm">
+          <span className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/85 px-3 py-1 text-sm font-semibold text-[#EA580C] shadow-sm backdrop-blur">
             <Sparkles className="h-4 w-4" aria-hidden="true" />
-            Loyalty operations for growing businesses
+            Loyalty operations for coffee shops, restaurants, and local brands
           </span>
           <h1 className="mt-6 max-w-4xl text-4xl font-semibold tracking-tight text-[#111827] sm:text-5xl lg:text-6xl">
-            Turn occasional customers into loyal regulars.
+            Turn occasional customers into{" "}
+            <span className="bg-gradient-to-r from-[#F97316] to-[#EA580C] bg-clip-text text-transparent">
+              loyal regulars
+            </span>
+            .
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-[#64748B]">
             Create digital stamp cards, reward repeat visits, grow customer retention, and track loyalty performance across every branch.
           </p>
           <MotionStagger className="mt-8 flex flex-col gap-3 sm:flex-row" delay={0.2}>
             <MotionItem>
-              <Link href="/request-demo" className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#F97316] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#EA580C] sm:w-auto">
+              <Link href="/request-demo" className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#F97316] to-[#EA580C] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:brightness-95 sm:w-auto">
                 Request a Demo
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             </MotionItem>
             <MotionItem>
-              <Link href="/benefits" className="inline-flex w-full items-center justify-center rounded-md border border-[#E5E7EB] bg-white px-5 py-3 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#EA580C] sm:w-auto">
+              <Link href="/benefits" className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-orange-200 bg-white/90 px-6 py-3 text-sm font-semibold text-[#111827] shadow-sm transition hover:border-[#F97316] hover:text-[#EA580C] sm:w-auto">
                 View Benefits
               </Link>
             </MotionItem>
           </MotionStagger>
+          <div className="mt-8 grid max-w-xl gap-3 text-sm font-semibold text-[#64748B] sm:grid-cols-3">
+            <span className="rounded-2xl border border-orange-100 bg-white/70 px-4 py-3">No app needed</span>
+            <span className="rounded-2xl border border-orange-100 bg-white/70 px-4 py-3">QR scanner ready</span>
+            <span className="rounded-2xl border border-orange-100 bg-white/70 px-4 py-3">Mobile-first cards</span>
+          </div>
         </MotionReveal>
         <LoyaltyCardPreview />
       </div>
@@ -156,39 +167,8 @@ function HeroSection() {
 
 function LoyaltyCardPreview() {
   return (
-    <MotionReveal delay={0.15} className="rounded-[28px] border border-orange-100 bg-white p-5 shadow-2xl shadow-orange-100">
-      <div className="rounded-[22px] bg-[#111827] p-5 text-white">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold text-orange-200">Coffee Club</p>
-            <h2 className="mt-2 text-2xl font-semibold">Mina Hanna</h2>
-          </div>
-          <span className="rounded-full bg-[#F97316] px-3 py-1 text-xs font-bold uppercase">Gold Member</span>
-        </div>
-        <div className="mt-8">
-          <div className="flex items-end justify-between">
-            <div>
-              <p className="text-sm text-orange-100">Stamp progress</p>
-              <p className="mt-1 text-4xl font-semibold">8/10</p>
-            </div>
-            <Gift className="h-10 w-10 text-[#FDBA74]" aria-hidden="true" />
-          </div>
-          <div className="mt-4 h-3 rounded-full bg-white/15">
-            <div className="h-3 w-4/5 rounded-full bg-[#F97316]" />
-          </div>
-          <p className="mt-3 text-sm text-orange-100">2 stamps away from a free coffee</p>
-        </div>
-        <div className="mt-8 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 rounded-2xl bg-white p-4 text-[#111827]">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-[#EA580C]">Reward Preview</p>
-            <p className="mt-1 text-lg font-semibold">Free Coffee</p>
-            <p className="mt-1 text-sm text-[#64748B]">Show QR code to earn or redeem.</p>
-          </div>
-          <div className="flex h-20 w-20 items-center justify-center rounded-md border border-[#E5E7EB] bg-[#FAFAFA]">
-            <QrCode className="h-12 w-12 text-[#111827]" aria-hidden="true" />
-          </div>
-        </div>
-      </div>
+    <MotionReveal delay={0.15} className="relative">
+      <HomepageLoyaltyCardDemo />
     </MotionReveal>
   );
 }
