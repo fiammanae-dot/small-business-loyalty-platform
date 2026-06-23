@@ -80,15 +80,26 @@ export default async function ReferralLandingPage({
             ) : null}
           </div>
 
+          <p className="mt-4 rounded-xl bg-[#FFF7ED] px-4 py-3 text-center text-sm font-medium leading-6 text-[#9A3412]">
+            Complete your first loyalty visit to activate this referral.
+          </p>
+
+          <div className="mt-5 rounded-3xl border-2 bg-white p-4 text-center shadow-sm" style={{ borderColor: brandColor }}>
+            <p className="text-lg font-semibold text-[#111827]">Show this QR code to staff</p>
+            <p className="mt-1 text-sm text-[#6B7280]">Staff will scan it when you join.</p>
+            <img src={referralQrDataUrl} alt="Referral invitation QR code" className="mx-auto mt-4 h-72 w-72 max-w-full rounded-2xl" />
+            <div className="mt-4 rounded-2xl bg-[#F9FAFB] px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">Referral ID</p>
+              <p className="mt-1 text-2xl font-bold tracking-wide text-[#111827]">{displayReferralId}</p>
+              <p className="mt-2 text-xs leading-5 text-[#6B7280]">
+                Staff can scan the QR code or use this referral ID.
+              </p>
+            </div>
+          </div>
+
           <p className="mt-5 text-center text-base leading-7 text-[#374151]">
             You have been invited to join this loyalty program. Show this referral QR to staff when visiting the branch.
           </p>
-
-          <div className="mt-5 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-center shadow-sm">
-            <img src={referralQrDataUrl} alt="Referral invitation QR code" className="mx-auto h-64 w-64 max-w-full rounded-xl" />
-            <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-[#6B7280]">Referral ID</p>
-            <p className="mt-1 text-2xl font-bold tracking-wide text-[#111827]">{displayReferralId}</p>
-          </div>
 
           <ReferralInviteActions
             referralUrl={referralUrl}
