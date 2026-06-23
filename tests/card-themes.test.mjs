@@ -84,3 +84,20 @@ test("public customer card renders selected program theme without replacing core
 });
 
 
+
+
+test("public customer card supports saving the loyalty card as a PNG image", () => {
+  const packageJson = read("package.json");
+  const publicCard = read("src/app/card/[token]/page.tsx");
+  const saveButton = read("src/components/SaveCardImageButton.tsx");
+
+  assert.match(packageJson, /"html-to-image"/);
+  assert.match(publicCard, /SaveCardImageButton/);
+  assert.match(publicCard, /data-loyalty-card-export/);
+  assert.match(publicCard, /targetSelector="\[data-loyalty-card-export\]"/);
+  assert.match(saveButton, /toPng/);
+  assert.match(saveButton, /pixelRatio/);
+  assert.match(saveButton, /loyalty-card-/);
+  assert.match(saveButton, /Loyalty card image downloaded successfully./);
+  assert.match(saveButton, /Save as Image/);
+});

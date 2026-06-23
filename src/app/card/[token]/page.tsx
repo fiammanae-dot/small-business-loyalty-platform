@@ -1,5 +1,6 @@
 ﻿import { CardShareActions } from "@/components/CardShareActions";
 import { ReferralShareActions } from "@/components/ReferralShareActions";
+import { SaveCardImageButton } from "@/components/SaveCardImageButton";
 import Image from "next/image";
 import { Gift, Link2, QrCode, Sparkles } from "lucide-react";
 import { getCardUrl, resolveBranding } from "@/lib/customer-cards";
@@ -101,33 +102,35 @@ export default async function PublicCustomerCardPage({
       style={{ backgroundColor: branding.backgroundColor, color: branding.textColor }}
     >
       <div className="mx-auto flex w-full max-w-lg flex-col gap-4 md:max-w-2xl">
-        <LoyaltyWalletCard
-          businessName={membership.business.name}
-          branding={branding}
-          customerName={customerName}
-          memberSince={formatDate(membership.createdAt)}
-          tier={tier}
-          qrCode={primaryProgram?.qrCode ?? null}
-          cardTheme={primaryCardTheme}
-          rewardReady={
-            primaryProgram
-              ? progressValue(primaryProgram.programMembership.earnedStamps, primaryProgram.programMembership.bonusStamps) >=
-                primaryProgram.programMembership.loyaltyProgram.requiredStamps
-              : false
-          }
-        />
+        <div data-loyalty-card-export className="flex flex-col gap-4 rounded-[34px] bg-white">
+          <LoyaltyWalletCard
+            businessName={membership.business.name}
+            branding={branding}
+            customerName={customerName}
+            memberSince={formatDate(membership.createdAt)}
+            tier={tier}
+            qrCode={primaryProgram?.qrCode ?? null}
+            cardTheme={primaryCardTheme}
+            rewardReady={
+              primaryProgram
+                ? progressValue(primaryProgram.programMembership.earnedStamps, primaryProgram.programMembership.bonusStamps) >=
+                  primaryProgram.programMembership.loyaltyProgram.requiredStamps
+                : false
+            }
+          />
 
-        {primaryProgram ? (
-          <LoyaltyProgressSection programMembership={primaryProgram.programMembership} branding={branding} cardTheme={primaryCardTheme} />
-        ) : (
-          <section className="rounded-[28px] border bg-white p-5 shadow-sm" style={{ borderColor: withAlpha(branding.primaryColor, 0.18) }}>
-            <p className="text-sm font-semibold uppercase tracking-wide" style={{ color: branding.textColor }}>Loyalty progress</p>
-            <h2 className="mt-2 text-xl font-bold text-[#1E293B]">No active loyalty program yet</h2>
-            <p className="mt-2 text-sm leading-6 text-[#64748B]">
-              Ask staff to enroll this card into a loyalty program before earning stamps.
-            </p>
-          </section>
-        )}
+          {primaryProgram ? (
+            <LoyaltyProgressSection programMembership={primaryProgram.programMembership} branding={branding} cardTheme={primaryCardTheme} />
+          ) : (
+            <section className="rounded-[28px] border bg-white p-5 shadow-sm" style={{ borderColor: withAlpha(branding.primaryColor, 0.18) }}>
+              <p className="text-sm font-semibold uppercase tracking-wide" style={{ color: branding.textColor }}>Loyalty progress</p>
+              <h2 className="mt-2 text-xl font-bold text-[#1E293B]">No active loyalty program yet</h2>
+              <p className="mt-2 text-sm leading-6 text-[#64748B]">
+                Ask staff to enroll this card into a loyalty program before earning stamps.
+              </p>
+            </section>
+          )}
+        </div>
 
         <TierStatusSection tier={tier} branding={branding} />
 
@@ -154,7 +157,7 @@ export default async function PublicCustomerCardPage({
           <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
             Last Updated: {formatDateTime(lastUpdatedAt)}
           </p>
-          <div className="mt-4">
+          <div className="mt-4 space-y-3">
             <CardShareActions
               cardUrl={cardUrl}
               businessName={membership.business.name}
@@ -162,6 +165,11 @@ export default async function PublicCustomerCardPage({
               recipientPhone={customer.normalizedPhone}
               whatsappLabel="Share via WhatsApp"
               showWallet={false}
+              buttonColor={branding.buttonColor}
+            />
+            <SaveCardImageButton
+              targetSelector="[data-loyalty-card-export]"
+              customerName={customerName}
               buttonColor={branding.buttonColor}
             />
           </div>
