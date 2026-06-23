@@ -30,6 +30,9 @@ test("camera scanner supports camera controls, manual paste, and safe invalid QR
     "Camera active. Using browser-compatible QR scanning for this device.",
     "LoyaltyBase scanner camera error",
     "router.push(`/scan/${encodeURIComponent(result.token)}`)",
+    "referral:${referralCode}",
+    "/referral/ABC123",
+    "including referral invitations",
   ]) {
     assert.match(scanner, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }
@@ -51,6 +54,9 @@ test("scan result page keeps validation flow and improves scan experience", () =
     "Card Number",
     "Last Visit",
     "Reason for multiple stamps",
+    "Referral invitation found",
+    "Enroll New Customer With Referral",
+    "This referral belongs to another business.",
   ]) {
     assert.match(scan, new RegExp(expected));
   }

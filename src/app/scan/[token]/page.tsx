@@ -11,7 +11,9 @@ import { BRANCH_INACTIVE_MESSAGE, hasUsableSubscription, SUBSCRIPTION_REQUIRED_M
 import { maskPhoneNumber } from "@/lib/customer-cards";
 import { formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { fromStoredTier } from "@/lib/customer-tiers";
 import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
+import { extractReferralCode, resolveReferralLandingReferrer } from "@/lib/referrals";
 import { isRewardReady } from "@/lib/rewards";
 import { roleHomePath } from "@/lib/roles";
 import { getCurrentUser, hasActiveBusinessAccess } from "@/lib/session";
@@ -54,6 +56,29 @@ export default async function ScanResultPage({
 
   if ((authUser.role === "STAFF" || authUser.role === "BRANCH_MANAGER") && scannerBranch?.status !== "ACTIVE") {
     return <ScanMessage user={user} title={BRANCH_INACTIVE_MESSAGE} soundEffectsEnabled={scannerSoundEffectsEnabled} />;
+  }
+
+  const referralCode = token.startsWith("referral:") ? extractReferralCode(token.slice("referral:".length)) : null;
+  if (referralCode) {
+    const referrer = await resolveReferralLandingReferrer(referralCode);
+    if (!referrer) {
+      return <ScanMessage user={user} title="Referral not available." description="This referral link is unavailable or has been disabled." soundEffectsEnabled={scannerSoundEffectsEnabled} />;
+    }
+
+    if (referrer.businessId !== authUser.businessId) {
+      return <ScanMessage user={user} title="Wrong Business" description="This referral belongs to another business." soundEffectsEnabled={scannerSoundEffectsEnabled} />;
+    }
+
+    return (
+      <ReferralInvitationScanScreen
+        user={authUser}
+        referralCode={referralCode}
+        businessName={referrer.business.name}
+        referrerName={`${referrer.globalCustomer.firstName} ${referrer.globalCustomer.lastName ?? ""}`.trim() || "Customer"}
+        referrerTier={fromStoredTier(referrer.currentTier)}
+        soundEffectsEnabled={scannerSoundEffectsEnabled}
+      />
+    );
   }
 
   const programMembership = await prisma.customerProgramMembership.findUnique({
@@ -410,6 +435,61 @@ export default async function ScanResultPage({
   );
 }
 
+function ReferralInvitationScanScreen({
+  user,
+  referralCode,
+  businessName,
+  referrerName,
+  referrerTier,
+  soundEffectsEnabled,
+}: {
+  user: NonNullable<Awaited<ReturnType<typeof getCurrentUser>>> & { businessId: number };
+  referralCode: string;
+  businessName: string;
+  referrerName: string;
+  referrerTier: string | null;
+  soundEffectsEnabled: boolean;
+}) {
+  const enrollmentHref = referralEnrollmentHref(user.role, referralCode);
+  const displayReferralId = friendlyReferralId(referralCode);
+
+  return (
+    <DashboardShell user={user} eyebrow={roleEyebrow(user.role)} title="Referral invitation found" hideWelcomeMessage>
+      <ScannerSoundFeedback event={null} enabled={soundEffectsEnabled} />
+      <ScanStatusBanner tone="green" title="Referral invitation found" description="This referral belongs to your business. Enroll the new customer to attach the referral." />
+
+      <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+        <div className="grid gap-4 md:grid-cols-2">
+          <Info label="Business" value={businessName} />
+          <Info label="Referred by" value={referrerName} />
+          <Info label="Tier" value={referrerTier ? `${referrerTier} member` : "Not assigned"} />
+          <Info label="Referral ID" value={displayReferralId} />
+        </div>
+        <div className="mt-5 rounded-md border border-orange-200 bg-orange-50 p-4 text-sm leading-6 text-orange-800 business-bg-soft business-border-soft business-text-strong">
+          Referral rewards are not issued now. They are activated after the referred customer completes their first valid loyalty stamp.
+        </div>
+        <Link href={enrollmentHref} className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-md business-button px-5 text-sm font-semibold text-white sm:w-auto">
+          Enroll New Customer With Referral
+        </Link>
+      </section>
+    </DashboardShell>
+  );
+}
+
+function referralEnrollmentHref(role: string, referralCode: string) {
+  const encoded = encodeURIComponent(referralCode);
+  if (role === "STAFF") return `/staff/customers/new?ref=${encoded}`;
+  if (role === "BRANCH_MANAGER") return `/branch/customers/new?ref=${encoded}`;
+  return `/dashboard/customers/new?ref=${encoded}`;
+}
+
+function friendlyReferralId(referralCode: string) {
+  let hash = 0;
+  for (const character of referralCode) {
+    hash = (hash * 31 + character.charCodeAt(0)) % 10000;
+  }
+  return `RF-${hash.toString().padStart(4, "0")}`;
+}
 function ScanMessage({
   user,
   title,

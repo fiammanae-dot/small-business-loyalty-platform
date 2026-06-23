@@ -36,6 +36,9 @@ function extractToken(value: string) {
   try {
     const url = new URL(trimmed, window.location.origin);
     const parts = url.pathname.split("/").filter(Boolean);
+    const referralIndex = parts.indexOf("referral");
+    const referralCode = referralIndex >= 0 ? parts[referralIndex + 1] : "";
+    if (referralCode && /^[A-Za-z0-9_-]+$/.test(referralCode)) return { token: `referral:${referralCode}`, reason: "" };
     const scanIndex = parts.indexOf("scan");
     const token = scanIndex >= 0 ? parts[scanIndex + 1] : "";
     if (token && /^[A-Za-z0-9_-]+$/.test(token)) return { token, reason: "" };
@@ -311,7 +314,7 @@ export function CameraScanner({ backHref }: { backHref: string }) {
             value={manualValue}
             onChange={(event) => setManualValue(event.target.value)}
             className="min-h-12 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm font-normal outline-none business-ring focus:ring-0"
-            placeholder="scan_... or https://domain.com/scan/scan_..."
+            placeholder="scan_..., /referral/ABC123, or customer card link"
           />
         </label>
         <button type="button" onClick={() => redirectFromValue(manualValue)} className="mt-3 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-[#111827] px-4 text-sm font-semibold text-white sm:w-auto">
@@ -320,7 +323,7 @@ export function CameraScanner({ backHref }: { backHref: string }) {
         </button>
         <p className="mt-3 flex items-center gap-2 text-xs text-[#6B7280]">
           <Zap className="h-3.5 w-3.5 business-primary" aria-hidden="true" />
-          Camera scan and manual paste both use the existing secure scan validation flow.
+          Camera scan and manual paste both use the existing secure scan validation flow, including referral invitations.
         </p>
       </div>
     </section>
