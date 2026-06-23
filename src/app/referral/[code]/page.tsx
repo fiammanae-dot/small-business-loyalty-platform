@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { CopyReferralCodeButton } from "@/components/CopyReferralCodeButton";
 import { businessTypeLabels } from "@/lib/roles";
 import { extractReferralCode, resolveReferralLandingReferrer } from "@/lib/referrals";
 
@@ -36,12 +36,13 @@ export default async function ReferralLandingPage({
           </div>
         </div>
 
-        <div className="mt-6 rounded-md bg-orange-50 p-4">
-          <p className="text-sm leading-6 text-[#111827]">
-            Show this referral link to staff when joining the loyalty program. Staff will enroll you and connect the referral after your first stamp.
+        <div className="mt-6 rounded-md p-4" style={{ backgroundColor: `${brandColor}14` }}>
+          <p className="text-xs font-semibold uppercase text-[#6B7280]">Referred by</p>
+          <p className="mt-2 text-lg font-semibold text-[#111827]">
+            {referrer.globalCustomer.firstName} {referrer.globalCustomer.lastName ?? ""}
           </p>
-          <p className="mt-3 text-sm text-[#6B7280]">
-            Referral from {referrer.globalCustomer.firstName} {referrer.globalCustomer.lastName ?? ""}
+          <p className="mt-3 text-sm leading-6 text-[#111827]">
+            Show this referral code to staff when joining the loyalty program.
           </p>
         </div>
 
@@ -50,14 +51,7 @@ export default async function ReferralLandingPage({
           <p className="mt-2 break-all text-lg font-semibold text-[#111827]">{referralCode}</p>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <Link href={`/staff/customers/new?ref=${encodeURIComponent(referralCode)}`} className="rounded-md px-4 py-3 text-center text-sm font-semibold text-white" style={{ backgroundColor: brandColor }}>
-            Staff enrollment
-          </Link>
-          <Link href={`/branch/customers/new?ref=${encodeURIComponent(referralCode)}`} className="rounded-md border border-[#E5E7EB] px-4 py-3 text-center text-sm font-semibold text-[#111827]">
-            Manager enrollment
-          </Link>
-        </div>
+        <CopyReferralCodeButton referralCode={referralCode} brandColor={brandColor} />
       </section>
     </main>
   );

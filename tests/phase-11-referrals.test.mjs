@@ -38,7 +38,10 @@ test("customer enrollment creates referral context without public self-registrat
   assert.match(referrals, /SELF_REFERRAL_BLOCKED/);
   assert.match(referrals, /Self-referrals are blocked/);
   assert.match(referrals, /findActiveReferralReferrerForEnrollment/);
-  assert.match(referralPage, /Staff enrollment/);
+  assert.match(referralPage, /Show this referral code to staff when joining the loyalty program/);
+  assert.match(referralPage, /CopyReferralCodeButton/);
+  assert.doesNotMatch(referralPage, /Staff enrollment/);
+  assert.doesNotMatch(referralPage, /Manager enrollment/);
   assert.doesNotMatch(referralPage, /create.*Customer/i);
 });
 
