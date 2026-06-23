@@ -69,13 +69,18 @@ test("public customer card renders selected program theme without replacing core
   assert.match(publicCard, /resolveCardThemeColors/);
   assert.match(publicCard, /primaryCardTheme/);
   assert.doesNotMatch(publicCard, /style=\{\{ color: cardTheme\.accent \}\}/);
-  assert.match(publicCard, /cardTheme\.label/);
+  assert.doesNotMatch(publicCard, /cardTheme\.label/);
   assert.match(publicCard, /LoyaltyProgressSection/);
-  assert.match(publicCard, /RewardStatusSection/);
+  assert.match(publicCard, /Member Since/);
+  assert.match(publicCard, /Current Visits/);
+  assert.match(publicCard, /Required Visits/);
+  assert.doesNotMatch(publicCard, /RewardStatusSection/);
   assert.match(publicCard, /TierStatusSection/);
   assert.match(publicCard, /ReferralCardSection/);
-  assert.match(publicCard, /WalletPlaceholderSection/);
+  assert.match(publicCard, /<details className=\"group\">/);
+  assert.doesNotMatch(publicCard, /WalletPlaceholderSection/);
   assert.match(publicCard, /getScanQrDataUrl/);
+  assert.doesNotMatch(publicCard, /Add to Apple Wallet|Add to Google Wallet|Coming Soon/);
 });
 
 
