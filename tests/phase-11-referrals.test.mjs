@@ -136,3 +136,30 @@ test("public referral landing resolves active business membership referral codes
   assert.match(referralPage, /resolveReferralLandingReferrer\(referralCode\)/);
   assert.doesNotMatch(referralPage, /businessCustomerMembership\.findFirst/);
 });
+
+test("customer enrollment supports same-business referral lookup by phone", () => {
+  const customers = read("src/lib/customers.ts");
+  const referrals = read("src/lib/referrals.ts");
+  const preview = read("src/components/ReferralPhoneLookupPreview.tsx");
+  const ownerNew = read("src/app/dashboard/customers/new/page.tsx");
+  const branchNew = read("src/app/branch/customers/new/page.tsx");
+  const staffNew = read("src/app/staff/customers/new/page.tsx");
+
+  assert.match(referrals, /findActiveReferralReferrerByPhone/);
+  assert.match(referrals, /globalCustomer: \{ normalizedPhone \}/);
+  assert.match(referrals, /status: "ACTIVE"/);
+  assert.match(referrals, /referralEnabled: true/);
+  assert.match(customers, /referredByPhoneNumber/);
+  assert.match(customers, /findActiveReferralReferrerByPhone/);
+  assert.match(customers, /referralCodeForEnrollment = phoneLookup\.referrer\.referralCode/);
+  assert.match(customers, /createPendingReferralForEnrollment/);
+  assert.match(preview, /Referred by:/);
+  assert.match(preview, /maskPhoneNumber/);
+
+  for (const page of [ownerNew, branchNew, staffNew]) {
+    assert.match(page, /Referred by phone number/);
+    assert.match(page, /ReferralPhoneLookupPreview/);
+    assert.match(page, /Check referrer/);
+    assert.match(page, /Referral code or link/);
+  }
+});

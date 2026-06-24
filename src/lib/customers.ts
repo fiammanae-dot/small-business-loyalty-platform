@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit";
 import { normalizePhone } from "@/lib/phone";
 import { generateCardToken } from "@/lib/customer-cards";
-import { createPendingReferralForEnrollment, extractReferralCode, generateReferralCode } from "@/lib/referrals";
+import { createPendingReferralForEnrollment, extractReferralCode, findActiveReferralReferrerByPhone, generateReferralCode } from "@/lib/referrals";
 
 export const customerSourceLabels = {
   STAFF: "Staff",
@@ -219,12 +219,33 @@ export async function enrollCustomerForBusiness({
         },
       });
 
+      const referralCodeFromInput = extractReferralCode(getString(formData, "referralCode"));
+      const referredByPhoneNumber = getString(formData, "referredByPhoneNumber");
+      let referralCodeForEnrollment = referralCodeFromInput;
+
+      if (!referralCodeForEnrollment && referredByPhoneNumber.trim()) {
+        const phoneLookup = await findActiveReferralReferrerByPhone({
+          tx,
+          businessId: user.businessId,
+          phone: referredByPhoneNumber,
+        });
+
+        if (phoneLookup.status === "INVALID_PHONE") {
+          fail(path, "Enter a valid referred-by UAE mobile number, for example 0501234567 or +971501234567.");
+        }
+        if (phoneLookup.status === "NOT_FOUND" || !phoneLookup.referrer?.referralCode) {
+          fail(path, "No active customer was found for the referred-by phone number.");
+        }
+
+        referralCodeForEnrollment = phoneLookup.referrer.referralCode;
+      }
+
       await createPendingReferralForEnrollment({
         tx,
         businessId: user.businessId,
         referredGlobalCustomerId: globalCustomer.id,
         referredMembershipId: created.id,
-        referralCode: extractReferralCode(getString(formData, "referralCode")),
+        referralCode: referralCodeForEnrollment,
       });
 
       return { duplicate: false, uuid: created.uuid, cardToken: created.cardToken };

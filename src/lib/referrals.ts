@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { getBaseUrl } from "@/lib/customer-cards";
 import { logAuditEvent } from "@/lib/audit";
 import { createCustomerNotification } from "@/lib/customer-notifications";
+import { normalizePhone } from "@/lib/phone";
 
 type ReferralCodeInput = {
   tx: TxClient;
@@ -122,7 +123,54 @@ function referralLandingInclude() {
     globalCustomer: true,
   };
 }
-type TxClient = Prisma.TransactionClient;
+type TxClient = Prisma.TransactionClient | typeof prisma;
+
+export async function findActiveReferralReferrerByPhone({
+  tx,
+  businessId,
+  phone,
+}: {
+  tx: TxClient;
+  businessId: number;
+  phone: string;
+}) {
+  const normalizedPhone = normalizePhone(phone);
+  if (!normalizedPhone) {
+    return { status: "INVALID_PHONE" as const, referrer: null };
+  }
+
+  const referrer = await tx.businessCustomerMembership.findFirst({
+    where: {
+      businessId,
+      status: "ACTIVE",
+      referralEnabled: true,
+      globalCustomer: { normalizedPhone },
+    },
+    select: {
+      id: true,
+      globalCustomerId: true,
+      referralCode: true,
+      currentTier: true,
+      globalCustomer: {
+        select: {
+          firstName: true,
+          lastName: true,
+          normalizedPhone: true,
+        },
+      },
+    },
+  });
+
+  if (!referrer?.referralCode) {
+    return { status: "NOT_FOUND" as const, referrer: null };
+  }
+
+  return { status: "FOUND" as const, referrer };
+}
+
+export async function previewActiveReferralReferrerByPhone({ businessId, phone }: { businessId: number; phone: string }) {
+  return findActiveReferralReferrerByPhone({ tx: prisma, businessId, phone });
+}
 
 async function findActiveReferralReferrerForEnrollment({
   tx,

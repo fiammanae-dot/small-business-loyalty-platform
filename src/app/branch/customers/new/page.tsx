@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
+import { ReferralPhoneLookupPreview } from "@/components/ReferralPhoneLookupPreview";
 import { requireRole } from "@/lib/session";
 import { createBranchCustomerAction } from "@/app/branch/customers/actions";
 
 export default async function NewBranchCustomerPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; ref?: string }>;
+  searchParams: Promise<{ error?: string; ref?: string; referredByPhoneNumber?: string }>;
 }) {
   const user = await requireRole("BRANCH_MANAGER");
   const params = await searchParams;
@@ -29,6 +30,19 @@ export default async function NewBranchCustomerPage({
             <input type="checkbox" name="marketingConsent" className="h-4 w-4 rounded border-[#E5E7EB]" />
             Marketing consent
           </label>
+          <div className="grid gap-3 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
+            <label className="space-y-2">
+              <span className="text-sm font-medium text-[#111827]">Referred by phone number</span>
+              <input name="referredByPhoneNumber" defaultValue={params.referredByPhoneNumber ?? ""} placeholder="0501234567" className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0" />
+            </label>
+            {user.businessId ? <ReferralPhoneLookupPreview businessId={user.businessId} phone={params.referredByPhoneNumber} /> : null}
+            <div className="flex flex-wrap items-center gap-3">
+              <button type="submit" formAction="/branch/customers/new" formMethod="get" className="rounded-md border border-[#E5E7EB] px-3 py-2 text-sm font-semibold text-[#111827]">
+                Check referrer
+              </button>
+              <p className="text-sm text-[#6B7280]">Optional. Rewards qualify only after the new customer receives their first valid stamp.</p>
+            </div>
+          </div>
           <label className="space-y-2">
             <span className="text-sm font-medium text-[#111827]">Referral code or link</span>
             <input name="referralCode" defaultValue={params.ref ?? ""} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0" />
