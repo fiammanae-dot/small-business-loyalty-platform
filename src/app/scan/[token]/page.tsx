@@ -266,103 +266,49 @@ export default async function ScanResultPage({
       <ScannerSoundFeedback event={soundEvent as "success" | "error" | "reward" | null} enabled={scannerSoundEffectsEnabled} />
       <ScanStatusBanner tone="green" title="Valid Customer" description="This loyalty QR belongs to your business and is ready for service." />
 
-      {rewardReady ? (
-        <ScanStatusBanner tone="blue" title="Reward Ready" description={`${program.rewardName} can be redeemed by a Business Owner or Branch Manager.`} />
-      ) : null}
+      <ActionSummarySection
+        customerName={`${customer.firstName} ${customer.lastName ?? ""}`.trim()}
+        tier={fromStoredTier(businessMembership.currentTier) ?? "Bronze"}
+        programName={program.name}
+        progress={progress}
+        requiredStamps={program.requiredStamps}
+        rewardReady={rewardReady}
+        rewardName={program.rewardName}
+      />
 
-      {issuedTransaction && issuedTransaction.quantity >= 3 ? (
-        <ScanStatusBanner tone="orange" title="Suspicious Activity Alert" description="Multiple stamps were issued in one transaction. This may create an alert for Business Owner review." />
-      ) : null}
+      <QuickScanActions
+        token={token}
+        rewardReady={rewardReady}
+        canRedeem={authUser.role !== "STAFF"}
+      />
 
       {qs.error ? (
         <ScanStatusBanner tone="red" title="Action blocked" description={qs.error} />
       ) : null}
 
-      <StampIssuanceSection
-        token={token}
-        progress={progress}
-        requiredStamps={program.requiredStamps}
-        canOverrideCooldown={authUser.role !== "STAFF"}
-      />
-
       {issuedTransaction ? (
-        <section className="rounded-md border border-emerald-200 bg-emerald-50 p-5">
-          <p className="text-sm font-semibold text-emerald-800">Stamp issued successfully</p>
-          <div className="mt-4 grid gap-3 md:grid-cols-4">
-            <Info label="Customer name" value={`${customer.firstName} ${customer.lastName ?? ""}`} />
-            <Info label="Program name" value={program.name} />
-            <Info label="Quantity added" value={issuedTransaction.quantity.toString()} />
-            <Info label="Earned stamps" value={issuedTransaction.customerProgramMembership.earnedStamps.toString()} />
-            <Info label="Bonus stamps" value={issuedTransaction.customerProgramMembership.bonusStamps.toString()} />
-            <Info label="Progress" value={`${successProgress} / ${program.requiredStamps}`} />
-            <Info label="Reward" value={program.rewardName} />
-          </div>
-        </section>
+        <ScanStatusBanner tone={issuedTransaction.quantity >= 3 ? "orange" : "green"} title="Stamp issued successfully" description={issuedTransaction.quantity >= 3 ? "Multiple stamps were issued in one transaction. This may create an alert for Business Owner review." : "The customer stamp progress was updated."} />
       ) : null}
 
       {redemption ? (
-        <section className="rounded-md border border-emerald-200 bg-emerald-50 p-5">
-          <p className="text-sm font-semibold text-emerald-800">Reward Redeemed Successfully</p>
-          <div className="mt-4 grid gap-3 md:grid-cols-4">
-            <Info label="Customer" value={`${customer.firstName} ${customer.lastName ?? ""}`} />
-            <Info label="Reward" value={redemption.rewardName} />
-            <Info label="Branch" value={redemption.branch?.name ?? "Unassigned"} />
-            <Info label="Redeemed By" value={redemption.redeemedByUser.name} />
-            <Info label="Date/Time" value={formatDateTime(redemption.redeemedAt)} />
-          </div>
-        </section>
+        <ScanStatusBanner tone="green" title="Reward redeemed successfully" description={`${redemption.rewardName} was redeemed by ${redemption.redeemedByUser.name}.`} />
       ) : null}
 
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-[#F97316]">Customer summary</p>
-            <h2 className="mt-2 text-2xl font-semibold text-[#111827]">{customer.firstName} {customer.lastName ?? ""}</h2>
-            <p className="mt-1 text-sm text-[#6B7280]">{program.name} member card</p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            <SummaryItem label="Card Number" value={cardNumber} />
-            <SummaryItem label="Program" value={program.name} />
-            <SummaryItem label="Progress" value={`${progress} / ${program.requiredStamps}`} />
-            <SummaryItem label="Reward Status" value={redemption ? "Redeemed" : rewardReady ? "Reward Ready" : "Active"} />
-            <SummaryItem label="Last Visit" value={lastVisit ? `${formatDateTime(lastVisit.createdAt)}${lastVisit.branch?.name ? ` at ${lastVisit.branch.name}` : ""}` : "No visits yet"} />
-          </div>
-        </div>
-      </section>
-
-      {rewardReady ? (
-        <section className="rounded-md border-2 border-blue-200 bg-blue-50 p-5 shadow-sm">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-sm font-semibold uppercase text-blue-800">Reward Ready</p>
-              <h2 className="mt-2 text-2xl font-semibold text-[#111827]">{program.rewardName}</h2>
-              <p className="mt-2 text-sm text-blue-800">This customer has reached the required stamp target.</p>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <Info label="Required Stamps" value={program.requiredStamps.toString()} />
-              <Info label="Current Stamps" value={progress.toString()} />
-              <Info label="Reward Name" value={program.rewardName} />
-            </div>
-          </div>
-        </section>
-      ) : null}
-
-      <section className="grid gap-5 lg:grid-cols-3">
-        <div className="rounded-md border border-[#E5E7EB] bg-white p-5">
-          <p className="text-sm font-semibold text-[#F97316]">Customer</p>
-          <h2 className="mt-2 text-xl font-semibold text-[#111827]">{customer.firstName} {customer.lastName ?? ""}</h2>
-          <div className="mt-5 grid gap-3">
+      <section className="grid gap-3">
+        <DetailAccordion title="Customer Details">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <Info label="Card number" value={cardNumber} />
+            <Info label="Join date" value={formatDateTime(businessMembership.joinedAt)} />
+            <Info label="Last Visit" value={lastVisit ? `${formatDateTime(lastVisit.createdAt)}${lastVisit.branch?.name ? ` at ${lastVisit.branch.name}` : ""}` : "No visits yet"} />
             <Info label="Phone" value={maskPhoneNumber(customer.normalizedPhone)} />
             <Info label="Business membership status" value={<StatusBadge status={businessMembership.status} />} />
           </div>
-        </div>
+        </DetailAccordion>
 
-        <div className="rounded-md border border-[#E5E7EB] bg-white p-5">
-          <p className="text-sm font-semibold text-[#F97316]">Program</p>
-          <h2 className="mt-2 text-xl font-semibold text-[#111827]">{program.name}</h2>
-          <div className="mt-5 grid gap-3">
-            <Info label="Product/service" value={program.productOrServiceName} />
-            <Info label="Current progress" value={`${progress} / ${program.requiredStamps}`} />
+        <DetailAccordion title="Program Details">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <Info label="Program name" value={program.name} />
+            <Info label="Reward description" value={program.rewardDescription} />
             <Info label="Required stamps" value={program.requiredStamps.toString()} />
             <Info label="Bonus stamps" value={programMembership.bonusStamps.toString()} />
             <Info label="Earned stamps" value={programMembership.earnedStamps.toString()} />
@@ -375,66 +321,166 @@ export default async function ScanResultPage({
                 requiredStamps: program.requiredStamps,
               })}
             />
-            <Info label="Reward name" value={program.rewardName} />
-            <Info label="Reward description" value={program.rewardDescription} />
-            <Info label="Reward state" value={redemption ? "Redeemed" : rewardReady ? "Reward Ready" : "Active"} />
           </div>
-        </div>
+        </DetailAccordion>
 
-        <div className="rounded-md border border-[#E5E7EB] bg-white p-5">
-          <p className="text-sm font-semibold text-[#F97316]">Scan details</p>
-          <div className="mt-5 grid gap-3">
-            <Info label="Scanned by" value={authUser.name} />
-            <Info label="Branch name" value={scannerBranch?.name ?? businessMembership.createdBranch?.name ?? "Unassigned"} />
-            <Info label="Scan timestamp" value={formatDateTime(scanTimestamp)} />
+        <DetailAccordion title="Scan Details">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <Info label="Staff member" value={authUser.name} />
+            <Info label="Branch" value={scannerBranch?.name ?? businessMembership.createdBranch?.name ?? "Unassigned"} />
+            <Info label="Timestamp" value={formatDateTime(scanTimestamp)} />
           </div>
-        </div>
+        </DetailAccordion>
       </section>
 
-      {authUser.role !== "STAFF" ? (
-        <section className={`rounded-md border p-5 ${rewardReady ? "border-emerald-200 bg-emerald-50" : "border-[#E5E7EB] bg-white"}`}>
-          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-            <div>
-              <p className={`text-sm font-semibold ${rewardReady ? "text-emerald-800" : "text-[#F97316]"}`}>Reward redemption</p>
-              <h2 className="mt-2 text-lg font-semibold text-[#111827]">{rewardReady ? "Reward Ready" : "Reward not ready"}</h2>
-              <p className="mt-2 text-sm leading-6 text-[#6B7280]">
-                {rewardReady
-                  ? `${program.rewardName} can be redeemed now. Redemption resets earned stamps and starts a new cycle with the program bonus.`
-                  : `Customer needs ${Math.max(0, program.requiredStamps - progress)} more stamp${Math.max(0, program.requiredStamps - progress) === 1 ? "" : "s"} before redemption.`}
-              </p>
-            </div>
-            <div className="rounded-md border border-[#E5E7EB] bg-white p-3 text-sm text-[#6B7280]">
-              Progress: <span className="font-semibold text-[#111827]">{progress} / {program.requiredStamps}</span>
-            </div>
-          </div>
-          {rewardReady ? (
-            <form action={redeemRewardAction} className="mt-5 grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
-              <CsrfInput scope="scan:redemption" />
-              <IdempotencyInput scope="redemption" />
-              <input type="hidden" name="scanToken" value={token} />
-              <label className="grid gap-2 text-sm font-semibold text-[#111827]">
-                Notes
-                <textarea
-                  name="notes"
-                  rows={3}
-                  className="rounded-md border border-[#E5E7EB] px-3 py-2 text-sm font-normal outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
-                  placeholder="Optional redemption note"
-                />
-              </label>
-              <ConfirmSubmitButton
-                message="Redeem this reward now? Earned stamps will reset for this program."
-                className="h-11 rounded-md bg-[#F97316] px-5 text-sm font-semibold text-white"
-              >
-                Confirm Redemption
-              </ConfirmSubmitButton>
-            </form>
-          ) : null}
-        </section>
-      ) : null}
+      <AdvancedStampOptions
+        token={token}
+        progress={progress}
+        requiredStamps={program.requiredStamps}
+        canOverrideCooldown={authUser.role !== "STAFF"}
+      />
     </DashboardShell>
   );
 }
 
+function ActionSummarySection({
+  customerName,
+  tier,
+  programName,
+  progress,
+  requiredStamps,
+  rewardReady,
+  rewardName,
+}: {
+  customerName: string;
+  tier: string;
+  programName: string;
+  progress: number;
+  requiredStamps: number;
+  rewardReady: boolean;
+  rewardName: string;
+}) {
+  const remaining = Math.max(0, requiredStamps - progress);
+  const progressPercent = Math.min(100, Math.round((progress / requiredStamps) * 100));
+
+  return (
+    <section className="rounded-md border-2 border-orange-200 bg-white p-4 shadow-sm">
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-[#F97316] business-text">Action Summary</p>
+          <p className="sr-only">Customer summary</p>
+          <h2 className="mt-1 truncate text-2xl font-semibold text-[#111827]">{customerName}</h2>
+          <div className="mt-2 flex flex-wrap gap-2 text-xs font-semibold">
+            <span className="rounded-full bg-orange-50 px-3 py-1 text-[#EA580C] business-bg-soft business-text">{tier} Member</span>
+            <span className="rounded-full bg-[#F3F4F6] px-3 py-1 text-[#374151]">{programName}</span>
+          </div>
+        </div>
+        <div className={`rounded-md border px-4 py-3 text-sm font-semibold ${rewardReady ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-blue-200 bg-blue-50 text-blue-800"}`}>
+          {rewardReady ? "Reward Ready" : `${remaining} Visit${remaining === 1 ? "" : "s"} Remaining`}
+        </div>
+      </div>
+      <div className="mt-4">
+        <div className="flex items-center justify-between text-sm">
+          <span className="font-semibold text-[#111827]">{progress} / {requiredStamps} Progress</span>
+          <span className="text-[#6B7280]">{rewardReady ? rewardName : `${progressPercent}%`}</span>
+        </div>
+        <div className="mt-2 h-3 overflow-hidden rounded-full bg-orange-100 business-bg-soft">
+          <div className="h-full rounded-full bg-[#F97316] business-button" style={{ width: `${progressPercent}%` }} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function QuickScanActions({ token, rewardReady, canRedeem }: { token: string; rewardReady: boolean; canRedeem: boolean }) {
+  return (
+    <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
+      <div className={`grid gap-3 ${rewardReady && canRedeem ? "sm:grid-cols-2" : ""}`}>
+        {rewardReady && canRedeem ? (
+          <form action={redeemRewardAction}>
+            <CsrfInput scope="scan:redemption" />
+            <IdempotencyInput scope="redemption" />
+            <input type="hidden" name="scanToken" value={token} />
+            <ConfirmSubmitButton
+              message="Redeem this reward now? Earned stamps will reset for this program."
+              className="min-h-12 w-full rounded-md bg-emerald-600 px-5 text-base font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+            >
+              Redeem Reward
+            </ConfirmSubmitButton>
+          </form>
+        ) : null}
+        <form action={issueStampAction}>
+          <CsrfInput scope="scan:stamp" />
+          <IdempotencyInput scope="stamp" />
+          <input type="hidden" name="scanToken" value={token} />
+          <input type="hidden" name="quantity" value="1" />
+          <ConfirmSubmitButton
+            message="Issue this stamp to this customer and selected program?"
+            className={`${rewardReady ? "border border-[#E5E7EB] bg-white text-[#111827]" : "business-button bg-[#F97316] text-white"} min-h-12 w-full rounded-md px-5 text-base font-semibold shadow-sm transition`}
+          >
+            Add Stamp
+          </ConfirmSubmitButton>
+        </form>
+      </div>
+      {rewardReady && !canRedeem ? (
+        <p className="mt-3 rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+          Reward is ready. Ask a Business Owner or Branch Manager to redeem it.
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
+function DetailAccordion({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <details className="rounded-md border border-[#E5E7EB] bg-white shadow-sm">
+      <summary className="cursor-pointer list-none px-4 py-4 text-sm font-semibold text-[#111827] marker:hidden">
+        <span className="flex items-center justify-between gap-3">
+          {title}
+          <span className="text-xs font-semibold text-[#6B7280]">Open</span>
+        </span>
+      </summary>
+      <div className="border-t border-[#E5E7EB] p-4">{children}</div>
+    </details>
+  );
+}
+
+function AdvancedStampOptions({
+  token,
+  progress,
+  requiredStamps,
+  canOverrideCooldown,
+}: {
+  token: string;
+  progress: number;
+  requiredStamps: number;
+  canOverrideCooldown: boolean;
+}) {
+  return (
+    <details className="rounded-md border border-orange-100 bg-white shadow-sm">
+      <summary className="cursor-pointer list-none px-4 py-4 text-sm font-semibold text-[#111827] marker:hidden">
+        <span className="flex items-center justify-between gap-3">
+          Advanced stamp options
+          <span className="text-xs font-semibold text-[#6B7280]">Open</span>
+        </span>
+      </summary>
+      <div className="border-t border-orange-100 p-4">
+        <div className="mb-4 rounded-md border border-orange-200 bg-orange-50 p-3 text-sm text-orange-900">
+          <p className="font-semibold">Suspicious Activity Alert</p>
+          <p className="mt-1">
+            Use these options when issuing multiple stamps or when repeated stamp activity needs a reason.
+          </p>
+        </div>
+        <StampIssuanceSection
+          token={token}
+          progress={progress}
+          requiredStamps={requiredStamps}
+          canOverrideCooldown={canOverrideCooldown}
+        />
+      </div>
+    </details>
+  );
+}
 function ReferralInvitationScanScreen({
   user,
   referralCode,
