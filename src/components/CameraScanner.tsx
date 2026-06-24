@@ -1,7 +1,7 @@
 "use client";
 
 import jsQR from "jsqr";
-import { Camera, ClipboardType, RotateCcw, Square, Video, Zap } from "lucide-react";
+import { Camera, RotateCcw, Square, Video } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -69,7 +69,6 @@ export function CameraScanner({ backHref }: { backHref: string }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationRef = useRef<number | null>(null);
   const lastDecodeAttemptRef = useRef(0);
-  const [manualValue, setManualValue] = useState("");
   const [message, setMessage] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
@@ -117,19 +116,19 @@ export function CameraScanner({ backHref }: { backHref: string }) {
       if (error.name === "NotAllowedError" || error.name === "SecurityError") {
         return {
           state: "camera-blocked" as ScannerState,
-          message: "Camera access is required to scan customer cards. You can still paste the scan token manually.",
+          message: "Camera access is required to scan customer cards. You can still use the search box below.",
         };
       }
       if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError") {
         return {
           state: "no-camera" as ScannerState,
-          message: "No camera was found on this device. Paste the scan token or customer card link below.",
+          message: "No camera was found on this device. Use the search box below to enter a scan token or customer card link.",
         };
       }
     }
     return {
       state: "scan-failed" as ScannerState,
-      message: "Scanner could not start. Paste the scan token or customer card link below.",
+      message: "Scanner could not start. Use the search box below to enter a scan token or customer card link.",
     };
   }
 
@@ -139,13 +138,13 @@ export function CameraScanner({ backHref }: { backHref: string }) {
 
     if (!isLocalOrSecure()) {
       setScannerState("camera-blocked");
-      setMessage("Camera scanning requires HTTPS or localhost. Paste the scan token or customer card link below.");
+      setMessage("Camera scanning requires HTTPS or localhost. Use the search box below to enter a scan token or customer card link.");
       return false;
     }
 
     if (!navigator.mediaDevices?.getUserMedia) {
       setScannerState("no-camera");
-      setMessage("This browser cannot access a camera. Paste the scan token or customer card link below.");
+      setMessage("This browser cannot access a camera. Use the search box below to enter a scan token or customer card link.");
       return false;
     }
 
@@ -180,7 +179,7 @@ export function CameraScanner({ backHref }: { backHref: string }) {
   async function testCamera() {
     const opened = await openCameraPreview();
     if (opened) {
-      setMessage("Camera active. If scanning is unsupported, paste the QR or card link below.");
+      setMessage("Camera active. If scanning is unsupported, use the search box below.");
     }
   }
 
@@ -279,7 +278,7 @@ export function CameraScanner({ backHref }: { backHref: string }) {
         <div>
           <p className="text-sm font-semibold business-primary">Camera scanner</p>
           <h2 className="mt-1 text-xl font-semibold text-[#111827]">Scan customer QR</h2>
-          <p className="mt-2 text-sm leading-6 text-[#6B7280]">Scan the QR code shown on the customer's LoyaltyBase card. If the camera is unavailable, paste the card link or scan URL below, or search for the customer manually.</p>
+          <p className="mt-2 text-sm leading-6 text-[#6B7280]">Scan the QR code shown on the customer's LoyaltyBase card. If the camera is unavailable, use the universal customer lookup below.</p>
         </div>
         <a href={backHref} className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">
           ← Back to Dashboard
@@ -317,25 +316,6 @@ export function CameraScanner({ backHref }: { backHref: string }) {
         </button>
       </div>
 
-      <div className="mt-5 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
-        <label className="grid gap-2 text-sm font-semibold text-[#111827]">
-          Paste QR / Card Link
-          <input
-            value={manualValue}
-            onChange={(event) => setManualValue(event.target.value)}
-            className="min-h-12 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm font-normal outline-none business-ring focus:ring-0"
-            placeholder="scan_..., /referral/ABC123, or customer card link"
-          />
-        </label>
-        <button type="button" onClick={() => redirectFromValue(manualValue)} className="mt-3 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-[#111827] px-4 text-sm font-semibold text-white sm:w-auto">
-          <ClipboardType className="h-4 w-4" aria-hidden="true" />
-          Validate QR
-        </button>
-        <p className="mt-3 flex items-center gap-2 text-xs text-[#6B7280]">
-          <Zap className="h-3.5 w-3.5 business-primary" aria-hidden="true" />
-          Camera scan and manual paste both use the existing secure scan validation flow, including referral invitations.
-        </p>
-      </div>
     </section>
   );
 }

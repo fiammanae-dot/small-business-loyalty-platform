@@ -19,6 +19,10 @@ import { roleHomePath } from "@/lib/roles";
 import { getCurrentUser, hasActiveBusinessAccess } from "@/lib/session";
 import { issueStampAction, redeemRewardAction } from "@/app/scan/actions";
 
+const CROSS_BUSINESS_SCAN_TITLE = "Access Denied";
+const CROSS_BUSINESS_SCAN_DESCRIPTION = "This customer belongs to a different business workspace. For privacy and security reasons, customer information cannot be viewed or modified outside the assigned business.";
+const CROSS_BUSINESS_SCAN_HELPER = "If you believe this is a mistake, contact your Business Owner or System Administrator.";
+
 export default async function ScanResultPage({
   params,
   searchParams,
@@ -66,7 +70,7 @@ export default async function ScanResultPage({
     }
 
     if (referrer.businessId !== authUser.businessId) {
-      return <ScanMessage user={user} title="Wrong Business" description="This referral belongs to another business." soundEffectsEnabled={scannerSoundEffectsEnabled} />;
+      return <CrossBusinessScanMessage user={user} soundEffectsEnabled={scannerSoundEffectsEnabled} />;
     }
 
     return (
@@ -135,7 +139,7 @@ export default async function ScanResultPage({
 
     if (cardMembership.businessId !== authUser.businessId) {
       await logScan("WRONG_BUSINESS");
-      return <ScanMessage user={user} title="Wrong Business" description="This customer card does not belong to your business." soundEffectsEnabled={scannerSoundEffectsEnabled} />;
+      return <CrossBusinessScanMessage user={user} soundEffectsEnabled={scannerSoundEffectsEnabled} />;
     }
 
     if (cardMembership.cardStatus !== "ACTIVE" || cardMembership.status !== "ACTIVE") {
@@ -167,7 +171,7 @@ export default async function ScanResultPage({
 
   if (businessMembership.businessId !== authUser.businessId) {
     await logScan("WRONG_BUSINESS", programMembership.id);
-    return <ScanMessage user={user} title="Wrong Business" description="This loyalty QR does not belong to your business." soundEffectsEnabled={scannerSoundEffectsEnabled} />;
+    return <CrossBusinessScanMessage user={user} soundEffectsEnabled={scannerSoundEffectsEnabled} />;
   }
 
   if (programMembership.scanStatus !== "ACTIVE") {
@@ -276,11 +280,13 @@ export default async function ScanResultPage({
         rewardName={program.rewardName}
       />
 
-      <QuickScanActions
-        token={token}
-        rewardReady={rewardReady}
-        canRedeem={authUser.role !== "STAFF"}
-      />
+      {!redemption ? (
+        <QuickScanActions
+          token={token}
+          rewardReady={rewardReady}
+          canRedeem={authUser.role !== "STAFF"}
+        />
+      ) : null}
 
       {qs.error ? (
         <ScanStatusBanner tone="red" title="Action blocked" description={qs.error} />
@@ -291,7 +297,7 @@ export default async function ScanResultPage({
       ) : null}
 
       {redemption ? (
-        <ScanStatusBanner tone="green" title="Reward redeemed successfully" description={`${redemption.rewardName} was redeemed by ${redemption.redeemedByUser.name}.`} />
+        <ScanStatusBanner tone="green" title="Reward redeemed successfully" description={`Progress has been reset to 0 / ${program.requiredStamps}.`} />
       ) : null}
 
       <section className="grid gap-3">
@@ -332,13 +338,14 @@ export default async function ScanResultPage({
           </div>
         </DetailAccordion>
       </section>
-
-      <AdvancedStampOptions
-        token={token}
-        progress={progress}
-        requiredStamps={program.requiredStamps}
-        canOverrideCooldown={authUser.role !== "STAFF"}
-      />
+      {!rewardReady && !redemption ? (
+        <AdvancedStampOptions
+          token={token}
+          progress={progress}
+          requiredStamps={program.requiredStamps}
+          canOverrideCooldown={authUser.role !== "STAFF"}
+        />
+      ) : null}
     </DashboardShell>
   );
 }
@@ -395,8 +402,8 @@ function ActionSummarySection({
 function QuickScanActions({ token, rewardReady, canRedeem }: { token: string; rewardReady: boolean; canRedeem: boolean }) {
   return (
     <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
-      <div className={`grid gap-3 ${rewardReady && canRedeem ? "sm:grid-cols-2" : ""}`}>
-        {rewardReady && canRedeem ? (
+      {rewardReady ? (
+        canRedeem ? (
           <form action={redeemRewardAction}>
             <CsrfInput scope="scan:redemption" />
             <IdempotencyInput scope="redemption" />
@@ -408,7 +415,12 @@ function QuickScanActions({ token, rewardReady, canRedeem }: { token: string; re
               Redeem Reward
             </ConfirmSubmitButton>
           </form>
-        ) : null}
+        ) : (
+          <p className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+            Reward is ready. Ask a Business Owner or Branch Manager to redeem it.
+          </p>
+        )
+      ) : (
         <form action={issueStampAction}>
           <CsrfInput scope="scan:stamp" />
           <IdempotencyInput scope="stamp" />
@@ -416,17 +428,12 @@ function QuickScanActions({ token, rewardReady, canRedeem }: { token: string; re
           <input type="hidden" name="quantity" value="1" />
           <ConfirmSubmitButton
             message="Issue this stamp to this customer and selected program?"
-            className={`${rewardReady ? "border border-[#E5E7EB] bg-white text-[#111827]" : "business-button bg-[#F97316] text-white"} min-h-12 w-full rounded-md px-5 text-base font-semibold shadow-sm transition`}
+            className="business-button min-h-12 w-full rounded-md bg-[#F97316] px-5 text-base font-semibold text-white shadow-sm transition"
           >
             Add Stamp
           </ConfirmSubmitButton>
         </form>
-      </div>
-      {rewardReady && !canRedeem ? (
-        <p className="mt-3 rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
-          Reward is ready. Ask a Business Owner or Branch Manager to redeem it.
-        </p>
-      ) : null}
+      )}
     </section>
   );
 }
@@ -536,6 +543,24 @@ function friendlyReferralId(referralCode: string) {
   }
   return `RF-${hash.toString().padStart(4, "0")}`;
 }
+function CrossBusinessScanMessage({
+  user,
+  soundEffectsEnabled,
+}: {
+  user: NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>;
+  soundEffectsEnabled: boolean;
+}) {
+  return (
+    <DashboardShell user={user} eyebrow={roleEyebrow(user.role)} title="Scan result" hideWelcomeMessage>
+      <ScannerSoundFeedback event="error" enabled={soundEffectsEnabled} />
+      <ScanStatusBanner tone="red" title={CROSS_BUSINESS_SCAN_TITLE} description={CROSS_BUSINESS_SCAN_DESCRIPTION} />
+      <p className="rounded-md border border-red-100 bg-white px-4 py-3 text-sm text-[#6B7280]">{CROSS_BUSINESS_SCAN_HELPER}</p>
+      <Link href={scannerPathForRole(user.role)} className="inline-flex min-h-12 w-full items-center justify-center rounded-md bg-[#111827] px-5 text-sm font-semibold text-white sm:w-auto">
+        Back to Scanner
+      </Link>
+    </DashboardShell>
+  );
+}
 function ScanMessage({
   user,
   title,
@@ -551,6 +576,7 @@ function ScanMessage({
     <DashboardShell user={user} eyebrow={roleEyebrow(user.role)} title="Scan result" hideWelcomeMessage>
       <ScannerSoundFeedback event="error" enabled={soundEffectsEnabled} />
       <ScanStatusBanner tone="red" title={title} description={description ?? "Ask the customer to show a current loyalty QR for this business."} />
+      {helperText ? <p className="rounded-md border border-red-100 bg-white px-4 py-3 text-sm text-[#6B7280]">{helperText}</p> : null}
     </DashboardShell>
   );
 }
@@ -752,6 +778,11 @@ function StampIssuanceSection({
   );
 }
 
+function scannerPathForRole(role: string) {
+  if (role === "STAFF") return "/staff/scanner";
+  if (role === "BRANCH_MANAGER") return "/branch/scanner";
+  return "/dashboard/scanner";
+}
 function roleEyebrow(role: string) {
   if (role === "STAFF") return "Staff";
   if (role === "BRANCH_MANAGER") return "Branch Manager";

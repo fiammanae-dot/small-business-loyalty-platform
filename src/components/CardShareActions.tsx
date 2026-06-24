@@ -1,5 +1,6 @@
 "use client";
 
+import { AlertTriangle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { auditLoyaltyCardWhatsAppShare } from "@/app/card-share-actions";
 import { formatUaePhoneForWhatsApp } from "@/lib/phone";
@@ -91,16 +92,26 @@ export function CardShareActions({
             Copy card link
           </button>
         ) : null}
-        <button
-          type="button"
-          onClick={shareViaWhatsApp}
-          disabled={!whatsappUrl || sharing}
-          title={!whatsappUrl ? disabledWhatsappLabel : whatsappLabel}
-          className={compact ? "whitespace-nowrap rounded-md border border-[#E5E7EB] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#111827] transition business-hover disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-500" : "rounded-md px-4 py-3 text-center text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-600 business-button"}
-          style={!compact && whatsappUrl && !sharing && buttonColor ? { backgroundColor: buttonColor } : undefined}
-        >
-          {sharing ? "Preparing..." : whatsappUrl ? whatsappLabel : disabledWhatsappLabel}
-        </button>
+        {compact && !whatsappUrl ? (
+          <span
+            title={disabledWhatsappLabel}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-amber-200 bg-amber-50 text-amber-700"
+            aria-label={disabledWhatsappLabel}
+          >
+            <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+          </span>
+        ) : (
+          <button
+            type="button"
+            onClick={shareViaWhatsApp}
+            disabled={!whatsappUrl || sharing}
+            title={!whatsappUrl ? disabledWhatsappLabel : whatsappLabel}
+            className={compact ? "whitespace-nowrap rounded-md border border-[#E5E7EB] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#111827] transition business-hover disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-500" : "rounded-md px-4 py-3 text-center text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-600 business-button"}
+            style={!compact && whatsappUrl && !sharing && buttonColor ? { backgroundColor: buttonColor } : undefined}
+          >
+            {sharing ? "Preparing..." : whatsappUrl ? whatsappLabel : disabledWhatsappLabel}
+          </button>
+        )}
       </div>
       {!compact && !whatsappUrl ? (
         <p className="text-center text-sm font-medium text-[#9A3412]">

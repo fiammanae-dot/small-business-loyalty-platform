@@ -1,4 +1,4 @@
-﻿import { CardShareActions } from "@/components/CardShareActions";
+import { CardShareActions } from "@/components/CardShareActions";
 import { ReferralShareActions } from "@/components/ReferralShareActions";
 import { SaveCardImageButton } from "@/components/SaveCardImageButton";
 import Image from "next/image";
@@ -335,7 +335,7 @@ function LoyaltyProgressSection({
         <div>
           <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wide text-[#64748B]">
             <span>Next Reward</span>
-            <span>{completion}%</span>
+            <span>{rewardReady ? "Reward Ready" : programMembership.loyaltyProgram.rewardName}</span>
           </div>
           <div className="mt-3 h-4 overflow-hidden rounded-full" style={{ backgroundColor: withAlpha(cardTheme.secondary, 0.18) }}>
             <div
@@ -346,11 +346,14 @@ function LoyaltyProgressSection({
               }}
             />
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <Info label="Current Visits" value={progress.toString()} />
-            <Info label="Required Visits" value={required.toString()} />
-            <Info label="Visits Remaining" value={remaining === 0 ? "Ready now" : remaining.toString()} />
-            <Info label="Next Reward" value={programMembership.loyaltyProgram.rewardName} />
+          <div className="mt-4 rounded-3xl border border-[#E5E7EB] bg-[#F8FAFC] p-4">
+            <p className="text-2xl font-black text-[#1E293B]">{progress} / {required} Visits</p>
+            <p className="mt-1 text-sm font-semibold text-[#64748B]">
+              {remaining === 0 ? "Reward ready" : `${remaining} Visit${remaining === 1 ? "" : "s"} Remaining`}
+            </p>
+            <p className="mt-3 text-sm font-semibold" style={{ color: cardTheme.secondary }}>
+              Next Reward: {programMembership.loyaltyProgram.rewardName}
+            </p>
           </div>
         </div>
       </div>

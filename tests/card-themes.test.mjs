@@ -72,8 +72,10 @@ test("public customer card renders selected program theme without replacing core
   assert.doesNotMatch(publicCard, /cardTheme\.label/);
   assert.match(publicCard, /LoyaltyProgressSection/);
   assert.match(publicCard, /Member Since/);
-  assert.match(publicCard, /Current Visits/);
-  assert.match(publicCard, /Required Visits/);
+  assert.match(publicCard, /Next Reward:/);
+  assert.match(publicCard, /\{progress\} \/ \{required\} Visits/);
+  assert.doesNotMatch(publicCard, /Current Visits/);
+  assert.doesNotMatch(publicCard, /Required Visits/);
   assert.doesNotMatch(publicCard, /RewardStatusSection/);
   assert.match(publicCard, /TierStatusSection/);
   assert.match(publicCard, /ReferralCardSection/);

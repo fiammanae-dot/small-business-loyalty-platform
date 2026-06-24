@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Link2, Search } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatDate } from "@/lib/format";
 import { formatUaePhoneDisplay, normalizePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
+import { extractScanToken } from "@/lib/scan";
 
 type ScannerManualCustomerSearchProps = {
   businessId: number;
@@ -13,8 +14,9 @@ type ScannerManualCustomerSearchProps = {
 
 export async function ScannerManualCustomerSearch({ businessId, query, actionPath }: ScannerManualCustomerSearchProps) {
   const trimmedQuery = query?.trim() ?? "";
-  const normalizedPhone = trimmedQuery ? normalizePhone(trimmedQuery) : null;
-  const shouldSearch = trimmedQuery.length >= 2;
+  const secureScanToken = trimmedQuery ? extractScanToken(trimmedQuery) : "";
+  const normalizedPhone = trimmedQuery && !secureScanToken ? normalizePhone(trimmedQuery) : null;
+  const shouldSearch = !secureScanToken && trimmedQuery.length >= 2;
 
   const results = shouldSearch
     ? await prisma.businessCustomerMembership.findMany({
@@ -50,14 +52,20 @@ export async function ScannerManualCustomerSearch({ businessId, query, actionPat
 
   return (
     <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm sm:p-5">
-      <div className="flex items-start gap-3">
+      <div className="flex items-center gap-3">
+        <span className="h-px flex-1 bg-[#E5E7EB]" aria-hidden="true" />
+        <span className="rounded-full border border-[#E5E7EB] bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#6B7280]">OR</span>
+        <span className="h-px flex-1 bg-[#E5E7EB]" aria-hidden="true" />
+      </div>
+
+      <div className="mt-4 flex items-start gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md business-bg-soft business-text">
           <Search className="h-5 w-5" aria-hidden="true" />
         </span>
         <div>
-          <p className="text-sm font-semibold business-primary">Find customer manually</p>
+          <p className="text-sm font-semibold business-primary">Search customer</p>
           <p className="mt-1 text-sm leading-6 text-[#6B7280]">
-            Search by customer name, phone number, card number, or referral code when camera scanning is unavailable.
+            Search by name, phone, card link, QR link, scan token, or referral code.
           </p>
         </div>
       </div>
@@ -66,7 +74,7 @@ export async function ScannerManualCustomerSearch({ businessId, query, actionPat
         <input
           name="customerSearch"
           defaultValue={trimmedQuery}
-          placeholder="Name, phone, card number, or referral code"
+          placeholder="Name, phone, card link, scan token, or referral code"
           className="min-h-12 min-w-0 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm outline-none business-ring focus:ring-0"
         />
         <button type="submit" className="inline-flex min-h-12 items-center justify-center rounded-md business-button px-5 text-sm font-semibold text-white">
@@ -74,7 +82,24 @@ export async function ScannerManualCustomerSearch({ businessId, query, actionPat
         </button>
       </form>
 
-      {trimmedQuery && !shouldSearch ? (
+      {secureScanToken ? (
+        <div className="mt-4 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-2">
+              <Link2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <div>
+                <p className="font-semibold">Secure scanner link detected.</p>
+                <p className="mt-1 text-emerald-800">Open the existing validation flow to confirm the customer, program, or referral.</p>
+              </div>
+            </div>
+            <Link href={`/scan/${encodeURIComponent(secureScanToken)}`} className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md business-button px-4 text-sm font-semibold text-white">
+              Open scan flow
+            </Link>
+          </div>
+        </div>
+      ) : null}
+
+      {trimmedQuery && !secureScanToken && !shouldSearch ? (
         <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
           Enter at least 2 characters to search.
         </p>
@@ -96,7 +121,7 @@ export async function ScannerManualCustomerSearch({ businessId, query, actionPat
                       <p className="font-semibold text-[#111827]">{customerName}</p>
                       <StatusBadge status={membership.status} />
                     </div>
-                    <div className="mt-2 grid gap-1 text-sm text-[#6B7280] sm:grid-cols-2 lg:grid-cols-5">
+                    <div className="mt-2 grid gap-1 text-sm text-[#6B7280] sm:grid-cols-2 lg:grid-cols-4">
                       <p>{formatUaePhoneDisplay(membership.globalCustomer.normalizedPhone)}</p>
                       <p>{membership.createdBranch?.name ?? "No branch"}</p>
                       <p>Joined {formatDate(membership.joinedAt)}</p>
