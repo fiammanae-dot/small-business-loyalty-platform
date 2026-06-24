@@ -39,3 +39,11 @@ test("starter multi-branch detection creates internal audit warning only", () =>
   assert.match(auditCenter, /Plan Compliance Warnings/);
   assert.match(auditCenter, /Compliance Events/);
 });
+test("dashboard wires computed plan compliance into HeaderSummary", () => {
+  const dashboard = read("src/app/dashboard/page.tsx");
+
+  assert.match(dashboard, /const planCompliance = await getPlanComplianceSummary/);
+  assert.match(dashboard, /planCompliance=\{planCompliance\}/);
+  assert.match(dashboard, /function HeaderSummary\(\{[\s\S]*planCompliance,[\s\S]*\}: \{[\s\S]*planCompliance: PlanComplianceSummary;/);
+  assert.match(dashboard, /<PlanComplianceCard compliance=\{planCompliance\} \/>/);
+});

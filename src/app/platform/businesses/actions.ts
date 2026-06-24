@@ -438,9 +438,21 @@ export async function toggleBusinessStatusAction(formData: FormData) {
     redirect("/platform/businesses");
   }
 
-  await prisma.business.update({
-    where: { id: businessId },
-    data: { status: nextStatus },
+  await prisma.$transaction(async (tx) => {
+    await tx.business.update({
+      where: { id: businessId },
+      data: { status: nextStatus },
+    });
+
+    if (nextStatus === "INACTIVE") {
+      await tx.user.updateMany({
+        where: {
+          businessId,
+          role: { in: ["BUSINESS_OWNER", "BRANCH_MANAGER", "STAFF"] },
+        },
+        data: { sessionVersion: { increment: 1 } },
+      });
+    }
   });
 
   revalidatePath("/platform/businesses");

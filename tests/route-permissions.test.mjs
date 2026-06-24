@@ -83,3 +83,12 @@ test("inactive business access is blocked for operational roles", () => {
   assert.match(scanPage, /business-inactive/);
   assert.match(blockedPage, /INACTIVE_BUSINESS_ACCESS_MESSAGE/);
 });
+
+test("disabling a business invalidates operational role sessions", () => {
+  const businessActions = read("src/app/platform/businesses/actions.ts");
+
+  assert.match(businessActions, /if \(nextStatus === "INACTIVE"\)/);
+  assert.match(businessActions, /sessionVersion: \{ increment: 1 \}/);
+  assert.match(businessActions, /role: \{ in: \["BUSINESS_OWNER", "BRANCH_MANAGER", "STAFF"\] \}/);
+  assert.doesNotMatch(businessActions, /role: \{ in: \[[^\]]*"PLATFORM_OWNER"/);
+});

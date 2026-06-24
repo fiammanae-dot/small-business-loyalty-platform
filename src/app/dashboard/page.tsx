@@ -16,7 +16,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { getBusinessDisplayName, getBusinessTypeDisplayName } from "@/lib/business-display";
 import { getBusinessOwnerContext, getCurrentPlan } from "@/lib/business-owner";
 import { formatDateTime } from "@/lib/format";
-import { getPlanComplianceSummary } from "@/lib/plan-compliance";
+import { getPlanComplianceSummary, type PlanComplianceSummary } from "@/lib/plan-compliance";
 import { prisma } from "@/lib/prisma";
 import { businessTypeLabels } from "@/lib/roles";
 
@@ -171,6 +171,7 @@ export default async function BusinessDashboard({
         logoUrl={business.branding?.logoUrl}
         onboardingPercent={onboardingPercent}
         onboardingItems={onboardingItems}
+        planCompliance={planCompliance}
       />
 
       <MainActions />
@@ -205,6 +206,7 @@ function HeaderSummary({
   logoUrl,
   onboardingPercent,
   onboardingItems,
+  planCompliance,
 }: {
   businessName: string;
   businessType: string;
@@ -221,6 +223,7 @@ function HeaderSummary({
   logoUrl?: string | null;
   onboardingPercent: number;
   onboardingItems: Array<{ label: string; complete: boolean; href: string }>;
+  planCompliance: PlanComplianceSummary;
 }) {
   return (
     <section className="max-w-full min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm">
