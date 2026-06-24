@@ -22,6 +22,10 @@ test("staff password reset is business-scoped and limited to branch managers and
   assert.match(resetComponent, /Generate secure temporary password/);
   assert.match(resetComponent, /Email delivery is not configured yet/);
   assert.match(resetComponent, /temporary password is shown once/i);
+  assert.match(resetComponent, /KeyRound/);
+  assert.match(resetComponent, /hover:border-\[#9CA3AF\]/);
+  assert.match(staffPage, /Ban/);
+  assert.match(staffPage, /border-red-200 bg-red-50/);
 });
 
 test("staff password reset hashes passwords, forces next-login change, logs audit, and invalidates sessions", () => {

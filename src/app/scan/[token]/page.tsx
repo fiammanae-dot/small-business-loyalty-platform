@@ -23,6 +23,19 @@ const CROSS_BUSINESS_SCAN_TITLE = "Access Denied";
 const CROSS_BUSINESS_SCAN_DESCRIPTION = "This customer belongs to a different business workspace. For privacy and security reasons, customer information cannot be viewed or modified outside the assigned business.";
 const CROSS_BUSINESS_SCAN_HELPER = "If you believe this is a mistake, contact your Business Owner or System Administrator.";
 
+function decodeScanRouteToken(token: string) {
+  try {
+    return decodeURIComponent(token);
+  } catch {
+    return token;
+  }
+}
+
+function referralCodeFromScanRouteToken(token: string) {
+  const decodedToken = decodeScanRouteToken(token);
+  return decodedToken.startsWith("referral:") ? extractReferralCode(decodedToken.slice("referral:".length)) : null;
+}
+
 export default async function ScanResultPage({
   params,
   searchParams,
@@ -62,7 +75,8 @@ export default async function ScanResultPage({
     return <ScanMessage user={user} title={BRANCH_INACTIVE_MESSAGE} soundEffectsEnabled={scannerSoundEffectsEnabled} />;
   }
 
-  const referralCode = token.startsWith("referral:") ? extractReferralCode(token.slice("referral:".length)) : null;
+  const scanToken = decodeScanRouteToken(token);
+  const referralCode = referralCodeFromScanRouteToken(token);
   if (referralCode) {
     const referrer = await resolveReferralLandingReferrer(referralCode);
     if (!referrer) {
@@ -86,7 +100,7 @@ export default async function ScanResultPage({
   }
 
   const programMembership = await prisma.customerProgramMembership.findUnique({
-    where: { scanToken: token },
+    where: { scanToken },
     include: {
       loyaltyProgram: true,
       businessCustomerMembership: {
@@ -282,7 +296,7 @@ export default async function ScanResultPage({
 
       {!redemption ? (
         <QuickScanActions
-          token={token}
+          token={scanToken}
           rewardReady={rewardReady}
           canRedeem={authUser.role !== "STAFF"}
         />
@@ -340,7 +354,7 @@ export default async function ScanResultPage({
       </section>
       {!rewardReady && !redemption ? (
         <AdvancedStampOptions
-          token={token}
+          token={scanToken}
           progress={progress}
           requiredStamps={program.requiredStamps}
           canOverrideCooldown={authUser.role !== "STAFF"}
@@ -417,7 +431,7 @@ function QuickScanActions({ token, rewardReady, canRedeem }: { token: string; re
           </form>
         ) : (
           <p className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
-            Reward is ready. Ask a Business Owner or Branch Manager to redeem it.
+            Reward ready. Only Branch Managers and Business Owners can redeem rewards.
           </p>
         )
       ) : (

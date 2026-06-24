@@ -12,6 +12,13 @@ type ScannerManualCustomerSearchProps = {
   actionPath: string;
 };
 
+function scanFlowHref(token: string) {
+  if (token.startsWith("referral:")) {
+    return "/scan/referral/" + encodeURIComponent(token.slice("referral:".length));
+  }
+  return "/scan/" + encodeURIComponent(token);
+}
+
 export async function ScannerManualCustomerSearch({ businessId, query, actionPath }: ScannerManualCustomerSearchProps) {
   const trimmedQuery = query?.trim() ?? "";
   const secureScanToken = trimmedQuery ? extractScanToken(trimmedQuery) : "";
@@ -92,7 +99,7 @@ export async function ScannerManualCustomerSearch({ businessId, query, actionPat
                 <p className="mt-1 text-emerald-800">Open the existing validation flow to confirm the customer, program, or referral.</p>
               </div>
             </div>
-            <Link href={`/scan/${encodeURIComponent(secureScanToken)}`} className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md business-button px-4 text-sm font-semibold text-white">
+            <Link href={scanFlowHref(secureScanToken)} className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md business-button px-4 text-sm font-semibold text-white">
               Open scan flow
             </Link>
           </div>
@@ -129,7 +136,7 @@ export async function ScannerManualCustomerSearch({ businessId, query, actionPat
                     </div>
                   </div>
                   {canOpenScanFlow ? (
-                    <Link href={`/scan/${encodeURIComponent(scanToken)}`} className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md business-button px-4 text-sm font-semibold text-white">
+                    <Link href={scanFlowHref(scanToken)} className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md business-button px-4 text-sm font-semibold text-white">
                       Open scan flow
                     </Link>
                   ) : (

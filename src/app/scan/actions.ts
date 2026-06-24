@@ -33,6 +33,7 @@ const stampIssueSchema = z
 const REPEATED_STAMP_WINDOW_MINUTES = 10;
 const REPEATED_STAMP_REASON_THRESHOLD = 3;
 const REPEATED_STAMP_REASON_MESSAGE = "Multiple stamps were issued to this customer in a short time. Please provide a reason.";
+const STAFF_REWARD_READY_STAMP_BLOCK_MESSAGE = "Reward ready. Only Branch Managers and Business Owners can redeem rewards.";
 
 function getString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -115,6 +116,17 @@ export async function issueStampAction(formData: FormData) {
     businessMembership.status !== "ACTIVE"
   ) {
     fail(data.scanToken, "Invalid or unavailable loyalty QR.");
+  }
+
+  if (
+    user.role === "STAFF" &&
+    isRewardReady({
+      earnedStamps: programMembership.earnedStamps,
+      bonusStamps: programMembership.bonusStamps,
+      requiredStamps: programMembership.loyaltyProgram.requiredStamps,
+    })
+  ) {
+    fail(data.scanToken, STAFF_REWARD_READY_STAMP_BLOCK_MESSAGE);
   }
 
   const now = new Date();

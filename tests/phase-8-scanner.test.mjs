@@ -29,7 +29,8 @@ test("camera scanner keeps camera controls while universal lookup handles text e
     "Camera access is required to scan customer cards.",
     "Camera active. Using browser-compatible QR scanning for this device.",
     "LoyaltyBase scanner camera error",
-    "router.push(`/scan/${encodeURIComponent(result.token)}`)",
+    "router.push(scanFlowHref(result.token))",
+    "/scan/referral/",
     "referral:${referralCode}",
   ]) {
     assert.match(scanner, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
@@ -46,6 +47,8 @@ test("camera scanner keeps camera controls while universal lookup handles text e
     "firstName",
     "normalizedPhone",
     "referralCode",
+    "scanFlowHref(secureScanToken)",
+    "/scan/referral/",
   ]) {
     assert.match(lookup, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }
@@ -80,6 +83,21 @@ test("scan result page keeps validation flow and improves scan experience", () =
   }
 });
 
+test("referral scanner flow uses referral route and graceful validation state", () => {
+  const lookup = read("src/components/ScannerManualCustomerSearch.tsx");
+  const camera = read("src/components/CameraScanner.tsx");
+  const scanPage = read("src/app/scan/[token]/page.tsx");
+  const referralRoute = read("src/app/scan/referral/[code]/page.tsx");
+
+  assert.match(lookup, /scanFlowHref\(secureScanToken\)/);
+  assert.match(camera, /router\.push\(scanFlowHref\(result\.token\)\)/);
+  assert.match(referralRoute, /encodeURIComponent/);
+  assert.match(referralRoute, /referral:/);
+  assert.match(scanPage, /decodeScanRouteToken/);
+  assert.match(scanPage, /referralCodeFromScanRouteToken/);
+  assert.match(scanPage, /Referral not available./);
+});
+
 test("manual scan token parser accepts scan URLs and direct tokens for existing validation route", () => {
   const scanLib = read("src/lib/scan.ts");
 
@@ -98,7 +116,17 @@ test("scanner reward-ready state hides stamp actions and shows dynamic reset mes
   assert.match(scan, /\) : \(\s*<form action=\{issueStampAction\}>/);
   assert.match(scan, /\{!redemption \? \(/);
   assert.match(scan, /\{!rewardReady && !redemption \? \(\s*<AdvancedStampOptions/);
+  assert.match(scan, /Reward ready\. Only Branch Managers and Business Owners can redeem rewards\./);
 });
+test("staff cannot issue stamps when a scanned program is reward ready", () => {
+  const actions = read("src/app/scan/actions.ts");
+
+  assert.match(actions, /STAFF_REWARD_READY_STAMP_BLOCK_MESSAGE/);
+  assert.match(actions, /user\.role === "STAFF"/);
+  assert.match(actions, /isRewardReady\(\{/);
+  assert.match(actions, /fail\(data\.scanToken, STAFF_REWARD_READY_STAMP_BLOCK_MESSAGE\)/);
+});
+
 test("scanner sound effects are configurable and outcome driven", () => {
   const schema = read("prisma/schema.prisma");
   const migration = read("prisma/migrations/0028_scanner_sound_settings/migration.sql");

@@ -37,8 +37,9 @@ export function StaffPasswordResetAction({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="text-sm font-semibold business-text"
+        className="inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-[#D1D5DB] bg-white px-3 text-xs font-semibold text-[#374151] shadow-sm transition hover:border-[#9CA3AF] hover:bg-[#F9FAFB] focus:outline-none focus:ring-2 focus:ring-[#111827]/20"
       >
+        <KeyRound className="h-3.5 w-3.5" aria-hidden="true" />
         Reset Password
       </button>
 

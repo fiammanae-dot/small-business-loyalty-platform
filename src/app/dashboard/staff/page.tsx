@@ -1,6 +1,7 @@
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { DashboardShell } from "@/components/DashboardShell";
 import Link from "next/link";
+import { Ban, CheckCircle2 } from "lucide-react";
 import { CsrfInput } from "@/components/CsrfInput";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { StaffPasswordResetAction } from "@/components/StaffPasswordResetAction";
@@ -85,21 +86,26 @@ export default async function StaffUsersPage({
                     </td>
                     <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(staffUser.createdAt)}</td>
                     <td className="border-b border-[#E5E7EB] px-3 py-4">
-                      <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-2">
                         <StaffPasswordResetAction staffUserId={staffUser.id} staffName={staffUser.name} csrfToken={resetCsrfToken} />
                         <form action={toggleStaffStatusAction}>
                           <CsrfInput scope="dashboard:staff" />
                           <input type="hidden" name="staffUserId" value={staffUser.id} />
                           <input type="hidden" name="nextStatus" value={nextStatus} />
                           {nextStatus === "ACTIVE" ? (
-                            <button type="submit" className="text-sm font-semibold business-primary">
+                            <button
+                              type="submit"
+                              className="inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-3 text-xs font-semibold text-emerald-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/25"
+                            >
+                              <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
                               Enable
                             </button>
                           ) : (
                             <ConfirmSubmitButton
                               message="Disable this user? They will lose access to the business workspace."
-                              className="text-sm font-semibold business-primary"
+                              className="inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-red-200 bg-red-50 px-3 text-xs font-semibold text-red-700 shadow-sm transition hover:border-red-300 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500/25"
                             >
+                              <Ban className="h-3.5 w-3.5" aria-hidden="true" />
                               Disable
                             </ConfirmSubmitButton>
                           )}

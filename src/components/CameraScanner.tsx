@@ -27,6 +27,14 @@ type ScannerState =
   | "scan-detected"
   | "scan-failed";
 
+
+function scanFlowHref(token: string) {
+  if (token.startsWith("referral:")) {
+    return "/scan/referral/" + encodeURIComponent(token.slice("referral:".length));
+  }
+  return "/scan/" + encodeURIComponent(token);
+}
+
 function extractToken(value: string) {
   const trimmed = value.trim();
   if (!trimmed) return { token: "", reason: "Invalid loyalty QR code." };
@@ -103,7 +111,7 @@ export function CameraScanner({ backHref }: { backHref: string }) {
 
     setScannerState("scan-detected");
     stopCamera();
-    router.push(`/scan/${encodeURIComponent(result.token)}`);
+    router.push(scanFlowHref(result.token));
   }
 
   function isLocalOrSecure() {
