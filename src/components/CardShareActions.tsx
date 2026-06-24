@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
 import { auditLoyaltyCardWhatsAppShare } from "@/app/card-share-actions";
@@ -14,6 +14,7 @@ type CardShareActionsProps = {
   showCopy?: boolean;
   showWallet?: boolean;
   buttonColor?: string;
+  compact?: boolean;
 };
 
 export function CardShareActions({
@@ -26,6 +27,7 @@ export function CardShareActions({
   showCopy = true,
   showWallet = true,
   buttonColor,
+  compact = false,
 }: CardShareActionsProps) {
   const [message, setMessage] = useState("");
   const [sharing, setSharing] = useState(false);
@@ -42,6 +44,7 @@ export function CardShareActions({
     if (!whatsappPhone) return null;
     return `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(shareText)}`;
   }, [shareText, whatsappPhone]);
+  const disabledWhatsappLabel = recipientPhone ? "Invalid phone" : "No phone";
 
   async function copyLink() {
     try {
@@ -77,13 +80,13 @@ export function CardShareActions({
   }
 
   return (
-    <div className="space-y-3">
-      <div className={`grid gap-3 ${showCopy ? "sm:grid-cols-2" : ""}`}>
+    <div className={compact ? "" : "space-y-3"}>
+      <div className={compact ? "flex items-center gap-2" : `grid gap-3 ${showCopy ? "sm:grid-cols-2" : ""}`}>
         {showCopy ? (
           <button
             type="button"
             onClick={copyLink}
-            className="rounded-md border border-[#E5E7EB] bg-white px-4 py-3 text-sm font-semibold text-[#111827] transition business-hover"
+            className={compact ? "rounded-md border border-[#E5E7EB] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#111827] transition business-hover" : "rounded-md border border-[#E5E7EB] bg-white px-4 py-3 text-sm font-semibold text-[#111827] transition business-hover"}
           >
             Copy card link
           </button>
@@ -92,13 +95,14 @@ export function CardShareActions({
           type="button"
           onClick={shareViaWhatsApp}
           disabled={!whatsappUrl || sharing}
-          className="rounded-md px-4 py-3 text-center text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-600 business-button"
-          style={whatsappUrl && !sharing && buttonColor ? { backgroundColor: buttonColor } : undefined}
+          title={!whatsappUrl ? disabledWhatsappLabel : whatsappLabel}
+          className={compact ? "whitespace-nowrap rounded-md border border-[#E5E7EB] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#111827] transition business-hover disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-500" : "rounded-md px-4 py-3 text-center text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-600 business-button"}
+          style={!compact && whatsappUrl && !sharing && buttonColor ? { backgroundColor: buttonColor } : undefined}
         >
-          {sharing ? "Preparing WhatsApp..." : whatsappLabel}
+          {sharing ? "Preparing..." : whatsappUrl ? whatsappLabel : disabledWhatsappLabel}
         </button>
       </div>
-      {!whatsappUrl ? (
+      {!compact && !whatsappUrl ? (
         <p className="text-center text-sm font-medium text-[#9A3412]">
           {recipientPhone ? "Customer phone number is invalid." : "Customer phone number required."}
         </p>
@@ -123,7 +127,7 @@ export function CardShareActions({
         </div>
       ) : null}
 
-      {message ? <p className="text-center text-sm font-medium business-text">{message}</p> : null}
+      {!compact && message ? <p className="text-center text-sm font-medium business-text">{message}</p> : null}
     </div>
   );
 }

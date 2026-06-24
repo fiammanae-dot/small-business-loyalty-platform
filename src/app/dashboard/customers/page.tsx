@@ -76,20 +76,20 @@ export default async function CustomersPage({
           </Link>
         </div>
 
-        <form className="mt-5 grid gap-3 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3 md:grid-cols-5">
+        <form className="mt-5 grid gap-3 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3 md:grid-cols-[minmax(280px,2fr)_minmax(140px,1fr)_minmax(170px,1fr)_minmax(150px,1fr)_auto_auto] md:items-center">
           <input
             name="q"
             defaultValue={params.q ?? ""}
             placeholder="Search name, phone, card number, referral code, program"
-            className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0 business-border  md:col-span-2"
+            className="h-10 min-w-0 rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0 business-border"
           />
           <Select name="status" label="Status" value={params.status} options={[["", "All statuses"], ["ACTIVE", "Active"], ["INACTIVE", "Inactive"], ["BLOCKED", "Blocked"]]} />
           <Select name="consent" label="Marketing consent" value={params.consent} options={[["", "All consent"], ["yes", "Consented"], ["no", "No consent"]]} />
           <Select name="source" label="Source" value={params.source} options={[["", "All sources"], ["OWNER", "Owner"], ["STAFF", "Staff"], ["IMPORT", "Import"], ["SELF_SIGNUP", "Self signup"]]} />
-          <button type="submit" className="h-10 rounded-md border business-border px-4 text-sm font-semibold business-primary md:col-start-5">
+          <button type="submit" className="h-10 whitespace-nowrap rounded-md border business-border px-4 text-sm font-semibold business-primary">
             Apply filters
           </button>
-          <Link href="/dashboard/customers" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] md:col-start-4">
+          <Link href="/dashboard/customers" className="inline-flex h-10 items-center justify-center whitespace-nowrap rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">
             Clear search
           </Link>
         </form>
@@ -132,8 +132,8 @@ export default async function CustomersPage({
           ))}
         </div>
 
-        <div className="mt-6 hidden lg:block">
-          <table className="w-full min-w-[980px] border-separate border-spacing-0 text-left text-sm">
+        <div className="mt-6 hidden max-w-full overflow-x-auto lg:block">
+          <table className="w-full min-w-[1120px] border-separate border-spacing-0 text-left text-sm">
             <thead>
               <tr className="text-[#6B7280]">
                 {["Customer name", "Phone", "Email", "Marketing consent", "Status", "Joined date", "Card issued branch", "Source", "Actions"].map((heading) => (
@@ -154,21 +154,20 @@ export default async function CustomersPage({
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(membership.joinedAt)}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{membership.createdBranch?.name ?? "-"}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{customerSourceLabels[membership.source]}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4">
-                    <div className="flex flex-col gap-3">
-                      <div className="flex gap-3">
-                        <Link href={`/dashboard/customers/${membership.uuid}`} className="font-semibold business-primary">View</Link>
-                        <Link href={`/dashboard/customers/${membership.uuid}/edit`} className="font-semibold business-primary">Edit</Link>
-                      </div>
+                  <td className="w-[220px] border-b border-[#E5E7EB] px-3 py-4">
+                    <div className="flex items-center gap-2 whitespace-nowrap">
+                      <Link href={`/dashboard/customers/${membership.uuid}`} className="rounded-md border border-[#E5E7EB] px-2.5 py-1.5 text-xs font-semibold text-[#111827] transition business-hover">View</Link>
+                      <Link href={`/dashboard/customers/${membership.uuid}/edit`} className="rounded-md border border-[#E5E7EB] px-2.5 py-1.5 text-xs font-semibold text-[#111827] transition business-hover">Edit</Link>
                       <CardShareActions
                         cardUrl={membership.cardUrl}
                         businessName={business.name}
                         customerName={membership.customerName}
                         recipientPhone={membership.globalCustomer.normalizedPhone}
                         auditMembershipUuid={membership.uuid}
-                        whatsappLabel="Send via WhatsApp"
+                        whatsappLabel="WhatsApp"
                         showCopy={false}
                         showWallet={false}
+                        compact
                       />
                     </div>
                   </td>
