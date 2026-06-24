@@ -76,7 +76,7 @@ export default async function CustomersPage({
           </Link>
         </div>
 
-        <form className="mt-5 grid gap-3 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3 md:grid-cols-[minmax(280px,2fr)_minmax(140px,1fr)_minmax(170px,1fr)_minmax(150px,1fr)_auto_auto] md:items-center">
+        <form className="mt-5 grid gap-3 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3 md:grid-cols-2 xl:grid-cols-[minmax(320px,2fr)_minmax(130px,1fr)_minmax(150px,1fr)_minmax(140px,1fr)_auto_auto] md:items-center">
           <input
             name="q"
             defaultValue={params.q ?? ""}
@@ -133,10 +133,18 @@ export default async function CustomersPage({
         </div>
 
         <div className="mt-6 hidden max-w-full overflow-x-auto lg:block">
-          <table className="w-full min-w-[1120px] border-separate border-spacing-0 text-left text-sm">
+          <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm">
+            <colgroup>
+              <col className="w-[22%]" />
+              <col className="w-[22%]" />
+              <col className="w-[13%]" />
+              <col className="w-[18%]" />
+              <col className="w-[10%]" />
+              <col className="w-[15%]" />
+            </colgroup>
             <thead>
               <tr className="text-[#6B7280]">
-                {["Customer name", "Phone", "Email", "Marketing consent", "Status", "Joined date", "Card issued branch", "Source", "Actions"].map((heading) => (
+                {["Customer", "Contact", "Status", "Joined / Branch", "Source", "Actions"].map((heading) => (
                   <th key={heading} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">{heading}</th>
                 ))}
               </tr>
@@ -144,20 +152,28 @@ export default async function CustomersPage({
             <tbody>
               {customerRows.map((membership) => (
                 <tr key={membership.id} className="align-top">
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 font-semibold text-[#111827]">
-                    {membership.globalCustomer.firstName} {membership.globalCustomer.lastName ?? ""}
+                  <td className="border-b border-[#E5E7EB] px-3 py-3">
+                    <Link href={`/dashboard/customers/${membership.uuid}`} className="block truncate font-semibold text-[#111827] transition business-hover">
+                      {membership.globalCustomer.firstName} {membership.globalCustomer.lastName ?? ""}
+                    </Link>
+                    <p className="mt-1 text-xs text-[#6B7280]">Marketing: {membership.marketingConsent ? "Yes" : "No"}</p>
                   </td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatUaePhoneDisplay(membership.globalCustomer.normalizedPhone)}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{membership.globalCustomer.email ?? "-"}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{membership.marketingConsent ? "Yes" : "No"}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4"><StatusBadge status={membership.status} /></td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(membership.joinedAt)}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{membership.createdBranch?.name ?? "-"}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{customerSourceLabels[membership.source]}</td>
-                  <td className="w-[220px] border-b border-[#E5E7EB] px-3 py-4">
-                    <div className="flex items-center gap-2 whitespace-nowrap">
-                      <Link href={`/dashboard/customers/${membership.uuid}`} className="rounded-md border border-[#E5E7EB] px-2.5 py-1.5 text-xs font-semibold text-[#111827] transition business-hover">View</Link>
-                      <Link href={`/dashboard/customers/${membership.uuid}/edit`} className="rounded-md border border-[#E5E7EB] px-2.5 py-1.5 text-xs font-semibold text-[#111827] transition business-hover">Edit</Link>
+                  <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">
+                    <p className="truncate">{formatUaePhoneDisplay(membership.globalCustomer.normalizedPhone)}</p>
+                    <p className="mt-1 truncate text-xs">{membership.globalCustomer.email ?? "No email"}</p>
+                  </td>
+                  <td className="border-b border-[#E5E7EB] px-3 py-3"><StatusBadge status={membership.status} /></td>
+                  <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">
+                    <p>{formatDate(membership.joinedAt)}</p>
+                    <p className="mt-1 truncate text-xs">{membership.createdBranch?.name ?? "No branch"}</p>
+                  </td>
+                  <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{customerSourceLabels[membership.source]}</td>
+                  <td className="border-b border-[#E5E7EB] px-3 py-3">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Link href={`/dashboard/customers/${membership.uuid}`} className="rounded-md border border-[#E5E7EB] px-2 py-1 text-xs font-semibold text-[#111827] transition business-hover">View</Link>
+                      <Link href={`/dashboard/customers/${membership.uuid}/edit`} className="rounded-md border border-[#E5E7EB] px-2 py-1 text-xs font-semibold text-[#111827] transition business-hover">Edit</Link>
+                    </div>
+                    <div className="mt-2 max-w-[130px]">
                       <CardShareActions
                         cardUrl={membership.cardUrl}
                         businessName={business.name}

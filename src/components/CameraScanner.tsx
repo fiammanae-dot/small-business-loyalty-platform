@@ -32,15 +32,23 @@ function extractToken(value: string) {
   if (!trimmed) return { token: "", reason: "Invalid loyalty QR code." };
 
   if (/^scan_[A-Za-z0-9_-]+$/.test(trimmed)) return { token: trimmed, reason: "" };
+  if (/^cst_[A-Za-z0-9_-]+$/.test(trimmed)) return { token: trimmed, reason: "" };
+  if (/^[A-Z0-9]{2,12}-[A-Z0-9][A-Z0-9_-]{1,120}$/i.test(trimmed)) return { token: `referral:${trimmed}`, reason: "" };
 
   try {
     const url = new URL(trimmed, window.location.origin);
     const parts = url.pathname.split("/").filter(Boolean);
-    const referralIndex = parts.indexOf("referral");
-    const referralCode = referralIndex >= 0 ? parts[referralIndex + 1] : "";
-    if (referralCode && /^[A-Za-z0-9_-]+$/.test(referralCode)) return { token: `referral:${referralCode}`, reason: "" };
     const scanIndex = parts.indexOf("scan");
-    const token = scanIndex >= 0 ? parts[scanIndex + 1] : "";
+    const cardIndex = parts.indexOf("card");
+    const referralIndex = parts.indexOf("referral");
+    const referralCode =
+      scanIndex >= 0 && parts[scanIndex + 1] === "referral"
+        ? parts[scanIndex + 2]
+        : referralIndex >= 0
+          ? parts[referralIndex + 1]
+          : "";
+    if (referralCode && /^[A-Za-z0-9_-]+$/.test(referralCode)) return { token: `referral:${referralCode}`, reason: "" };
+    const token = scanIndex >= 0 ? parts[scanIndex + 1] : cardIndex >= 0 ? parts[cardIndex + 1] : "";
     if (token && /^[A-Za-z0-9_-]+$/.test(token)) return { token, reason: "" };
     if (url.protocol === "http:" || url.protocol === "https:") {
       return { token: "", reason: "This QR code is not a LoyaltyBase customer card." };
@@ -271,10 +279,10 @@ export function CameraScanner({ backHref }: { backHref: string }) {
         <div>
           <p className="text-sm font-semibold business-primary">Camera scanner</p>
           <h2 className="mt-1 text-xl font-semibold text-[#111827]">Scan customer QR</h2>
-          <p className="mt-2 text-sm leading-6 text-[#6B7280]">Point the camera at a LoyaltyBase customer card QR code.</p>
+          <p className="mt-2 text-sm leading-6 text-[#6B7280]">Scan the QR code shown on the customer's LoyaltyBase card. If the camera is unavailable, paste the card link or scan URL below, or search for the customer manually.</p>
         </div>
         <a href={backHref} className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">
-          Back
+          ← Back to Dashboard
         </a>
       </div>
 
@@ -288,7 +296,7 @@ export function CameraScanner({ backHref }: { backHref: string }) {
         <video ref={videoRef} className="aspect-[3/4] w-full object-cover sm:aspect-video" muted playsInline />
       </div>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-4">
+      <div className={`mt-4 grid gap-3 ${isCameraOpen || isScanning ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}>
         <button type="button" onClick={testCamera} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-[#FED7AA] business-border-soft bg-orange-50 business-bg-soft px-4 text-sm font-semibold text-[#9A3412] business-text-strong">
           <Video className="h-4 w-4" aria-hidden="true" />
           Test Camera
@@ -297,10 +305,12 @@ export function CameraScanner({ backHref }: { backHref: string }) {
           <Camera className="h-4 w-4" aria-hidden="true" />
           Start Camera
         </button>
-        <button type="button" onClick={stopCamera} disabled={!isCameraOpen && !isScanning} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] disabled:cursor-not-allowed disabled:opacity-50">
-          <Square className="h-4 w-4" aria-hidden="true" />
-          Stop Camera
-        </button>
+        {isCameraOpen || isScanning ? (
+          <button type="button" onClick={stopCamera} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">
+            <Square className="h-4 w-4" aria-hidden="true" />
+            Stop Camera
+          </button>
+        ) : null}
         <button type="button" onClick={switchCamera} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">
           <RotateCcw className="h-4 w-4" aria-hidden="true" />
           Switch Camera

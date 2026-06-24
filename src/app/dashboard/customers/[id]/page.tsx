@@ -270,8 +270,8 @@ export default async function CustomerProfilePage({
       </nav>
 
       {activeTab === "overview" ? (
-        <section className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
-          <div className="grid gap-5">
+        <section className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+          <div className="grid gap-4 content-start">
             <CustomerCardPanel
               cardUrl={cardUrl}
               businessName={membership.business.name}
@@ -287,10 +287,10 @@ export default async function CustomerProfilePage({
             />
             <ProfileSummaryCard membership={membership} customer={customer} />
           </div>
-          <div className="grid gap-5">
+          <div className="grid gap-4 content-start">
             <TierDetailsPanel customerTier={customerTier} rewardRedemptionsCount={rewardRedemptions.length} totalBonusStamps={totalBonusStamps} activePrograms={activePrograms} joinedAt={membership.joinedAt} />
             <LatestActivityPreview items={timeline.slice(0, 5)} customerUuid={membership.uuid} />
-            <ReferralSummaryPanel membershipUuid={membership.uuid} referralCode={membership.referralCode} compact />
+            <ReferralSummaryPanel memberReference={membership.referralCode ?? getShortCardToken(membership.cardToken)} referralCode={membership.referralCode} compact />
           </div>
         </section>
       ) : null}
@@ -315,7 +315,7 @@ export default async function CustomerProfilePage({
 
       {activeTab === "activity" ? (
       <>
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+      <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-sm font-semibold business-text">Activity timeline</p>
@@ -338,7 +338,7 @@ export default async function CustomerProfilePage({
         </div>
       </section>
 
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+      <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
         <h2 className="text-lg font-semibold text-[#111827]">Stamp issuance history</h2>
         <div className="mt-5 overflow-x-auto">
           <table className="w-full min-w-[920px] border-separate border-spacing-0 text-left text-sm">
@@ -386,7 +386,7 @@ export default async function CustomerProfilePage({
       ) : null}
 
       {activeTab === "referrals" ? (
-        <ReferralSummaryPanel membershipUuid={membership.uuid} referralCode={membership.referralCode} />
+        <ReferralSummaryPanel memberReference={membership.referralCode ?? getShortCardToken(membership.cardToken)} referralCode={membership.referralCode} />
       ) : null}
     </DashboardShell>
   );
@@ -423,7 +423,7 @@ function ProfileSummaryCard({
   customer: Awaited<ReturnType<typeof getBusinessCustomerOrRedirect>>["globalCustomer"];
 }) {
   return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+    <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-sm font-semibold business-text">Profile summary</p>
@@ -454,7 +454,7 @@ function LoyaltyOverviewPanel({
 }) {
   const visiblePrograms = programCards.slice(0, 3);
   return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+    <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-semibold business-text">Active loyalty progress</p>
@@ -495,7 +495,7 @@ function LoyaltyOverviewPanel({
 
 function LatestActivityPreview({ items, customerUuid }: { items: TimelineItem[]; customerUuid: string }) {
   return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+    <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-semibold business-text">Latest activity</p>
@@ -527,7 +527,7 @@ function TierDetailsPanel({
   joinedAt: Date;
 }) {
   return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+    <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-sm font-semibold business-text">Tier details</p>
@@ -564,9 +564,9 @@ function TierDetailsPanel({
   );
 }
 
-function ReferralSummaryPanel({ membershipUuid, referralCode, compact = false }: { membershipUuid: string; referralCode: string | null; compact?: boolean }) {
+function ReferralSummaryPanel({ memberReference, referralCode, compact = false }: { memberReference: string; referralCode: string | null; compact?: boolean }) {
   return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+    <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
           <p className="text-sm font-semibold business-text">Referrals</p>
@@ -575,13 +575,13 @@ function ReferralSummaryPanel({ membershipUuid, referralCode, compact = false }:
             Referral performance is managed in the Referral Center. Use the referral code to filter this customer's referral activity.
           </p>
         </div>
-        <Link href={`/dashboard/referrals?search=${encodeURIComponent(referralCode ?? membershipUuid)}`} className="rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
+        <Link href={`/dashboard/referrals?search=${encodeURIComponent(referralCode ?? memberReference)}`} className="rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
           Open Referral Center
         </Link>
       </div>
       <div className="mt-5 grid gap-3 md:grid-cols-2">
         <Info label="Referral code" value={referralCode ?? "-"} />
-        {!compact ? <Info label="Customer profile" value={membershipUuid} /> : null}
+        {!compact && memberReference ? <Info label="Member reference" value={memberReference} /> : null}
       </div>
     </section>
   );
@@ -682,7 +682,7 @@ function CustomerCardPanel({
   compact?: boolean;
 }) {
   return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+    <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-semibold business-text">Customer card</p>
@@ -759,7 +759,7 @@ function LoyaltyProgramsPanel({
   }>;
 }) {
   return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
+    <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-semibold business-text">Loyalty programs</p>

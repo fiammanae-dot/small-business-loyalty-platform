@@ -16,5 +16,5 @@ export async function branchScannerAction(formData: FormData) {
     redirect("/branch/scanner?error=Enter a valid scan token or scan URL.");
   }
 
-  redirect(`/scan/${token}`);
+  redirect(`/scan/${encodeURIComponent(token)}`);
 }

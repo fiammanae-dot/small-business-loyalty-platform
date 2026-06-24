@@ -16,5 +16,5 @@ export async function staffScannerAction(formData: FormData) {
     redirect("/staff/scanner?error=Enter a valid scan token or scan URL.");
   }
 
-  redirect(`/scan/${token}`);
+  redirect(`/scan/${encodeURIComponent(token)}`);
 }
