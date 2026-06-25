@@ -16,6 +16,8 @@ enum UserRole {
 enum RecordStatus {
   ACTIVE
   INACTIVE
+  SUSPENDED
+  ARCHIVED
 }
 
 enum BusinessType {

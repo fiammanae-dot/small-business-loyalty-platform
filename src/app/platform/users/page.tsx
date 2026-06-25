@@ -1,15 +1,20 @@
 import type { Prisma, RecordStatus, UserRole } from "@prisma/client";
-import { RotateCcw, Search, SlidersHorizontal } from "lucide-react";
+import { MoreHorizontal, RotateCcw, Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
+import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
+import { PlatformUserPasswordResetAction } from "@/components/PlatformUserPasswordResetAction";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { getDisplayUserName, roleLabels } from "@/lib/roles";
 import { requireRole } from "@/lib/session";
+import { createCsrfToken } from "@/lib/csrf";
+import { archivePlatformUserAction, forceLogoutPlatformUserAction, setPlatformUserStatusAction } from "./actions";
 
 type UsersSearchParams = {
   name?: string;
@@ -26,7 +31,7 @@ type UsersSearchParams = {
 };
 
 const validRoles = ["PLATFORM_OWNER", "BUSINESS_OWNER", "BRANCH_MANAGER", "STAFF"] as const;
-const validStatuses: RecordStatus[] = ["ACTIVE", "INACTIVE"];
+const validStatuses: RecordStatus[] = ["ACTIVE", "INACTIVE", "SUSPENDED", "ARCHIVED"];
 const sortableFields = {
   name: "Name",
   email: "Email",
@@ -131,7 +136,7 @@ export default async function PlatformUsersPage({
     ...(name ? { name: { contains: name, mode: "insensitive" } } : {}),
     ...(email ? { email: { contains: email, mode: "insensitive" } } : {}),
     ...(selectedRole ? { role: selectedRole } : {}),
-    ...(selectedStatus ? { status: selectedStatus } : {}),
+    ...(selectedStatus ? { status: selectedStatus } : { status: { not: "ARCHIVED" } }),
     ...(selectedBusinessId ? { businessId: selectedBusinessId } : {}),
     ...(selectedBranchId ? { branchId: selectedBranchId } : {}),
     ...(createdFrom || createdTo ? { createdAt } : {}),
@@ -230,6 +235,8 @@ export default async function PlatformUsersPage({
               <option value="">All statuses</option>
               <option value="ACTIVE">Active</option>
               <option value="INACTIVE">Inactive</option>
+              <option value="SUSPENDED">Suspended</option>
+              <option value="ARCHIVED">Archived</option>
             </SelectField>
 
             <SearchableCombobox
@@ -284,6 +291,8 @@ export default async function PlatformUsersPage({
               <QuickChip href={buildQuickFilterHref({ role: "STAFF" })} label="Staff" active={selectedRole === "STAFF"} />
               <QuickChip href={buildQuickFilterHref({ status: "ACTIVE" })} label="Active" active={selectedStatus === "ACTIVE"} />
               <QuickChip href={buildQuickFilterHref({ status: "INACTIVE" })} label="Inactive" active={selectedStatus === "INACTIVE"} />
+              <QuickChip href={buildQuickFilterHref({ status: "SUSPENDED" })} label="Suspended" active={selectedStatus === "SUSPENDED"} />
+              <QuickChip href={buildQuickFilterHref({ status: "ARCHIVED" })} label="Archived" active={selectedStatus === "ARCHIVED"} />
               <QuickChip href={buildQuickFilterHref({ suspect: "1" })} label="Demo/Test Data" active={suspectOnly} />
             </div>
 
@@ -305,7 +314,7 @@ export default async function PlatformUsersPage({
 
         <div className="mt-5 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm font-semibold text-[#111827]">Showing {users.length} users</p>
-          <p className="text-xs text-[#6B7280]">User management actions are not available on this read-only system view.</p>
+          <p className="text-xs text-[#6B7280]">Archived users are hidden unless the Archived filter is selected.</p>
         </div>
 
         <div className="mt-4 hidden overflow-x-auto lg:block">
@@ -321,7 +330,7 @@ export default async function PlatformUsersPage({
             </thead>
             <tbody>
               {users.map((user) => (
-                <UserRow key={user.id} user={user} />
+                <UserRow key={user.id} user={user} currentUserId={currentUser.id} />
               ))}
             </tbody>
           </table>
@@ -329,7 +338,7 @@ export default async function PlatformUsersPage({
 
         <div className="mt-4 grid gap-3 lg:hidden">
           {users.map((user) => (
-            <UserMobileCard key={user.id} user={user} />
+            <UserMobileCard key={user.id} user={user} currentUserId={currentUser.id} />
           ))}
         </div>
 
@@ -349,7 +358,7 @@ export default async function PlatformUsersPage({
   );
 }
 
-function UserRow({ user }: { user: UserWithListData }) {
+function UserRow({ user, currentUserId }: { user: UserWithListData; currentUserId: number }) {
   const displayName = getDisplayUserName(user);
 
   return (
@@ -376,12 +385,14 @@ function UserRow({ user }: { user: UserWithListData }) {
         <StatusBadge status={user.status} />
       </td>
       <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(user.createdAt)}</td>
-      <td className="border-b border-[#E5E7EB] px-3 py-4 text-xs font-semibold text-[#6B7280]">Read-only</td>
+      <td className="border-b border-[#E5E7EB] px-3 py-4">
+        <UserActions user={user} currentUserId={currentUserId} />
+      </td>
     </tr>
   );
 }
 
-function UserMobileCard({ user }: { user: UserWithListData }) {
+function UserMobileCard({ user, currentUserId }: { user: UserWithListData; currentUserId: number }) {
   const displayName = getDisplayUserName(user);
 
   return (
@@ -403,9 +414,38 @@ function UserMobileCard({ user }: { user: UserWithListData }) {
         <Detail label="Business" value={user.business?.name ?? "-"} />
         <Detail label="Branch" value={user.branch?.name ?? "-"} />
         <Detail label="Created" value={formatDate(user.createdAt)} />
-        <Detail label="Actions" value="Read-only" />
+        <div className="col-span-2">
+        <UserActions user={user} currentUserId={currentUserId} />
+      </div>
       </dl>
     </article>
+  );
+}
+
+function UserActions({ user, currentUserId }: { user: UserWithListData; currentUserId: number }) {
+  const displayName = getDisplayUserName(user);
+  const isCurrentUser = user.id === currentUserId;
+  const statusAction = user.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE";
+  const statusLabel = statusAction === "ACTIVE" ? "Enable" : "Suspend";
+  let statusMessage = "Suspend this user? They will lose workspace access.";
+  if (statusAction === "ACTIVE") {
+    statusMessage = "Enable this user and restore login access?";
+  }
+  if (statusAction !== "ACTIVE") {
+    if (user.role === "PLATFORM_OWNER") {
+      statusMessage = "Suspend this System Administrator? This is a dangerous platform access change.";
+    }
+  }
+  return (
+    <div className="flex min-w-[260px] flex-wrap items-center gap-2">
+      <Link href={`/platform/users/${user.id}`} className="inline-flex h-8 items-center rounded-md border border-[#D1D5DB] bg-white px-2.5 text-xs font-semibold text-[#111827] transition hover:bg-[#F9FAFB]">View</Link>
+      <Link href={`/platform/users/${user.id}/edit`} className="inline-flex h-8 items-center rounded-md border border-[#D1D5DB] bg-white px-2.5 text-xs font-semibold text-[#111827] transition hover:bg-[#F9FAFB]">Edit</Link>
+      <PlatformUserPasswordResetAction userId={user.id} userName={displayName} csrfToken={createCsrfToken("platform:users")} />
+      <form action={forceLogoutPlatformUserAction}><CsrfInput scope="platform:users" /><input type="hidden" name="userId" value={user.id} /><ConfirmSubmitButton message="Force this user to log out of active sessions?" confirmLabel="Force logout" className="inline-flex h-8 items-center rounded-md border border-[#D1D5DB] bg-white px-2.5 text-xs font-semibold text-[#374151] transition hover:bg-[#F9FAFB]">Force Logout</ConfirmSubmitButton></form>
+      <form action={setPlatformUserStatusAction}><CsrfInput scope="platform:users" /><input type="hidden" name="userId" value={user.id} /><input type="hidden" name="nextStatus" value={statusAction} /><ConfirmSubmitButton message={statusMessage} confirmLabel={statusLabel} disabled={isCurrentUser} className={statusAction === "ACTIVE" ? "inline-flex h-8 items-center rounded-md border border-emerald-200 bg-white px-2.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50" : "inline-flex h-8 items-center rounded-md border border-red-200 bg-white px-2.5 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"}>{statusLabel}</ConfirmSubmitButton></form>
+      {user.status !== "ARCHIVED" ? <form action={archivePlatformUserAction}><CsrfInput scope="platform:users" /><input type="hidden" name="userId" value={user.id} /><ConfirmSubmitButton message="Archive this user? They cannot log in, but all history will be preserved." confirmLabel="Archive" disabled={isCurrentUser} className="inline-flex h-8 items-center rounded-md border border-red-200 bg-red-50 px-2.5 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50">Archive</ConfirmSubmitButton></form> : null}
+      <Link href="/platform/audit-center?entityType=user" className="inline-flex h-8 items-center gap-1 rounded-md border border-[#D1D5DB] bg-white px-2.5 text-xs font-semibold text-[#374151] transition hover:bg-[#F9FAFB]"><MoreHorizontal className="h-3.5 w-3.5" aria-hidden="true" />Audit</Link>
+    </div>
   );
 }
 
