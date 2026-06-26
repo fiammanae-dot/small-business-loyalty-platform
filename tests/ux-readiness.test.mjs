@@ -33,12 +33,17 @@ test("business dashboard includes beta readiness polish without changing loyalty
   assert.doesNotMatch(dashboard, /Cooldown Monitoring/);
 });
 
-test("customer profile uses compact Customer 360 tabs and operational summaries", () => {
+test("customer profile uses design-system Customer 360 command center", () => {
   const profile = read("src/app/dashboard/customers/[id]/page.tsx");
 
   for (const expected of [
     "Customer 360",
-    "KpiCard",
+    "CustomerSummaryCard",
+    "MetricCard",
+    "DetailPageLayout",
+    "PageActions",
+    "ActionMenu",
+    "ReferralStatusBadge",
     "TabLink",
     "ProfileSummaryCard",
     "LoyaltyOverviewPanel",
@@ -55,12 +60,23 @@ test("customer profile uses compact Customer 360 tabs and operational summaries"
     "Activity",
     "Rewards",
     "Referrals",
-    "Programs",
+    "Card & QR",
+    "Main active program",
+    "Available reward status",
+    "Referral Status",
+    "Open Referral Center",
   ]) {
     assert.match(profile, new RegExp(expected));
   }
 
-  for (const removed of ["Communication history", "Manual delivery history", "\\[\"messages\", \"Messages\"\\]", "\\[\"redemptions\", \"Redemptions\"\\]"]) {
+  for (const removed of [
+    "Communication history",
+    "Manual delivery history",
+    "\\[\"messages\", \"Messages\"\\]",
+    "\\[\"redemptions\", \"Redemptions\"\\]",
+    "Customer profile:",
+    "JSON.stringify",
+  ]) {
     assert.doesNotMatch(profile, new RegExp(removed));
   }
 });

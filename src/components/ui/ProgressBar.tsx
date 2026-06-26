@@ -1,0 +1,26 @@
+import { cn } from "./utils";
+
+export function ProgressBar({
+  value,
+  max = 100,
+  label,
+  className,
+  barClassName,
+}: {
+  value: number;
+  max?: number;
+  label?: string;
+  className?: string;
+  barClassName?: string;
+}) {
+  const percent = max <= 0 ? 0 : Math.min(100, Math.max(0, (value / max) * 100));
+
+  return (
+    <div className={cn("w-full", className)}>
+      {label ? <div className="mb-2 text-sm font-medium text-[#334155]">{label}</div> : null}
+      <div className="h-2.5 overflow-hidden rounded-full bg-[#E2E8F0]" role="progressbar" aria-valuemin={0} aria-valuemax={max} aria-valuenow={value} aria-label={label}>
+        <div className={cn("h-full rounded-full bg-[#F97316] transition-all duration-300", barClassName)} style={{ width: `${percent}%` }} />
+      </div>
+    </div>
+  );
+}

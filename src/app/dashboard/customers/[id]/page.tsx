@@ -20,6 +20,9 @@ import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CopyButton } from "@/components/CopyButton";
 import { CsrfInput } from "@/components/CsrfInput";
 import { StatusBadge } from "@/components/StatusBadge";
+import { ActionMenu, ActionMenuItem, ButtonLink, MetricCard, PageActions, SectionCard } from "@/components/ui";
+import { CustomerSummaryCard, ReferralStatusBadge } from "@/components/domain";
+import { DetailPageLayout } from "@/components/layouts";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { activityHref, staffProfileHref } from "@/lib/alert-investigation";
 import { alertTypeLabel } from "@/lib/alert-labels";
@@ -196,70 +199,123 @@ export default async function CustomerProfilePage({
     ["activity", "Activity"],
     ["rewards", "Rewards"],
     ["referrals", "Referrals"],
-    ["programs", "Programs"],
+    ["card", "Card & QR"],
   ] as const;
+  const primaryProgram = programCards[0]?.programMembership ?? null;
+  const primaryProgress = primaryProgram ? progressValue(primaryProgram.earnedStamps, primaryProgram.bonusStamps) : 0;
+  const primaryRequired = primaryProgram?.loyaltyProgram.requiredStamps ?? 0;
+  const primaryRewardReady = Boolean(
+    primaryProgram &&
+      primaryProgram.status !== "COMPLETED" &&
+      primaryProgress >= primaryProgram.loyaltyProgram.requiredStamps,
+  );
+  const referralStatus = membership.referralCode ? "ACTIVE" : "NOT_CONFIGURED";
+  const overviewAside = (
+    <>
+      <CustomerCardPanel
+        cardUrl={cardUrl}
+        businessName={membership.business.name}
+        customerName={customerName}
+        customerPhone={customer.normalizedPhone}
+        cardToken={membership.cardToken}
+        cardStatus={membership.cardStatus}
+        cardCreatedAt={membership.cardCreatedAt}
+        cardLastViewedAt={membership.cardLastViewedAt}
+        membershipUuid={membership.uuid}
+        nextCardStatus={nextCardStatus}
+        compact
+      />
+      <ProfileSummaryCard membership={membership} customer={customer} />
+      <ReferralSummaryPanel memberReference={membership.referralCode ?? getShortCardToken(membership.cardToken)} referralCode={membership.referralCode} compact />
+    </>
+  );
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Customer 360">
       {qs.success ? <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{qs.success}</p> : null}
 
-      <section className="sticky top-0 z-30 -mx-4 border-y border-[#E5E7EB] bg-white/95 px-4 py-3 shadow-sm backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex min-w-0 items-start gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md business-bg-soft business-text">
-              <UserRound className="h-6 w-6" aria-hidden="true" />
-            </span>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-xl font-semibold text-[#111827] sm:text-2xl">{customerName}</h2>
-                <span className="rounded-md bg-yellow-50 px-2 py-1 text-xs font-semibold text-yellow-700">
-                  {customerTier.badgeIcon} {customerTier.badgeLabel}
-                </span>
-              </div>
-              <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-[#6B7280]">
-                <StatusBadge status={membership.status} />
-                <span>{formatUaePhoneDisplay(customer.normalizedPhone)}</span>
-                <span className="hidden text-[#CBD5E1] sm:inline">•</span>
+      <SectionCard className="sticky top-0 z-30 -mx-4 rounded-none border-x-0 bg-white/95 shadow-sm backdrop-blur sm:-mx-6 lg:-mx-8">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
+          <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(0,320px)_1fr]">
+            <CustomerSummaryCard
+              name={customerName}
+              phone={formatUaePhoneDisplay(customer.normalizedPhone)}
+              tier={customerTier.badgeIcon + " " + customerTier.badgeLabel}
+              status={membership.status}
+              cardNumber={getShortCardToken(membership.cardToken)}
+            />
+            <div className="min-w-0 rounded-md border border-[#E5E7EB] bg-white p-4">
+              <div className="flex flex-wrap items-center gap-2 text-sm text-[#64748B]">
                 <span>Joined {formatDate(membership.joinedAt)}</span>
-                <span className={`rounded-md px-2 py-1 text-xs font-semibold ${membership.marketingConsent ? "bg-emerald-50 text-emerald-700" : "bg-zinc-100 text-zinc-700"}`}>
-                  {membership.marketingConsent ? "Marketing consent" : "No marketing consent"}
-                </span>
+                <span className="hidden text-[#CBD5E1] sm:inline">|</span>
+                <span>{membership.marketingConsent ? "Marketing consent enabled" : "No marketing consent"}</span>
+                <ReferralStatusBadge status={referralStatus} />
+              </div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <Info label="Main active program" value={primaryProgram ? primaryProgram.loyaltyProgram.name : "No active program"} />
+                <Info label="Available reward status" value={primaryRewardReady ? "Reward Ready" : rewardsReady > 0 ? rewardsReady + " available" : "No rewards ready"} />
+                <Info label="Program progress" value={primaryProgram ? primaryProgress + " / " + primaryRequired : "-"} />
+                <Info label="Last activity" value={lastActivityDate ? formatDateTime(lastActivityDate) : "-"} />
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap xl:justify-end">
-            <a href={cardUrl} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center justify-center rounded-md business-button px-3 text-sm font-semibold text-white">
+          <PageActions className="xl:justify-end">
+            {primaryRewardReady ? (
+              <ButtonLink href="/dashboard/scanner" variant="success" size="sm" leftIcon={<Gift className="h-4 w-4" aria-hidden />}>
+                Redeem Reward
+              </ButtonLink>
+            ) : (
+              <ButtonLink href="/dashboard/scanner" variant="business" size="sm" leftIcon={<TicketCheck className="h-4 w-4" aria-hidden />}>
+                Issue Stamp
+              </ButtonLink>
+            )}
+            <ButtonLink href={cardUrl} target="_blank" rel="noreferrer" variant="outline" size="sm" leftIcon={<CreditCard className="h-4 w-4" aria-hidden />}>
               Open Card
-            </a>
-            <CopyButton value={cardUrl} label="Copy Card Link" copiedLabel="Card link copied." />
-            <div className="col-span-2 sm:col-span-1">
-              <CardShareActions
-                cardUrl={cardUrl}
-                businessName={membership.business.name}
-                customerName={customerName}
-                recipientPhone={customer.normalizedPhone}
-                auditMembershipUuid={membership.uuid}
-                whatsappLabel="Share Card"
-                showCopy={false}
-                showWallet={false}
-              />
-            </div>
-            <Link href={`/dashboard/programs?customer=${membership.uuid}`} className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827]">Enroll Program</Link>
-            <Link href="/dashboard/scanner" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827]">Issue Stamp</Link>
-            <Link href="/dashboard/scanner" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827]">Redeem Reward</Link>
-            <Link href={`/dashboard/customers/${membership.uuid}/edit`} className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827]">Edit</Link>
-          </div>
+            </ButtonLink>
+            <ActionMenu label="More actions">
+              <ActionMenuItem>
+                <CopyButton value={cardUrl} label="Copy Card Link" copiedLabel="Card link copied." />
+              </ActionMenuItem>
+              <ActionMenuItem>
+                <CardShareActions
+                  cardUrl={cardUrl}
+                  businessName={membership.business.name}
+                  customerName={customerName}
+                  recipientPhone={customer.normalizedPhone}
+                  auditMembershipUuid={membership.uuid}
+                  whatsappLabel="Share Card"
+                  showCopy={false}
+                  showWallet={false}
+                  compact
+                />
+              </ActionMenuItem>
+              <ActionMenuItem>
+                <Link href={"/dashboard/programs?customer=" + membership.uuid} className="block rounded-md px-2 py-2 font-semibold hover:bg-[#F8FAFC]">
+                  Enroll Program
+                </Link>
+              </ActionMenuItem>
+              <ActionMenuItem>
+                <Link href={"/dashboard/customers/" + membership.uuid + "/edit"} className="block rounded-md px-2 py-2 font-semibold hover:bg-[#F8FAFC]">
+                  Edit Customer
+                </Link>
+              </ActionMenuItem>
+              <ActionMenuItem>
+                <Link href={"/dashboard/referrals?search=" + encodeURIComponent(membership.referralCode ?? getShortCardToken(membership.cardToken))} className="block rounded-md px-2 py-2 font-semibold hover:bg-[#F8FAFC]">
+                  Open Referral Center
+                </Link>
+              </ActionMenuItem>
+            </ActionMenu>
+          </PageActions>
         </div>
-      </section>
+      </SectionCard>
 
-      <section className="grid gap-3 grid-cols-2 xl:grid-cols-4">
-        <KpiCard icon={Crown} label="Current Tier" value={`${customerTier.badgeIcon} ${customerTier.badgeLabel}`} />
-        <KpiCard icon={Users} label="Active Programs" value={activePrograms.toString()} />
-        <KpiCard icon={History} label="Total Visits" value={stampTransactions.length.toString()} />
-        <KpiCard icon={Gift} label="Available Rewards" value={rewardsReady.toString()} tone={rewardsReady > 0 ? "alert" : "default"} />
+      <section className="grid grid-cols-2 gap-3 xl:grid-cols-5">
+        <MetricCard icon={<Crown className="h-5 w-5" />} label="Current Tier" value={customerTier.badgeIcon + " " + customerTier.badgeLabel} tone="business" />
+        <MetricCard icon={<Users className="h-5 w-5" />} label="Active Programs" value={activePrograms.toString()} />
+        <MetricCard icon={<History className="h-5 w-5" />} label="Total Visits" value={stampTransactions.length.toString()} />
+        <MetricCard icon={<Gift className="h-5 w-5" />} label="Available Rewards" value={rewardsReady.toString()} tone={rewardsReady > 0 ? "success" : "neutral"} />
+        <MetricCard icon={<Sparkles className="h-5 w-5" />} label="Referral Status" value={membership.referralCode ? "Active" : "Not set"} helper={membership.referralCode ?? "No referral code"} />
       </section>
-
-      <LoyaltyOverviewPanel programCards={programCards} />
 
       <nav className="-mx-4 border-y border-[#E5E7EB] bg-white px-4 py-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8" aria-label="Customer profile tabs">
         <div className="flex gap-2 overflow-x-auto text-sm">
@@ -270,32 +326,14 @@ export default async function CustomerProfilePage({
       </nav>
 
       {activeTab === "overview" ? (
-        <section className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-          <div className="grid gap-4 content-start">
-            <CustomerCardPanel
-              cardUrl={cardUrl}
-              businessName={membership.business.name}
-              customerName={customerName}
-              customerPhone={customer.normalizedPhone}
-              cardToken={membership.cardToken}
-              cardStatus={membership.cardStatus}
-              cardCreatedAt={membership.cardCreatedAt}
-              cardLastViewedAt={membership.cardLastViewedAt}
-              membershipUuid={membership.uuid}
-              nextCardStatus={nextCardStatus}
-              compact
-            />
-            <ProfileSummaryCard membership={membership} customer={customer} />
-          </div>
-          <div className="grid gap-4 content-start">
-            <TierDetailsPanel customerTier={customerTier} rewardRedemptionsCount={rewardRedemptions.length} totalBonusStamps={totalBonusStamps} activePrograms={activePrograms} joinedAt={membership.joinedAt} />
-            <LatestActivityPreview items={timeline.slice(0, 5)} customerUuid={membership.uuid} />
-            <ReferralSummaryPanel memberReference={membership.referralCode ?? getShortCardToken(membership.cardToken)} referralCode={membership.referralCode} compact />
-          </div>
-        </section>
+        <DetailPageLayout aside={overviewAside}>
+          <LoyaltyOverviewPanel programCards={programCards} />
+          <LatestActivityPreview items={timeline.slice(0, 5)} customerUuid={membership.uuid} />
+          <TierDetailsPanel customerTier={customerTier} rewardRedemptionsCount={rewardRedemptions.length} totalBonusStamps={totalBonusStamps} activePrograms={activePrograms} joinedAt={membership.joinedAt} />
+        </DetailPageLayout>
       ) : null}
 
-      {activeTab === "programs" ? (
+      {activeTab === "card" ? (
         <section className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
           <CustomerCardPanel
             cardUrl={cardUrl}
@@ -460,7 +498,7 @@ function LoyaltyOverviewPanel({
           <p className="text-sm font-semibold business-text">Active loyalty progress</p>
           <h2 className="mt-1 text-xl font-semibold text-[#111827]">Programs</h2>
         </div>
-        <Link href="?tab=programs" className="text-sm font-semibold business-text">View programs</Link>
+        <Link href="?tab=card" className="text-sm font-semibold business-text">View programs</Link>
       </div>
       <div className="mt-5 grid gap-3">
         {visiblePrograms.map(({ programMembership }) => {
@@ -710,7 +748,7 @@ function CustomerCardPanel({
           Open public card
         </a>
         {compact ? (
-          <Link href={`/dashboard/customers/${membershipUuid}?tab=programs`} className="inline-flex items-center justify-center rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]">
+          <Link href={`/dashboard/customers/${membershipUuid}?tab=card`} className="inline-flex items-center justify-center rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]">
             Card tools
           </Link>
         ) : (
@@ -953,6 +991,6 @@ function startOfDay(value: Date) {
 }
 
 function resolveCustomerTab(tab: string | undefined) {
-  const allowed = ["overview", "activity", "rewards", "referrals", "programs"];
+  const allowed = ["overview", "activity", "rewards", "referrals", "card"];
   return allowed.includes(tab ?? "") ? tab! : "overview";
 }
