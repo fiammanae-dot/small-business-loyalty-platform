@@ -74,9 +74,9 @@ test("alert governance remains available while dashboard shows one compact alert
 
   for (const expected of [
     "alertCount",
-    "SummaryTile",
+    "ActionRequiredSection",
     "href=\"/dashboard/notifications\"",
-    "label=\"Alerts\"",
+    "Open Alerts",
   ]) {
     assert.match(dashboard, new RegExp(expected));
   }

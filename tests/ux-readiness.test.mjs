@@ -10,24 +10,26 @@ test("business dashboard includes beta readiness polish without changing loyalty
   const dashboard = read("src/app/dashboard/page.tsx");
 
   for (const expected of [
-    "HeaderSummary",
-    "MainActions",
-    "New Customers Today",
-    "Stamps Issued Today",
-    "Rewards Redeemed Today",
-    "Reward Ready Customers",
-    "SecondaryBusinessMetric",
-    "RecentCustomers",
-    "ProgramPerformance",
-    "RecentActivity",
-    "Continue Setup",
-    "PrimaryAction",
-    "SummaryTile",
+    "DashboardPageLayout",
+    "DashboardCommandCenter",
+    "Today\'s Operations",
+    "Quick Actions",
+    "Action Required",
+    "Business Health",
+    "Recent Activity",
+    "Subscription Summary",
+    "Open Scanner",
+    "Pending Referrals",
   ]) {
     assert.match(dashboard, new RegExp(expected));
   }
 
   assert.doesNotMatch(dashboard, /Add Staff/);
+  assert.doesNotMatch(dashboard, /HeaderSummary/);
+  assert.doesNotMatch(dashboard, /MainActions/);
+  assert.doesNotMatch(dashboard, /RecentCustomers/);
+  assert.doesNotMatch(dashboard, /ProgramPerformance/);
+  assert.doesNotMatch(dashboard, /SummaryTile/);
   assert.doesNotMatch(dashboard, /CSV report preparation/);
   assert.doesNotMatch(dashboard, /TopReferrers/);
   assert.doesNotMatch(dashboard, /Cooldown Monitoring/);
