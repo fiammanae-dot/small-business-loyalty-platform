@@ -7,6 +7,9 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { IdempotencyInput } from "@/components/IdempotencyInput";
 import { ScannerSoundFeedback } from "@/components/ScannerSoundFeedback";
 import { StatusBadge } from "@/components/StatusBadge";
+import { ButtonLink, EmptyState, MetricCard, ProgressBar, SectionCard } from "@/components/ui";
+import { ScannerResultCard } from "@/components/domain";
+import { DetailPageLayout } from "@/components/layouts";
 import { BRANCH_INACTIVE_MESSAGE, hasUsableSubscription, SUBSCRIPTION_REQUIRED_MESSAGE } from "@/lib/commercial-access";
 import { maskPhoneNumber } from "@/lib/customer-cards";
 import { formatDateTime } from "@/lib/format";
@@ -285,8 +288,12 @@ export default async function ScanResultPage({
       <ScanStatusBanner tone="green" title="Valid Customer" description="This loyalty QR belongs to your business and is ready for service." />
 
       <ActionSummarySection
-        customerName={`${customer.firstName} ${customer.lastName ?? ""}`.trim()}
+        customerName={(customer.firstName + " " + (customer.lastName ?? "")).trim()}
+        phone={customer.normalizedPhone}
         tier={fromStoredTier(businessMembership.currentTier) ?? "Bronze"}
+        status={businessMembership.status}
+        businessName={businessMembership.business.name}
+        branchName={scannerBranch?.name ?? businessMembership.createdBranch?.name ?? "Unassigned"}
         programName={program.name}
         progress={progress}
         requiredStamps={program.requiredStamps}
@@ -314,6 +321,7 @@ export default async function ScanResultPage({
         <ScanStatusBanner tone="green" title="Reward redeemed successfully" description={`Progress has been reset to 0 / ${program.requiredStamps}.`} />
       ) : null}
 
+      <DetailPageLayout>
       <section className="grid gap-3">
         <DetailAccordion title="Customer Details">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -360,13 +368,18 @@ export default async function ScanResultPage({
           canOverrideCooldown={authUser.role !== "STAFF"}
         />
       ) : null}
+      </DetailPageLayout>
     </DashboardShell>
   );
 }
 
 function ActionSummarySection({
   customerName,
+  phone,
   tier,
+  status,
+  businessName,
+  branchName,
   programName,
   progress,
   requiredStamps,
@@ -374,7 +387,11 @@ function ActionSummarySection({
   rewardName,
 }: {
   customerName: string;
+  phone: string;
   tier: string;
+  status: string;
+  businessName: string;
+  branchName: string;
   programName: string;
   progress: number;
   requiredStamps: number;
@@ -382,34 +399,34 @@ function ActionSummarySection({
   rewardName: string;
 }) {
   const remaining = Math.max(0, requiredStamps - progress);
-  const progressPercent = Math.min(100, Math.round((progress / requiredStamps) * 100));
 
   return (
-    <section className="rounded-md border-2 border-orange-200 bg-white p-4 shadow-sm">
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-[#F97316] business-text">Action Summary</p>
-          <p className="sr-only">Customer summary</p>
-          <h2 className="mt-1 truncate text-2xl font-semibold text-[#111827]">{customerName}</h2>
-          <div className="mt-2 flex flex-wrap gap-2 text-xs font-semibold">
-            <span className="rounded-full bg-orange-50 px-3 py-1 text-[#EA580C] business-bg-soft business-text">{tier} Member</span>
-            <span className="rounded-full bg-[#F3F4F6] px-3 py-1 text-[#374151]">{programName}</span>
+    <SectionCard className="border-[#FED7AA]">
+      <ScannerResultCard
+        customerName={customerName}
+        tier={tier}
+        programName={programName}
+        current={progress}
+        required={requiredStamps}
+        rewardReady={rewardReady}
+      />
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard label="Phone" value={maskPhoneNumber(phone)} />
+        <MetricCard label="Workspace" value={businessName} helper={branchName} />
+        <MetricCard label="Status" value={<StatusBadge status={status} />} />
+        <MetricCard label="Reward" value={rewardName} helper={rewardReady ? "Reward Ready" : remaining + " visits remaining"} tone={rewardReady ? "success" : "neutral"} />
+      </div>
+      <div className="mt-4 rounded-md border border-[#E2E8F0] bg-white p-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-[#0F172A]">{progress} / {requiredStamps} Visits</p>
+            <p className="mt-1 text-sm text-[#64748B]">{rewardReady ? "Reward Ready" : remaining + " Visits Remaining"}</p>
           </div>
+          <span className="rounded-md px-2 py-1 text-xs font-semibold business-bg-soft business-text">{programName}</span>
         </div>
-        <div className={`rounded-md border px-4 py-3 text-sm font-semibold ${rewardReady ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-blue-200 bg-blue-50 text-blue-800"}`}>
-          {rewardReady ? "Reward Ready" : `${remaining} Visit${remaining === 1 ? "" : "s"} Remaining`}
-        </div>
+        <ProgressBar value={progress} max={requiredStamps} className="mt-4" barClassName="business-button" />
       </div>
-      <div className="mt-4">
-        <div className="flex items-center justify-between text-sm">
-          <span className="font-semibold text-[#111827]">{progress} / {requiredStamps} Progress</span>
-          <span className="text-[#6B7280]">{rewardReady ? rewardName : `${progressPercent}%`}</span>
-        </div>
-        <div className="mt-2 h-3 overflow-hidden rounded-full bg-orange-100 business-bg-soft">
-          <div className="h-full rounded-full bg-[#F97316] business-button" style={{ width: `${progressPercent}%` }} />
-        </div>
-      </div>
-    </section>
+    </SectionCard>
   );
 }
 
@@ -423,7 +440,10 @@ function QuickScanActions({ token, rewardReady, canRedeem }: { token: string; re
             <IdempotencyInput scope="redemption" />
             <input type="hidden" name="scanToken" value={token} />
             <ConfirmSubmitButton
-              message="Redeem this reward now? Earned stamps will reset for this program."
+              title="Redeem reward?"
+              message="This will redeem the customer's available reward and reset progress for this program."
+              confirmLabel="Redeem Reward"
+              cancelLabel="Cancel"
               className="min-h-12 w-full rounded-md bg-emerald-600 px-5 text-base font-semibold text-white shadow-sm transition hover:bg-emerald-700"
             >
               Redeem Reward
@@ -441,10 +461,13 @@ function QuickScanActions({ token, rewardReady, canRedeem }: { token: string; re
           <input type="hidden" name="scanToken" value={token} />
           <input type="hidden" name="quantity" value="1" />
           <ConfirmSubmitButton
-            message="Issue this stamp to this customer and selected program?"
+            title="Issue stamp?"
+            message="This will add 1 visit to the customer's selected program."
+            confirmLabel="Issue Stamp"
+            cancelLabel="Cancel"
             className="business-button min-h-12 w-full rounded-md bg-[#F97316] px-5 text-base font-semibold text-white shadow-sm transition"
           >
-            Add Stamp
+            Issue Stamp
           </ConfirmSubmitButton>
         </form>
       )}
@@ -589,8 +612,10 @@ function ScanMessage({
   return (
     <DashboardShell user={user} eyebrow={roleEyebrow(user.role)} title="Scan result" hideWelcomeMessage>
       <ScannerSoundFeedback event="error" enabled={soundEffectsEnabled} />
-      <ScanStatusBanner tone="red" title={title} description={description ?? "Ask the customer to show a current loyalty QR for this business."} />
-      {helperText ? <p className="rounded-md border border-red-100 bg-white px-4 py-3 text-sm text-[#6B7280]">{helperText}</p> : null}
+      <EmptyState title={title} description={description ?? "Ask the customer to show a current loyalty QR for this business."} />
+      <ButtonLink href={scannerPathForRole(user.role)} variant="outline" className="w-full sm:w-auto">
+        Back to Scanner
+      </ButtonLink>
     </DashboardShell>
   );
 }

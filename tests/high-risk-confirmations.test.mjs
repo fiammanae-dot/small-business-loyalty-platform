@@ -16,8 +16,8 @@ test("reusable confirmation submit button exists and submits the parent form aft
 
 test("scanner stamp and reward actions require confirmation", () => {
   const page = read("src/app/scan/[token]/page.tsx");
-  assert.match(page, /Issue this stamp to this customer and selected program\?/);
-  assert.match(page, /Redeem this reward now\? Earned stamps will reset for this program\./);
+  assert.match(page, /This will add 1 visit to the customer\'s selected program\./);
+  assert.match(page, /This will redeem the customer\'s available reward and reset progress for this program\./);
 });
 
 test("highest-risk business owner actions require confirmation", () => {

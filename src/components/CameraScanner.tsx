@@ -1,9 +1,10 @@
 "use client";
 
 import jsQR from "jsqr";
-import { Camera, RotateCcw, Square, Video } from "lucide-react";
+import { Camera, RotateCcw, Square } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { SectionCard } from "@/components/ui";
 
 type BarcodeDetectorConstructor = new (options?: { formats?: string[] }) => {
   detect(source: HTMLVideoElement): Promise<Array<{ rawValue: string }>>;
@@ -130,13 +131,13 @@ export function CameraScanner({ backHref }: { backHref: string }) {
       if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError") {
         return {
           state: "no-camera" as ScannerState,
-          message: "No camera was found on this device. Use the search box below to enter a scan token or customer card link.",
+          message: "No camera was found on this device. Camera unavailable. You can still search by name, phone, card link, scan token, or referral code.",
         };
       }
     }
     return {
       state: "scan-failed" as ScannerState,
-      message: "Scanner could not start. Use the search box below to enter a scan token or customer card link.",
+      message: "Scanner could not start. Camera unavailable. You can still search by name, phone, card link, scan token, or referral code.",
     };
   }
 
@@ -146,13 +147,13 @@ export function CameraScanner({ backHref }: { backHref: string }) {
 
     if (!isLocalOrSecure()) {
       setScannerState("camera-blocked");
-      setMessage("Camera scanning requires HTTPS or localhost. Use the search box below to enter a scan token or customer card link.");
+      setMessage("Camera scanning requires HTTPS or localhost. Camera unavailable. You can still search by name, phone, card link, scan token, or referral code.");
       return false;
     }
 
     if (!navigator.mediaDevices?.getUserMedia) {
       setScannerState("no-camera");
-      setMessage("This browser cannot access a camera. Use the search box below to enter a scan token or customer card link.");
+      setMessage("This browser cannot access a camera. Camera unavailable. You can still search by name, phone, card link, scan token, or referral code.");
       return false;
     }
 
@@ -181,13 +182,6 @@ export function CameraScanner({ backHref }: { backHref: string }) {
       setMessage(diagnosis.message);
       stopCamera();
       return false;
-    }
-  }
-
-  async function testCamera() {
-    const opened = await openCameraPreview();
-    if (opened) {
-      setMessage("Camera active. If scanning is unsupported, use the search box below.");
     }
   }
 
@@ -281,7 +275,7 @@ export function CameraScanner({ backHref }: { backHref: string }) {
   }
 
   return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm sm:p-5">
+    <SectionCard title="Camera scanner" description="Scan the QR code shown on the customer's LoyaltyBase card. If the camera is unavailable, use the universal customer lookup below." className="max-w-full overflow-x-hidden">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-sm font-semibold business-primary">Camera scanner</p>
@@ -303,27 +297,25 @@ export function CameraScanner({ backHref }: { backHref: string }) {
         <video ref={videoRef} className="aspect-[3/4] w-full object-cover sm:aspect-video" muted playsInline />
       </div>
 
-      <div className={`mt-4 grid gap-3 ${isCameraOpen || isScanning ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}>
-        <button type="button" onClick={testCamera} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-[#FED7AA] business-border-soft bg-orange-50 business-bg-soft px-4 text-sm font-semibold text-[#9A3412] business-text-strong">
-          <Video className="h-4 w-4" aria-hidden="true" />
-          Test Camera
-        </button>
+      <div className={`mt-4 grid gap-3 ${isCameraOpen || isScanning ? "sm:grid-cols-3" : "sm:grid-cols-1"}`}>
         <button type="button" onClick={() => startCamera()} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md business-button px-4 text-sm font-semibold text-white">
           <Camera className="h-4 w-4" aria-hidden="true" />
           Start Camera
         </button>
         {isCameraOpen || isScanning ? (
-          <button type="button" onClick={stopCamera} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">
-            <Square className="h-4 w-4" aria-hidden="true" />
-            Stop Camera
-          </button>
+          <>
+            <button type="button" onClick={stopCamera} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">
+              <Square className="h-4 w-4" aria-hidden="true" />
+              Stop Camera
+            </button>
+            <button type="button" onClick={switchCamera} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">
+              <RotateCcw className="h-4 w-4" aria-hidden="true" />
+              Switch Camera
+            </button>
+          </>
         ) : null}
-        <button type="button" onClick={switchCamera} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">
-          <RotateCcw className="h-4 w-4" aria-hidden="true" />
-          Switch Camera
-        </button>
       </div>
 
-    </section>
+    </SectionCard>
   );
 }

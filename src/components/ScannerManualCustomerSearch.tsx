@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Link2, Search } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
+import { EmptyState, SectionCard } from "@/components/ui";
 import { formatDate } from "@/lib/format";
 import { formatUaePhoneDisplay, normalizePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
@@ -11,6 +12,13 @@ type ScannerManualCustomerSearchProps = {
   query?: string;
   actionPath: string;
 };
+
+function detectedTypeLabel(token: string) {
+  if (token.startsWith("referral:")) return "Referral invitation";
+  if (token.startsWith("cst_")) return "Customer card";
+  if (token.startsWith("scan_")) return "Program scan token";
+  return "Secure scan input";
+}
 
 function scanFlowHref(token: string) {
   if (token.startsWith("referral:")) {
@@ -58,23 +66,11 @@ export async function ScannerManualCustomerSearch({ businessId, query, actionPat
     : [];
 
   return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm sm:p-5">
+    <SectionCard title="Search customer" description="Search by name, phone, card link, QR link, scan token, or referral code." className="max-w-full overflow-x-hidden">
       <div className="flex items-center gap-3">
         <span className="h-px flex-1 bg-[#E5E7EB]" aria-hidden="true" />
         <span className="rounded-full border border-[#E5E7EB] bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#6B7280]">OR</span>
         <span className="h-px flex-1 bg-[#E5E7EB]" aria-hidden="true" />
-      </div>
-
-      <div className="mt-4 flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md business-bg-soft business-text">
-          <Search className="h-5 w-5" aria-hidden="true" />
-        </span>
-        <div>
-          <p className="text-sm font-semibold business-primary">Search customer</p>
-          <p className="mt-1 text-sm leading-6 text-[#6B7280]">
-            Search by name, phone, card link, QR link, scan token, or referral code.
-          </p>
-        </div>
       </div>
 
       <form action={actionPath} className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
@@ -95,8 +91,8 @@ export async function ScannerManualCustomerSearch({ businessId, query, actionPat
             <div className="flex items-start gap-2">
               <Link2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
               <div>
-                <p className="font-semibold">Secure scanner link detected.</p>
-                <p className="mt-1 text-emerald-800">Open the existing validation flow to confirm the customer, program, or referral.</p>
+                <p className="font-semibold">{detectedTypeLabel(secureScanToken)} detected.</p>
+                <p className="mt-1 text-emerald-800">Security note: this opens the existing server-side validation flow before any stamp, reward, or referral action.</p>
               </div>
             </div>
             <Link href={scanFlowHref(secureScanToken)} className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md business-button px-4 text-sm font-semibold text-white">
@@ -149,12 +145,10 @@ export async function ScannerManualCustomerSearch({ businessId, query, actionPat
             );
           })}
           {results.length === 0 ? (
-            <p className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] px-3 py-4 text-sm text-[#6B7280]">
-              No matching customers found in this business.
-            </p>
+            <EmptyState title="No matching customers" description="No matching customers found in this business." />
           ) : null}
         </div>
       ) : null}
-    </section>
+    </SectionCard>
   );
 }
