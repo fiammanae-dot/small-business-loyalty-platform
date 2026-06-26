@@ -136,7 +136,7 @@ export default async function PlatformUsersPage({
     ...(name ? { name: { contains: name, mode: "insensitive" } } : {}),
     ...(email ? { email: { contains: email, mode: "insensitive" } } : {}),
     ...(selectedRole ? { role: selectedRole } : {}),
-    ...(selectedStatus ? { status: selectedStatus } : { status: { not: "ARCHIVED" } }),
+    ...(selectedStatus ? { status: selectedStatus } : {}),
     ...(selectedBusinessId ? { businessId: selectedBusinessId } : {}),
     ...(selectedBranchId ? { branchId: selectedBranchId } : {}),
     ...(createdFrom || createdTo ? { createdAt } : {}),
@@ -162,6 +162,7 @@ export default async function PlatformUsersPage({
   ]);
 
   const users = allUsers
+    .filter((user) => (selectedStatus ? true : user.status !== "ARCHIVED"))
     .filter((user) => (suspectOnly ? isSuspiciousUser(user) : true))
     .sort((a, b) => {
       const multiplier = direction === "asc" ? 1 : -1;
@@ -542,3 +543,4 @@ function Detail({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+

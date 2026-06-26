@@ -14,4 +14,5 @@ test("system administrator self and last-admin protections exist",function(){con
 
 test("suspended and archived users cannot authenticate because only ACTIVE sessions are accepted",function(){const login=read("src/app/login/actions.ts");const session=read("src/lib/session.ts");assert.match(login,/user.status !== "ACTIVE"/);assert.match(session,/status: "ACTIVE"/);});
 
-test("platform users page exposes controlled actions and archive filter",function(){const page=read("src/app/platform/users/page.tsx");assert.doesNotMatch(page,/Read-only/);assert.match(page,/PlatformUserPasswordResetAction/);assert.match(page,/forceLogoutPlatformUserAction/);assert.match(page,/archivePlatformUserAction/);assert.match(page,/SUSPENDED/);assert.match(page,/ARCHIVED/);assert.match(page,/status: { not: "ARCHIVED" }/);});
+test("platform users page exposes controlled actions and archive filter",function(){const page=read("src/app/platform/users/page.tsx");assert.doesNotMatch(page,/Read-only/);assert.match(page,/PlatformUserPasswordResetAction/);assert.match(page,/forceLogoutPlatformUserAction/);assert.match(page,/archivePlatformUserAction/);assert.match(page,/SUSPENDED/);assert.match(page,/ARCHIVED/);assert.doesNotMatch(page,/status: { not: "ARCHIVED" }/);assert.match(page,/selectedStatus \? true : user.status !== "ARCHIVED"/);});
+
