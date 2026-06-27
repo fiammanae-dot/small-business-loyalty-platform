@@ -12,7 +12,7 @@ import { businessTypeLabels, roleLabels } from "@/lib/roles";
 import { requireRole } from "@/lib/session";
 import { toggleBusinessStatusAction } from "@/app/platform/businesses/actions";
 
-export default async function BusinessDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function BusinessDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; success?: string }> }) {
   const user = await requireRole("PLATFORM_OWNER");
   const { id } = await params;
   const business = await prisma.business.findUnique({
@@ -45,9 +45,14 @@ export default async function BusinessDetailPage({ params }: { params: Promise<{
   const owner = business.users[0];
   const currentSubscription = business.subscriptions[0];
   const lifetimeRevenue = business.invoices.reduce((sum, invoice) => sum + invoice.payments.reduce((paid, payment) => paid + Number(payment.amount), 0), 0);
+  const now = new Date();
+  const activeSupportSession = business.supportSessions.find((session) => session.status === "ACTIVE" && !session.endedAt && session.expiresAt > now);
+  const lastSupportSession = business.supportSessions[0] ?? null;
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title={business.name}>
+      {qs.error || qs.success ? <p className={`rounded-md border px-3 py-2 text-sm ${qs.error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>{qs.error ?? qs.success}</p> : null}
+
       <div className="grid max-w-full min-w-0 gap-2 sm:flex sm:flex-wrap sm:gap-3">
         <Link href="/platform/businesses" className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] hover:border-[#F97316] hover:text-[#F97316]">
           Back to businesses
@@ -83,7 +88,27 @@ export default async function BusinessDetailPage({ params }: { params: Promise<{
           <ColorRow label="Text" value={branding?.textColor ?? "#111827"} />
           <ColorRow label="Button" value={branding?.buttonColor ?? "#F97316"} />
         </InfoCard>
-        <InfoCard title="Business owner user">
+        <InfoCard title="Support Access">
+          {activeSupportSession ? (
+            <>
+              <InfoRow label="Active session" value={`Started ${formatDate(activeSupportSession.startedAt)}`} />
+              <InfoRow label="Expires" value={formatDate(activeSupportSession.expiresAt)} />
+              <InfoRow label="Admin" value={activeSupportSession.adminUser.name} />
+              <InfoRow label="Mode" value={activeSupportSession.readOnly ? "Read-only" : "Read/write"} />
+            </>
+          ) : (
+            <p className="text-sm text-[#6B7280]">No active support session.</p>
+          )}
+          {lastSupportSession ? (
+            <div className="mt-4 border-t border-[#E5E7EB] pt-4">
+              <InfoRow label="Last support session" value={`${lastSupportSession.status} - ${formatDate(lastSupportSession.startedAt)}`} />
+              <InfoRow label="Reason" value={lastSupportSession.reason} />
+            </div>
+          ) : null}
+          <Link href={`/platform/businesses/${business.uuid}/support-session`} className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] hover:border-[#F97316] hover:text-[#F97316]">
+            Open Support Session
+          </Link>
+        </InfoCard>        <InfoCard title="Business owner user">
           {owner ? (
             <>
               <InfoRow label="Name" value={owner.name} />

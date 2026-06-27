@@ -8,23 +8,27 @@ import {
   UserPlus,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { DashboardPageLayout } from "@/components/layouts";
 import { ButtonLink, MetricCard, PageActions, PageHeader, ProgressBar, SectionCard as UiSectionCard, StatusBadge as UiStatusBadge, Timeline, TimelineItem } from "@/components/ui";
 import { getBusinessDisplayName, getBusinessTypeDisplayName } from "@/lib/business-display";
+import { endSupportSessionAction } from "@/app/platform/businesses/support-actions";
 import { getBusinessOwnerContext, getCurrentPlan } from "@/lib/business-owner";
 import { formatDateTime } from "@/lib/format";
 import { getPlanComplianceSummary, type PlanComplianceSummary } from "@/lib/plan-compliance";
+import { requireSupportBusinessContext } from "@/lib/support-sessions";
 import { prisma } from "@/lib/prisma";
 import { businessTypeLabels } from "@/lib/roles";
 
 export default async function BusinessDashboard({
   searchParams,
 }: {
-  searchParams: Promise<{ customerSearch?: string }>;
+  searchParams: Promise<{ customerSearch?: string; supportSessionId?: string }>;
 }) {
-  const { user, business } = await getBusinessOwnerContext();
-  await searchParams;
+  const params = await searchParams;
+  const supportContext = params.supportSessionId ? await requireSupportBusinessContext(params.supportSessionId) : null;
+  const { user, business } = supportContext ?? await getBusinessOwnerContext();
   const plan = getCurrentPlan(business);
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
@@ -101,7 +105,7 @@ export default async function BusinessDashboard({
   const planCompliance = await getPlanComplianceSummary({
     businessId: user.businessId,
     planCode: plan?.code,
-    recordAuditEvent: true,
+    recordAuditEvent: !supportContext?.supportSession.readOnly,
   });
   const totalOpenAlerts = highAlerts + mediumAlerts + lowAlerts;
   const customerCount = business._count.customerMemberships;
@@ -160,10 +164,11 @@ export default async function BusinessDashboard({
   return (
     <DashboardShell
       user={user}
-      eyebrow="Business Owner"
+      eyebrow={supportContext ? "Support Session" : "Business Owner"}
       title="Business dashboard"
       hideWelcomeMessage
     >
+      {supportContext ? <SupportSessionNotice supportSession={supportContext.supportSession} businessUuid={business.uuid} /> : null}
       <DashboardPageLayout
         summary={
           <DashboardCommandCenter
@@ -204,6 +209,27 @@ export default async function BusinessDashboard({
 }
 
 
+function SupportSessionNotice({ supportSession, businessUuid }: { supportSession: { id: number; reason: string; expiresAt: Date; readOnly: boolean }; businessUuid: string }) {
+  return (
+    <section className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <p className="font-semibold">System Administrator support session is active</p>
+          <p className="mt-1">Reason: {supportSession.reason}</p>
+          <p className="mt-1">Expires: {formatDateTime(supportSession.expiresAt)} - Mode: {supportSession.readOnly ? "Read-only" : "Read/write"}</p>
+        </div>
+        <form action={endSupportSessionAction}>
+          <CsrfInput scope="platform:support-sessions" />
+          <input type="hidden" name="supportSessionId" value={supportSession.id} />
+          <input type="hidden" name="businessUuid" value={businessUuid} />
+          <button type="submit" className="inline-flex min-h-11 items-center justify-center rounded-md border border-blue-300 bg-white px-4 text-sm font-semibold text-blue-900 transition hover:bg-blue-100">
+            End support session
+          </button>
+        </form>
+      </div>
+    </section>
+  );
+}
 function DashboardCommandCenter({ businessName, businessType, ownerName, planName, status, currentDate, customersToday, logoUrl }: { businessName: string; businessType: string; ownerName: string; planName: string; status: string; currentDate: string; customersToday: number; logoUrl?: string | null }) {
   return (
     <UiSectionCard className="business-border-soft business-bg-soft">

@@ -20,6 +20,12 @@ enum RecordStatus {
   ARCHIVED
 }
 
+enum SupportSessionStatus {
+  ACTIVE
+  ENDED
+  EXPIRED
+}
+
 enum BusinessType {
   COFFEE_SHOP
   RESTAURANT
@@ -276,6 +282,7 @@ model User {
   auditEvents AuditEvent[]
   cooldownEvents CooldownEvent[]
   passwordResetTokens PasswordResetToken[]
+  supportSessionsStarted SupportSession[] @relation("SupportSessionAdminUser")
 
   @@index([businessId])
   @@index([branchId])
@@ -353,6 +360,7 @@ model Business {
   cooldownRules CooldownRule[]
   cooldownEvents CooldownEvent[]
   tierSetting CustomerTierSetting?
+  supportSessions SupportSession[]
 
   @@map("businesses")
 }
@@ -1076,6 +1084,28 @@ model MessageDeliveryQueue {
   @@map("message_delivery_queue")
 }
 
+
+model SupportSession {
+  id          Int                  @id @default(autoincrement())
+  businessId  Int                  @map("business_id")
+  adminUserId Int                  @map("admin_user_id")
+  reason      String
+  startedAt   DateTime             @default(now()) @map("started_at")
+  expiresAt   DateTime             @map("expires_at")
+  endedAt     DateTime?            @map("ended_at")
+  readOnly    Boolean              @default(true) @map("read_only")
+  status      SupportSessionStatus @default(ACTIVE)
+  createdAt   DateTime             @default(now()) @map("created_at")
+  updatedAt   DateTime             @updatedAt @map("updated_at")
+
+  business  Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  adminUser User     @relation("SupportSessionAdminUser", fields: [adminUserId], references: [id])
+
+  @@index([businessId, status, expiresAt])
+  @@index([adminUserId, status, expiresAt])
+  @@index([expiresAt])
+  @@map("support_sessions")
+}
 model PlatformSetting {
   id        Int      @id @default(autoincrement())
   key       String   @unique

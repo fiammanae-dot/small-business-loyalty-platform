@@ -5,6 +5,32 @@ import { prisma } from "@/lib/prisma";
 import { requireRole, type AuthUser } from "@/lib/session";
 import { commerciallyUsableStatuses } from "@/lib/subscriptions";
 
+export const businessOwnerInclude = {
+  branding: true,
+  tierSetting: true,
+  communicationSettings: true,
+  scannerSettings: true,
+  branches: { orderBy: { createdAt: "asc" } },
+  users: {
+    where: { role: { in: ["BRANCH_MANAGER", "STAFF"] } },
+    orderBy: { createdAt: "desc" },
+    include: { branch: true },
+  },
+  subscriptions: {
+    where: { status: { in: commerciallyUsableStatuses } },
+    orderBy: { createdAt: "desc" },
+    take: 1,
+    include: { subscriptionPlan: true },
+  },
+  _count: {
+    select: {
+      branches: true,
+      users: true,
+      customerMemberships: true,
+      loyaltyPrograms: true,
+    },
+  },
+} as const;
 export async function requireBusinessOwner() {
   const user = await requireRole("BUSINESS_OWNER");
 
@@ -19,32 +45,7 @@ export async function getBusinessOwnerContext() {
   const user = await requireBusinessOwner();
   const business = await prisma.business.findFirst({
     where: { id: user.businessId },
-    include: {
-      branding: true,
-      tierSetting: true,
-      communicationSettings: true,
-      scannerSettings: true,
-      branches: { orderBy: { createdAt: "asc" } },
-      users: {
-        where: { role: { in: ["BRANCH_MANAGER", "STAFF"] } },
-        orderBy: { createdAt: "desc" },
-        include: { branch: true },
-      },
-      subscriptions: {
-        where: { status: { in: commerciallyUsableStatuses } },
-        orderBy: { createdAt: "desc" },
-        take: 1,
-        include: { subscriptionPlan: true },
-      },
-      _count: {
-        select: {
-          branches: true,
-          users: true,
-          customerMemberships: true,
-          loyaltyPrograms: true,
-        },
-      },
-    },
+    include: businessOwnerInclude,
   });
 
   if (!business) {
