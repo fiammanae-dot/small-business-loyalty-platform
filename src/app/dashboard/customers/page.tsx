@@ -1,7 +1,26 @@
 import Link from "next/link";
+import { MessageCircle, QrCode, UserPlus } from "lucide-react";
 import { CardShareActions } from "@/components/CardShareActions";
 import { DashboardShell } from "@/components/DashboardShell";
-import { StatusBadge } from "@/components/StatusBadge";
+import {
+  ActionMenu,
+  ActionMenuItem,
+  ButtonLink,
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableHeadCell,
+  DataTableHeader,
+  EmptyState,
+  FilterBar,
+  MetricCard,
+  PageActions,
+  PageHeader,
+  ProgressBar,
+  SearchBar,
+  SectionCard,
+  StatusBadge,
+} from "@/components/ui";
 import { getCardUrl } from "@/lib/customer-cards";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { customerSourceLabels } from "@/lib/customers";
@@ -9,17 +28,25 @@ import { formatDate } from "@/lib/format";
 import { formatUaePhoneDisplay, normalizePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 
+const tierOptions = ["BRONZE", "SILVER", "GOLD", "VIP"] as const;
+
+type CustomerSearchParams = {
+  q?: string;
+  status?: string;
+  consent?: string;
+  source?: string;
+  branch?: string;
+  program?: string;
+  tier?: string;
+  reward?: string;
+  error?: string;
+  success?: string;
+};
+
 export default async function CustomersPage({
   searchParams,
 }: {
-  searchParams: Promise<{
-    q?: string;
-    status?: string;
-    consent?: string;
-    source?: string;
-    error?: string;
-    success?: string;
-  }>;
+  searchParams: Promise<CustomerSearchParams>;
 }) {
   const { user, business } = await getBusinessOwnerContext();
   const params = await searchParams;
@@ -28,193 +55,322 @@ export default async function CustomersPage({
   const status = ["ACTIVE", "INACTIVE", "BLOCKED"].includes(params.status ?? "") ? params.status : undefined;
   const source = ["STAFF", "OWNER", "IMPORT", "SELF_SIGNUP"].includes(params.source ?? "") ? params.source : undefined;
   const consent = ["yes", "no"].includes(params.consent ?? "") ? params.consent : undefined;
+  const tier = tierOptions.includes(params.tier as (typeof tierOptions)[number]) ? params.tier : undefined;
+  const branchId = params.branch && !Number.isNaN(Number(params.branch)) ? Number(params.branch) : undefined;
+  const rewardFilter = ["ready", "near"].includes(params.reward ?? "") ? params.reward : undefined;
 
-  const customers = await prisma.businessCustomerMembership.findMany({
-    where: {
-      businessId: user.businessId,
-      ...(status ? { status: status as "ACTIVE" | "INACTIVE" | "BLOCKED" } : {}),
-      ...(source ? { source: source as "STAFF" | "OWNER" | "IMPORT" | "SELF_SIGNUP" } : {}),
-      ...(consent ? { marketingConsent: consent === "yes" } : {}),
-      ...(query
-        ? {
-            OR: [
-              { globalCustomer: { firstName: { contains: query, mode: "insensitive" } } },
-              { globalCustomer: { lastName: { contains: query, mode: "insensitive" } } },
-              { globalCustomer: { phone: { contains: query, mode: "insensitive" } } },
-              { globalCustomer: { normalizedPhone: { contains: query, mode: "insensitive" } } },
-              ...(normalizedQueryPhone ? [{ globalCustomer: { normalizedPhone: normalizedQueryPhone } }] : []),
-              { globalCustomer: { email: { contains: query, mode: "insensitive" } } },
-              { cardToken: { contains: query, mode: "insensitive" } },
-              { referralCode: { contains: query, mode: "insensitive" } },
-              { programMemberships: { some: { loyaltyProgram: { name: { contains: query, mode: "insensitive" } } } } },
-            ],
-          }
-        : {}),
-    },
-    include: { globalCustomer: true, createdBranch: true },
-    orderBy: { joinedAt: "desc" },
-  });
-  const customerRows = await Promise.all(
+  const [programs, customers, allCustomers] = await Promise.all([
+    prisma.loyaltyProgram.findMany({
+      where: { businessId: user.businessId, active: true },
+      orderBy: { name: "asc" },
+      select: { uuid: true, name: true },
+    }),
+    prisma.businessCustomerMembership.findMany({
+      where: {
+        businessId: user.businessId,
+        ...(status ? { status: status as "ACTIVE" | "INACTIVE" | "BLOCKED" } : {}),
+        ...(source ? { source: source as "STAFF" | "OWNER" | "IMPORT" | "SELF_SIGNUP" } : {}),
+        ...(consent ? { marketingConsent: consent === "yes" } : {}),
+        ...(tier ? { currentTier: tier as "BRONZE" | "SILVER" | "GOLD" | "VIP" } : {}),
+        ...(branchId ? { createdBranchId: branchId } : {}),
+        ...(params.program ? { programMemberships: { some: { loyaltyProgram: { uuid: params.program } } } } : {}),
+        ...(query
+          ? {
+              OR: [
+                { globalCustomer: { firstName: { contains: query, mode: "insensitive" } } },
+                { globalCustomer: { lastName: { contains: query, mode: "insensitive" } } },
+                { globalCustomer: { phone: { contains: query, mode: "insensitive" } } },
+                { globalCustomer: { normalizedPhone: { contains: query, mode: "insensitive" } } },
+                ...(normalizedQueryPhone ? [{ globalCustomer: { normalizedPhone: normalizedQueryPhone } }] : []),
+                { globalCustomer: { email: { contains: query, mode: "insensitive" } } },
+                { cardToken: { contains: query, mode: "insensitive" } },
+                { referralCode: { contains: query, mode: "insensitive" } },
+                { programMemberships: { some: { loyaltyProgram: { name: { contains: query, mode: "insensitive" } } } } },
+              ],
+            }
+          : {}),
+      },
+      include: customerInclude,
+      orderBy: { joinedAt: "desc" },
+    }),
+    prisma.businessCustomerMembership.findMany({
+      where: { businessId: user.businessId },
+      include: customerInclude,
+      orderBy: { joinedAt: "desc" },
+    }),
+  ]);
+
+  const allRows = allCustomers.map(toCustomerSummary);
+  const rowsWithUrls = await Promise.all(
     customers.map(async (membership) => ({
-      ...membership,
+      ...toCustomerSummary(membership),
+      raw: membership,
       cardUrl: await getCardUrl(membership.cardToken),
-      customerName: `${membership.globalCustomer.firstName} ${membership.globalCustomer.lastName ?? ""}`.trim(),
+      customerName: getCustomerName(membership.globalCustomer),
     })),
   );
+  const customerRows = rowsWithUrls.filter((row) => {
+    if (rewardFilter === "ready") return row.rewardReady;
+    if (rewardFilter === "near") return row.nearReward;
+    return true;
+  });
+
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
 
   return (
-    <DashboardShell user={user} eyebrow="Business Owner" title="Customers">
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
+    <DashboardShell user={user} eyebrow="Business Owner" title="Customers" hideWelcomeMessage>
+      <div className="space-y-5 pb-24 md:pb-0">
         <Message error={params.error} success={params.success} />
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-[#111827]">Business customer memberships</h2>
-            <p className="text-sm text-[#6B7280]">Only customers enrolled in your business are shown.</p>
+
+        <SectionCard>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <PageHeader title="Customers" description="Manage your customers, loyalty progress, referrals and rewards." eyebrow="Customer Management Center" />
+            <PageActions>
+              <ButtonLink href="/dashboard/customers/new" variant="business"><UserPlus className="h-4 w-4" aria-hidden />Add Customer</ButtonLink>
+              <ButtonLink href="/dashboard/exports/customers" variant="outline">Export Customers</ButtonLink>
+              <ButtonLink href="/dashboard/scanner" variant="outline"><QrCode className="h-4 w-4" aria-hidden />Open Scanner</ButtonLink>
+            </PageActions>
           </div>
-          <Link href="/dashboard/customers/new" className="rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
-            Enroll customer
-          </Link>
-        </div>
+        </SectionCard>
 
-        <form className="mt-5 grid gap-3 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3 md:grid-cols-2 xl:grid-cols-[minmax(320px,2fr)_minmax(130px,1fr)_minmax(150px,1fr)_minmax(140px,1fr)_auto_auto] md:items-center">
-          <input
-            name="q"
-            defaultValue={params.q ?? ""}
-            placeholder="Search name, phone, card number, referral code, program"
-            className="h-10 min-w-0 rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0 business-border"
-          />
-          <Select name="status" label="Status" value={params.status} options={[["", "All statuses"], ["ACTIVE", "Active"], ["INACTIVE", "Inactive"], ["BLOCKED", "Blocked"]]} />
-          <Select name="consent" label="Marketing consent" value={params.consent} options={[["", "All consent"], ["yes", "Consented"], ["no", "No consent"]]} />
-          <Select name="source" label="Source" value={params.source} options={[["", "All sources"], ["OWNER", "Owner"], ["STAFF", "Staff"], ["IMPORT", "Import"], ["SELF_SIGNUP", "Self signup"]]} />
-          <button type="submit" className="h-10 whitespace-nowrap rounded-md border business-border px-4 text-sm font-semibold business-primary">
-            Apply filters
-          </button>
-          <Link href="/dashboard/customers" className="inline-flex h-10 items-center justify-center whitespace-nowrap rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">
-            Clear search
-          </Link>
-        </form>
-        <p className="mt-4 text-sm font-semibold text-[#6B7280]">Showing {customerRows.length} customers</p>
+        <section className="grid grid-cols-2 gap-3 xl:grid-cols-5">
+          <MetricCard href="/dashboard/customers" label="Total Customers" value={allRows.length} tone="business" />
+          <MetricCard href="/dashboard/customers?status=ACTIVE" label="Active Customers" value={allRows.filter((row) => row.status === "ACTIVE").length} />
+          <MetricCard href="/dashboard/customers?reward=ready" label="Reward Ready" value={allRows.filter((row) => row.rewardReady).length} tone="warning" />
+          <MetricCard href="/dashboard/customers?tier=VIP" label="VIP Customers" value={allRows.filter((row) => row.tier === "VIP").length} />
+          <MetricCard href="/dashboard/customers" label="New This Month" value={allRows.filter((row) => row.joinedAt >= monthStart).length} />
+        </section>
 
-        <div className="mt-6 grid gap-3 lg:hidden">
-          {customerRows.map((membership) => (
-            <article key={membership.id} className="rounded-md border border-[#E5E7EB] p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="font-semibold text-[#111827]">{membership.globalCustomer.firstName} {membership.globalCustomer.lastName ?? ""}</h3>
-                  <p className="mt-1 text-sm text-[#6B7280]">{formatUaePhoneDisplay(membership.globalCustomer.normalizedPhone)}</p>
-                  <p className="mt-1 text-sm text-[#6B7280]">{membership.globalCustomer.email ?? "No email"}</p>
-                </div>
-                <StatusBadge status={membership.status} />
-              </div>
-              <div className="mt-4 grid gap-2 text-sm text-[#6B7280]">
-                <p>Marketing consent: {membership.marketingConsent ? "Yes" : "No"}</p>
-                <p>Joined: {formatDate(membership.joinedAt)}</p>
-                <p>Card issued branch: {membership.createdBranch?.name ?? "-"}</p>
-                <p>Source: {customerSourceLabels[membership.source]}</p>
-              </div>
-              <div className="mt-4 flex gap-3">
-                <Link href={`/dashboard/customers/${membership.uuid}`} className="font-semibold business-primary">View</Link>
-                <Link href={`/dashboard/customers/${membership.uuid}/edit`} className="font-semibold business-primary">Edit</Link>
-              </div>
-              <div className="mt-4">
-                <CardShareActions
-                  cardUrl={membership.cardUrl}
-                  businessName={business.name}
-                  customerName={membership.customerName}
-                  recipientPhone={membership.globalCustomer.normalizedPhone}
-                  auditMembershipUuid={membership.uuid}
-                  whatsappLabel="Send via WhatsApp"
-                  showCopy={false}
-                  showWallet={false}
-                />
-              </div>
-            </article>
-          ))}
-        </div>
+        <SectionCard title="Search customer" description="Find customers by name, phone, referral code, card number, or program.">
+          <form action="/dashboard/customers" className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+            <SearchBar label="Search" name="q" defaultValue={params.q ?? ""} placeholder="Search by name, phone number, referral code or card number..." className="text-base" />
+            <button type="submit" className="h-11 rounded-md business-button px-6 text-sm font-semibold text-white">Search</button>
+          </form>
+        </SectionCard>
 
-        <div className="mt-6 hidden max-w-full overflow-x-auto lg:block">
-          <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm">
-            <colgroup>
-              <col className="w-[22%]" />
-              <col className="w-[22%]" />
-              <col className="w-[13%]" />
-              <col className="w-[18%]" />
-              <col className="w-[10%]" />
-              <col className="w-[15%]" />
-            </colgroup>
-            <thead>
-              <tr className="text-[#6B7280]">
-                {["Customer", "Contact", "Status", "Joined / Branch", "Source", "Actions"].map((heading) => (
-                  <th key={heading} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">{heading}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {customerRows.map((membership) => (
-                <tr key={membership.id} className="align-top">
-                  <td className="border-b border-[#E5E7EB] px-3 py-3">
-                    <Link href={`/dashboard/customers/${membership.uuid}`} className="block truncate font-semibold text-[#111827] transition business-hover">
-                      {membership.globalCustomer.firstName} {membership.globalCustomer.lastName ?? ""}
-                    </Link>
-                    <p className="mt-1 text-xs text-[#6B7280]">Marketing: {membership.marketingConsent ? "Yes" : "No"}</p>
-                  </td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">
-                    <p className="truncate">{formatUaePhoneDisplay(membership.globalCustomer.normalizedPhone)}</p>
-                    <p className="mt-1 truncate text-xs">{membership.globalCustomer.email ?? "No email"}</p>
-                  </td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-3"><StatusBadge status={membership.status} /></td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">
-                    <p>{formatDate(membership.joinedAt)}</p>
-                    <p className="mt-1 truncate text-xs">{membership.createdBranch?.name ?? "No branch"}</p>
-                  </td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{customerSourceLabels[membership.source]}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-3">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <Link href={`/dashboard/customers/${membership.uuid}`} className="rounded-md border border-[#E5E7EB] px-2 py-1 text-xs font-semibold text-[#111827] transition business-hover">View</Link>
-                      <Link href={`/dashboard/customers/${membership.uuid}/edit`} className="rounded-md border border-[#E5E7EB] px-2 py-1 text-xs font-semibold text-[#111827] transition business-hover">Edit</Link>
-                    </div>
-                    <div className="mt-2 max-w-[130px]">
-                      <CardShareActions
-                        cardUrl={membership.cardUrl}
-                        businessName={business.name}
-                        customerName={membership.customerName}
-                        recipientPhone={membership.globalCustomer.normalizedPhone}
-                        auditMembershipUuid={membership.uuid}
-                        whatsappLabel="WhatsApp"
-                        showCopy={false}
-                        showWallet={false}
-                        compact
-                      />
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {customers.length === 0 ? (
-            <div className="py-10 text-center">
-              <p className="text-sm font-semibold text-[#111827]">Create your first customer.</p>
-              <p className="mt-2 text-sm text-[#6B7280]">Enroll a customer to start issuing cards, stamps, and engagement events.</p>
-              <Link href="/dashboard/customers/new" className="mt-4 inline-flex rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
-                Enroll customer
-              </Link>
-            </div>
-          ) : null}
-        </div>
-      </section>
+        <FilterBar
+          title="Customer filters"
+          action="/dashboard/customers"
+          actions={
+            <>
+              <button type="submit" className="h-10 rounded-md border business-border px-4 text-sm font-semibold business-text">Apply</button>
+              <Link href="/dashboard/customers" className="inline-flex h-10 items-center rounded-md border border-[#E2E8F0] px-4 text-sm font-semibold text-[#334155]">Clear</Link>
+            </>
+          }
+        >
+          <HiddenInput name="q" value={params.q} />
+          <Select name="branch" value={params.branch} options={[["", "All branches"], ...business.branches.map((branch) => [String(branch.id), branch.name] as [string, string])]} />
+          <Select name="program" value={params.program} options={[["", "All programs"], ...programs.map((program) => [program.uuid, program.name] as [string, string])]} />
+          <Select name="tier" value={params.tier} options={[["", "All tiers"], ["BRONZE", "Bronze"], ["SILVER", "Silver"], ["GOLD", "Gold"], ["VIP", "VIP"]]} />
+          <Select name="status" value={params.status} options={[["", "All statuses"], ["ACTIVE", "Active"], ["INACTIVE", "Inactive"], ["BLOCKED", "Blocked"]]} />
+          <Select name="reward" value={params.reward} options={[["", "All reward states"], ["ready", "Reward ready"], ["near", "Near reward"]]} />
+          <Select name="consent" value={params.consent} options={[["", "All consent"], ["yes", "Consented"], ["no", "No consent"]]} />
+        </FilterBar>
+
+        <SavedViews activeView={resolveSavedView(params)} />
+
+        <SectionCard
+          title="Customer Directory"
+          description={`Showing ${customerRows.length} customer${customerRows.length === 1 ? "" : "s"}`}
+          actions={<span className="rounded-full bg-[#F8FAFC] px-3 py-1 text-xs font-semibold text-[#64748B]">Bulk actions ready</span>}
+        >
+          {customerRows.length ? (
+            <>
+              <div className="hidden lg:block">
+                <DataTable>
+                  <DataTableHeader>
+                    <tr>
+                      {[
+                        "Customer",
+                        "Tier",
+                        "Programs",
+                        "Progress",
+                        "Last Visit",
+                        "Status",
+                        "Actions",
+                      ].map((heading) => <DataTableHeadCell key={heading}>{heading}</DataTableHeadCell>)}
+                    </tr>
+                  </DataTableHeader>
+                  <DataTableBody>
+                    {customerRows.map((row) => <CustomerTableRow key={row.raw.id} row={row} businessName={business.name} />)}
+                  </DataTableBody>
+                </DataTable>
+              </div>
+              <div className="grid gap-3 lg:hidden">
+                {customerRows.map((row) => <CustomerMobileCard key={row.raw.id} row={row} businessName={business.name} />)}
+              </div>
+            </>
+          ) : (
+            <EmptyState
+              title="No customers found"
+              description="Add a customer or clear filters to see every customer in your business."
+              action={<ButtonLink href="/dashboard/customers/new" variant="business">Add Customer</ButtonLink>}
+            />
+          )}
+        </SectionCard>
+      </div>
     </DashboardShell>
   );
 }
 
-function Select({ name, value, options }: { name: string; label: string; value?: string; options: [string, string][] }) {
+const customerInclude = {
+  globalCustomer: true,
+  createdBranch: true,
+  programMemberships: {
+    where: { status: "ACTIVE" as const },
+    include: {
+      loyaltyProgram: { select: { name: true, requiredStamps: true } },
+      stampTransactions: { orderBy: { createdAt: "desc" as const }, take: 1, select: { createdAt: true } },
+    },
+  },
+};
+
+function CustomerTableRow({ row, businessName }: { row: CustomerRow; businessName: string }) {
   return (
-    <select name={name} defaultValue={value ?? ""} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm">
-      {options.map(([optionValue, label]) => <option key={optionValue} value={optionValue}>{label}</option>)}
-    </select>
+    <tr>
+      <DataTableCell>
+        <Link href={`/dashboard/customers/${row.raw.uuid}`} className="font-semibold text-[#0F172A] transition business-hover">{row.customerName}</Link>
+        <p className="mt-1 text-xs text-[#64748B]">{formatUaePhoneDisplay(row.raw.globalCustomer.normalizedPhone)}</p>
+      </DataTableCell>
+      <DataTableCell><TierBadge tier={row.tier} /></DataTableCell>
+      <DataTableCell>{row.activePrograms} active</DataTableCell>
+      <DataTableCell><CustomerProgress row={row} /></DataTableCell>
+      <DataTableCell>{row.lastVisit ? formatDate(row.lastVisit) : "No visits"}</DataTableCell>
+      <DataTableCell><StatusBadge tone={row.status === "ACTIVE" ? "success" : row.status === "BLOCKED" ? "danger" : "neutral"}>{row.status}</StatusBadge></DataTableCell>
+      <DataTableCell><CustomerActions row={row} businessName={businessName} /></DataTableCell>
+    </tr>
   );
+}
+
+function CustomerMobileCard({ row, businessName }: { row: CustomerRow; businessName: string }) {
+  return (
+    <article className="rounded-md border border-[#E2E8F0] bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <Link href={`/dashboard/customers/${row.raw.uuid}`} className="font-semibold text-[#0F172A] business-hover">{row.customerName}</Link>
+          <p className="mt-1 text-sm text-[#64748B]">{formatUaePhoneDisplay(row.raw.globalCustomer.normalizedPhone)}</p>
+        </div>
+        <CustomerActions row={row} businessName={businessName} />
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2"><TierBadge tier={row.tier} /><StatusBadge tone={row.status === "ACTIVE" ? "success" : row.status === "BLOCKED" ? "danger" : "neutral"}>{row.status}</StatusBadge>{row.rewardReady ? <StatusBadge tone="warning">Reward Ready</StatusBadge> : null}</div>
+      <div className="mt-4"><CustomerProgress row={row} /></div>
+      <p className="mt-3 text-sm text-[#64748B]">Last visit: {row.lastVisit ? formatDate(row.lastVisit) : "No visits"}</p>
+    </article>
+  );
+}
+
+function CustomerActions({ row, businessName }: { row: CustomerRow; businessName: string }) {
+  return (
+    <ActionMenu label="Actions">
+      <ActionMenuItem><Link href={`/dashboard/customers/${row.raw.uuid}`}>Open Customer</Link></ActionMenuItem>
+      <ActionMenuItem><Link href={`/scan/${row.raw.cardToken}`}>Open Scanner</Link></ActionMenuItem>
+      <ActionMenuItem><Link href={`/scan/${row.raw.cardToken}`}>Issue Stamp</Link></ActionMenuItem>
+      <ActionMenuItem>
+        <CardShareActions
+          cardUrl={row.cardUrl}
+          businessName={businessName}
+          customerName={row.customerName}
+          recipientPhone={row.raw.globalCustomer.normalizedPhone}
+          auditMembershipUuid={row.raw.uuid}
+          whatsappLabel="WhatsApp"
+          showCopy
+          showWallet={false}
+          compact
+        />
+      </ActionMenuItem>
+      <ActionMenuItem><Link href={`/dashboard/customers/${row.raw.uuid}/edit`}>Edit Customer</Link></ActionMenuItem>
+    </ActionMenu>
+  );
+}
+
+function CustomerProgress({ row }: { row: CustomerRow }) {
+  if (!row.progress) return <span className="text-sm text-[#64748B]">No active programs</span>;
+  if (row.rewardReady) return <StatusBadge tone="warning"><MessageCircle className="mr-1 h-3.5 w-3.5" aria-hidden />Reward Ready</StatusBadge>;
+  return (
+    <div className="min-w-36">
+      <ProgressBar value={row.progress.current} max={row.progress.required} />
+      <p className="mt-1 text-xs font-semibold text-[#64748B]">{row.progress.current} / {row.progress.required}</p>
+    </div>
+  );
+}
+
+function SavedViews({ activeView }: { activeView: string }) {
+  const views = [
+    ["all", "All Customers", "/dashboard/customers"],
+    ["reward", "Reward Ready", "/dashboard/customers?reward=ready"],
+    ["vip", "VIP", "/dashboard/customers?tier=VIP"],
+    ["recent", "Recently Joined", "/dashboard/customers"],
+    ["inactive", "Inactive", "/dashboard/customers?status=INACTIVE"],
+    ["near", "Near Reward", "/dashboard/customers?reward=near"],
+  ];
+  return <nav aria-label="Saved customer views" className="flex gap-2 overflow-x-auto pb-1">{views.map(([key, label, href]) => <Link key={key} href={href} className={`shrink-0 rounded-full border px-3 py-2 text-sm font-semibold transition ${activeView === key ? "business-button text-white" : "border-[#E2E8F0] bg-white text-[#334155] hover:bg-[#F8FAFC]"}`}>{label}</Link>)}</nav>;
+}
+
+function Select({ name, value, options }: { name: string; value?: string; options: [string, string][] }) {
+  return <select name={name} defaultValue={value ?? ""} className="h-10 rounded-md border border-[#CBD5E1] bg-white px-3 text-sm text-[#334155] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] focus-visible:ring-offset-2">{options.map(([optionValue, label]) => <option key={optionValue} value={optionValue}>{label}</option>)}</select>;
+}
+
+function HiddenInput({ name, value }: { name: string; value?: string }) {
+  return value ? <input type="hidden" name={name} value={value} /> : null;
+}
+
+function TierBadge({ tier }: { tier: string }) {
+  const tone = tier === "VIP" || tier === "GOLD" ? "warning" : tier === "SILVER" ? "info" : "neutral";
+  return <StatusBadge tone={tone}>{friendlyTier(tier)}</StatusBadge>;
 }
 
 function Message({ error, success }: { error?: string; success?: string }) {
   if (!error && !success) return null;
-  return <p className={`mb-5 rounded-md border px-3 py-2 text-sm ${error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>{error ?? success}</p>;
+  return <p className={`rounded-md border px-3 py-2 text-sm ${error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>{error ?? success}</p>;
 }
+
+function toCustomerSummary(membership: CustomerMembershipWithRelations) {
+  const progressRows = membership.programMemberships.map((programMembership) => {
+    const current = programMembership.earnedStamps + programMembership.bonusStamps;
+    const required = programMembership.loyaltyProgram.requiredStamps;
+    return {
+      current,
+      required,
+      programName: programMembership.loyaltyProgram.name,
+      rewardReady: current >= required,
+      nearReward: current < required && current >= Math.max(0, required - 2),
+      lastVisit: programMembership.stampTransactions[0]?.createdAt ?? null,
+    };
+  });
+  const progress = progressRows.sort((a, b) => b.current / Math.max(1, b.required) - a.current / Math.max(1, a.required))[0] ?? null;
+  return {
+    status: membership.status,
+    tier: membership.currentTier,
+    activePrograms: membership.programMemberships.length,
+    progress,
+    rewardReady: progressRows.some((row) => row.rewardReady),
+    nearReward: progressRows.some((row) => row.nearReward),
+    lastVisit: progressRows.map((row) => row.lastVisit).filter(Boolean).sort((a, b) => b!.getTime() - a!.getTime())[0] ?? null,
+    joinedAt: membership.joinedAt,
+  };
+}
+
+function resolveSavedView(params: CustomerSearchParams) {
+  if (params.reward === "ready") return "reward";
+  if (params.reward === "near") return "near";
+  if (params.tier === "VIP") return "vip";
+  if (params.status === "INACTIVE") return "inactive";
+  return "all";
+}
+
+function friendlyTier(tier: string) {
+  return tier.charAt(0) + tier.slice(1).toLowerCase();
+}
+
+function getCustomerName(customer: { firstName: string; lastName?: string | null }) {
+  return `${customer.firstName} ${customer.lastName ?? ""}`.trim();
+}
+
+type CustomerMembershipWithRelations = Awaited<ReturnType<typeof prisma.businessCustomerMembership.findMany<{ include: typeof customerInclude }>>>[number];
+type CustomerRow = ReturnType<typeof toCustomerSummary> & {
+  raw: CustomerMembershipWithRelations;
+  cardUrl: string;
+  customerName: string;
+};

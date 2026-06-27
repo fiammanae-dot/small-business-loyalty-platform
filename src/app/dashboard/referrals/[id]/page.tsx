@@ -39,7 +39,7 @@ export default async function ReferralDetailPage({
   const referred = referral.referredMembership?.globalCustomer ?? referral.referredGlobalCustomer;
 
   return (
-    <DashboardShell user={user} eyebrow="Business Owner" title="Referral details">
+    <DashboardShell user={user} eyebrow="Business Owner" title="Referral details" hideWelcomeMessage>
       <div>
         <Link href="/dashboard/referrals" className="inline-flex items-center gap-2 rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]">
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -147,7 +147,7 @@ export default async function ReferralDetailPage({
               <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                 <div>
                   <p className="font-semibold text-[#111827]">{friendlyStatus(event.eventType)}</p>
-                  <pre className="mt-2 max-h-40 overflow-auto rounded-md bg-[#FAFAFA] p-3 text-xs text-[#374151]">{JSON.stringify(event.metadata, null, 2)}</pre>
+                  <p className="mt-2 text-sm text-[#6B7280]">Referral milestone recorded. No technical details are shown.</p>
                 </div>
                 <p className="shrink-0 text-sm text-[#6B7280]">{formatDateTime(event.createdAt)}</p>
               </div>

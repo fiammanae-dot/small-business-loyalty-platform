@@ -1,9 +1,25 @@
-import Link from "next/link";
-import type { ReactNode } from "react";
-import { Gift, Search, Trophy, Users } from "lucide-react";
+import { BarChart3, Gift, Plus, Trophy, Users } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
+import {
+  ActionMenu,
+  ActionMenuItem,
+  ButtonLink,
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableHeadCell,
+  DataTableHeader,
+  EmptyState,
+  FilterBar,
+  MetricCard,
+  PageActions,
+  PageHeader,
+  ProgressBar,
+  SearchBar,
+  SectionCard,
+  StatusBadge,
+} from "@/components/ui";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
-import { formatDate } from "@/lib/format";
 import { progressValue } from "@/lib/programs";
 import { businessTypeLabels } from "@/lib/roles";
 import { prisma } from "@/lib/prisma";
@@ -11,6 +27,7 @@ import { prisma } from "@/lib/prisma";
 type ProgramSearchParams = {
   q?: string;
   status?: string;
+  reward?: string;
   sort?: string;
   direction?: string;
 };
@@ -24,201 +41,294 @@ export default async function ProgramsPage({
   const params = await searchParams;
   const query = (params.q ?? "").trim().toLowerCase();
   const status = params.status ?? "";
+  const reward = params.reward ?? "";
   const sort = params.sort ?? "created";
   const direction = params.direction === "asc" ? "asc" : "desc";
+
   const allPrograms = await prisma.loyaltyProgram.findMany({
     where: { businessId: user.businessId },
     include: {
-      memberships: { select: { earnedStamps: true, bonusStamps: true } },
+      memberships: {
+        include: {
+          stampTransactions: { select: { quantity: true } },
+          rewardRedemptions: { select: { id: true } },
+        },
+      },
+      rewardRedemptions: { select: { id: true } },
       _count: { select: { memberships: true } },
     },
     orderBy: { createdAt: "desc" },
   });
-  const programs = allPrograms
-    .filter((program) => {
+
+  const programRows = allPrograms.map((program) => {
+    const requiredStamps = Math.max(program.requiredStamps, 1);
+    const memberCount = program._count.memberships;
+    const rewardReadyCount = program.memberships.filter(
+      (membership) => membership.status !== "COMPLETED" && progressValue(membership.earnedStamps, membership.bonusStamps) >= requiredStamps,
+    ).length;
+    const progressTotal = program.memberships.reduce(
+      (sum, membership) => sum + Math.min(requiredStamps, progressValue(membership.earnedStamps, membership.bonusStamps)),
+      0,
+    );
+    const completionRate = memberCount > 0 ? Math.round((progressTotal / (memberCount * requiredStamps)) * 100) : 0;
+    const stampsIssued = program.memberships.reduce(
+      (sum, membership) => sum + membership.stampTransactions.reduce((stampSum, stamp) => stampSum + stamp.quantity, 0),
+      0,
+    );
+    const rewardsRedeemed = program.rewardRedemptions.length;
+    const averageVisits = memberCount > 0 ? Math.round(stampsIssued / memberCount) : 0;
+
+    return {
+      program,
+      requiredStamps,
+      memberCount,
+      rewardReadyCount,
+      completionRate,
+      stampsIssued,
+      rewardsRedeemed,
+      averageVisits,
+    };
+  });
+
+  const programs = programRows
+    .filter((row) => {
+      const program = row.program;
       const matchesSearch =
         !query ||
         program.name.toLowerCase().includes(query) ||
         program.productOrServiceName.toLowerCase().includes(query) ||
         program.rewardName.toLowerCase().includes(query);
       const matchesStatus = !status || (status === "active" ? program.active : !program.active);
-      return matchesSearch && matchesStatus;
+      const matchesReward = !reward || (reward === "ready" ? row.rewardReadyCount > 0 : row.rewardReadyCount === 0);
+      return matchesSearch && matchesStatus && matchesReward;
     })
     .sort((a, b) => {
       const sortValue =
         sort === "name"
-          ? a.name.localeCompare(b.name)
+          ? a.program.name.localeCompare(b.program.name)
           : sort === "members"
-            ? a._count.memberships - b._count.memberships
-            : sort === "status"
-              ? Number(a.active) - Number(b.active)
-              : a.createdAt.getTime() - b.createdAt.getTime();
+            ? a.memberCount - b.memberCount
+            : sort === "completion"
+              ? a.completionRate - b.completionRate
+              : sort === "rewards"
+                ? a.rewardsRedeemed - b.rewardsRedeemed
+                : a.program.createdAt.getTime() - b.program.createdAt.getTime();
       return direction === "asc" ? sortValue : -sortValue;
     });
 
   const activeCount = allPrograms.filter((program) => program.active).length;
-  const inactiveCount = allPrograms.length - activeCount;
-  const rewardReadyCount = allPrograms.reduce(
-    (total, program) =>
-      total +
-      program.memberships.filter((membership) => membership.earnedStamps + membership.bonusStamps >= program.requiredStamps).length,
-    0,
-  );
+  const totalMembers = programRows.reduce((total, row) => total + row.memberCount, 0);
+  const rewardsRedeemed = programRows.reduce((total, row) => total + row.rewardsRedeemed, 0);
+  const rewardReadyCount = programRows.reduce((total, row) => total + row.rewardReadyCount, 0);
+  const averageCompletionRate = programRows.length > 0 ? Math.round(programRows.reduce((total, row) => total + row.completionRate, 0) / programRows.length) : 0;
+  const filtered = Boolean(query || status || reward || sort !== "created" || direction !== "desc");
 
   return (
-    <DashboardShell user={user} eyebrow="Business Owner" title="Loyalty programs">
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-[#111827]">Programs</h2>
-            <p className="text-sm text-[#6B7280]">Manage loyalty program setup and enrolled customers.</p>
-          </div>
-          <Link href="/dashboard/programs/new" className="rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
-            Create Program
-          </Link>
-        </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
-          <KpiCard icon={<Gift className="h-5 w-5" />} label="Active Programs" value={activeCount} />
-          <KpiCard icon={<Trophy className="h-5 w-5" />} label="Reward Ready" value={rewardReadyCount} />
-          <KpiCard icon={<Users className="h-5 w-5" />} label="Inactive Programs" value={inactiveCount} />
-        </div>
-        <form className="mt-4 grid gap-3 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3 lg:grid-cols-[1.5fr_1fr_1fr_1fr_auto_auto] lg:items-center">
-          <label className="relative">
-            <span className="sr-only">Search programs</span>
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" aria-hidden="true" />
-            <input
-              name="q"
-              defaultValue={params.q ?? ""}
-              placeholder="Search programs or rewards"
-              className="h-10 w-full rounded-md border border-[#E5E7EB] bg-white pl-9 pr-3 text-sm outline-none business-ring focus:ring-0 business-border "
-            />
-          </label>
-          <select name="status" defaultValue={status} className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm">
-            <option value="">All statuses</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-          <select name="sort" defaultValue={sort} className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm">
-            <option value="created">Created date</option>
-            <option value="name">Program name</option>
-            <option value="members">Members</option>
-            <option value="status">Status</option>
-          </select>
-          <select name="direction" defaultValue={direction} className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm">
-            <option value="desc">Descending</option>
-            <option value="asc">Ascending</option>
-          </select>
-          <button type="submit" className="h-10 rounded-md business-button px-4 text-sm font-semibold text-white">
-            Apply
-          </button>
-          <Link href="/dashboard/programs" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] bg-white px-4 text-sm font-semibold text-[#111827]">
-            Clear Filters
-          </Link>
-        </form>
-        <p className="mt-4 text-sm font-semibold text-[#6B7280]">Showing {programs.length} programs</p>
-        <div className="mt-6 grid gap-3 lg:hidden">
-          {programs.map((program) => (
-            <article key={program.id} className="rounded-md border border-[#E5E7EB] p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="font-semibold text-[#111827]">{program.name}</h3>
-                  <p className="mt-1 text-sm text-[#6B7280]">{businessTypeLabels[program.businessType]}</p>
-                </div>
-                <StatusBadge active={program.active} />
-              </div>
-              <div className="mt-4 grid gap-2 text-sm text-[#6B7280]">
-                <p>Progress setup: {progressValue(0, program.startingBonusStamps)} / {program.requiredStamps}</p>
-                <p>Reward: {program.rewardName}</p>
-                <p>Customers: {program._count.memberships}</p>
-                <p>Created: {formatDate(program.createdAt)}</p>
-              </div>
-              <div className="mt-4 flex flex-wrap gap-3">
-                <Link href={`/dashboard/programs/${program.uuid}`} className="font-semibold business-primary">View</Link>
-                <Link href={`/dashboard/programs/${program.uuid}/edit`} className="font-semibold business-primary">Edit</Link>
-                <Link href={`/dashboard/programs/${program.uuid}/customers`} className="font-semibold business-primary">Customers</Link>
-              </div>
-            </article>
-          ))}
-        </div>
+    <DashboardShell user={user} eyebrow="Business Owner" title="Loyalty Programs" hideWelcomeMessage>
+      <div className="grid gap-5">
+        <PageHeader
+          eyebrow="Programs"
+          title="Loyalty Programs"
+          description="Manage your loyalty programs, rewards and customer participation."
+          actions={
+            <PageActions>
+              <ButtonLink href="/dashboard/programs/new" variant="business" leftIcon={<Plus className="h-4 w-4" aria-hidden />}>
+                Create Program
+              </ButtonLink>
+              <ButtonLink href="/dashboard/exports/programs" variant="outline">
+                Export
+              </ButtonLink>
+              <ButtonLink href="/dashboard/activity?type=program" variant="outline">
+                View Analytics
+              </ButtonLink>
+            </PageActions>
+          }
+        />
 
-        <div className="mt-6 hidden lg:block">
-          <table className="w-full min-w-[900px] border-separate border-spacing-0 text-left text-sm">
-            <thead>
-              <tr className="text-[#6B7280]">
-                {["Name", "Business type", "Progress setup", "Reward", "Status", "Customers", "Created", "Actions"].map((heading) => (
-                  <th key={heading} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">{heading}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {programs.map((program) => (
-                <tr key={program.id}>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 font-semibold text-[#111827]">{program.name}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{businessTypeLabels[program.businessType]}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{progressValue(0, program.startingBonusStamps)} / {program.requiredStamps}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{program.rewardName}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4"><StatusBadge active={program.active} /></td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{program._count.memberships}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(program.createdAt)}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4">
-                    <div className="flex gap-3">
-                      <Link href={`/dashboard/programs/${program.uuid}`} className="font-semibold business-primary">View</Link>
-                      <Link href={`/dashboard/programs/${program.uuid}/edit`} className="font-semibold business-primary">Edit</Link>
-                      <Link href={`/dashboard/programs/${program.uuid}/customers`} className="font-semibold business-primary">Customers</Link>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {programs.length === 0 ? (
-            <div className="py-10 text-center">
-              <EmptyPrograms filtered={Boolean(query || status)} />
-            </div>
-          ) : null}
-        </div>
-        {programs.length === 0 ? (
-          <div className="py-10 text-center lg:hidden">
-            <EmptyPrograms filtered={Boolean(query || status)} />
-          </div>
-        ) : null}
-      </section>
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5" aria-label="Program KPI cards">
+          <MetricCard label="Active Programs" value={activeCount} icon={<Gift className="h-5 w-5" />} tone="business" href="/dashboard/programs?status=active" />
+          <MetricCard label="Total Members" value={totalMembers} icon={<Users className="h-5 w-5" />} href="/dashboard/customers" />
+          <MetricCard label="Rewards Redeemed" value={rewardsRedeemed} icon={<Trophy className="h-5 w-5" />} href="/dashboard/activity?type=reward" />
+          <MetricCard label="Reward Ready Customers" value={rewardReadyCount} icon={<Gift className="h-5 w-5" />} tone="warning" href="/dashboard/customers?reward=ready" />
+          <MetricCard label="Average Completion Rate" value={averageCompletionRate + "%"} icon={<BarChart3 className="h-5 w-5" />} />
+        </section>
+
+        <SectionCard title="Find programs" description="Search and filter programs by status, reward readiness, and performance.">
+          <form className="grid gap-4">
+            <SearchBar name="q" defaultValue={params.q ?? ""} label="Search" placeholder="Search program name..." />
+            <FilterBar
+              title="Program filters"
+              actions={
+                <>
+                  <button type="submit" className="inline-flex h-10 items-center justify-center rounded-md business-button px-4 text-sm font-semibold text-white">
+                    Apply
+                  </button>
+                  <ButtonLink href="/dashboard/programs" variant="outline">
+                    Clear Filters
+                  </ButtonLink>
+                </>
+              }
+            >
+              <FilterSelect name="status" label="Status" defaultValue={status} options={[{ value: "", label: "All statuses" }, { value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]} />
+              <FilterSelect name="reward" label="Reward Ready" defaultValue={reward} options={[{ value: "", label: "Any reward state" }, { value: "ready", label: "Has reward-ready customers" }, { value: "none", label: "No reward-ready customers" }]} />
+              <FilterSelect name="sort" label="Sort" defaultValue={sort} options={[{ value: "created", label: "Newest" }, { value: "members", label: "Most active" }, { value: "completion", label: "Completion" }, { value: "rewards", label: "Rewards redeemed" }, { value: "name", label: "Program name" }]} />
+              <FilterSelect name="direction" label="Direction" defaultValue={direction} options={[{ value: "desc", label: "Descending" }, { value: "asc", label: "Ascending" }]} />
+            </FilterBar>
+          </form>
+        </SectionCard>
+
+        <SectionCard
+          title="Program Performance"
+          description={programs.length + " program" + (programs.length === 1 ? "" : "s") + " shown. Cards summarize members, completion, rewards redeemed and average visits."}
+        >
+          {programs.length > 0 ? (
+            <>
+              <div className="grid gap-4 lg:hidden">
+                {programs.map((row) => <ProgramCard key={row.program.id} row={row} />)}
+              </div>
+
+              <div className="hidden lg:block">
+                <DataTable>
+                  <DataTableHeader>
+                    <tr>
+                      <DataTableHeadCell>Program</DataTableHeadCell>
+                      <DataTableHeadCell>Reward</DataTableHeadCell>
+                      <DataTableHeadCell>Members</DataTableHeadCell>
+                      <DataTableHeadCell>Completion</DataTableHeadCell>
+                      <DataTableHeadCell>Rewards</DataTableHeadCell>
+                      <DataTableHeadCell>Status</DataTableHeadCell>
+                      <DataTableHeadCell className="text-right">Actions</DataTableHeadCell>
+                    </tr>
+                  </DataTableHeader>
+                  <DataTableBody>
+                    {programs.map((row) => (
+                      <tr key={row.program.id}>
+                        <DataTableCell className="font-semibold text-[#0F172A]">
+                          <div>{row.program.name}</div>
+                          <div className="mt-1 text-xs font-normal text-[#64748B]">{businessTypeLabels[row.program.businessType]} - {row.program.productOrServiceName}</div>
+                        </DataTableCell>
+                        <DataTableCell>
+                          <div className="font-medium text-[#0F172A]">{row.program.rewardName}</div>
+                          <div className="mt-1 text-xs text-[#64748B]">{row.requiredStamps} visits required</div>
+                        </DataTableCell>
+                        <DataTableCell>{row.memberCount}</DataTableCell>
+                        <DataTableCell className="min-w-44">
+                          <ProgressBar value={row.completionRate} label={row.completionRate + "% average"} barClassName="business-button" />
+                        </DataTableCell>
+                        <DataTableCell>
+                          <div>{row.rewardsRedeemed} redeemed</div>
+                          <div className="mt-1 text-xs text-[#64748B]">{row.rewardReadyCount} ready</div>
+                        </DataTableCell>
+                        <DataTableCell><ProgramStatus active={row.program.active} rewardReadyCount={row.rewardReadyCount} /></DataTableCell>
+                        <DataTableCell className="text-right"><ProgramActions uuid={row.program.uuid} /></DataTableCell>
+                      </tr>
+                    ))}
+                  </DataTableBody>
+                </DataTable>
+              </div>
+            </>
+          ) : (
+            <EmptyState
+              title={filtered ? "No programs match these filters." : "Create your first loyalty program."}
+              description={filtered ? "Clear the filters to see all loyalty programs." : "Set up a simple stamp program so customers can start earning progress."}
+              action={<ButtonLink href={filtered ? "/dashboard/programs" : "/dashboard/programs/new"} variant="business">{filtered ? "Clear Filters" : "Create Program"}</ButtonLink>}
+            />
+          )}
+        </SectionCard>
+      </div>
     </DashboardShell>
   );
 }
 
-function KpiCard({ icon, label, value }: { icon: ReactNode; label: string; value: number }) {
+type ProgramRow = {
+  program: {
+    id: number;
+    uuid: string;
+    name: string;
+    businessType: keyof typeof businessTypeLabels;
+    productOrServiceName: string;
+    rewardName: string;
+    active: boolean;
+    createdAt: Date;
+  };
+  requiredStamps: number;
+  memberCount: number;
+  rewardReadyCount: number;
+  completionRate: number;
+  stampsIssued: number;
+  rewardsRedeemed: number;
+  averageVisits: number;
+};
+
+function ProgramCard({ row }: { row: ProgramRow }) {
   return (
-    <div className="rounded-md border border-[#E5E7EB] bg-white p-4">
-      <div className="flex items-center gap-3">
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-orange-50 business-bg-soft business-primary">{icon}</span>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{label}</p>
-          <p className="text-2xl font-semibold text-[#111827]">{value}</p>
+    <article className="rounded-md border border-[#E2E8F0] bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="break-words text-base font-semibold text-[#0F172A]">{row.program.name}</h3>
+          <p className="mt-1 text-sm text-[#64748B]">{businessTypeLabels[row.program.businessType]} - {row.program.productOrServiceName}</p>
         </div>
+        <ProgramStatus active={row.program.active} rewardReadyCount={row.rewardReadyCount} />
       </div>
+      <div className="mt-4 grid gap-3 text-sm text-[#475569]">
+        <InfoLine label="Reward" value={row.program.rewardName} />
+        <InfoLine label="Members" value={row.memberCount.toString()} />
+        <InfoLine label="Reward ready" value={row.rewardReadyCount.toString()} />
+        <InfoLine label="Average visits" value={row.averageVisits.toString()} />
+      </div>
+      <div className="mt-4">
+        <ProgressBar value={row.completionRate} label={row.completionRate + "% completion"} barClassName="business-button" />
+      </div>
+      <div className="mt-4 flex justify-end">
+        <ProgramActions uuid={row.program.uuid} />
+      </div>
+    </article>
+  );
+}
+
+function ProgramActions({ uuid }: { uuid: string }) {
+  return (
+    <ActionMenu label="Actions">
+      <ActionMenuItem><a href={"/dashboard/programs/" + uuid} className="block rounded px-2 py-1 hover:bg-[#F8FAFC]">View</a></ActionMenuItem>
+      <ActionMenuItem><a href={"/dashboard/programs/" + uuid + "/edit"} className="block rounded px-2 py-1 hover:bg-[#F8FAFC]">Edit</a></ActionMenuItem>
+      <ActionMenuItem><a href={"/dashboard/programs/" + uuid + "/customers"} className="block rounded px-2 py-1 hover:bg-[#F8FAFC]">View Customers</a></ActionMenuItem>
+      <ActionMenuItem><a href="/dashboard/scanner" className="block rounded px-2 py-1 hover:bg-[#F8FAFC]">Open Scanner</a></ActionMenuItem>
+    </ActionMenu>
+  );
+}
+
+function ProgramStatus({ active, rewardReadyCount }: { active: boolean; rewardReadyCount: number }) {
+  if (!active) return <StatusBadge tone="neutral">Inactive</StatusBadge>;
+  if (rewardReadyCount > 0) return <StatusBadge tone="warning">Reward Ready</StatusBadge>;
+  return <StatusBadge tone="success">Active</StatusBadge>;
+}
+
+function FilterSelect({
+  label,
+  name,
+  defaultValue,
+  options,
+}: {
+  label: string;
+  name: string;
+  defaultValue: string;
+  options: Array<{ value: string; label: string }>;
+}) {
+  return (
+    <label className="grid gap-1 text-sm font-medium text-[#1E293B]">
+      <span>{label}</span>
+      <select name={name} defaultValue={defaultValue} className="h-10 rounded-md border border-[#CBD5E1] bg-white px-3 text-sm text-[#0F172A] outline-none business-ring focus:ring-0">
+        {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+      </select>
+    </label>
+  );
+}
+
+function InfoLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span>{label}</span>
+      <span className="font-semibold text-[#0F172A]">{value}</span>
     </div>
-  );
-}
-
-function StatusBadge({ active }: { active: boolean }) {
-  return (
-    <span className={`inline-flex rounded-md px-2 py-1 text-xs font-semibold ${active ? "bg-emerald-50 text-emerald-700" : "bg-zinc-100 text-zinc-700"}`}>
-      {active ? "Active" : "Inactive"}
-    </span>
-  );
-}
-
-function EmptyPrograms({ filtered }: { filtered: boolean }) {
-  return (
-    <>
-      <p className="text-sm font-semibold text-[#111827]">{filtered ? "No programs match these filters." : "Create your first loyalty program."}</p>
-      <p className="mt-2 text-sm text-[#6B7280]">
-        {filtered ? "Clear the filters to see all loyalty programs." : "Set up a simple stamp program so customers can start earning progress."}
-      </p>
-      <Link href={filtered ? "/dashboard/programs" : "/dashboard/programs/new"} className="mt-4 inline-flex rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
-        {filtered ? "Clear Filters" : "Create Program"}
-      </Link>
-    </>
   );
 }

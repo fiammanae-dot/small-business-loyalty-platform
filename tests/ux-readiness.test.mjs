@@ -87,10 +87,20 @@ test("customer and program lists include mobile card views and helpful empty sta
   const customers = read("src/app/dashboard/customers/page.tsx");
   const programs = read("src/app/dashboard/programs/page.tsx");
 
-  assert.match(customers, /Search name, phone, card number, referral code, program/);
-  assert.match(customers, /Create your first customer/);
+  assert.match(customers, /Search by name, phone number, referral code or card number/);
+  assert.match(customers, /No customers found/);
   assert.match(customers, /lg:hidden/);
+  assert.match(customers, /PageHeader/);
+  assert.match(customers, /MetricCard/);
+  assert.match(customers, /SavedViews/);
+  assert.match(customers, /ActionMenu/);
+  assert.match(customers, /ProgressBar/);
+  assert.match(customers, /Reward Ready/);
+  assert.doesNotMatch(customers, /View<\/Link>\s*<Link[\s\S]*Edit<\/Link>/);
   assert.match(programs, /Create your first loyalty program/);
+  assert.match(programs, /Program Performance/);
+  assert.match(programs, /ActionMenu/);
+  assert.match(programs, /ProgressBar/);
   assert.match(programs, /lg:hidden/);
 });
 

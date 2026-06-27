@@ -87,13 +87,13 @@ test("business owner customer search is ready for customer volume and direct nav
   const customers = read("src/app/dashboard/customers/page.tsx");
 
   for (const expected of [
-    "Search name, phone, card number, referral code, program",
+    "Search by name, phone number, referral code or card number...",
     "globalCustomer: { email",
     "programMemberships: {",
     "loyaltyProgram: { name",
     "createdBranch",
     "referralCode",
-    "href={`/dashboard/customers/${membership.uuid}`}",
+    "href={`/dashboard/customers/${row.raw.uuid}`}",
   ]) {
     assert.ok(customers.includes(expected), `Customers page search missing: ${expected}`);
   }

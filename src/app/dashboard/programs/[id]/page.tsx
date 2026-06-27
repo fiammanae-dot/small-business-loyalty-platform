@@ -1,7 +1,21 @@
-import Link from "next/link";
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
+import {
+  ButtonLink,
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableHeadCell,
+  DataTableHeader,
+  EmptyState,
+  MetricCard,
+  PageActions,
+  PageHeader,
+  ProgressBar,
+  SectionCard,
+  StatusBadge,
+} from "@/components/ui";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { formatDate } from "@/lib/format";
 import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
@@ -22,7 +36,12 @@ export default async function ProgramDetailPage({
   let program = await prisma.loyaltyProgram.findFirst({
     where: { uuid: id, businessId: user.businessId },
     include: {
-      memberships: { include: { businessCustomerMembership: { include: { globalCustomer: true } } } },
+      memberships: {
+        include: {
+          businessCustomerMembership: { include: { globalCustomer: true } },
+          stampTransactions: { select: { quantity: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 1 },
+        },
+      },
       rewardRedemptions: true,
     },
   });
@@ -30,12 +49,18 @@ export default async function ProgramDetailPage({
     program = await prisma.loyaltyProgram.findFirst({
       where: { id: Number(id), businessId: user.businessId },
       include: {
-        memberships: { include: { businessCustomerMembership: { include: { globalCustomer: true } } } },
+        memberships: {
+          include: {
+            businessCustomerMembership: { include: { globalCustomer: true } },
+            stampTransactions: { select: { quantity: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 1 },
+          },
+        },
         rewardRedemptions: true,
       },
     });
   }
   if (!program) return <NotFound user={user} />;
+
   const nextActive = !program.active;
   const safeRequiredStamps = Math.max(program.requiredStamps, 1);
   const enrolledCustomers = program.memberships.length;
@@ -47,152 +72,173 @@ export default async function ProgramDetailPage({
   ).length;
   const redeemedRewards = program.rewardRedemptions.length;
   const progressTotal = program.memberships.reduce(
-    (sum, membership) => sum + progressValue(membership.earnedStamps, membership.bonusStamps),
+    (sum, membership) => sum + Math.min(safeRequiredStamps, progressValue(membership.earnedStamps, membership.bonusStamps)),
     0,
   );
-  const averageCompletionRate =
-    enrolledCustomers > 0 ? Math.min(100, Math.round((progressTotal / (enrolledCustomers * safeRequiredStamps)) * 100)) : 0;
+  const averageCompletionRate = enrolledCustomers > 0 ? Math.min(100, Math.round((progressTotal / (enrolledCustomers * safeRequiredStamps)) * 100)) : 0;
   const bonusStampsIssued = program.memberships.reduce((sum, membership) => sum + membership.bonusStamps, 0);
   const earnedStamps = program.memberships.reduce((sum, membership) => sum + membership.earnedStamps, 0);
 
   return (
-    <DashboardShell user={user} eyebrow="Business Owner" title={program.name}>
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
-        {qs.success ? <p className="mb-5 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{qs.success}</p> : null}
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div>
-            <p className="text-sm font-semibold business-text">{businessTypeLabels[program.businessType]}</p>
-            <h2 className="mt-2 text-2xl font-semibold text-[#111827]">{program.name}</h2>
-            <p className="mt-2 text-sm text-[#6B7280]">{program.description ?? "No description."}</p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Link href="/dashboard/programs" className="rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]">Back</Link>
-            <Link href={`/dashboard/programs/${program.uuid}/edit`} className="rounded-md business-button px-4 py-2 text-sm font-semibold text-white">Edit Program</Link>
-            <form action={toggleProgramAction}>
-              <CsrfInput scope="dashboard:programs" />
-              <input type="hidden" name="programUuid" value={program.uuid} />
-              <input type="hidden" name="active" value={nextActive.toString()} />
-              {nextActive ? (
-                <button type="submit" className="rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]">
-                  Enable Program
-                </button>
-              ) : (
-                <ConfirmSubmitButton
-                  message="Disable this loyalty program? Customers will no longer earn stamps for it."
-                  className="rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]"
-                >
-                  Disable Program
-                </ConfirmSubmitButton>
-              )}
-            </form>
-          </div>
-        </div>
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          <Info label="Product/Service" value={program.productOrServiceName} />
-          <Info label="Required stamps" value={program.requiredStamps.toString()} />
-          <Info label="Starting bonus" value={program.startingBonusStamps.toString()} />
-          <Info label="Referral reward" value={`${program.referralRewardBonusStamps} bonus stamp${program.referralRewardBonusStamps === 1 ? "" : "s"}`} />
-          <Info label="Reward" value={program.rewardName} />
-          <Info label="Status" value={program.active ? "active" : "inactive"} />
-          <Info label="Created" value={formatDate(program.createdAt)} />
-          <Info label="Start date" value={program.startDate ? formatDate(program.startDate) : "-"} />
-          <Info label="End date" value={program.endDate ? formatDate(program.endDate) : "-"} />
-          <Info label="Enrolled customers" value={program.memberships.length.toString()} />
-          <Info label="Reward description" value={program.rewardDescription} wide />
-        </div>
-      </section>
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
-        <h2 className="text-lg font-semibold text-[#111827]">Program Status</h2>
-        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Metric label="Enrolled Customers" value={enrolledCustomers.toString()} />
-          <Metric label="Active Customers" value={activeCustomers.toString()} />
-          <Metric label="Reward Ready" value={rewardReadyCustomers.toString()} />
-          <Metric label="Redeemed Rewards" value={redeemedRewards.toString()} />
-          <CompletionMetric value={averageCompletionRate} />
-          <Metric label="Bonus Stamps Issued" value={bonusStampsIssued.toString()} />
-          <Metric label="Earned Stamps" value={earnedStamps.toString()} />
-          <Metric label="Reward Name" value={program.rewardName} />
-          <Metric label="Program Status" value={program.active ? "Active" : "Inactive"} />
-        </div>
-      </section>
+    <DashboardShell user={user} eyebrow="Business Owner" title={program.name} hideWelcomeMessage>
+      <div className="grid gap-5">
+        {qs.success ? <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{qs.success}</p> : null}
+        <PageHeader
+          eyebrow={businessTypeLabels[program.businessType]}
+          title={program.name}
+          description={program.description ?? "Review program configuration, customer participation and reward performance."}
+          actions={
+            <PageActions>
+              <ButtonLink href="/dashboard/programs" variant="outline">Back to Programs</ButtonLink>
+              <ButtonLink href={"/dashboard/programs/" + program.uuid + "/edit"} variant="business">Edit Program</ButtonLink>
+              <form action={toggleProgramAction}>
+                <CsrfInput scope="dashboard:programs" />
+                <input type="hidden" name="programUuid" value={program.uuid} />
+                <input type="hidden" name="active" value={nextActive.toString()} />
+                {nextActive ? (
+                  <button type="submit" className="inline-flex h-10 items-center justify-center rounded-md border border-[#CBD5E1] bg-white px-4 text-sm font-semibold text-[#1E293B] transition hover:bg-[#F8FAFC]">
+                    Enable Program
+                  </button>
+                ) : (
+                  <ConfirmSubmitButton
+                    message="Disable this loyalty program? Customers will no longer earn stamps for it."
+                    className="inline-flex h-10 items-center justify-center rounded-md border border-[#CBD5E1] bg-white px-4 text-sm font-semibold text-[#1E293B] transition hover:bg-[#F8FAFC]"
+                  >
+                    Disable Program
+                  </ConfirmSubmitButton>
+                )}
+              </form>
+            </PageActions>
+          }
+        />
 
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-[#111827]">Enrolled customers</h2>
-          <Link href={`/dashboard/programs/${program.uuid}/customers`} className="text-sm font-semibold business-text">Manage customers</Link>
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5" aria-label="Program metrics">
+          <MetricCard label="Members" value={enrolledCustomers} />
+          <MetricCard label="Active Members" value={activeCustomers} tone="success" />
+          <MetricCard label="Reward Ready" value={rewardReadyCustomers} tone="warning" href={"/dashboard/programs/" + program.uuid + "/customers"} />
+          <MetricCard label="Rewards Redeemed" value={redeemedRewards} />
+          <MetricCard label="Completion" value={averageCompletionRate + "%"} tone="business" />
+        </section>
+
+        <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+          <div className="grid gap-5">
+            <SectionCard title="Program Information" description="Core program setup and visibility.">
+              <div className="grid gap-3 md:grid-cols-2">
+                <Info label="Product / Service" value={program.productOrServiceName} />
+                <Info label="Status" value={program.active ? "Active" : "Inactive"} />
+                <Info label="Created" value={formatDate(program.createdAt)} />
+                <Info label="Program type" value={businessTypeLabels[program.businessType]} />
+              </div>
+            </SectionCard>
+
+            <SectionCard title="Reward" description="Reward offer and redemption progress.">
+              <div className="grid gap-3 md:grid-cols-2">
+                <Info label="Reward name" value={program.rewardName} />
+                <Info label="Required visits" value={program.requiredStamps.toString()} />
+                <Info label="Reward description" value={program.rewardDescription} wide />
+              </div>
+            </SectionCard>
+
+            <SectionCard title="Qualification" description="Visits, bonuses and date rules used by this program.">
+              <div className="grid gap-3 md:grid-cols-2">
+                <Info label="Starting bonus" value={program.startingBonusStamps.toString()} />
+                <Info label="Referral reward" value={program.referralRewardBonusStamps + " bonus stamp" + (program.referralRewardBonusStamps === 1 ? "" : "s")} />
+                <Info label="Start date" value={program.startDate ? formatDate(program.startDate) : "-"} />
+                <Info label="End date" value={program.endDate ? formatDate(program.endDate) : "-"} />
+              </div>
+            </SectionCard>
+          </div>
+
+          <div className="grid gap-5">
+            <SectionCard title="Program Performance" description="Existing activity summarized from program memberships and redemptions.">
+              <div className="grid gap-4">
+                <ProgressBar value={averageCompletionRate} label={averageCompletionRate + "% average completion"} barClassName="business-button" />
+                <Info label="Earned stamps" value={earnedStamps.toString()} />
+                <Info label="Bonus stamps issued" value={bonusStampsIssued.toString()} />
+                <Info label="Redeemed rewards" value={redeemedRewards.toString()} />
+              </div>
+            </SectionCard>
+
+            <SectionCard title="Danger Zone" description="Disable this program when customers should no longer earn stamps for it.">
+              <form action={toggleProgramAction}>
+                <CsrfInput scope="dashboard:programs" />
+                <input type="hidden" name="programUuid" value={program.uuid} />
+                <input type="hidden" name="active" value={nextActive.toString()} />
+                {nextActive ? (
+                  <button type="submit" className="inline-flex h-10 items-center justify-center rounded-md border border-[#CBD5E1] bg-white px-4 text-sm font-semibold text-[#1E293B] transition hover:bg-[#F8FAFC]">
+                    Enable Program
+                  </button>
+                ) : (
+                  <ConfirmSubmitButton
+                    message="Disable this loyalty program? Customers will no longer earn stamps for it."
+                    className="inline-flex h-10 items-center justify-center rounded-md border border-red-200 bg-red-50 px-4 text-sm font-semibold text-red-700 transition hover:bg-red-100"
+                  >
+                    Disable Program
+                  </ConfirmSubmitButton>
+                )}
+              </form>
+            </SectionCard>
+          </div>
         </div>
-        <div className="mt-6 overflow-x-auto">
-          <table className="w-full min-w-[820px] border-separate border-spacing-0 text-left text-sm">
-            <thead>
-              <tr className="text-[#6B7280]">
-                {["Customer", "Progress", "Bonus", "Earned", "Status", "Enrolled"].map((heading) => (
-                  <th key={heading} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">{heading}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {program.memberships.map((membership) => (
-                <tr key={membership.id}>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 font-semibold text-[#111827]">
-                    {membership.businessCustomerMembership.globalCustomer.firstName} {membership.businessCustomerMembership.globalCustomer.lastName ?? ""}
-                  </td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{progressValue(membership.earnedStamps, membership.bonusStamps)} / {program.requiredStamps}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{membership.bonusStamps}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{membership.earnedStamps}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">
-                    {programCustomerStatusLabel({
-                      status: membership.status,
-                      earnedStamps: membership.earnedStamps,
-                      bonusStamps: membership.bonusStamps,
-                      requiredStamps: safeRequiredStamps,
-                    })}
-                  </td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(membership.enrolledAt)}</td>
+
+        <SectionCard title="Members" description="Recent customer participation for this program." actions={<ButtonLink href={"/dashboard/programs/" + program.uuid + "/customers"} variant="outline">View Customers</ButtonLink>}>
+          {program.memberships.length > 0 ? (
+            <DataTable>
+              <DataTableHeader>
+                <tr>
+                  <DataTableHeadCell>Customer</DataTableHeadCell>
+                  <DataTableHeadCell>Progress</DataTableHeadCell>
+                  <DataTableHeadCell>Status</DataTableHeadCell>
+                  <DataTableHeadCell>Last Visit</DataTableHeadCell>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          {program.memberships.length === 0 ? <p className="py-8 text-center text-sm text-[#6B7280]">No enrolled customers yet.</p> : null}
-        </div>
-      </section>
+              </DataTableHeader>
+              <DataTableBody>
+                {program.memberships.slice(0, 8).map((membership) => {
+                  const progress = progressValue(membership.earnedStamps, membership.bonusStamps);
+                  const rewardReady = progress >= safeRequiredStamps && membership.status !== "COMPLETED";
+                  return (
+                    <tr key={membership.id}>
+                      <DataTableCell className="font-semibold text-[#0F172A]">
+                        {membership.businessCustomerMembership.globalCustomer.firstName} {membership.businessCustomerMembership.globalCustomer.lastName ?? ""}
+                      </DataTableCell>
+                      <DataTableCell className="min-w-48">
+                        <ProgressBar value={progress} max={safeRequiredStamps} label={progress + " / " + safeRequiredStamps} barClassName="business-button" />
+                      </DataTableCell>
+                      <DataTableCell>
+                        <StatusBadge tone={rewardReady ? "warning" : membership.status === "ACTIVE" ? "success" : "neutral"}>
+                          {programCustomerStatusLabel({ status: membership.status, earnedStamps: membership.earnedStamps, bonusStamps: membership.bonusStamps, requiredStamps: safeRequiredStamps })}
+                        </StatusBadge>
+                      </DataTableCell>
+                      <DataTableCell>{membership.stampTransactions[0] ? formatDate(membership.stampTransactions[0].createdAt) : "-"}</DataTableCell>
+                    </tr>
+                  );
+                })}
+              </DataTableBody>
+            </DataTable>
+          ) : (
+            <EmptyState title="No enrolled customers yet" description="Customers will appear here after they join this loyalty program." />
+          )}
+        </SectionCard>
+      </div>
     </DashboardShell>
   );
 }
 
 function NotFound({ user }: { user: Parameters<typeof DashboardShell>[0]["user"] }) {
   return (
-    <DashboardShell user={user} eyebrow="Business Owner" title="Program not found">
-      <p className="rounded-md border border-[#E5E7EB] bg-white p-5 text-sm text-[#6B7280]">Program not found.</p>
+    <DashboardShell user={user} eyebrow="Business Owner" title="Program not found" hideWelcomeMessage>
+      <SectionCard>
+        <EmptyState title="Program not found" description="This program may have been removed or it does not belong to your business." />
+      </SectionCard>
     </DashboardShell>
   );
 }
 
 function Info({ label, value, wide = false }: { label: string; value: string; wide?: boolean }) {
   return (
-    <div className={`rounded-md border border-[#E5E7EB] p-4 ${wide ? "md:col-span-3" : ""}`}>
-      <p className="text-sm text-[#6B7280]">{label}</p>
-      <p className="mt-2 text-sm font-semibold text-[#111827]">{value}</p>
-    </div>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md border border-[#E5E7EB] bg-white p-4">
-      <p className="text-sm text-[#6B7280]">{label}</p>
-      <p className="mt-2 break-words text-lg font-semibold text-[#111827]">{value}</p>
-    </div>
-  );
-}
-
-function CompletionMetric({ value }: { value: number }) {
-  return (
-    <div className="rounded-md border border-[#E5E7EB] bg-white p-4">
-      <p className="text-sm text-[#6B7280]">Average Completion Rate</p>
-      <p className="mt-2 text-lg font-semibold text-[#111827]">{value}%</p>
-      <div className="mt-3 h-2 rounded-full business-secondary-bg-soft">
-        <div className="h-2 rounded-full business-button" style={{ width: `${value}%` }} />
-      </div>
+    <div className={"rounded-md border border-[#E2E8F0] bg-[#F8FAFC] p-3 " + (wide ? "md:col-span-2" : "")}>
+      <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">{label}</p>
+      <p className="mt-2 break-words text-sm font-semibold text-[#0F172A]">{value}</p>
     </div>
   );
 }

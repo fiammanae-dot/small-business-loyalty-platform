@@ -6,21 +6,29 @@ function read(path) {
   return readFileSync(path, "utf8");
 }
 
-test("program management has filters, KPIs, result counts, and mobile cards", () => {
+test("program management center uses design-system KPIs, filters, cards, progress, and action menus", () => {
   const programs = read("src/app/dashboard/programs/page.tsx");
 
   for (const expected of [
+    "PageHeader",
+    "MetricCard",
     "Active Programs",
-    "Reward Ready",
-    "Inactive Programs",
-    "Search programs or rewards",
-    "All statuses",
-    "Clear Filters",
-    "Showing {programs.length} programs",
+    "Total Members",
+    "Rewards Redeemed",
+    "Reward Ready Customers",
+    "Average Completion Rate",
+    "Search program name...",
+    "Program filters",
+    "Most active",
+    "Program Performance",
+    "ProgressBar",
+    "ActionMenu",
     "lg:hidden",
   ]) {
-    assert.match(programs, new RegExp(expected.replace(/[{}]/g, "\\$&")));
+    assert.match(programs, new RegExp(expected.replace(/[{}]/g, "\$&")));
   }
+
+  assert.doesNotMatch(programs, new RegExp("View<\\/Link>\\s*<Link[\\s\\S]*Edit<\\/Link>"));
 });
 
 test("notifications have alert governance filters and standardized KPIs", () => {

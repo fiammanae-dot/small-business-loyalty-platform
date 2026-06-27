@@ -103,7 +103,7 @@ test("business owner referral center exposes referral reporting and detail visib
     "Pending referrals",
     "Qualified referrals",
     "Rewards granted",
-    "Top referrers",
+    "Top Referrers",
     "businessId: user.businessId",
     "referralCode",
   ]) {

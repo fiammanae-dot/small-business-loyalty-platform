@@ -3,6 +3,7 @@ import type { Prisma, ReferralRewardStatus, ReferralStatus } from "@prisma/clien
 import { Gift, Search, Share2, Sparkles, Trophy, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
+import { MetricCard, StatusBadge } from "@/components/ui";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -108,13 +109,13 @@ export default async function ReferralsPage({
   const statusCounts = buildStatusCounts(allReferrals);
 
   return (
-    <DashboardShell user={user} eyebrow="Business Owner" title="Referral Center">
+    <DashboardShell user={user} eyebrow="Business Owner" title="Referral Center" hideWelcomeMessage>
       <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-sm font-semibold business-primary">Referral performance</p>
-            <h2 className="mt-1 text-2xl font-semibold text-[#111827]">Customer referral tracking</h2>
-            <p className="mt-1 text-sm text-[#6B7280]">Monitor pending referrals, qualified referrals, reward grants, and top referrers.</p>
+            <p className="text-sm font-semibold business-primary">Growth</p>
+            <h2 className="mt-1 text-2xl font-semibold text-[#111827]">Referral Center</h2>
+            <p className="mt-1 text-sm text-[#6B7280]">Track referral growth, pending referrals and earned rewards.</p>
           </div>
           <Link href="/dashboard" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">
             Back to dashboard
@@ -133,7 +134,7 @@ export default async function ReferralsPage({
         <div className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-[#111827]">Referral list</h2>
+              <h2 className="text-lg font-semibold text-[#111827]">Referral List</h2>
               <p className="mt-1 text-sm text-[#6B7280]">Showing {referrals.length} referral{referrals.length === 1 ? "" : "s"}</p>
             </div>
             <form className="grid gap-2 sm:grid-cols-[minmax(220px,1fr)_150px_120px_auto]">
@@ -175,7 +176,7 @@ export default async function ReferralsPage({
 
         <aside className="grid gap-5">
           <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
-            <h2 className="text-lg font-semibold text-[#111827]">Top referrers</h2>
+            <h2 className="text-lg font-semibold text-[#111827]">Top Referrers</h2>
             <div className="mt-4 grid gap-3">
               {topReferrers.map((row) => {
                 const membership = referrerById.get(row.referrerMembershipId);
@@ -191,12 +192,12 @@ export default async function ReferralsPage({
           </section>
 
           <details className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
-            <summary className="cursor-pointer text-lg font-semibold text-[#111827]">How referrals qualify</summary>
+            <summary className="cursor-pointer text-lg font-semibold text-[#111827]">Growth Funnel</summary>
             <ol className="mt-4 grid gap-3 text-sm text-[#6B7280]">
-              <li className="rounded-md bg-[#FAFAFA] p-3"><strong className="text-[#111827]">1.</strong> Customer shares referral link.</li>
-              <li className="rounded-md bg-[#FAFAFA] p-3"><strong className="text-[#111827]">2.</strong> Staff enrolls the referred customer with that code.</li>
-              <li className="rounded-md bg-[#FAFAFA] p-3"><strong className="text-[#111827]">3.</strong> Referral stays pending until the first valid stamp.</li>
-              <li className="rounded-md bg-[#FAFAFA] p-3"><strong className="text-[#111827]">4.</strong> Reward is granted automatically after qualification.</li>
+              <li className="rounded-md bg-[#FAFAFA] p-3"><strong className="text-[#111827]">1.</strong> Invited: Customer shares referral link.</li>
+              <li className="rounded-md bg-[#FAFAFA] p-3"><strong className="text-[#111827]">2.</strong> Joined: Staff enrolls the referred customer with that code.</li>
+              <li className="rounded-md bg-[#FAFAFA] p-3"><strong className="text-[#111827]">3.</strong> First Visit: Referral stays pending until the first valid stamp.</li>
+              <li className="rounded-md bg-[#FAFAFA] p-3"><strong className="text-[#111827]">4.</strong> Qualified / Reward Granted: Reward is granted automatically after qualification.</li>
             </ol>
           </details>
         </aside>
