@@ -18,15 +18,18 @@ test("dashboard quick action labels keep single-line desktop affordance", () => 
   assert.doesNotMatch(page, /break-words text-lg font-semibold/, "Quick action labels should not force multi-line wrapping");
 });
 
-test("referral center right column uses responsive no-clipping layout", () => {
+test("referral center uses stacked full-width sections and help dialog", () => {
   const page = read("src/app/dashboard/referrals/page.tsx");
 
-  assert.match(page, /grid min-w-0 gap-5 xl:grid-cols-\[minmax\(680px,1fr\)_minmax\(340px,360px\)\]/);
-  assert.match(page, /<aside className="grid min-w-0 gap-5 xl:w-\[340px\] 2xl:w-\[360px\]">/);
+  assert.match(page, /How referrals work/);
+  assert.match(page, /role="dialog" aria-label="How referrals work"/);
+  assert.doesNotMatch(page, /<aside className=/, "Referral Center should not keep a narrow permanent sidebar");
+  assert.doesNotMatch(page, /<h2 className="text-lg font-semibold text-\[#111827\]">Growth Funnel<\/h2>/, "Growth Funnel should not occupy permanent dashboard space");
+  assert.match(page, /<h2 className="text-lg font-semibold text-\[#111827\]">Referral List<\/h2>/);
   assert.match(page, /<h2 className="text-lg font-semibold text-\[#111827\]">Top Referrers<\/h2>/);
-  assert.match(page, /<section className="min-w-0 rounded-md border border-\[#E5E7EB\] bg-white p-4 shadow-sm">\s*<h2 className="text-lg font-semibold text-\[#111827\]">Growth Funnel<\/h2>/);
-  assert.doesNotMatch(page, /<summary className="cursor-pointer text-lg font-semibold text-\[#111827\]">Growth Funnel<\/summary>/);
-  assert.match(page, /truncate font-semibold text-\[#111827\]/, "Top referrer names should truncate safely inside cards");
+  assert.match(page, /grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5/);
+  assert.match(page, /take: 10/);
+  assert.match(page, /No top referrers yet\./);
 });
 
 test("referral cards use compact responsive metadata grid", () => {
@@ -74,6 +77,7 @@ test("expanded alert details use responsive readable panels", () => {
   assert.doesNotMatch(page, /`r`n/);
   assert.doesNotMatch(page, /JSON\.stringify|debug payload/i);
 });
+
 
 
 
