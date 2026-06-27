@@ -35,54 +35,60 @@ test("business dashboard includes beta readiness polish without changing loyalty
   assert.doesNotMatch(dashboard, /Cooldown Monitoring/);
 });
 
-test("customer profile uses design-system Customer 360 command center", () => {
+test("customer profile uses compact Customer 360 command center", () => {
   const profile = read("src/app/dashboard/customers/[id]/page.tsx");
 
   for (const expected of [
     "Customer 360",
-    "CustomerSummaryCard",
-    "MetricCard",
-    "DetailPageLayout",
+    "CommandInfo",
     "PageActions",
     "ActionMenu",
-    "ReferralStatusBadge",
-    "TabLink",
     "ProfileSummaryCard",
     "LoyaltyOverviewPanel",
     "LatestActivityPreview",
     "TierDetailsPanel",
     "RewardsPanel",
+    "ReferralSummaryPanel",
+    "CustomerCardPanel",
+    "Loyalty Progress",
+    "Recent Activity",
+    "Rewards",
+    "Referrals",
+    "Card & QR",
+    "Tier Summary",
+    "Quick Actions",
     "Open Card",
     "Copy Card Link",
     "Share Card",
     "Enroll Program",
     "Issue Stamp",
     "Redeem Reward",
-    "Overview",
-    "Activity",
-    "Rewards",
-    "Referrals",
-    "Card & QR",
-    "Main active program",
-    "Available reward status",
-    "Referral Status",
+    "Active program",
+    "Reward status",
     "Open Referral Center",
+    "xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]",
   ]) {
-    assert.match(profile, new RegExp(expected));
+    assert.equal(profile.includes(expected), true, `${expected} should appear in rebuilt Customer 360`);
   }
 
   for (const removed of [
+    "CustomerSummaryCard",
+    "DetailPageLayout",
+    "MetricCard",
+    "ReferralStatusBadge",
+    "TabLink",
+    "Customer profile tabs",
+    "?tab=",
     "Communication history",
     "Manual delivery history",
-    "\\[\"messages\", \"Messages\"\\]",
-    "\\[\"redemptions\", \"Redemptions\"\\]",
+    "[\"messages\", \"Messages\"]",
+    "[\"redemptions\", \"Redemptions\"]",
     "Customer profile:",
     "JSON.stringify",
   ]) {
-    assert.doesNotMatch(profile, new RegExp(removed));
+    assert.equal(profile.includes(removed), false, `${removed} should not appear in rebuilt Customer 360`);
   }
 });
-
 test("customer and program lists include mobile card views and helpful empty states", () => {
   const customers = read("src/app/dashboard/customers/page.tsx");
   const programs = read("src/app/dashboard/programs/page.tsx");

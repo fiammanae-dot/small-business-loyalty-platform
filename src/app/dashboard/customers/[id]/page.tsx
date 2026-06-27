@@ -19,10 +19,7 @@ import { CardShareActions } from "@/components/CardShareActions";
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CopyButton } from "@/components/CopyButton";
 import { CsrfInput } from "@/components/CsrfInput";
-import { StatusBadge } from "@/components/StatusBadge";
-import { ActionMenu, ActionMenuItem, ButtonLink, MetricCard, PageActions, SectionCard } from "@/components/ui";
-import { CustomerSummaryCard, ReferralStatusBadge } from "@/components/domain";
-import { DetailPageLayout } from "@/components/layouts";
+import { ActionMenu, ActionMenuItem, ButtonLink, PageActions, SectionCard } from "@/components/ui";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { activityHref, staffProfileHref } from "@/lib/alert-investigation";
 import { alertTypeLabel } from "@/lib/alert-labels";
@@ -117,7 +114,6 @@ export default async function CustomerProfilePage({
     }),
   ]);
 
-  const totalEarnedStamps = membership.programMemberships.reduce((sum, programMembership) => sum + programMembership.earnedStamps, 0);
   const totalBonusStamps = membership.programMemberships.reduce((sum, programMembership) => sum + programMembership.bonusStamps, 0);
   const activePrograms = membership.programMemberships.filter((programMembership) => programMembership.status === "ACTIVE").length;
   const rewardsReady = membership.programMemberships.filter(
@@ -192,15 +188,6 @@ export default async function CustomerProfilePage({
       tone: "alert" as const,
     })),
   ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 30);
-  const timelineGroups = groupTimeline(timeline);
-  const activeTab = resolveCustomerTab(qs.tab);
-  const tabs = [
-    ["overview", "Overview"],
-    ["activity", "Activity"],
-    ["rewards", "Rewards"],
-    ["referrals", "Referrals"],
-    ["card", "Card & QR"],
-  ] as const;
   const primaryProgram = programCards[0]?.programMembership ?? null;
   const primaryProgress = primaryProgram ? progressValue(primaryProgram.earnedStamps, primaryProgram.bonusStamps) : 0;
   const primaryRequired = primaryProgram?.loyaltyProgram.requiredStamps ?? 0;
@@ -210,53 +197,24 @@ export default async function CustomerProfilePage({
       primaryProgress >= primaryProgram.loyaltyProgram.requiredStamps,
   );
   const referralStatus = membership.referralCode ? "ACTIVE" : "NOT_CONFIGURED";
-  const overviewAside = (
-    <>
-      <CustomerCardPanel
-        cardUrl={cardUrl}
-        businessName={membership.business.name}
-        customerName={customerName}
-        customerPhone={customer.normalizedPhone}
-        cardToken={membership.cardToken}
-        cardStatus={membership.cardStatus}
-        cardCreatedAt={membership.cardCreatedAt}
-        cardLastViewedAt={membership.cardLastViewedAt}
-        membershipUuid={membership.uuid}
-        nextCardStatus={nextCardStatus}
-        compact
-      />
-      <ProfileSummaryCard membership={membership} customer={customer} />
-      <ReferralSummaryPanel memberReference={membership.referralCode ?? getShortCardToken(membership.cardToken)} referralCode={membership.referralCode} compact />
-    </>
-  );
-
-  return (
+return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Customer 360">
       {qs.success ? <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{qs.success}</p> : null}
 
-      <SectionCard className="sticky top-0 z-30 -mx-4 rounded-none border-x-0 bg-white/95 shadow-sm backdrop-blur sm:-mx-6 lg:-mx-8">
+      <SectionCard className="bg-white shadow-sm">
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
-          <div className="grid min-w-0 gap-4 md:grid-cols-[minmax(0,320px)_1fr]">
-            <CustomerSummaryCard
-              name={customerName}
-              phone={formatUaePhoneDisplay(customer.normalizedPhone)}
-              tier={customerTier.badgeIcon + " " + customerTier.badgeLabel}
-              status={membership.status}
-              cardNumber={getShortCardToken(membership.cardToken)}
-            />
-            <div className="min-w-0 rounded-md border border-[#E5E7EB] bg-white p-4">
-              <div className="flex flex-wrap items-center gap-2 text-sm text-[#64748B]">
-                <span>Joined {formatDate(membership.joinedAt)}</span>
-                <span className="hidden text-[#CBD5E1] sm:inline">|</span>
-                <span>{membership.marketingConsent ? "Marketing consent enabled" : "No marketing consent"}</span>
-                <ReferralStatusBadge status={referralStatus} />
-              </div>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <Info label="Main active program" value={primaryProgram ? primaryProgram.loyaltyProgram.name : "No active program"} />
-                <Info label="Available reward status" value={primaryRewardReady ? "Reward Ready" : rewardsReady > 0 ? rewardsReady + " available" : "No rewards ready"} />
-                <Info label="Program progress" value={primaryProgram ? primaryProgress + " / " + primaryRequired : "-"} />
-                <Info label="Last activity" value={lastActivityDate ? formatDateTime(lastActivityDate) : "-"} />
-              </div>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="break-words text-2xl font-semibold text-[#111827]">{customerName}</h2>
+              <StatusPill status={membership.status} />
+              <span className="rounded-md business-bg-soft px-2 py-1 text-xs font-semibold business-text">{customerTier.badgeIcon} {customerTier.badgeLabel}</span>
+              {primaryRewardReady ? <span className="rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">Reward Ready</span> : null}
+            </div>
+            <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <CommandInfo label="Phone" value={formatUaePhoneDisplay(customer.normalizedPhone)} />
+              <CommandInfo label="Active program" value={primaryProgram ? primaryProgram.loyaltyProgram.name : "No active program"} />
+              <CommandInfo label="Progress" value={primaryProgram ? `${primaryProgress} / ${primaryRequired}` : "-"} />
+              <CommandInfo label="Reward status" value={primaryRewardReady ? "Ready to redeem" : rewardsReady > 0 ? `${rewardsReady} available` : "No rewards ready"} />
             </div>
           </div>
           <PageActions className="xl:justify-end">
@@ -309,32 +267,15 @@ export default async function CustomerProfilePage({
         </div>
       </SectionCard>
 
-      <section className="grid grid-cols-2 gap-3 xl:grid-cols-5">
-        <MetricCard icon={<Crown className="h-5 w-5" />} label="Current Tier" value={customerTier.badgeIcon + " " + customerTier.badgeLabel} tone="business" />
-        <MetricCard icon={<Users className="h-5 w-5" />} label="Active Programs" value={activePrograms.toString()} />
-        <MetricCard icon={<History className="h-5 w-5" />} label="Total Visits" value={stampTransactions.length.toString()} />
-        <MetricCard icon={<Gift className="h-5 w-5" />} label="Available Rewards" value={rewardsReady.toString()} tone={rewardsReady > 0 ? "success" : "neutral"} />
-        <MetricCard icon={<Sparkles className="h-5 w-5" />} label="Referral Status" value={membership.referralCode ? "Active" : "Not set"} helper={membership.referralCode ?? "No referral code"} />
-      </section>
-
-      <nav className="-mx-4 border-y border-[#E5E7EB] bg-white px-4 py-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8" aria-label="Customer profile tabs">
-        <div className="flex gap-2 overflow-x-auto text-sm">
-          {tabs.map(([tab, label]) => (
-            <TabLink key={tab} href={`/dashboard/customers/${membership.uuid}?tab=${tab}`} label={label} active={activeTab === tab} />
-          ))}
-        </div>
-      </nav>
-
-      {activeTab === "overview" ? (
-        <DetailPageLayout aside={overviewAside}>
+      <section className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
+        <div className="grid min-w-0 gap-5">
           <LoyaltyOverviewPanel programCards={programCards} />
-          <LatestActivityPreview items={timeline.slice(0, 5)} customerUuid={membership.uuid} />
-          <TierDetailsPanel customerTier={customerTier} rewardRedemptionsCount={rewardRedemptions.length} totalBonusStamps={totalBonusStamps} activePrograms={activePrograms} joinedAt={membership.joinedAt} />
-        </DetailPageLayout>
-      ) : null}
-
-      {activeTab === "card" ? (
-        <section className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+          <LatestActivityPreview items={timeline.slice(0, 6)} customerUuid={membership.uuid} />
+          <RewardsPanel programCards={programCards} rewardRedemptions={rewardRedemptions} />
+          <ReferralSummaryPanel memberReference={membership.referralCode ?? getShortCardToken(membership.cardToken)} referralCode={membership.referralCode} compact />
+        </div>
+        <aside className="grid min-w-0 content-start gap-5">
+          <ProfileSummaryCard membership={membership} customer={customer} />
           <CustomerCardPanel
             cardUrl={cardUrl}
             businessName={membership.business.name}
@@ -346,110 +287,28 @@ export default async function CustomerProfilePage({
             cardLastViewedAt={membership.cardLastViewedAt}
             membershipUuid={membership.uuid}
             nextCardStatus={nextCardStatus}
+            compact
           />
-          <LoyaltyProgramsPanel programCards={programCards} />
-        </section>
-      ) : null}
-
-      {activeTab === "activity" ? (
-      <>
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold business-text">Activity timeline</p>
-            <h2 className="mt-1 text-xl font-semibold text-[#111827]">Customer history</h2>
-          </div>
-          <History className="h-5 w-5 business-text" aria-hidden="true" />
-        </div>
-        <div className="mt-5 grid gap-6">
-          {timelineGroups.map((group) => (
-            <div key={group.label}>
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{group.label}</p>
-              <div className="mt-3 grid gap-3">
-                {group.items.map((item) => (
-                  <TimelineRow key={item.id} item={item} />
-                ))}
-              </div>
+          <TierDetailsPanel customerTier={customerTier} rewardRedemptionsCount={rewardRedemptions.length} totalBonusStamps={totalBonusStamps} activePrograms={activePrograms} joinedAt={membership.joinedAt} compact />
+          <SectionCard title="Quick Actions" description="Common customer tasks in one place.">
+            <div className="grid gap-2">
+              <ButtonLink href="/dashboard/scanner" variant="business" className="w-full">Open Scanner</ButtonLink>
+              <ButtonLink href={`/dashboard/customers/${membership.uuid}/edit`} variant="outline" className="w-full">Edit Customer</ButtonLink>
+              <ButtonLink href="/dashboard/referrals" variant="outline" className="w-full">Open Referral Center</ButtonLink>
             </div>
-          ))}
-          {timelineGroups.length === 0 ? <p className="text-sm text-[#6B7280]">No customer activity yet.</p> : null}
-        </div>
+          </SectionCard>
+        </aside>
       </section>
-
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
-        <h2 className="text-lg font-semibold text-[#111827]">Stamp issuance history</h2>
-        <div className="mt-5 overflow-x-auto">
-          <table className="w-full min-w-[920px] border-separate border-spacing-0 text-left text-sm">
-            <thead>
-              <tr className="text-[#6B7280]">
-                {["Activity", "Quantity", "Staff", "Branch", "Reason", "Date"].map((heading) => (
-                  <th key={heading} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">{heading}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {stampTransactions.map((transaction) => {
-                const isSuspicious = transaction.quantity >= 3;
-                const isHighlighted = highlightedTransactionId === transaction.id;
-                return (
-                  <tr key={transaction.id} className={isHighlighted ? "business-bg-soft" : isSuspicious ? "bg-orange-50" : ""}>
-                    <AuditCell highlighted={isHighlighted || isSuspicious}>
-                      <Link href={activityHref(transaction.id, highlightedAlertId ?? undefined) ?? "#"} className="font-semibold business-text">
-                        #{transaction.id}
-                      </Link>
-                      {isSuspicious ? <p className="mt-1 text-xs font-semibold text-orange-700">Suspicious quantity</p> : null}
-                    </AuditCell>
-                    <AuditCell highlighted={isHighlighted || isSuspicious}>{transaction.quantity}</AuditCell>
-                    <AuditCell highlighted={isHighlighted || isSuspicious}>
-                      <Link href={staffProfileHref(transaction.issuedByUserId, highlightedAlertId ?? undefined, transaction.id) ?? "#"} className="font-semibold business-text">
-                        {transaction.issuedByUser.name}
-                      </Link>
-                    </AuditCell>
-                    <AuditCell highlighted={isHighlighted || isSuspicious}>{transaction.branch?.name ?? "-"}</AuditCell>
-                    <AuditCell highlighted={isHighlighted || isSuspicious}>{transaction.reason ?? "-"}</AuditCell>
-                    <AuditCell highlighted={isHighlighted || isSuspicious}>{formatDateTime(transaction.createdAt)}</AuditCell>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          {stampTransactions.length === 0 ? <p className="py-8 text-center text-sm text-[#6B7280]">No stamp issuance history yet.</p> : null}
-        </div>
-      </section>
-      </>
-      ) : null}
-
-      {activeTab === "rewards" ? (
-        <RewardsPanel programCards={programCards} rewardRedemptions={rewardRedemptions} />
-      ) : null}
-
-      {activeTab === "referrals" ? (
-        <ReferralSummaryPanel memberReference={membership.referralCode ?? getShortCardToken(membership.cardToken)} referralCode={membership.referralCode} />
-      ) : null}
     </DashboardShell>
   );
 }
 
-function KpiCard({ icon: Icon, label, value, tone = "default" }: { icon: LucideIcon; label: string; value: string; tone?: "default" | "alert" }) {
+function CommandInfo({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className={`rounded-md border p-4 shadow-sm ${tone === "alert" ? "business-border-soft business-bg-soft" : "border-[#E5E7EB] bg-white"}`}>
-      <Icon className={`h-5 w-5 ${tone === "alert" ? "business-text-strong" : "business-text"}`} aria-hidden="true" />
-      <p className="mt-3 text-sm text-[#6B7280]">{label}</p>
-      <p className="mt-1 text-xl font-semibold text-[#111827]">{value}</p>
+    <div className="min-w-0 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] px-3 py-2">
+      <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">{label}</p>
+      <div className="mt-1 break-words text-sm font-semibold text-[#111827]">{value}</div>
     </div>
-  );
-}
-
-function TabLink({ href, label, active }: { href: string; label: string; active: boolean }) {
-  return (
-    <Link
-      href={href}
-      className={`shrink-0 rounded-md border px-3 py-2 font-semibold transition ${
-        active ? "business-border business-bg-soft business-text" : "border-[#E5E7EB] text-[#111827] business-hover"
-      }`}
-    >
-      {label}
-    </Link>
   );
 }
 
@@ -495,10 +354,10 @@ function LoyaltyOverviewPanel({
     <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold business-text">Active loyalty progress</p>
-          <h2 className="mt-1 text-xl font-semibold text-[#111827]">Programs</h2>
+          <p className="text-sm font-semibold business-text">Loyalty Progress</p>
+          <h2 className="mt-1 text-xl font-semibold text-[#111827]">Active programs</h2>
         </div>
-        <Link href="?tab=card" className="text-sm font-semibold business-text">View programs</Link>
+        <Link href="/dashboard/programs" className="text-sm font-semibold business-text">View programs</Link>
       </div>
       <div className="mt-5 grid gap-3">
         {visiblePrograms.map(({ programMembership }) => {
@@ -531,15 +390,15 @@ function LoyaltyOverviewPanel({
   );
 }
 
-function LatestActivityPreview({ items, customerUuid }: { items: TimelineItem[]; customerUuid: string }) {
+function LatestActivityPreview({ items }: { items: TimelineItem[]; customerUuid: string }) {
   return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
+    <section id="recent-activity" className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold business-text">Latest activity</p>
-          <h2 className="mt-1 text-xl font-semibold text-[#111827]">Recent movement</h2>
+          <p className="text-sm font-semibold business-text">Recent Activity</p>
+          <h2 className="mt-1 text-xl font-semibold text-[#111827]">Latest important events</h2>
         </div>
-        <Link href={`/dashboard/customers/${customerUuid}?tab=activity`} className="text-sm font-semibold business-text">View all</Link>
+        <a href="#recent-activity" className="text-sm font-semibold business-text">View all</a>
       </div>
       <div className="mt-5 grid gap-3">
         {items.map((item) => (
@@ -557,18 +416,20 @@ function TierDetailsPanel({
   totalBonusStamps,
   activePrograms,
   joinedAt,
+  compact = false,
 }: {
   customerTier: ReturnType<typeof calculateCustomerTier>;
   rewardRedemptionsCount: number;
   totalBonusStamps: number;
   activePrograms: number;
   joinedAt: Date;
+  compact?: boolean;
 }) {
   return (
     <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold business-text">Tier details</p>
+          <p className="text-sm font-semibold business-text">Tier Summary</p>
           <h2 className="mt-1 text-xl font-semibold text-[#111827]">Customer grade</h2>
         </div>
         <Sparkles className="h-5 w-5 business-text" aria-hidden="true" />
@@ -577,10 +438,10 @@ function TierDetailsPanel({
         <InsightMetric icon={Crown} label="Current tier" value={`${customerTier.badgeIcon} ${customerTier.badgeLabel}`} />
         <InsightMetric icon={History} label="Visits completed" value={customerTier.qualifyingVisits.toString()} />
         <InsightMetric icon={Sparkles} label="Next tier" value={customerTier.nextTier ?? "Top tier"} />
-        <InsightMetric icon={Gift} label="Rewards redeemed" value={rewardRedemptionsCount.toString()} />
-        <InsightMetric icon={Gift} label="Bonus stamps" value={totalBonusStamps.toString()} />
-        <InsightMetric icon={Users} label="Active programs" value={activePrograms.toString()} />
-        <InsightMetric icon={CalendarDays} label="Customer since" value={formatDate(joinedAt)} />
+        {!compact ? <InsightMetric icon={Gift} label="Rewards redeemed" value={rewardRedemptionsCount.toString()} /> : null}
+        {!compact ? <InsightMetric icon={Gift} label="Bonus stamps" value={totalBonusStamps.toString()} /> : null}
+        {!compact ? <InsightMetric icon={Users} label="Active programs" value={activePrograms.toString()} /> : null}
+        {!compact ? <InsightMetric icon={CalendarDays} label="Customer since" value={formatDate(joinedAt)} /> : null}
       </div>
       <div className={`mt-4 rounded-md border p-4 ${customerTier.isVip ? "border-yellow-300 bg-[#111827] text-white" : "border-[#E5E7EB] bg-[#FAFAFA] text-[#111827]"}`}>
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -723,8 +584,8 @@ function CustomerCardPanel({
     <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold business-text">Customer card</p>
-          <h2 className="mt-1 text-xl font-semibold text-[#111827]">Public member card</h2>
+          <p className="text-sm font-semibold business-text">Card & QR</p>
+          <h2 className="mt-1 text-xl font-semibold text-[#111827]">Public card tools</h2>
           {!compact ? <p className="mt-2 text-sm text-[#6B7280]">Card number: {getShortCardToken(cardToken)}</p> : null}
         </div>
         <CreditCard className="h-5 w-5 business-text" aria-hidden="true" />
@@ -748,9 +609,7 @@ function CustomerCardPanel({
           Open public card
         </a>
         {compact ? (
-          <Link href={`/dashboard/customers/${membershipUuid}?tab=card`} className="inline-flex items-center justify-center rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]">
-            Card tools
-          </Link>
+          <CopyButton value={cardUrl} label="Copy card link" copiedLabel="Card link copied." />
         ) : (
           <form action={toggleCustomerCardAction}>
             <CsrfInput scope="dashboard:customers" />
@@ -994,3 +853,8 @@ function resolveCustomerTab(tab: string | undefined) {
   const allowed = ["overview", "activity", "rewards", "referrals", "card"];
   return allowed.includes(tab ?? "") ? tab! : "overview";
 }
+
+
+
+
+
