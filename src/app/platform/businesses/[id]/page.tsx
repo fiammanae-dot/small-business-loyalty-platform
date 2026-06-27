@@ -15,6 +15,7 @@ import { toggleBusinessStatusAction } from "@/app/platform/businesses/actions";
 export default async function BusinessDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; success?: string }> }) {
   const user = await requireRole("PLATFORM_OWNER");
   const { id } = await params;
+  const qs = await searchParams;
   const business = await prisma.business.findUnique({
     where: { uuid: id },
     include: {
@@ -33,6 +34,14 @@ export default async function BusinessDetailPage({ params, searchParams }: { par
         include: {
           payments: true,
           subscription: { include: { subscriptionPlan: true } },
+        },
+      },
+      supportSessions: {
+        orderBy: { startedAt: "desc" },
+        take: 3,
+        include: {
+          adminUser: { select: { name: true, email: true } },
+          _count: { select: { activities: true } },
         },
       },
     },
@@ -93,8 +102,9 @@ export default async function BusinessDetailPage({ params, searchParams }: { par
             <>
               <InfoRow label="Active session" value={`Started ${formatDate(activeSupportSession.startedAt)}`} />
               <InfoRow label="Expires" value={formatDate(activeSupportSession.expiresAt)} />
-              <InfoRow label="Admin" value={activeSupportSession.adminUser.name} />
+              <InfoRow label="Admin" value={activeSupportSession.adminUser.name ?? activeSupportSession.adminUser.email} />
               <InfoRow label="Mode" value={activeSupportSession.readOnly ? "Read-only" : "Read/write"} />
+              <InfoRow label="Activities" value={activeSupportSession._count.activities.toString()} />
             </>
           ) : (
             <p className="text-sm text-[#6B7280]">No active support session.</p>
@@ -102,6 +112,8 @@ export default async function BusinessDetailPage({ params, searchParams }: { par
           {lastSupportSession ? (
             <div className="mt-4 border-t border-[#E5E7EB] pt-4">
               <InfoRow label="Last support session" value={`${lastSupportSession.status} - ${formatDate(lastSupportSession.startedAt)}`} />
+              <InfoRow label="Admin" value={lastSupportSession.adminUser.name ?? lastSupportSession.adminUser.email} />
+              <InfoRow label="Activities" value={lastSupportSession._count.activities.toString()} />
               <InfoRow label="Reason" value={lastSupportSession.reason} />
             </div>
           ) : null}

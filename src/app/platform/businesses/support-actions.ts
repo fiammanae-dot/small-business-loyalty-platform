@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { validateCsrfForm } from "@/lib/csrf";
 import { prisma } from "@/lib/prisma";
+import { recordSupportActivity } from "@/lib/support-activity";
 import { requireRole } from "@/lib/session";
 import {
   clearSupportSessionCookie,
@@ -113,6 +114,14 @@ export async function startSupportSessionAction(formData: FormData) {
   });
 
   await setSupportSessionCookie(session.id);
+  await recordSupportActivity({
+    supportSessionId: session.id,
+    adminUserId: adminUser.id,
+    businessId: business.id,
+    activityType: "SESSION_STARTED",
+    path: "/dashboard",
+    description: "Support session started",
+  });
   revalidatePath(`/platform/businesses/${business.uuid}`);
   redirect("/dashboard");
 }
@@ -121,7 +130,7 @@ export async function joinSupportSessionAction(formData: FormData) {
   const businessUuid = getString(formData, "businessUuid");
   const path = businessUuid ? `/platform/businesses/${businessUuid}/support-session` : "/platform/businesses";
   validateSecurity(formData, path);
-  await requireRole("PLATFORM_OWNER");
+  const adminUser = await requireRole("PLATFORM_OWNER");
 
   const parsed = joinSupportSessionSchema.safeParse({
     supportSessionId: getString(formData, "supportSessionId"),
@@ -142,7 +151,7 @@ export async function joinSupportSessionAction(formData: FormData) {
       endedAt: null,
       expiresAt: { gt: new Date() },
     },
-    select: { id: true },
+    select: { id: true, businessId: true },
   });
 
   if (!session) {
@@ -150,6 +159,14 @@ export async function joinSupportSessionAction(formData: FormData) {
   }
 
   await setSupportSessionCookie(session.id);
+  await recordSupportActivity({
+    supportSessionId: session.id,
+    adminUserId: adminUser.id,
+    businessId: session.businessId,
+    activityType: "SESSION_JOINED",
+    path: "/dashboard",
+    description: "Support session joined",
+  });
   redirect("/dashboard");
 }
 
@@ -163,6 +180,27 @@ export async function endSupportSessionAction(formData: FormData) {
 
   if (!parsed.success) {
     redirect("/platform/businesses?error=Support%20session%20is%20not%20available.");
+  }
+
+  const session = await prisma.supportSession.findFirst({
+    where: {
+      id: parsed.data.supportSessionId,
+      adminUserId: adminUser.id,
+      status: "ACTIVE",
+      endedAt: null,
+    },
+    select: { id: true, businessId: true },
+  });
+
+  if (session) {
+    await recordSupportActivity({
+      supportSessionId: session.id,
+      adminUserId: adminUser.id,
+      businessId: session.businessId,
+      activityType: "SESSION_ENDED",
+      path: "/platform",
+      description: "Support session ended",
+    });
   }
 
   await prisma.supportSession.updateMany({

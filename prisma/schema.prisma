@@ -26,6 +26,20 @@ enum SupportSessionStatus {
   EXPIRED
 }
 
+enum SupportSessionActivityType {
+  SESSION_STARTED
+  SESSION_JOINED
+  PAGE_VIEWED
+  CUSTOMER_VIEWED
+  PROGRAM_VIEWED
+  STAFF_VIEWED
+  BRANCH_VIEWED
+  SETTINGS_VIEWED
+  RECORD_CHANGED
+  SESSION_ENDED
+  SESSION_EXPIRED
+}
+
 enum BusinessType {
   COFFEE_SHOP
   RESTAURANT
@@ -283,6 +297,7 @@ model User {
   cooldownEvents CooldownEvent[]
   passwordResetTokens PasswordResetToken[]
   supportSessionsStarted SupportSession[] @relation("SupportSessionAdminUser")
+  supportSessionActivities SupportSessionActivity[] @relation("SupportSessionActivityAdminUser")
 
   @@index([businessId])
   @@index([branchId])
@@ -361,6 +376,7 @@ model Business {
   cooldownEvents CooldownEvent[]
   tierSetting CustomerTierSetting?
   supportSessions SupportSession[]
+  supportSessionActivities SupportSessionActivity[]
 
   @@map("businesses")
 }
@@ -1100,11 +1116,35 @@ model SupportSession {
 
   business  Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   adminUser User     @relation("SupportSessionAdminUser", fields: [adminUserId], references: [id])
+  activities SupportSessionActivity[]
 
   @@index([businessId, status, expiresAt])
   @@index([adminUserId, status, expiresAt])
   @@index([expiresAt])
   @@map("support_sessions")
+}
+model SupportSessionActivity {
+  id               Int                        @id @default(autoincrement())
+  supportSessionId Int                        @map("support_session_id")
+  adminUserId      Int                        @map("admin_user_id")
+  businessId       Int                        @map("business_id")
+  activityType     SupportSessionActivityType @map("activity_type")
+  path             String?
+  entityType       String?                    @map("entity_type")
+  entityId         String?                    @map("entity_id")
+  description      String
+  createdAt        DateTime                   @default(now()) @map("created_at")
+
+  supportSession SupportSession @relation(fields: [supportSessionId], references: [id], onDelete: Cascade)
+  adminUser      User           @relation("SupportSessionActivityAdminUser", fields: [adminUserId], references: [id])
+  business       Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([supportSessionId, createdAt])
+  @@index([adminUserId, createdAt])
+  @@index([businessId, createdAt])
+  @@index([activityType, createdAt])
+  @@index([entityType, entityId])
+  @@map("support_session_activities")
 }
 model PlatformSetting {
   id        Int      @id @default(autoincrement())

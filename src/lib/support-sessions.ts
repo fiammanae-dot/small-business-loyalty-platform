@@ -55,6 +55,10 @@ async function loadSupportSessionForAdmin(supportSessionId: number, adminUser: A
     include: {
       business: { include: businessOwnerInclude },
       adminUser: { select: { id: true, name: true, email: true } },
+      activities: {
+        orderBy: { createdAt: "desc" },
+        take: 8,
+      },
     },
   });
 

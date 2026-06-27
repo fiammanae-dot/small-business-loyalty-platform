@@ -22,6 +22,7 @@ import { BusinessBrandingProvider } from "@/components/BusinessBrandingProvider"
 import { CsrfInput } from "@/components/CsrfInput";
 import { IdleSessionTimeout } from "@/components/IdleSessionTimeout";
 import { MobileBranchNavigation, MobileBusinessNavigation, MobilePlatformNavigation, MobileStaffNavigation, RoleNavigation } from "@/components/RoleNavigation";
+import { SupportActivityTracker } from "@/components/SupportActivityTracker";
 import { SupportEndSessionButton } from "@/components/SupportEndSessionButton";
 import { SupportModeBanner } from "@/components/SupportModeBanner";
 import { endSupportSessionAction } from "@/app/platform/businesses/support-actions";
@@ -40,6 +41,15 @@ type SupportShellSession = {
   readOnly: boolean;
   business: { name: string; uuid: string };
   adminUser: { name: string | null; email: string };
+  activities?: Array<{
+    id: number;
+    activityType: string;
+    path: string | null;
+    entityType: string | null;
+    entityId: string | null;
+    description: string;
+    createdAt: Date;
+  }>;
 };
 
 type DashboardShellProps = {
@@ -111,6 +121,7 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
     <BusinessBrandingProvider branding={businessBranding}>
     <div className="min-h-screen max-w-full overflow-x-hidden bg-white text-[#111827]">
       <IdleSessionTimeout />
+      {activeSupportSession ? <SupportActivityTracker supportSessionId={activeSupportSession.id} /> : null}
       <header className="border-b border-[#E5E7EB] bg-white">
         <div className="mx-auto flex max-w-7xl min-w-0 flex-col gap-2 px-4 py-2.5 sm:px-6 sm:py-4 lg:gap-4 lg:px-8">
           <div className="flex min-w-0 items-center justify-between gap-4">
@@ -161,6 +172,15 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
           expiresAt={activeSupportSession.expiresAt.toISOString()}
           readOnly={activeSupportSession.readOnly}
           status={activeSupportSession.status}
+          activities={(activeSupportSession.activities ?? []).map((activity) => ({
+            id: activity.id,
+            activityType: activity.activityType,
+            path: activity.path,
+            entityType: activity.entityType,
+            entityId: activity.entityId,
+            description: activity.description,
+            createdAt: activity.createdAt.toISOString(),
+          }))}
           endSessionControl={(
             <form action={endSupportSessionAction}>
               <CsrfInput scope="platform:support-sessions" />

@@ -15,6 +15,15 @@ type SupportModeBannerProps = {
   expiresAt: string;
   readOnly: boolean;
   status: string;
+  activities: Array<{
+    id: number;
+    activityType: string;
+    path: string | null;
+    entityType: string | null;
+    entityId: string | null;
+    description: string;
+    createdAt: string;
+  }>;
   endSessionControl: ReactNode;
 };
 
@@ -35,6 +44,7 @@ export function SupportModeBanner({
   expiresAt,
   readOnly,
   status,
+  activities,
   endSessionControl,
 }: SupportModeBannerProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -138,13 +148,40 @@ export function SupportModeBanner({
 
             <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-sm font-black text-slate-900">Audit Timeline</p>
-              <p className="mt-1 text-sm text-slate-600">Coming Soon</p>
+              <div className="mt-3 grid gap-3">
+                {activities.map((activity) => (
+                  <div key={activity.id} className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="text-xs font-black uppercase tracking-wide text-slate-700">{formatActivityType(activity.activityType)}</p>
+                      <time className="shrink-0 text-xs font-semibold text-slate-500">{formatTime(activity.createdAt)}</time>
+                    </div>
+                    <p className="mt-1 text-sm font-semibold text-slate-950">{activity.description}</p>
+                    {activity.path || activity.entityType ? (
+                      <p className="mt-1 break-words text-xs text-slate-500">
+                        {[activity.path, activity.entityType, activity.entityId].filter(Boolean).join(" · ")}
+                      </p>
+                    ) : null}
+                  </div>
+                ))}
+                {activities.length === 0 ? <p className="text-sm text-slate-600">No support activity recorded yet.</p> : null}
+              </div>
             </div>
           </div>
         </div>
       ) : null}
     </>
   );
+}
+
+function formatActivityType(value: string) {
+  return value.replaceAll("_", " ").toLowerCase();
+}
+
+function formatTime(value: string) {
+  return new Intl.DateTimeFormat("en", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(value));
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
