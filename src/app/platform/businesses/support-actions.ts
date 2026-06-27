@@ -6,7 +6,12 @@ import { z } from "zod";
 import { validateCsrfForm } from "@/lib/csrf";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
-import { expireStaleSupportSessions, SUPPORT_SESSION_DURATIONS } from "@/lib/support-sessions";
+import {
+  clearSupportSessionCookie,
+  expireStaleSupportSessions,
+  setSupportSessionCookie,
+  SUPPORT_SESSION_DURATIONS,
+} from "@/lib/support-sessions";
 
 const scope = "platform:support-sessions";
 
@@ -19,6 +24,11 @@ const startSupportSessionSchema = z.object({
 });
 
 const endSupportSessionSchema = z.object({
+  supportSessionId: z.coerce.number().int().positive(),
+  businessUuid: z.string().trim().min(1),
+});
+
+const joinSupportSessionSchema = z.object({
   supportSessionId: z.coerce.number().int().positive(),
   businessUuid: z.string().trim().min(1),
 });
@@ -75,6 +85,21 @@ export async function startSupportSessionAction(formData: FormData) {
   await expireStaleSupportSessions();
 
   const now = new Date();
+  const activeSession = await prisma.supportSession.findFirst({
+    where: {
+      businessId: business.id,
+      status: "ACTIVE",
+      endedAt: null,
+      expiresAt: { gt: now },
+    },
+    orderBy: { startedAt: "desc" },
+    select: { id: true },
+  });
+
+  if (activeSession) {
+    redirect(`/platform/businesses/${business.uuid}/support-session?activeSessionId=${activeSession.id}`);
+  }
+
   const session = await prisma.supportSession.create({
     data: {
       businessId: business.id,
@@ -87,8 +112,45 @@ export async function startSupportSessionAction(formData: FormData) {
     },
   });
 
+  await setSupportSessionCookie(session.id);
   revalidatePath(`/platform/businesses/${business.uuid}`);
-  redirect(`/dashboard?supportSessionId=${session.id}`);
+  redirect("/dashboard");
+}
+
+export async function joinSupportSessionAction(formData: FormData) {
+  const businessUuid = getString(formData, "businessUuid");
+  const path = businessUuid ? `/platform/businesses/${businessUuid}/support-session` : "/platform/businesses";
+  validateSecurity(formData, path);
+  await requireRole("PLATFORM_OWNER");
+
+  const parsed = joinSupportSessionSchema.safeParse({
+    supportSessionId: getString(formData, "supportSessionId"),
+    businessUuid,
+  });
+
+  if (!parsed.success) {
+    fail(path, "Support session is not available.");
+  }
+
+  await expireStaleSupportSessions();
+
+  const session = await prisma.supportSession.findFirst({
+    where: {
+      id: parsed.data.supportSessionId,
+      business: { uuid: parsed.data.businessUuid },
+      status: "ACTIVE",
+      endedAt: null,
+      expiresAt: { gt: new Date() },
+    },
+    select: { id: true },
+  });
+
+  if (!session) {
+    fail(path, "Support session has ended or expired.");
+  }
+
+  await setSupportSessionCookie(session.id);
+  redirect("/dashboard");
 }
 
 export async function endSupportSessionAction(formData: FormData) {
@@ -116,6 +178,7 @@ export async function endSupportSessionAction(formData: FormData) {
     },
   });
 
+  await clearSupportSessionCookie();
   revalidatePath(`/platform/businesses/${parsed.data.businessUuid}`);
-  redirect(`/platform/businesses/${parsed.data.businessUuid}?success=Support%20session%20ended.`);
+  redirect("/platform?success=Support%20session%20ended.");
 }

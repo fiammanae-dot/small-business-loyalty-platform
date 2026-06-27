@@ -27,7 +27,11 @@ test("platform owner can create support sessions with required reason and durati
   assert.match(actions, /SUPPORT_SESSION_DURATIONS\.includes/);
   assert.match(actions, /expiresAt: new Date\(now\.getTime\(\) \+ data\.durationMinutes \* 60 \* 1000\)/);
   assert.match(actions, /status: "ACTIVE"/);
-  assert.match(actions, /redirect\(`\/dashboard\?supportSessionId=\$\{session\.id\}`\)/);
+  assert.match(actions, /await setSupportSessionCookie\(session\.id\)/);
+  assert.match(actions, /redirect\("\/dashboard"\)/);
+  assert.match(actions, /supportSession\.findFirst/);
+  assert.match(actions, /activeSessionId=\$\{activeSession\.id\}/);
+  assert.match(actions, /joinSupportSessionAction/);
 });
 
 test("business users cannot create support sessions through platform guard", function () {
@@ -46,17 +50,26 @@ test("expired sessions are not treated as active and can be ended", function () 
   assert.match(helper, /session\.expiresAt > now/);
   assert.match(actions, /endedAt: new Date\(\)/);
   assert.match(actions, /status: "ENDED"/);
+  assert.match(actions, /await clearSupportSessionCookie\(\)/);
 });
 
 test("support session UI is exposed from business detail and uses a dedicated start page", function () {
   const detail = read("src/app/platform/businesses/[id]/page.tsx");
   const page = read("src/app/platform/businesses/[id]/support-session/page.tsx");
-  const dashboard = read("src/app/dashboard/page.tsx");
+  const shell = read("src/components/DashboardShell.tsx");
+  const banner = read("src/components/SupportModeBanner.tsx");
+  const endButton = read("src/components/SupportEndSessionButton.tsx");
   assert.match(detail, /Support Access/);
   assert.match(detail, /Open Support Session/);
   assert.match(page, /Reason for access/);
   assert.match(page, /Start Support Session/);
   assert.match(page, /Read-only mode/);
-  assert.match(dashboard, /SupportSessionNotice/);
-  assert.match(dashboard, /End support session/);
+  assert.match(page, /Support Session Already Active/);
+  assert.match(page, /Join Existing Session/);
+  assert.match(shell, /SupportModeBanner/);
+  assert.match(banner, /SUPPORT MODE/);
+  assert.match(banner, /View Session Details/);
+  assert.match(banner, /endSessionControl/);
+  assert.match(endButton, /End Support Session/);
+  assert.match(banner, /🔴 SUPPORT/);
 });
