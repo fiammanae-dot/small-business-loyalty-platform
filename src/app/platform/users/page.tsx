@@ -7,6 +7,7 @@ import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
 import { PlatformUserPasswordResetAction } from "@/components/PlatformUserPasswordResetAction";
+import { ButtonLink, EmptyState } from "@/components/ui";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatDate } from "@/lib/format";
@@ -344,15 +345,11 @@ export default async function PlatformUsersPage({
         </div>
 
         {users.length === 0 ? (
-          <div className="mt-4 rounded-md border border-dashed border-[#E5E7EB] p-8 text-center">
-            <p className="text-sm font-medium text-[#6B7280]">No users match these filters.</p>
-            <Link
-              href="/platform/users"
-              className="mt-4 inline-flex h-10 items-center justify-center rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white hover:bg-orange-600"
-            >
-              Clear filters
-            </Link>
-          </div>
+          <EmptyState
+            title="No users match these filters."
+            description="Clear filters or adjust the access criteria to review more users."
+            action={<ButtonLink href="/platform/users" variant="primary">Clear filters</ButtonLink>}
+          />
         ) : null}
       </section>
     </DashboardShell>

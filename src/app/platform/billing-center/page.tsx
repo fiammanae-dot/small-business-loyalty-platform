@@ -20,6 +20,9 @@ import { MobileAccordionSection } from "@/components/MobileAccordionSection";
 import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
 import { PlatformKpiGrid } from "@/components/PlatformKpiGrid";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { MetricCard } from "@/components/ui/MetricCard";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { formatDate } from "@/lib/format";
 import { formatMoney, getInvoiceDisplayStatus } from "@/lib/billing";
 import { prisma } from "@/lib/prisma";
@@ -388,7 +391,7 @@ function AdvancedSubscriptionTable({ subscriptions }: { subscriptions: Subscript
         {subscriptions.map((subscription) => (
           <SubscriptionMobileCard key={subscription.id} subscription={subscription} />
         ))}
-        {subscriptions.length === 0 ? <p className="rounded-md border border-dashed border-[#E5E7EB] py-8 text-center text-sm text-[#6B7280]">No subscriptions match these filters.</p> : null}
+        {subscriptions.length === 0 ? <EmptyState title="No subscriptions match these filters." className="py-8" /> : null}
       </div>
       <div className="hidden overflow-x-auto md:block">
       <table className="w-full min-w-[1320px] border-separate border-spacing-0 text-left text-sm">
@@ -434,7 +437,7 @@ function AdvancedSubscriptionTable({ subscriptions }: { subscriptions: Subscript
           })}
         </tbody>
       </table>
-      {subscriptions.length === 0 ? <p className="py-8 text-center text-sm text-[#6B7280]">No subscriptions match these filters.</p> : null}
+      {subscriptions.length === 0 ? <EmptyState title="No subscriptions match these filters." className="my-4 py-8" /> : null}
       </div>
     </>
   );
@@ -577,7 +580,7 @@ function InvoiceTable({ invoices }: { invoices: InvoiceRow[] }) {
         {invoices.slice(0, 20).map((invoice) => (
           <InvoiceMobileCard key={invoice.id} invoice={invoice} />
         ))}
-        {invoices.length === 0 ? <p className="rounded-md border border-dashed border-[#E5E7EB] py-8 text-center text-sm text-[#6B7280]">No invoices match these filters.</p> : null}
+        {invoices.length === 0 ? <EmptyState title="No invoices match these filters." className="py-8" /> : null}
       </div>
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[920px] border-separate border-spacing-0 text-left text-sm">
@@ -849,39 +852,16 @@ function titleCase(value: string) {
 }
 
 function KpiCard({ icon: Icon, label, value, tone = "default", href }: { icon: LucideIcon; label: string; value: string; tone?: "default" | "warn" | "danger"; href?: string }) {
-  const toneClass = tone === "danger" ? "border-red-200 bg-red-50 text-red-700" : tone === "warn" ? "border-orange-200 bg-orange-50 text-[#C2410C]" : "border-[#E5E7EB] bg-white text-[#111827]";
-  const content = (
-    <div className={`h-full rounded-md border p-3 shadow-sm transition md:p-4 ${toneClass} ${href ? "cursor-pointer hover:border-[#F97316] hover:shadow-md" : ""}`}>
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-medium">{label}</p>
-        <Icon className="h-5 w-5" aria-hidden="true" />
-      </div>
-      <p className="mt-3 text-2xl font-semibold">{value}</p>
-      {href ? <p className="mt-2 text-xs font-semibold text-[#F97316]">View</p> : null}
-    </div>
-  );
-
-  return href ? <Link href={href} className="block h-full rounded-md focus:outline-none focus:ring-4 focus:ring-orange-100">{content}</Link> : content;
+  const metricTone = tone === "danger" ? "danger" : tone === "warn" ? "warning" : "neutral";
+  const iconClass = tone === "danger" ? "h-5 w-5 text-red-600" : tone === "warn" ? "h-5 w-5 text-[#C2410C]" : "h-5 w-5 text-[#F97316]";
+  return <MetricCard href={href} label={label} value={value} tone={metricTone} icon={<Icon className={iconClass} />} className="h-full" />;
 }
-
 function Panel({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
-      <h2 className="text-lg font-semibold text-[#111827]">{title}</h2>
-      <div className="mt-5">{children}</div>
-    </section>
-  );
+  return <SectionCard title={title}>{children}</SectionCard>;
 }
-
 function MiniMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{label}</p>
-      <p className="mt-2 text-lg font-semibold text-[#111827]">{value}</p>
-    </div>
-  );
+  return <MetricCard label={label} value={value} className="h-full" />;
 }
-
 function HealthLine({ label, value }: { label: string; value: number }) {
   return <div className="flex items-center justify-between rounded-md border border-[#E5E7EB] px-3 py-2"><span>{label}</span><strong>{value}</strong></div>;
 }
@@ -951,11 +931,13 @@ function MetricLine({ label, value }: { label: string; value: string }) {
 }
 
 function EmptyText({ text }: { text: string }) {
-  return <p className="rounded-md border border-dashed border-[#E5E7EB] p-4 text-sm text-[#6B7280]">{text}</p>;
+  return <EmptyState title={text} className="p-4 md:p-4" />;
 }
-
 function ExportButton({ href, icon, label }: { href: string; icon: ReactNode; label: string }) {
   return <Link href={href} className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] hover:border-[#F97316] hover:text-[#F97316]">{icon}{label}</Link>;
 }
+
+
+
 
 

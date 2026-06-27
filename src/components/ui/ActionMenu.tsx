@@ -5,15 +5,15 @@ import { cn } from "./utils";
 export function ActionMenu({ label = "More actions", children, className }: { label?: string; children: ReactNode; className?: string }) {
   return (
     <details className={cn("relative inline-block text-left", className)}>
-      <summary className="inline-flex h-9 cursor-pointer list-none items-center justify-center gap-2 rounded-md border border-[#CBD5E1] bg-white px-3 text-sm font-semibold text-[#334155] transition hover:bg-[#F8FAFC] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] focus-visible:ring-offset-2">
+      <summary className="inline-flex h-9 cursor-pointer list-none items-center justify-center gap-2 rounded-lg border border-[#CBD5E1] bg-white px-3 text-sm font-semibold text-[#334155] shadow-sm transition duration-200 ease-out hover:bg-[#F8FAFC] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:active:translate-y-0">
         <MoreHorizontal className="h-4 w-4" aria-hidden />
         <span>{label}</span>
       </summary>
-      <div className="absolute right-0 z-30 mt-2 min-w-48 rounded-md border border-[#E2E8F0] bg-white p-1 shadow-lg">{children}</div>
+      <div className="absolute right-0 z-30 mt-2 min-w-48 overflow-hidden rounded-lg border border-[#E2E8F0] bg-white p-1 shadow-xl">{children}</div>
     </details>
   );
 }
 
 export function ActionMenuItem({ children, danger = false }: { children: ReactNode; danger?: boolean }) {
-  return <div className={cn("rounded-md px-2 py-1 text-sm", danger ? "text-[#B91C1C]" : "text-[#334155]")}>{children}</div>;
+  return <div className={cn("rounded-md px-2 py-1.5 text-sm transition hover:bg-[#F8FAFC]", danger ? "text-[#B91C1C]" : "text-[#334155]")}>{children}</div>;
 }

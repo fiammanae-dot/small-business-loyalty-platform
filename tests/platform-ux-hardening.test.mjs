@@ -77,7 +77,7 @@ test("platform invoices use compact controls, result counts, mobile cards, and a
   for (const expected of [
     "Clear Filters",
     "Showing {invoices.length} invoices",
-    "InvoiceKpi",
+    "MetricCard",
     "InvoiceActions",
     "More",
     "lg:hidden",

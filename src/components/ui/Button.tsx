@@ -31,7 +31,7 @@ export function buttonClassName({
   className?: string;
 }) {
   return cn(
-    "inline-flex items-center justify-center gap-2 rounded-md border font-semibold transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+    "inline-flex min-w-0 items-center justify-center gap-2 rounded-lg border font-semibold shadow-sm transition duration-200 ease-out active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:translate-y-0 disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:translate-y-0",
     variants[variant],
     sizes[size],
     className,

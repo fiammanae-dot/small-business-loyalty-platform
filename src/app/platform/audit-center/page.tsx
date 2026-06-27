@@ -24,6 +24,9 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
 import { PlatformKpiGrid } from "@/components/PlatformKpiGrid";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { MetricCard } from "@/components/ui/MetricCard";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { formatDateTime } from "@/lib/format";
 import { roleLabels } from "@/lib/roles";
 import { prisma } from "@/lib/prisma";
@@ -501,19 +504,16 @@ function summarizeUsers(events: DecoratedAuditEvent[]) {
 
 function KpiLink({ icon: Icon, label, value, href, tone = "default" }: { icon: LucideIcon; label: string; value: number; href: string; tone?: "default" | "alert" }) {
   return (
-    <Link href={href} className={`block h-full cursor-pointer rounded-md border bg-white p-3 shadow-sm transition md:p-4 hover:border-[#F97316] hover:shadow-md focus:outline-none focus:ring-4 focus:ring-orange-100 ${tone === "alert" ? "border-red-200" : "border-[#E5E7EB]"}`}>
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-medium text-[#6B7280]">{label}</p>
-        <span className={`flex h-9 w-9 items-center justify-center rounded-md ${tone === "alert" ? "bg-red-50 text-red-600" : "bg-orange-50 text-[#F97316]"}`}>
-          <Icon className="h-5 w-5" aria-hidden="true" />
-        </span>
-      </div>
-      <p className="mt-3 text-2xl font-semibold text-[#111827]">{value}</p>
-      <p className="mt-2 text-xs font-semibold text-[#F97316]">View</p>
-    </Link>
+    <MetricCard
+      href={href}
+      label={label}
+      value={value}
+      tone={tone === "alert" ? "danger" : "neutral"}
+      icon={<Icon className={tone === "alert" ? "h-5 w-5 text-red-600" : "h-5 w-5 text-[#F97316]"} />}
+      className="h-full"
+    />
   );
 }
-
 function Select({ name, value, label, options }: { name: string; value?: string; label: string; options: readonly string[] }) {
   return (
     <select name={name} defaultValue={value ?? ""} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm">
@@ -646,26 +646,23 @@ function ExportButton({ href, icon, label }: { href: string; icon: ReactNode; la
 
 function SecurityMetric({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: number }) {
   return (
-    <div className="rounded-md border border-[#E5E7EB] p-4">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-[#6B7280]">{label}</p>
-        <Icon className="h-4 w-4 text-[#F97316]" aria-hidden="true" />
-      </div>
-      <p className="mt-3 text-2xl font-semibold text-[#111827]">{value}</p>
-      <p className="mt-1 text-xs text-[#6B7280]">Trend data uses current audit history.</p>
-    </div>
+    <MetricCard
+      label={label}
+      value={value}
+      helper="Trend data uses current audit history."
+      icon={<Icon className="h-4 w-4 text-[#F97316]" />}
+      className="h-full"
+    />
   );
 }
-
 function SummaryTable({ title, columns, rows }: { title: string; columns: string[]; rows: string[][] }) {
   return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
-      <h2 className="text-lg font-semibold text-[#111827]">{title}</h2>
+    <SectionCard title={title}>
       <div className="mt-4 grid gap-3 md:hidden">
         {rows.map((row, index) => (
           <SummaryMobileCard key={`${title}-mobile-${index}`} columns={columns} row={row} />
         ))}
-        {rows.length === 0 ? <p className="rounded-md border border-dashed border-[#E5E7EB] p-4 text-sm text-[#6B7280]">No activity summary available yet.</p> : null}
+        {rows.length === 0 ? <EmptyState title="No activity summary available yet." className="p-4 md:p-4" /> : null}
       </div>
       <div className="mt-4 hidden overflow-x-auto md:block">
         <table className="w-full min-w-[520px] border-separate border-spacing-0 text-left text-sm">
@@ -682,12 +679,11 @@ function SummaryTable({ title, columns, rows }: { title: string; columns: string
             ))}
           </tbody>
         </table>
-        {rows.length === 0 ? <p className="py-8 text-center text-sm text-[#6B7280]">No activity summary available yet.</p> : null}
+        {rows.length === 0 ? <EmptyState title="No activity summary available yet." className="my-4" /> : null}
       </div>
-    </section>
+    </SectionCard>
   );
 }
-
 function SummaryMobileCard({ columns, row }: { columns: string[]; row: string[] }) {
   return (
     <article className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
@@ -702,13 +698,9 @@ function SummaryMobileCard({ columns, row }: { columns: string[]; row: string[] 
 }
 
 function HealthMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{label}</p>
-      <p className="mt-2 text-lg font-semibold text-[#111827]">{value}</p>
-    </div>
-  );
+  return <MetricCard label={label} value={value} className="h-full" />;
 }
+
 
 
 

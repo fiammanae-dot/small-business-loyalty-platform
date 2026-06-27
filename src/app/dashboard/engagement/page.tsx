@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { EngagementEventType } from "@prisma/client";
 import { DashboardShell } from "@/components/DashboardShell";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { MetricCard } from "@/components/ui/MetricCard";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { engagementEventLabels, isMarketingEngagement } from "@/lib/engagement";
@@ -179,7 +181,7 @@ export default async function EngagementCenterPage({
               })}
             </tbody>
           </table>
-          {visibleEvents.length === 0 ? <p className="py-8 text-center text-sm text-[#6B7280]">No engagement events match these filters.</p> : null}
+          {visibleEvents.length === 0 ? <EmptyState title="No engagement events match these filters." className="my-4" /> : null}
         </div>
       </section>
     </DashboardShell>
@@ -187,10 +189,6 @@ export default async function EngagementCenterPage({
 }
 
 function Metric({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
-      <p className="text-sm text-[#6B7280]">{label}</p>
-      <p className="mt-2 text-2xl font-semibold text-[#111827]">{value}</p>
-    </div>
-  );
+  return <MetricCard label={label} value={value} className="h-full" />;
 }
+

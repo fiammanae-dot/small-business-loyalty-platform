@@ -1,4 +1,4 @@
-﻿import type { Prisma, SubscriptionStatus } from "@prisma/client";
+import type { Prisma, SubscriptionStatus } from "@prisma/client";
 import { ChevronDown, ExternalLink, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
@@ -8,6 +8,7 @@ import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
 import { PlatformKpiGrid } from "@/components/PlatformKpiGrid";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { StatusBadge } from "@/components/StatusBadge";
+import { EmptyState, MetricCard } from "@/components/ui";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
@@ -133,10 +134,10 @@ export default async function PlatformSubscriptionsPage({
       </section>
 
       <PlatformKpiGrid className="md:grid-cols-2 xl:grid-cols-4">
-        <SubscriptionKpiCard label="Active Subscriptions" value={activeSubscriptionCount.toString()} href="/platform/subscriptions?status=ACTIVE" />
-        <SubscriptionKpiCard label="Trial Subscriptions" value={trialSubscriptionCount.toString()} href="/platform/subscriptions?status=TRIAL" />
-        <SubscriptionKpiCard label="Expiring Within 30 Days" value={expiringWithin30DaysCount.toString()} href="/platform/subscriptions?expiry=next30" />
-        <SubscriptionKpiCard label="Suspended Subscriptions" value={suspendedSubscriptionCount.toString()} href="/platform/subscriptions?status=SUSPENDED" />
+        <MetricCard label="Active Subscriptions" value={activeSubscriptionCount.toString()} href="/platform/subscriptions?status=ACTIVE" />
+        <MetricCard label="Trial Subscriptions" value={trialSubscriptionCount.toString()} href="/platform/subscriptions?status=TRIAL" tone="warning" />
+        <MetricCard label="Expiring Within 30 Days" value={expiringWithin30DaysCount.toString()} href="/platform/subscriptions?expiry=next30" tone="info" />
+        <MetricCard label="Suspended Subscriptions" value={suspendedSubscriptionCount.toString()} href="/platform/subscriptions?status=SUSPENDED" tone={suspendedSubscriptionCount > 0 ? "danger" : "neutral"} />
       </PlatformKpiGrid>
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
@@ -170,28 +171,12 @@ export default async function PlatformSubscriptionsPage({
           ))}
         </div>
 
-        {subscriptions.length === 0 ? <p className="py-8 text-center text-sm text-[#6B7280]">No subscriptions match these filters.</p> : null}
+        {subscriptions.length === 0 ? <EmptyState title="No subscriptions match these filters." description="Clear filters or adjust the subscription criteria to review more records." /> : null}
       </section>
     </DashboardShell>
   );
 }
 
-function SubscriptionKpiCard({ label, value, href }: { label: string; value: string; href?: string }) {
-  const content = (
-    <div className={`h-full rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm transition md:p-4 ${href ? "cursor-pointer hover:border-[#F97316] hover:shadow-md" : ""}`}>
-      <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{label}</p>
-      <p className="mt-2 text-2xl font-semibold text-[#111827]">{value}</p>
-    </div>
-  );
-
-  return href ? (
-    <Link href={href} className="block h-full rounded-md focus:outline-none focus:ring-4 focus:ring-orange-100">
-      {content}
-    </Link>
-  ) : (
-    content
-  );
-}
 function SubscriptionRow({ subscription }: { subscription: SubscriptionWithListData }) {
   const lastAudit = subscription.auditLogs[0];
   const remainingDays = getSubscriptionRemainingDays(subscription);

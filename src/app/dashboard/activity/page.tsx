@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Gift, History, Share2, TicketCheck, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { MetricCard } from "@/components/ui/MetricCard";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -169,10 +171,7 @@ export default async function BusinessActivityPage() {
           {timeline.length ? (
             timeline.map((item, index) => <ActivityRow key={`${item.type}-${item.createdAt.toISOString()}-${index}`} item={item} />)
           ) : (
-            <div className="rounded-md border border-dashed border-[#E5E7EB] p-6 text-center">
-              <p className="text-sm font-semibold text-[#111827]">No activity yet.</p>
-              <p className="mt-2 text-sm text-[#6B7280]">Activity will appear here after customers enroll, earn stamps, redeem rewards, or use referrals.</p>
-            </div>
+            <EmptyState title="No activity yet." description="Activity will appear here after customers enroll, earn stamps, redeem rewards, or use referrals." />
           )}
         </div>
       </section>
@@ -181,17 +180,8 @@ export default async function BusinessActivityPage() {
 }
 
 function ActivityMetric({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
-  return (
-    <div className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
-      <div className="flex items-center justify-between gap-3">
-        <Icon className="h-5 w-5 business-text" aria-hidden="true" />
-        <p className="text-2xl font-semibold text-[#111827]">{value}</p>
-      </div>
-      <p className="mt-2 text-xs font-semibold uppercase text-[#6B7280]">{label}</p>
-    </div>
-  );
+  return <MetricCard label={label} value={value} icon={<Icon className="h-5 w-5 business-text" />} className="h-full" />;
 }
-
 function ActivityRow({ item }: { item: ActivityItem }) {
   const content = (
     <>
@@ -231,3 +221,9 @@ function friendlyLabel(value: string) {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 }
+
+
+
+
+
+

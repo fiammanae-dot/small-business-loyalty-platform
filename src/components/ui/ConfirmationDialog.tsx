@@ -30,13 +30,13 @@ export function ConfirmationDialog({
     <>
       <span onClick={() => setOpen(true)}>{trigger}</span>
       {open ? (
-        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 p-4 sm:items-center" role="presentation">
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/45 p-4 backdrop-blur-sm sm:items-center" role="presentation">
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
             aria-describedby={descriptionId}
-            className="w-full max-w-md rounded-md bg-white p-5 shadow-lg"
+            className="w-full max-w-md rounded-lg bg-white p-5 shadow-2xl"
           >
             <h2 id={titleId} className="text-lg font-semibold text-[#0F172A]">
               {title}

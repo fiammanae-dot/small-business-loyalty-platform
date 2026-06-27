@@ -3,7 +3,7 @@ import { cn } from "./utils";
 
 export function DataTable({ className, ...props }: TableHTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="w-full overflow-x-auto rounded-md border border-[#E2E8F0] bg-white">
+    <div className="w-full overflow-x-auto rounded-lg border border-[#E2E8F0] bg-white shadow-sm [scrollbar-gutter:stable]">
       <table className={cn("min-w-full border-collapse text-left text-sm", className)} {...props} />
     </div>
   );
@@ -18,7 +18,7 @@ export function DataTableBody({ className, ...props }: HTMLAttributes<HTMLTableS
 }
 
 export function DataTableCell({ children, className }: { children: ReactNode; className?: string }) {
-  return <td className={cn("px-3 py-3 align-middle text-[#334155]", className)}>{children}</td>;
+  return <td className={cn("min-w-0 px-3 py-3 align-middle text-[#334155]", className)}>{children}</td>;
 }
 
 export function DataTableHeadCell({ children, className }: { children: ReactNode; className?: string }) {

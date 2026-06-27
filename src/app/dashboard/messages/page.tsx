@@ -2,6 +2,9 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { CheckCircle2, MessageSquare, Search, XCircle } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { MetricCard } from "@/components/ui/MetricCard";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { engagementEventLabels } from "@/lib/engagement";
 import { formatDateTime } from "@/lib/format";
@@ -50,7 +53,7 @@ export default async function MessageOutboxPage({
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Message outbox">
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
+      <SectionCard>
         <p className="mb-5 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-800">
           Messages are prepared only and are not sent automatically.
         </p>
@@ -155,39 +158,32 @@ export default async function MessageOutboxPage({
           </table>
           {messages.length === 0 ? <EmptyMessages filtered={Boolean(query || params.status || params.channel || params.event)} /> : null}
         </div>
-      </section>
+      </SectionCard>
     </DashboardShell>
   );
 }
 
 function MessageKpi({ icon, label, value }: { icon: ReactNode; label: string; value: number }) {
-  return (
-    <div className="rounded-md border border-[#E5E7EB] bg-white p-4">
-      <div className="flex items-center gap-3">
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-md business-bg-soft business-text">{icon}</span>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{label}</p>
-          <p className="text-2xl font-semibold text-[#111827]">{value}</p>
-        </div>
-      </div>
-    </div>
-  );
+  return <MetricCard label={label} value={value} icon={icon} tone="business" className="h-full" />;
 }
-
 function StatusBadge({ label }: { label: string }) {
   return <span className="inline-flex rounded-md business-bg-soft px-2 py-1 text-xs font-semibold business-text">{label}</span>;
 }
 
 function EmptyMessages({ filtered }: { filtered: boolean }) {
   return (
-    <div className="py-8 text-center">
-      <p className="text-sm font-semibold text-[#111827]">{filtered ? "No messages match these filters." : "No prepared messages yet."}</p>
-      <p className="mt-2 text-sm text-[#6B7280]">
-        {filtered ? "Clear filters to return to the full message queue." : "Prepare a message from an engagement opportunity when you are ready to contact a customer manually."}
-      </p>
-      <Link href={filtered ? "/dashboard/messages" : "/dashboard/engagement"} className="mt-4 inline-flex rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
-        {filtered ? "Clear Filters" : "View Engagement"}
-      </Link>
-    </div>
+    <EmptyState
+      title={filtered ? "No messages match these filters." : "No prepared messages yet."}
+      description={filtered ? "Clear filters to return to the full message queue." : "Prepare a message from an engagement opportunity when you are ready to contact a customer manually."}
+      action={(
+        <Link href={filtered ? "/dashboard/messages" : "/dashboard/engagement"} className="inline-flex rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
+          {filtered ? "Clear Filters" : "View Engagement"}
+        </Link>
+      )}
+      className="my-4"
+    />
   );
 }
+
+
+

@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import type { InvoiceStatus, Prisma } from "@prisma/client";
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CsrfInput } from "@/components/CsrfInput";
@@ -6,6 +6,7 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
 import { InvoiceBadge } from "@/components/InvoiceBadge";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
+import { ButtonLink, EmptyState, MetricCard } from "@/components/ui";
 import { formatDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
@@ -76,10 +77,10 @@ export default async function PlatformInvoicesPage({
           </div>
         </div>
         <div className="mt-5 grid gap-3 md:grid-cols-4">
-          <InvoiceKpi label="Total Invoices" value={invoiceKpis.total} href="/platform/invoices" />
-          <InvoiceKpi label="Paid Invoices" value={invoiceKpis.paid} href="/platform/invoices?status=PAID" />
-          <InvoiceKpi label="Outstanding Invoices" value={invoiceKpis.outstanding} href="/platform/invoices?status=OUTSTANDING" />
-          <InvoiceKpi label="Overdue Invoices" value={invoiceKpis.overdue} tone="text-red-700" href="/platform/invoices?status=OVERDUE" />
+          <MetricCard label="Total Invoices" value={invoiceKpis.total} href="/platform/invoices" />
+          <MetricCard label="Paid Invoices" value={invoiceKpis.paid} href="/platform/invoices?status=PAID" tone="success" />
+          <MetricCard label="Outstanding Invoices" value={invoiceKpis.outstanding} href="/platform/invoices?status=OUTSTANDING" tone={invoiceKpis.outstanding > 0 ? "warning" : "neutral"} />
+          <MetricCard label="Overdue Invoices" value={invoiceKpis.overdue} href="/platform/invoices?status=OVERDUE" tone={invoiceKpis.overdue > 0 ? "danger" : "neutral"} />
         </div>
         <MobileFilterDrawer activeCount={activeFilterCount}>
         <form className="mt-5 grid gap-3 rounded-md border border-[#E5E7EB] bg-zinc-50 p-3 lg:grid-cols-[1fr_1fr_1fr_auto_auto] lg:items-center">
@@ -244,22 +245,6 @@ function InvoiceDetail({ label, value }: { label: string; value: string }) {
 function formatInvoiceBillingCycle(value: string) {
   return value.toLowerCase().replaceAll("_", " ");
 }
-function InvoiceKpi({ label, value, tone = "text-[#111827]", href }: { label: string; value: number; tone?: string; href?: string }) {
-  const content = (
-    <div className={`h-full rounded-md border border-[#E5E7EB] bg-white p-4 transition ${href ? "cursor-pointer hover:border-[#F97316] hover:shadow-md" : ""}`}>
-      <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{label}</p>
-      <p className={`mt-2 text-2xl font-semibold ${tone}`}>{value}</p>
-    </div>
-  );
-
-  return href ? (
-    <Link href={href} className="block h-full rounded-md focus:outline-none focus:ring-4 focus:ring-orange-100">
-      {content}
-    </Link>
-  ) : (
-    content
-  );
-}
 type InvoiceListItem = {
   uuid: string;
   status: InvoiceStatus;
@@ -284,11 +269,11 @@ function InvoiceActions({ invoice }: { invoice: InvoiceListItem }) {
 
 function InvoiceEmpty() {
   return (
-    <div className="py-8 text-center">
-      <p className="text-sm font-semibold text-[#111827]">No invoices match these filters.</p>
-      <p className="mt-2 text-sm text-[#6B7280]">Clear filters or review subscription billing records.</p>
-      <Link href="/platform/invoices" className="mt-4 inline-flex rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">Clear Filters</Link>
-    </div>
+    <EmptyState
+      title="No invoices match these filters."
+      description="Clear filters or review subscription billing records."
+      action={<ButtonLink href="/platform/invoices" variant="primary">Clear Filters</ButtonLink>}
+    />
   );
 }
 

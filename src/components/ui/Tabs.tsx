@@ -16,7 +16,7 @@ export function Tabs({ items, defaultValue, label = "Sections" }: { items: TabIt
 
   return (
     <div>
-      <div role="tablist" aria-label={label} className="flex gap-2 overflow-x-auto border-b border-[#E2E8F0]">
+      <div role="tablist" aria-label={label} className="flex gap-2 overflow-x-auto border-b border-[#E2E8F0] [scrollbar-gutter:stable]">
         {items.map((item) => (
           <button
             key={item.id}
@@ -25,7 +25,7 @@ export function Tabs({ items, defaultValue, label = "Sections" }: { items: TabIt
             aria-selected={activeItem?.id === item.id}
             onClick={() => setActive(item.id)}
             className={cn(
-              "min-h-11 whitespace-nowrap border-b-2 px-3 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] focus-visible:ring-offset-2",
+              "min-h-11 whitespace-nowrap border-b-2 px-3 text-sm font-semibold transition duration-200 ease-out active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:active:translate-y-0",
               activeItem?.id === item.id ? "border-[#F97316] text-[#EA580C]" : "border-transparent text-[#64748B] hover:text-[#1E293B]",
             )}
           >

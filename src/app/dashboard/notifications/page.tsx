@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import { BarChart3, Bell, ChevronDown, Clock, Search, ShieldAlert, UserCheck } from "lucide-react";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { MetricCard } from "@/components/ui/MetricCard";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { reviewActivityAlertAction } from "@/app/dashboard/notifications/actions";
 import { alertCategory, defaultAbusePolicies } from "@/lib/alert-engine";
@@ -567,18 +569,9 @@ function SeverityBadge({ severity }: { severity: string }) {
 }
 
 function FilterSummary({ href, icon, label, value, tone = "default" }: { href: string; icon?: ReactNode; label: string; value: number; tone?: "default" | "red" | "orange" | "green" }) {
-  const toneClass = tone === "red" ? "text-red-700" : tone === "orange" ? "text-orange-700" : tone === "green" ? "text-emerald-700" : "text-[#111827]";
-  return (
-    <Link href={href} className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3 transition business-hover">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-[#6B7280]">{label}</p>
-        {icon ? <span className="business-text">{icon}</span> : null}
-      </div>
-      <p className={`mt-1 text-2xl font-semibold ${toneClass}`}>{value}</p>
-    </Link>
-  );
+  const metricTone = tone === "red" ? "danger" : tone === "orange" ? "warning" : tone === "green" ? "success" : "neutral";
+  return <MetricCard href={href} label={label} value={value} icon={icon} tone={metricTone} className="h-full" />;
 }
-
 function MiniChart({ title, rows }: { title: string; rows: Array<{ label: string; value: number }> }) {
   const max = Math.max(1, ...rows.map((row) => row.value));
   return (
@@ -595,7 +588,7 @@ function MiniChart({ title, rows }: { title: string; rows: Array<{ label: string
               <div className="h-2 rounded-full business-button" style={{ width: `${Math.max(6, (row.value / max) * 100)}%` }} />
             </div>
           </div>
-        )) : <p className="text-sm text-[#6B7280]">No alert data yet.</p>}
+        )) : <EmptyState title="No alert data yet." className="p-4 md:p-4" />}
       </div>
     </div>
   );
@@ -698,6 +691,13 @@ type AlertRow = {
   staffHref: string | null;
   activityHref: string | null;
 };
+
+
+
+
+
+
+
 
 
 
