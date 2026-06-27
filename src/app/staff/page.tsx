@@ -1,7 +1,9 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { Gift, QrCode, Search, TicketCheck, UserPlus, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { MetricCard } from "@/components/ui/MetricCard";
 import { formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
@@ -68,7 +70,7 @@ export default async function StaffDashboard() {
               <p className="mt-1 text-[#6B7280]">{formatDateTime(scan.createdAt)}</p>
             </div>
           ))}
-          {recentScans.length === 0 ? <p className="text-sm text-[#6B7280]">No scan activity yet today.</p> : null}
+          {recentScans.length === 0 ? <EmptyState title="No scan activity yet today." className="p-4 md:p-4" /> : null}
         </div>
       </section>
     </DashboardShell>
@@ -88,22 +90,8 @@ function Action({ href, icon: Icon, title, description, primary = false }: { hre
 }
 
 function Metric({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
-  return (
-    <div className="rounded-md border border-[#E5E7EB] p-4">
-      <Icon className="h-4 w-4 business-primary" aria-hidden="true" />
-      <p className="mt-3 text-sm text-[#6B7280]">{label}</p>
-      <p className="mt-1 text-xl font-semibold text-[#111827]">{value}</p>
-    </div>
-  );
+  return <MetricCard label={label} value={value} icon={<Icon className="h-4 w-4 business-primary" />} className="h-full" />;
 }
-
 function Info({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md border border-[#E5E7EB] bg-white p-4">
-      <p className="text-sm text-[#6B7280]">{label}</p>
-      <p className="mt-2 text-base font-semibold text-[#111827]">{value}</p>
-    </div>
-  );
+  return <MetricCard label={label} value={value} className="h-full" />;
 }
-
-

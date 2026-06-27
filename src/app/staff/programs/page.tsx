@@ -1,4 +1,6 @@
 import { DashboardShell } from "@/components/DashboardShell";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { prisma } from "@/lib/prisma";
 import { progressValue } from "@/lib/programs";
 import { requireRole } from "@/lib/session";
@@ -14,7 +16,7 @@ export default async function StaffProgramsPage() {
 
   return (
     <DashboardShell user={user} eyebrow="Staff" title="Programs" hideWelcomeMessage>
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
+      <SectionCard title="Available programs">
         <h2 className="text-lg font-semibold text-[#111827]">Available programs</h2>
         <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {programs.map((program) => (
@@ -25,8 +27,13 @@ export default async function StaffProgramsPage() {
             </article>
           ))}
         </div>
-        {programs.length === 0 ? <p className="py-8 text-center text-sm text-[#6B7280]">No active programs yet.</p> : null}
-      </section>
+        {programs.length === 0 ? <EmptyState title="No active programs yet." className="my-4" /> : null}
+      </SectionCard>
     </DashboardShell>
   );
 }
+
+
+
+
+

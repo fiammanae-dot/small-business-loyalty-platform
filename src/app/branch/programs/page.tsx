@@ -1,7 +1,10 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { Gift, TicketCheck, Trophy, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { MetricCard } from "@/components/ui/MetricCard";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { prisma } from "@/lib/prisma";
 import { progressValue } from "@/lib/programs";
 import { requireRole } from "@/lib/session";
@@ -41,7 +44,7 @@ export default async function BranchProgramsPage() {
 
   return (
     <DashboardShell user={user} eyebrow="Branch Manager" title="Programs" hideWelcomeMessage>
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5">
+      <SectionCard>
         <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-[#111827]">Available programs</h2>
@@ -84,18 +87,14 @@ export default async function BranchProgramsPage() {
             );
           })}
         </div>
-        {programs.length === 0 ? <p className="py-8 text-center text-sm text-[#6B7280]">No active programs yet.</p> : null}
-      </section>
+        {programs.length === 0 ? <EmptyState title="No active programs yet." className="my-4" /> : null}
+      </SectionCard>
     </DashboardShell>
   );
 }
 
 function ProgramStat({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
-  return (
-    <div className="rounded-md bg-[#FAFAFA] p-3">
-      <Icon className="h-4 w-4 business-text" aria-hidden="true" />
-      <p className="mt-2 text-xs text-[#6B7280]">{label}</p>
-      <p className="text-base font-semibold text-[#111827]">{value}</p>
-    </div>
-  );
+  return <MetricCard label={label} value={value} icon={<Icon className="h-4 w-4 business-text" />} className="h-full p-3 md:p-3" />;
 }
+
+

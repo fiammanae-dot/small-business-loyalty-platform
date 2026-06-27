@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { CardShareActions } from "@/components/CardShareActions";
 import { DashboardShell } from "@/components/DashboardShell";
+import { Card, CardContent } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { getCardUrl } from "@/lib/customer-cards";
 import { customerSourceLabels } from "@/lib/customers";
@@ -56,7 +59,7 @@ export default async function BranchCustomersPage({
 
   return (
     <DashboardShell user={user} eyebrow="Branch Manager" title="Business customers" hideWelcomeMessage>
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
+      <SectionCard>
         <Message error={params.error} success={params.success} />
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
@@ -71,7 +74,7 @@ export default async function BranchCustomersPage({
           <input name="q" defaultValue={params.q ?? ""} placeholder="Search name, phone, email" className="h-10 flex-1 rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0" />
           <button type="submit" className="rounded-md border business-border px-4 text-sm font-semibold business-text">Search</button>
         </form>
-        <div className="mt-6 overflow-x-auto">
+        <div className="mt-6 hidden overflow-x-auto md:block">
           <table className="w-full min-w-[820px] border-separate border-spacing-0 text-left text-sm">
             <thead>
               <tr className="text-[#6B7280]">
@@ -108,9 +111,45 @@ export default async function BranchCustomersPage({
               ))}
             </tbody>
           </table>
-          {customers.length === 0 ? <p className="py-8 text-center text-sm text-[#6B7280]">No customers found.</p> : null}
         </div>
-      </section>
+        <div className="mt-6 grid gap-3 md:hidden">
+          {customerRows.map((membership) => (
+            <Card key={membership.id}>
+              <CardContent className="space-y-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="break-words font-semibold text-[#111827]">{membership.customerName}</h3>
+                    <p className="mt-1 text-sm text-[#6B7280]">{formatUaePhoneDisplay(membership.globalCustomer.normalizedPhone)}</p>
+                    {membership.globalCustomer.email ? <p className="mt-1 break-words text-sm text-[#6B7280]">{membership.globalCustomer.email}</p> : null}
+                  </div>
+                  <StatusBadge status={membership.status} />
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <MobileInfo label="Joined" value={formatDate(membership.joinedAt)} />
+                  <MobileInfo label="Branch" value={membership.createdBranch?.name ?? "-"} />
+                  <MobileInfo label="Source" value={customerSourceLabels[membership.source]} />
+                  <MobileInfo label="Card" value={membership.cardStatus.toLowerCase()} />
+                </div>
+                <div className="flex flex-col gap-3 border-t border-[#E5E7EB] pt-4">
+                  <Link href={`/branch/customers/${membership.uuid}`} className="inline-flex min-h-11 items-center justify-center rounded-md business-button px-4 text-sm font-semibold text-white">
+                    View customer
+                  </Link>
+                  <CardShareActions
+                    cardUrl={membership.cardUrl}
+                    businessName={membership.business.name}
+                    customerName={membership.customerName}
+                    recipientPhone={membership.globalCustomer.normalizedPhone}
+                    auditMembershipUuid={membership.uuid}
+                    showCopy={false}
+                    showWallet={false}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        {customers.length === 0 ? <EmptyState title="No customers found." className="my-4" /> : null}
+      </SectionCard>
     </DashboardShell>
   );
 }
@@ -119,3 +158,16 @@ function Message({ error, success }: { error?: string; success?: string }) {
   if (!error && !success) return null;
   return <p className={`mb-5 rounded-md border px-3 py-2 text-sm ${error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>{error ?? success}</p>;
 }
+
+function MobileInfo({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="min-w-0 rounded-md bg-[#F8FAFC] p-3">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">{label}</p>
+      <div className="mt-1 break-words text-sm font-semibold text-[#111827]">{value}</div>
+    </div>
+  );
+}
+
+
+
+

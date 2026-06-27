@@ -3,6 +3,7 @@ import Image from "next/image";
 import type React from "react";
 import { CardShareActions } from "@/components/CardShareActions";
 import { DashboardShell } from "@/components/DashboardShell";
+import { Card, CardContent, EmptyState, MetricCard } from "@/components/ui";
 import { StatusBadge } from "@/components/StatusBadge";
 import { getCardUrl, getShortCardToken } from "@/lib/customer-cards";
 import { customerSourceLabels, getBusinessCustomerOrRedirect } from "@/lib/customers";
@@ -147,11 +148,11 @@ export default async function BranchCustomerProfilePage({
             </div>
           ))}
         </div>
-        {membership.programMemberships.length === 0 ? <p className="mt-4 text-sm text-[#6B7280]">No program enrollments yet.</p> : null}
+        {membership.programMemberships.length === 0 ? <EmptyState title="No program enrollments yet." className="mt-4 p-4 md:p-4" /> : null}
       </section>
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
         <h2 className="text-lg font-semibold text-[#111827]">Redemption History</h2>
-        <div className="mt-5 overflow-x-auto">
+        <div className="mt-5 hidden overflow-x-auto md:block">
           <table className="w-full min-w-[720px] border-separate border-spacing-0 text-left text-sm">
             <thead>
               <tr className="text-[#6B7280]">
@@ -172,18 +173,43 @@ export default async function BranchCustomerProfilePage({
               ))}
             </tbody>
           </table>
-          {rewardRedemptions.length === 0 ? <p className="py-8 text-center text-sm text-[#6B7280]">No reward redemptions yet.</p> : null}
         </div>
+        <div className="mt-5 grid gap-3 md:hidden">
+          {rewardRedemptions.map((redemption) => (
+            <Card key={redemption.id}>
+              <CardContent className="space-y-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="break-words font-semibold text-[#111827]">{redemption.rewardName}</h3>
+                    <p className="mt-1 break-words text-sm text-[#6B7280]">{redemption.loyaltyProgram.name}</p>
+                  </div>
+                  <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">Redeemed</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <MobileInfo label="Date" value={formatDate(redemption.redeemedAt)} />
+                  <MobileInfo label="Branch" value={redemption.branch?.name ?? "-"} />
+                  <MobileInfo label="Redeemed by" value={redemption.redeemedByUser.name} />
+                  <MobileInfo label="Program" value={redemption.loyaltyProgram.name} />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        {rewardRedemptions.length === 0 ? <EmptyState title="No reward redemptions yet." className="my-4" /> : null}
       </section>
     </DashboardShell>
   );
 }
 
 function Info({ label, value, wide = false }: { label: string; value: React.ReactNode; wide?: boolean }) {
+  return <MetricCard label={label} value={value} className={wide ? "h-full md:col-span-3" : "h-full"} />;
+}
+
+function MobileInfo({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className={`rounded-md border border-[#E5E7EB] bg-white p-4 ${wide ? "md:col-span-3" : ""}`}>
-      <p className="text-sm text-[#6B7280]">{label}</p>
-      <div className="mt-2 text-sm font-semibold text-[#111827]">{value}</div>
+    <div className="min-w-0 rounded-md bg-[#F8FAFC] p-3">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">{label}</p>
+      <div className="mt-1 break-words text-sm font-semibold text-[#111827]">{value}</div>
     </div>
   );
 }

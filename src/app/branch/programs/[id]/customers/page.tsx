@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
+import { Card, CardContent, EmptyState, ProgressBar } from "@/components/ui";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { formatDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -38,7 +39,7 @@ export default async function BranchProgramCustomersPage({
   if (!program) {
     return (
       <DashboardShell user={user} eyebrow="Branch Manager" title="Program not found" hideWelcomeMessage>
-        <p className="rounded-md border border-[#E5E7EB] bg-white p-5 text-sm text-[#6B7280]">Program not found.</p>
+        <EmptyState title="Program not found." />
       </DashboardShell>
     );
   }
@@ -88,7 +89,7 @@ export default async function BranchProgramCustomersPage({
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
         <h2 className="text-lg font-semibold text-[#111827]">Enrolled business customers</h2>
-        <div className="mt-6 overflow-x-auto">
+        <div className="mt-6 hidden overflow-x-auto md:block">
           <table className="w-full min-w-[760px] border-separate border-spacing-0 text-left text-sm">
             <thead>
               <tr className="text-[#6B7280]">
@@ -118,9 +119,47 @@ export default async function BranchProgramCustomersPage({
               ))}
             </tbody>
           </table>
-          {program.memberships.length === 0 ? <p className="py-8 text-center text-sm text-[#6B7280]">No enrolled customers yet.</p> : null}
         </div>
+        <div className="mt-6 grid gap-3 md:hidden">
+          {program.memberships.map((membership) => {
+            const customer = membership.businessCustomerMembership.globalCustomer;
+            const progress = progressValue(membership.earnedStamps, membership.bonusStamps);
+            const status = programCustomerStatusLabel({
+              status: membership.status,
+              earnedStamps: membership.earnedStamps,
+              bonusStamps: membership.bonusStamps,
+              requiredStamps: program.requiredStamps,
+            });
+            return (
+              <Card key={membership.id}>
+                <CardContent className="space-y-4">
+                  <div className="min-w-0">
+                    <h3 className="break-words font-semibold text-[#111827]">{customer.firstName} {customer.lastName ?? ""}</h3>
+                    <p className="mt-1 text-sm text-[#6B7280]">Enrolled {formatDate(membership.enrolledAt)}</p>
+                  </div>
+                  <ProgressBar value={progress} max={program.requiredStamps} label={`${progress} / ${program.requiredStamps}`} barClassName="business-button" />
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <MobileInfo label="Status" value={status} />
+                    <MobileInfo label="Reward" value={program.rewardName} />
+                    <MobileInfo label="Branch" value={membership.businessCustomerMembership.createdBranch?.name ?? "-"} />
+                    <MobileInfo label="Progress" value={`${progress} visits`} />
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+        {program.memberships.length === 0 ? <EmptyState title="No enrolled customers yet." className="my-4" /> : null}
       </section>
     </DashboardShell>
+  );
+}
+
+function MobileInfo({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="min-w-0 rounded-md bg-[#F8FAFC] p-3">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">{label}</p>
+      <div className="mt-1 break-words text-sm font-semibold text-[#111827]">{value}</div>
+    </div>
   );
 }
