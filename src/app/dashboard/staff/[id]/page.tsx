@@ -1,14 +1,15 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound } from "next/navigation";
-import type React from "react";
+import type { ReactNode } from "react";
 import { DashboardShell } from "@/components/DashboardShell";
-import { StatusBadge } from "@/components/StatusBadge";
+import { ButtonLink, EmptyState, PageHeader, SectionCard, StatusBadge, Timeline, TimelineItem } from "@/components/ui";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { activityHref, customerProfileHref } from "@/lib/alert-investigation";
 import { alertTypeLabel } from "@/lib/alert-labels";
 import { formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { roleLabels } from "@/lib/roles";
+import { ArrowLeft, Bell, Clock, KeyRound, ShieldCheck, Stamp, UserRound } from "lucide-react";
 
 export default async function StaffDetailPage({
   params,
@@ -26,11 +27,7 @@ export default async function StaffDetailPage({
   if (!staffUserId) notFound();
 
   const staffUser = await prisma.user.findFirst({
-    where: {
-      id: staffUserId,
-      businessId: user.businessId,
-      role: { in: ["BRANCH_MANAGER", "STAFF"] },
-    },
+    where: { id: staffUserId, businessId: user.businessId, role: { in: ["BRANCH_MANAGER", "STAFF"] } },
     include: {
       branch: true,
       stampTransactions: {
@@ -40,12 +37,7 @@ export default async function StaffDetailPage({
         include: {
           branch: true,
           customerProgramMembership: {
-            include: {
-              loyaltyProgram: true,
-              businessCustomerMembership: {
-                include: { globalCustomer: true },
-              },
-            },
+            include: { loyaltyProgram: true, businessCustomerMembership: { include: { globalCustomer: true } } },
           },
         },
       },
@@ -53,14 +45,7 @@ export default async function StaffDetailPage({
         where: { businessId: user.businessId },
         orderBy: { createdAt: "desc" },
         take: 20,
-        include: {
-          customerProgramMembership: {
-            include: {
-              loyaltyProgram: true,
-              businessCustomerMembership: { include: { globalCustomer: true } },
-            },
-          },
-        },
+        include: { customerProgramMembership: { include: { loyaltyProgram: true, businessCustomerMembership: { include: { globalCustomer: true } } } } },
       },
     },
   });
@@ -68,108 +53,115 @@ export default async function StaffDetailPage({
   if (!staffUser) notFound();
 
   const failedLoginAttempts = await prisma.failedLoginAudit.count({
-    where: {
-      emailAttempted: staffUser.email,
-      outcome: { in: ["FAILED", "LOCKED"] },
-      createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
-    },
+    where: { emailAttempted: staffUser.email, outcome: { in: ["FAILED", "LOCKED"] }, createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } },
   });
 
   return (
-    <DashboardShell user={user} eyebrow="Business Owner" title="Staff profile">
-      <div>
-        <Link href="/dashboard/staff" className="text-sm font-semibold business-primary">
-          Back to staff
-        </Link>
+    <DashboardShell user={user} eyebrow="Business Owner" title="Team Member Profile" hideWelcomeMessage>
+      <div className="max-w-full min-w-0 space-y-5 overflow-x-hidden">
+        <PageHeader
+          eyebrow="Team Management"
+          title={staffUser.name}
+          description={`${roleLabels[staffUser.role]} assigned to ${staffUser.branch?.name ?? "no branch"}.`}
+          actions={<ButtonLink href="/dashboard/staff" variant="outline" leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden />}>Back to Team Management</ButtonLink>}
+        />
+
+        <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+          <SectionCard title="Profile" description="Core team member information.">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Info label="Name" value={staffUser.name} icon={<UserRound className="h-4 w-4" />} />
+              <Info label="Email" value={staffUser.email} />
+              <Info label="Status" value={staffStatusBadge(staffUser.status)} />
+              <Info label="Created" value={formatDateTime(staffUser.createdAt)} />
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Role" description="Access level and branch assignment.">
+            <div className="grid gap-3">
+              <Info label="Role" value={<StatusBadge tone={staffUser.role === "BRANCH_MANAGER" ? "info" : "neutral"}>{roleLabels[staffUser.role]}</StatusBadge>} icon={<ShieldCheck className="h-4 w-4" />} />
+              <Info label="Assigned Branch" value={staffUser.branch?.name ?? "Unassigned"} />
+              <Info label="Permissions Summary" value={staffUser.role === "BRANCH_MANAGER" ? "Can supervise branch operations, scan customers and redeem rewards." : "Can enroll customers, scan cards and issue stamps within assigned access."} />
+            </div>
+          </SectionCard>
+        </section>
+
+        <SectionCard title="Account Security" description="Login and password health for this account.">
+          <div className="grid gap-3 md:grid-cols-4">
+            <Info label="Last Login" value={staffUser.lastLoginAt ? formatDateTime(staffUser.lastLoginAt) : "Never"} icon={<Clock className="h-4 w-4" />} />
+            <Info label="Password Last Changed" value={formatDateTime(staffUser.passwordChangedAt)} icon={<KeyRound className="h-4 w-4" />} />
+            <Info label="Failed Login Attempts 24h" value={failedLoginAttempts} />
+            <Info label="Password Change Required" value={staffUser.forcePasswordChange ? "Yes" : "No"} />
+          </div>
+        </SectionCard>
+
+        <section className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+          <SectionCard title="Recent Activity" description="Latest stamp issuance handled by this team member.">
+            {staffUser.stampTransactions.length ? (
+              <Timeline>
+                {staffUser.stampTransactions.map((transaction) => {
+                  const membership = transaction.customerProgramMembership.businessCustomerMembership;
+                  const customer = membership.globalCustomer;
+                  const isHighlighted = highlightedTransactionId === transaction.id;
+                  return (
+                    <TimelineItem
+                      key={transaction.id}
+                      marker={<Stamp className="h-3 w-3" />}
+                      className={isHighlighted ? "rounded-md bg-orange-50 py-2" : undefined}
+                      title={<Link href={activityHref(transaction.id, alertId) ?? "#"} className="business-text transition business-hover">{transaction.quantity} stamp{transaction.quantity === 1 ? "" : "s"} issued</Link>}
+                      time={formatDateTime(transaction.createdAt)}
+                      description={
+                        <span>
+                          {customer.firstName} {customer.lastName ?? ""} - {transaction.customerProgramMembership.loyaltyProgram.name} - {transaction.branch?.name ?? "No branch"}
+                          {transaction.reason ? <span className="block">Reason: {transaction.reason}</span> : null}
+                          <Link href={customerProfileHref(membership.uuid, alertId, transaction.id) ?? "#"} className="mt-1 inline-flex font-semibold business-text">Open Customer</Link>
+                        </span>
+                      }
+                    />
+                  );
+                })}
+              </Timeline>
+            ) : (
+              <EmptyState title="No recent staff activity" description="Stamp issuance activity for this team member will appear here." />
+            )}
+          </SectionCard>
+
+          <SectionCard title="Generated Alerts" description="Operational alerts connected to this user.">
+            {staffUser.activityAlerts.length ? (
+              <Timeline>
+                {staffUser.activityAlerts.map((alert) => (
+                  <TimelineItem
+                    key={alert.id}
+                    marker={<Bell className="h-3 w-3" />}
+                    className={alertId === alert.id ? "rounded-md bg-orange-50 py-2" : undefined}
+                    title={<Link href={`/dashboard/notifications/${alert.id}`} className="business-text transition business-hover">{alertTypeLabel(alert.alertType)}</Link>}
+                    time={formatDateTime(alert.createdAt)}
+                    description={<span>{alert.description}<span className="mt-1 block font-semibold">Severity: {alert.severity}</span></span>}
+                  />
+                ))}
+              </Timeline>
+            ) : (
+              <EmptyState title="No generated alerts" description="Security or activity alerts created by this team member will appear here." />
+            )}
+          </SectionCard>
+        </section>
+
+        <SectionCard title="Danger Zone" description="Sensitive access actions are available from the Team Management action menu and remain protected by confirmation prompts.">
+          <p className="text-sm leading-6 text-[#64748B]">Use Reset Password, Enable or Disable from the staff list when account access needs to change. History remains preserved for audit and operational reporting.</p>
+        </SectionCard>
       </div>
-
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
-        <div className="grid gap-4 md:grid-cols-3">
-          <Info label="Name" value={staffUser.name} />
-          <Info label="Email" value={staffUser.email} />
-          <Info label="Role" value={roleLabels[staffUser.role]} />
-          <Info label="Branch" value={staffUser.branch?.name ?? "-"} />
-          <Info label="Status" value={<StatusBadge status={staffUser.status} />} />
-          <Info label="Created" value={formatDateTime(staffUser.createdAt)} />
-        </div>
-      </section>
-
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
-        <h2 className="text-lg font-semibold text-[#111827]">Account security</h2>
-        <div className="mt-4 grid gap-4 md:grid-cols-4">
-          <Info label="Last login" value={staffUser.lastLoginAt ? formatDateTime(staffUser.lastLoginAt) : "-"} />
-          <Info label="Password last changed" value={formatDateTime(staffUser.passwordChangedAt)} />
-          <Info label="Failed login attempts (24h)" value={failedLoginAttempts} />
-          <Info label="Password change required" value={staffUser.forcePasswordChange ? "Yes" : "No"} />
-        </div>
-      </section>
-
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
-        <h2 className="text-lg font-semibold text-[#111827]">Stamp issuance history</h2>
-        <div className="mt-5 grid gap-3">
-          {staffUser.stampTransactions.map((transaction) => {
-            const membership = transaction.customerProgramMembership.businessCustomerMembership;
-            const customer = membership.globalCustomer;
-            const isHighlighted = highlightedTransactionId === transaction.id;
-            return (
-              <div
-                key={transaction.id}
-                className={`rounded-md border p-4 ${isHighlighted ? "border-[#F97316] bg-orange-50" : "border-[#E5E7EB] bg-white"}`}
-              >
-                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                  <div>
-                    <Link href={activityHref(transaction.id, alertId) ?? "#"} className="font-semibold business-primary">
-                      Activity #{transaction.id}
-                    </Link>
-                    <p className="mt-1 text-sm text-[#111827]">
-                      {transaction.quantity} stamp{transaction.quantity === 1 ? "" : "s"} issued to {customer.firstName} {customer.lastName ?? ""}
-                    </p>
-                    <p className="mt-1 text-sm text-[#6B7280]">
-                      {transaction.customerProgramMembership.loyaltyProgram.name} • {transaction.branch?.name ?? "-"} • {formatDateTime(transaction.createdAt)}
-                    </p>
-                  </div>
-                  <Link href={customerProfileHref(membership.uuid, alertId, transaction.id) ?? "#"} className="text-sm font-semibold business-primary">
-                    View Customer
-                  </Link>
-                </div>
-                {transaction.reason ? <p className="mt-3 text-sm text-[#6B7280]">Reason: {transaction.reason}</p> : null}
-              </div>
-            );
-          })}
-          {staffUser.stampTransactions.length === 0 ? <p className="text-sm text-[#6B7280]">No stamp transactions issued by this user.</p> : null}
-        </div>
-      </section>
-
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
-        <h2 className="text-lg font-semibold text-[#111827]">Generated alerts history</h2>
-        <div className="mt-5 grid gap-3">
-          {staffUser.activityAlerts.map((alert) => (
-            <Link
-              key={alert.id}
-              href={`/dashboard/notifications/${alert.id}`}
-              className={`rounded-md border p-4 transition business-hover ${alertId === alert.id ? "border-[#F97316] bg-orange-50" : "border-[#E5E7EB] bg-white"}`}
-            >
-              <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                <div>
-                  <p className="font-semibold text-[#111827]">{alertTypeLabel(alert.alertType)}</p>
-                  <p className="mt-1 text-sm text-[#6B7280]">{alert.description}</p>
-                </div>
-                <p className="text-sm font-semibold business-primary">{alert.severity}</p>
-              </div>
-            </Link>
-          ))}
-          {staffUser.activityAlerts.length === 0 ? <p className="text-sm text-[#6B7280]">No generated alerts for this user.</p> : null}
-        </div>
-      </section>
     </DashboardShell>
   );
 }
 
-function Info({ label, value }: { label: string; value: React.ReactNode }) {
+function Info({ label, value, icon }: { label: string; value: ReactNode; icon?: ReactNode }) {
   return (
-    <div className="rounded-md border border-[#E5E7EB] bg-white p-4">
-      <p className="text-sm text-[#6B7280]">{label}</p>
-      <div className="mt-2 text-sm font-semibold text-[#111827]">{value}</div>
+    <div className="min-w-0 rounded-md border border-[#E2E8F0] bg-white p-4">
+      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#64748B]">{icon ? <span aria-hidden>{icon}</span> : null}{label}</div>
+      <div className="mt-2 break-words text-sm font-semibold text-[#0F172A]">{value}</div>
     </div>
   );
+}
+
+function staffStatusBadge(status: string) {
+  return status === "ACTIVE" ? <StatusBadge tone="success">Active</StatusBadge> : <StatusBadge tone="danger">Disabled</StatusBadge>;
 }

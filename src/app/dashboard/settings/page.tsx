@@ -1,23 +1,21 @@
-import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
+﻿import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
-import { StatusBadge } from "@/components/StatusBadge";
 import { SettingsMobileSectionSelect } from "@/components/SettingsMobileSectionSelect";
-import Link from "next/link";
+import { ButtonLink, EmptyState, MetricCard, PageHeader, SectionCard, StatusBadge } from "@/components/ui";
 import { saveAbusePolicyAction, saveCooldownRuleAction, saveCustomerTierSettingsAction, saveScannerSettingsAction } from "@/app/dashboard/actions";
 import { getBusinessOwnerContext, getCurrentPlan, getCurrentSubscription } from "@/lib/business-owner";
 import { normalizeTierConfig, tierMaintenanceModeLabels, tierQualificationWindowLabels } from "@/lib/customer-tiers";
 import { formatDate } from "@/lib/format";
+import { messageChannelLabels } from "@/lib/messages";
 import { prisma } from "@/lib/prisma";
 import { businessTypeLabels } from "@/lib/roles";
-import { getSubscriptionRemainingDays, getTrialRemainingDays, subscriptionDisplayDate } from "@/lib/subscriptions";
-import { messageChannelLabels } from "@/lib/messages";
+import { getSubscriptionRemainingDays, getTrialRemainingDays, subscriptionDisplayDate, subscriptionStatusLabels } from "@/lib/subscriptions";
+import { Bell, Building2, LockKeyhole, Palette, Plug, Settings2, ShieldAlert, SlidersHorizontal, UserRound } from "lucide-react";
+import Link from "next/link";
+import type { ReactNode } from "react";
 
-export default async function BusinessSettingsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string; success?: string; tab?: string }>;
-}) {
+export default async function BusinessSettingsPage({ searchParams }: { searchParams: Promise<{ error?: string; success?: string; tab?: string }> }) {
   const { user, business } = await getBusinessOwnerContext();
   const params = await searchParams;
   const plan = getCurrentPlan(business);
@@ -28,19 +26,19 @@ export default async function BusinessSettingsPage({
   const communicationSettings = business.communicationSettings;
   const scannerSoundEffectsEnabled = business.scannerSettings?.soundEffectsEnabled ?? true;
   const tierConfig = normalizeTierConfig(business.tierSetting);
-  const cooldownRule = await prisma.cooldownRule.findFirst({
-    where: { businessId: user.businessId, active: true },
-    orderBy: { updatedAt: "desc" },
-  });
-  const abusePolicies = await prisma.abusePolicy.findMany({
-    where: { businessId: user.businessId },
-    orderBy: { ruleType: "asc" },
-  });
+  const cooldownRule = await prisma.cooldownRule.findFirst({ where: { businessId: user.businessId, active: true }, orderBy: { updatedAt: "desc" } });
+  const abusePolicies = await prisma.abusePolicy.findMany({ where: { businessId: user.businessId }, orderBy: { ruleType: "asc" } });
   const activeTab = resolveSettingsTab(params.tab);
   const settingsTabs = [
-    { tab: "overview", label: "Overview", mobileLabel: "Overview" },
+    { tab: "profile", label: "Business Profile", mobileLabel: "Business Profile" },
+    { tab: "security", label: "Security", mobileLabel: "Security" },
+    { tab: "notifications", label: "Notifications", mobileLabel: "Notifications" },
+    { tab: "branding", label: "Branding", mobileLabel: "Branding" },
+    { tab: "preferences", label: "Preferences", mobileLabel: "Preferences" },
+    { tab: "integrations", label: "Integrations", mobileLabel: "Integrations" },
+    { tab: "advanced", label: "Advanced", mobileLabel: "Advanced" },
     { tab: "tiers", label: "Customer Tiers", mobileLabel: "Customer Tiers" },
-    { tab: "scanner", label: "Scanner Settings", mobileLabel: "Scanner" },
+    { tab: "scanner", label: "Scanner", mobileLabel: "Scanner" },
     { tab: "alerts", label: "Alert Policies", mobileLabel: "Alert Policies" },
     { tab: "cooldowns", label: "Cooldowns", mobileLabel: "Cooldowns" },
     { tab: "subscription", label: "Subscription", mobileLabel: "Subscription" },
@@ -48,271 +46,65 @@ export default async function BusinessSettingsPage({
   ];
 
   return (
-    <DashboardShell user={user} eyebrow="Business Owner" title="Business settings">
-      <div className="max-w-full min-w-0 overflow-x-hidden pb-28 md:pb-0">
-      {params.error || params.success ? (
-        <p className={`rounded-md border px-3 py-2 text-sm ${params.error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>
-          {params.error ?? params.success}
-        </p>
-      ) : null}
-      <SettingsMobileSectionSelect tabs={settingsTabs} activeTab={activeTab} />
-      <nav className="hidden max-w-full min-w-0 overflow-x-auto rounded-md border border-[#E5E7EB] bg-white p-2 text-sm md:flex" aria-label="Business settings tabs">
-        {settingsTabs.map(({ tab, label }) => (
-          <Link
-            key={tab}
-            href={`/dashboard/settings?tab=${tab}`}
-            className={`shrink-0 rounded-md px-3 py-2 font-semibold ${activeTab === tab ? "bg-orange-50 business-bg-soft business-primary" : "text-[#111827] hover:bg-[#FAFAFA]"}`}
-          >
-            {label}
-          </Link>
-        ))}
-      </nav>
+    <DashboardShell user={user} eyebrow="Business Owner" title="Business Settings" hideWelcomeMessage>
+      <div className="max-w-full min-w-0 space-y-5 overflow-x-hidden pb-28 md:pb-0">
+        <Message error={params.error} success={params.success} />
+        <PageHeader eyebrow="Business Owner" title="Business Settings" description="Manage your business configuration, preferences and security." />
 
-      {activeTab === "overview" ? <section className="max-w-full min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5">
-        <h2 className="text-lg font-semibold text-[#111827]">Read-only setup</h2>
-        <div className="mt-4 grid min-w-0 gap-3 md:mt-5 md:gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Item label="Business type" value={businessTypeLabels[business.businessType]} />
-          <Item label="Current plan" value={plan?.name ?? "Unassigned"} />
-          <Item label="Branch limit" value={(plan?.maxBranches ?? 1).toString()} />
-          <Item label="Loyalty program limit" value={(plan?.maxLoyaltyPrograms ?? 1).toString()} />
-          <Item label="Management scope" value="Business profile, branches, staff, customers, and programs" />
-        </div>
-        <details className="mt-4">
-          <summary className="cursor-pointer text-sm font-semibold business-primary">Advanced identifiers</summary>
-          <div className="mt-3 grid gap-4 md:grid-cols-2">
-            <Item label="Business ID" value={business.id.toString()} />
-            <Item label="Business UUID" value={business.uuid} />
-          </div>
-        </details>
-      </section> : null}
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Settings overview">
+          <MetricCard label="Business" value={business.name} helper={businessTypeLabels[business.businessType]} icon={<Building2 className="h-5 w-5" />} tone="business" />
+          <MetricCard label="Security" value={user.lastLoginAt ? "Recent login" : "No login recorded"} helper={user.passwordChangedAt ? `Password changed ${formatDate(user.passwordChangedAt)}` : "Password status available"} icon={<LockKeyhole className="h-5 w-5" />} tone="neutral" />
+          <MetricCard label="Notifications" value={communicationSettings?.preferredDefaultChannel ? messageChannelLabels[communicationSettings.preferredDefaultChannel] : "Manual only"} helper="Customer messages are prepared manually" icon={<Bell className="h-5 w-5" />} tone="info" />
+          <MetricCard label="Platform Config" value={plan?.name ?? "Unassigned"} helper={`${business._count.branches} branches, ${business._count.loyaltyPrograms} programs`} icon={<Settings2 className="h-5 w-5" />} tone="neutral" />
+        </section>
 
-      {activeTab === "tiers" ? <section className="max-w-full min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5">
-        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-[#111827]">Customer tiers</h2>
-            <p className="mt-2 break-words text-sm text-[#6B7280]">
-              Configure visit-based Bronze, Silver, Gold, and VIP grades. Tiers are available on every plan.
-            </p>
-          </div>
-          <span className="w-fit rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">
-            Enabled
-          </span>
-        </div>
-        <form action={saveCustomerTierSettingsAction} className="mt-4 grid min-w-0 gap-3 md:mt-5 md:gap-4">
-          <CsrfInput scope="dashboard:customer-tiers" />
-          <div className="grid min-w-0 gap-3 md:gap-4 md:grid-cols-3">
-            <label className="min-w-0 space-y-1.5 md:space-y-2">
-              <span className="text-sm font-medium text-[#111827]">Tier calculation method</span>
-              <select name="criteria" defaultValue="VISITS_ONLY" disabled className="h-11 w-full max-w-full min-w-0 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] px-3 text-sm text-[#6B7280]">
-                <option value="VISITS_ONLY">Visits only</option>
-              </select>
-            </label>
-            <label className="min-w-0 space-y-1.5 md:space-y-2">
-              <span className="text-sm font-medium text-[#111827]">Qualification window</span>
-              <select name="tierQualificationWindow" defaultValue={tierConfig.tierQualificationWindow} className="h-11 w-full max-w-full min-w-0 rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0 business-border ">
-                {Object.entries(tierQualificationWindowLabels).map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
-            </label>
-            <label className="min-w-0 space-y-1.5 md:space-y-2">
-              <span className="text-sm font-medium text-[#111827]">Maintenance mode</span>
-              <select name="tierMaintenanceMode" defaultValue={tierConfig.tierMaintenanceMode} className="h-11 w-full max-w-full min-w-0 rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0 business-border ">
-                {Object.entries(tierMaintenanceModeLabels).map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <div className="grid min-w-0 gap-3 md:gap-4 md:grid-cols-3">
-            <Input name="silverVisitRequirement" label="Silver visit requirement" type="number" min="1" defaultValue={tierConfig.silverVisitRequirement.toString()} />
-            <Input name="goldVisitRequirement" label="Gold visit requirement" type="number" min="1" defaultValue={tierConfig.goldVisitRequirement.toString()} />
-            <Input name="vipVisitRequirement" label="VIP visit requirement" type="number" min="1" defaultValue={tierConfig.vipVisitRequirement.toString()} />
-          </div>
-          <div className="grid min-w-0 gap-2 rounded-md bg-orange-50 business-bg-soft px-3 py-2 text-sm md:gap-3 md:py-3 business-primary-strong md:grid-cols-3">
-            <p className="break-words">Silver: {tierConfig.silverVisitRequirement} visits in {tierQualificationWindowLabels[tierConfig.tierQualificationWindow].toLowerCase()}</p>
-            <p className="break-words">Gold: {tierConfig.goldVisitRequirement} visits in {tierQualificationWindowLabels[tierConfig.tierQualificationWindow].toLowerCase()}</p>
-            <p className="break-words">VIP: {tierConfig.vipVisitRequirement} visits in {tierQualificationWindowLabels[tierConfig.tierQualificationWindow].toLowerCase()}</p>
-          </div>
-          <p className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] px-3 py-2 text-sm break-words text-[#6B7280]">
-            Bronze is automatic when a customer joins. Public customer cards show visits, tier progress, rewards, and QR code only. Spend and internal analytics are never shown on the customer card.
-          </p>
-          <div>
-            <button type="submit" className="h-11 rounded-md business-button px-4 text-sm font-semibold text-white">
-              Save tier settings
-            </button>
-          </div>
-        </form>
-      </section> : null}
+        <SettingsMobileSectionSelect tabs={settingsTabs} activeTab={activeTab} />
+        <nav className="hidden max-w-full min-w-0 grid-cols-2 gap-3 md:grid xl:grid-cols-4" aria-label="Business settings sections">
+          {settingsTabs.map(({ tab, label }) => <SettingsNavCard key={tab} tab={tab} label={label} active={activeTab === tab} />)}
+        </nav>
 
-      {activeTab === "scanner" ? <section className="max-w-full min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5">
-        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-[#111827]">Scanner settings</h2>
-            <p className="mt-2 break-words text-sm text-[#6B7280]">Control audio feedback for scanner outcomes. Visual success and error messages always remain visible.</p>
-          </div>
-          <span className={`w-fit rounded-md px-2 py-1 text-xs font-semibold ${scannerSoundEffectsEnabled ? "bg-emerald-50 text-emerald-700" : "bg-[#FAFAFA] text-[#6B7280]"}`}>
-            {scannerSoundEffectsEnabled ? "Sound ON" : "Sound OFF"}
-          </span>
-        </div>
-        <form action={saveScannerSettingsAction} className="mt-4 grid min-w-0 gap-3 md:mt-5 md:gap-4">
-          <CsrfInput scope="dashboard:scanner-settings" />
-          <label className="flex items-center justify-between gap-4 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
-            <span>
-              <span className="block text-sm font-semibold text-[#111827]">Scanner Sound Effects</span>
-              <span className="mt-1 block text-sm text-[#6B7280]">Play a short beep, buzz, or chime after scanner actions.</span>
-            </span>
-            <input
-              type="checkbox"
-              name="soundEffectsEnabled"
-              defaultChecked={scannerSoundEffectsEnabled}
-              className="h-5 w-5 rounded border-[#E5E7EB] business-primary"
-              aria-label="Scanner Sound Effects"
-            />
-          </label>
-          <p className="rounded-md border border-orange-200 business-border-soft bg-orange-50 business-bg-soft px-3 py-2 text-sm break-words business-primary-strong">
-            Sounds play only after scanner interaction or scan form submission so mobile browsers can allow audio. Keep this on for busy counters where staff need instant feedback.
-          </p>
-          <div>
-            <button type="submit" className="h-11 rounded-md business-button px-4 text-sm font-semibold text-white">
-              Save scanner settings
-            </button>
-          </div>
-        </form>
-      </section> : null}
-
-      {activeTab === "alerts" ? <section className="max-w-full min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5">
-        <div>
-          <h2 className="text-lg font-semibold text-[#111827]">Alert policies</h2>
-          <p className="mt-2 break-words text-sm text-[#6B7280]">Tune abuse-monitoring thresholds and severity for this business.</p>
-        </div>
-        <div className="mt-5 grid gap-3">
-          {abusePolicies.map((policy) => (
-            <form key={policy.id} action={saveAbusePolicyAction} className="grid gap-3 rounded-md border border-[#E5E7EB] p-4 lg:grid-cols-[1fr_140px_150px_120px_auto] lg:items-end">
-              <CsrfInput scope="dashboard:abuse-policies" />
-              <input type="hidden" name="policyId" value={policy.id} />
-              <div>
-                <p className="text-sm font-semibold text-[#111827]">{policy.policyName}</p>
-                <p className="mt-1 text-xs text-[#6B7280]">{policy.ruleType.replaceAll("_", " ").toLowerCase()}</p>
-              </div>
-              <Input name="thresholdValue" label="Threshold" type="number" min="0" defaultValue={policy.thresholdValue.toString()} />
-              <label className="min-w-0 space-y-1.5 md:space-y-2">
-                <span className="text-sm font-medium text-[#111827]">Severity</span>
-                <select name="severity" defaultValue={policy.severity} className="h-11 w-full max-w-full min-w-0 rounded-md border border-[#E5E7EB] px-3 text-sm">
-                  {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((severity) => (
-                    <option key={severity} value={severity}>{severity}</option>
-                  ))}
-                </select>
-              </label>
-              <label className="flex min-h-11 items-center gap-2 rounded-md border border-[#E5E7EB] px-3 text-sm font-medium text-[#111827]">
-                <input type="checkbox" name="enabled" defaultChecked={policy.enabled} className="h-4 w-4 rounded border-[#E5E7EB]" />
-                Enabled
-              </label>
-              <button type="submit" className="h-11 rounded-md border business-border px-4 text-sm font-semibold business-primary">
-                Save
-              </button>
-            </form>
-          ))}
-          {abusePolicies.length === 0 ? <p className="rounded-md border border-dashed border-[#E5E7EB] p-4 text-sm text-[#6B7280]">Default alert policies will be created by the Phase 12B migration.</p> : null}
-        </div>
-      </section> : null}
-
-      {activeTab === "cooldowns" ? <section className="max-w-full min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5">
-        <div>
-          <h2 className="text-lg font-semibold text-[#111827]">Cooldown policy</h2>
-          <p className="mt-2 break-words text-sm text-[#6B7280]">Control abuse-monitoring limits for stamp issuance. Overrides are available only to Business Owners and Branch Managers.</p>
-        </div>
-        <form action={saveCooldownRuleAction} className="mt-4 grid min-w-0 gap-3 md:mt-5 md:gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <CsrfInput scope="dashboard:cooldowns" />
-          <Input name="minimumMinutesBetweenStamps" label="Minimum minutes between stamps" type="number" min="0" defaultValue={(cooldownRule?.minimumMinutesBetweenStamps ?? 0).toString()} />
-          <Input name="maximumStampsPerTransaction" label="Maximum stamps per transaction" type="number" min="1" max="5" defaultValue={(cooldownRule?.maximumStampsPerTransaction ?? 5).toString()} />
-          <Input name="maximumStampsPerCustomerPerDay" label="Maximum stamps per customer per day" type="number" min="1" defaultValue={cooldownRule?.maximumStampsPerCustomerPerDay?.toString() ?? ""} />
-          <Input name="maximumStampsPerStaffPerDay" label="Maximum stamps per staff per day" type="number" min="1" defaultValue={cooldownRule?.maximumStampsPerStaffPerDay?.toString() ?? ""} />
-          <label className="flex min-h-11 items-center gap-2 rounded-md border border-[#E5E7EB] px-3 text-sm font-medium text-[#111827]">
-            <input type="checkbox" name="generateAlert" defaultChecked={cooldownRule?.generateAlert ?? true} className="h-4 w-4 rounded border-[#E5E7EB]" />
-            Generate alerts for violations
-          </label>
-          <div className="flex items-end">
-            <ConfirmSubmitButton
-              message="Save cooldown policy? This affects future stamp issuance limits."
-              className="h-11 rounded-md business-button px-4 text-sm font-semibold text-white"
-            >
-              Save cooldown policy
-            </ConfirmSubmitButton>
-          </div>
-        </form>
-      </section> : null}
-
-      {activeTab === "subscription" ? <section className="max-w-full min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5">
-        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-[#111827]">Subscription</h2>
-            <p className="break-words text-sm text-[#6B7280]">Plan and lifecycle details are managed by the System Administrator.</p>
-          </div>
-          {subscription ? <StatusBadge status={subscription.status} /> : null}
-        </div>
-        <div className="mt-4 grid min-w-0 gap-3 md:mt-5 md:gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Item label="Current plan" value={plan?.name ?? "Unassigned"} />
-          <Item label="Renewal date" value={subscription?.renewalDate ? formatDate(subscription.renewalDate) : "Not set"} />
-          <Item label="Expiry date" value={expiryDate ? formatDate(expiryDate) : "Not set"} />
-          <Item label="Remaining days" value={remainingDays === null ? "Not set" : remainingDays.toString()} />
-          <Item label="Trial remaining days" value={trialDays === null ? "Not in trial" : trialDays.toString()} />
-          <Item label="Branch usage" value={`${business._count.branches} / ${plan?.maxBranches ?? 1}`} />
-          <Item label="Program usage" value={`${business._count.loyaltyPrograms} / ${plan?.maxLoyaltyPrograms ?? 1}`} />
-        </div>
-      </section> : null}
-
-      {activeTab === "communications" ? <section className="max-w-full min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5">
-        <h2 className="text-lg font-semibold text-[#111827]">Communication channels</h2>
-        <p className="mt-2 break-words text-sm text-[#6B7280]">Provider-level channel settings are managed by the System Administrator. Messages are prepared manually only.</p>
-        <div className="mt-4 grid min-w-0 gap-3 md:mt-5 md:gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Item label="WhatsApp enabled" value={communicationSettings?.whatsappEnabled ? "Yes" : "No"} />
-          <Item label="SMS enabled" value={communicationSettings?.smsEnabled ? "Yes" : "No"} />
-          <Item label="Email enabled" value={communicationSettings?.emailEnabled ? "Yes" : "No"} />
-          <Item label="Default channel" value={messageChannelLabels[communicationSettings?.preferredDefaultChannel ?? "NONE"]} />
-          <Item label="WhatsApp business number" value={communicationSettings?.whatsappBusinessNumber ?? "Not set"} />
-          <Item label="Sender email" value={communicationSettings?.senderEmail ?? "Not set"} />
-          <Item label="Sender name" value={communicationSettings?.senderName ?? "Not set"} />
-        </div>
-      </section> : null}
+        {activeTab === "profile" ? <BusinessProfileSection business={business} user={user} /> : null}
+        {activeTab === "security" ? <SecuritySection user={user} /> : null}
+        {activeTab === "notifications" ? <NotificationsSection communicationSettings={communicationSettings} /> : null}
+        {activeTab === "branding" ? <BrandingSection branding={business.branding} businessName={business.name} /> : null}
+        {activeTab === "preferences" ? <PreferencesSection business={business} communicationSettings={communicationSettings} /> : null}
+        {activeTab === "integrations" ? <IntegrationsSection communicationSettings={communicationSettings} /> : null}
+        {activeTab === "advanced" ? <AdvancedSection /> : null}
+        {activeTab === "tiers" ? <CustomerTiersSection tierConfig={tierConfig} /> : null}
+        {activeTab === "scanner" ? <ScannerSection scannerSoundEffectsEnabled={scannerSoundEffectsEnabled} /> : null}
+        {activeTab === "alerts" ? <AlertPoliciesSection abusePolicies={abusePolicies} /> : null}
+        {activeTab === "cooldowns" ? <CooldownSection cooldownRule={cooldownRule} /> : null}
+        {activeTab === "subscription" ? <SubscriptionSection plan={plan} subscription={subscription} expiryDate={expiryDate} remainingDays={remainingDays} trialDays={trialDays} business={business} /> : null}
+        {activeTab === "communications" ? <CommunicationsSection communicationSettings={communicationSettings} /> : null}
       </div>
     </DashboardShell>
   );
 }
 
-function resolveSettingsTab(tab?: string) {
-  const allowed = ["overview", "tiers", "scanner", "alerts", "cooldowns", "subscription", "communications"];
-  return allowed.includes(tab ?? "") ? tab! : "overview";
+function BusinessProfileSection({ business, user }: { business: Awaited<ReturnType<typeof getBusinessOwnerContext>>["business"]; user: Awaited<ReturnType<typeof getBusinessOwnerContext>>["user"] }) {
+  const primaryBranch = business.branches[0];
+  return <SectionCard title="Business Profile" description="Core identity and public-facing business information."><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3"><Item label="Business Name" value={business.name} /><Item label="Business Type" value={businessTypeLabels[business.businessType]} /><Item label="Owner Name" value={user.name} /><Item label="Owner Email" value={user.email} /><Item label="Phone" value="Not configured" /><Item label="Address" value={primaryBranch ? `${primaryBranch.address}, ${primaryBranch.city}, ${primaryBranch.country}` : "No branch address configured"} /><Item label="Timezone" value="Business default" /><Item label="Language" value="English" /><Item label="Logo" value={business.branding?.logoUrl ? "Configured" : "Not configured"} /></div></SectionCard>;
 }
+function SecuritySection({ user }: { user: Awaited<ReturnType<typeof getBusinessOwnerContext>>["user"] }) { return <SectionCard title="Security" description="Account access and session-related information for the Business Owner."><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4"><Item label="Password" value="Managed through secure account flow" /><Item label="Two-factor status" value="Not available" /><Item label="Recent password change" value={user.passwordChangedAt ? formatDate(user.passwordChangedAt) : "Not recorded"} /><Item label="Active sessions" value="Current session managed automatically" /></div><div className="mt-4"><ButtonLink href="/change-password" variant="outline">Reset Password</ButtonLink></div></SectionCard>; }
+function NotificationsSection({ communicationSettings }: { communicationSettings: Awaited<ReturnType<typeof getBusinessOwnerContext>>["business"]["communicationSettings"] }) { return <SectionCard title="Notifications" description="Customer and team notification preferences currently available for this business."><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5"><Item label="Email notifications" value={communicationSettings?.emailEnabled ? "Enabled" : "Disabled"} /><Item label="Referral notifications" value="Prepared manually" /><Item label="Reward notifications" value="Prepared manually" /><Item label="Staff notifications" value="Workspace alerts" /><Item label="Billing notifications" value="Platform managed" /></div></SectionCard>; }
+function BrandingSection({ branding, businessName }: { branding: Awaited<ReturnType<typeof getBusinessOwnerContext>>["business"]["branding"]; businessName: string }) { return <SectionCard title="Branding" description="Business branding values applied to operational workspaces and customer-facing card surfaces."><div className="grid gap-4 lg:grid-cols-[1fr_280px]"><div className="grid gap-3 md:grid-cols-2"><Item label="Logo" value={branding?.logoUrl ? "Configured" : "Not configured"} /><ColorItem label="Primary Color" value={branding?.primaryColor ?? "#F97316"} /><ColorItem label="Secondary Color" value={branding?.secondaryColor ?? "#FDBA74"} /><ColorItem label="Background Color" value={branding?.backgroundColor ?? "#FFFFFF"} /><ColorItem label="Text Color" value={branding?.textColor ?? "#111827"} /><ColorItem label="Button Color" value={branding?.buttonColor ?? "#F97316"} /></div><div className="rounded-md border border-[#E2E8F0] p-4" style={{ background: branding?.backgroundColor ?? "#FFFFFF", color: branding?.textColor ?? "#111827" }}><p className="text-xs font-semibold uppercase tracking-wide">Card Preview</p><div className="mt-4 rounded-md border bg-white/90 p-4"><div className="flex items-center gap-3"><div className="flex h-11 w-11 items-center justify-center rounded-md font-bold text-white" style={{ background: branding?.primaryColor ?? "#F97316" }}>{businessName.slice(0, 2).toUpperCase()}</div><div><p className="font-semibold">{businessName}</p><p className="text-sm opacity-75">Digital loyalty card</p></div></div><button type="button" className="mt-4 h-10 rounded-md px-4 text-sm font-semibold text-white" style={{ background: branding?.buttonColor ?? "#F97316" }}>Primary action</button></div></div></div></SectionCard>; }
+function PreferencesSection({ business, communicationSettings }: { business: Awaited<ReturnType<typeof getBusinessOwnerContext>>["business"]; communicationSettings: Awaited<ReturnType<typeof getBusinessOwnerContext>>["business"]["communicationSettings"] }) { return <SectionCard title="Preferences" description="Display and workspace defaults currently available for this business."><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4"><Item label="Language" value="English" /><Item label="Date format" value="System default" /><Item label="Timezone" value="Business default" /><Item label="Display preferences" value="Standard dashboard layout" /><Item label="Default channel" value={messageChannelLabels[communicationSettings?.preferredDefaultChannel ?? "NONE"]} /><Item label="Business type" value={businessTypeLabels[business.businessType]} /></div></SectionCard>; }
+function IntegrationsSection({ communicationSettings }: { communicationSettings: Awaited<ReturnType<typeof getBusinessOwnerContext>>["business"]["communicationSettings"] }) { return <SectionCard title="Integrations" description="Connected services visible to this business."><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4"><IntegrationCard title="WhatsApp" status={communicationSettings?.whatsappEnabled ? "Enabled" : "Not connected"} /><IntegrationCard title="SMS" status={communicationSettings?.smsEnabled ? "Enabled" : "Not connected"} /><IntegrationCard title="Email" status={communicationSettings?.emailEnabled ? "Enabled" : "Not connected"} /><IntegrationCard title="Apple Wallet" status="Coming Soon" /></div></SectionCard>; }
+function AdvancedSection() { return <SectionCard title="Advanced" description="Future-ready platform configuration without exposing unsafe controls."><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4"><IntegrationCard title="API Keys" status="Planned" /><IntegrationCard title="Webhooks" status="Planned" /><IntegrationCard title="Custom Domains" status="Planned" /><IntegrationCard title="White Label" status="Planned" /></div><div className="mt-5 rounded-md border border-red-200 bg-red-50 p-4"><h3 className="font-semibold text-red-800">Danger Zone</h3><p className="mt-1 text-sm text-red-700">Deactivate Business and Delete Business are not available from this workspace. Contact LoyaltyBase support for account lifecycle changes.</p></div></SectionCard>; }
 
-function Input({
-  label,
-  name,
-  type = "text",
-  defaultValue,
-  min,
-  max,
-}: {
-  label: string;
-  name: string;
-  type?: string;
-  defaultValue?: string;
-  min?: string;
-  max?: string;
-}) {
-  return (
-    <label className="min-w-0 space-y-1.5 md:space-y-2">
-      <span className="text-sm font-medium text-[#111827]">{label}</span>
-      <input name={name} type={type} min={min} max={max} defaultValue={defaultValue} className="h-11 w-full max-w-full min-w-0 rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0 business-border " />
-    </label>
-  );
-}
+function CustomerTiersSection({ tierConfig }: { tierConfig: ReturnType<typeof normalizeTierConfig> }) { return <SectionCard title="Customer tiers" description="Configure visit-based Bronze, Silver, Gold, and VIP grades. Tiers are available on every plan." actions={<StatusBadge tone="success">Enabled</StatusBadge>}><form action={saveCustomerTierSettingsAction} className="grid min-w-0 gap-4"><CsrfInput scope="dashboard:customer-tiers" /><div className="grid gap-4 md:grid-cols-3"><label className="space-y-2"><span className="text-sm font-medium text-[#111827]">Tier calculation method</span><select name="criteria" defaultValue="VISITS_ONLY" disabled className="h-11 w-full rounded-md border border-[#E5E7EB] bg-[#FAFAFA] px-3 text-sm text-[#6B7280]"><option value="VISITS_ONLY">Visits only</option></select></label><SelectInput name="tierQualificationWindow" label="Qualification window" defaultValue={tierConfig.tierQualificationWindow} options={Object.entries(tierQualificationWindowLabels)} /><SelectInput name="tierMaintenanceMode" label="Maintenance mode" defaultValue={tierConfig.tierMaintenanceMode} options={Object.entries(tierMaintenanceModeLabels)} /></div><div className="grid gap-4 md:grid-cols-3"><Input name="silverVisitRequirement" label="Silver visit requirement" type="number" min="1" defaultValue={tierConfig.silverVisitRequirement.toString()} /><Input name="goldVisitRequirement" label="Gold visit requirement" type="number" min="1" defaultValue={tierConfig.goldVisitRequirement.toString()} /><Input name="vipVisitRequirement" label="VIP visit requirement" type="number" min="1" defaultValue={tierConfig.vipVisitRequirement.toString()} /></div><div className="grid gap-3 rounded-md business-bg-soft px-3 py-3 text-sm business-primary-strong md:grid-cols-3"><p>Silver: {tierConfig.silverVisitRequirement} visits</p><p>Gold: {tierConfig.goldVisitRequirement} visits</p><p>VIP: {tierConfig.vipVisitRequirement} visits</p></div><button type="submit" className="h-11 w-fit rounded-md business-button px-4 text-sm font-semibold text-white">Save tier settings</button></form></SectionCard>; }
+function ScannerSection({ scannerSoundEffectsEnabled }: { scannerSoundEffectsEnabled: boolean }) { return <SectionCard title="Scanner Settings" description="Control audio feedback for scanner outcomes. Visual success and error messages always remain visible." actions={<StatusBadge tone={scannerSoundEffectsEnabled ? "success" : "neutral"}>{scannerSoundEffectsEnabled ? "Sound ON" : "Sound OFF"}</StatusBadge>}><form action={saveScannerSettingsAction} className="grid gap-4"><CsrfInput scope="dashboard:scanner-settings" /><label className="flex items-center justify-between gap-4 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4"><span><span className="block text-sm font-semibold text-[#111827]">Scanner Sound Effects</span><span className="mt-1 block text-sm text-[#6B7280]">Play a short beep, buzz, or chime after scanner actions.</span></span><input type="checkbox" name="soundEffectsEnabled" defaultChecked={scannerSoundEffectsEnabled} className="h-5 w-5 rounded border-[#E5E7EB] business-primary" aria-label="Scanner Sound Effects" /></label><p className="rounded-md business-border-soft business-bg-soft px-3 py-2 text-sm business-primary-strong">Sounds play only after scanner interaction or scan form submission so mobile browsers can allow audio.</p><button type="submit" className="h-11 w-fit rounded-md business-button px-4 text-sm font-semibold text-white">Save scanner settings</button></form></SectionCard>; }
+function AlertPoliciesSection({ abusePolicies }: { abusePolicies: Array<{ id: number; policyName: string; ruleType: string; thresholdValue: number; severity: string; enabled: boolean }> }) { return <SectionCard title="Alert policies" description="Tune abuse-monitoring thresholds and severity for this business."><div className="grid gap-3">{abusePolicies.map((policy) => <form key={policy.id} action={saveAbusePolicyAction} className="grid gap-3 rounded-md border border-[#E5E7EB] p-4 lg:grid-cols-[1fr_140px_150px_120px_auto] lg:items-end"><CsrfInput scope="dashboard:abuse-policies" /><input type="hidden" name="policyId" value={policy.id} /><div><p className="text-sm font-semibold text-[#111827]">{policy.policyName}</p><p className="mt-1 text-xs text-[#6B7280]">{policy.ruleType.replaceAll("_", " ").toLowerCase()}</p></div><Input name="thresholdValue" label="Threshold" type="number" min="0" defaultValue={policy.thresholdValue.toString()} /><SelectInput name="severity" label="Severity" defaultValue={policy.severity} options={["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((s) => [s, s])} /><label className="flex min-h-11 items-center gap-2 rounded-md border border-[#E5E7EB] px-3 text-sm font-medium text-[#111827]"><input type="checkbox" name="enabled" defaultChecked={policy.enabled} className="h-4 w-4 rounded border-[#E5E7EB]" />Enabled</label><button type="submit" className="h-11 rounded-md border business-border px-4 text-sm font-semibold business-primary">Save</button></form>)}{abusePolicies.length === 0 ? <EmptyState title="No alert policies configured" description="Default alert policies will be created by the platform migration." /> : null}</div></SectionCard>; }
+function CooldownSection({ cooldownRule }: { cooldownRule: { minimumMinutesBetweenStamps: number; maximumStampsPerTransaction: number; maximumStampsPerCustomerPerDay: number | null; maximumStampsPerStaffPerDay: number | null; generateAlert: boolean } | null }) { return <SectionCard title="Cooldown policy" description="Control abuse-monitoring limits for stamp issuance. Overrides are available only to Business Owners and Branch Managers."><form action={saveCooldownRuleAction} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"><CsrfInput scope="dashboard:cooldowns" /><Input name="minimumMinutesBetweenStamps" label="Minimum minutes between stamps" type="number" min="0" defaultValue={(cooldownRule?.minimumMinutesBetweenStamps ?? 0).toString()} /><Input name="maximumStampsPerTransaction" label="Maximum stamps per transaction" type="number" min="1" max="5" defaultValue={(cooldownRule?.maximumStampsPerTransaction ?? 5).toString()} /><Input name="maximumStampsPerCustomerPerDay" label="Maximum stamps per customer per day" type="number" min="1" defaultValue={cooldownRule?.maximumStampsPerCustomerPerDay?.toString() ?? ""} /><Input name="maximumStampsPerStaffPerDay" label="Maximum stamps per staff per day" type="number" min="1" defaultValue={cooldownRule?.maximumStampsPerStaffPerDay?.toString() ?? ""} /><label className="flex min-h-11 items-center gap-2 rounded-md border border-[#E5E7EB] px-3 text-sm font-medium text-[#111827]"><input type="checkbox" name="generateAlert" defaultChecked={cooldownRule?.generateAlert ?? true} className="h-4 w-4 rounded border-[#E5E7EB]" />Generate alerts for violations</label><div className="flex items-end"><ConfirmSubmitButton message="Save cooldown policy? This affects future stamp issuance limits." className="h-11 rounded-md business-button px-4 text-sm font-semibold text-white">Save cooldown policy</ConfirmSubmitButton></div></form></SectionCard>; }
+function SubscriptionSection({ plan, subscription, expiryDate, remainingDays, trialDays, business }: { plan: ReturnType<typeof getCurrentPlan>; subscription: ReturnType<typeof getCurrentSubscription>; expiryDate: Date | null; remainingDays: number | null; trialDays: number | null; business: Awaited<ReturnType<typeof getBusinessOwnerContext>>["business"] }) { return <SectionCard title="Subscription" description="Plan and lifecycle details are managed by the System Administrator." actions={subscription ? <StatusBadge tone={subscription.status === "ACTIVE" ? "success" : subscription.status === "TRIAL" ? "warning" : "danger"}>{subscriptionStatusLabels[subscription.status]}</StatusBadge> : null}><div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4"><Item label="Current plan" value={plan?.name ?? "Unassigned"} /><Item label="Renewal date" value={subscription?.renewalDate ? formatDate(subscription.renewalDate) : "Not set"} /><Item label="Expiry date" value={expiryDate ? formatDate(expiryDate) : "Not set"} /><Item label="Remaining days" value={remainingDays === null ? "Not set" : remainingDays.toString()} /><Item label="Trial remaining days" value={trialDays === null ? "Not in trial" : trialDays.toString()} /><Item label="Branch usage" value={`${business._count.branches} / ${plan?.maxBranches ?? 1}`} /><Item label="Program usage" value={`${business._count.loyaltyPrograms} / ${plan?.maxLoyaltyPrograms ?? 1}`} /></div></SectionCard>; }
+function CommunicationsSection({ communicationSettings }: { communicationSettings: Awaited<ReturnType<typeof getBusinessOwnerContext>>["business"]["communicationSettings"] }) { return <SectionCard title="Communication Channels" description="Provider-level channel settings are managed by the System Administrator. Messages are prepared manually only."><div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3"><Item label="WhatsApp enabled" value={communicationSettings?.whatsappEnabled ? "Yes" : "No"} /><Item label="SMS enabled" value={communicationSettings?.smsEnabled ? "Yes" : "No"} /><Item label="Email enabled" value={communicationSettings?.emailEnabled ? "Yes" : "No"} /><Item label="Default channel" value={messageChannelLabels[communicationSettings?.preferredDefaultChannel ?? "NONE"]} /><Item label="WhatsApp business number" value={communicationSettings?.whatsappBusinessNumber ?? "Not set"} /><Item label="Sender email" value={communicationSettings?.senderEmail ?? "Not set"} /><Item label="Sender name" value={communicationSettings?.senderName ?? "Not set"} /></div></SectionCard>; }
 
-function Item({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] p-4">
-      <p className="break-words text-sm text-[#6B7280]">{label}</p>
-      <p className="mt-2 break-words text-sm font-semibold text-[#111827]">{value}</p>
-    </div>
-  );
-}
+function resolveSettingsTab(tab?: string) { const aliases: Record<string, string> = { overview: "profile" }; const value = aliases[tab ?? ""] ?? tab ?? "profile"; const allowed = ["profile", "security", "notifications", "branding", "preferences", "integrations", "advanced", "tiers", "scanner", "alerts", "cooldowns", "subscription", "communications"]; return allowed.includes(value) ? value : "profile"; }
+function SettingsNavCard({ tab, label, active }: { tab: string; label: string; active: boolean }) { return <Link href={`/dashboard/settings?tab=${tab}`} className={`min-w-0 rounded-md border p-4 transition ${active ? "business-border-soft business-bg-soft business-text" : "border-[#E2E8F0] bg-white text-[#0F172A] hover:bg-[#F8FAFC]"}`}><span className="text-sm font-semibold">{label}</span></Link>; }
+function SelectInput({ label, name, defaultValue, options }: { label: string; name: string; defaultValue: string; options: Array<[string, string]> }) { return <label className="min-w-0 space-y-2"><span className="text-sm font-medium text-[#111827]">{label}</span><select name={name} defaultValue={defaultValue} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring business-border">{options.map(([value, labelText]) => <option key={value} value={value}>{labelText}</option>)}</select></label>; }
+function Input({ label, name, type = "text", defaultValue, min, max }: { label: string; name: string; type?: string; defaultValue?: string; min?: string; max?: string }) { return <label className="min-w-0 space-y-2"><span className="text-sm font-medium text-[#111827]">{label}</span><input name={name} type={type} min={min} max={max} defaultValue={defaultValue} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring business-border" /></label>; }
+function Item({ label, value }: { label: string; value: ReactNode }) { return <div className="min-w-0 overflow-hidden rounded-md border border-[#E2E8F0] bg-white p-4"><p className="break-words text-xs font-semibold uppercase tracking-wide text-[#64748B]">{label}</p><div className="mt-2 break-words text-sm font-semibold text-[#0F172A]">{value}</div></div>; }
+function ColorItem({ label, value }: { label: string; value: string }) { return <div className="min-w-0 rounded-md border border-[#E2E8F0] bg-white p-4"><p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">{label}</p><div className="mt-2 flex items-center gap-2"><span className="h-5 w-5 rounded-full border" style={{ backgroundColor: value }} /><span className="break-all text-sm font-semibold text-[#0F172A]">{value}</span></div></div>; }
+function IntegrationCard({ title, status }: { title: string; status: string }) { return <div className="rounded-md border border-[#E2E8F0] bg-white p-4"><div className="flex items-center justify-between gap-3"><p className="font-semibold text-[#0F172A]">{title}</p><Plug className="h-4 w-4 text-[#64748B]" aria-hidden /></div><p className="mt-2 text-sm text-[#64748B]">{status}</p></div>; }
+function Message({ error, success }: { error?: string; success?: string }) { if (!error && !success) return null; return <p className={`rounded-md border px-3 py-2 text-sm ${error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>{error ?? success}</p>; }
+
