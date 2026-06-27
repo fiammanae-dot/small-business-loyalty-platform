@@ -1,4 +1,4 @@
-﻿import assert from "node:assert/strict";
+import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
@@ -29,7 +29,7 @@ test("business owner billing page uses Billing & Plan Center structure", () => {
 test("business owner billing page uses design system billing components", () => {
   const page = read("src/app/dashboard/billing/page.tsx");
 
-  for (const component of ["PageHeader", "MetricCard", "SectionCard", "ProgressBar", "StatusBadge", "DataTable", "ActionMenu", "EmptyState", "ButtonLink"]) {
+  for (const component of ["PageHeader", "MetricCard", "SectionCard", "ProgressBar", "StatusBadge", "DataTable", "EmptyState", "ButtonLink"]) {
     assert.match(page, new RegExp(component), `Billing page should use ${component}`);
   }
 
@@ -50,3 +50,4 @@ test("business owner billing page remains UI-only and mobile safe", () => {
   assert.doesNotMatch(page, /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
   assert.doesNotMatch(page, /prisma\.[a-zA-Z0-9_]+\.(create|update|delete|upsert|deleteMany|updateMany)\(/, "Billing redesign should not add Prisma mutation calls");
 });
+

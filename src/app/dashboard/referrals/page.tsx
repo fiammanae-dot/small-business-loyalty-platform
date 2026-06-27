@@ -110,7 +110,7 @@ export default async function ReferralsPage({
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Referral Center" hideWelcomeMessage>
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
+      <section className="min-w-0 rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p className="text-sm font-semibold business-primary">Growth</p>
@@ -130,8 +130,8 @@ export default async function ReferralsPage({
         </div>
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-[1fr_360px]">
-        <div className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
+      <section className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(300px,420px)]">
+        <div className="min-w-0 rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-lg font-semibold text-[#111827]">Referral List</h2>
@@ -174,15 +174,15 @@ export default async function ReferralsPage({
           </div>
         </div>
 
-        <aside className="grid gap-5">
-          <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
+        <aside className="grid min-w-0 gap-5">
+          <section className="min-w-0 rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
             <h2 className="text-lg font-semibold text-[#111827]">Top Referrers</h2>
             <div className="mt-4 grid gap-3">
               {topReferrers.map((row) => {
                 const membership = referrerById.get(row.referrerMembershipId);
                 return (
-                  <Link key={row.referrerMembershipId} href={membership ? `/dashboard/customers/${membership.uuid}` : "/dashboard/referrals"} className="rounded-md border border-[#E5E7EB] p-3 transition business-hover">
-                    <p className="font-semibold text-[#111827]">{membership ? customerName(membership.globalCustomer) : `Customer #${row.referrerMembershipId}`}</p>
+                  <Link key={row.referrerMembershipId} href={membership ? `/dashboard/customers/${membership.uuid}` : "/dashboard/referrals"} className="min-w-0 rounded-md border border-[#E5E7EB] p-3 transition business-hover">
+                    <p className="truncate font-semibold text-[#111827]" title={membership ? customerName(membership.globalCustomer) : `Customer #${row.referrerMembershipId}`}>{membership ? customerName(membership.globalCustomer) : `Customer #${row.referrerMembershipId}`}</p>
                     <p className="mt-1 text-sm text-[#6B7280]">{row._count.id} referral{row._count.id === 1 ? "" : "s"}</p>
                   </Link>
                 );
@@ -191,7 +191,7 @@ export default async function ReferralsPage({
             </div>
           </section>
 
-          <details className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
+          <details className="min-w-0 rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
             <summary className="cursor-pointer text-lg font-semibold text-[#111827]">Growth Funnel</summary>
             <ol className="mt-4 grid gap-3 text-sm text-[#6B7280]">
               <li className="rounded-md bg-[#FAFAFA] p-3"><strong className="text-[#111827]">1.</strong> Invited: Customer shares referral link.</li>
@@ -291,3 +291,6 @@ type ReferralRow = Prisma.ReferralGetPayload<{
     events: true;
   };
 }>;
+
+
+

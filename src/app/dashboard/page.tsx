@@ -358,7 +358,7 @@ function PrimaryAction({ href, icon: Icon, label, featured = false }: { href: st
   return (
     <Link
       href={href}
-      className={`flex min-h-24 min-w-0 items-center gap-4 rounded-md border p-4 shadow-sm transition ${
+      className={`flex min-h-24 min-w-[10rem] items-center gap-4 rounded-md border p-4 shadow-sm transition ${
         featured
           ? "business-border business-button text-white"
           : "border-[#E5E7EB] bg-white text-[#111827] business-hover"
@@ -367,7 +367,7 @@ function PrimaryAction({ href, icon: Icon, label, featured = false }: { href: st
       <span className={`flex h-12 w-12 items-center justify-center rounded-md ${featured ? "bg-white/15" : "bg-orange-50 business-bg-soft business-primary"}`}>
         <Icon className="h-6 w-6" aria-hidden="true" />
       </span>
-      <span className="min-w-0 break-words text-lg font-semibold">{label}</span>
+      <span className="min-w-0 whitespace-nowrap text-lg font-semibold">{label}</span>
     </Link>
   );
 }
@@ -384,6 +384,9 @@ function getInitials(name: string) {
     .map((part) => part[0]?.toUpperCase())
     .join("");
 }
+
+
+
 
 
 

@@ -337,7 +337,7 @@ function AlertCard({
   const canManage = !["RESOLVED", "DISMISSED", "REVIEWED"].includes(alert.status);
 
   return (
-    <details className="group rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm open:ring-1 open:ring-[var(--business-primary-border)]">
+    <details className="group min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm open:ring-1 open:ring-[var(--business-primary-border)]">
       <summary className="flex cursor-pointer list-none flex-col gap-3">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -363,8 +363,8 @@ function AlertCard({
         </div>
       </summary>
 
-      <div className="mt-4 grid gap-4 border-t border-[#E5E7EB] pt-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="grid gap-4">
+      <div className="mt-4 grid min-w-0 gap-4 border-t border-[#E5E7EB] pt-4 xl:grid-cols-2">
+        <div className="grid min-w-0 gap-4">
           <InvestigationPanel title="Business impact">
             <p>Why was this alert generated? {alert.description}</p>
             <p>Potential business impact: possible loyalty abuse, incorrect stamp issuance, or operational risk requiring review.</p>
@@ -394,7 +394,7 @@ function AlertCard({
           </InvestigationPanel>
         </div>
 
-        <aside className="grid gap-3 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3">
+        <aside className="grid min-w-0 gap-3 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3">
           <InvestigationPanel title="Customer details">
             <p>Name: {customerName}</p>
             <p>Phone: {customer?.phone ?? "-"}</p>
@@ -503,9 +503,9 @@ function ActionForm({
 
 function CompactInfo({ label, value }: { label: string; value: string }) {
   return (
-    <div>
+    <div className="min-w-0">
       <p className="text-xs font-semibold uppercase text-[#9CA3AF]">{label}</p>
-      <p className="mt-1 truncate font-medium text-[#111827]">{value}</p>
+      <p className="mt-1 truncate font-medium text-[#111827]" title={value}>{value}</p>
     </div>
   );
 }
@@ -513,12 +513,12 @@ function CompactInfo({ label, value }: { label: string; value: string }) {
 function RiskMeter({ score }: { score: number }) {
   const color = score >= 70 ? "bg-red-500" : score >= 40 ? "bg-orange-500" : "bg-emerald-500";
   return (
-    <div>
-      <div className="flex items-center justify-between gap-3">
+    <div className="min-w-0">
+      <div className="flex min-w-0 items-center justify-between gap-3">
         <p className="text-xs font-semibold uppercase text-[#9CA3AF]">Risk score</p>
         <p className="text-sm font-semibold text-[#111827]">{score}/100</p>
       </div>
-      <div className="mt-2 h-2 rounded-full bg-[#F3F4F6]">
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#F3F4F6]">
         <div className={`h-2 rounded-full ${color}`} style={{ width: `${Math.min(100, Math.max(0, score))}%` }} />
       </div>
     </div>
@@ -527,20 +527,20 @@ function RiskMeter({ score }: { score: number }) {
 
 function InvestigationPanel({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-3 text-sm leading-6 text-[#6B7280]">
+    <section className="min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-3 text-sm leading-6 text-[#6B7280]">
       <h4 className="mb-2 font-semibold text-[#111827]">{title}</h4>
-      <div className="grid gap-1">{children}</div>
+      <div className="grid min-w-0 gap-1 break-words">{children}</div>
     </section>
   );
 }
 
 function TimelineItem({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-md bg-[#FAFAFA] p-2">
+    <div className="flex min-w-0 items-start gap-3 rounded-md bg-[#FAFAFA] p-2">
       <span className="business-text">{icon}</span>
-      <div>
+      <div className="min-w-0">
         <p className="font-semibold text-[#111827]">{label}</p>
-        <p className="text-xs text-[#6B7280]">{value}</p>
+        <p className="break-words text-xs text-[#6B7280]">{value}</p>
       </div>
     </div>
   );
@@ -582,16 +582,16 @@ function FilterSummary({ href, icon, label, value, tone = "default" }: { href: s
 function MiniChart({ title, rows }: { title: string; rows: Array<{ label: string; value: number }> }) {
   const max = Math.max(1, ...rows.map((row) => row.value));
   return (
-    <div className="rounded-md border border-[#E5E7EB] bg-white p-3">
+    <div className="min-w-0 rounded-md border border-[#E5E7EB] bg-white p-3">
       <p className="text-sm font-semibold text-[#111827]">{title}</p>
       <div className="mt-3 grid gap-2">
         {rows.length ? rows.map((row) => (
-          <div key={`${title}-${row.label}`}>
-            <div className="flex justify-between gap-3 text-xs">
-              <span className="truncate text-[#6B7280]">{row.label}</span>
-              <strong className="text-[#111827]">{row.value}</strong>
+          <div key={`${title}-${row.label}`} className="min-w-0">
+            <div className="flex min-w-0 items-center justify-between gap-3 text-xs">
+              <span className="min-w-0 truncate text-[#6B7280]" title={row.label}>{row.label}</span>
+              <strong className="w-8 shrink-0 text-right text-[#111827]">{row.value}</strong>
             </div>
-            <div className="mt-1 h-2 rounded-full bg-[#F3F4F6]">
+            <div className="mt-1 h-2 overflow-hidden rounded-full bg-[#F3F4F6]">
               <div className="h-2 rounded-full business-button" style={{ width: `${Math.max(6, (row.value / max) * 100)}%` }} />
             </div>
           </div>
@@ -698,3 +698,7 @@ type AlertRow = {
   staffHref: string | null;
   activityHref: string | null;
 };
+
+
+
+
