@@ -235,7 +235,7 @@ function ActionRequiredSection({ rewardReadyCustomers, pendingReferrals, custome
   return <UiSectionCard title="Action Required" description="Operational queues that need owner attention.">{hasAction ? <div className="grid gap-4 lg:grid-cols-2"><QueueBox title="Reward Ready Customers" count={rewardReadyCustomers} href="/dashboard/customers?reward=ready" empty="No rewards waiting right now." /><QueueBox title="Pending Referrals" count={pendingReferrals} href="/dashboard/referrals?status=PENDING" empty="No pending referrals." /><QueueBox title="Customers Close To Reward" count={customersCloseToReward} href="/dashboard/customers" empty="No customers close to reward." /><QueueBox title="Recent Scanner Activity" count={recentScannerActivity} href="/dashboard/activity" empty="No scanner activity today." />{alertCount > 0 ? <AlertRow href="/dashboard/notifications" label="Open Alerts" value={alertCount} /> : null}{subscriptionNeedsAttention ? <Link href="/dashboard/billing" className="rounded-md border border-[#FDE68A] bg-[#FFFBEB] p-3 text-sm font-semibold text-[#92400E] transition hover:bg-[#FEF3C7]">Subscription / plan warning</Link> : null}{onboardingPercent < 100 ? <div className="lg:col-span-2"><OnboardingSummary percent={onboardingPercent} items={onboardingItems} /></div> : null}</div> : <p className="text-sm text-[#64748B]">No action required.</p>}</UiSectionCard>;
 }
 function QuickActions() {
-  return <section><h2 className="mb-3 text-xl font-semibold text-[#0F172A]">Quick Actions</h2><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><PrimaryAction href="/dashboard/scanner" icon={ScanLine} label="Open Scanner" featured /><PrimaryAction href="/dashboard/customers/new" icon={UserPlus} label="Add Customer" /><PrimaryAction href="/dashboard/customers" icon={Search} label="Find Customer" /><PrimaryAction href="/dashboard/programs" icon={TicketCheck} label="Programs" /></div></section>;
+  return <section><h2 className="mb-3 text-xl font-semibold text-[#0F172A]">Quick Actions</h2><div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 min-[1180px]:grid-cols-4"><PrimaryAction href="/dashboard/scanner" icon={ScanLine} label="Open Scanner" featured /><PrimaryAction href="/dashboard/customers/new" icon={UserPlus} label="Add Customer" /><PrimaryAction href="/dashboard/customers" icon={Search} label="Find Customer" /><PrimaryAction href="/dashboard/programs" icon={TicketCheck} label="Programs" /></div></section>;
 }
 function DashboardActivityTimeline({ customers, programs }: { customers: Array<{ uuid: string; createdAt: Date; globalCustomer: { firstName: string; lastName: string | null } }>; programs: Array<{ uuid: string; name: string; createdAt: Date }> }) {
   const items = [...customers.slice(0, 4).map((customer) => ({ title: "Customer Joined", description: getCustomerName(customer.globalCustomer), time: customer.createdAt, href: `/dashboard/customers/${customer.uuid}` })), ...programs.slice(0, 3).map((program) => ({ title: "Program Created", description: program.name, time: program.createdAt, href: `/dashboard/programs/${program.uuid}` }))].sort((a, b) => b.time.getTime() - a.time.getTime()).slice(0, 6);
@@ -358,16 +358,16 @@ function PrimaryAction({ href, icon: Icon, label, featured = false }: { href: st
   return (
     <Link
       href={href}
-      className={`flex min-h-24 min-w-[10rem] items-center gap-4 rounded-md border p-4 shadow-sm transition ${
+      className={`flex min-h-24 w-full min-w-0 items-center gap-3 rounded-md border p-4 shadow-sm transition ${
         featured
           ? "business-border business-button text-white"
           : "border-[#E5E7EB] bg-white text-[#111827] business-hover"
       }`}
     >
-      <span className={`flex h-12 w-12 items-center justify-center rounded-md ${featured ? "bg-white/15" : "bg-orange-50 business-bg-soft business-primary"}`}>
+      <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-md ${featured ? "bg-white/15" : "bg-orange-50 business-bg-soft business-primary"}`}>
         <Icon className="h-6 w-6" aria-hidden="true" />
       </span>
-      <span className="min-w-0 whitespace-nowrap text-lg font-semibold">{label}</span>
+      <span className="min-w-0 text-base font-semibold leading-tight sm:whitespace-nowrap lg:text-lg">{label}</span>
     </Link>
   );
 }
@@ -384,6 +384,7 @@ function getInitials(name: string) {
     .map((part) => part[0]?.toUpperCase())
     .join("");
 }
+
 
 
 
