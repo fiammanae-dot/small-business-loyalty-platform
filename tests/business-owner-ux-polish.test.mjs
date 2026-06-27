@@ -21,8 +21,8 @@ test("dashboard quick action labels keep single-line desktop affordance", () => 
 test("referral center right column uses responsive no-clipping layout", () => {
   const page = read("src/app/dashboard/referrals/page.tsx");
 
-  assert.match(page, /grid min-w-0 gap-5 xl:grid-cols-\[minmax\(620px,1fr\)_minmax\(280px,360px\)\]/);
-  assert.match(page, /<aside className="grid min-w-0 gap-5">/);
+  assert.match(page, /grid min-w-0 gap-5 xl:grid-cols-\[minmax\(680px,1fr\)_minmax\(340px,360px\)\]/);
+  assert.match(page, /<aside className="grid min-w-0 gap-5 xl:w-\[340px\] 2xl:w-\[360px\]">/);
   assert.match(page, /<h2 className="text-lg font-semibold text-\[#111827\]">Top Referrers<\/h2>/);
   assert.match(page, /<section className="min-w-0 rounded-md border border-\[#E5E7EB\] bg-white p-4 shadow-sm">\s*<h2 className="text-lg font-semibold text-\[#111827\]">Growth Funnel<\/h2>/);
   assert.doesNotMatch(page, /<summary className="cursor-pointer text-lg font-semibold text-\[#111827\]">Growth Funnel<\/summary>/);
@@ -32,11 +32,15 @@ test("referral center right column uses responsive no-clipping layout", () => {
 test("referral cards use compact responsive metadata grid", () => {
   const page = read("src/app/dashboard/referrals/page.tsx");
 
-  assert.match(page, /<dl className="mt-4 grid min-w-0 gap-2 text-sm text-\[#6B7280\] sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">/);
+  assert.match(page, /<dl className="mt-5 grid min-w-0 gap-3 text-sm text-\[#6B7280\] lg:grid-cols-2">/);
   for (const label of ["Created", "Qualified", "Reward", "First Visit", "Branch", "Referrer", "Referred"]) {
     assert.match(page, new RegExp(`ReferralMeta label="${label}"`));
   }
-  assert.match(page, /flex min-w-0 flex-wrap items-center gap-2 2xl:justify-end/);
+  assert.match(page, /<p className="mb-3 text-xs font-semibold uppercase tracking-wide text-\[#9CA3AF\]">Actions<\/p>/);
+  assert.match(page, /flex min-w-0 flex-wrap items-center gap-2/);
+  assert.match(page, /inline-flex h-10 shrink-0 items-center justify-center/);
+  assert.match(page, /whitespace-normal break-words font-medium leading-5/);
+  assert.doesNotMatch(page, /<dd className="mt-1 truncate/);
 });
 
 test("business billing history does not expose broken download action", () => {
@@ -70,5 +74,7 @@ test("expanded alert details use responsive readable panels", () => {
   assert.doesNotMatch(page, /`r`n/);
   assert.doesNotMatch(page, /JSON\.stringify|debug payload/i);
 });
+
+
 
 

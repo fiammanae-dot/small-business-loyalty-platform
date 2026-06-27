@@ -130,14 +130,14 @@ export default async function ReferralsPage({
         </div>
       </section>
 
-      <section className="grid min-w-0 gap-5 xl:grid-cols-[minmax(620px,1fr)_minmax(280px,360px)] 2xl:grid-cols-[minmax(760px,1fr)_minmax(320px,380px)]">
+      <section className="grid min-w-0 gap-5 xl:grid-cols-[minmax(680px,1fr)_minmax(340px,360px)] 2xl:grid-cols-[minmax(820px,1fr)_360px]">
         <div className="min-w-0 rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-lg font-semibold text-[#111827]">Referral List</h2>
               <p className="mt-1 text-sm text-[#6B7280]">Showing {referrals.length} referral{referrals.length === 1 ? "" : "s"}</p>
             </div>
-            <form className="grid min-w-0 gap-2 md:grid-cols-[minmax(260px,1fr)_150px_140px_auto] xl:grid-cols-[minmax(320px,1fr)_150px_140px_auto]">
+            <form className="grid min-w-0 items-center gap-2 md:grid-cols-[minmax(320px,1fr)_150px_140px_auto] xl:grid-cols-[minmax(420px,1fr)_150px_140px_auto]">
               <label className="relative">
                 <span className="sr-only">Search referrals</span>
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" aria-hidden="true" />
@@ -174,7 +174,7 @@ export default async function ReferralsPage({
           </div>
         </div>
 
-        <aside className="grid min-w-0 gap-5">
+        <aside className="grid min-w-0 gap-5 xl:w-[340px] 2xl:w-[360px]">
           <section className="min-w-0 rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
             <h2 className="text-lg font-semibold text-[#111827]">Top Referrers</h2>
             <div className="mt-4 grid gap-3">
@@ -212,44 +212,44 @@ function ReferralCard({ referral }: { referral: ReferralRow }) {
   const referred = referral.referredMembership?.globalCustomer ?? referral.referredGlobalCustomer;
 
   return (
-    <article className="min-w-0 rounded-md border border-[#E5E7EB] p-4 transition business-hover">
-      <div className="grid min-w-0 gap-4 2xl:grid-cols-[minmax(0,1fr)_auto]">
+    <article className="min-w-0 rounded-md border border-[#E5E7EB] p-5 transition business-hover">
+      <div className="grid min-w-0 gap-5">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <StatusPill status={referral.status} />
             <span className="rounded-md bg-orange-50 business-bg-soft px-2 py-1 text-xs font-semibold business-primary-strong">{referral.referralCode}</span>
           </div>
-          <h3 className="mt-3 break-words text-lg font-semibold text-[#111827]">
+          <h3 className="mt-4 break-words text-lg font-semibold leading-7 text-[#111827]">
             {customerName(referral.referrerMembership.globalCustomer)} referred {referred ? customerName(referred) : "a customer"}
           </h3>
-          <dl className="mt-4 grid min-w-0 gap-2 text-sm text-[#6B7280] sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          <dl className="mt-5 grid min-w-0 gap-3 text-sm text-[#6B7280] lg:grid-cols-2">
             <ReferralMeta label="Created" value={formatDateTime(referral.createdAt)} />
             <ReferralMeta label="Qualified" value={referral.qualifiedAt ? formatDateTime(referral.qualifiedAt) : "-"} />
             <ReferralMeta label="Reward" value={latestReward ? `${latestReward.bonusStamps} stamp${latestReward.bonusStamps === 1 ? "" : "s"} - ${friendlyStatus(latestReward.status)}` : "-"} />
             <ReferralMeta label="First Visit" value={referral.qualifiedAt ? "Completed" : "Pending"} />
             <ReferralMeta label="Branch" value={referral.referredFirstStampBranch?.name ?? "-"} />
             <ReferralMeta label="Referrer" value={customerName(referral.referrerMembership.globalCustomer)} />
-            <ReferralMeta label="Referred" value={referred ? customerName(referred) : "Pending"} />
+            <ReferralMeta label="Referred" value={referred ? customerName(referred) : "Pending"} className="lg:col-span-2" />
           </dl>
           {referral.rejectionReason ? <p className="mt-2 text-sm font-semibold text-red-700">{referral.rejectionReason}</p> : null}
         </div>
-        <div className="flex min-w-0 flex-wrap items-center gap-2 2xl:justify-end">
-          <Link href={`/dashboard/referrals/${referral.uuid}`} className="shrink-0 rounded-md business-button px-4 py-2 text-sm font-semibold text-white">View details</Link>
-          <Link href={`/dashboard/customers/${referral.referrerMembership.uuid}`} className="shrink-0 rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]">Referrer</Link>
+        <div className="rounded-md bg-[#FAFAFA] p-3"><p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">Actions</p><div className="flex min-w-0 flex-wrap items-center gap-2">
+          <Link href={`/dashboard/referrals/${referral.uuid}`} className="inline-flex h-10 shrink-0 items-center justify-center rounded-md business-button px-4 text-sm font-semibold text-white">View details</Link>
+          <Link href={`/dashboard/customers/${referral.referrerMembership.uuid}`} className="inline-flex h-10 shrink-0 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">Referrer</Link>
           {referral.referredMembership ? (
-            <Link href={`/dashboard/customers/${referral.referredMembership.uuid}`} className="shrink-0 rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]">Referred</Link>
+            <Link href={`/dashboard/customers/${referral.referredMembership.uuid}`} className="inline-flex h-10 shrink-0 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">Referred</Link>
           ) : null}
-        </div>
+        </div></div>
       </div>
     </article>
   );
 }
 
-function ReferralMeta({ label, value }: { label: string; value: string }) {
+function ReferralMeta({ label, value, className = "" }: { label: string; value: string; className?: string }) {
   return (
-    <div className="min-w-0 rounded-md bg-[#FAFAFA] px-3 py-2">
+    <div className={`min-w-0 rounded-md bg-[#FAFAFA] px-3 py-3 ${className}`}>
       <dt className="text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]">{label}</dt>
-      <dd className="mt-1 truncate font-medium text-[#111827]" title={value}>{value}</dd>
+      <dd className="mt-1 whitespace-normal break-words font-medium leading-5 text-[#111827]">{value}</dd>
     </div>
   );
 }
@@ -303,6 +303,8 @@ type ReferralRow = Prisma.ReferralGetPayload<{
     events: true;
   };
 }>;
+
+
 
 
 
