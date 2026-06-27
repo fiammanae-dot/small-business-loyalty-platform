@@ -1,4 +1,4 @@
-﻿import assert from "node:assert/strict";
+import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
@@ -29,7 +29,7 @@ test("loyalty programs store a selected card theme with business default support
   }
 });
 
-test("program create and edit flows expose visual card theme previews", () => {
+test("program create and edit flows expose independent wallet visual style previews", () => {
   const themes = read("src/lib/card-themes.ts");
   const form = read("src/components/ProgramForm.tsx");
   const preview = read("src/components/CardThemePreviewSelector.tsx");
@@ -38,20 +38,27 @@ test("program create and edit flows expose visual card theme previews", () => {
   const editPage = read("src/app/dashboard/programs/[id]/edit/page.tsx");
   const newPage = read("src/app/dashboard/programs/new/page.tsx");
 
-  assert.match(themes, /cardThemeOptions/);
-  assert.match(themes, /Coffee & Cafe/);
-  assert.match(themes, /Restaurant/);
-  assert.match(themes, /Beauty & Salon/);
-  assert.match(themes, /Automotive/);
-  assert.match(themes, /Retail & General/);
+  assert.match(themes, /walletStyleTokens/);
+  assert.match(themes, /modern-clean/);
+  assert.match(themes, /premium-dark/);
+  assert.match(themes, /minimal-light/);
+  assert.match(themes, /image-background/);
+  assert.match(themes, /Business Default/);
+  assert.match(themes, /Uses your business brand colors with the Modern Clean wallet style/);
   assert.match(form, /CardThemePreviewSelector/);
   assert.match(form, /businessName={businessName}/);
   assert.match(form, /branding={branding}/);
-  assert.match(preview, /Loyalty card theme/);
+  assert.match(form, /Wallet Card Style/);
+  assert.match(form, /Business category and wallet style are separate/);
+  assert.match(preview, /Wallet card style/);
+  assert.match(preview, /Choose one of four wallet styles/);
+  assert.match(preview, /aria-label=.*wallet card style/);
   assert.match(preview, /Preview card/);
   assert.match(preview, /type="button"/);
   assert.match(preview, /role="dialog"/);
   assert.match(preview, /aria-modal="true"/);
+  assert.match(preview, /LoyaltyWalletCard/);
+  assert.match(preview, /LoyaltyProgressPanel/);
   assert.match(preview, /Sample referral section/);
   assert.match(preview, /cardThemeOptions\.map/);
   assert.match(programs, /cardTheme: z\.enum/);
@@ -63,29 +70,35 @@ test("program create and edit flows expose visual card theme previews", () => {
   assert.match(newPage, /resolveBranding\(business.branding\)/);
 });
 
-test("public customer card renders selected program theme without replacing core card sections", () => {
+test("public customer card renders selected program theme through shared wallet components", () => {
   const publicCard = read("src/app/card/[token]/page.tsx");
+  const walletCard = read("src/components/public-card/LoyaltyWalletCard.tsx");
+  const progressPanel = read("src/components/public-card/LoyaltyProgressPanel.tsx");
+  const tierPanel = read("src/components/public-card/TierStatusPanel.tsx");
+  const referralPanel = read("src/components/public-card/ReferralPanel.tsx");
 
   assert.match(publicCard, /resolveCardThemeColors/);
   assert.match(publicCard, /primaryCardTheme/);
+  assert.match(publicCard, /LoyaltyWalletCard/);
+  assert.match(publicCard, /LoyaltyProgressPanel/);
+  assert.match(publicCard, /TierStatusPanel/);
+  assert.match(publicCard, /ReferralPanel/);
+  assert.match(publicCard, /ProgramRewardCard/);
+  assert.match(publicCard, /getScanQrDataUrl/);
+  assert.match(walletCard, /Member Since/);
+  assert.match(walletCard, /Scan this card/);
+  assert.match(progressPanel, /Next Reward:/);
+  assert.match(progressPanel, /\{progress\} \/ \{required\} Visits/);
+  assert.match(tierPanel, /Customer tier/);
+  assert.match(referralPanel, /<details className="group">/);
   assert.doesNotMatch(publicCard, /style=\{\{ color: cardTheme\.accent \}\}/);
   assert.doesNotMatch(publicCard, /cardTheme\.label/);
-  assert.match(publicCard, /LoyaltyProgressSection/);
-  assert.match(publicCard, /Member Since/);
-  assert.match(publicCard, /Next Reward:/);
-  assert.match(publicCard, /\{progress\} \/ \{required\} Visits/);
-  assert.doesNotMatch(publicCard, /Current Visits/);
-  assert.doesNotMatch(publicCard, /Required Visits/);
+  assert.doesNotMatch(progressPanel, /Current Visits/);
+  assert.doesNotMatch(progressPanel, /Required Visits/);
   assert.doesNotMatch(publicCard, /RewardStatusSection/);
-  assert.match(publicCard, /TierStatusSection/);
-  assert.match(publicCard, /ReferralCardSection/);
-  assert.match(publicCard, /<details className=\"group\">/);
   assert.doesNotMatch(publicCard, /WalletPlaceholderSection/);
-  assert.match(publicCard, /getScanQrDataUrl/);
   assert.doesNotMatch(publicCard, /Add to Apple Wallet|Add to Google Wallet|Coming Soon/);
 });
-
-
 
 
 test("public customer card supports saving the loyalty card as a PNG image", () => {

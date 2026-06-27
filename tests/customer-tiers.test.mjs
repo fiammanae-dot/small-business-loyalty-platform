@@ -106,29 +106,29 @@ test("business owner settings expose visit-only window and maintenance settings 
 
 test("public customer card shows tiers without exposing spend or internal analytics", () => {
   const card = read("src/app/card/[token]/page.tsx");
+  const walletCard = read("src/components/public-card/LoyaltyWalletCard.tsx");
+  const tierPanel = read("src/components/public-card/TierStatusPanel.tsx");
 
-  for (const expected of [
-    "Customer tier",
-    "tier.badgeLabel",
-    "tier.badgeIcon",
-    "Exclusive Rewards Available",
-    "Scan this card",
-  ]) {
-    assert.match(card, new RegExp(expected));
-  }
+  assert.match(card, /tier\.badgeLabel/);
+  assert.match(card, /tier\.badgeIcon/);
+  assert.match(card, /visitsRemaining=\{tier\.visitsRemaining\}/);
+  assert.match(card, /progressPercent=\{tier\.progressPercent\}/);
+  assert.match(walletCard, /Scan this card/);
+  assert.match(tierPanel, /Customer tier/);
+  assert.match(tierPanel, /Exclusive Rewards Available/);
 
-  for (const forbidden of [
-    "Lifetime spend",
-    "Average spend",
-    "Customer value score",
-    "Risk score",
-    "lifetimeSpend",
-    "tier.visitsRemaining",
-    "tier.progressPercent",
-    "Progress to",
-    "Top tier progress",
-  ]) {
-    assert.doesNotMatch(card, new RegExp(forbidden));
+  for (const source of [card, walletCard, tierPanel]) {
+    for (const forbidden of [
+      "Lifetime spend",
+      "Average spend",
+      "Customer value score",
+      "Risk score",
+      "lifetimeSpend",
+      "Progress to",
+      "Top tier progress",
+    ]) {
+      assert.doesNotMatch(source, new RegExp(forbidden));
+    }
   }
 });
 

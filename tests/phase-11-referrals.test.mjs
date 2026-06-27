@@ -70,6 +70,7 @@ test("first stamp qualifies referral and grants configured bonus stamps", () => 
 
 test("public customer card exposes referral link and aggregate referral stats only", () => {
   const card = read("src/app/card/[token]/page.tsx");
+  const referralPanel = read("src/components/public-card/ReferralPanel.tsx");
 
   for (const expected of [
     "Refer a friend",
@@ -79,10 +80,11 @@ test("public customer card exposes referral link and aggregate referral stats on
     "Rewards Earned",
     "ReferralShareActions",
   ]) {
-    assert.match(card, new RegExp(expected));
+    assert.match(referralPanel, new RegExp(expected));
   }
 
   assert.match(card, /membership\.referralCode && membership\.referralEnabled \? await getReferralUrl/);
+  assert.match(card, /ReferralPanel/);
 });
 
 test("business dashboard does not duplicate referral reporting after cleanup", () => {

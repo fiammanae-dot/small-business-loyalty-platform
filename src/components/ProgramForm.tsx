@@ -1,4 +1,4 @@
-﻿import type { BusinessType, CardTheme } from "@prisma/client";
+import type { BusinessType, CardTheme } from "@prisma/client";
 import { CsrfInput } from "@/components/CsrfInput";
 import { businessTypeOptions } from "@/lib/platform-options";
 import { CardThemePreviewSelector } from "@/components/CardThemePreviewSelector";
@@ -109,10 +109,10 @@ export function ProgramForm({
         </div>
       </SectionCard>
 
-      <SectionCard title="Preview" description="Choose a predefined loyalty card theme and preview it before saving.">
+      <SectionCard title="Wallet Card Style" description="Choose the visual style customers see on their public loyalty card. This is separate from the business category.">
         <div className="mb-4 rounded-md border business-border-soft business-bg-soft p-4">
-          <p className="text-sm font-semibold business-text">Template loaded</p>
-          <p className="mt-1 text-sm text-[#6B7280]">Defaults are editable before saving.</p>
+          <p className="text-sm font-semibold business-text">Business category and wallet style are separate</p>
+          <p className="mt-1 text-sm text-[#6B7280]">Changing this style only affects the visual card design. Rewards, stamps, QR codes, referrals, and tiers stay unchanged.</p>
         </div>
         <CardThemePreviewSelector selectedTheme={cardTheme} businessName={businessName} branding={branding} />
       </SectionCard>
