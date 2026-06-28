@@ -16,6 +16,7 @@ import {
   Receipt,
   Rocket,
   Settings,
+  ShieldCheck,
   Share2,
   Sparkles,
   Store,
@@ -66,6 +67,7 @@ const businessOwnerNavigationGroups: Array<{ label: string; items: NavigationIte
     label: "Business",
     items: [
       { href: "/dashboard/billing", label: "Billing", icon: CreditCard, description: "Subscription" },
+      { href: "/dashboard/support-history", label: "Support History", icon: ShieldCheck, description: "Support transparency" },
       { href: "/dashboard/settings", label: "Settings", icon: Settings, description: "Business settings" },
     ],
   },
@@ -97,6 +99,7 @@ const mobileMoreItems: NavigationItem[] = [
   { href: "/dashboard/staff", label: "Staff", icon: UserPlus },
   { href: "/dashboard/branches", label: "Branches", icon: Building2 },
   { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
+  { href: "/dashboard/support-history", label: "Support History", icon: ShieldCheck },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
   { href: "/dashboard/notifications", label: "Alerts", icon: Bell },
   { href: "/dashboard/messages", label: "Messages", icon: MessageSquare },

@@ -377,6 +377,7 @@ model Business {
   tierSetting CustomerTierSetting?
   supportSessions SupportSession[]
   supportSessionActivities SupportSessionActivity[]
+  businessNotifications BusinessNotification[]
 
   @@map("businesses")
 }
@@ -1034,6 +1035,23 @@ model CustomerNotification {
   @@index([businessCustomerMembershipId, createdAt])
   @@index([businessId, deliveryStatus, createdAt])
   @@map("customer_notifications")
+}
+
+model BusinessNotification {
+  id         Int       @id @default(autoincrement())
+  uuid       String    @unique @default(uuid()) @db.Uuid
+  businessId Int       @map("business_id")
+  title      String
+  message    String
+  metadata   Json      @default("{}")
+  readAt     DateTime? @map("read_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId, createdAt])
+  @@index([businessId, readAt])
+  @@map("business_notifications")
 }
 
 model BusinessCommunicationSettings {

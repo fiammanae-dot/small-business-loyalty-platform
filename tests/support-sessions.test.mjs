@@ -66,7 +66,7 @@ test("expired sessions are not treated as active and can be ended", function () 
   assert.match(helper, /expiresAt: \{ lte: now \}/);
   assert.match(helper, /status: "EXPIRED"/);
   assert.match(helper, /session\.expiresAt > now/);
-  assert.match(actions, /endedAt: new Date\(\)/);
+  assert.match(actions, /const endedAt = new Date\(\)/);
   assert.match(actions, /status: "ENDED"/);
   assert.match(actions, /activityType: "SESSION_ENDED"/);
   assert.match(actions, /await clearSupportSessionCookie\(\)/);
@@ -184,4 +184,33 @@ test("operations center can start support sessions directly", function () {
   assert.match(actions, /businessId=\$\{business\.id\}&activeSessionId=\$\{activeSession\.id\}/);
   assert.match(actions, /dashboard\?supportSessionId=\$\{session\.id\}/);
   assert.match(actions, /revalidatePath\("\/platform\/operations-center"\)/);
+});
+
+test("business owners can view support history without internal audit details", function () {
+  const schema = read("prisma/schema.prisma");
+  const migration = read("prisma/migrations/0034_business_support_notifications/migration.sql");
+  const page = read("src/app/dashboard/support-history/page.tsx");
+  const dashboard = read("src/app/dashboard/page.tsx");
+  const navigation = read("src/components/RoleNavigation.tsx");
+  const actions = read("src/app/platform/businesses/support-actions.ts");
+
+  assert.match(schema, /model BusinessNotification/);
+  assert.match(schema, /businessNotifications BusinessNotification\[\]/);
+  assert.match(migration, /CREATE TABLE "business_notifications"/);
+  assert.match(page, /requireBusinessOwner/);
+  assert.match(page, /supportSession\.findMany/);
+  assert.match(page, /Date/);
+  assert.match(page, /Support Summary/);
+  assert.match(page, /Started at/);
+  assert.match(page, /Ended at/);
+  assert.doesNotMatch(page, /activities/);
+  assert.doesNotMatch(page, /adminUser/);
+  assert.doesNotMatch(page, /Session ID/);
+  assert.match(dashboard, /Support Access/);
+  assert.match(dashboard, /No support access recorded/);
+  assert.match(dashboard, /LoyaltyBase Support is currently assisting with your workspace/);
+  assert.match(navigation, /\/dashboard\/support-history/);
+  assert.match(actions, /businessNotification\.create/);
+  assert.match(actions, /Support Access Completed/);
+  assert.match(actions, /LoyaltyBase Support accessed your workspace/);
 });

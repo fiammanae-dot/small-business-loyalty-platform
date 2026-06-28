@@ -3,6 +3,7 @@ import type React from "react";
 import {
   CheckCircle2,
   Search,
+  ShieldCheck,
   ScanLine,
   TicketCheck,
   UserPlus,
@@ -48,6 +49,8 @@ export default async function BusinessDashboard({
     redemptionCount,
     pendingReferrals,
     referralConversionsToday,
+    latestSupportSession,
+    activeBusinessSupportSession,
   ] = await Promise.all([
     prisma.businessCustomerMembership.count({ where: { businessId: user.businessId, createdAt: { gte: todayStart } } }),
     prisma.stampTransaction.aggregate({
@@ -99,6 +102,16 @@ export default async function BusinessDashboard({
     prisma.rewardRedemption.count({ where: { businessId: user.businessId } }),
     prisma.referral.count({ where: { businessId: user.businessId, status: "PENDING" } }),
     prisma.referral.count({ where: { businessId: user.businessId, status: "QUALIFIED", qualifiedAt: { gte: todayStart } } }),
+    prisma.supportSession.findFirst({
+      where: { businessId: user.businessId },
+      orderBy: { startedAt: "desc" },
+      select: { startedAt: true, endedAt: true, expiresAt: true, status: true, reason: true, supportSummary: true },
+    }),
+    prisma.supportSession.findFirst({
+      where: { businessId: user.businessId, status: "ACTIVE", endedAt: null, expiresAt: { gt: new Date() } },
+      orderBy: { startedAt: "desc" },
+      select: { startedAt: true, expiresAt: true, status: true, reason: true },
+    }),
   ]);
 
   const planCompliance = await getPlanComplianceSummary({
@@ -183,6 +196,8 @@ export default async function BusinessDashboard({
         }
         actions={<CompactCustomerSearch />}
       >
+        {!supportSession && activeBusinessSupportSession ? <ActiveSupportNotice session={activeBusinessSupportSession} /> : null}
+
         <TodaysOperations
           newCustomersToday={newCustomersToday}
           stampsIssuedToday={stampsIssuedToday}
@@ -200,6 +215,7 @@ export default async function BusinessDashboard({
           <div className="space-y-5">
             <BusinessHealthPanel customerGrowth={newCustomersToday > 0 ? "Growing today" : "Needs activity"} activePrograms={loyaltyPrograms} activeStaff={staffCount} branchCount={branchCount} subscriptionStatus={business.subscriptions[0]?.status ?? "UNASSIGNED"} branchesUsed={branchCount} branchLimit={plan?.maxBranches ?? null} programsUsed={loyaltyPrograms} programLimit={plan?.maxLoyaltyPrograms ?? null} planCompliance={planCompliance} />
             <SubscriptionSummaryCard planName={plan?.name ?? "Unassigned"} branchesUsed={branchCount} branchLimit={plan?.maxBranches ?? null} programsUsed={loyaltyPrograms} programLimit={plan?.maxLoyaltyPrograms ?? null} renewalDate={business.subscriptions[0]?.renewalDate ?? business.subscriptions[0]?.expiryDate ?? null} />
+            <SupportAccessCard session={latestSupportSession} />
           </div>
         </div>
       </DashboardPageLayout>
@@ -220,6 +236,25 @@ function DashboardCommandCenter({ businessName, businessType, ownerName, planNam
           </div>
         </div>
         <PageActions className="lg:justify-end"><ButtonLink href="/dashboard/scanner" variant="business" size="lg">Open Scanner</ButtonLink><div className="flex flex-wrap gap-2 pt-1 lg:justify-end"><SecondaryAction href="/dashboard/customers/new" label="Add Customer" /><SecondaryAction href="/dashboard/customers" label="Find Customer" /><SecondaryAction href="/dashboard/programs" label="Programs" /></div></PageActions>
+      </div>
+    </UiSectionCard>
+  );
+}
+
+function ActiveSupportNotice({ session }: { session: { reason: string; expiresAt: Date } }) {
+  return (
+    <UiSectionCard className="border-red-200 bg-red-50">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-red-100 text-red-700">
+            <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-red-800">LoyaltyBase Support is currently assisting with your workspace.</p>
+            <p className="mt-1 text-sm text-red-700">Reason: {session.reason}</p>
+          </div>
+        </div>
+        <UiStatusBadge tone="danger">Active until {formatDateTime(session.expiresAt)}</UiStatusBadge>
       </div>
     </UiSectionCard>
   );
@@ -247,6 +282,26 @@ function DashboardActivityTimeline({ customers, programs }: { customers: Array<{
 }
 function SubscriptionSummaryCard({ planName, branchesUsed, branchLimit, programsUsed, programLimit, renewalDate }: { planName: string; branchesUsed: number; branchLimit: number | null; programsUsed: number; programLimit: number | null; renewalDate: Date | null }) {
   return <UiSectionCard title="Subscription Summary" description="Compact plan and usage overview."><div className="grid gap-3"><InfoLine label="Current Plan" value={planName} /><InfoLine label="Branches Used" value={formatUsage(branchesUsed, branchLimit)} /><InfoLine label="Programs Used" value={formatUsage(programsUsed, programLimit)} /><InfoLine label="Renewal Date" value={renewalDate ? formatDateTime(renewalDate) : "Not scheduled"} /><ButtonLink href="/dashboard/billing" variant="outline" className="w-full">Upgrade</ButtonLink></div></UiSectionCard>;
+}
+
+function SupportAccessCard({ session }: { session: { startedAt: Date; endedAt: Date | null; expiresAt: Date; status: string; reason: string; supportSummary: string | null } | null }) {
+  return (
+    <UiSectionCard title="Support Access" description="Transparent record of LoyaltyBase support access.">
+      {session ? (
+        <div className="grid gap-3">
+          <InfoLine label="Last Session" value={formatDateTime(session.startedAt)} />
+          <InfoLine label="Status" value={session.status.replaceAll("_", " ")} />
+          <InfoLine label="Reason" value={session.reason} />
+          <ButtonLink href="/dashboard/support-history" variant="outline" className="w-full">View Support History</ButtonLink>
+        </div>
+      ) : (
+        <div className="grid gap-3">
+          <p className="rounded-md bg-[#F8FAFC] p-3 text-sm text-[#64748B]">No support access recorded.</p>
+          <ButtonLink href="/dashboard/support-history" variant="outline" className="w-full">View Support History</ButtonLink>
+        </div>
+      )}
+    </UiSectionCard>
+  );
 }
 
 function HealthRow({ label, value, tone }: { label: string; value: string; tone: "success" | "warning" | "danger" }) {

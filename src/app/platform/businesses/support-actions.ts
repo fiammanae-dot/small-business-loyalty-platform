@@ -50,6 +50,16 @@ function getSafeRedirectPath(value: string, fallback: string) {
   return value.startsWith("/platform") ? value : fallback;
 }
 
+function formatSupportDuration(startedAt: Date, endedAt: Date) {
+  const totalMinutes = Math.max(0, Math.round((endedAt.getTime() - startedAt.getTime()) / 60000));
+  if (totalMinutes < 60) {
+    return totalMinutes + " min";
+  }
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return minutes ? hours + " hr " + minutes + " min" : hours + " hr";
+}
+
 function validateSecurity(formData: FormData, path: string) {
   try {
     validateCsrfForm(formData, scope);
@@ -203,8 +213,9 @@ export async function endSupportSessionAction(formData: FormData) {
       status: "ACTIVE",
       endedAt: null,
     },
-    select: { id: true, businessId: true },
+    select: { id: true, businessId: true, reason: true, startedAt: true },
   });
+  const endedAt = new Date();
 
   if (session) {
     await recordSupportActivity({
@@ -224,14 +235,32 @@ export async function endSupportSessionAction(formData: FormData) {
       endedAt: null,
     },
     data: {
-      endedAt: new Date(),
+      endedAt,
       status: "ENDED",
       supportSummary: parsed.data.supportSummary,
     },
   });
 
+  if (session) {
+    await prisma.businessNotification.create({
+      data: {
+        businessId: session.businessId,
+        title: "Support Access Completed",
+        message: "LoyaltyBase Support accessed your workspace.",
+        metadata: {
+          date: endedAt.toISOString(),
+          duration: formatSupportDuration(session.startedAt, endedAt),
+          reason: session.reason,
+          supportSummary: parsed.data.supportSummary,
+        },
+      },
+    });
+  }
+
   await clearSupportSessionCookie();
   revalidatePath(`/platform/businesses/${parsed.data.businessUuid}`);
   revalidatePath("/platform/operations-center");
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/support-history");
   redirect(`${redirectTo}?success=Support%20session%20ended.`);
 }
