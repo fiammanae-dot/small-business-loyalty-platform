@@ -157,7 +157,16 @@ export default async function OperationsCenterPage({
   const longestDuration = completedDurations.length ? Math.max(...completedDurations) : 0;
 
   return (
-    <DashboardShell user={currentUser} eyebrow="System Administrator" title="Operations Center">
+    <DashboardShell
+      user={currentUser}
+      eyebrow="System Administrator"
+      title="Operations Center"
+      headerAside={(
+        <Link href="/platform/operations-center/support/start" className="inline-flex min-h-11 items-center justify-center rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600">
+          Start Support Session
+        </Link>
+      )}
+    >
       <div className="grid gap-6">
         <section className="rounded-lg border border-[#E2E8F0] bg-white p-2 shadow-sm">
           <div className="grid gap-2 md:grid-cols-4">

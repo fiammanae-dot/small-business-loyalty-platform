@@ -44,7 +44,7 @@ test("platform owner can create support sessions with required reason and durati
   assert.match(actions, /status: "ACTIVE"/);
   assert.match(actions, /await setSupportSessionCookie\(session\.id\)/);
   assert.match(actions, /activityType: "SESSION_STARTED"/);
-  assert.match(actions, /redirect\("\/dashboard"\)/);
+  assert.match(actions, /dashboard\?supportSessionId=\$\{session\.id\}/);
   assert.match(actions, /supportSession\.findFirst/);
   assert.match(actions, /activeSessionId=\$\{activeSession\.id\}/);
   assert.match(actions, /joinSupportSessionAction/);
@@ -157,4 +157,31 @@ test("operations center support module exposes session management and reports", 
   assert.match(report, /Timeline/);
   assert.match(report, /Export Coming Soon/);
   assert.match(report, /activities/);
+});
+
+test("operations center can start support sessions directly", function () {
+  const operations = read("src/app/platform/operations-center/page.tsx");
+  const startPage = read("src/app/platform/operations-center/support/start/page.tsx");
+  const actions = read("src/app/platform/businesses/support-actions.ts");
+
+  assert.match(operations, /Start Support Session/);
+  assert.match(operations, /\/platform\/operations-center\/support\/start/);
+  assert.match(startPage, /requireRole\("PLATFORM_OWNER"\)/);
+  assert.match(startPage, /Select Business/);
+  assert.match(startPage, /Reason for access/);
+  assert.match(startPage, /durationMinutes/);
+  assert.match(startPage, /15/);
+  assert.match(startPage, /30/);
+  assert.match(startPage, /60/);
+  assert.match(startPage, /Read-only mode/);
+  assert.match(startPage, /startSupportSessionAction/);
+  assert.match(startPage, /Support Session Already Active/);
+  assert.match(startPage, /Join Existing Session/);
+  assert.match(startPage, /SupportCountdown/);
+  assert.match(startPage, /formPath/);
+  assert.match(startPage, /activeRedirectTo/);
+  assert.match(actions, /activeRedirectTo/);
+  assert.match(actions, /businessId=\$\{business\.id\}&activeSessionId=\$\{activeSession\.id\}/);
+  assert.match(actions, /dashboard\?supportSessionId=\$\{session\.id\}/);
+  assert.match(actions, /revalidatePath\("\/platform\/operations-center"\)/);
 });

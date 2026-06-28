@@ -22,6 +22,7 @@ const startSupportSessionSchema = z.object({
   reason: z.string().trim().min(1, "Reason for access is required."),
   durationMinutes: z.coerce.number().refine((value) => SUPPORT_SESSION_DURATIONS.includes(value as 15 | 30 | 60), "Duration is required."),
   readOnly: z.boolean().default(true),
+  activeRedirectTo: z.string().trim().optional(),
 });
 
 const endSupportSessionSchema = z.object({
@@ -59,7 +60,9 @@ function validateSecurity(formData: FormData, path: string) {
 
 export async function startSupportSessionAction(formData: FormData) {
   const businessUuid = getString(formData, "businessUuid");
-  const path = businessUuid ? `/platform/businesses/${businessUuid}/support-session` : "/platform/businesses";
+  const defaultPath = businessUuid ? `/platform/businesses/${businessUuid}/support-session` : "/platform/businesses";
+  const path = getSafeRedirectPath(getString(formData, "formPath"), defaultPath);
+  const activeRedirectTo = getSafeRedirectPath(getString(formData, "activeRedirectTo"), defaultPath);
   validateSecurity(formData, path);
   const adminUser = await requireRole("PLATFORM_OWNER");
 
@@ -69,6 +72,7 @@ export async function startSupportSessionAction(formData: FormData) {
     reason: getString(formData, "reason"),
     durationMinutes: getString(formData, "durationMinutes"),
     readOnly: formData.has("readOnly"),
+    activeRedirectTo,
   });
 
   if (!parsed.success) {
@@ -104,7 +108,8 @@ export async function startSupportSessionAction(formData: FormData) {
   });
 
   if (activeSession) {
-    redirect(`/platform/businesses/${business.uuid}/support-session?activeSessionId=${activeSession.id}`);
+    const separator = activeRedirectTo.includes("?") ? "&" : "?";
+    redirect(`${activeRedirectTo}${separator}businessId=${business.id}&activeSessionId=${activeSession.id}`);
   }
 
   const session = await prisma.supportSession.create({
@@ -129,7 +134,8 @@ export async function startSupportSessionAction(formData: FormData) {
     description: "Support session started",
   });
   revalidatePath(`/platform/businesses/${business.uuid}`);
-  redirect("/dashboard");
+  revalidatePath("/platform/operations-center");
+  redirect(`/dashboard?supportSessionId=${session.id}`);
 }
 
 export async function joinSupportSessionAction(formData: FormData) {
@@ -173,7 +179,7 @@ export async function joinSupportSessionAction(formData: FormData) {
     path: "/dashboard",
     description: "Support session joined",
   });
-  redirect("/dashboard");
+  redirect(`/dashboard?supportSessionId=${session.id}`);
 }
 
 export async function endSupportSessionAction(formData: FormData) {
