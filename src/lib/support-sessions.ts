@@ -101,9 +101,6 @@ export async function getActiveSupportSessionForCurrentAdmin() {
   }
 
   const supportContext = await loadSupportSessionForAdmin(supportSessionId, currentUser);
-  if (!supportContext) {
-    await clearSupportSessionCookie();
-  }
 
   return supportContext;
 }
@@ -125,11 +122,9 @@ export async function requireSupportBusinessContext(supportSessionId: string) {
 
   const supportContext = await loadSupportSessionForAdmin(parsedId, currentUser);
   if (!supportContext) {
-    await clearSupportSessionCookie();
     redirect("/platform/businesses?error=Support%20session%20has%20ended%20or%20expired.");
   }
 
-  await setSupportSessionCookie(parsedId);
   return supportContext;
 }
 
