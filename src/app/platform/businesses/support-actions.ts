@@ -27,6 +27,8 @@ const startSupportSessionSchema = z.object({
 const endSupportSessionSchema = z.object({
   supportSessionId: z.coerce.number().int().positive(),
   businessUuid: z.string().trim().min(1),
+  supportSummary: z.string().trim().min(1, "Support summary is required."),
+  redirectTo: z.string().trim().optional(),
 });
 
 const joinSupportSessionSchema = z.object({
@@ -41,6 +43,10 @@ function getString(formData: FormData, key: string) {
 
 function fail(path: string, message: string): never {
   redirect(`${path}?error=${encodeURIComponent(message)}`);
+}
+
+function getSafeRedirectPath(value: string, fallback: string) {
+  return value.startsWith("/platform") ? value : fallback;
 }
 
 function validateSecurity(formData: FormData, path: string) {
@@ -171,21 +177,23 @@ export async function joinSupportSessionAction(formData: FormData) {
 }
 
 export async function endSupportSessionAction(formData: FormData) {
-  validateSecurity(formData, "/platform/businesses");
+  const redirectTo = getSafeRedirectPath(getString(formData, "redirectTo"), "/platform");
+  validateSecurity(formData, redirectTo);
   const adminUser = await requireRole("PLATFORM_OWNER");
   const parsed = endSupportSessionSchema.safeParse({
     supportSessionId: getString(formData, "supportSessionId"),
     businessUuid: getString(formData, "businessUuid"),
+    supportSummary: getString(formData, "supportSummary"),
+    redirectTo,
   });
 
   if (!parsed.success) {
-    redirect("/platform/businesses?error=Support%20session%20is%20not%20available.");
+    fail(redirectTo, parsed.error.issues[0]?.message ?? "Support session is not available.");
   }
 
   const session = await prisma.supportSession.findFirst({
     where: {
       id: parsed.data.supportSessionId,
-      adminUserId: adminUser.id,
       status: "ACTIVE",
       endedAt: null,
     },
@@ -199,24 +207,25 @@ export async function endSupportSessionAction(formData: FormData) {
       businessId: session.businessId,
       activityType: "SESSION_ENDED",
       path: "/platform",
-      description: "Support session ended",
+      description: `Support session ended: ${parsed.data.supportSummary}`,
     });
   }
 
   await prisma.supportSession.updateMany({
     where: {
       id: parsed.data.supportSessionId,
-      adminUserId: adminUser.id,
       status: "ACTIVE",
       endedAt: null,
     },
     data: {
       endedAt: new Date(),
       status: "ENDED",
+      supportSummary: parsed.data.supportSummary,
     },
   });
 
   await clearSupportSessionCookie();
   revalidatePath(`/platform/businesses/${parsed.data.businessUuid}`);
-  redirect("/platform?success=Support%20session%20ended.");
+  revalidatePath("/platform/operations-center");
+  redirect(`${redirectTo}?success=Support%20session%20ended.`);
 }

@@ -115,3 +115,46 @@ test("support session UI exposes real audit timeline and platform summary", func
   assert.match(endButton, /End Support Session/);
   assert.match(banner, /🔴 SUPPORT/);
 });
+
+
+test("operations center support module exposes session management and reports", function () {
+  const schema = read("prisma/schema.prisma");
+  const migration = read("prisma/migrations/0033_support_session_operations_center/migration.sql");
+  const shell = read("src/components/DashboardShell.tsx");
+  const operations = read("src/app/platform/operations-center/page.tsx");
+  const report = read("src/app/platform/operations-center/support/[id]/page.tsx");
+  const actions = read("src/app/platform/businesses/support-actions.ts");
+  const terminateButton = read("src/components/TerminateSupportSessionButton.tsx");
+
+  assert.match(schema, /supportSummary\s+String\?\s+@map\("support_summary"\)/);
+  assert.match(migration, /ADD COLUMN "support_summary" TEXT/);
+  assert.match(shell, /Operations Center/);
+  assert.match(shell, /\/platform\/operations-center/);
+  assert.match(operations, /requireRole\("PLATFORM_OWNER"\)/);
+  assert.match(operations, /Support \(active\)|label="Support"/);
+  assert.match(operations, /Compliance/);
+  assert.match(operations, /Platform Health/);
+  assert.match(operations, /Background Jobs/);
+  assert.match(operations, /Active Support Sessions/);
+  assert.match(operations, /Recent Support Sessions/);
+  assert.match(operations, /Active Sessions/);
+  assert.match(operations, /Completed Today/);
+  assert.match(operations, /Average Duration/);
+  assert.match(operations, /Longest Session/);
+  assert.match(operations, /Common Reason/);
+  assert.match(operations, /Total Sessions/);
+  assert.match(operations, /TerminateSupportSessionButton/);
+  assert.match(operations, /joinSupportSessionAction/);
+  assert.match(operations, /View Report/);
+  assert.match(actions, /Support summary is required/);
+  assert.match(actions, /supportSummary: parsed\.data\.supportSummary/);
+  assert.match(actions, /revalidatePath\("\/platform\/operations-center"\)/);
+  assert.match(terminateButton, /Business:/);
+  assert.match(terminateButton, /Administrator:/);
+  assert.match(terminateButton, /Support Summary is required/);
+  assert.match(report, /Support Session Report/);
+  assert.match(report, /Support Notes/);
+  assert.match(report, /Timeline/);
+  assert.match(report, /Export Coming Soon/);
+  assert.match(report, /activities/);
+});

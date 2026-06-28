@@ -78,6 +78,7 @@ const platformNavItems: Array<{ href: string; label: string; icon: LucideIcon }>
   { href: "/platform/users", label: "Users", icon: Users },
   { href: "/platform/health-analytics", label: "Analytics", icon: BarChart3 },
   { href: "/platform/audit-center", label: "Audit Center", icon: ClipboardList },
+  { href: "/platform/operations-center", label: "Operations Center", icon: ShieldAlert },
   { href: "/platform/billing-center", label: "Billing Center", icon: CircleDollarSign },
   { href: "/platform/tenant-center", label: "Tenant Center", icon: Layers3 },
   { href: "/platform/settings", label: "Settings", icon: Settings },

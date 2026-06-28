@@ -1111,6 +1111,7 @@ model SupportSession {
   endedAt     DateTime?            @map("ended_at")
   readOnly    Boolean              @default(true) @map("read_only")
   status      SupportSessionStatus @default(ACTIVE)
+  supportSummary String?           @map("support_summary")
   createdAt   DateTime             @default(now()) @map("created_at")
   updatedAt   DateTime             @updatedAt @map("updated_at")
 
