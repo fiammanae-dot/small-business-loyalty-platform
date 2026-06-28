@@ -138,6 +138,7 @@ test("scanner sound effects are configurable and outcome driven", () => {
   const actions = read("src/app/dashboard/actions.ts");
   const scan = read("src/app/scan/[token]/page.tsx");
   const sound = read("src/components/ScannerSoundFeedback.tsx");
+  const soundHelper = read("src/lib/scanner-sounds.ts");
 
   assert.match(schema, /model BusinessScannerSettings/);
   assert.match(schema, /soundEffectsEnabled Boolean\s+@default\(true\)/);
@@ -148,10 +149,20 @@ test("scanner sound effects are configurable and outcome driven", () => {
   assert.match(actions, /SCANNER_SETTINGS_UPDATED/);
   assert.match(scan, /ScannerSoundFeedback/);
   assert.ok(scan.includes('const soundEvent = qs.error'));
-  assert.ok(scan.includes('? "error"'));
-  assert.match(scan, /successProgress !== null && successProgress >= program.requiredStamps/);
-  assert.match(scan, /event="error"/);
-  assert.match(sound, /AudioContext/);
-  assert.match(sound, /webkitAudioContext/);
-  assert.match(sound, /LoyaltyBase scanner sound error/);
+  assert.match(scan, /\?\s+"invalid"/);
+  assert.match(scan, /"stamp-added"/);
+  assert.match(scan, /: "valid"/);
+  assert.match(scan, /event="invalid"/);
+  assert.match(scan, /event="valid"/);
+  assert.match(sound, /playScannerSound/);
+  assert.match(sound, /unlockScannerAudio/);
+  assert.match(soundHelper, /scannerValidSound/);
+  assert.match(soundHelper, /scannerInvalidSound/);
+  assert.match(soundHelper, /stampAddedSound/);
+  assert.match(soundHelper, /AudioContext/);
+  assert.match(soundHelper, /webkitAudioContext/);
+  assert.match(soundHelper, /stopScannerSound/);
+  assert.match(soundHelper, /LoyaltyBase scanner sound error/);
 });
+
+

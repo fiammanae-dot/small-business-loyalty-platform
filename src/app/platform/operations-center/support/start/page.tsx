@@ -42,12 +42,12 @@ export default async function OperationsStartSupportSessionPage({
     prisma.business.findMany({
       where: { status: { not: "ARCHIVED" } },
       orderBy: { name: "asc" },
-      select: { id: true, uuid: true, name: true, status: true, businessType: true },
+      select: { id: true, uuid: true, name: true, status: true, businessType: true, supportAccessPolicy: true },
     }),
     selectedBusinessId
       ? prisma.business.findFirst({
           where: { id: selectedBusinessId, status: { not: "ARCHIVED" } },
-          select: { id: true, uuid: true, name: true, status: true, businessType: true },
+          select: { id: true, uuid: true, name: true, status: true, businessType: true, supportAccessPolicy: true },
         })
       : null,
   ]);
@@ -145,6 +145,7 @@ export default async function OperationsStartSupportSessionPage({
                 <Info label="Business" value={selectedBusiness.name} />
                 <Info label="Status" value={selectedBusiness.status} />
                 <Info label="Type" value={selectedBusiness.businessType.replaceAll("_", " ")} />
+                <Info label="Support Policy" value={formatSupportAccessPolicy(selectedBusiness.supportAccessPolicy)} />
               </div>
 
               <label className="grid gap-2 text-sm font-semibold text-[#111827]">
@@ -164,16 +165,25 @@ export default async function OperationsStartSupportSessionPage({
                 </div>
               </fieldset>
 
-              <label className="flex min-h-11 items-center justify-between gap-4 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] px-3 py-2 text-sm font-semibold text-[#111827]">
-                <span>
-                  <span className="block">Read-only mode</span>
-                  <span className="mt-1 block text-xs font-normal text-[#6B7280]">Checked by default for support visibility.</span>
-                </span>
-                <input type="checkbox" name="readOnly" defaultChecked className="h-5 w-5 rounded border-[#E5E7EB]" />
-              </label>
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="flex min-h-11 items-center justify-between gap-4 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] px-3 py-2 text-sm font-semibold text-[#111827]">
+                  <span>
+                    <span className="block">Read-only mode</span>
+                    <span className="mt-1 block text-xs font-normal text-[#6B7280]">Checked by default for support visibility.</span>
+                  </span>
+                  <input type="checkbox" name="readOnly" defaultChecked className="h-5 w-5 rounded border-[#E5E7EB]" />
+                </label>
+                <label className="flex min-h-11 items-center justify-between gap-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-900">
+                  <span>
+                    <span className="block">Emergency access</span>
+                    <span className="mt-1 block text-xs font-normal text-red-700">Starts immediately only when the business policy allows emergency access.</span>
+                  </span>
+                  <input type="checkbox" name="emergency" className="h-5 w-5 rounded border-red-300" />
+                </label>
+              </div>
 
               <button type="submit" className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white transition hover:bg-orange-600 sm:w-fit">
-                Start Support Session
+                {selectedBusiness.supportAccessPolicy === "IMMEDIATE" ? "Start Support Session" : "Submit Support Request"}
               </button>
             </form>
           </SectionCard>
@@ -190,4 +200,11 @@ function Info({ label, value }: { label: string; value: ReactNode }) {
       <p className="mt-1 break-words font-semibold text-[#0F172A]">{value}</p>
     </div>
   );
+}
+
+function formatSupportAccessPolicy(policy: string) {
+  if (policy === "IMMEDIATE") return "Immediate Support";
+  if (policy === "APPROVAL_REQUIRED") return "Approval Required";
+  if (policy === "EMERGENCY_ACCESS") return "Emergency Access Allowed";
+  return policy.replaceAll("_", " ");
 }

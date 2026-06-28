@@ -5,6 +5,7 @@ import { Camera, RotateCcw, Square } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SectionCard } from "@/components/ui";
+import { playScannerSound, unlockScannerAudio } from "@/lib/scanner-sounds";
 
 type BarcodeDetectorConstructor = new (options?: { formats?: string[] }) => {
   detect(source: HTMLVideoElement): Promise<Array<{ rawValue: string }>>;
@@ -107,10 +108,12 @@ export function CameraScanner({ backHref }: { backHref: string }) {
     if (!result.token) {
       setScannerState("scan-failed");
       setMessage(result.reason);
+      void playScannerSound("invalid");
       return;
     }
 
     setScannerState("scan-detected");
+    void playScannerSound("valid");
     stopCamera();
     router.push(scanFlowHref(result.token));
   }
@@ -186,6 +189,7 @@ export function CameraScanner({ backHref }: { backHref: string }) {
   }
 
   async function startCamera(nextFacingMode = facingMode) {
+    void unlockScannerAudio();
     setMessage("");
 
     const opened = await openCameraPreview(nextFacingMode);
@@ -242,6 +246,7 @@ export function CameraScanner({ backHref }: { backHref: string }) {
       console.warn("LoyaltyBase scanner detection error", error);
       setScannerState("scan-failed");
       setMessage("Invalid loyalty QR code.");
+      void playScannerSound("invalid");
     }
 
     animationRef.current = requestAnimationFrame(scanLoop);
@@ -319,3 +324,6 @@ export function CameraScanner({ backHref }: { backHref: string }) {
     </SectionCard>
   );
 }
+
+
+

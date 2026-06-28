@@ -8,6 +8,7 @@ import { getCurrentUser, type AuthUser } from "@/lib/session";
 import { roleHomePath } from "@/lib/roles";
 
 export const SUPPORT_SESSION_DURATIONS = [15, 30, 60] as const;
+export const SUPPORT_REQUEST_EXPIRY_MINUTES = 30;
 export const SUPPORT_SESSION_COOKIE = "loyalty_support_session";
 
 type LoadedSupportSession = Awaited<ReturnType<typeof loadSupportSessionForAdmin>>;
@@ -15,6 +16,13 @@ type LoadedSupportSession = Awaited<ReturnType<typeof loadSupportSessionForAdmin
 export async function expireStaleSupportSessions(now = new Date()) {
   await prisma.supportSession.updateMany({
     where: { status: "ACTIVE", endedAt: null, expiresAt: { lte: now } },
+    data: { status: "EXPIRED" },
+  });
+}
+
+export async function expireStaleSupportRequests(now = new Date()) {
+  await prisma.supportRequest.updateMany({
+    where: { status: "PENDING", expiresAt: { lte: now } },
     data: { status: "EXPIRED" },
   });
 }

@@ -273,18 +273,16 @@ export default async function ScanResultPage({
   });
   const cardNumber = businessMembership.cardToken.length > 12 ? `${businessMembership.cardToken.slice(0, 8)}...${businessMembership.cardToken.slice(-4)}` : businessMembership.cardToken;
   const soundEvent = qs.error
-    ? "error"
-    : redemption
-      ? "success"
-      : issuedTransaction
-        ? successProgress !== null && successProgress >= program.requiredStamps
-          ? "reward"
-          : "success"
-        : null;
+    ? "invalid"
+    : issuedTransaction
+      ? "stamp-added"
+      : redemption
+        ? null
+        : "valid";
 
   return (
     <DashboardShell user={authUser} eyebrow={roleEyebrow(authUser.role)} title="Scan result" hideWelcomeMessage>
-      <ScannerSoundFeedback event={soundEvent as "success" | "error" | "reward" | null} enabled={scannerSoundEffectsEnabled} />
+      <ScannerSoundFeedback event={soundEvent} enabled={scannerSoundEffectsEnabled} />
       <ScanStatusBanner tone="green" title="Valid Customer" description="This loyalty QR belongs to your business and is ready for service." />
 
       <ActionSummarySection
@@ -545,7 +543,7 @@ function ReferralInvitationScanScreen({
 
   return (
     <DashboardShell user={user} eyebrow={roleEyebrow(user.role)} title="Referral invitation found" hideWelcomeMessage>
-      <ScannerSoundFeedback event={null} enabled={soundEffectsEnabled} />
+      <ScannerSoundFeedback event="valid" enabled={soundEffectsEnabled} />
       <ScanStatusBanner tone="green" title="Referral invitation found" description="This referral belongs to your business. Enroll the new customer to attach the referral." />
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
@@ -589,7 +587,7 @@ function CrossBusinessScanMessage({
 }) {
   return (
     <DashboardShell user={user} eyebrow={roleEyebrow(user.role)} title="Scan result" hideWelcomeMessage>
-      <ScannerSoundFeedback event="error" enabled={soundEffectsEnabled} />
+      <ScannerSoundFeedback event="invalid" enabled={soundEffectsEnabled} />
       <ScanStatusBanner tone="red" title={CROSS_BUSINESS_SCAN_TITLE} description={CROSS_BUSINESS_SCAN_DESCRIPTION} />
       <p className="rounded-md border border-red-100 bg-white px-4 py-3 text-sm text-[#6B7280]">{CROSS_BUSINESS_SCAN_HELPER}</p>
       <Link href={scannerPathForRole(user.role)} className="inline-flex min-h-12 w-full items-center justify-center rounded-md bg-[#111827] px-5 text-sm font-semibold text-white sm:w-auto">
@@ -611,7 +609,7 @@ function ScanMessage({
 }) {
   return (
     <DashboardShell user={user} eyebrow={roleEyebrow(user.role)} title="Scan result" hideWelcomeMessage>
-      <ScannerSoundFeedback event="error" enabled={soundEffectsEnabled} />
+      <ScannerSoundFeedback event="invalid" enabled={soundEffectsEnabled} />
       <EmptyState title={title} description={description ?? "Ask the customer to show a current loyalty QR for this business."} />
       <ButtonLink href={scannerPathForRole(user.role)} variant="outline" className="w-full sm:w-auto">
         Back to Scanner
@@ -652,7 +650,7 @@ function ProgramSelectionScreen({
 
   return (
     <DashboardShell user={user} eyebrow={roleEyebrow(user.role)} title="Choose loyalty program" hideWelcomeMessage>
-      <ScannerSoundFeedback event={null} enabled={soundEffectsEnabled} />
+      <ScannerSoundFeedback event="valid" enabled={soundEffectsEnabled} />
       <ScanStatusBanner tone="green" title="Valid Customer" description="This customer belongs to your business. Choose which loyalty program receives the stamp." />
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
@@ -845,5 +843,7 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+
 
 

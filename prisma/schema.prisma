@@ -26,6 +26,19 @@ enum SupportSessionStatus {
   EXPIRED
 }
 
+enum SupportAccessPolicy {
+  IMMEDIATE
+  APPROVAL_REQUIRED
+  EMERGENCY_ACCESS
+}
+
+enum SupportRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
 enum SupportSessionActivityType {
   SESSION_STARTED
   SESSION_JOINED
@@ -259,44 +272,46 @@ enum CustomerTierName {
 }
 
 model User {
-  id           Int          @id @default(autoincrement())
-  uuid         String       @unique @default(uuid()) @db.Uuid
-  name         String
-  email        String       @unique
-  passwordHash String       @map("password_hash")
-  sessionVersion Int        @default(1) @map("session_version")
-  forcePasswordChange Boolean @default(false) @map("force_password_change")
-  passwordChangedAt DateTime @default(now()) @map("password_changed_at")
-  lastLoginAt  DateTime?    @map("last_login_at")
-  role         UserRole
-  businessId   Int?         @map("business_id")
-  branchId     Int?         @map("branch_id")
-  status       RecordStatus @default(ACTIVE)
-  createdAt    DateTime     @default(now()) @map("created_at")
-  updatedAt    DateTime     @updatedAt @map("updated_at")
+  id                  Int                 @id @default(autoincrement())
+  uuid                String              @unique @default(uuid()) @db.Uuid
+  name                String
+  email               String              @unique
+  passwordHash        String              @map("password_hash")
+  sessionVersion      Int                 @default(1) @map("session_version")
+  forcePasswordChange Boolean             @default(false) @map("force_password_change")
+  passwordChangedAt DateTime            @default(now()) @map("password_changed_at")
+  lastLoginAt         DateTime?           @map("last_login_at")
+  role                UserRole
+  businessId          Int?                @map("business_id")
+  branchId            Int?                @map("branch_id")
+  status              RecordStatus        @default(ACTIVE)
+  createdAt           DateTime            @default(now()) @map("created_at")
+  updatedAt           DateTime            @updatedAt @map("updated_at")
 
-  business Business? @relation(fields: [businessId], references: [id])
-  branch   Branch?   @relation(fields: [branchId], references: [id])
+  business                   Business?                    @relation(fields: [businessId], references: [id])
+  branch                     Branch?                      @relation(fields: [branchId], references: [id])
   createdCustomerMemberships BusinessCustomerMembership[]
-  scanEvents ScanEvent[]
-  stampTransactions StampTransaction[]
-  rewardRedemptions RewardRedemption[]
-  activityAlerts ActivityAlert[] @relation("ActivityAlertUser")
-  reviewedActivityAlerts ActivityAlert[] @relation("ActivityAlertReviewer")
-  assignedActivityAlerts ActivityAlert[] @relation("ActivityAlertAssignee")
-  resolvedActivityAlerts ActivityAlert[] @relation("ActivityAlertResolver")
-  dismissedActivityAlerts ActivityAlert[] @relation("ActivityAlertDismisser")
-  alertEvents AlertEvent[]
-  subscriptionAudits SubscriptionAuditLog[]
-  createdInvoices Invoice[] @relation("InvoiceCreator")
-  recordedPayments Payment[]
-  invoiceAuditLogs InvoiceAuditLog[]
-  preparedMessages MessageDeliveryQueue[] @relation("MessagePreparedBy")
-  sentMessages MessageDeliveryQueue[] @relation("MessageSentBy")
-  auditEvents AuditEvent[]
-  cooldownEvents CooldownEvent[]
+  scanEvents                 ScanEvent[]
+  stampTransactions          StampTransaction[]
+  rewardRedemptions          RewardRedemption[]
+  activityAlerts             ActivityAlert[]              @relation("ActivityAlertUser")
+  reviewedActivityAlerts     ActivityAlert[]              @relation("ActivityAlertReviewer")
+  assignedActivityAlerts     ActivityAlert[]              @relation("ActivityAlertAssignee")
+  resolvedActivityAlerts     ActivityAlert[]              @relation("ActivityAlertResolver")
+  dismissedActivityAlerts    ActivityAlert[]              @relation("ActivityAlertDismisser")
+  alertEvents                AlertEvent[]
+  subscriptionAudits         SubscriptionAuditLog[]
+  createdInvoices            Invoice[]                    @relation("InvoiceCreator")
+  recordedPayments           Payment[]
+  invoiceAuditLogs           InvoiceAuditLog[]
+  preparedMessages           MessageDeliveryQueue[]       @relation("MessagePreparedBy")
+  sentMessages               MessageDeliveryQueue[]       @relation("MessageSentBy")
+  auditEvents                AuditEvent[]
+  cooldownEvents             CooldownEvent[]
   passwordResetTokens PasswordResetToken[]
   supportSessionsStarted SupportSession[] @relation("SupportSessionAdminUser")
+  supportRequestsRequested   SupportRequest[]             @relation("SupportRequestRequestedBy")
+  supportRequestsReviewed    SupportRequest[]             @relation("SupportRequestReviewedBy")
   supportSessionActivities SupportSessionActivity[] @relation("SupportSessionActivityAdminUser")
 
   @@index([businessId])
@@ -305,15 +320,15 @@ model User {
 }
 
 model PasswordResetToken {
-  id                 Int      @id @default(autoincrement())
-  uuid               String   @unique @default(uuid()) @db.Uuid
-  userId             Int      @map("user_id")
-  tokenHash          String   @unique @map("token_hash")
-  expiresAt          DateTime @map("expires_at")
+  id                 Int       @id @default(autoincrement())
+  uuid               String    @unique @default(uuid()) @db.Uuid
+  userId             Int       @map("user_id")
+  tokenHash          String    @unique @map("token_hash")
+  expiresAt          DateTime  @map("expires_at")
   usedAt             DateTime? @map("used_at")
-  requestedIp        String?  @map("requested_ip")
-  requestedUserAgent String?  @map("requested_user_agent")
-  createdAt          DateTime @default(now()) @map("created_at")
+  requestedIp        String?   @map("requested_ip")
+  requestedUserAgent String?   @map("requested_user_agent")
+  createdAt          DateTime  @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -340,43 +355,45 @@ model Business {
   id           Int          @id @default(autoincrement())
   uuid         String       @unique @default(uuid()) @db.Uuid
   name         String
-  businessType BusinessType @map("business_type")
-  status       RecordStatus @default(ACTIVE)
-  createdAt    DateTime     @default(now()) @map("created_at")
+  businessType        BusinessType        @map("business_type")
+  status              RecordStatus        @default(ACTIVE)
+  supportAccessPolicy SupportAccessPolicy @default(IMMEDIATE) @map("support_access_policy")
+  createdAt           DateTime            @default(now()) @map("created_at")
   updatedAt    DateTime     @updatedAt @map("updated_at")
 
-  users         User[]
-  branches      Branch[]
-  branding      BusinessBranding?
-  subscriptions BusinessSubscription[]
-  customerMemberships BusinessCustomerMembership[]
-  loyaltyPrograms LoyaltyProgram[]
-  scanEvents ScanEvent[]
-  stampTransactions StampTransaction[]
-  rewardRedemptions RewardRedemption[]
-  activityAlerts ActivityAlert[]
-  abusePolicies AbusePolicy[]
-  alertEvents AlertEvent[]
-  subscriptionAudits SubscriptionAuditLog[]
-  invoices Invoice[]
-  payments Payment[]
-  invoiceAuditLogs InvoiceAuditLog[]
-  engagementEvents EngagementEvent[]
-  messageTemplates MessageTemplate[]
+  users                         User[]
+  branches                      Branch[]
+  branding                      BusinessBranding?
+  subscriptions                 BusinessSubscription[]
+  customerMemberships           BusinessCustomerMembership[]
+  loyaltyPrograms               LoyaltyProgram[]
+  scanEvents                    ScanEvent[]
+  stampTransactions             StampTransaction[]
+  rewardRedemptions             RewardRedemption[]
+  activityAlerts                ActivityAlert[]
+  abusePolicies                 AbusePolicy[]
+  alertEvents                   AlertEvent[]
+  subscriptionAudits            SubscriptionAuditLog[]
+  invoices                      Invoice[]
+  payments                      Payment[]
+  invoiceAuditLogs              InvoiceAuditLog[]
+  engagementEvents              EngagementEvent[]
+  messageTemplates              MessageTemplate[]
   customerNotificationTemplates CustomerNotificationTemplate[]
-  communicationSettings BusinessCommunicationSettings?
-  scannerSettings BusinessScannerSettings?
-  messageDeliveryQueue MessageDeliveryQueue[]
-  customerNotifications CustomerNotification[]
-  referrals Referral[]
-  referralRewards ReferralReward[]
-  referralEvents ReferralEvent[]
-  auditEvents AuditEvent[]
-  cooldownRules CooldownRule[]
-  cooldownEvents CooldownEvent[]
-  tierSetting CustomerTierSetting?
-  supportSessions SupportSession[]
-  supportSessionActivities SupportSessionActivity[]
+  communicationSettings         BusinessCommunicationSettings?
+  scannerSettings               BusinessScannerSettings?
+  messageDeliveryQueue          MessageDeliveryQueue[]
+  customerNotifications         CustomerNotification[]
+  referrals                     Referral[]
+  referralRewards               ReferralReward[]
+  referralEvents                ReferralEvent[]
+  auditEvents                   AuditEvent[]
+  cooldownRules                 CooldownRule[]
+  cooldownEvents                CooldownEvent[]
+  tierSetting                   CustomerTierSetting?
+  supportSessions               SupportSession[]
+  supportRequests               SupportRequest[]
+  supportSessionActivities      SupportSessionActivity[]
   businessNotifications BusinessNotification[]
 
   @@map("businesses")
@@ -412,16 +429,16 @@ model Branch {
   createdAt  DateTime     @default(now()) @map("created_at")
   updatedAt  DateTime     @updatedAt @map("updated_at")
 
-  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  users    User[]
-  createdCustomerMemberships BusinessCustomerMembership[]
-  scanEvents ScanEvent[]
-  stampTransactions StampTransaction[]
-  rewardRedemptions RewardRedemption[]
-  activityAlerts ActivityAlert[]
-  referredFirstStampReferrals Referral[] @relation("ReferralFirstStampBranch")
-  auditEvents AuditEvent[]
-  cooldownEvents CooldownEvent[]
+  business                    Business                     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  users                       User[]
+  createdCustomerMemberships  BusinessCustomerMembership[]
+  scanEvents                  ScanEvent[]
+  stampTransactions           StampTransaction[]
+  rewardRedemptions           RewardRedemption[]
+  activityAlerts              ActivityAlert[]
+  referredFirstStampReferrals Referral[]                   @relation("ReferralFirstStampBranch")
+  auditEvents                 AuditEvent[]
+  cooldownEvents              CooldownEvent[]
 
   @@index([businessId])
   @@map("branches")
@@ -445,16 +462,16 @@ model BusinessBranding {
 }
 
 model SubscriptionPlan {
-  id                 Int      @id @default(autoincrement())
-  code               String   @unique
-  name               String   @unique
-  monthlyPrice       Decimal  @map("monthly_price") @db.Decimal(10, 2)
-  annualPrice        Decimal  @map("annual_price") @db.Decimal(10, 2)
-  maxBranches        Int      @map("max_branches")
-  maxLoyaltyPrograms Int      @map("max_loyalty_programs")
+  id                  Int      @id @default(autoincrement())
+  code                String   @unique
+  name                String   @unique
+  monthlyPrice        Decimal  @map("monthly_price") @db.Decimal(10, 2)
+  annualPrice         Decimal  @map("annual_price") @db.Decimal(10, 2)
+  maxBranches         Int      @map("max_branches")
+  maxLoyaltyPrograms  Int      @map("max_loyalty_programs")
   billingCycleSupport Json     @map("billing_cycle_support")
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
 
   subscriptions BusinessSubscription[]
 
@@ -476,8 +493,8 @@ model BusinessSubscription {
   createdAt          DateTime           @default(now()) @map("created_at")
   updatedAt          DateTime           @updatedAt @map("updated_at")
 
-  business         Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  subscriptionPlan SubscriptionPlan @relation(fields: [subscriptionPlanId], references: [id])
+  business         Business               @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  subscriptionPlan SubscriptionPlan       @relation(fields: [subscriptionPlanId], references: [id])
   auditLogs        SubscriptionAuditLog[]
   invoices         Invoice[]
 
@@ -511,20 +528,20 @@ model SubscriptionAuditLog {
 }
 
 model Invoice {
-  id                   Int           @id @default(autoincrement())
-  uuid                 String        @unique @default(uuid()) @db.Uuid
-  businessId           Int           @map("business_id")
-  subscriptionId       Int           @map("subscription_id")
-  invoiceNumber        String        @unique @map("invoice_number")
-  invoiceDate          DateTime      @map("invoice_date")
-  dueDate              DateTime      @map("due_date")
-  amount               Decimal       @db.Decimal(10, 2)
-  currency             String        @default("AED")
-  status               InvoiceStatus @default(DRAFT)
-  notes                String?
-  createdByUserId      Int           @map("created_by_user_id")
-  createdAt            DateTime      @default(now()) @map("created_at")
-  updatedAt            DateTime      @updatedAt @map("updated_at")
+  id              Int           @id @default(autoincrement())
+  uuid            String        @unique @default(uuid()) @db.Uuid
+  businessId      Int           @map("business_id")
+  subscriptionId  Int           @map("subscription_id")
+  invoiceNumber   String        @unique @map("invoice_number")
+  invoiceDate     DateTime      @map("invoice_date")
+  dueDate         DateTime      @map("due_date")
+  amount          Decimal       @db.Decimal(10, 2)
+  currency        String        @default("AED")
+  status          InvoiceStatus @default(DRAFT)
+  notes           String?
+  createdByUserId Int           @map("created_by_user_id")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
 
   business      Business             @relation(fields: [businessId], references: [id], onDelete: Cascade)
   subscription  BusinessSubscription @relation(fields: [subscriptionId], references: [id])
@@ -541,18 +558,18 @@ model Invoice {
 }
 
 model Payment {
-  id                 Int           @id @default(autoincrement())
-  uuid               String        @unique @default(uuid()) @db.Uuid
-  businessId         Int           @map("business_id")
-  invoiceId          Int           @map("invoice_id")
-  amount             Decimal       @db.Decimal(10, 2)
-  currency           String        @default("AED")
-  paymentMethod      PaymentMethod @map("payment_method")
-  paymentReference   String?       @map("payment_reference")
-  paidAt             DateTime      @map("paid_at")
-  recordedByUserId   Int           @map("recorded_by_user_id")
-  notes              String?
-  createdAt          DateTime      @default(now()) @map("created_at")
+  id               Int           @id @default(autoincrement())
+  uuid             String        @unique @default(uuid()) @db.Uuid
+  businessId       Int           @map("business_id")
+  invoiceId        Int           @map("invoice_id")
+  amount           Decimal       @db.Decimal(10, 2)
+  currency         String        @default("AED")
+  paymentMethod    PaymentMethod @map("payment_method")
+  paymentReference String?       @map("payment_reference")
+  paidAt           DateTime      @map("paid_at")
+  recordedByUserId Int           @map("recorded_by_user_id")
+  notes            String?
+  createdAt        DateTime      @default(now()) @map("created_at")
 
   business       Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   invoice        Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
@@ -588,18 +605,18 @@ model InvoiceAuditLog {
 }
 
 model GlobalCustomer {
-  id              Int      @id @default(autoincrement())
-  uuid            String   @unique @default(uuid()) @db.Uuid
-  firstName       String   @map("first_name")
-  lastName        String?  @map("last_name")
+  id              Int       @id @default(autoincrement())
+  uuid            String    @unique @default(uuid()) @db.Uuid
+  firstName       String    @map("first_name")
+  lastName        String?   @map("last_name")
   phone           String
-  normalizedPhone String   @unique @map("normalized_phone")
+  normalizedPhone String    @unique @map("normalized_phone")
   email           String?
   birthday        DateTime?
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
-  memberships BusinessCustomerMembership[]
+  memberships         BusinessCustomerMembership[]
   referredByReferrals Referral[]
 
   @@map("global_customers")
@@ -628,22 +645,22 @@ model BusinessCustomerMembership {
   createdAt        DateTime                 @default(now()) @map("created_at")
   updatedAt        DateTime                 @updatedAt @map("updated_at")
 
-  globalCustomer GlobalCustomer @relation(fields: [globalCustomerId], references: [id], onDelete: Cascade)
-  business       Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  createdBranch  Branch?        @relation(fields: [createdBranchId], references: [id])
-  createdByUser  User?          @relation(fields: [createdByUserId], references: [id])
-  programMemberships CustomerProgramMembership[]
-  engagementEvents EngagementEvent[]
-  messageDeliveryQueue MessageDeliveryQueue[]
+  globalCustomer        GlobalCustomer              @relation(fields: [globalCustomerId], references: [id], onDelete: Cascade)
+  business              Business                    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  createdBranch         Branch?                     @relation(fields: [createdBranchId], references: [id])
+  createdByUser         User?                       @relation(fields: [createdByUserId], references: [id])
+  programMemberships    CustomerProgramMembership[]
+  engagementEvents      EngagementEvent[]
+  messageDeliveryQueue  MessageDeliveryQueue[]
   customerNotifications CustomerNotification[]
-  referralsMade Referral[] @relation("ReferralReferrer")
-  referralsReceived Referral[] @relation("ReferralReferredMembership")
+  referralsMade         Referral[]                  @relation("ReferralReferrer")
+  referralsReceived     Referral[]                  @relation("ReferralReferredMembership")
 
   @@unique([businessId, globalCustomerId])
+  @@unique([businessId, referralCode])
   @@index([globalCustomerId])
   @@index([businessId])
   @@index([businessId, status])
-  @@unique([businessId, referralCode])
   @@index([businessId, createdBranchId, status])
   @@index([createdBranchId])
   @@index([createdByUserId])
@@ -651,30 +668,30 @@ model BusinessCustomerMembership {
 }
 
 model LoyaltyProgram {
-  id                   Int          @id @default(autoincrement())
-  uuid                 String       @unique @default(uuid()) @db.Uuid
-  businessId           Int          @map("business_id")
-  name                 String
-  businessType         BusinessType @map("business_type")
-  productOrServiceName String       @map("product_or_service_name")
-  description          String?
-  requiredStamps       Int          @map("required_stamps")
-  startingBonusStamps  Int          @default(0) @map("starting_bonus_stamps")
-  rewardName           String       @map("reward_name")
-  rewardDescription    String       @map("reward_description")
-  referralRewardBonusStamps Int     @default(1) @map("referral_reward_bonus_stamps")
-  cardTheme            CardTheme    @default(BUSINESS_DEFAULT) @map("card_theme")
-  active               Boolean      @default(true)
-  startDate            DateTime?    @map("start_date")
-  endDate              DateTime?    @map("end_date")
-  createdAt            DateTime     @default(now()) @map("created_at")
-  updatedAt            DateTime     @updatedAt @map("updated_at")
+  id                        Int          @id @default(autoincrement())
+  uuid                      String       @unique @default(uuid()) @db.Uuid
+  businessId                Int          @map("business_id")
+  name                      String
+  businessType              BusinessType @map("business_type")
+  productOrServiceName      String       @map("product_or_service_name")
+  description               String?
+  requiredStamps            Int          @map("required_stamps")
+  startingBonusStamps       Int          @default(0) @map("starting_bonus_stamps")
+  rewardName                String       @map("reward_name")
+  rewardDescription         String       @map("reward_description")
+  referralRewardBonusStamps Int          @default(1) @map("referral_reward_bonus_stamps")
+  cardTheme                 CardTheme    @default(BUSINESS_DEFAULT) @map("card_theme")
+  active                    Boolean      @default(true)
+  startDate                 DateTime?    @map("start_date")
+  endDate                   DateTime?    @map("end_date")
+  createdAt                 DateTime     @default(now()) @map("created_at")
+  updatedAt                 DateTime     @updatedAt @map("updated_at")
 
-  business    Business                    @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  memberships CustomerProgramMembership[]
+  business          Business                    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  memberships       CustomerProgramMembership[]
   rewardRedemptions RewardRedemption[]
-  referralRewards ReferralReward[]
-  cooldownEvents CooldownEvent[]
+  referralRewards   ReferralReward[]
+  cooldownEvents    CooldownEvent[]
 
   @@index([businessId])
   @@index([businessId, active])
@@ -729,8 +746,8 @@ model StampTransaction {
   business                  Business                  @relation(fields: [businessId], references: [id], onDelete: Cascade)
   branch                    Branch?                   @relation(fields: [branchId], references: [id])
   customerProgramMembership CustomerProgramMembership @relation(fields: [customerProgramMembershipId], references: [id])
-  issuedByUser              User                     @relation(fields: [issuedByUserId], references: [id])
-  referralQualifications Referral[]
+  issuedByUser              User                      @relation(fields: [issuedByUserId], references: [id])
+  referralQualifications    Referral[]
 
   @@index([businessId])
   @@index([branchId])
@@ -759,14 +776,14 @@ model Referral {
   createdAt                  DateTime       @default(now()) @map("created_at")
   updatedAt                  DateTime       @updatedAt @map("updated_at")
 
-  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  referrerMembership BusinessCustomerMembership @relation("ReferralReferrer", fields: [referrerMembershipId], references: [id], onDelete: Cascade)
-  referredGlobalCustomer GlobalCustomer? @relation(fields: [referredGlobalCustomerId], references: [id], onDelete: SetNull)
-  referredMembership BusinessCustomerMembership? @relation("ReferralReferredMembership", fields: [referredMembershipId], references: [id], onDelete: SetNull)
-  firstStampTransaction StampTransaction? @relation(fields: [firstStampTransactionId], references: [id])
-  referredFirstStampBranch Branch? @relation("ReferralFirstStampBranch", fields: [referredFirstStampBranchId], references: [id])
-  rewards ReferralReward[]
-  events ReferralEvent[]
+  business                 Business                    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  referrerMembership       BusinessCustomerMembership  @relation("ReferralReferrer", fields: [referrerMembershipId], references: [id], onDelete: Cascade)
+  referredGlobalCustomer   GlobalCustomer?             @relation(fields: [referredGlobalCustomerId], references: [id], onDelete: SetNull)
+  referredMembership       BusinessCustomerMembership? @relation("ReferralReferredMembership", fields: [referredMembershipId], references: [id], onDelete: SetNull)
+  firstStampTransaction    StampTransaction?           @relation(fields: [firstStampTransactionId], references: [id])
+  referredFirstStampBranch Branch?                     @relation("ReferralFirstStampBranch", fields: [referredFirstStampBranchId], references: [id])
+  rewards                  ReferralReward[]
+  events                   ReferralEvent[]
 
   @@unique([businessId, referredMembershipId])
   @@index([businessId, status])
@@ -789,9 +806,9 @@ model ReferralReward {
   grantedAt                   DateTime?            @map("granted_at")
   createdAt                   DateTime             @default(now()) @map("created_at")
 
-  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  referral Referral @relation(fields: [referralId], references: [id], onDelete: Cascade)
-  loyaltyProgram LoyaltyProgram @relation(fields: [loyaltyProgramId], references: [id])
+  business                  Business                   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  referral                  Referral                   @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  loyaltyProgram            LoyaltyProgram             @relation(fields: [loyaltyProgramId], references: [id])
   referrerProgramMembership CustomerProgramMembership? @relation(fields: [referrerProgramMembershipId], references: [id], onDelete: SetNull)
 
   @@unique([referralId, loyaltyProgramId])
@@ -900,17 +917,17 @@ model ActivityAlert {
 }
 
 model AbusePolicy {
-  id             Int                   @id @default(autoincrement())
-  uuid           String                @unique @default(uuid()) @db.Uuid
-  businessId     Int                   @map("business_id")
-  policyName     String                @map("policy_name")
-  ruleType       String                @map("rule_type")
-  thresholdValue Int                   @map("threshold_value")
-  severity       ActivityAlertSeverity
-  enabled        Boolean               @default(true)
-  dedupeWindowHours Int                @default(24) @map("dedupe_window_hours")
-  createdAt      DateTime              @default(now()) @map("created_at")
-  updatedAt      DateTime              @updatedAt @map("updated_at")
+  id                Int                   @id @default(autoincrement())
+  uuid              String                @unique @default(uuid()) @db.Uuid
+  businessId        Int                   @map("business_id")
+  policyName        String                @map("policy_name")
+  ruleType          String                @map("rule_type")
+  thresholdValue    Int                   @map("threshold_value")
+  severity          ActivityAlertSeverity
+  enabled           Boolean               @default(true)
+  dedupeWindowHours Int                   @default(24) @map("dedupe_window_hours")
+  createdAt         DateTime              @default(now()) @map("created_at")
+  updatedAt         DateTime              @updatedAt @map("updated_at")
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
@@ -964,18 +981,18 @@ model ScanEvent {
 }
 
 model EngagementEvent {
-  id          Int                   @id @default(autoincrement())
-  uuid        String                @unique @default(uuid()) @db.Uuid
-  businessId  Int                   @map("business_id")
-  customerId  Int                   @map("customer_id")
-  eventType   EngagementEventType   @map("event_type")
-  eventDate   DateTime              @map("event_date")
-  status      EngagementEventStatus @default(ACTIVE)
-  metadata    Json                  @default("{}")
-  createdAt   DateTime              @default(now()) @map("created_at")
+  id         Int                   @id @default(autoincrement())
+  uuid       String                @unique @default(uuid()) @db.Uuid
+  businessId Int                   @map("business_id")
+  customerId Int                   @map("customer_id")
+  eventType  EngagementEventType   @map("event_type")
+  eventDate  DateTime              @map("event_date")
+  status     EngagementEventStatus @default(ACTIVE)
+  metadata   Json                  @default("{}")
+  createdAt  DateTime              @default(now()) @map("created_at")
 
-  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  customer BusinessCustomerMembership @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  business             Business                   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customer             BusinessCustomerMembership @relation(fields: [customerId], references: [id], onDelete: Cascade)
   messageDeliveryQueue MessageDeliveryQueue[]
 
   @@index([businessId, eventType, eventDate])
@@ -1000,13 +1017,13 @@ model MessageTemplate {
 }
 
 model CustomerNotificationTemplate {
-  id                 Int                      @id @default(autoincrement())
-  businessId         Int?                     @map("business_id")
-  notificationType   CustomerNotificationType @map("notification_type")
-  title              String
-  message            String
-  active             Boolean                  @default(true)
-  createdAt          DateTime                 @default(now()) @map("created_at")
+  id               Int                      @id @default(autoincrement())
+  businessId       Int?                     @map("business_id")
+  notificationType CustomerNotificationType @map("notification_type")
+  title            String
+  message          String
+  active           Boolean                  @default(true)
+  createdAt        DateTime                 @default(now()) @map("created_at")
 
   business Business? @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
@@ -1055,17 +1072,17 @@ model BusinessNotification {
 }
 
 model BusinessCommunicationSettings {
-  id                       Int                  @id @default(autoincrement())
-  businessId               Int                  @unique @map("business_id")
-  whatsappEnabled          Boolean              @default(false) @map("whatsapp_enabled")
-  smsEnabled               Boolean              @default(false) @map("sms_enabled")
-  emailEnabled             Boolean              @default(false) @map("email_enabled")
-  preferredDefaultChannel  CommunicationChannel @default(NONE) @map("preferred_default_channel")
-  whatsappBusinessNumber   String?              @map("whatsapp_business_number")
-  senderEmail              String?              @map("sender_email")
-  senderName               String?              @map("sender_name")
-  createdAt                DateTime             @default(now()) @map("created_at")
-  updatedAt                DateTime             @updatedAt @map("updated_at")
+  id                      Int                  @id @default(autoincrement())
+  businessId              Int                  @unique @map("business_id")
+  whatsappEnabled         Boolean              @default(false) @map("whatsapp_enabled")
+  smsEnabled              Boolean              @default(false) @map("sms_enabled")
+  emailEnabled            Boolean              @default(false) @map("email_enabled")
+  preferredDefaultChannel CommunicationChannel @default(NONE) @map("preferred_default_channel")
+  whatsappBusinessNumber  String?              @map("whatsapp_business_number")
+  senderEmail             String?              @map("sender_email")
+  senderName              String?              @map("sender_name")
+  createdAt               DateTime             @default(now()) @map("created_at")
+  updatedAt               DateTime             @updatedAt @map("updated_at")
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
@@ -1085,29 +1102,29 @@ model BusinessScannerSettings {
 }
 
 model MessageDeliveryQueue {
-  id                            Int                   @id @default(autoincrement())
-  uuid                          String                @unique @default(uuid()) @db.Uuid
-  businessId                    Int                   @map("business_id")
-  engagementEventId             Int?                  @map("engagement_event_id")
-  businessCustomerMembershipId  Int                   @map("business_customer_membership_id")
-  channel                       CommunicationChannel
-  recipientMasked               String                @map("recipient_masked")
-  messageBody                   String                @map("message_body")
-  status                        MessageDeliveryStatus @default(READY)
-  providerMessageId             String?               @map("provider_message_id")
-  errorMessage                  String?               @map("error_message")
-  preparedByUserId              Int?                  @map("prepared_by_user_id")
-  sentByUserId                  Int?                  @map("sent_by_user_id")
-  preparedAt                    DateTime?             @map("prepared_at")
-  sentAt                        DateTime?             @map("sent_at")
-  createdAt                     DateTime              @default(now()) @map("created_at")
-  updatedAt                     DateTime              @updatedAt @map("updated_at")
+  id                           Int                   @id @default(autoincrement())
+  uuid                         String                @unique @default(uuid()) @db.Uuid
+  businessId                   Int                   @map("business_id")
+  engagementEventId            Int?                  @map("engagement_event_id")
+  businessCustomerMembershipId Int                   @map("business_customer_membership_id")
+  channel                      CommunicationChannel
+  recipientMasked              String                @map("recipient_masked")
+  messageBody                  String                @map("message_body")
+  status                       MessageDeliveryStatus @default(READY)
+  providerMessageId            String?               @map("provider_message_id")
+  errorMessage                 String?               @map("error_message")
+  preparedByUserId             Int?                  @map("prepared_by_user_id")
+  sentByUserId                 Int?                  @map("sent_by_user_id")
+  preparedAt                   DateTime?             @map("prepared_at")
+  sentAt                       DateTime?             @map("sent_at")
+  createdAt                    DateTime              @default(now()) @map("created_at")
+  updatedAt                    DateTime              @updatedAt @map("updated_at")
 
-  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  engagementEvent EngagementEvent? @relation(fields: [engagementEventId], references: [id], onDelete: SetNull)
+  business                   Business                   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  engagementEvent            EngagementEvent?           @relation(fields: [engagementEventId], references: [id], onDelete: SetNull)
   businessCustomerMembership BusinessCustomerMembership @relation(fields: [businessCustomerMembershipId], references: [id], onDelete: Cascade)
-  preparedByUser User? @relation("MessagePreparedBy", fields: [preparedByUserId], references: [id])
-  sentByUser User? @relation("MessageSentBy", fields: [sentByUserId], references: [id])
+  preparedByUser             User?                      @relation("MessagePreparedBy", fields: [preparedByUserId], references: [id])
+  sentByUser                 User?                      @relation("MessageSentBy", fields: [sentByUserId], references: [id])
 
   @@index([businessId, status, createdAt])
   @@index([businessId, channel, status])
@@ -1118,30 +1135,61 @@ model MessageDeliveryQueue {
   @@map("message_delivery_queue")
 }
 
+model SupportRequest {
+  id                Int                  @id @default(autoincrement())
+  uuid              String               @unique @default(uuid()) @db.Uuid
+  businessId        Int                  @map("business_id")
+  requestedByUserId Int                  @map("requested_by_user_id")
+  reviewedByUserId  Int?                 @map("reviewed_by_user_id")
+  reason            String
+  durationMinutes   Int                  @map("duration_minutes")
+  readOnly          Boolean              @default(true) @map("read_only")
+  emergency         Boolean              @default(false)
+  status            SupportRequestStatus @default(PENDING)
+  expiresAt         DateTime             @map("expires_at")
+  reviewedAt        DateTime?            @map("reviewed_at")
+  responseNote      String?              @map("response_note")
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
+
+  business        Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  requestedByUser User            @relation("SupportRequestRequestedBy", fields: [requestedByUserId], references: [id])
+  reviewedByUser  User?           @relation("SupportRequestReviewedBy", fields: [reviewedByUserId], references: [id])
+  supportSession  SupportSession?
+
+  @@index([businessId, status, expiresAt])
+  @@index([requestedByUserId, status, createdAt])
+  @@index([reviewedByUserId, reviewedAt])
+  @@index([status, expiresAt])
+  @@map("support_requests")
+}
 
 model SupportSession {
-  id          Int                  @id @default(autoincrement())
-  businessId  Int                  @map("business_id")
-  adminUserId Int                  @map("admin_user_id")
-  reason      String
-  startedAt   DateTime             @default(now()) @map("started_at")
-  expiresAt   DateTime             @map("expires_at")
-  endedAt     DateTime?            @map("ended_at")
-  readOnly    Boolean              @default(true) @map("read_only")
-  status      SupportSessionStatus @default(ACTIVE)
-  supportSummary String?           @map("support_summary")
-  createdAt   DateTime             @default(now()) @map("created_at")
-  updatedAt   DateTime             @updatedAt @map("updated_at")
+  id               Int                  @id @default(autoincrement())
+  businessId       Int                  @map("business_id")
+  adminUserId      Int                  @map("admin_user_id")
+  reason           String
+  startedAt        DateTime             @default(now()) @map("started_at")
+  expiresAt        DateTime             @map("expires_at")
+  endedAt          DateTime?            @map("ended_at")
+  readOnly         Boolean              @default(true) @map("read_only")
+  status           SupportSessionStatus @default(ACTIVE)
+  supportSummary   String?              @map("support_summary")
+  supportRequestId Int?                 @unique @map("support_request_id")
+  createdAt        DateTime             @default(now()) @map("created_at")
+  updatedAt        DateTime             @updatedAt @map("updated_at")
 
-  business  Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  adminUser User     @relation("SupportSessionAdminUser", fields: [adminUserId], references: [id])
-  activities SupportSessionActivity[]
+  business       Business                 @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  adminUser      User                     @relation("SupportSessionAdminUser", fields: [adminUserId], references: [id])
+  supportRequest SupportRequest?          @relation(fields: [supportRequestId], references: [id])
+  activities     SupportSessionActivity[]
 
   @@index([businessId, status, expiresAt])
   @@index([adminUserId, status, expiresAt])
   @@index([expiresAt])
   @@map("support_sessions")
 }
+
 model SupportSessionActivity {
   id               Int                        @id @default(autoincrement())
   supportSessionId Int                        @map("support_session_id")
@@ -1165,6 +1213,7 @@ model SupportSessionActivity {
   @@index([entityType, entityId])
   @@map("support_session_activities")
 }
+
 model PlatformSetting {
   id        Int      @id @default(autoincrement())
   key       String   @unique
@@ -1187,9 +1236,9 @@ model AuditEvent {
   metadata    Json     @default("{}")
   createdAt   DateTime @default(now()) @map("created_at")
 
-  actorUser User? @relation(fields: [actorUserId], references: [id])
+  actorUser User?     @relation(fields: [actorUserId], references: [id])
   business  Business? @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  branch    Branch? @relation(fields: [branchId], references: [id])
+  branch    Branch?   @relation(fields: [branchId], references: [id])
 
   @@index([businessId, createdAt])
   @@index([actorUserId, createdAt])
@@ -1199,20 +1248,20 @@ model AuditEvent {
 }
 
 model CooldownRule {
-  id                              Int      @id @default(autoincrement())
-  uuid                            String   @unique @default(uuid()) @db.Uuid
-  businessId                      Int      @map("business_id")
-  name                            String   @default("Default cooldown policy")
-  active                          Boolean  @default(true)
-  minimumMinutesBetweenStamps     Int      @default(0) @map("minimum_minutes_between_stamps")
-  maximumStampsPerTransaction     Int      @default(5) @map("maximum_stamps_per_transaction")
-  maximumStampsPerCustomerPerDay  Int?     @map("maximum_stamps_per_customer_per_day")
-  maximumStampsPerStaffPerDay     Int?     @map("maximum_stamps_per_staff_per_day")
-  generateAlert                   Boolean  @default(true) @map("generate_alert")
-  createdAt                       DateTime @default(now()) @map("created_at")
-  updatedAt                       DateTime @updatedAt @map("updated_at")
+  id                             Int      @id @default(autoincrement())
+  uuid                           String   @unique @default(uuid()) @db.Uuid
+  businessId                     Int      @map("business_id")
+  name                           String   @default("Default cooldown policy")
+  active                         Boolean  @default(true)
+  minimumMinutesBetweenStamps    Int      @default(0) @map("minimum_minutes_between_stamps")
+  maximumStampsPerTransaction    Int      @default(5) @map("maximum_stamps_per_transaction")
+  maximumStampsPerCustomerPerDay Int?     @map("maximum_stamps_per_customer_per_day")
+  maximumStampsPerStaffPerDay    Int?     @map("maximum_stamps_per_staff_per_day")
+  generateAlert                  Boolean  @default(true) @map("generate_alert")
+  createdAt                      DateTime @default(now()) @map("created_at")
+  updatedAt                      DateTime @updatedAt @map("updated_at")
 
-  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  business       Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
   cooldownEvents CooldownEvent[]
 
   @@index([businessId, active])
@@ -1235,12 +1284,12 @@ model CooldownEvent {
   metadata                    Json     @default("{}")
   createdAt                   DateTime @default(now()) @map("created_at")
 
-  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  branch Branch? @relation(fields: [branchId], references: [id])
+  business                  Business                  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  branch                    Branch?                   @relation(fields: [branchId], references: [id])
   customerProgramMembership CustomerProgramMembership @relation(fields: [customerProgramMembershipId], references: [id])
-  staffUser User @relation(fields: [staffUserId], references: [id])
-  loyaltyProgram LoyaltyProgram @relation(fields: [loyaltyProgramId], references: [id])
-  cooldownRule CooldownRule? @relation(fields: [cooldownRuleId], references: [id])
+  staffUser                 User                      @relation(fields: [staffUserId], references: [id])
+  loyaltyProgram            LoyaltyProgram            @relation(fields: [loyaltyProgramId], references: [id])
+  cooldownRule              CooldownRule?             @relation(fields: [cooldownRuleId], references: [id])
 
   @@index([businessId, createdAt])
   @@index([businessId, violationType, createdAt])
@@ -1249,4 +1298,5 @@ model CooldownEvent {
   @@index([branchId, createdAt])
   @@map("cooldown_events")
 }
+
 
