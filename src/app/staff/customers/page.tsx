@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { Search } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -18,10 +18,10 @@ export default async function StaffCustomerSearchPage({
   const query = params.q?.trim();
   const normalizedQueryPhone = query ? normalizePhone(query) : null;
 
-  if (!user.businessId) {
+  if (!user.businessId || !user.branchId) {
     return (
       <DashboardShell user={user} eyebrow="Staff" title="Find customer" hideWelcomeMessage>
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">Business assignment is required.</p>
+        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">Business and branch assignment are required.</p>
       </DashboardShell>
     );
   }
@@ -30,6 +30,7 @@ export default async function StaffCustomerSearchPage({
     ? await prisma.businessCustomerMembership.findMany({
         where: {
           businessId: user.businessId,
+          createdBranchId: user.branchId,
           OR: [
             { globalCustomer: { firstName: { contains: query, mode: "insensitive" } } },
             { globalCustomer: { lastName: { contains: query, mode: "insensitive" } } },
@@ -58,7 +59,7 @@ export default async function StaffCustomerSearchPage({
         <div>
           <p className="text-sm font-semibold business-primary">Customer lookup</p>
           <h2 className="mt-1 text-xl font-semibold text-[#111827]">Find customer</h2>
-          <p className="mt-2 text-sm text-[#6B7280]">Search customers in your business by name, phone number, or card number.</p>
+          <p className="mt-2 text-sm text-[#6B7280]">Search customers in your assigned branch by name, phone number, or card number.</p>
         </div>
         <form className="mt-5 flex flex-col gap-3 sm:flex-row">
           <label className="sr-only" htmlFor="staff-customer-search">Search customers</label>
@@ -128,7 +129,7 @@ export default async function StaffCustomerSearchPage({
               </Link>
             );
           })}
-          {query && customers.length === 0 ? <p className="rounded-md border border-dashed border-[#E5E7EB] p-5 text-center text-sm text-[#6B7280]">No customers found in your business.</p> : null}
+          {query && customers.length === 0 ? <p className="rounded-md border border-dashed border-[#E5E7EB] p-5 text-center text-sm text-[#6B7280]">No customers found in your assigned branch.</p> : null}
         </div>
       </section>
     </DashboardShell>

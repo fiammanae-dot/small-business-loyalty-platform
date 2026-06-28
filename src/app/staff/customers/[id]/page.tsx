@@ -1,4 +1,4 @@
-﻿import Image from "next/image";
+import Image from "next/image";
 import Link from "next/link";
 import type React from "react";
 import QRCode from "qrcode";
@@ -18,16 +18,16 @@ export default async function StaffCustomerProfilePage({
   const user = await requireRole("STAFF");
   const { id } = await params;
 
-  if (!user.businessId) {
+  if (!user.businessId || !user.branchId) {
     return (
       <DashboardShell user={user} eyebrow="Staff" title="Customer profile" hideWelcomeMessage>
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">Business assignment is required.</p>
+        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">Business and branch assignment are required.</p>
       </DashboardShell>
     );
   }
 
   const membership = await prisma.businessCustomerMembership.findFirst({
-    where: { uuid: id, businessId: user.businessId },
+    where: { uuid: id, businessId: user.businessId, createdBranchId: user.branchId },
     include: {
       globalCustomer: true,
       business: true,
@@ -42,7 +42,7 @@ export default async function StaffCustomerProfilePage({
   if (!membership) {
     return (
       <DashboardShell user={user} eyebrow="Staff" title="Customer profile" hideWelcomeMessage>
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">Customer not found or outside your business.</p>
+        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">Customer not found or outside your assigned branch.</p>
         <Link href="/staff/customers" className="mt-4 inline-flex rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]">
           Back to customer search
         </Link>

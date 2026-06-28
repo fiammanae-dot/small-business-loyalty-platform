@@ -1,5 +1,6 @@
 "use server";
 
+import { Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createEngagementEventIfAllowed } from "@/lib/engagement";
@@ -25,6 +26,19 @@ function fail(token: string, message: string): never {
   redirect(`/join/program/${encodeURIComponent(token)}?error=${encodeURIComponent(message)}`);
 }
 
+async function findExistingProgramCardToken(normalizedPhone: string, businessId: number, programId: number) {
+  const membership = await prisma.businessCustomerMembership.findFirst({
+    where: {
+      businessId,
+      status: "ACTIVE",
+      globalCustomer: { normalizedPhone },
+      programMemberships: { some: { loyaltyProgramId: programId } },
+    },
+    select: { cardToken: true },
+  });
+
+  return membership?.cardToken ?? null;
+}
 export async function joinProgramAction(formData: FormData) {
   const token = getString(formData, "token");
   const parsed = joinProgramSchema.safeParse({
@@ -49,7 +63,9 @@ export async function joinProgramAction(formData: FormData) {
     fail(parsed.data.token, "This program is not available for public enrollment.");
   }
 
-  const result = await prisma.$transaction(async (tx) => {
+  let result: { cardToken: string };
+  try {
+    result = await prisma.$transaction(async (tx) => {
     const globalCustomer =
       (await tx.globalCustomer.findUnique({
         where: { normalizedPhone },
@@ -172,7 +188,17 @@ export async function joinProgramAction(formData: FormData) {
     });
 
     return { cardToken: membership.cardToken };
-  });
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      const existingCardToken = await findExistingProgramCardToken(normalizedPhone, program.businessId, program.id);
+      if (existingCardToken) {
+        redirect(`/join/program/${encodeURIComponent(parsed.data.token)}?card=${encodeURIComponent(existingCardToken)}`);
+      }
+    }
+
+    fail(parsed.data.token, "Enrollment could not be completed. Please try again.");
+  }
 
   redirect(`/join/program/${encodeURIComponent(parsed.data.token)}?card=${encodeURIComponent(result.cardToken)}`);
 }

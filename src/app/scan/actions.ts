@@ -34,6 +34,11 @@ const REPEATED_STAMP_WINDOW_MINUTES = 10;
 const REPEATED_STAMP_REASON_THRESHOLD = 3;
 const REPEATED_STAMP_REASON_MESSAGE = "Multiple stamps were issued to this customer in a short time. Please provide a reason.";
 const STAFF_REWARD_READY_STAMP_BLOCK_MESSAGE = "Reward ready. Redeem the reward before adding another stamp.";
+const OUT_OF_BRANCH_ACTION_MESSAGE = "This customer is outside your assigned branch scope.";
+
+function isOutOfAssignedBranch(user: { role: string; branchId?: number | null }, membership: { createdBranchId?: number | null }) {
+  return (user.role === "STAFF" || user.role === "BRANCH_MANAGER") && (!user.branchId || membership.createdBranchId !== user.branchId);
+}
 
 function getString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -107,6 +112,10 @@ export async function issueStampAction(formData: FormData) {
   const businessMembership = programMembership.businessCustomerMembership;
   if (businessMembership.businessId !== user.businessId) {
     fail(data.scanToken, "This loyalty QR does not belong to your business.");
+  }
+
+  if (isOutOfAssignedBranch(user, businessMembership)) {
+    fail(data.scanToken, OUT_OF_BRANCH_ACTION_MESSAGE);
   }
 
   if (
@@ -470,6 +479,10 @@ export async function redeemRewardAction(formData: FormData) {
     fail(scanToken, "This loyalty QR does not belong to your business.");
   }
 
+  if (isOutOfAssignedBranch(user, businessMembership)) {
+    fail(scanToken, OUT_OF_BRANCH_ACTION_MESSAGE);
+  }
+
   if (
     programMembership.scanStatus !== "ACTIVE" ||
     programMembership.status !== "ACTIVE" ||
@@ -525,6 +538,9 @@ export async function redeemRewardAction(formData: FormData) {
       lockedMembership.businessCustomerMembership.status !== "ACTIVE"
     ) {
       fail(scanToken, "Invalid or unavailable loyalty QR.");
+    }
+    if (isOutOfAssignedBranch(user, lockedMembership.businessCustomerMembership)) {
+      fail(scanToken, OUT_OF_BRANCH_ACTION_MESSAGE);
     }
     if (
       !isRewardReady({

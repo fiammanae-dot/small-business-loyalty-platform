@@ -27,7 +27,7 @@ export default async function BranchScannerPage({
             <CameraScanner backHref="/branch" />
           </>
         }
-        lookup={user.businessId ? <ScannerManualCustomerSearch businessId={user.businessId} query={qs.customerSearch} actionPath="/branch/scanner" /> : null}
+        lookup={user.businessId ? <ScannerManualCustomerSearch businessId={user.businessId} branchId={user.branchId} query={qs.customerSearch} actionPath="/branch/scanner" /> : null}
       />
     </DashboardShell>
   );

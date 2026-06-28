@@ -38,7 +38,7 @@ export default async function PublicCustomerCardPage({
     },
   });
 
-  if (!membership || membership.cardStatus !== "ACTIVE" || membership.status !== "ACTIVE") {
+  if (!membership || membership.cardStatus !== "ACTIVE" || membership.status !== "ACTIVE" || membership.business.status !== "ACTIVE") {
     return <CardUnavailable />;
   }
 
@@ -249,4 +249,5 @@ function CardUnavailable() {
     </main>
   );
 }
+
 

@@ -25,6 +25,11 @@ import { issueStampAction, redeemRewardAction } from "@/app/scan/actions";
 const CROSS_BUSINESS_SCAN_TITLE = "Access Denied";
 const CROSS_BUSINESS_SCAN_DESCRIPTION = "This customer belongs to a different business workspace. For privacy and security reasons, customer information cannot be viewed or modified outside the assigned business.";
 const CROSS_BUSINESS_SCAN_HELPER = "If you believe this is a mistake, contact your Business Owner or System Administrator.";
+const OUT_OF_BRANCH_SCAN_DESCRIPTION = "This customer is outside your assigned branch scope. Customer information cannot be viewed or modified from this scanner.";
+
+function isOutOfAssignedBranch(user: { role: string; branchId?: number | null }, membership: { createdBranchId?: number | null }) {
+  return (user.role === "STAFF" || user.role === "BRANCH_MANAGER") && (!user.branchId || membership.createdBranchId !== user.branchId);
+}
 
 function decodeScanRouteToken(token: string) {
   try {
@@ -159,6 +164,11 @@ export default async function ScanResultPage({
       return <CrossBusinessScanMessage user={user} soundEffectsEnabled={scannerSoundEffectsEnabled} />;
     }
 
+    if (isOutOfAssignedBranch(authUser, cardMembership)) {
+      await logScan("INVALID");
+      return <OutOfBranchScanMessage user={user} soundEffectsEnabled={scannerSoundEffectsEnabled} />;
+    }
+
     if (cardMembership.cardStatus !== "ACTIVE" || cardMembership.status !== "ACTIVE") {
       await logScan("DISABLED");
       return <ScanMessage user={user} title="Disabled Card" description="This customer card is disabled and cannot be used for scanning." soundEffectsEnabled={scannerSoundEffectsEnabled} />;
@@ -189,6 +199,11 @@ export default async function ScanResultPage({
   if (businessMembership.businessId !== authUser.businessId) {
     await logScan("WRONG_BUSINESS", programMembership.id);
     return <CrossBusinessScanMessage user={user} soundEffectsEnabled={scannerSoundEffectsEnabled} />;
+  }
+
+  if (isOutOfAssignedBranch(authUser, businessMembership)) {
+    await logScan("INVALID", programMembership.id);
+    return <OutOfBranchScanMessage user={user} soundEffectsEnabled={scannerSoundEffectsEnabled} />;
   }
 
   if (programMembership.scanStatus !== "ACTIVE") {
@@ -596,6 +611,16 @@ function CrossBusinessScanMessage({
     </DashboardShell>
   );
 }
+function OutOfBranchScanMessage({
+  user,
+  soundEffectsEnabled,
+}: {
+  user: NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>;
+  soundEffectsEnabled: boolean;
+}) {
+  return <ScanMessage user={user} title="Access Denied" description={OUT_OF_BRANCH_SCAN_DESCRIPTION} soundEffectsEnabled={soundEffectsEnabled} />;
+}
+
 function ScanMessage({
   user,
   title,

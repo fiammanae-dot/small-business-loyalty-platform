@@ -62,3 +62,15 @@ test("business owner program detail exposes join QR controls without changing sc
   assert.match(poster, /PrintPageButton/);
   assert.match(poster, /getProgramJoinQrDataUrl\(program\.joinToken\)/);
 });
+
+test("public program join handles duplicate submissions safely", () => {
+  const action = read("src/app/join/program/[token]/actions.ts");
+
+  assert.match(action, /PrismaClientKnownRequestError/);
+  assert.match(action, /error\.code === "P2002"/);
+  assert.match(action, /findExistingProgramCardToken/);
+  assert.match(action, /programMemberships: \{ some: \{ loyaltyProgramId: programId \} \}/);
+  assert.match(action, /Enrollment could not be completed\. Please try again\./);
+  assert.doesNotMatch(action, /stampTransaction\.create/);
+  assert.doesNotMatch(action, /rewardRedemption\.create/);
+});

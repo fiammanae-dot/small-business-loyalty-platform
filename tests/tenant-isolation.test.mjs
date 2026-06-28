@@ -40,3 +40,33 @@ test("Business Owner cannot redeem another business reward", () => {
   assert.match(scanActions, /businessMembership\.businessId !== user\.businessId/);
   assert.match(scanActions, /lockedMembership\.businessCustomerMembership\.businessId !== user\.businessId/);
 });
+
+test("public card and operational branch isolation hardening are enforced", () => {
+  const publicCard = read("src/app/card/[token]/page.tsx");
+  const manualSearch = read("src/components/ScannerManualCustomerSearch.tsx");
+  const branchScanner = read("src/app/branch/scanner/page.tsx");
+  const staffScanner = read("src/app/staff/scanner/page.tsx");
+  const scanPage = read("src/app/scan/[token]/page.tsx");
+  const scanActions = read("src/app/scan/actions.ts");
+  const staffCustomers = read("src/app/staff/customers/page.tsx");
+  const staffProfile = read("src/app/staff/customers/[id]/page.tsx");
+
+  assert.match(publicCard, /membership\.business\.status !== "ACTIVE"/);
+  assert.match(manualSearch, /branchId\?: number \| null/);
+  assert.match(manualSearch, /createdBranchId: branchId/);
+  assert.match(branchScanner, /branchId=\{user\.branchId\}/);
+  assert.match(staffScanner, /branchId=\{user\.branchId\}/);
+  assert.match(scanPage, /isOutOfAssignedBranch\(authUser, cardMembership\)/);
+  assert.match(scanPage, /isOutOfAssignedBranch\(authUser, businessMembership\)/);
+  assert.match(scanPage, /This customer is outside your assigned branch scope/);
+  assert.match(scanActions, /isOutOfAssignedBranch\(user, businessMembership\)/);
+  assert.match(scanActions, /isOutOfAssignedBranch\(user, lockedMembership\.businessCustomerMembership\)/);
+  assert.match(staffCustomers, /createdBranchId: user\.branchId/);
+  assert.match(staffProfile, /createdBranchId: user\.branchId/);
+});
+
+test("Business Owner scanner remains business-wide", () => {
+  const dashboardScanner = read("src/app/dashboard/scanner/page.tsx");
+  assert.match(dashboardScanner, /<ScannerManualCustomerSearch businessId=\{user\.businessId\}/);
+  assert.doesNotMatch(dashboardScanner, /branchId=\{user\.branchId\}/);
+});

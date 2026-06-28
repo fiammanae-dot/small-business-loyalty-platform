@@ -9,6 +9,7 @@ import { extractScanToken } from "@/lib/scan";
 
 type ScannerManualCustomerSearchProps = {
   businessId: number;
+  branchId?: number | null;
   query?: string;
   actionPath: string;
 };
@@ -27,7 +28,7 @@ function scanFlowHref(token: string) {
   return "/scan/" + encodeURIComponent(token);
 }
 
-export async function ScannerManualCustomerSearch({ businessId, query, actionPath }: ScannerManualCustomerSearchProps) {
+export async function ScannerManualCustomerSearch({ businessId, branchId, query, actionPath }: ScannerManualCustomerSearchProps) {
   const trimmedQuery = query?.trim() ?? "";
   const secureScanToken = trimmedQuery ? extractScanToken(trimmedQuery) : "";
   const normalizedPhone = trimmedQuery && !secureScanToken ? normalizePhone(trimmedQuery) : null;
@@ -37,6 +38,7 @@ export async function ScannerManualCustomerSearch({ businessId, query, actionPat
     ? await prisma.businessCustomerMembership.findMany({
         where: {
           businessId,
+          ...(branchId ? { createdBranchId: branchId } : {}),
           OR: [
             { globalCustomer: { firstName: { contains: trimmedQuery, mode: "insensitive" } } },
             { globalCustomer: { lastName: { contains: trimmedQuery, mode: "insensitive" } } },
