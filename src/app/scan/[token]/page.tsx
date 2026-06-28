@@ -303,7 +303,7 @@ export default async function ScanResultPage({
         <QuickScanActions
           token={scanToken}
           rewardReady={rewardReady}
-          canRedeem={authUser.role !== "STAFF"}
+          canRedeem={["BUSINESS_OWNER", "BRANCH_MANAGER", "STAFF"].includes(authUser.role)}
         />
       ) : null}
 
@@ -449,7 +449,7 @@ function QuickScanActions({ token, rewardReady, canRedeem }: { token: string; re
           </form>
         ) : (
           <p className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
-            Reward ready. Only Branch Managers and Business Owners can redeem rewards.
+            Reward ready. Redeem the reward before adding another stamp.
           </p>
         )
       ) : (

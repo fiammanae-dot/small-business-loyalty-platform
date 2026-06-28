@@ -33,7 +33,7 @@ const stampIssueSchema = z
 const REPEATED_STAMP_WINDOW_MINUTES = 10;
 const REPEATED_STAMP_REASON_THRESHOLD = 3;
 const REPEATED_STAMP_REASON_MESSAGE = "Multiple stamps were issued to this customer in a short time. Please provide a reason.";
-const STAFF_REWARD_READY_STAMP_BLOCK_MESSAGE = "Reward ready. Only Branch Managers and Business Owners can redeem rewards.";
+const STAFF_REWARD_READY_STAMP_BLOCK_MESSAGE = "Reward ready. Redeem the reward before adding another stamp.";
 
 function getString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -430,7 +430,7 @@ export async function redeemRewardAction(formData: FormData) {
 
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  if (!["BUSINESS_OWNER", "BRANCH_MANAGER"].includes(user.role)) redirect(roleHomePath[user.role]);
+  if (!["BUSINESS_OWNER", "BRANCH_MANAGER", "STAFF"].includes(user.role)) redirect(roleHomePath[user.role]);
   if (!user.businessId) redirect(roleHomePath[user.role]);
   if (!hasActiveBusinessAccess(user)) fail(scanToken, INACTIVE_BUSINESS_ACCESS_MESSAGE);
   await requireUsableSubscription(user.businessId).catch((error) => fail(scanToken, error.message));

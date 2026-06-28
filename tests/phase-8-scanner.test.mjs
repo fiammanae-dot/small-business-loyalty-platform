@@ -117,10 +117,11 @@ test("scanner reward-ready state hides stamp actions and shows dynamic reset mes
   assert.match(scan, /description=\{`Progress has been reset to 0 \/ \$\{program\.requiredStamps\}\.\`\}/);
   assert.match(scan, /\{rewardReady \? \(/);
   assert.match(scan, /canRedeem \? \(/);
+  assert.match(scan, /\["BUSINESS_OWNER", "BRANCH_MANAGER", "STAFF"\]\.includes\(authUser\.role\)/);
   assert.match(scan, /\) : \(\s*<form action=\{issueStampAction\}>/);
   assert.match(scan, /\{!redemption \? \(/);
   assert.match(scan, /\{!rewardReady && !redemption \? \(\s*<AdvancedStampOptions/);
-  assert.match(scan, /Reward ready\. Only Branch Managers and Business Owners can redeem rewards\./);
+  assert.doesNotMatch(scan, /Only Branch Managers and Business Owners can redeem rewards/);
 });
 test("staff cannot issue stamps when a scanned program is reward ready", () => {
   const actions = read("src/app/scan/actions.ts");
@@ -129,6 +130,16 @@ test("staff cannot issue stamps when a scanned program is reward ready", () => {
   assert.match(actions, /user\.role === "STAFF"/);
   assert.match(actions, /isRewardReady\(\{/);
   assert.match(actions, /fail\(data\.scanToken, STAFF_REWARD_READY_STAMP_BLOCK_MESSAGE\)/);
+});
+
+test("staff can redeem ready rewards through the protected scanner action", () => {
+  const actions = read("src/app/scan/actions.ts");
+  const redemptionAction = actions.slice(actions.indexOf("export async function redeemRewardAction"));
+
+  assert.match(redemptionAction, /\["BUSINESS_OWNER", "BRANCH_MANAGER", "STAFF"\]\.includes\(user\.role\)/);
+  assert.match(redemptionAction, /businessMembership\.businessId !== user\.businessId/);
+  assert.match(redemptionAction, /Reward is not ready yet\./);
+  assert.match(redemptionAction, /redeemedByUserId:\s*user\.id/);
 });
 
 test("scanner sound effects are configurable and outcome driven", () => {

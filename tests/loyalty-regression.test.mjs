@@ -41,8 +41,9 @@ test("duplicate idempotency keys are rejected at database and action level", () 
 
 test("reward redemption permissions and reset behavior remain correct", () => {
   const redemptionAction = scanActions.slice(scanActions.indexOf("export async function redeemRewardAction"));
-  assert.match(redemptionAction, /\["BUSINESS_OWNER", "BRANCH_MANAGER"\]\.includes\(user\.role\)/);
-  assert.doesNotMatch(redemptionAction, /"STAFF"/);
+  assert.match(redemptionAction, /\["BUSINESS_OWNER", "BRANCH_MANAGER", "STAFF"\]\.includes\(user\.role\)/);
+  assert.match(redemptionAction, /businessMembership\.businessId !== user\.businessId/);
+  assert.match(redemptionAction, /redeemedByUserId:\s*user\.id/);
   assert.match(redemptionAction, /earnedStamps:\s*0/);
   assert.match(redemptionAction, /bonusStamps:\s*lockedMembership\.loyaltyProgram\.startingBonusStamps/);
 });
