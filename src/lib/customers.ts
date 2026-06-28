@@ -72,6 +72,7 @@ export async function getBusinessCustomerOrRedirect(uuid: string, businessId: nu
     where: {
       uuid,
       businessId,
+      ...(branchId ? { createdBranchId: branchId } : {}),
     },
     include: {
       globalCustomer: true,

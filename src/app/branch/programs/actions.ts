@@ -45,6 +45,7 @@ export async function enrollBranchCustomerInProgramAction(formData: FormData) {
     where: {
       uuid: membershipUuid,
       businessId: user.businessId,
+      createdBranchId: user.branchId,
       status: "ACTIVE",
     },
     select: { id: true },

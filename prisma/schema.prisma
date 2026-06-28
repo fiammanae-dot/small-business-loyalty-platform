@@ -670,6 +670,7 @@ model BusinessCustomerMembership {
 model LoyaltyProgram {
   id                        Int          @id @default(autoincrement())
   uuid                      String       @unique @default(uuid()) @db.Uuid
+  joinToken                 String       @unique @default(uuid()) @map("join_token") @db.Uuid
   businessId                Int          @map("business_id")
   name                      String
   businessType              BusinessType @map("business_type")

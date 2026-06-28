@@ -47,6 +47,7 @@ export default async function BranchCustomerProfilePage({
   const rewardRedemptions = await prisma.rewardRedemption.findMany({
     where: {
       businessId: user.businessId,
+      branchId: user.branchId,
       customerProgramMembershipId: { in: programMembershipIds.length ? programMembershipIds : [-1] },
     },
     orderBy: { redeemedAt: "desc" },
@@ -55,6 +56,19 @@ export default async function BranchCustomerProfilePage({
       redeemedByUser: true,
       loyaltyProgram: true,
     },
+  });
+  const primaryProgram = membership.programMemberships.find((programMembership) => programMembership.status === "ACTIVE") ?? membership.programMemberships[0] ?? null;
+  const primaryProgress = primaryProgram ? progressValue(primaryProgram.earnedStamps, primaryProgram.bonusStamps) : 0;
+  const rewardReady = membership.programMemberships.some(
+    (programMembership) => progressValue(programMembership.earnedStamps, programMembership.bonusStamps) >= programMembership.loyaltyProgram.requiredStamps,
+  );
+  const lastVisit = await prisma.stampTransaction.findFirst({
+    where: {
+      branchId: user.branchId,
+      customerProgramMembershipId: { in: programMembershipIds.length ? programMembershipIds : [-1] },
+    },
+    orderBy: { createdAt: "desc" },
+    select: { createdAt: true },
   });
 
   return (
@@ -65,7 +79,7 @@ export default async function BranchCustomerProfilePage({
           <div>
             <h2 className="text-2xl font-semibold text-[#111827]">{customer.firstName} {customer.lastName ?? ""}</h2>
             <p className="mt-2 text-sm text-[#6B7280]">{formatUaePhoneDisplay(customer.normalizedPhone)}</p>
-            {membership.programMemberships.some((programMembership) => progressValue(programMembership.earnedStamps, programMembership.bonusStamps) >= programMembership.loyaltyProgram.requiredStamps) ? (
+            {rewardReady ? (
               <p className="mt-3 inline-flex rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">Reward Ready</p>
             ) : null}
           </div>
@@ -75,6 +89,11 @@ export default async function BranchCustomerProfilePage({
           <Info label="Email" value={customer.email ?? "-"} />
           <Info label="Birthday" value={customer.birthday ? formatDate(customer.birthday) : "-"} />
           <Info label="Marketing consent" value={membership.marketingConsent ? "Yes" : "No"} />
+          <Info label="Current tier" value={membership.currentTier} />
+          <Info label="Current progress" value={primaryProgram ? `${primaryProgress} / ${primaryProgram.loyaltyProgram.requiredStamps}` : "-"} />
+          <Info label="Last branch visit" value={lastVisit ? formatDate(lastVisit.createdAt) : "-"} />
+          <Info label="Rewards ready" value={rewardReady ? "Yes" : "No"} />
+          <Info label="Redeemed rewards" value={rewardRedemptions.length.toString()} />
           <Info label="Status" value={<StatusBadge status={membership.status} />} />
           <Info label="Source" value={customerSourceLabels[membership.source]} />
           <Info label="Joined date" value={formatDate(membership.joinedAt)} />

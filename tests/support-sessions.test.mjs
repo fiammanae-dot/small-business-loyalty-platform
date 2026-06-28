@@ -143,6 +143,16 @@ test("operations center support module exposes session management and reports", 
   assert.match(operations, /Longest Session/);
   assert.match(operations, /Common Reason/);
   assert.match(operations, /Total Sessions/);
+  assert.match(operations, /data-operations-center-lite/);
+  assert.match(operations, /Active Support Sessions/);
+  assert.match(operations, /Sessions Today/);
+  assert.match(operations, /Active Alerts/);
+  assert.match(operations, /Operations Center Lite quick actions/);
+  assert.match(operations, /Start Support Session/);
+  assert.match(operations, /Active Sessions/);
+  assert.match(operations, /Refresh/);
+  assert.match(operations, /Available on desktop/);
+  assert.match(operations, /MobileSupportSessionCard/);
   assert.match(operations, /TerminateSupportSessionButton/);
   assert.match(operations, /joinSupportSessionAction/);
   assert.match(operations, /View Report/);
@@ -153,6 +163,10 @@ test("operations center support module exposes session management and reports", 
   assert.match(terminateButton, /Administrator:/);
   assert.match(terminateButton, /Support Summary is required/);
   assert.match(report, /Support Session Report/);
+  assert.match(report, /data-support-session-mobile-view/);
+  assert.match(report, /Countdown/);
+  assert.match(report, /End Session/);
+  assert.match(report, /Available on desktop/);
   assert.match(report, /Support Notes/);
   assert.match(report, /Timeline/);
   assert.match(report, /Export Coming Soon/);

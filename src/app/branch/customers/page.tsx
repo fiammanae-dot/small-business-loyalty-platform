@@ -10,6 +10,7 @@ import { customerSourceLabels } from "@/lib/customers";
 import { formatDate } from "@/lib/format";
 import { formatUaePhoneDisplay, normalizePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
+import { progressValue } from "@/lib/programs";
 import { requireRole } from "@/lib/session";
 
 export default async function BranchCustomersPage({
@@ -29,10 +30,12 @@ export default async function BranchCustomersPage({
       </DashboardShell>
     );
   }
+  const branchId = user.branchId;
 
   const customers = await prisma.businessCustomerMembership.findMany({
     where: {
       businessId: user.businessId,
+      createdBranchId: branchId,
       ...(query
         ? {
             OR: [
@@ -46,15 +49,52 @@ export default async function BranchCustomersPage({
           }
         : {}),
     },
-    include: { globalCustomer: true, createdBranch: true, business: true },
+    include: {
+      globalCustomer: true,
+      createdBranch: true,
+      business: true,
+      programMemberships: {
+        include: {
+          loyaltyProgram: true,
+          stampTransactions: {
+            where: { branchId },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+          },
+          rewardRedemptions: {
+            where: { branchId },
+            select: { id: true },
+          },
+        },
+      },
+    },
     orderBy: { joinedAt: "desc" },
   });
   const customerRows = await Promise.all(
-    customers.map(async (membership) => ({
-      ...membership,
-      cardUrl: await getCardUrl(membership.cardToken),
-      customerName: `${membership.globalCustomer.firstName} ${membership.globalCustomer.lastName ?? ""}`.trim(),
-    })),
+    customers.map(async (membership) => {
+      const activePrograms = membership.programMemberships.filter((programMembership) => programMembership.status === "ACTIVE");
+      const primaryProgram = activePrograms[0] ?? membership.programMemberships[0] ?? null;
+      const primaryProgress = primaryProgram ? progressValue(primaryProgram.earnedStamps, primaryProgram.bonusStamps) : 0;
+      const rewardReady = membership.programMemberships.some(
+        (programMembership) => programMembership.status === "ACTIVE" && progressValue(programMembership.earnedStamps, programMembership.bonusStamps) >= programMembership.loyaltyProgram.requiredStamps,
+      );
+      const lastVisit = membership.programMemberships
+        .map((programMembership) => programMembership.stampTransactions[0]?.createdAt)
+        .filter((value): value is Date => Boolean(value))
+        .sort((a, b) => b.getTime() - a.getTime())[0];
+      const redeemedRewards = membership.programMemberships.reduce((sum, programMembership) => sum + programMembership.rewardRedemptions.length, 0);
+
+      return {
+        ...membership,
+        cardUrl: await getCardUrl(membership.cardToken),
+        customerName: `${membership.globalCustomer.firstName} ${membership.globalCustomer.lastName ?? ""}`.trim(),
+        primaryProgram,
+        primaryProgress,
+        rewardReady,
+        lastVisit,
+        redeemedRewards,
+      };
+    }),
   );
 
   return (
@@ -64,7 +104,7 @@ export default async function BranchCustomersPage({
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-[#111827]">Business customers</h2>
-            <p className="text-sm text-[#6B7280]">Search and open customers across this business. Origin branch is preserved for history.</p>
+            <p className="text-sm text-[#6B7280]">Search and open customers assigned to this branch. Business-wide data remains protected.</p>
           </div>
           <Link href="/branch/customers/new" className="rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
             Enroll customer
@@ -78,7 +118,7 @@ export default async function BranchCustomersPage({
           <table className="w-full min-w-[820px] border-separate border-spacing-0 text-left text-sm">
             <thead>
               <tr className="text-[#6B7280]">
-                {["Customer name", "Phone", "Email", "Status", "Joined date", "Card issued branch", "Source", "Actions"].map((heading) => (
+                {["Customer", "Tier", "Progress", "Last visit", "Rewards", "Status", "Actions"].map((heading) => (
                   <th key={heading} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">{heading}</th>
                 ))}
               </tr>
@@ -87,12 +127,23 @@ export default async function BranchCustomersPage({
               {customerRows.map((membership) => (
                 <tr key={membership.id}>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 font-semibold">{membership.globalCustomer.firstName} {membership.globalCustomer.lastName ?? ""}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatUaePhoneDisplay(membership.globalCustomer.normalizedPhone)}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{membership.globalCustomer.email ?? "-"}</td>
+                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{membership.currentTier}</td>
+                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">
+                    {membership.primaryProgram ? (
+                      <div className="min-w-40">
+                        <p className="font-semibold text-[#111827]">
+                          {membership.primaryProgress} / {membership.primaryProgram.loyaltyProgram.requiredStamps}
+                        </p>
+                        <p className="mt-1 text-xs text-[#6B7280]">{membership.primaryProgram.loyaltyProgram.name}</p>
+                        {membership.rewardReady ? <span className="mt-2 inline-flex rounded-full bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">Reward ready</span> : null}
+                      </div>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{membership.lastVisit ? formatDate(membership.lastVisit) : "-"}</td>
+                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{membership.redeemedRewards}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4"><StatusBadge status={membership.status} /></td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(membership.joinedAt)}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{membership.createdBranch?.name ?? "-"}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{customerSourceLabels[membership.source]}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4">
                     <div className="flex flex-col gap-3">
                       <Link href={`/branch/customers/${membership.uuid}`} className="font-semibold business-text">View</Link>
@@ -126,9 +177,11 @@ export default async function BranchCustomersPage({
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <MobileInfo label="Joined" value={formatDate(membership.joinedAt)} />
-                  <MobileInfo label="Branch" value={membership.createdBranch?.name ?? "-"} />
+                  <MobileInfo label="Tier" value={membership.currentTier} />
+                  <MobileInfo label="Progress" value={membership.primaryProgram ? `${membership.primaryProgress} / ${membership.primaryProgram.loyaltyProgram.requiredStamps}` : "-"} />
+                  <MobileInfo label="Last visit" value={membership.lastVisit ? formatDate(membership.lastVisit) : "-"} />
+                  <MobileInfo label="Rewards" value={membership.rewardReady ? "Reward ready" : `${membership.redeemedRewards} redeemed`} />
                   <MobileInfo label="Source" value={customerSourceLabels[membership.source]} />
-                  <MobileInfo label="Card" value={membership.cardStatus.toLowerCase()} />
                 </div>
                 <div className="flex flex-col gap-3 border-t border-[#E5E7EB] pt-4">
                   <Link href={`/branch/customers/${membership.uuid}`} className="inline-flex min-h-11 items-center justify-center rounded-md business-button px-4 text-sm font-semibold text-white">

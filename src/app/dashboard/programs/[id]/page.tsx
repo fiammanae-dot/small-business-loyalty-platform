@@ -1,4 +1,5 @@
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
+import { CopyButton } from "@/components/CopyButton";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import {
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { formatDate } from "@/lib/format";
+import { getProgramJoinQrDataUrl, getProgramJoinUrl } from "@/lib/program-join";
 import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
 import { businessTypeLabels } from "@/lib/roles";
 import { prisma } from "@/lib/prisma";
@@ -30,7 +32,7 @@ export default async function ProgramDetailPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ success?: string }>;
 }) {
-  const { user } = await getBusinessOwnerContext();
+  const { user, business } = await getBusinessOwnerContext();
   const { id } = await params;
   const qs = await searchParams;
   let program = await prisma.loyaltyProgram.findFirst({
@@ -78,6 +80,8 @@ export default async function ProgramDetailPage({
   const averageCompletionRate = enrolledCustomers > 0 ? Math.min(100, Math.round((progressTotal / (enrolledCustomers * safeRequiredStamps)) * 100)) : 0;
   const bonusStampsIssued = program.memberships.reduce((sum, membership) => sum + membership.bonusStamps, 0);
   const earnedStamps = program.memberships.reduce((sum, membership) => sum + membership.earnedStamps, 0);
+  const joinUrl = await getProgramJoinUrl(program.joinToken);
+  const joinQrCode = await getProgramJoinQrDataUrl(program.joinToken);
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title={program.name} hideWelcomeMessage>
@@ -150,6 +154,29 @@ export default async function ProgramDetailPage({
           </div>
 
           <div className="grid gap-5">
+            <SectionCard title="Program Join QR" description="Print or share this QR so customers can join this program themselves. No stamps are added during signup.">
+              <div className="grid gap-4">
+                <div className="rounded-2xl border border-[#E2E8F0] bg-white p-4 text-center">
+                  <img src={joinQrCode} alt={`${program.name} join QR code`} className="mx-auto h-52 w-52 rounded-xl bg-white p-2" />
+                  <p className="mt-3 text-sm font-semibold text-[#0F172A]">Scan to join {program.name}</p>
+                  <p className="mt-1 text-xs text-[#64748B]">{business.name}</p>
+                </div>
+                <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">Join link</p>
+                  <p className="mt-2 break-all text-sm font-semibold text-[#0F172A]">{joinUrl}</p>
+                </div>
+                <div className="flex flex-wrap items-start gap-2">
+                  <CopyButton value={joinUrl} label="Copy join link" copiedLabel="Join link copied." />
+                  <ButtonLink href={joinUrl} variant="outline" target="_blank" rel="noopener noreferrer">
+                    Open Join Page
+                  </ButtonLink>
+                  <ButtonLink href={"/dashboard/programs/" + program.uuid + "/join-poster"} variant="business">
+                    Printable Poster
+                  </ButtonLink>
+                </div>
+              </div>
+            </SectionCard>
+
             <SectionCard title="Program Performance" description="Existing activity summarized from program memberships and redemptions.">
               <div className="grid gap-4">
                 <ProgressBar value={averageCompletionRate} label={averageCompletionRate + "% average completion"} barClassName="business-button" />

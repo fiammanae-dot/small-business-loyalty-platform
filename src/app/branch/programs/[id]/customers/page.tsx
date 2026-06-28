@@ -31,6 +31,7 @@ export default async function BranchProgramCustomersPage({
     where: { uuid: id, businessId: user.businessId, active: true },
     include: {
       memberships: {
+        where: { businessCustomerMembership: { createdBranchId: user.branchId } },
         include: { businessCustomerMembership: { include: { globalCustomer: true, createdBranch: true } } },
         orderBy: { enrolledAt: "desc" },
       },
@@ -47,6 +48,7 @@ export default async function BranchProgramCustomersPage({
   const availableCustomers = await prisma.businessCustomerMembership.findMany({
     where: {
       businessId: user.businessId,
+      createdBranchId: user.branchId,
       status: "ACTIVE",
       programMemberships: { none: { loyaltyProgramId: program.id } },
     },

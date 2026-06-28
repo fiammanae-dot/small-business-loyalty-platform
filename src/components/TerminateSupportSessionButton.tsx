@@ -4,6 +4,7 @@ type TerminateSupportSessionButtonProps = {
   businessName: string;
   adminName: string;
   reason: string;
+  label?: string;
 };
 
 function setHiddenFormValue(form: HTMLFormElement, name: string, value: string) {
@@ -19,7 +20,7 @@ function setHiddenFormValue(form: HTMLFormElement, name: string, value: string) 
   input.value = value;
 }
 
-export function TerminateSupportSessionButton({ businessName, adminName, reason }: TerminateSupportSessionButtonProps) {
+export function TerminateSupportSessionButton({ businessName, adminName, reason, label = "Terminate Session" }: TerminateSupportSessionButtonProps) {
   return (
     <button
       type="submit"
@@ -44,7 +45,7 @@ export function TerminateSupportSessionButton({ businessName, adminName, reason 
       }}
       className="inline-flex min-h-10 items-center justify-center rounded-md border border-red-200 bg-red-50 px-3 text-sm font-semibold text-red-700 transition hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2"
     >
-      Terminate Session
+      {label}
     </button>
   );
 }

@@ -23,6 +23,7 @@ export default async function BranchProgramsPage() {
     where: { businessId: user.businessId, active: true },
     include: {
       memberships: {
+        where: { businessCustomerMembership: { createdBranchId: user.branchId } },
         select: {
           id: true,
           earnedStamps: true,
