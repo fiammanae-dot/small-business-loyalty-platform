@@ -20,7 +20,7 @@ export function WalletCardShell({
       style={{
         backgroundColor: theme.phoneBackground,
         borderRadius: theme.phoneRadius,
-        boxShadow: exportMode ? theme.shadow : theme.phoneShadow,
+        boxShadow: exportMode ? "none" : theme.phoneShadow,
       }}
     >
       <section
@@ -29,8 +29,8 @@ export function WalletCardShell({
           background: theme.cardBackground,
           color: theme.cardText,
           borderRadius: theme.radius,
-          boxShadow: theme.shadow,
-          border: theme.style === "minimal-light" ? "1px solid #E5E7EB" : undefined,
+          boxShadow: exportMode ? "none" : theme.shadow,
+          border: exportMode ? "1px solid rgba(255,255,255,0.18)" : theme.style === "minimal-light" ? "1px solid #E5E7EB" : undefined,
         }}
       >
         <div className="relative">{children}</div>

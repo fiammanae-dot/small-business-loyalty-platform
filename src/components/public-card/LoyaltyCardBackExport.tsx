@@ -14,25 +14,30 @@ export function LoyaltyCardBackExport({ wallet }: { wallet: Omit<LoyaltyWalletCa
         ? "1 visit remaining"
         : `${remaining} visits remaining`
     : "No active program yet";
+  const summaryRows = [
+    ["Business", wallet.businessName],
+    ["Customer", wallet.customerName],
+    ["Program", displayProgram],
+    ["Progress", `${displayProgress} / ${displayRequired} visits`],
+    ["Reward", displayReward],
+    ["Status", wallet.rewardReady ? "Reward Ready" : statusText],
+  ];
 
   return (
     <div className="w-[360px] bg-transparent">
       <WalletCardShell theme={wallet.theme} exportMode>
-        <div className="px-6 pb-5 pt-7">
-          <div className="flex items-center justify-between gap-4">
+        <div className="px-5 pb-5 pt-6">
+          <div className="grid gap-2">
             <div className="min-w-0">
               <p className="text-[12px] font-semibold uppercase tracking-[0.18em]" style={{ color: wallet.theme.mutedText }}>
                 Scan View
               </p>
-              <h2 className="mt-1 text-[22px] font-extrabold tracking-[-0.04em]">Present this QR at checkout</h2>
+              <h2 className="mt-1 text-[24px] font-extrabold leading-tight tracking-[-0.04em]">Present this QR at checkout</h2>
             </div>
-            <span className="shrink-0 rounded-full px-3 py-2 text-[13px] font-bold ring-1" style={{ color: wallet.theme.cardText, borderColor: wallet.theme.badgeBorder, backgroundColor: wallet.theme.badgeBackground }}>
-              Back
-            </span>
           </div>
 
-          <section className="pt-7 text-center">
-            <div className="mx-auto flex h-[220px] w-[220px] items-center justify-center rounded-[18px] bg-white p-4 shadow-lg ring-1 ring-black/5">
+          <section className="pt-5 text-center">
+            <div className="mx-auto flex h-[214px] w-[214px] items-center justify-center rounded-[18px] border border-black/5 bg-white p-4">
               {wallet.qrCode ? (
                 <div
                   aria-label={`${wallet.businessName} customer card QR code`}
@@ -53,15 +58,18 @@ export function LoyaltyCardBackExport({ wallet }: { wallet: Omit<LoyaltyWalletCa
             </p>
           </section>
 
-          <section className="pt-7">
-            <div className="rounded-[18px] px-4 py-4 ring-1" style={{ backgroundColor: wallet.theme.rewardPanelBackground, color: wallet.theme.rewardPanelText, borderColor: wallet.theme.rewardPanelBorder }}>
-              <div className="grid gap-3">
-                <SummaryLine label="Business" value={wallet.businessName} theme={wallet.theme} />
-                <SummaryLine label="Customer" value={wallet.customerName} theme={wallet.theme} />
-                <SummaryLine label="Program" value={displayProgram} theme={wallet.theme} />
-                <SummaryLine label="Progress" value={`${displayProgress} / ${displayRequired} visits`} theme={wallet.theme} />
-                <SummaryLine label="Reward" value={displayReward} theme={wallet.theme} />
-                <SummaryLine label="Status" value={wallet.rewardReady ? "Reward Ready" : statusText} theme={wallet.theme} />
+          <section className="pt-5">
+            <div className="rounded-[18px] border px-4 py-2.5" style={{ backgroundColor: wallet.theme.rewardPanelBackground, color: wallet.theme.rewardPanelText, borderColor: wallet.theme.rewardPanelBorder }}>
+              <div className="grid">
+                {summaryRows.map(([label, value], index) => (
+                  <SummaryLine
+                    key={label}
+                    label={label}
+                    value={value}
+                    theme={wallet.theme}
+                    isLast={index === summaryRows.length - 1}
+                  />
+                ))}
               </div>
             </div>
           </section>
@@ -75,15 +83,17 @@ function SummaryLine({
   label,
   value,
   theme,
+  isLast,
 }: {
   label: string;
   value: string;
   theme: Omit<LoyaltyWalletCardProps, "exportMode">["theme"];
+  isLast: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4">
-      <span className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: theme.rewardPanelMuted }}>{label}</span>
-      <span className="text-right text-[14px] font-bold">{value}</span>
+    <div className={`flex min-h-9 items-center justify-between gap-4 py-2 ${isLast ? "" : "border-b border-black/5"}`}>
+      <span className="text-[10px] font-semibold uppercase tracking-[0.12em]" style={{ color: theme.rewardPanelMuted }}>{label}</span>
+      <span className="max-w-[190px] text-right text-[13px] font-bold leading-snug">{value}</span>
     </div>
   );
 }

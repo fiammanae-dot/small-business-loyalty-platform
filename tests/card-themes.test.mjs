@@ -148,11 +148,16 @@ test("public customer card supports saving the loyalty card as a PNG image", () 
   assert.match(frontExport, /Scan at Checkout/);
   assert.match(backExport, /LoyaltyCardBackExport/);
   assert.match(backExport, /Present this QR at checkout/);
-  assert.match(backExport, /h-\[220px\] w-\[220px\]/);
+  assert.match(backExport, /h-\[214px\] w-\[214px\]/);
   assert.match(backExport, /backgroundImage: `url\("\$\{wallet\.qrCode\}"\)`/);
+  assert.match(backExport, /border-b border-black\/5/);
+  assert.doesNotMatch(frontExport, /shadow-(?:sm|md|lg|xl|2xl)|ring-1|blur-3xl|backdrop-blur/);
+  assert.doesNotMatch(backExport, /shadow-(?:sm|md|lg|xl|2xl)|ring-1|blur-3xl|backdrop-blur/);
   assert.match(walletCard, /showScanView = !exportMode && mode === "scan"/);
   assert.match(walletCard, /Scan at Checkout/);
   assert.match(walletShell, /exportMode/);
+  assert.match(walletShell, /boxShadow: exportMode \? "none" : theme\.phoneShadow/);
+  assert.match(walletShell, /boxShadow: exportMode \? "none" : theme\.shadow/);
   assert.doesNotMatch(walletShell, /blur-3xl/);
   assert.match(themes, /modern-clean/);
   assert.match(themes, /premium-dark/);

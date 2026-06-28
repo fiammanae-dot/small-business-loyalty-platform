@@ -20,14 +20,14 @@ export function LoyaltyCardFrontExport({ wallet }: { wallet: Omit<LoyaltyWalletC
   return (
     <div className="w-[360px] bg-transparent">
       <WalletCardShell theme={wallet.theme} exportMode>
-        <div className="px-6 pb-5 pt-7">
+        <div className="px-5 pb-5 pt-6">
           <ExportHeader wallet={wallet} displayProgram={displayProgram} />
 
-          <section className="pt-7">
+          <section className="pt-5">
             <p className="text-[12px] font-semibold uppercase tracking-[0.18em]" style={{ color: wallet.theme.mutedText }}>
               Customer
             </p>
-            <h2 className="mt-2 text-[30px] font-extrabold leading-[1.05] tracking-[-0.05em]">
+            <h2 className="mt-2 text-[28px] font-extrabold leading-[1.05] tracking-[-0.05em]">
               {wallet.customerName}
             </h2>
             <p className="mt-2 text-[14px]" style={{ color: wallet.theme.mutedText }}>
@@ -35,13 +35,13 @@ export function LoyaltyCardFrontExport({ wallet }: { wallet: Omit<LoyaltyWalletC
             </p>
           </section>
 
-          <section className="pt-7">
+          <section className="pt-5">
             <div className="flex items-end justify-between gap-4">
               <div>
                 <p className="text-[12px] font-semibold uppercase tracking-[0.16em]" style={{ color: wallet.theme.mutedText }}>
                   Progress
                 </p>
-                <p className="mt-1 text-[44px] font-black leading-none tracking-[-0.06em]">
+                <p className="mt-1 text-[38px] font-black leading-none tracking-[-0.06em]">
                   {displayProgress}
                   <span className="text-[20px] font-extrabold" style={{ color: wallet.theme.mutedText }}>
                     /{displayRequired}
@@ -64,7 +64,7 @@ export function LoyaltyCardFrontExport({ wallet }: { wallet: Omit<LoyaltyWalletC
           </section>
 
           <section
-            className="mt-7 rounded-[18px] px-4 py-4 shadow-md ring-1"
+            className="mt-5 rounded-[18px] border px-4 py-3"
             style={{
               backgroundColor: wallet.rewardReady ? "#E9F7EE" : wallet.theme.rewardPanelBackground,
               color: wallet.rewardReady ? "#14532D" : wallet.theme.rewardPanelText,
@@ -78,14 +78,14 @@ export function LoyaltyCardFrontExport({ wallet }: { wallet: Omit<LoyaltyWalletC
                 </p>
                 <p className="pt-1 text-[17px] font-bold">{displayReward}</p>
               </div>
-              <div className="shrink-0 rounded-full px-3 py-1 text-[13px] font-black" style={{ backgroundColor: wallet.rewardReady ? "#DCFCE7" : wallet.theme.badgeBackground, color: wallet.rewardReady ? "#15803D" : wallet.theme.badgeText }}>
+              <div className="shrink-0 rounded-full border px-3 py-1 text-[12px] font-black" style={{ backgroundColor: wallet.rewardReady ? "#DCFCE7" : wallet.theme.badgeBackground, color: wallet.rewardReady ? "#15803D" : wallet.theme.badgeText, borderColor: wallet.rewardReady ? "rgba(21,128,61,0.22)" : wallet.theme.badgeBorder }}>
                 {wallet.rewardReady ? "Reward Ready" : statusText}
               </div>
             </div>
           </section>
 
           <div className="pt-5">
-            <div className="flex min-h-12 w-full items-center justify-center rounded-[16px] px-5 text-[15px] font-bold shadow-sm" style={{ background: wallet.theme.progressFill, color: ctaTextColor }}>
+            <div className="flex min-h-12 w-full items-center justify-center rounded-[16px] px-5 text-[15px] font-bold" style={{ background: wallet.theme.progressFill, color: ctaTextColor }}>
               Scan at Checkout
             </div>
           </div>
@@ -108,12 +108,12 @@ function ExportHeader({
         {wallet.businessLogoUrl ? (
           <div
             aria-label={`${wallet.businessName} logo`}
-            className="h-12 w-12 shrink-0 rounded-full bg-cover bg-center shadow-sm"
+            className="h-12 w-12 shrink-0 rounded-full bg-cover bg-center"
             style={{ backgroundImage: `url(${wallet.businessLogoUrl})`, backgroundColor: wallet.theme.logoBackground }}
           />
         ) : (
           <div
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-black shadow-sm"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-black"
             style={{ backgroundColor: wallet.theme.logoBackground, color: wallet.theme.logoText }}
             aria-hidden="true"
           >
@@ -128,7 +128,7 @@ function ExportHeader({
       <div className="shrink-0 text-right">
         <p className="text-[11px] uppercase tracking-[0.18em]" style={{ color: wallet.theme.mutedText }}>Tier</p>
         <span
-          className="mt-2 inline-flex rounded-full px-3 py-1 text-[14px] font-semibold ring-1"
+          className="mt-2 inline-flex rounded-full border px-3 py-1 text-[13px] font-semibold"
           style={{
             backgroundColor: wallet.theme.badgeBackground,
             color: wallet.theme.badgeText,
