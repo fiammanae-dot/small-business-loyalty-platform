@@ -10,7 +10,8 @@ import { progressValue } from "@/lib/programs";
 import { getScanQrDataUrl } from "@/lib/scan";
 import { getReferralUrl } from "@/lib/referrals";
 import {
-  LoyaltyCardExport,
+  LoyaltyCardBackExport,
+  LoyaltyCardFrontExport,
   LoyaltyWalletCard,
   ProgramRewardCard,
   ReferralPanel,
@@ -139,8 +140,11 @@ export default async function PublicCustomerCardPage({
     >
       <div className="mx-auto flex w-full max-w-lg flex-col gap-4 md:max-w-2xl">
         <div className="pointer-events-none fixed left-[-10000px] top-0" aria-hidden="true">
-          <div data-loyalty-card-export>
-            <LoyaltyCardExport wallet={walletCardProps} />
+          <div data-loyalty-card-front-export>
+            <LoyaltyCardFrontExport wallet={walletCardProps} />
+          </div>
+          <div data-loyalty-card-back-export>
+            <LoyaltyCardBackExport wallet={walletCardProps} />
           </div>
         </div>
 
@@ -193,7 +197,8 @@ export default async function PublicCustomerCardPage({
               buttonColor={branding.buttonColor}
             />
             <SaveCardImageButton
-              targetSelector="[data-loyalty-card-export]"
+              frontTargetSelector="[data-loyalty-card-front-export]"
+              backTargetSelector="[data-loyalty-card-back-export]"
               customerName={customerName}
               buttonColor={branding.buttonColor}
             />
