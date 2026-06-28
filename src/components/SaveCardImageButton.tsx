@@ -39,6 +39,11 @@ export function SaveCardImageButton({ targetSelector, customerName, buttonColor 
         cacheBust: true,
         pixelRatio,
         backgroundColor: "#ffffff",
+        includeQueryParams: true,
+        style: {
+          transform: "none",
+          transformOrigin: "top left",
+        },
       });
 
       const link = document.createElement("a");

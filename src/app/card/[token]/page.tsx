@@ -2,7 +2,7 @@ import { CardShareActions } from "@/components/CardShareActions";
 import { SaveCardImageButton } from "@/components/SaveCardImageButton";
 import { Gift, QrCode } from "lucide-react";
 import { getCardQrDataUrl, getCardUrl, resolveBranding } from "@/lib/customer-cards";
-import { resolveCardThemeColors, withAlpha } from "@/lib/card-themes";
+import { resolveCardThemeColors } from "@/lib/card-themes";
 import { calculateCustomerTier } from "@/lib/customer-tiers";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -10,7 +10,7 @@ import { progressValue } from "@/lib/programs";
 import { getScanQrDataUrl } from "@/lib/scan";
 import { getReferralUrl } from "@/lib/referrals";
 import {
-  LoyaltyProgressPanel,
+  LoyaltyCardExport,
   LoyaltyWalletCard,
   ProgramRewardCard,
   ReferralPanel,
@@ -113,6 +113,24 @@ export default async function PublicCustomerCardPage({
       data: { currentTier: tier.storedTier, tierUpdatedAt: new Date() },
     });
   }
+  const walletCardProps = {
+    businessName: membership.business.name,
+    businessLogoUrl: branding.logoUrl,
+    customerName,
+    memberSince: formatDate(membership.createdAt),
+    tierLabel: tier.badgeLabel,
+    tierIcon: tier.badgeIcon,
+    qrCode: primaryProgram?.qrCode ?? cardQrCode,
+    theme: primaryCardTheme,
+    rewardReady: primaryProgram?.rewardReady ?? false,
+    qrHelperText: primaryProgram ? "Scan this card" : "Show this QR code to staff to find your customer card.",
+    programName: primaryProgram?.programMembership.loyaltyProgram.name ?? null,
+    rewardName: primaryProgram?.programMembership.loyaltyProgram.rewardName ?? null,
+    progress: primaryProgram?.progress ?? 0,
+    required: primaryProgram?.required ?? 0,
+    remaining: primaryProgram?.remaining ?? 0,
+    completion: primaryProgram?.completion ?? 0,
+  };
 
   return (
     <main
@@ -120,40 +138,14 @@ export default async function PublicCustomerCardPage({
       style={{ backgroundColor: primaryCardTheme.pageBackground, color: branding.textColor }}
     >
       <div className="mx-auto flex w-full max-w-lg flex-col gap-4 md:max-w-2xl">
-        <div data-loyalty-card-export className="flex flex-col gap-4 rounded-[34px] bg-white">
-          <LoyaltyWalletCard
-            businessName={membership.business.name}
-            businessLogoUrl={branding.logoUrl}
-            customerName={customerName}
-            memberSince={formatDate(membership.createdAt)}
-            tierLabel={tier.badgeLabel}
-            tierIcon={tier.badgeIcon}
-            qrCode={primaryProgram?.qrCode ?? cardQrCode}
-            theme={primaryCardTheme}
-            rewardReady={primaryProgram?.rewardReady ?? false}
-            qrHelperText={primaryProgram ? "Scan this card" : "Show this QR code to staff to find your customer card."}
-          />
+        <div className="pointer-events-none fixed left-[-10000px] top-0" aria-hidden="true">
+          <div data-loyalty-card-export>
+            <LoyaltyCardExport wallet={walletCardProps} />
+          </div>
+        </div>
 
-          {primaryProgram ? (
-            <LoyaltyProgressPanel
-              programName={primaryProgram.programMembership.loyaltyProgram.name}
-              rewardName={primaryProgram.programMembership.loyaltyProgram.rewardName}
-              progress={primaryProgram.progress}
-              required={primaryProgram.required}
-              remaining={primaryProgram.remaining}
-              completion={primaryProgram.completion}
-              rewardReady={primaryProgram.rewardReady}
-              theme={primaryCardTheme}
-            />
-          ) : (
-            <section className="rounded-[28px] border bg-white p-5 shadow-sm" style={{ borderColor: withAlpha(branding.primaryColor, 0.18) }}>
-              <p className="text-sm font-semibold uppercase tracking-wide" style={{ color: branding.textColor }}>Loyalty progress</p>
-              <h2 className="mt-2 text-xl font-bold text-[#1E293B]">No active loyalty program yet</h2>
-              <p className="mt-2 text-sm leading-6 text-[#64748B]">
-                Ask staff to enroll this card into a loyalty program before earning stamps.
-              </p>
-            </section>
-          )}
+        <div className="flex flex-col gap-4 rounded-[34px] bg-white">
+          <LoyaltyWalletCard {...walletCardProps} />
         </div>
 
         <TierStatusPanel

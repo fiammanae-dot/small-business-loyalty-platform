@@ -14,11 +14,14 @@ test("public customer card shows a card-level QR before program enrollment", () 
   assert.match(customerCards, /export async function getCardQrDataUrl/);
   assert.match(customerCards, /QRCode\.toDataURL\(await getCardUrl\(token\)/);
   assert.match(publicCard, /const cardQrCode = await getCardQrDataUrl\(token\)/);
-  assert.match(publicCard, /qrCode=\{primaryProgram\?\.qrCode \?\? cardQrCode\}/);
+  assert.match(publicCard, /const walletCardProps = \{/);
+  assert.match(publicCard, /qrCode: primaryProgram\?\.qrCode \?\? cardQrCode/);
+  assert.match(publicCard, /<LoyaltyWalletCard \{\.\.\.walletCardProps\} \/>/);
   assert.match(publicCard, /Show this QR code to staff to find your customer card\./);
   assert.match(walletCard, /qrHelperText\?: string/);
   assert.match(walletCard, /qrHelperText = "Scan this card"/);
   assert.doesNotMatch(publicCard, /qrCode=\{primaryProgram\?\.qrCode \?\? null\}/);
+  assert.doesNotMatch(publicCard, /qrCode: primaryProgram\?\.qrCode \?\? null/);
 });
 
 test("program-enrolled public card still uses program scan QR behavior", () => {
@@ -26,7 +29,7 @@ test("program-enrolled public card still uses program scan QR behavior", () => {
   const scan = read("src/lib/scan.ts");
 
   assert.match(publicCard, /qrCode: await getScanQrDataUrl\(programMembership\.scanToken\)/);
-  assert.match(publicCard, /qrCode=\{primaryProgram\?\.qrCode \?\? cardQrCode\}/);
+  assert.match(publicCard, /qrCode: primaryProgram\?\.qrCode \?\? cardQrCode/);
   assert.match(scan, /getScanUrl\(token: string\)/);
   assert.match(scan, /\/scan\/\$\{token\}/);
 });

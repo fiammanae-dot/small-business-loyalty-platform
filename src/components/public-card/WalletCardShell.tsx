@@ -7,25 +7,34 @@ export function WalletCardShell({
   theme,
   children,
   className = "",
+  exportMode = false,
 }: {
   theme: WalletTheme;
   children: ReactNode;
   className?: string;
+  exportMode?: boolean;
 }) {
   return (
-    <section
-      className={`relative overflow-hidden p-5 sm:p-6 ${className}`}
+    <div
+      className={`mx-auto w-full max-w-[360px] p-[7px] ${className}`}
       style={{
-        background: theme.cardBackground,
-        color: theme.cardText,
-        borderRadius: theme.radius,
-        boxShadow: theme.shadow,
+        backgroundColor: theme.phoneBackground,
+        borderRadius: theme.phoneRadius,
+        boxShadow: exportMode ? theme.shadow : theme.phoneShadow,
       }}
     >
-      <div className="pointer-events-none absolute -right-14 -top-14 h-44 w-44 rounded-full blur-3xl" style={{ backgroundColor: theme.decorative }} />
-      <div className="pointer-events-none absolute -bottom-16 -left-16 h-48 w-48 rounded-full blur-3xl" style={{ backgroundColor: theme.decorative }} />
-      <div className="pointer-events-none absolute inset-x-6 top-0 h-px" style={{ backgroundColor: theme.border }} />
-      <div className="relative">{children}</div>
-    </section>
+      <section
+        className="relative overflow-hidden"
+        style={{
+          background: theme.cardBackground,
+          color: theme.cardText,
+          borderRadius: theme.radius,
+          boxShadow: theme.shadow,
+          border: theme.style === "minimal-light" ? "1px solid #E5E7EB" : undefined,
+        }}
+      >
+        <div className="relative">{children}</div>
+      </section>
+    </div>
   );
 }

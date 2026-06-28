@@ -3,7 +3,6 @@
 import { useState } from "react";
 import type { CardTheme } from "@prisma/client";
 import { cardThemeOptions, resolveCardThemeColors } from "@/lib/card-themes";
-import { LoyaltyProgressPanel } from "@/components/public-card/LoyaltyProgressPanel";
 import { LoyaltyWalletCard } from "@/components/public-card/LoyaltyWalletCard";
 
 type PreviewBranding = {
@@ -80,16 +79,12 @@ export function CardThemePreviewSelector({
                 qrCode={null}
                 rewardReady={false}
                 theme={activePreview}
-              />
-              <LoyaltyProgressPanel
                 programName="Coffee Club"
                 rewardName="Free Coffee"
                 progress={7}
                 required={10}
                 remaining={3}
                 completion={70}
-                rewardReady={false}
-                theme={activePreview}
               />
               <section className="rounded-[24px] border border-[#E5E7EB] bg-white p-4">
                 <p className="text-xs font-black uppercase tracking-wide" style={{ color: activePreview.accent }}>Referral Preview</p>
