@@ -16,6 +16,7 @@ import { ButtonLink, MetricCard, PageActions, PageHeader, ProgressBar, SectionCa
 import { getBusinessDisplayName, getBusinessTypeDisplayName } from "@/lib/business-display";
 import { endSupportSessionAction } from "@/app/platform/businesses/support-actions";
 import { getBusinessOwnerContext, getCurrentPlan } from "@/lib/business-owner";
+import { formatDateTime } from "@/lib/format";
 import { getPlanComplianceSummary, type PlanComplianceSummary } from "@/lib/plan-compliance";
 import { requireSupportBusinessContext } from "@/lib/support-sessions";
 import { prisma } from "@/lib/prisma";
