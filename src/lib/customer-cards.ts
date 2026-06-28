@@ -2,6 +2,7 @@ import "server-only";
 
 import { randomBytes } from "crypto";
 import type { BusinessBranding } from "@prisma/client";
+import QRCode from "qrcode";
 import { getRequestBaseUrl } from "@/lib/app-url";
 import { formatUaePhoneDisplay } from "@/lib/phone";
 
@@ -34,6 +35,18 @@ export async function getCardUrl(token: string) {
   return `${await getBaseUrl()}/card/${token}`;
 }
 
+export async function getCardQrDataUrl(token: string) {
+  return QRCode.toDataURL(await getCardUrl(token), {
+    errorCorrectionLevel: "M",
+    margin: 2,
+    width: 220,
+    color: {
+      dark: "#111827",
+      light: "#FFFFFF",
+    },
+  });
+}
+
 export function resolveBranding(branding?: BusinessBranding | null) {
   return {
     primaryColor: branding?.primaryColor ?? defaultCardBranding.primaryColor,
@@ -44,3 +57,6 @@ export function resolveBranding(branding?: BusinessBranding | null) {
     logoUrl: branding?.logoUrl ?? null,
   };
 }
+
+
+

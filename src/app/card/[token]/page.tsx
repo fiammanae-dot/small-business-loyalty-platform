@@ -1,7 +1,7 @@
 import { CardShareActions } from "@/components/CardShareActions";
 import { SaveCardImageButton } from "@/components/SaveCardImageButton";
 import { Gift, QrCode } from "lucide-react";
-import { getCardUrl, resolveBranding } from "@/lib/customer-cards";
+import { getCardQrDataUrl, getCardUrl, resolveBranding } from "@/lib/customer-cards";
 import { resolveCardThemeColors, withAlpha } from "@/lib/card-themes";
 import { calculateCustomerTier } from "@/lib/customer-tiers";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -50,6 +50,7 @@ export default async function PublicCustomerCardPage({
   const customer = membership.globalCustomer;
   const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim();
   const cardUrl = await getCardUrl(token);
+  const cardQrCode = await getCardQrDataUrl(token);
   const referralUrl = membership.referralCode && membership.referralEnabled ? await getReferralUrl(membership.referralCode) : null;
   const programCards = await Promise.all(
     membership.programMemberships.map(async (programMembership) => {
@@ -127,9 +128,10 @@ export default async function PublicCustomerCardPage({
             memberSince={formatDate(membership.createdAt)}
             tierLabel={tier.badgeLabel}
             tierIcon={tier.badgeIcon}
-            qrCode={primaryProgram?.qrCode ?? null}
+            qrCode={primaryProgram?.qrCode ?? cardQrCode}
             theme={primaryCardTheme}
             rewardReady={primaryProgram?.rewardReady ?? false}
+            qrHelperText={primaryProgram ? "Scan this card" : "Show this QR code to staff to find your customer card."}
           />
 
           {primaryProgram ? (
@@ -250,3 +252,4 @@ function CardUnavailable() {
     </main>
   );
 }
+

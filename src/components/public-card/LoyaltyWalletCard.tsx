@@ -10,6 +10,7 @@ export type LoyaltyWalletCardProps = {
   tierIcon: string;
   qrCode: string | null;
   rewardReady: boolean;
+  qrHelperText?: string;
   theme: WalletTheme;
 };
 
@@ -22,6 +23,7 @@ export function LoyaltyWalletCard({
   tierIcon,
   qrCode,
   rewardReady,
+  qrHelperText = "Scan this card",
   theme,
 }: LoyaltyWalletCardProps) {
   const isLight = theme.style === "minimal-light";
@@ -81,9 +83,12 @@ export function LoyaltyWalletCard({
               QR pending
             </div>
           )}
-          <p className="mt-2 text-xs font-bold uppercase tracking-wide text-[#64748B]">Scan this card</p>
+          <p className="mt-2 text-xs font-bold uppercase tracking-wide text-[#64748B]">{qrHelperText}</p>
         </div>
       </div>
     </WalletCardShell>
   );
 }
+
+
+
