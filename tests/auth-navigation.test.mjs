@@ -39,6 +39,14 @@ test("authenticated shell logo navigates to the current role dashboard", () => {
   assert.doesNotMatch(shell, /<Link href="\/" className="flex items-center gap-2">/);
 });
 
+test("system administrator mobile more menu includes operations center", () => {
+  const navigation = read("src/components/RoleNavigation.tsx");
+
+  assert.match(navigation, /const platformMobileMoreItems/);
+  assert.match(navigation, /href: "\/platform\/operations-center"/);
+  assert.match(navigation, /label: "Operations Center"/);
+});
+
 test("logout clears session and prevents cached authenticated pages", () => {
   const logout = read("src/app/logout/route.ts");
   const session = read("src/lib/session.ts");
