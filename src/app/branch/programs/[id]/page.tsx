@@ -68,7 +68,6 @@ export default async function BranchProgramDetailPage({ params }: { params: Prom
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0">
             <p className="text-sm font-semibold business-text">{businessTypeLabels[program.businessType]}</p>
-            <h2 className="mt-2 break-words text-2xl font-semibold text-[#111827]">{program.name}</h2>
             <p className="mt-2 text-sm text-[#6B7280]">{program.description ?? "No description."}</p>
           </div>
           <div className="grid gap-3 sm:flex">

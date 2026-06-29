@@ -114,8 +114,7 @@ export default async function ReferralsPage({
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <p className="text-sm font-semibold business-primary">Growth</p>
-            <div className="mt-1 flex min-w-0 flex-wrap items-center gap-3">
-              <h2 className="text-2xl font-semibold text-[#111827]">Referral Center</h2>
+            <div className="mt-2 flex min-w-0 flex-wrap items-center gap-3">
               <details className="relative">
                 <summary className="inline-flex h-9 cursor-pointer list-none items-center gap-2 rounded-md border border-[#E5E7EB] bg-white px-3 text-xs font-semibold text-[#475569] transition business-hover">
                   <HelpCircle className="h-4 w-4" aria-hidden="true" />

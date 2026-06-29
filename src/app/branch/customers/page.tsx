@@ -103,7 +103,6 @@ export default async function BranchCustomersPage({
         <Message error={params.error} success={params.success} />
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-[#111827]">Business customers</h2>
             <p className="text-sm text-[#6B7280]">Search and open customers assigned to this branch. Business-wide data remains protected.</p>
           </div>
           <Link href="/branch/customers/new" className="rounded-md business-button px-4 py-2 text-sm font-semibold text-white">

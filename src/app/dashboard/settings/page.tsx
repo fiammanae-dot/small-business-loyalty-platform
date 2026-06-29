@@ -2,7 +2,7 @@
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { SettingsMobileSectionSelect } from "@/components/SettingsMobileSectionSelect";
-import { ButtonLink, EmptyState, MetricCard, PageHeader, SectionCard, StatusBadge } from "@/components/ui";
+import { ButtonLink, EmptyState, MetricCard, PageIntro, SectionCard, StatusBadge } from "@/components/ui";
 import { saveAbusePolicyAction, saveCooldownRuleAction, saveCustomerTierSettingsAction, saveScannerSettingsAction } from "@/app/dashboard/actions";
 import { saveSupportAccessPolicyAction } from "@/app/platform/businesses/support-actions";
 import { getBusinessOwnerContext, getCurrentPlan, getCurrentSubscription } from "@/lib/business-owner";
@@ -51,7 +51,7 @@ export default async function BusinessSettingsPage({ searchParams }: { searchPar
     <DashboardShell user={user} eyebrow="Business Owner" title="Business Settings" hideWelcomeMessage>
       <div className="max-w-full min-w-0 space-y-5 overflow-x-hidden pb-28 md:pb-0">
         <Message error={params.error} success={params.success} />
-        <PageHeader eyebrow="Business Owner" title="Business Settings" description="Manage your business configuration, preferences and security." />
+        <PageIntro eyebrow="Business Owner" description="Manage your business configuration, preferences and security." />
 
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Settings overview">
           <MetricCard label="Business" value={business.name} helper={businessTypeLabels[business.businessType]} icon={<Building2 className="h-5 w-5" />} tone="business" />

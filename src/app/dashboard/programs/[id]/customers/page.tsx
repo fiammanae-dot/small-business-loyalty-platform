@@ -10,7 +10,7 @@ import {
   DataTableHeader,
   EmptyState,
   PageActions,
-  PageHeader,
+  PageIntro,
   ProgressBar,
   SectionCard,
   StatusBadge,
@@ -66,9 +66,8 @@ export default async function ProgramCustomersPage({
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title={program.name + " customers"} hideWelcomeMessage>
       <div className="grid gap-5">
-        <PageHeader
+        <PageIntro
           eyebrow="Program Customers"
-          title={program.name + " participation"}
           description="Review enrolled customers, loyalty progress, reward readiness and recent visits."
           actions={
             <PageActions>

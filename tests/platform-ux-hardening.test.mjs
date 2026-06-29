@@ -10,7 +10,7 @@ test("program management center uses design-system KPIs, filters, cards, progres
   const programs = read("src/app/dashboard/programs/page.tsx");
 
   for (const expected of [
-    "PageHeader",
+    "PageIntro",
     "MetricCard",
     "Active Programs",
     "Total Members",

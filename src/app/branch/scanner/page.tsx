@@ -1,7 +1,7 @@
 import { CameraScanner } from "@/components/CameraScanner";
 import { DashboardShell } from "@/components/DashboardShell";
 import { ScannerManualCustomerSearch } from "@/components/ScannerManualCustomerSearch";
-import { ButtonLink, PageHeader } from "@/components/ui";
+import { ButtonLink, PageIntro } from "@/components/ui";
 import { ScannerPageLayout } from "@/components/layouts";
 import { requireRole } from "@/lib/session";
 
@@ -19,8 +19,7 @@ export default async function BranchScannerPage({
       <ScannerPageLayout
         scanner={
           <>
-            <PageHeader
-              title="Scanner"
+            <PageIntro
               description="Scan a customer card, search manually, or process a referral."
               actions={<ButtonLink href="/branch" variant="outline">Back to Dashboard</ButtonLink>}
             />

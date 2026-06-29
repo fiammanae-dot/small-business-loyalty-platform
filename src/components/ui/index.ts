@@ -11,6 +11,7 @@ export * from "./LoadingSkeleton";
 export * from "./MetricCard";
 export * from "./PageActions";
 export * from "./PageHeader";
+export * from "./PageIntro";
 export * from "./ProgressBar";
 export * from "./SearchBar";
 export * from "./SectionCard";

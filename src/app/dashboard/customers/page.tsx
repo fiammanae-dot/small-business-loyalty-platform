@@ -15,7 +15,7 @@ import {
   FilterBar,
   MetricCard,
   PageActions,
-  PageHeader,
+  PageIntro,
   ProgressBar,
   SearchBar,
   SectionCard,
@@ -126,7 +126,7 @@ export default async function CustomersPage({
 
         <SectionCard>
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <PageHeader title="Customers" description="Manage your customers, loyalty progress, referrals and rewards." eyebrow="Customer Management Center" />
+            <PageIntro description="Manage your customers, loyalty progress, referrals and rewards." eyebrow="Customer Management Center" />
             <PageActions>
               <ButtonLink href="/dashboard/customers/new" variant="business"><UserPlus className="h-4 w-4" aria-hidden />Add Customer</ButtonLink>
               <ButtonLink href="/dashboard/exports/customers" variant="outline">Export Customers</ButtonLink>

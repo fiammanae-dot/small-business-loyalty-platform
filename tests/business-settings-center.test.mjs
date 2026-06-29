@@ -30,7 +30,7 @@ test("business owner settings page uses Business Control Center structure", () =
 test("business owner settings page uses design-system foundations and preserves existing settings actions", () => {
   const page = read("src/app/dashboard/settings/page.tsx");
 
-  for (const component of ["PageHeader", "SectionCard", "MetricCard", "StatusBadge", "ButtonLink", "EmptyState"]) {
+  for (const component of ["PageIntro", "SectionCard", "MetricCard", "StatusBadge", "ButtonLink", "EmptyState"]) {
     assert.match(page, new RegExp(component), `Settings page should use ${component}`);
   }
 

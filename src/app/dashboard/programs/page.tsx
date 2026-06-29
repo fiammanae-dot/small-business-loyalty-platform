@@ -13,7 +13,7 @@ import {
   FilterBar,
   MetricCard,
   PageActions,
-  PageHeader,
+  PageIntro,
   ProgressBar,
   SearchBar,
   SectionCard,
@@ -126,9 +126,8 @@ export default async function ProgramsPage({
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Loyalty Programs" hideWelcomeMessage>
       <div className="grid gap-5">
-        <PageHeader
+        <PageIntro
           eyebrow="Programs"
-          title="Loyalty Programs"
           description="Manage your loyalty programs, rewards and customer participation."
           actions={
             <PageActions>

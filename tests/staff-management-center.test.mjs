@@ -28,7 +28,7 @@ test("business owner staff management uses the team management center structure"
     assert.ok(page.includes(expected), `Missing staff management copy: ${expected}`);
   }
 
-  for (const component of ["PageHeader", "MetricCard", "SearchBar", "FilterBar", "DataTable", "StatusBadge", "ActionMenu", "SectionCard", "EmptyState", "ButtonLink"]) {
+  for (const component of ["PageIntro", "MetricCard", "SearchBar", "FilterBar", "DataTable", "StatusBadge", "ActionMenu", "SectionCard", "EmptyState", "ButtonLink"]) {
     assert.match(page, new RegExp(component), `Staff page should use ${component}`);
   }
 });

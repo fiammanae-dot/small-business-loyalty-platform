@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
-import { EmptyState, PageHeader, SectionCard, StatusBadge } from "@/components/ui";
+import { EmptyState, PageIntro, SectionCard, StatusBadge } from "@/components/ui";
 import { approveSupportRequestAction, rejectSupportRequestAction } from "@/app/platform/businesses/support-actions";
 import { requireBusinessOwner } from "@/lib/business-owner";
 import { formatDateTime } from "@/lib/format";
@@ -21,7 +21,7 @@ export default async function BusinessSupportHistoryPage() {
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Support History" hideWelcomeMessage>
       <div className="space-y-6">
-        <PageHeader eyebrow="Support transparency" title="Support History" description={`Review LoyaltyBase support access for ${business?.name ?? "your business"}. Internal audit activity and administrator technical details stay private to Platform Operations.`} />
+        <PageIntro eyebrow="Support transparency" description={`Review LoyaltyBase support access for ${business?.name ?? "your business"}. Internal audit activity and administrator technical details stay private to Platform Operations.`} />
 
         <SectionCard title="Pending Support Requests" description="Approve or reject LoyaltyBase Support access requests for your business.">
           {pendingRequests.length ? <div className="grid gap-3">{pendingRequests.map((request) => <SupportRequestCard key={request.id} request={request} actionable />)}</div> : <EmptyState title="No pending support requests." description="Support requests that need your approval will appear here." />}

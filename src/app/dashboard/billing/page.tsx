@@ -9,7 +9,7 @@ import {
   DataTableHeader,
   EmptyState,
   MetricCard,
-  PageHeader,
+  PageIntro,
   ProgressBar,
   SectionCard,
   StatusBadge,
@@ -54,7 +54,7 @@ export default async function BusinessBillingPage() {
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Billing & Plan" hideWelcomeMessage>
       <div className="max-w-full min-w-0 space-y-5 overflow-x-hidden">
-        <PageHeader eyebrow="Business Owner" title="Billing & Plan" description="Manage your subscription, plan usage and billing history." actions={<><ButtonLink href="/dashboard/settings?tab=subscription" variant="business" rightIcon={<ArrowUpRight className="h-4 w-4" aria-hidden />}>Upgrade Plan / Manage Plan</ButtonLink>{invoices.length ? <ButtonLink href="/dashboard/exports/billing" variant="outline" leftIcon={<Download className="h-4 w-4" aria-hidden />}>Export Billing</ButtonLink> : null}</>} />
+        <PageIntro eyebrow="Business Owner" description="Manage your subscription, plan usage and billing history." actions={<><ButtonLink href="/dashboard/settings?tab=subscription" variant="business" rightIcon={<ArrowUpRight className="h-4 w-4" aria-hidden />}>Upgrade Plan / Manage Plan</ButtonLink>{invoices.length ? <ButtonLink href="/dashboard/exports/billing" variant="outline" leftIcon={<Download className="h-4 w-4" aria-hidden />}>Export Billing</ButtonLink> : null}</>} />
 
         <section aria-label="Billing summary" className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard label="Current Plan" value={currentPlan?.name ?? "No active plan"} helper={currentSubscription ? formatBillingCycle(currentSubscription.billingCycle) : "Subscription inactive"} tone="business" />

@@ -96,7 +96,7 @@ test("customer and program lists include mobile card views and helpful empty sta
   assert.match(customers, /Search by name, phone number, referral code or card number/);
   assert.match(customers, /No customers found/);
   assert.match(customers, /lg:hidden/);
-  assert.match(customers, /PageHeader/);
+  assert.match(customers, /PageIntro/);
   assert.match(customers, /MetricCard/);
   assert.match(customers, /SavedViews/);
   assert.match(customers, /ActionMenu/);

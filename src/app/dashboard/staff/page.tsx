@@ -16,7 +16,7 @@ import {
   EmptyState,
   FilterBar,
   MetricCard,
-  PageHeader,
+  PageIntro,
   SearchBar,
   SectionCard,
   StatusBadge,
@@ -68,9 +68,8 @@ export default async function StaffUsersPage({ searchParams }: { searchParams: P
     <DashboardShell user={user} eyebrow="Business Owner" title="Team Management" hideWelcomeMessage>
       <div className="max-w-full min-w-0 space-y-5 overflow-x-hidden">
         <Message error={params.error} success={params.success} />
-        <PageHeader
+        <PageIntro
           eyebrow="Business Owner"
-          title="Team Management"
           description="Manage your staff, branch managers and account access."
           actions={
             <>

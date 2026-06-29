@@ -29,7 +29,7 @@ test("business owner billing page uses Billing & Plan Center structure", () => {
 test("business owner billing page uses design system billing components", () => {
   const page = read("src/app/dashboard/billing/page.tsx");
 
-  for (const component of ["PageHeader", "MetricCard", "SectionCard", "ProgressBar", "StatusBadge", "DataTable", "EmptyState", "ButtonLink"]) {
+  for (const component of ["PageIntro", "MetricCard", "SectionCard", "ProgressBar", "StatusBadge", "DataTable", "EmptyState", "ButtonLink"]) {
     assert.match(page, new RegExp(component), `Billing page should use ${component}`);
   }
 

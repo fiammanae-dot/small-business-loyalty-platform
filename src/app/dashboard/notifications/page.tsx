@@ -173,7 +173,6 @@ export default async function NotificationsPage({
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p className="text-sm font-semibold business-text">Fraud and risk investigation</p>
-            <h2 className="mt-1 text-2xl font-semibold text-[#111827]">Alert Center</h2>
             <p className="mt-1 text-sm text-[#6B7280]">Investigate suspicious activity without leaving the alert workspace.</p>
           </div>
           <Link href="/dashboard" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">

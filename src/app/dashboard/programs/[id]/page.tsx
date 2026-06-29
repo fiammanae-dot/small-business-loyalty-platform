@@ -12,7 +12,7 @@ import {
   EmptyState,
   MetricCard,
   PageActions,
-  PageHeader,
+  PageIntro,
   ProgressBar,
   SectionCard,
   StatusBadge,
@@ -87,9 +87,8 @@ export default async function ProgramDetailPage({
     <DashboardShell user={user} eyebrow="Business Owner" title={program.name} hideWelcomeMessage>
       <div className="grid gap-5">
         {qs.success ? <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{qs.success}</p> : null}
-        <PageHeader
+        <PageIntro
           eyebrow={businessTypeLabels[program.businessType]}
-          title={program.name}
           description={program.description ?? "Review program configuration, customer participation and reward performance."}
           actions={
             <PageActions>
