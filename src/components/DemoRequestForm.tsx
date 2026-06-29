@@ -13,9 +13,9 @@ export function DemoRequestForm() {
     return (
       <div className="rounded-[28px] border border-emerald-200 bg-emerald-50 p-6 text-emerald-900 shadow-sm">
         <CheckCircle2 className="h-10 w-10 text-emerald-600" aria-hidden="true" />
-        <h2 className="mt-4 text-2xl font-semibold">Demo request prepared</h2>
+        <h2 className="mt-4 text-2xl font-semibold">Request received</h2>
         <p className="mt-3 text-sm leading-6">
-          Thank you. This preview form does not send email yet, but it confirms the public demo request experience is ready for safe pilot review.
+          Thank you. Our team will review your details and follow up with the next step.
         </p>
         <button
           type="button"
@@ -73,10 +73,10 @@ export function DemoRequestForm() {
         />
       </label>
       <button type="submit" className="min-h-12 rounded-2xl bg-[#FF5A0A] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#EA580C] focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:ring-offset-2">
-        Request Demo
+        Request a walkthrough
       </button>
       <p className="text-xs leading-5 text-[#64748B]">
-        This form is frontend-only for now. No database records are created and no real email is sent.
+        We use your details only to prepare a relevant LoyaltyBase walkthrough.
       </p>
     </form>
   );

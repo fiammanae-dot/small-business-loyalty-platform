@@ -22,7 +22,7 @@ export function HomepageLoyaltyCardDemo() {
         <p className="mt-1 text-sm font-semibold text-[#111827]">Free Coffee</p>
       </div>
       <div className="absolute -right-4 -top-5 hidden rounded-full bg-[#FDBA74]/30 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-[#9A3412] sm:block" aria-hidden="true">
-        Live demo
+        Interactive card
       </div>
       <div className="overflow-hidden rounded-[26px] bg-gradient-to-br from-[#2A160E] via-[#4A2413] to-[#8B3A12] p-5 text-white">
         <div className="flex items-start justify-between gap-4">
@@ -71,7 +71,7 @@ export function HomepageLoyaltyCardDemo() {
                 Reward Unlocked
               </>
             ) : (
-              "Add Stamp (Demo)"
+              "Add Stamp"
             )}
           </button>
         </div>

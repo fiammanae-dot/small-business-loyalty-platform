@@ -53,14 +53,14 @@ test("program create and edit flows expose independent wallet visual style previ
   assert.match(preview, /Wallet card style/);
   assert.match(preview, /Choose one of four wallet styles/);
   assert.match(preview, /aria-label=.*wallet card style/);
-  assert.match(preview, /Preview card/);
+  assert.match(preview, /View card style/);
   assert.match(preview, /type="button"/);
   assert.match(preview, /role="dialog"/);
   assert.match(preview, /aria-modal="true"/);
   assert.match(preview, /LoyaltyWalletCard/);
   assert.match(preview, /programName="Coffee Club"/);
   assert.match(preview, /rewardName="Free Coffee"/);
-  assert.match(preview, /Sample referral section/);
+  assert.match(preview, /This card style uses illustrative card content/);
   assert.match(preview, /cardThemeOptions\.map/);
   assert.match(programs, /cardTheme: z\.enum/);
   assert.match(actions, /cardTheme: getString\(formData, "cardTheme"\) \|\| "BUSINESS_DEFAULT"/);

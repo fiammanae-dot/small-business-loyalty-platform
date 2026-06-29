@@ -126,7 +126,7 @@ export function BusinessForm({ action, plans, error, mode, business }: BusinessF
             <Field label="Button color" name="buttonColor" defaultValue={brandingValues.buttonColor} required />
           </div>
           <BrandingPreview
-            businessName={business?.name ?? "Business preview"}
+            businessName={business?.name ?? "Business"}
             values={brandingValues}
           />
         </div>
@@ -219,7 +219,7 @@ function BrandingPreview({
 }) {
   return (
     <div className="rounded-md border border-[#E5E7EB] p-5" style={{ backgroundColor: values.backgroundColor, color: values.textColor }}>
-      <p className="text-sm font-semibold" style={{ color: values.primaryColor }}>Brand preview</p>
+      <p className="text-sm font-semibold" style={{ color: values.primaryColor }}>Brand appearance</p>
       <div className="mt-4 flex items-center gap-3">
         {values.logoUrl ? (
           <div className="h-12 w-12 rounded-md bg-cover bg-center" style={{ backgroundImage: `url(${values.logoUrl})` }} />
@@ -234,12 +234,12 @@ function BrandingPreview({
         </div>
       </div>
       <div className="mt-5 rounded-md border border-[#E5E7EB] bg-white/80 p-4">
-        <p className="text-sm font-semibold">Sample loyalty progress</p>
+        <p className="text-sm font-semibold">Loyalty progress</p>
         <div className="mt-4 h-3 rounded-full" style={{ backgroundColor: values.secondaryColor }}>
           <div className="h-3 w-2/5 rounded-full" style={{ backgroundColor: values.primaryColor }} />
         </div>
         <button type="button" className="mt-5 rounded-md px-4 py-2 text-sm font-semibold text-white" style={{ backgroundColor: values.buttonColor }}>
-          Sample button
+          Primary action
         </button>
       </div>
     </div>

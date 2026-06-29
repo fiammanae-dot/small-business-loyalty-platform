@@ -175,7 +175,7 @@ export default async function SupportSessionReportPage({
           <SectionCard title="Export" description="Support report export will be added in a later milestone.">
             <button disabled className="inline-flex min-h-10 cursor-not-allowed items-center gap-2 rounded-md border border-[#CBD5E1] bg-[#F8FAFC] px-3 text-sm font-semibold text-[#64748B]">
               <Download className="h-4 w-4" aria-hidden="true" />
-              Export Coming Soon
+              Export unavailable
             </button>
           </SectionCard>
         </div>

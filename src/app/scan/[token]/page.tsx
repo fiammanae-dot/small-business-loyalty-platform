@@ -942,7 +942,7 @@ function StampIssuanceSection({
             name="reason"
             rows={3}
             className="rounded-md border border-[#E5E7EB] px-3 py-2 text-sm font-normal outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
-            placeholder="Required for multiple stamps or repeated stamps in a short time. Example: Customer purchased multiple items."
+            placeholder="Required for multiple stamps or repeated stamps in a short time. Reason: customer purchased multiple items."
           />
         </label>
         <ConfirmSubmitButton

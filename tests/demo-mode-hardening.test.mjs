@@ -6,7 +6,7 @@ function read(path) {
   return readFileSync(path, "utf8");
 }
 
-test("demo mode is a global platform setting with explicit restriction copy", () => {
+test("safety mode is a global platform setting with explicit restriction copy", () => {
   const platformSettings = read("src/lib/platform-settings.ts");
   const settingsPage = read("src/app/platform/settings/page.tsx");
   const shell = read("src/components/DashboardShell.tsx");
@@ -14,15 +14,15 @@ test("demo mode is a global platform setting with explicit restriction copy", ()
   assert.match(platformSettings, /where: \{ key: "demo_mode" \}/);
   assert.match(platformSettings, /demoModeRestrictions/);
 
-  for (const expected of ["Demo Mode Status", "Demo Mode is intended for product demonstrations, staff training, QA testing, and user acceptance testing"]) {
+  for (const expected of ["Safety Mode Status", "Safety Mode restricts external communications and payment processing"]) {
     assert.match(settingsPage, new RegExp(expected));
   }
 
-  assert.match(shell, /Demo Mode Active/);
+  assert.match(shell, /Safety Mode Active/);
   assert.match(shell, /External communications and selected production actions are restricted/);
 });
 
-test("demo mode changes and blocked external actions are audited server-side", () => {
+test("safety mode changes and blocked external actions are audited server-side", () => {
   const platformSettings = read("src/lib/platform-settings.ts");
   const settingsActions = read("src/app/platform/settings/actions.ts");
   const messageActions = read("src/app/dashboard/messages/actions.ts");
@@ -35,9 +35,9 @@ test("demo mode changes and blocked external actions are audited server-side", (
   assert.match(settingsActions, /logAuditEvent/);
   assert.match(messageActions, /blockDemoModeExternalAction/);
   assert.match(messageActions, /MESSAGE_SENT_MANUALLY/);
-  assert.match(messageActions, /Demo Mode is active\. External communications and selected production actions are restricted\./);
+  assert.match(messageActions, /Safety Mode is active\. External communications and selected production actions are restricted\./);
   assert.match(invoiceActions, /blockDemoModeExternalAction/);
   assert.match(invoiceActions, /INVOICE_MARK_PAID/);
   assert.match(invoiceActions, /PAYMENT_RECORDED/);
-  assert.match(invoiceActions, /Demo Mode is active\. Payment processing is restricted\./);
+  assert.match(invoiceActions, /Safety Mode is active\. Payment processing is restricted\./);
 });

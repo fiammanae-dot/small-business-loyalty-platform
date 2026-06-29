@@ -38,7 +38,7 @@ const settingsTabs = [
   { key: "general", label: "General", icon: Server },
   { key: "security", label: "Security", icon: ShieldCheck },
   { key: "notifications", label: "Notifications", icon: Bell },
-  { key: "demo-mode", label: "Demo Mode", icon: FlaskConical },
+  { key: "demo-mode", label: "Safety Mode", icon: FlaskConical },
   { key: "audit-logs", label: "Audit Logs", icon: Activity },
 ] as const;
 
@@ -170,7 +170,7 @@ function GeneralTab({
         <div className="mt-4 grid min-w-0 gap-3 md:mt-5 md:grid-cols-2 xl:grid-cols-3">
           <InfoCard icon={GitBranch} label="Environment" value={environmentName} />
           <InfoCard icon={Database} label="Current Database" value={databaseName} />
-          <InfoCard icon={FlaskConical} label="Demo Mode" value={demoModeEnabled ? "Enabled" : "Disabled"} tone={demoModeEnabled ? "orange" : "gray"} />
+          <InfoCard icon={FlaskConical} label="Safety Mode" value={demoModeEnabled ? "Enabled" : "Disabled"} tone={demoModeEnabled ? "orange" : "gray"} />
           <InfoCard icon={PackageCheck} label="Application Version" value={packageJson.version ?? "Configured version unavailable"} />
           <InfoCard icon={HeartPulse} label="Build Status" value="Healthy" tone="green" />
           <InfoCard icon={Activity} label="Last Deployment" value={buildTimestamp || "Not Available"} />
@@ -205,7 +205,7 @@ function GeneralTab({
 function SecurityTab() {
   return (
     <section className="max-w-full overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm md:p-5">
-      <SectionHeader icon={ShieldCheck} title="Security Administration" description="Current platform security posture and future hardening controls." />
+      <SectionHeader icon={ShieldCheck} title="Security Administration" description="Current platform security posture and access controls." />
       <div className="mt-4 grid min-w-0 gap-4 md:mt-5 lg:grid-cols-3">
         <RestrictionPanel
           title="Active Protections"
@@ -224,7 +224,7 @@ function SecurityTab() {
           ]}
         />
         <PlaceholderPanel
-          title="Future Security Integrations"
+          title="Security integrations"
           items={["Single sign-on", "IP allow lists", "Admin approval workflows", "Security webhooks"]}
         />
       </div>
@@ -235,7 +235,7 @@ function SecurityTab() {
 function NotificationsTab() {
   return (
     <section className="max-w-full overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm md:p-5">
-      <SectionHeader icon={Bell} title="Notifications" description="Provider readiness and future communication controls." />
+      <SectionHeader icon={Bell} title="Notifications" description="Provider readiness and communication controls." />
       <div className="mt-4 grid min-w-0 gap-4 md:mt-5 lg:grid-cols-3">
         <RestrictionPanel
           title="Current Notification Controls"
@@ -247,8 +247,8 @@ function NotificationsTab() {
         />
         <FutureCapabilitiesPanel
           sections={[
-            { title: "Future Delivery Providers", items: ["WhatsApp Business API", "SMS gateway", "Transactional email", "Push notifications"] },
-            { title: "Future Routing Rules", items: ["Channel fallback order", "Quiet hours", "Retry policies", "Provider health monitoring"] },
+            { title: "Delivery Providers", items: ["WhatsApp Business API", "SMS gateway", "Transactional email", "Push notifications"] },
+            { title: "Routing Rules", items: ["Channel fallback order", "Quiet hours", "Retry policies", "Provider health monitoring"] },
           ]}
         />
       </div>
@@ -262,21 +262,21 @@ function DemoModeTab({ demoModeEnabled }: { demoModeEnabled: boolean }) {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <SectionHeader
           icon={FlaskConical}
-          title="Demo Mode"
-          description="Demo Mode is intended for product demonstrations, staff training, QA testing, and user acceptance testing."
+          title="Safety Mode"
+          description="Safety Mode restricts external communications and payment processing when the environment should not trigger real-world actions."
         />
         <form action={toggleDemoModeAction}>
           <CsrfInput scope="platform:settings" />
           <input type="hidden" name="enabled" value={demoModeEnabled ? "false" : "true"} />
           <button type="submit" className="rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600">
-            {demoModeEnabled ? "Disable Demo Mode" : "Enable Demo Mode"}
+            {demoModeEnabled ? "Disable Safety Mode" : "Enable Safety Mode"}
           </button>
         </form>
       </div>
 
       <div className="mt-4 grid min-w-0 gap-4 md:mt-5 lg:grid-cols-[260px_1fr_1fr]">
         <div className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">Demo Mode Status</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">Safety Mode Status</p>
           <p className={`mt-3 inline-flex rounded-md px-3 py-2 text-sm font-semibold ${demoModeEnabled ? "bg-orange-50 text-[#F97316]" : "bg-zinc-100 text-zinc-700"}`}>
             {demoModeEnabled ? "Enabled" : "Disabled"}
           </p>
@@ -291,7 +291,7 @@ function DemoModeTab({ demoModeEnabled }: { demoModeEnabled: boolean }) {
         />
 
         <RestrictionPanel
-          title="Future Integrations Protected"
+          title="External Integrations Protected"
           items={[
             { icon: Mail, label: "Email sending" },
             { icon: Smartphone, label: "SMS sending" },
@@ -303,7 +303,7 @@ function DemoModeTab({ demoModeEnabled }: { demoModeEnabled: boolean }) {
       </div>
 
       <div className="mt-4 rounded-md border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-semibold text-[#C2410C]">
-        No real customer communications will be sent while Demo Mode protections are active.
+        No real customer communications will be sent while Safety Mode protections are active.
       </div>
     </section>
   );
@@ -488,7 +488,7 @@ function FutureCapabilitiesPanel({ sections }: { sections: Array<{ title: string
   return (
     <details className="min-w-0 overflow-hidden rounded-md border border-dashed border-[#E5E7EB] bg-[#FAFAFA] p-4 lg:col-span-2">
       <summary className="cursor-pointer list-none text-sm font-semibold text-[#111827]">
-        Roadmap / Future Capabilities
+        Planned Capabilities
         <span className="mt-1 block text-sm font-normal leading-6 text-[#6B7280]">Planned provider and routing options. These are not active platform settings yet.</span>
       </summary>
       <div className="mt-4 grid min-w-0 gap-3 md:grid-cols-2">

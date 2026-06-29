@@ -57,7 +57,7 @@ export function CardShareActions({
   }
 
   function walletSoon() {
-    setMessage("Wallet integration coming soon.");
+    setMessage("Wallet pass is not available yet.");
   }
 
   async function shareViaWhatsApp() {

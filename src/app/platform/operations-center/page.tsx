@@ -292,7 +292,7 @@ function TabItem({ label, active, comingSoon }: { label: string; active?: boolea
   return (
     <div className={`rounded-md px-4 py-3 text-sm font-semibold ${active ? "bg-[#F97316] text-white" : "bg-[#F8FAFC] text-[#64748B]"}`}>
       <span>{label}</span>
-      {comingSoon ? <span className="ml-2 rounded-full bg-white px-2 py-0.5 text-xs text-[#64748B]">Coming Soon</span> : null}
+      {comingSoon ? <span className="ml-2 rounded-full bg-white px-2 py-0.5 text-xs text-[#64748B]">Not enabled</span> : null}
     </div>
   );
 }

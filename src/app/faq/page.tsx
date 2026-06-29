@@ -32,11 +32,11 @@ const faqs = [
   },
   {
     question: "Is Apple Wallet supported?",
-    answer: "Apple Wallet support is on the roadmap. Browser-based public cards are available today.",
+    answer: "Browser-based public cards are available today. Apple Wallet passes are not included in the current pilot experience.",
   },
   {
     question: "Is Google Wallet supported?",
-    answer: "Google Wallet support is on the roadmap. Customers can currently use mobile browser cards without installing an app.",
+    answer: "Customers can currently use mobile browser cards without installing an app. Google Wallet passes are not included in the current pilot experience.",
   },
   {
     question: "What plans are available?",
@@ -54,7 +54,7 @@ export default function FaqPage() {
       <PageHero
         eyebrow="FAQ"
         title="Answers for business owners before launch"
-        description="Clear answers about customer cards, QR scanning, referrals, rewards, branches, pricing, wallet roadmap, and security."
+        description="Clear answers about customer cards, QR scanning, referrals, rewards, branches, pricing, mobile cards, and security."
       />
 
       <section className="px-5 py-16 sm:px-8 lg:px-16">
@@ -75,7 +75,7 @@ export default function FaqPage() {
         </div>
       </section>
 
-      <CTASection title="Still have questions?" description="Book a demo and walk through the workflow from customer join to reward redemption." />
+      <CTASection title="Still have questions?" description="Book a walkthrough and review the workflow from customer join to reward redemption." />
     </MarketingFrame>
   );
 }

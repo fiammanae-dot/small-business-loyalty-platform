@@ -43,8 +43,8 @@ const benefits = [
     icon: Layers3,
   },
   {
-    title: "Wallet roadmap",
-    description: "Apple Wallet and Google Wallet support are part of the product roadmap, with browser cards available today.",
+    title: "Mobile browser cards",
+    description: "Customers can use secure browser-based loyalty cards today without waiting for wallet pass support.",
     icon: ScanLine,
   },
 ];

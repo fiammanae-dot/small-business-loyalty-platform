@@ -295,7 +295,7 @@ export default async function PlatformUsersPage({
               <QuickChip href={buildQuickFilterHref({ status: "INACTIVE" })} label="Inactive" active={selectedStatus === "INACTIVE"} />
               <QuickChip href={buildQuickFilterHref({ status: "SUSPENDED" })} label="Suspended" active={selectedStatus === "SUSPENDED"} />
               <QuickChip href={buildQuickFilterHref({ status: "ARCHIVED" })} label="Archived" active={selectedStatus === "ARCHIVED"} />
-              <QuickChip href={buildQuickFilterHref({ suspect: "1" })} label="Demo/Test Data" active={suspectOnly} />
+              <QuickChip href={buildQuickFilterHref({ suspect: "1" })} label="Review flagged" active={suspectOnly} />
             </div>
 
             <div className="flex gap-2">
@@ -527,7 +527,7 @@ function RoleBadge({ role }: { role: UserRole }) {
 function SuspiciousBadge() {
   return (
     <span className="inline-flex w-fit items-center rounded-full border border-orange-200 bg-orange-50 px-2 py-1 text-xs font-semibold text-[#C2410C]">
-      Test/Demo Data
+      Review flagged
     </span>
   );
 }

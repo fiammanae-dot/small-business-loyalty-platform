@@ -25,7 +25,7 @@ const resources = [
   },
   {
     title: "Pilot launch checklist",
-    description: "A practical pre-launch list for branches, staff accounts, test cards, demo customers, and owner review.",
+    description: "A practical launch list for branches, staff accounts, customer cards, enrollment flow, and owner review.",
     icon: Rocket,
   },
 ];
@@ -41,12 +41,12 @@ export default function ResourcesPage() {
 
       <section className="px-5 py-16 sm:px-8 lg:px-16">
         <div className="mx-auto max-w-[1180px]">
-          <SectionHeading eyebrow="Guides" title="Useful launch material, without the fluff" description="These resources are static for now, but they reflect the operational decisions most pilot businesses need to make." />
+          <SectionHeading eyebrow="Guides" title="Useful launch material, without the fluff" description="These resources focus on the operational decisions most pilot businesses need to make." />
           <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {resources.map((resource) => (
               <MarketingCard key={resource.title} {...resource}>
                 <Link href="/request-demo" className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-[#EA580C]">
-                  Discuss in demo <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  Discuss with LoyaltyBase <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
               </MarketingCard>
             ))}
@@ -54,7 +54,7 @@ export default function ResourcesPage() {
         </div>
       </section>
 
-      <CTASection title="Launch with a cleaner plan from day one" description="Request a demo and walk through the right loyalty setup for your business type, team, and branch count." />
+      <CTASection title="Launch with a cleaner plan from day one" description="Request a walkthrough and map the right loyalty setup for your business type, team, and branch count." />
     </MarketingFrame>
   );
 }

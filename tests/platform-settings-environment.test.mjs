@@ -14,7 +14,7 @@ test("platform settings exposes environment information and health summary", () 
     "General",
     "Security",
     "Notifications",
-    "Demo Mode",
+    "Safety Mode",
     "Audit Logs",
     "role=\"tab\"",
     "Environment Information",
@@ -45,39 +45,39 @@ test("platform settings exposes environment information and health summary", () 
   assert.match(page, /prisma\.auditEvent\.findMany/);
 });
 
-test("platform settings demo mode panel is explicit about current and future protections", () => {
+test("platform settings safety mode panel is explicit about current protections", () => {
   const page = read("src/app/platform/settings/page.tsx");
 
   for (const expected of [
-    "Demo Mode Status",
+    "Safety Mode Status",
     "Current Restrictions",
     "Manual message sending blocked",
     "Invoice payment recording blocked",
-    "Future Integrations Protected",
+    "External Integrations Protected",
     "Email sending",
     "SMS sending",
     "WhatsApp sending",
     "Campaign delivery",
     "External integrations",
-    "No real customer communications will be sent while Demo Mode protections are active.",
+    "No real customer communications will be sent while Safety Mode protections are active.",
   ]) {
     assert.match(page, new RegExp(expected));
   }
 });
 
-test("platform settings has administration tabs for future integrations and audit visibility", () => {
+test("platform settings has administration tabs for integrations and audit visibility", () => {
   const page = read("src/app/platform/settings/page.tsx");
 
   for (const expected of [
     "Security Administration",
-    "Future Security Integrations",
+    "Security integrations",
     "Single sign-on",
     "IP allow lists",
-    "Future Delivery Providers",
+    "Delivery Providers",
     "WhatsApp Business API",
     "SMS gateway",
     "Transactional email",
-    "Future Routing Rules",
+    "Routing Rules",
     "Provider health monitoring",
     "Recent platform and business audit events",
     "No audit events recorded yet.",

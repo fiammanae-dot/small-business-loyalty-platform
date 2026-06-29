@@ -140,7 +140,7 @@ export async function enrollCustomerForBusiness({
 
   const normalizedPhone = normalizePhone(identity.data.phone);
   if (!normalizedPhone) {
-    fail(path, "Enter a valid UAE mobile number, for example 0501234567 or +971501234567.");
+    fail(path, "Enter a valid UAE mobile number such as 0501234567 or +971501234567.");
   }
 
   try {
@@ -232,7 +232,7 @@ export async function enrollCustomerForBusiness({
         });
 
         if (phoneLookup.status === "INVALID_PHONE") {
-          fail(path, "Enter a valid referred-by UAE mobile number, for example 0501234567 or +971501234567.");
+          fail(path, "Enter a valid referred-by UAE mobile number such as 0501234567 or +971501234567.");
         }
         if (phoneLookup.status === "NOT_FOUND" || !phoneLookup.referrer?.referralCode) {
           fail(path, "No active customer was found for the referred-by phone number.");

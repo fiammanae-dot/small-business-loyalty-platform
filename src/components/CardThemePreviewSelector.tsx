@@ -50,19 +50,19 @@ export function CardThemePreviewSelector({
               <span className="mt-1 block text-xs leading-5 text-[#6B7280]">{theme.description}</span>
             </label>
             <button type="button" onClick={() => setPreviewTheme(theme.value)} className="mt-3 h-10 w-full rounded-md border border-[#E5E7EB] bg-white px-3 text-sm font-semibold text-[#111827] transition hover:bg-[#FAFAFA] active:scale-[0.99]">
-              Preview card
+              View card style
             </button>
           </div>
         ))}
       </div>
 
       {activePreview ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#0F172A]/55 px-3 py-4 md:items-center" role="dialog" aria-modal="true" aria-label="Loyalty card theme preview">
-          <button type="button" className="absolute inset-0 cursor-default" aria-label="Close preview" onClick={() => setPreviewTheme(null)} />
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#0F172A]/55 px-3 py-4 md:items-center" role="dialog" aria-modal="true" aria-label="Loyalty card style">
+          <button type="button" className="absolute inset-0 cursor-default" aria-label="Close card style" onClick={() => setPreviewTheme(null)} />
           <section className="relative max-h-[calc(100vh-2rem)] w-full max-w-lg overflow-y-auto rounded-3xl bg-white p-4 shadow-2xl md:p-5">
             <div className="sticky top-0 z-10 -mx-4 -mt-4 flex items-center justify-between gap-3 border-b border-[#E5E7EB] bg-white px-4 py-3 md:-mx-5 md:-mt-5 md:px-5">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">Preview card</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">Card style</p>
                 <h2 className="text-lg font-bold text-[#111827]">{activePreview.label}</h2>
               </div>
               <button type="button" onClick={() => setPreviewTheme(null)} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827]">Close</button>
@@ -87,8 +87,8 @@ export function CardThemePreviewSelector({
                 completion={70}
               />
               <section className="rounded-[24px] border border-[#E5E7EB] bg-white p-4">
-                <p className="text-xs font-black uppercase tracking-wide" style={{ color: activePreview.accent }}>Referral Preview</p>
-                <p className="mt-2 text-sm leading-6 text-[#64748B]">Sample referral section shown for preview only. No customer data is created.</p>
+                <p className="text-xs font-black uppercase tracking-wide" style={{ color: activePreview.accent }}>Referral section</p>
+                <p className="mt-2 text-sm leading-6 text-[#64748B]">This card style uses illustrative card content. No customer data is created.</p>
               </section>
             </div>
           </section>

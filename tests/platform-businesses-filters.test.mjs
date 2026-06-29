@@ -21,8 +21,7 @@ test("platform businesses page exposes filtering, sorting, badges, and mobile ca
     "Sort by",
     "Clear filters",
     "Showing {businesses.length} businesses",
-    "Demo/Test Data",
-    "Test/Demo Data",
+    "Review flagged",
     "BusinessMobileCard",
   ]) {
     assert.match(page, new RegExp(expected.replace(/[{}]/g, "\\$&")));

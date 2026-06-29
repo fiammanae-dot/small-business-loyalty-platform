@@ -684,7 +684,7 @@ export async function updateCustomerAction(formData: FormData) {
   if (!membership.success) fail(path, membership.error.issues[0]?.message ?? "Validation failed.");
   const normalizedPhone = normalizePhone(identity.data.phone);
   if (!normalizedPhone) {
-    fail(path, "Enter a valid UAE mobile number, for example 0501234567 or +971501234567.");
+    fail(path, "Enter a valid UAE mobile number such as 0501234567 or +971501234567.");
   }
 
   const existing = await prisma.businessCustomerMembership.findFirst({

@@ -52,7 +52,7 @@ export async function joinProgramAction(formData: FormData) {
 
   const normalizedPhone = normalizePhone(parsed.data.phone);
   if (!normalizedPhone) {
-    fail(token, "Enter a valid UAE mobile number, for example 0501234567 or +971501234567.");
+    fail(token, "Enter a valid UAE mobile number such as 0501234567 or +971501234567.");
   }
 
   const program = await prisma.loyaltyProgram.findUnique({

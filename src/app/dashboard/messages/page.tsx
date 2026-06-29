@@ -129,7 +129,7 @@ export default async function MessageOutboxPage({
           <table className="w-full min-w-[980px] border-separate border-spacing-0 text-left text-sm">
             <thead>
               <tr className="text-[#6B7280]">
-                {["Customer", "Event Type", "Channel", "Status", "Message Preview", "Created Date", "Actions"].map((heading) => (
+                {["Customer", "Event Type", "Channel", "Status", "Message", "Created Date", "Actions"].map((heading) => (
                   <th key={heading} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">{heading}</th>
                 ))}
               </tr>

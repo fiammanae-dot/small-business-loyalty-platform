@@ -77,7 +77,7 @@ const eventTypeOptions = [
   "Cooldown Actions",
   "Authentication Events",
   "Platform Settings Events",
-  "Demo Mode Events",
+  "Safety Mode Events",
   "Security Events",
 ];
 const severityOptions: AuditSeverity[] = ["INFO", "LOW", "MEDIUM", "HIGH", "CRITICAL"];
@@ -326,7 +326,7 @@ export default async function PlatformAuditCenterPage({
           <SecurityMetric icon={XCircle} label="Blocked Actions" value={securityCounts.blockedActions} />
           <SecurityMetric icon={AlertTriangle} label="Cooldown Violations" value={securityCounts.cooldownViolations} />
           <SecurityMetric icon={CheckCircle2} label="Cooldown Overrides" value={securityCounts.cooldownOverrides} />
-          <SecurityMetric icon={ShieldAlert} label="Demo Mode Violations" value={securityCounts.demoModeViolations} />
+          <SecurityMetric icon={ShieldAlert} label="Safety Mode Violations" value={securityCounts.demoModeViolations} />
           <SecurityMetric icon={ShieldAlert} label="Permission Violations" value={securityCounts.permissionViolations} />
         </div>
       </section>
@@ -389,7 +389,7 @@ function decorateAuditEvent<T extends AuditEventWithRelations>(event: T): T & { 
     eventType: classifyEventType(event.action, event.entityType),
     severity: inferSeverity(event.action, event.metadata),
     status: inferStatus(event.action, event.metadata),
-    ipAddress: getMetadataString(event.metadata, "ipAddress") ?? getMetadataString(event.metadata, "ip") ?? "Future-ready",
+    ipAddress: getMetadataString(event.metadata, "ipAddress") ?? getMetadataString(event.metadata, "ip") ?? "Not recorded",
   };
 }
 
@@ -408,7 +408,7 @@ function classifyEventType(action: string, entityType: string) {
   if (value.includes("REWARD")) return "Reward Actions";
   if (value.includes("COOLDOWN")) return "Cooldown Actions";
   if (value.includes("LOGIN") || value.includes("AUTH")) return "Authentication Events";
-  if (value.includes("DEMO_MODE")) return "Demo Mode Events";
+  if (value.includes("DEMO_MODE")) return "Safety Mode Events";
   if (value.includes("SETTING") || value.includes("PLATFORM")) return "Platform Settings Events";
   if (value.includes("SECURITY") || value.includes("BLOCKED") || value.includes("PERMISSION")) return "Security Events";
   return "Administrative Changes";

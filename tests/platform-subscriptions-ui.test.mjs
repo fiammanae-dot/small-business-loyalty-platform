@@ -25,7 +25,7 @@ test("platform subscriptions page uses compact toolbar, dropdown actions, badges
     "Audit History",
     "Start Trial",
     "Extend",
-    "Test/Demo Data",
+    "Review flagged",
     "SubscriptionCard",
     "CompactBadge",
   ]) {

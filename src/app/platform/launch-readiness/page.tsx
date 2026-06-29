@@ -48,7 +48,7 @@ export default async function LaunchReadinessPage() {
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Launch readiness">
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
-        <h2 className="text-lg font-semibold text-[#111827]">Beta readiness checklist</h2>
+        <h2 className="text-lg font-semibold text-[#111827]">Pilot readiness checklist</h2>
         <div className="mt-5 grid gap-3">
           {rows.map(([label, pass, detail]) => (
             <div key={label} className="flex flex-col gap-3 rounded-md border border-[#E5E7EB] p-4 sm:flex-row sm:items-center sm:justify-between">

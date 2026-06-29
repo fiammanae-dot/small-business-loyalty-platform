@@ -12,7 +12,7 @@ export const demoModeRestrictions = [
   { label: "Push notifications disabled", enabled: true },
   { label: "Payment processing disabled", enabled: true },
   { label: "External integrations disabled", enabled: true },
-  { label: "Demo banner displayed", enabled: true },
+  { label: "Safety mode banner displayed", enabled: true },
 ] as const;
 
 export async function isDemoModeEnabled() {

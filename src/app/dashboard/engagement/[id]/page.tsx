@@ -64,7 +64,7 @@ export default async function EngagementEventDetailPage({
       </section>
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
-        <h2 className="text-lg font-semibold text-[#111827]">Manual share preview</h2>
+        <h2 className="text-lg font-semibold text-[#111827]">Manual share message</h2>
         <p className="mt-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-800">
           Messages are prepared only and are not sent automatically.
         </p>

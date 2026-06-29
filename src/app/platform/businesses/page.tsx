@@ -207,7 +207,7 @@ export default async function BusinessesPage({
           <MetricCard label="Total businesses" value={businessSummary.total} href="/platform/businesses" />
           <MetricCard label="Active" value={businessSummary.active} href="/platform/businesses?status=ACTIVE" tone="success" />
           <MetricCard label="Inactive" value={businessSummary.inactive} href="/platform/businesses?status=INACTIVE" tone={businessSummary.inactive > 0 ? "warning" : "neutral"} />
-          <MetricCard label="Demo/Test flagged" value={businessSummary.flagged} href="/platform/businesses?suspect=1" tone={businessSummary.flagged > 0 ? "warning" : "neutral"} />
+          <MetricCard label="Review flagged" value={businessSummary.flagged} href="/platform/businesses?suspect=1" tone={businessSummary.flagged > 0 ? "warning" : "neutral"} />
         </div>
 
         <MobileFilterDrawer activeCount={activeFilterCount}>
@@ -289,7 +289,7 @@ export default async function BusinessesPage({
               {starterPlan ? (
                 <QuickChip href={buildQuickFilterHref({ plan: starterPlan.id.toString() })} label="Starter Plan" active={selectedPlanId === starterPlan.id} />
               ) : null}
-              <QuickChip href={buildQuickFilterHref({ suspect: "1" })} label="Demo/Test Data" active={suspectOnly} />
+              <QuickChip href={buildQuickFilterHref({ suspect: "1" })} label="Review flagged" active={suspectOnly} />
             </div>
 
             <div className="flex gap-2">
@@ -364,7 +364,7 @@ export default async function BusinessesPage({
           <details className="mt-4 rounded-md border border-[#E5E7EB] bg-white">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-[#111827]">
               <span>Advanced filters</span>
-              <span className="text-xs font-medium text-[#6B7280]">Type, dates, branches, sorting, demo/test</span>
+              <span className="text-xs font-medium text-[#6B7280]">Type, dates, branches, sorting, review flags</span>
             </summary>
             <div className="border-t border-[#E5E7EB] p-4">
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -397,7 +397,7 @@ export default async function BusinessesPage({
 
                 <label className="flex h-full min-h-10 items-end gap-2 rounded-md border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm font-semibold text-[#111827]">
                   <input type="checkbox" name="suspect" value="1" defaultChecked={suspectOnly} className="h-4 w-4 rounded border-[#D1D5DB]" />
-                  Demo/Test filter
+                  Review flag filter
                 </label>
               </div>
             </div>
@@ -413,14 +413,14 @@ export default async function BusinessesPage({
             {starterPlan ? (
               <QuickChip href={buildQuickFilterHref({ plan: starterPlan.id.toString() })} label="Starter Plan" active={selectedPlanId === starterPlan.id} />
             ) : null}
-            <QuickChip href={buildQuickFilterHref({ suspect: "1" })} label="Demo/Test Data" active={suspectOnly} />
+            <QuickChip href={buildQuickFilterHref({ suspect: "1" })} label="Review flagged" active={suspectOnly} />
           </div>
         </form>
         </MobileFilterDrawer>
 
         <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm font-semibold text-[#111827]">Showing {businesses.length} businesses</p>
-          <p className="text-xs text-[#6B7280]">Test/demo badges are visual only. No records are hidden or changed.</p>
+          <p className="text-xs text-[#6B7280]">Review flags are visual only. No records are hidden or changed.</p>
         </div>
 
         <div className="mt-4 hidden overflow-x-auto lg:block">
@@ -694,7 +694,7 @@ function Detail({ label, value }: { label: string; value: string }) {
 function SuspiciousBadge() {
   return (
     <span className="inline-flex w-fit items-center rounded-full border border-orange-200 bg-orange-50 px-2 py-1 text-xs font-semibold text-[#C2410C]">
-      Test/Demo Data
+      Review flagged
     </span>
   );
 }

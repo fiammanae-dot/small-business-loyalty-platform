@@ -12,7 +12,7 @@ export async function ReferralPhoneLookupPreview({ businessId, phone }: { busine
   if (lookup.status === "INVALID_PHONE") {
     return (
       <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-        Enter a valid referred-by UAE mobile number to preview the referrer.
+        Enter a valid referred-by UAE mobile number to confirm the referrer.
       </p>
     );
   }

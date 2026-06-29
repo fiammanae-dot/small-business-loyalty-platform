@@ -95,7 +95,7 @@ function HeroSection() {
               </MotionItem>
               <MotionItem>
                 <Link href="/request-demo" className="inline-flex h-16 w-full items-center justify-center gap-4 rounded-[12px] border border-[#E5E7EB] bg-white px-7 text-[17px] font-bold text-[#111827] shadow-sm transition hover:border-[#F97316] hover:text-[#EA580C] focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:ring-offset-2 sm:w-auto">
-                  Book a demo <CalendarDays className="h-5 w-5" aria-hidden="true" />
+                  Book a walkthrough <CalendarDays className="h-5 w-5" aria-hidden="true" />
                 </Link>
               </MotionItem>
             </MotionStagger>
@@ -124,7 +124,7 @@ function HeroSection() {
 
 function ProductPreview() {
   return (
-    <div className="relative mx-auto min-h-[640px] w-full max-w-[820px] lg:min-h-[760px]" aria-label="LoyaltyBase product preview">
+    <div className="relative mx-auto min-h-[640px] w-full max-w-[820px] lg:min-h-[760px]" aria-label="LoyaltyBase product interface">
       <div className="absolute right-6 top-24 hidden h-56 w-72 opacity-40 lg:block" aria-hidden="true">
         <div className="grid grid-cols-9 gap-3">
           {Array.from({ length: 72 }).map((_, index) => (

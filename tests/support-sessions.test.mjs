@@ -169,7 +169,7 @@ test("operations center support module exposes session management and reports", 
   assert.match(report, /Available on desktop/);
   assert.match(report, /Support Notes/);
   assert.match(report, /Timeline/);
-  assert.match(report, /Export Coming Soon/);
+  assert.match(report, /Export unavailable/);
   assert.match(report, /activities/);
 });
 

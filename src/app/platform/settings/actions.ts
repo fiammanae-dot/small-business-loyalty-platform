@@ -58,5 +58,5 @@ export async function toggleDemoModeAction(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/branch");
   revalidatePath("/staff");
-  redirect("/platform/settings?success=Demo mode updated.");
+  redirect("/platform/settings?success=Safety mode updated.");
 }

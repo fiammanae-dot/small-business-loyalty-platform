@@ -104,7 +104,7 @@ export async function markMessageSentManuallyAction(formData: FormData) {
     metadata: { channel: message.channel, messageUuid },
   });
   if (blocked) {
-    fail(path, "Demo Mode is active. External communications and selected production actions are restricted.");
+    fail(path, "Safety Mode is active. External communications and selected production actions are restricted.");
   }
 
   await prisma.messageDeliveryQueue.update({

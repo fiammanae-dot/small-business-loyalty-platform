@@ -57,7 +57,7 @@ export default async function ProgramJoinPosterPage({ params }: { params: Promis
         <div className="grid gap-8 px-8 py-10 text-center sm:px-12">
           {unavailable ? (
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
-              This poster is for preview only because the program or business is not currently active.
+              This poster is unavailable because the program or business is not currently active.
             </div>
           ) : null}
 

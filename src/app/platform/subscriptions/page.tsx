@@ -192,7 +192,7 @@ function SubscriptionRow({ subscription }: { subscription: SubscriptionWithListD
             </Link>
             <div className="flex flex-wrap gap-1">
               <CompactBadge label={subscription.business.status === "ACTIVE" ? "Business active" : "Business inactive"} tone={subscription.business.status === "ACTIVE" ? "green" : "gray"} />
-              {isSuspiciousBusinessName(subscription.business.name) ? <CompactBadge label="Test/Demo Data" tone="orange" /> : null}
+              {isSuspiciousBusinessName(subscription.business.name) ? <CompactBadge label="Review flagged" tone="orange" /> : null}
             </div>
           </div>
         </td>
@@ -246,7 +246,7 @@ function SubscriptionCard({ subscription }: { subscription: SubscriptionWithList
 
       <div className="mt-3 flex flex-wrap gap-1">
         <CompactBadge label={subscription.business.status === "ACTIVE" ? "Business active" : "Business inactive"} tone={subscription.business.status === "ACTIVE" ? "green" : "gray"} />
-        {isSuspiciousBusinessName(subscription.business.name) ? <CompactBadge label="Test/Demo Data" tone="orange" /> : null}
+        {isSuspiciousBusinessName(subscription.business.name) ? <CompactBadge label="Review flagged" tone="orange" /> : null}
       </div>
 
       <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
