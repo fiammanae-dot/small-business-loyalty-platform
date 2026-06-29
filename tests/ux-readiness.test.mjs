@@ -141,3 +141,21 @@ test("phase 7f.1 fixes add scanner banners, mobile cards, and wizard labels", ()
   assert.match(read("src/app/branch/page.tsx"), /Branch Performance/);
   assert.match(read("src/app/staff/page.tsx"), /Today.*Activity/);
 });
+
+test("new business creation defaults branding to black and white without changing edit fallback", () => {
+  const businessForm = read("src/components/BusinessForm.tsx");
+  const businessActions = read("src/app/platform/businesses/actions.ts");
+
+  assert.match(businessForm, /createBrandingDefaults[\s\S]*primaryColor: "#000000"/);
+  assert.match(businessForm, /createBrandingDefaults[\s\S]*secondaryColor: "#FFFFFF"/);
+  assert.match(businessForm, /createBrandingDefaults[\s\S]*buttonColor: "#000000"/);
+  assert.match(businessForm, /editBrandingDefaults[\s\S]*primaryColor: "#F97316"/);
+  assert.match(businessForm, /editBrandingDefaults[\s\S]*secondaryColor: "#FDBA74"/);
+  assert.match(businessForm, /editBrandingDefaults[\s\S]*buttonColor: "#F97316"/);
+  assert.match(businessActions, /primaryColor: colorSchema\.default\("#000000"\)/);
+  assert.match(businessActions, /secondaryColor: colorSchema\.default\("#FFFFFF"\)/);
+  assert.match(businessActions, /buttonColor: colorSchema\.default\("#000000"\)/);
+  assert.match(businessActions, /primaryColor: getString\(formData, "primaryColor"\) \|\| "#000000"/);
+  assert.match(businessActions, /secondaryColor: getString\(formData, "secondaryColor"\) \|\| "#FFFFFF"/);
+  assert.match(businessActions, /buttonColor: getString\(formData, "buttonColor"\) \|\| "#000000"/);
+});

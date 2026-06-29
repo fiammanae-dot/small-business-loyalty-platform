@@ -25,13 +25,30 @@ type BusinessFormProps = {
 export function BusinessForm({ action, plans, error, mode, business }: BusinessFormProps) {
   const branding = business?.branding;
   const communicationSettings = business?.communicationSettings;
+  const createBrandingDefaults = {
+    logoUrl: "",
+    primaryColor: "#000000",
+    secondaryColor: "#FFFFFF",
+    backgroundColor: "#FFFFFF",
+    textColor: "#111827",
+    buttonColor: "#000000",
+  };
+  const editBrandingDefaults = {
+    logoUrl: "",
+    primaryColor: "#F97316",
+    secondaryColor: "#FDBA74",
+    backgroundColor: "#FFFFFF",
+    textColor: "#111827",
+    buttonColor: "#F97316",
+  };
+  const defaultBrandingValues = mode === "create" ? createBrandingDefaults : editBrandingDefaults;
   const brandingValues = {
-    logoUrl: branding?.logoUrl ?? "",
-    primaryColor: branding?.primaryColor ?? "#F97316",
-    secondaryColor: branding?.secondaryColor ?? "#FDBA74",
-    backgroundColor: branding?.backgroundColor ?? "#FFFFFF",
-    textColor: branding?.textColor ?? "#111827",
-    buttonColor: branding?.buttonColor ?? "#F97316",
+    logoUrl: branding?.logoUrl ?? defaultBrandingValues.logoUrl,
+    primaryColor: branding?.primaryColor ?? defaultBrandingValues.primaryColor,
+    secondaryColor: branding?.secondaryColor ?? defaultBrandingValues.secondaryColor,
+    backgroundColor: branding?.backgroundColor ?? defaultBrandingValues.backgroundColor,
+    textColor: branding?.textColor ?? defaultBrandingValues.textColor,
+    buttonColor: branding?.buttonColor ?? defaultBrandingValues.buttonColor,
   };
 
   return (
