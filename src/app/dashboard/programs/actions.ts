@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import type { BusinessType } from "@prisma/client";
 import { requireBusinessOwner } from "@/lib/business-owner";
 import { logAuditEvent } from "@/lib/audit";
 import { validateCsrfForm } from "@/lib/csrf";
@@ -30,10 +29,10 @@ function validateActionSecurity(formData: FormData, scope: string, path: string)
   }
 }
 
-function programData(formData: FormData) {
+function programData(formData: FormData, businessType: string) {
   const parsed = programSchema.safeParse({
     name: getString(formData, "name"),
-    businessType: getString(formData, "businessType"),
+    businessType,
     productOrServiceName: getString(formData, "productOrServiceName"),
     description: getString(formData, "description"),
     requiredStamps: getString(formData, "requiredStamps"),
@@ -51,12 +50,22 @@ function programData(formData: FormData) {
   return parsed;
 }
 
+async function getBusinessTypeForProgramAction(businessId: number, path: string) {
+  const business = await prisma.business.findUnique({
+    where: { id: businessId },
+    select: { businessType: true },
+  });
+  if (!business) fail(path, "Business not found.");
+  return business.businessType;
+}
+
 export async function createProgramAction(formData: FormData) {
   validateActionSecurity(formData, "dashboard:programs", "/dashboard/programs/new");
   const user = await requireBusinessOwner();
   await requireUsableSubscription(user.businessId).catch((error) => fail("/dashboard/programs/new", error.message));
   const path = "/dashboard/programs/new";
-  const parsed = programData(formData);
+  const businessType = await getBusinessTypeForProgramAction(user.businessId, path);
+  const parsed = programData(formData, businessType);
   if (!parsed.success) fail(path, parsed.error.issues[0]?.message ?? "Validation failed.");
 
   const subscription = await prisma.businessSubscription.findFirst({
@@ -74,7 +83,7 @@ export async function createProgramAction(formData: FormData) {
     data: {
       businessId: user.businessId,
       name: parsed.data.name,
-      businessType: parsed.data.businessType as BusinessType,
+      businessType: parsed.data.businessType,
       productOrServiceName: parsed.data.productOrServiceName,
       description: parsed.data.description || null,
       requiredStamps: parsed.data.requiredStamps,
@@ -110,7 +119,8 @@ export async function updateProgramAction(formData: FormData) {
   const uuid = getString(formData, "programUuid");
   const path = `/dashboard/programs/${uuid}/edit`;
   if (!uuid) fail("/dashboard/programs", "Program not found.");
-  const parsed = programData(formData);
+  const businessType = await getBusinessTypeForProgramAction(user.businessId, path);
+  const parsed = programData(formData, businessType);
   if (!parsed.success) fail(path, parsed.error.issues[0]?.message ?? "Validation failed.");
 
   const program = await prisma.loyaltyProgram.findFirst({
@@ -123,7 +133,7 @@ export async function updateProgramAction(formData: FormData) {
     where: { id: program.id },
     data: {
       name: parsed.data.name,
-      businessType: parsed.data.businessType as BusinessType,
+      businessType: parsed.data.businessType,
       productOrServiceName: parsed.data.productOrServiceName,
       description: parsed.data.description || null,
       requiredStamps: parsed.data.requiredStamps,

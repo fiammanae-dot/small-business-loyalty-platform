@@ -1,6 +1,5 @@
 import type { BusinessType, CardTheme, StartingStampPolicy } from "@prisma/client";
 import { CsrfInput } from "@/components/CsrfInput";
-import { businessTypeOptions } from "@/lib/platform-options";
 import { CardThemePreviewSelector } from "@/components/CardThemePreviewSelector";
 import { Button } from "@/components/ui/Button";
 import { SectionCard } from "@/components/ui/SectionCard";
@@ -65,12 +64,6 @@ export function ProgramForm({
       <SectionCard title="Program Details" description="Name the program and describe what customers earn progress toward.">
         <div className="grid gap-4 md:grid-cols-2">
           <Input name="name" label="Program Name" defaultValue={name} required />
-          <label className="space-y-2">
-            <span className="text-sm font-medium text-[#111827]">Business Type</span>
-            <select name="businessType" defaultValue={defaults.businessType} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm">
-              {businessTypeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-            </select>
-          </label>
           <Input name="productOrServiceName" label="Product/Service Name" defaultValue={productOrServiceName} required />
           <label className="space-y-2 md:col-span-2">
             <span className="text-sm font-medium text-[#111827]">Description</span>

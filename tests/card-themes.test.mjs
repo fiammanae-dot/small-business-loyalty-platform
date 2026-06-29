@@ -71,6 +71,27 @@ test("program create and edit flows expose independent wallet visual style previ
   assert.match(newPage, /resolveBranding\(business.branding\)/);
 });
 
+test("program forms use the business-level business type without a per-program selector", () => {
+  const form = read("src/components/ProgramForm.tsx");
+  const actions = read("src/app/dashboard/programs/actions.ts");
+  const editPage = read("src/app/dashboard/programs/[id]/edit/page.tsx");
+  const newPage = read("src/app/dashboard/programs/new/page.tsx");
+
+  assert.doesNotMatch(form, /Business Type/);
+  assert.doesNotMatch(form, /businessTypeOptions/);
+  assert.doesNotMatch(form, /name="businessType"/);
+  assert.match(form, /programTemplates\[defaults\.businessType\]/);
+
+  assert.match(actions, /getBusinessTypeForProgramAction/);
+  assert.match(actions, /select: \{ businessType: true \}/);
+  assert.match(actions, /const parsed = programData\(formData, businessType\)/);
+  assert.doesNotMatch(actions, /getString\(formData, "businessType"\)/);
+
+  assert.match(newPage, /defaults=\{\{ businessType: business\.businessType/);
+  assert.match(editPage, /businessType: business\.businessType/);
+  assert.doesNotMatch(editPage, /businessType: program\.businessType/);
+});
+
 test("public customer card renders selected program theme through shared wallet components", () => {
   const publicCard = read("src/app/card/[token]/page.tsx");
   const walletCard = read("src/components/public-card/LoyaltyWalletCard.tsx");

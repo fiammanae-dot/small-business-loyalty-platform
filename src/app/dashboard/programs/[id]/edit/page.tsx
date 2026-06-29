@@ -37,7 +37,7 @@ export default async function EditProgramPage({
           defaults={{
             uuid: program.uuid,
             name: program.name,
-            businessType: program.businessType,
+            businessType: business.businessType,
             productOrServiceName: program.productOrServiceName,
             description: program.description,
             requiredStamps: program.requiredStamps,
