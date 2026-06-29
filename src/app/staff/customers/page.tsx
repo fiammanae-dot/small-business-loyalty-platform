@@ -18,10 +18,10 @@ export default async function StaffCustomerSearchPage({
   const query = params.q?.trim();
   const normalizedQueryPhone = query ? normalizePhone(query) : null;
 
-  if (!user.businessId || !user.branchId) {
+  if (!user.businessId) {
     return (
       <DashboardShell user={user} eyebrow="Staff" title="Find customer" hideWelcomeMessage>
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">Business and branch assignment are required.</p>
+        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">Business assignment is required.</p>
       </DashboardShell>
     );
   }
@@ -30,14 +30,16 @@ export default async function StaffCustomerSearchPage({
     ? await prisma.businessCustomerMembership.findMany({
         where: {
           businessId: user.businessId,
-          createdBranchId: user.branchId,
           OR: [
             { globalCustomer: { firstName: { contains: query, mode: "insensitive" } } },
             { globalCustomer: { lastName: { contains: query, mode: "insensitive" } } },
+            { globalCustomer: { email: { contains: query, mode: "insensitive" } } },
             { globalCustomer: { phone: { contains: query, mode: "insensitive" } } },
             { globalCustomer: { normalizedPhone: { contains: query, mode: "insensitive" } } },
             ...(normalizedQueryPhone ? [{ globalCustomer: { normalizedPhone: normalizedQueryPhone } }] : []),
             { cardToken: { contains: query, mode: "insensitive" } },
+            { referralCode: { contains: query, mode: "insensitive" } },
+            { programMemberships: { some: { scanToken: { contains: query, mode: "insensitive" } } } },
           ],
         },
         include: {
@@ -58,7 +60,7 @@ export default async function StaffCustomerSearchPage({
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <div>
           <p className="text-sm font-semibold business-primary">Customer lookup</p>
-          <p className="mt-2 text-sm text-[#6B7280]">Search customers in your assigned branch by name, phone number, or card number.</p>
+          <p className="mt-2 text-sm text-[#6B7280]">Search customers across your business by name, phone, email, card number, referral code, or QR code.</p>
         </div>
         <form className="mt-5 flex flex-col gap-3 sm:flex-row">
           <label className="sr-only" htmlFor="staff-customer-search">Search customers</label>
@@ -68,7 +70,7 @@ export default async function StaffCustomerSearchPage({
               id="staff-customer-search"
               name="q"
               defaultValue={params.q ?? ""}
-              placeholder="Name, phone, or card number"
+              placeholder="Name, phone, email, card, referral, or QR code"
               className="h-11 w-full rounded-md border border-[#E5E7EB] pl-10 pr-3 text-sm outline-none business-ring focus:ring-0"
             />
           </div>
@@ -128,7 +130,7 @@ export default async function StaffCustomerSearchPage({
               </Link>
             );
           })}
-          {query && customers.length === 0 ? <p className="rounded-md border border-dashed border-[#E5E7EB] p-5 text-center text-sm text-[#6B7280]">No customers found in your assigned branch.</p> : null}
+          {query && customers.length === 0 ? <p className="rounded-md border border-dashed border-[#E5E7EB] p-5 text-center text-sm text-[#6B7280]">No customers found in your business.</p> : null}
         </div>
       </section>
     </DashboardShell>

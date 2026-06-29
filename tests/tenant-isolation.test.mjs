@@ -61,8 +61,10 @@ test("public card and operational branch isolation hardening are enforced", () =
   assert.match(scanPage, /This customer is outside your assigned branch scope/);
   assert.match(scanActions, /isOutOfAssignedBranch\(user, businessMembership\)/);
   assert.match(scanActions, /isOutOfAssignedBranch\(user, lockedMembership\.businessCustomerMembership\)/);
-  assert.match(staffCustomers, /createdBranchId: user\.branchId/);
-  assert.match(staffProfile, /createdBranchId: user\.branchId/);
+  assert.match(staffCustomers, /businessId: user\.businessId/);
+  assert.doesNotMatch(staffCustomers, /createdBranchId: user\.branchId/);
+  assert.match(staffProfile, /businessId: user\.businessId/);
+  assert.doesNotMatch(staffProfile, /createdBranchId: user\.branchId/);
 });
 
 test("Business Owner scanner remains business-wide", () => {
