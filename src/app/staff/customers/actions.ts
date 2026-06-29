@@ -15,6 +15,7 @@ const customerCreateFormFields = [
   "birthday",
   "marketingConsent",
   "selectedProgramUuid",
+  "referredBySearch",
   "referredByPhoneNumber",
   "referralCode",
   "notes",

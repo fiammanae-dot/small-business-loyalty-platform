@@ -130,6 +130,7 @@ const customerCreateFormFields = [
   "createdBranchId",
   "marketingConsent",
   "selectedProgramUuid",
+  "referredBySearch",
   "referredByPhoneNumber",
   "referralCode",
   "notes",

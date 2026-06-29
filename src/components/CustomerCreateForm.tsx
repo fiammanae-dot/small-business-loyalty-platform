@@ -91,12 +91,16 @@ export function CustomerCreateForm({
       </label>
       <ProgramEnrollmentField activePrograms={activePrograms} selectedProgramUuid={value("selectedProgramUuid")} error={fieldErrors.selectedProgramUuid} />
       <div className="grid gap-3 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
+        <div>
+          <p className="text-sm font-semibold text-[#111827]">Referred by</p>
+          <p className="mt-1 text-sm text-[#6B7280]">Search by phone, customer name, referral code, or referral link.</p>
+        </div>
         <Input
-          name="referredByPhoneNumber"
-          label="Referred by phone number"
-          defaultValue={value("referredByPhoneNumber")}
-          placeholder="0501234567"
-          error={fieldErrors.referredByPhoneNumber}
+          name="referredBySearch"
+          label="Referrer lookup"
+          defaultValue={value("referredBySearch", value("referredByPhoneNumber", value("referralCode")))}
+          placeholder="Phone, name, referral code, or referral link"
+          error={fieldErrors.referredBySearch ?? fieldErrors.referredByPhoneNumber ?? fieldErrors.referralCode}
           focusClass={inputFocusClass}
         />
         {referralPreview}
@@ -107,13 +111,6 @@ export function CustomerCreateForm({
           <p className="text-sm text-[#6B7280]">Optional. Rewards qualify only after the new customer receives their first valid stamp.</p>
         </div>
       </div>
-      <Input
-        name="referralCode"
-        label="Referral code or link"
-        defaultValue={value("referralCode")}
-        error={fieldErrors.referralCode}
-        focusClass={inputFocusClass}
-      />
       <label className="space-y-2">
         <span className="text-sm font-medium text-[#111827]">Notes</span>
         <textarea

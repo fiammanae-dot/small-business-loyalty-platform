@@ -226,6 +226,7 @@ export default async function CustomerProfilePage({
   const primaryProgram = programCards[0]?.programMembership ?? null;
   const primaryProgress = primaryProgram ? progressValue(primaryProgram.earnedStamps, primaryProgram.bonusStamps) : 0;
   const primaryRequired = primaryProgram?.loyaltyProgram.requiredStamps ?? 0;
+  const primaryScanHref = primaryProgram ? `/scan/${primaryProgram.scanToken}` : "/dashboard/scanner";
   const primaryRewardReady = Boolean(
     primaryProgram &&
       primaryProgram.status !== "COMPLETED" &&
@@ -254,11 +255,11 @@ return (
           </div>
           <PageActions className="xl:justify-end">
             {primaryRewardReady ? (
-              <ButtonLink href="/dashboard/scanner" variant="success" size="sm" leftIcon={<Gift className="h-4 w-4" aria-hidden />}>
+              <ButtonLink href={primaryScanHref} variant="success" size="sm" leftIcon={<Gift className="h-4 w-4" aria-hidden />}>
                 Redeem Reward
               </ButtonLink>
             ) : (
-              <ButtonLink href="/dashboard/scanner" variant="business" size="sm" leftIcon={<TicketCheck className="h-4 w-4" aria-hidden />}>
+              <ButtonLink href={primaryScanHref} variant="business" size="sm" leftIcon={<TicketCheck className="h-4 w-4" aria-hidden />}>
                 Issue Stamp
               </ButtonLink>
             )}
@@ -602,7 +603,7 @@ function RewardsPanel({
             <article key={programMembership.id} className="rounded-md border border-emerald-200 bg-emerald-50 p-4">
               <p className="font-semibold text-emerald-900">{programMembership.loyaltyProgram.rewardName}</p>
               <p className="mt-1 text-sm text-emerald-800">{programMembership.loyaltyProgram.name}</p>
-              <Link href="/dashboard/scanner" className="mt-3 inline-flex rounded-md business-button px-3 py-2 text-sm font-semibold text-white">
+              <Link href={`/scan/${programMembership.scanToken}`} className="mt-3 inline-flex rounded-md business-button px-3 py-2 text-sm font-semibold text-white">
                 Redeem Reward
               </Link>
             </article>

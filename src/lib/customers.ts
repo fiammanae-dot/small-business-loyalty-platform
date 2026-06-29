@@ -290,25 +290,30 @@ export async function enrollCustomerForBusiness({
         },
       });
 
-      const referralCodeFromInput = extractReferralCode(getString(formData, "referralCode"));
+      const explicitReferralCodeInput = getString(formData, "referralCode");
       const referredByPhoneNumber = getString(formData, "referredByPhoneNumber");
+      const referredBySearch = getString(formData, "referredBySearch");
+      const referralLookupInput = explicitReferralCodeInput || referredByPhoneNumber || referredBySearch;
+      const referralCodeFromInput = extractReferralCode(referralLookupInput);
       let referralCodeForEnrollment = referralCodeFromInput;
 
-      if (!referralCodeForEnrollment && referredByPhoneNumber.trim()) {
+      if (!referralCodeForEnrollment && referralLookupInput.trim()) {
         const phoneLookup = await findActiveReferralReferrerByPhone({
           tx,
           businessId: user.businessId,
-          phone: referredByPhoneNumber,
+          phone: referralLookupInput,
         });
 
         if (phoneLookup.status === "INVALID_PHONE") {
-          failForForm("Enter a valid referred-by UAE mobile number such as 0501234567 or +971501234567.", {
-            referredByPhoneNumber: "Enter a valid referred-by UAE mobile number such as 0501234567 or +971501234567.",
+          const fieldName = referredBySearch.trim() ? "referredBySearch" : "referredByPhoneNumber";
+          failForForm("Check the referrer and select a matching customer before submitting.", {
+            [fieldName]: "Check the referrer and select a matching customer before submitting.",
           });
         }
         if (phoneLookup.status === "NOT_FOUND" || !phoneLookup.referrer?.referralCode) {
-          failForForm("No active customer was found for the referred-by phone number.", {
-            referredByPhoneNumber: "No active customer was found for the referred-by phone number.",
+          const fieldName = referredBySearch.trim() ? "referredBySearch" : "referredByPhoneNumber";
+          failForForm("No matching referrer found.", {
+            [fieldName]: "No matching referrer found.",
           });
         }
 

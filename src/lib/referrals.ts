@@ -172,6 +172,97 @@ export async function previewActiveReferralReferrerByPhone({ businessId, phone }
   return findActiveReferralReferrerByPhone({ tx: prisma, businessId, phone });
 }
 
+export type ReferralReferrerLookupMatch = {
+  id: number;
+  globalCustomerId: number;
+  referralCode: string;
+  currentTier: string;
+  globalCustomer: {
+    firstName: string;
+    lastName: string | null;
+    normalizedPhone: string;
+    email: string | null;
+  };
+};
+
+export async function lookupActiveReferralReferrers({
+  businessId,
+  query,
+  limit = 5,
+}: {
+  businessId: number;
+  query?: string | null;
+  limit?: number;
+}) {
+  const trimmedQuery = query?.trim() ?? "";
+  if (!trimmedQuery) {
+    return { status: "EMPTY" as const, matches: [] as ReferralReferrerLookupMatch[] };
+  }
+
+  const referralCode = extractReferralCode(trimmedQuery);
+  const normalizedPhone = normalizePhone(trimmedQuery);
+  const take = Math.max(1, limit) + 1;
+  const textFilters: Prisma.BusinessCustomerMembershipWhereInput[] = [
+    { referralCode: { contains: trimmedQuery, mode: "insensitive" } },
+    { globalCustomer: { firstName: { contains: trimmedQuery, mode: "insensitive" } } },
+    { globalCustomer: { lastName: { contains: trimmedQuery, mode: "insensitive" } } },
+    { globalCustomer: { email: { contains: trimmedQuery, mode: "insensitive" } } },
+    { globalCustomer: { normalizedPhone: { contains: trimmedQuery.replace(/\D/g, ""), mode: "insensitive" } } },
+  ];
+
+  if (referralCode) {
+    textFilters.unshift({ referralCode });
+  }
+
+  if (normalizedPhone) {
+    textFilters.unshift({ globalCustomer: { normalizedPhone } });
+  }
+
+  const matches = await prisma.businessCustomerMembership.findMany({
+    where: {
+      businessId,
+      status: "ACTIVE",
+      referralEnabled: true,
+      referralCode: { not: null },
+      OR: textFilters,
+    },
+    select: {
+      id: true,
+      globalCustomerId: true,
+      referralCode: true,
+      currentTier: true,
+      globalCustomer: {
+        select: {
+          firstName: true,
+          lastName: true,
+          normalizedPhone: true,
+          email: true,
+        },
+      },
+    },
+    orderBy: [{ joinedAt: "desc" }, { id: "desc" }],
+    take,
+  });
+
+  const safeMatches = matches
+    .filter((match): match is ReferralReferrerLookupMatch => Boolean(match.referralCode))
+    .slice(0, Math.max(1, limit))
+    .map((match) => ({
+      ...match,
+      referralCode: match.referralCode,
+      currentTier: match.currentTier,
+    }));
+
+  if (safeMatches.length === 0) {
+    return { status: "NOT_FOUND" as const, matches: safeMatches };
+  }
+
+  return {
+    status: matches.length > 1 ? ("MULTIPLE" as const) : ("FOUND" as const),
+    matches: safeMatches,
+  };
+}
+
 async function findActiveReferralReferrerForEnrollment({
   tx,
   businessId,

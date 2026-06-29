@@ -71,6 +71,10 @@ test("customer profile uses compact Customer 360 command center", () => {
     assert.equal(profile.includes(expected), true, `${expected} should appear in rebuilt Customer 360`);
   }
 
+  assert.match(profile, /const primaryScanHref = primaryProgram \? `\/scan\/\$\{primaryProgram\.scanToken\}` : "\/dashboard\/scanner"/);
+  assert.match(profile, /href=\{primaryScanHref\}[\s\S]*Issue Stamp/);
+  assert.match(profile, /href=\{`\/scan\/\$\{programMembership\.scanToken\}`\}[\s\S]*Redeem Reward/);
+
   for (const removed of [
     "CustomerSummaryCard",
     "DetailPageLayout",

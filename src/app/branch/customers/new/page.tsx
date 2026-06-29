@@ -1,7 +1,7 @@
 import { CustomerCreateForm } from "@/components/CustomerCreateForm";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
-import { ReferralPhoneLookupPreview } from "@/components/ReferralPhoneLookupPreview";
+import { ReferralReferrerLookupPreview } from "@/components/ReferralReferrerLookupPreview";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 import { createBranchCustomerAction } from "@/app/branch/customers/actions";
@@ -9,10 +9,12 @@ import { createBranchCustomerAction } from "@/app/branch/customers/actions";
 export default async function NewBranchCustomerPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; ref?: string; referredByPhoneNumber?: string }>;
+  searchParams: Promise<{ error?: string; ref?: string; referralCode?: string; referredByPhoneNumber?: string; referredBySearch?: string }>;
 }) {
   const user = await requireRole("BRANCH_MANAGER");
   const params = await searchParams;
+  const referredBySearch = params.referredBySearch ?? params.referredByPhoneNumber ?? params.ref ?? "";
+  const selectedReferralCode = params.referralCode ?? params.ref ?? "";
   const activePrograms = user.businessId
     ? await prisma.loyaltyProgram.findMany({
         where: { businessId: user.businessId, active: true },
@@ -31,10 +33,10 @@ export default async function NewBranchCustomerPage({
           lookupPath="/branch/customers/new"
           activePrograms={activePrograms}
           initialValues={{
-            referralCode: params.ref ?? "",
-            referredByPhoneNumber: params.referredByPhoneNumber ?? "",
+            referralCode: selectedReferralCode,
+            referredBySearch,
           }}
-          referralPreview={user.businessId ? <ReferralPhoneLookupPreview businessId={user.businessId} phone={params.referredByPhoneNumber} /> : null}
+          referralPreview={user.businessId ? <ReferralReferrerLookupPreview businessId={user.businessId} query={referredBySearch} selectedReferralCode={selectedReferralCode} /> : null}
           inputFocusClass="business-ring focus:ring-0"
           primaryButtonClass="business-button text-white"
         />

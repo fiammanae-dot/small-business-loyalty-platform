@@ -1,7 +1,7 @@
 import { CustomerCreateForm } from "@/components/CustomerCreateForm";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
-import { ReferralPhoneLookupPreview } from "@/components/ReferralPhoneLookupPreview";
+import { ReferralReferrerLookupPreview } from "@/components/ReferralReferrerLookupPreview";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { prisma } from "@/lib/prisma";
 import { createCustomerAction } from "@/app/dashboard/actions";
@@ -9,10 +9,12 @@ import { createCustomerAction } from "@/app/dashboard/actions";
 export default async function NewCustomerPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; ref?: string; referredByPhoneNumber?: string }>;
+  searchParams: Promise<{ error?: string; ref?: string; referralCode?: string; referredByPhoneNumber?: string; referredBySearch?: string }>;
 }) {
   const { user, business } = await getBusinessOwnerContext();
   const params = await searchParams;
+  const referredBySearch = params.referredBySearch ?? params.referredByPhoneNumber ?? params.ref ?? "";
+  const selectedReferralCode = params.referralCode ?? params.ref ?? "";
   const activePrograms = await prisma.loyaltyProgram.findMany({
     where: { businessId: user.businessId, active: true },
     select: { uuid: true, name: true, rewardName: true, requiredStamps: true },
@@ -39,10 +41,10 @@ export default async function NewCustomerPage({
             })),
           ]}
           initialValues={{
-            referralCode: params.ref ?? "",
-            referredByPhoneNumber: params.referredByPhoneNumber ?? "",
+            referralCode: selectedReferralCode,
+            referredBySearch,
           }}
-          referralPreview={<ReferralPhoneLookupPreview businessId={user.businessId} phone={params.referredByPhoneNumber} />}
+          referralPreview={<ReferralReferrerLookupPreview businessId={user.businessId} query={referredBySearch} selectedReferralCode={selectedReferralCode} />}
         />
       </section>
     </DashboardShell>

@@ -142,7 +142,7 @@ test("public referral landing resolves active business membership referral codes
 test("customer enrollment supports same-business referral lookup by phone", () => {
   const customers = read("src/lib/customers.ts");
   const referrals = read("src/lib/referrals.ts");
-  const preview = read("src/components/ReferralPhoneLookupPreview.tsx");
+  const preview = read("src/components/ReferralReferrerLookupPreview.tsx");
   const customerForm = read("src/components/CustomerCreateForm.tsx");
   const ownerNew = read("src/app/dashboard/customers/new/page.tsx");
   const branchNew = read("src/app/branch/customers/new/page.tsx");
@@ -150,20 +150,30 @@ test("customer enrollment supports same-business referral lookup by phone", () =
 
   assert.match(referrals, /findActiveReferralReferrerByPhone/);
   assert.match(referrals, /globalCustomer: \{ normalizedPhone \}/);
+  assert.match(referrals, /lookupActiveReferralReferrers/);
+  assert.match(referrals, /firstName: \{ contains: trimmedQuery/);
+  assert.match(referrals, /lastName: \{ contains: trimmedQuery/);
   assert.match(referrals, /status: "ACTIVE"/);
   assert.match(referrals, /referralEnabled: true/);
+  assert.match(referrals, /businessId,/);
   assert.match(customers, /referredByPhoneNumber/);
+  assert.match(customers, /referredBySearch/);
   assert.match(customers, /findActiveReferralReferrerByPhone/);
   assert.match(customers, /referralCodeForEnrollment = phoneLookup\.referrer\.referralCode/);
   assert.match(customers, /createPendingReferralForEnrollment/);
   assert.match(preview, /Referred by:/);
+  assert.match(preview, /No matching referrer found/);
+  assert.match(preview, /Choose the matching referrer/);
   assert.match(preview, /maskPhoneNumber/);
-  assert.match(customerForm, /Referred by phone number/);
+  assert.match(customerForm, /Referred by/);
+  assert.match(customerForm, /Phone, name, referral code, or referral link/);
+  assert.match(customerForm, /referredBySearch/);
   assert.match(customerForm, /Check referrer/);
-  assert.match(customerForm, /Referral code or link/);
+  assert.doesNotMatch(customerForm, /Referral code or link/);
 
   for (const page of [ownerNew, branchNew, staffNew]) {
     assert.match(page, /CustomerCreateForm/);
-    assert.match(page, /ReferralPhoneLookupPreview/);
+    assert.match(page, /ReferralReferrerLookupPreview/);
+    assert.match(page, /referredBySearch/);
   }
 });
