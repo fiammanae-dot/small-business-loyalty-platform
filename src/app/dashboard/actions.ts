@@ -91,6 +91,18 @@ const customerTierSettingsSchema = z
     }
   });
 
+const manualStampCorrectionSchema = z
+  .object({
+    membershipUuid: z.string().uuid("Customer not found."),
+    programMembershipUuid: z.string().uuid("Program membership not found."),
+    adjustment: z.coerce.number().int().min(-50, "Correction is too large.").max(50, "Correction is too large."),
+    reason: z.string().trim().min(5, "Correction reason is required.").max(500, "Correction reason is too long."),
+  })
+  .refine((data) => data.adjustment !== 0, {
+    message: "Correction must add or remove at least 1 stamp.",
+    path: ["adjustment"],
+  });
+
 function getString(formData: FormData, key: string) {
   const value = formData.get(key);
   return typeof value === "string" ? value : "";
@@ -805,4 +817,93 @@ export async function toggleProgramScanTokenAction(formData: FormData) {
 
   revalidatePath(`/dashboard/customers/${membershipUuid}`);
   redirect(`/dashboard/customers/${membershipUuid}?success=Scan token updated.`);
+}
+
+export async function manualStampCorrectionAction(formData: FormData) {
+  validateActionSecurity(formData, "dashboard:stamp-correction", "/dashboard/customers");
+  const user = await requireBusinessOwner();
+  const parsed = manualStampCorrectionSchema.safeParse({
+    membershipUuid: getString(formData, "membershipUuid"),
+    programMembershipUuid: getString(formData, "programMembershipUuid"),
+    adjustment: getString(formData, "adjustment"),
+    reason: getString(formData, "correctionReason"),
+  });
+
+  const fallbackMembershipUuid = getString(formData, "membershipUuid");
+  const redirectPath = fallbackMembershipUuid ? `/dashboard/customers/${fallbackMembershipUuid}` : "/dashboard/customers";
+  if (!parsed.success) fail(redirectPath, parsed.error.issues[0]?.message ?? "Correction validation failed.");
+
+  const data = parsed.data;
+  await requireUsableSubscription(user.businessId).catch((error) => fail(`/dashboard/customers/${data.membershipUuid}`, error.message));
+
+  const programMembership = await prisma.customerProgramMembership.findFirst({
+    where: {
+      uuid: data.programMembershipUuid,
+      businessCustomerMembership: {
+        uuid: data.membershipUuid,
+        businessId: user.businessId,
+      },
+    },
+    include: {
+      loyaltyProgram: true,
+      businessCustomerMembership: {
+        include: {
+          globalCustomer: true,
+          createdBranch: true,
+        },
+      },
+    },
+  });
+  if (!programMembership) fail(`/dashboard/customers/${data.membershipUuid}`, "Program membership not found.");
+
+  const previousEarnedStamps = programMembership.earnedStamps;
+  const nextEarnedStamps = Math.max(0, previousEarnedStamps + data.adjustment);
+  const appliedAdjustment = nextEarnedStamps - previousEarnedStamps;
+  if (appliedAdjustment === 0) fail(`/dashboard/customers/${data.membershipUuid}`, "Correction did not change customer progress.");
+
+  await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "customer_program_memberships" WHERE id = ${programMembership.id} FOR UPDATE`;
+    const lockedMembership = await tx.customerProgramMembership.findFirst({
+      where: {
+        id: programMembership.id,
+        businessCustomerMembership: { businessId: user.businessId },
+      },
+      include: {
+        loyaltyProgram: true,
+        businessCustomerMembership: { include: { globalCustomer: true } },
+      },
+    });
+    if (!lockedMembership) fail(`/dashboard/customers/${data.membershipUuid}`, "Program membership not found.");
+
+    const lockedNextEarnedStamps = Math.max(0, lockedMembership.earnedStamps + data.adjustment);
+    const lockedAppliedAdjustment = lockedNextEarnedStamps - lockedMembership.earnedStamps;
+    if (lockedAppliedAdjustment === 0) fail(`/dashboard/customers/${data.membershipUuid}`, "Correction did not change customer progress.");
+
+    await tx.customerProgramMembership.update({
+      where: { id: lockedMembership.id },
+      data: { earnedStamps: lockedNextEarnedStamps },
+    });
+
+    await logAuditEvent({
+      tx,
+      actorUserId: user.id,
+      businessId: user.businessId,
+      branchId: lockedMembership.businessCustomerMembership.createdBranchId,
+      action: "STAMP_MANUAL_CORRECTION",
+      entityType: "customer_program_membership",
+      entityId: lockedMembership.id,
+      metadata: {
+        requestedAdjustment: data.adjustment,
+        appliedAdjustment: lockedAppliedAdjustment,
+        previousEarnedStamps: lockedMembership.earnedStamps,
+        newEarnedStamps: lockedNextEarnedStamps,
+        reason: data.reason,
+        customerName: `${lockedMembership.businessCustomerMembership.globalCustomer.firstName} ${lockedMembership.businessCustomerMembership.globalCustomer.lastName ?? ""}`.trim(),
+        programName: lockedMembership.loyaltyProgram.name,
+      },
+    });
+  });
+
+  revalidatePath(`/dashboard/customers/${data.membershipUuid}`);
+  redirect(`/dashboard/customers/${data.membershipUuid}?success=Manual stamp correction recorded.`);
 }

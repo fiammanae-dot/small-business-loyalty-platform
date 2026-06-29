@@ -20,15 +20,68 @@ import { extractReferralCode, resolveReferralLandingReferrer } from "@/lib/refer
 import { isRewardReady } from "@/lib/rewards";
 import { roleHomePath } from "@/lib/roles";
 import { getCurrentUser, hasActiveBusinessAccess } from "@/lib/session";
-import { issueStampAction, redeemRewardAction } from "@/app/scan/actions";
+import { issueStampAction, redeemRewardAction, undoStampAction } from "@/app/scan/actions";
 
 const CROSS_BUSINESS_SCAN_TITLE = "Access Denied";
 const CROSS_BUSINESS_SCAN_DESCRIPTION = "This customer belongs to a different business workspace. For privacy and security reasons, customer information cannot be viewed or modified outside the assigned business.";
 const CROSS_BUSINESS_SCAN_HELPER = "If you believe this is a mistake, contact your Business Owner or System Administrator.";
 const OUT_OF_BRANCH_SCAN_DESCRIPTION = "This customer is outside your assigned branch scope. Customer information cannot be viewed or modified from this scanner.";
+const STAMP_UNDO_WINDOW_MINUTES = 3;
+const stampUndoReasons = ["Wrong customer scanned", "Duplicate scan", "Customer cancelled purchase", "System error", "Other"];
 
 function isOutOfAssignedBranch(user: { role: string; branchId?: number | null }, membership: { createdBranchId?: number | null }) {
   return (user.role === "STAFF" || user.role === "BRANCH_MANAGER") && (!user.branchId || membership.createdBranchId !== user.branchId);
+}
+
+async function getStampUndoEligibility({
+  stampTransaction,
+  user,
+}: {
+  stampTransaction: {
+    id: number;
+    businessId: number;
+    customerProgramMembershipId: number;
+    issuedByUserId: number;
+    createdAt: Date;
+  };
+  user: NonNullable<Awaited<ReturnType<typeof getCurrentUser>>> & { businessId: number };
+}) {
+  if (stampTransaction.businessId !== user.businessId) return { allowed: false, reason: "Stamp belongs to another business." };
+  if (stampTransaction.issuedByUserId !== user.id) return { allowed: false, reason: "Only the user who issued this stamp can undo it." };
+  if (stampTransaction.createdAt < new Date(Date.now() - STAMP_UNDO_WINDOW_MINUTES * 60 * 1000)) {
+    return { allowed: false, reason: "The 3 minute undo window has expired." };
+  }
+
+  const [latestStamp, laterRedemption, laterCorrection] = await Promise.all([
+    prisma.stampTransaction.findFirst({
+      where: { businessId: user.businessId, customerProgramMembershipId: stampTransaction.customerProgramMembershipId },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      select: { id: true },
+    }),
+    prisma.rewardRedemption.findFirst({
+      where: {
+        businessId: user.businessId,
+        customerProgramMembershipId: stampTransaction.customerProgramMembershipId,
+        redeemedAt: { gt: stampTransaction.createdAt },
+      },
+      select: { id: true },
+    }),
+    prisma.auditEvent.findFirst({
+      where: {
+        businessId: user.businessId,
+        entityType: "customer_program_membership",
+        entityId: String(stampTransaction.customerProgramMembershipId),
+        action: { in: ["STAMP_UNDONE", "STAMP_MANUAL_CORRECTION"] },
+        createdAt: { gt: stampTransaction.createdAt },
+      },
+      select: { id: true },
+    }),
+  ]);
+
+  if (latestStamp?.id !== stampTransaction.id) return { allowed: false, reason: "Only the most recent stamp can be undone." };
+  if (laterRedemption) return { allowed: false, reason: "A reward was redeemed after this stamp." };
+  if (laterCorrection) return { allowed: false, reason: "A later correction already exists." };
+  return { allowed: true, reason: null };
 }
 
 function decodeScanRouteToken(token: string) {
@@ -49,7 +102,7 @@ export default async function ScanResultPage({
   searchParams,
 }: {
   params: Promise<{ token: string }>;
-  searchParams: Promise<{ error?: string; issued?: string; redeemed?: string }>;
+  searchParams: Promise<{ error?: string; issued?: string; redeemed?: string; undone?: string }>;
 }) {
   const user = await getCurrentUser();
   const { token } = await params;
@@ -251,6 +304,7 @@ export default async function ScanResultPage({
           customerProgramMembershipId: programMembership.id,
         },
         include: {
+          issuedByUser: true,
           customerProgramMembership: {
             include: { loyaltyProgram: true },
           },
@@ -286,6 +340,18 @@ export default async function ScanResultPage({
     orderBy: { createdAt: "desc" },
     select: { createdAt: true, branch: { select: { name: true } } },
   });
+  const undoEligibility = issuedTransaction
+    ? await getStampUndoEligibility({
+        stampTransaction: {
+          id: issuedTransaction.id,
+          businessId: issuedTransaction.businessId,
+          customerProgramMembershipId: issuedTransaction.customerProgramMembershipId,
+          issuedByUserId: issuedTransaction.issuedByUserId,
+          createdAt: issuedTransaction.createdAt,
+        },
+        user: authUser,
+      })
+    : { allowed: false, reason: "No stamp transaction selected." };
   const cardNumber = businessMembership.cardToken.length > 12 ? `${businessMembership.cardToken.slice(0, 8)}...${businessMembership.cardToken.slice(-4)}` : businessMembership.cardToken;
   const soundEvent = qs.error
     ? "invalid"
@@ -327,7 +393,17 @@ export default async function ScanResultPage({
       ) : null}
 
       {issuedTransaction ? (
-        <ScanStatusBanner tone={issuedTransaction.quantity >= 3 ? "orange" : "green"} title="Stamp issued successfully" description={issuedTransaction.quantity >= 3 ? "Multiple stamps were issued in one transaction. This may create an alert for Business Owner review." : "The customer stamp progress was updated."} />
+        <StampUndoPanel
+          token={scanToken}
+          transactionId={issuedTransaction.id}
+          quantity={issuedTransaction.quantity}
+          canUndo={undoEligibility.allowed}
+          unavailableReason={undoEligibility.reason}
+        />
+      ) : null}
+
+      {qs.undone ? (
+        <ScanStatusBanner tone="orange" title="Stamp undone" description="The last stamp was removed from customer progress and permanently recorded in audit history." />
       ) : null}
 
       {redemption ? (
@@ -484,6 +560,62 @@ function QuickScanActions({ token, rewardReady, canRedeem }: { token: string; re
           </ConfirmSubmitButton>
         </form>
       )}
+    </section>
+  );
+}
+
+function StampUndoPanel({
+  token,
+  transactionId,
+  quantity,
+  canUndo,
+  unavailableReason,
+}: {
+  token: string;
+  transactionId: number;
+  quantity: number;
+  canUndo: boolean;
+  unavailableReason: string | null;
+}) {
+  return (
+    <section className={`rounded-md border p-5 ${quantity >= 3 ? "border-orange-200 bg-orange-50 text-orange-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <h2 className="text-xl font-semibold">Stamp added successfully</h2>
+          <p className="mt-2 text-sm leading-6">
+            {quantity >= 3
+              ? "Multiple stamps were issued in one transaction. This may create an alert for Business Owner review."
+              : "The customer stamp progress was updated."}
+          </p>
+          {!canUndo && unavailableReason ? <p className="mt-2 text-xs font-semibold opacity-80">Undo unavailable: {unavailableReason}</p> : null}
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row lg:justify-end">
+          {canUndo ? (
+            <form action={undoStampAction} className="grid gap-2 sm:min-w-60">
+              <CsrfInput scope="scan:stamp-undo" />
+              <input type="hidden" name="scanToken" value={token} />
+              <input type="hidden" name="stampTransactionId" value={transactionId} />
+              <label className="text-xs font-bold uppercase tracking-wide" htmlFor="undoReason">Reason</label>
+              <select id="undoReason" name="undoReason" required className="min-h-10 rounded-md border border-[#CBD5E1] bg-white px-3 text-sm font-semibold text-[#0F172A]">
+                <option value="">Select reason</option>
+                {stampUndoReasons.map((reason) => <option key={reason} value={reason}>{reason}</option>)}
+              </select>
+              <ConfirmSubmitButton
+                title="Undo last stamp?"
+                message="This will remove the last loyalty stamp issued to this customer and will be permanently recorded in the audit history."
+                confirmLabel="Undo Stamp"
+                cancelLabel="Cancel"
+                className="min-h-10 rounded-md border border-orange-300 bg-white px-4 text-sm font-bold text-orange-700 transition hover:bg-orange-100"
+              >
+                Undo Stamp
+              </ConfirmSubmitButton>
+            </form>
+          ) : null}
+          <ButtonLink href={`/scan/${token}`} variant="outline" className="min-h-10">
+            Done
+          </ButtonLink>
+        </div>
+      </div>
     </section>
   );
 }

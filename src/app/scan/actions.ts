@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { logAuditEvent } from "@/lib/audit";
 import { requireActiveBranch, requireUsableSubscription } from "@/lib/commercial-access";
 import { createAbuseAlert } from "@/lib/alert-engine";
 import { enforceStampCooldown } from "@/lib/cooldowns";
@@ -35,6 +36,14 @@ const REPEATED_STAMP_REASON_THRESHOLD = 3;
 const REPEATED_STAMP_REASON_MESSAGE = "Multiple stamps were issued to this customer in a short time. Please provide a reason.";
 const STAFF_REWARD_READY_STAMP_BLOCK_MESSAGE = "Reward ready. Redeem the reward before adding another stamp.";
 const OUT_OF_BRANCH_ACTION_MESSAGE = "This customer is outside your assigned branch scope.";
+const STAMP_UNDO_WINDOW_MINUTES = 3;
+const STAMP_UNDO_REASONS = ["Wrong customer scanned", "Duplicate scan", "Customer cancelled purchase", "System error", "Other"] as const;
+
+const stampUndoSchema = z.object({
+  scanToken: z.string().trim().min(1, "Scan token is required."),
+  stampTransactionId: z.coerce.number().int().positive("Stamp transaction is required."),
+  reason: z.enum(STAMP_UNDO_REASONS, { message: "Undo reason is required." }),
+});
 
 function isOutOfAssignedBranch(user: { role: string; branchId?: number | null }, membership: { createdBranchId?: number | null }) {
   return (user.role === "STAFF" || user.role === "BRANCH_MANAGER") && (!user.branchId || membership.createdBranchId !== user.branchId);
@@ -55,6 +64,10 @@ function success(token: string, transactionId: number): never {
 
 function redemptionSuccess(token: string, redemptionId: number): never {
   redirect(`/scan/${token}?redeemed=${redemptionId}`);
+}
+
+function undoSuccess(token: string, transactionId: number): never {
+  redirect(`/scan/${token}?undone=${transactionId}`);
 }
 
 export async function issueStampAction(formData: FormData) {
@@ -603,5 +616,158 @@ export async function redeemRewardAction(formData: FormData) {
   }
 
   redemptionSuccess(scanToken, redemption.id);
+}
+
+export async function undoStampAction(formData: FormData) {
+  const scanToken = getString(formData, "scanToken");
+  try {
+    validateCsrfForm(formData, "scan:stamp-undo");
+  } catch {
+    fail(scanToken, "Security check failed. Please refresh and try again.");
+  }
+
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  if (!["BUSINESS_OWNER", "BRANCH_MANAGER", "STAFF"].includes(user.role)) redirect(roleHomePath[user.role]);
+  if (!user.businessId) redirect(roleHomePath[user.role]);
+  if (!hasActiveBusinessAccess(user)) fail(scanToken, INACTIVE_BUSINESS_ACCESS_MESSAGE);
+  await requireUsableSubscription(user.businessId).catch((error) => fail(scanToken, error.message));
+  if (user.branchId) {
+    await requireActiveBranch(user.branchId, user.businessId).catch((error) => fail(scanToken, error.message));
+  }
+
+  const parsed = stampUndoSchema.safeParse({
+    scanToken,
+    stampTransactionId: getString(formData, "stampTransactionId"),
+    reason: getString(formData, "undoReason"),
+  });
+  if (!parsed.success) fail(scanToken, parsed.error.issues[0]?.message ?? "Undo validation failed.");
+
+  const now = new Date();
+  const data = parsed.data;
+
+  const stampTransaction = await prisma.stampTransaction.findFirst({
+    where: {
+      id: data.stampTransactionId,
+      businessId: user.businessId,
+      customerProgramMembership: { scanToken: data.scanToken },
+    },
+    include: {
+      customerProgramMembership: {
+        include: {
+          loyaltyProgram: true,
+          businessCustomerMembership: {
+            include: {
+              globalCustomer: true,
+              createdBranch: true,
+            },
+          },
+        },
+      },
+      branch: true,
+      issuedByUser: true,
+    },
+  });
+
+  if (!stampTransaction) fail(data.scanToken, "Stamp transaction was not found.");
+
+  const programMembership = stampTransaction.customerProgramMembership;
+  const businessMembership = programMembership.businessCustomerMembership;
+  if (businessMembership.businessId !== user.businessId) fail(data.scanToken, "This loyalty QR does not belong to your business.");
+  if (isOutOfAssignedBranch(user, businessMembership)) fail(data.scanToken, OUT_OF_BRANCH_ACTION_MESSAGE);
+  if (stampTransaction.issuedByUserId !== user.id) fail(data.scanToken, "You can only undo your own most recent stamp.");
+
+  const undoWindowStart = new Date(now.getTime() - STAMP_UNDO_WINDOW_MINUTES * 60 * 1000);
+  if (stampTransaction.createdAt < undoWindowStart) fail(data.scanToken, "Undo window has expired. Ask a Business Owner to record a manual correction.");
+
+  const latestStamp = await prisma.stampTransaction.findFirst({
+    where: { businessId: user.businessId, customerProgramMembershipId: programMembership.id },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    select: { id: true },
+  });
+  if (latestStamp?.id !== stampTransaction.id) fail(data.scanToken, "Only the most recent stamp can be undone.");
+
+  const laterRedemption = await prisma.rewardRedemption.findFirst({
+    where: {
+      businessId: user.businessId,
+      customerProgramMembershipId: programMembership.id,
+      redeemedAt: { gt: stampTransaction.createdAt },
+    },
+    select: { id: true },
+  });
+  if (laterRedemption) fail(data.scanToken, "This stamp cannot be undone because a reward was redeemed afterwards.");
+
+  const laterCorrection = await prisma.auditEvent.findFirst({
+    where: {
+      businessId: user.businessId,
+      entityType: "customer_program_membership",
+      entityId: String(programMembership.id),
+      action: { in: ["STAMP_UNDONE", "STAMP_MANUAL_CORRECTION"] },
+      createdAt: { gt: stampTransaction.createdAt },
+    },
+    select: { id: true },
+  });
+  if (laterCorrection) fail(data.scanToken, "This stamp cannot be undone because a later correction already exists.");
+
+  await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "customer_program_memberships" WHERE id = ${programMembership.id} FOR UPDATE`;
+    const lockedMembership = await tx.customerProgramMembership.findUnique({
+      where: { id: programMembership.id },
+      include: { businessCustomerMembership: true, loyaltyProgram: true },
+    });
+    if (!lockedMembership) fail(data.scanToken, "Invalid or unavailable loyalty QR.");
+    if (lockedMembership.businessCustomerMembership.businessId !== user.businessId) fail(data.scanToken, "This loyalty QR does not belong to your business.");
+    if (isOutOfAssignedBranch(user, lockedMembership.businessCustomerMembership)) fail(data.scanToken, OUT_OF_BRANCH_ACTION_MESSAGE);
+
+    await tx.customerProgramMembership.update({
+      where: { id: programMembership.id },
+      data: {
+        earnedStamps: Math.max(0, lockedMembership.earnedStamps - stampTransaction.quantity),
+      },
+    });
+
+    await logAuditEvent({
+      tx,
+      actorUserId: user.id,
+      businessId: user.businessId,
+      branchId: stampTransaction.branchId,
+      action: "STAMP_UNDONE",
+      entityType: "customer_program_membership",
+      entityId: programMembership.id,
+      metadata: {
+        originalStampTransactionId: stampTransaction.id,
+        quantity: stampTransaction.quantity,
+        reason: data.reason,
+        issuedByUserId: stampTransaction.issuedByUserId,
+        issuedByUserName: stampTransaction.issuedByUser.name,
+        customerName: `${businessMembership.globalCustomer.firstName} ${businessMembership.globalCustomer.lastName ?? ""}`.trim(),
+        programName: programMembership.loyaltyProgram.name,
+      },
+    });
+  });
+
+  const recentUndoCount = await prisma.auditEvent.count({
+    where: {
+      businessId: user.businessId,
+      actorUserId: user.id,
+      action: "STAMP_UNDONE",
+      createdAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
+    },
+  });
+  if (recentUndoCount >= 3) {
+    await createAbuseAlert({
+      businessId: user.businessId,
+      branchId: stampTransaction.branchId,
+      userId: user.id,
+      customerProgramMembershipId: programMembership.id,
+      alertType: "HIGH_STAMP_UNDO_COUNT",
+      severity: "MEDIUM",
+      description: `${user.name} recorded ${recentUndoCount} stamp undo corrections within 24 hours.`,
+      dedupeScope: `stamp-undo:${user.id}`,
+      metadata: { undoCount24h: recentUndoCount, latestReason: data.reason },
+    });
+  }
+
+  undoSuccess(data.scanToken, stampTransaction.id);
 }
 

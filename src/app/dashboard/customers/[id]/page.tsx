@@ -31,7 +31,7 @@ import { formatUaePhoneDisplay } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
 import { getScanQrDataUrl, getScanUrl, scanStatusLabel } from "@/lib/scan";
-import { toggleCustomerCardAction, toggleProgramScanTokenAction } from "@/app/dashboard/actions";
+import { manualStampCorrectionAction, toggleCustomerCardAction, toggleProgramScanTokenAction } from "@/app/dashboard/actions";
 
 type TimelineItem = {
   id: string;
@@ -73,7 +73,7 @@ export default async function CustomerProfilePage({
   );
   const programMembershipIds = membership.programMemberships.map((programMembership) => programMembership.id);
 
-  const [stampTransactions, generatedAlerts, rewardRedemptions] = await Promise.all([
+  const [stampTransactions, generatedAlerts, rewardRedemptions, correctionEvents] = await Promise.all([
     prisma.stampTransaction.findMany({
       where: {
         businessId: user.businessId,
@@ -110,6 +110,20 @@ export default async function CustomerProfilePage({
         branch: true,
         redeemedByUser: true,
         loyaltyProgram: true,
+      },
+    }),
+    prisma.auditEvent.findMany({
+      where: {
+        businessId: user.businessId,
+        entityType: "customer_program_membership",
+        entityId: { in: programMembershipIds.length ? programMembershipIds.map(String) : ["-1"] },
+        action: { in: ["STAMP_UNDONE", "STAMP_MANUAL_CORRECTION"] },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 30,
+      include: {
+        actorUser: true,
+        branch: true,
       },
     }),
   ]);
@@ -177,6 +191,27 @@ export default async function CustomerProfilePage({
       icon: TicketCheck,
       tone: transaction.quantity >= 3 ? "alert" as const : "default" as const,
     })),
+    ...correctionEvents.map((event) => {
+      const metadata = auditMetadata(event.metadata);
+      const reason = typeof metadata.reason === "string" ? metadata.reason : null;
+      const programName = typeof metadata.programName === "string" ? metadata.programName : "Customer program";
+      const appliedAdjustment = typeof metadata.appliedAdjustment === "number" ? metadata.appliedAdjustment : null;
+      const quantity = typeof metadata.quantity === "number" ? metadata.quantity : null;
+      const actorName = event.actorUser?.name ?? "Team member";
+      return {
+        id: `correction-${event.id}`,
+        createdAt: event.createdAt,
+        title: event.action === "STAMP_UNDONE" ? `Stamp removed / undone by ${actorName}` : `Manual stamp correction by ${actorName}`,
+        detail:
+          event.action === "STAMP_UNDONE"
+            ? `${quantity ?? 1} stamp${quantity === 1 ? "" : "s"} removed from ${programName}${reason ? `: ${reason}` : "."}`
+            : `${appliedAdjustment && appliedAdjustment > 0 ? "+" : ""}${appliedAdjustment ?? "Adjusted"} stamp${Math.abs(appliedAdjustment ?? 1) === 1 ? "" : "s"} on ${programName}${reason ? `: ${reason}` : "."}`,
+        href: null,
+        highlighted: false,
+        icon: History,
+        tone: "alert" as const,
+      };
+    }),
     ...generatedAlerts.map((alert) => ({
       id: `alert-${alert.id}`,
       createdAt: alert.createdAt,
@@ -360,7 +395,7 @@ function LoyaltyOverviewPanel({
         <Link href="/dashboard/programs" className="text-sm font-semibold business-text">View programs</Link>
       </div>
       <div className="mt-5 grid gap-3">
-        {visiblePrograms.map(({ programMembership }) => {
+        {visiblePrograms.map(({ programMembership, membershipUuid }) => {
           const progress = progressValue(programMembership.earnedStamps, programMembership.bonusStamps);
           const required = programMembership.loyaltyProgram.requiredStamps;
           const progressPercent = Math.min(100, Math.round((progress / required) * 100));
@@ -381,12 +416,58 @@ function LoyaltyOverviewPanel({
               <div className="mt-2 h-2 overflow-hidden rounded-full business-secondary-bg-soft">
                 <div className="h-full rounded-full business-button" style={{ width: `${progressPercent}%` }} />
               </div>
+              <ManualStampCorrectionForm membershipUuid={membershipUuid} programMembershipUuid={programMembership.uuid} />
             </article>
           );
         })}
         {programCards.length === 0 ? <p className="text-sm text-[#6B7280]">No program enrollments yet.</p> : null}
       </div>
     </section>
+  );
+}
+
+function ManualStampCorrectionForm({
+  membershipUuid,
+  programMembershipUuid,
+}: {
+  membershipUuid: string;
+  programMembershipUuid: string;
+}) {
+  return (
+    <form action={manualStampCorrectionAction} className="mt-4 rounded-md border border-orange-200 bg-orange-50 p-3">
+      <CsrfInput scope="dashboard:stamp-correction" />
+      <input type="hidden" name="membershipUuid" value={membershipUuid} />
+      <input type="hidden" name="programMembershipUuid" value={programMembershipUuid} />
+      <p className="text-sm font-semibold text-orange-900">Manual correction</p>
+      <p className="mt-1 text-xs leading-5 text-orange-800">Business Owner only. This adjusts progress and records the reason in audit history.</p>
+      <div className="mt-3 grid gap-2 md:grid-cols-[120px_minmax(0,1fr)_auto] md:items-end">
+        <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-orange-900">
+          Stamps
+          <select name="adjustment" required className="min-h-10 rounded-md border border-orange-200 bg-white px-3 text-sm font-semibold text-[#111827]">
+            <option value="">Select</option>
+            <option value="-1">-1</option>
+            <option value="-2">-2</option>
+            <option value="-3">-3</option>
+            <option value="1">+1</option>
+            <option value="2">+2</option>
+            <option value="3">+3</option>
+          </select>
+        </label>
+        <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-orange-900">
+          Reason
+          <input name="correctionReason" required minLength={5} maxLength={500} placeholder="Required correction reason" className="min-h-10 rounded-md border border-orange-200 bg-white px-3 text-sm font-semibold text-[#111827]" />
+        </label>
+        <ConfirmSubmitButton
+          title="Record manual correction?"
+          message="This will adjust customer stamp progress and permanently record the correction in audit history."
+          confirmLabel="Record Correction"
+          cancelLabel="Cancel"
+          className="min-h-10 rounded-md border border-orange-300 bg-white px-4 text-sm font-bold text-orange-700 transition hover:bg-orange-100"
+        >
+          Record
+        </ConfirmSubmitButton>
+      </div>
+    </form>
   );
 }
 
@@ -688,9 +769,9 @@ function LoyaltyProgramsPanel({
                     <div className="mt-2 h-2 rounded-full business-secondary-bg-soft">
                       <div className="h-2 rounded-full business-button" style={{ width: `${progressPercent}%` }} />
                     </div>
-                    <p className="mt-2 text-sm text-[#6B7280]">
-                      {isRewardReady ? "Reward Ready" : `${remaining} stamp${remaining === 1 ? "" : "s"} remaining until reward`}
-                    </p>
+                  <p className="mt-2 text-sm text-[#6B7280]">
+                    {isRewardReady ? "Reward Ready" : `${remaining} stamp${remaining === 1 ? "" : "s"} remaining until reward`}
+                  </p>
                   </div>
                   <p className="mt-3 text-sm text-[#6B7280]">
                     Status: {programCustomerStatusLabel({
@@ -700,6 +781,40 @@ function LoyaltyProgramsPanel({
                       requiredStamps: required,
                     })}
                   </p>
+                  <form action={manualStampCorrectionAction} className="mt-4 rounded-md border border-orange-200 bg-orange-50 p-3">
+                    <CsrfInput scope="dashboard:stamp-correction" />
+                    <input type="hidden" name="membershipUuid" value={membershipUuid} />
+                    <input type="hidden" name="programMembershipUuid" value={programMembership.uuid} />
+                    <p className="text-sm font-semibold text-orange-900">Manual correction</p>
+                    <p className="mt-1 text-xs leading-5 text-orange-800">Business Owner only. This adjusts progress and records the reason in audit history.</p>
+                    <div className="mt-3 grid gap-2 md:grid-cols-[120px_minmax(0,1fr)_auto] md:items-end">
+                      <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-orange-900">
+                        Stamps
+                        <select name="adjustment" required className="min-h-10 rounded-md border border-orange-200 bg-white px-3 text-sm font-semibold text-[#111827]">
+                          <option value="">Select</option>
+                          <option value="-1">-1</option>
+                          <option value="-2">-2</option>
+                          <option value="-3">-3</option>
+                          <option value="1">+1</option>
+                          <option value="2">+2</option>
+                          <option value="3">+3</option>
+                        </select>
+                      </label>
+                      <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-orange-900">
+                        Reason
+                        <input name="correctionReason" required minLength={5} maxLength={500} placeholder="Required correction reason" className="min-h-10 rounded-md border border-orange-200 bg-white px-3 text-sm font-semibold text-[#111827]" />
+                      </label>
+                      <ConfirmSubmitButton
+                        title="Record manual correction?"
+                        message="This will adjust customer stamp progress and permanently record the correction in audit history."
+                        confirmLabel="Record Correction"
+                        cancelLabel="Cancel"
+                        className="min-h-10 rounded-md border border-orange-300 bg-white px-4 text-sm font-bold text-orange-700 transition hover:bg-orange-100"
+                      >
+                        Record
+                      </ConfirmSubmitButton>
+                    </div>
+                  </form>
                 </div>
                 <div className="flex shrink-0 flex-col items-center rounded-md border border-[#E5E7EB] bg-white p-3">
                   <Image src={qrCode} alt={`${programMembership.loyaltyProgram.name} scan QR`} width={112} height={112} unoptimized />
@@ -815,6 +930,10 @@ function Info({ label, value, wide = false }: { label: string; value: React.Reac
 
 function friendlySeverity(severity: string) {
   return severity.charAt(0).toUpperCase() + severity.slice(1).toLowerCase();
+}
+
+function auditMetadata(metadata: unknown): Record<string, unknown> {
+  return metadata && typeof metadata === "object" && !Array.isArray(metadata) ? metadata as Record<string, unknown> : {};
 }
 
 function groupTimeline(items: TimelineItem[]) {
