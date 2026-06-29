@@ -4,6 +4,7 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { ReferralPhoneLookupPreview } from "@/components/ReferralPhoneLookupPreview";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
+import { prisma } from "@/lib/prisma";
 import { createCustomerAction } from "@/app/dashboard/actions";
 
 export default async function NewCustomerPage({
@@ -13,6 +14,11 @@ export default async function NewCustomerPage({
 }) {
   const { user, business } = await getBusinessOwnerContext();
   const params = await searchParams;
+  const activePrograms = await prisma.loyaltyProgram.findMany({
+    where: { businessId: user.businessId, active: true },
+    select: { uuid: true, name: true, rewardName: true, requiredStamps: true },
+    orderBy: { createdAt: "asc" },
+  });
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Enroll customer">
@@ -47,6 +53,7 @@ export default async function NewCustomerPage({
             <input type="checkbox" name="marketingConsent" className="h-4 w-4 rounded border-[#E5E7EB]" />
             Marketing consent
           </label>
+          <ProgramEnrollmentField activePrograms={activePrograms} />
           <div className="grid gap-3 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
             <label className="space-y-2">
               <span className="text-sm font-medium text-[#111827]">Referred by phone number</span>
@@ -79,6 +86,44 @@ export default async function NewCustomerPage({
         </form>
       </section>
     </DashboardShell>
+  );
+}
+
+function ProgramEnrollmentField({
+  activePrograms,
+}: {
+  activePrograms: Array<{ uuid: string; name: string; rewardName: string; requiredStamps: number }>;
+}) {
+  if (activePrograms.length === 0) {
+    return (
+      <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+        Customer card will be created now. No active loyalty program is available for enrollment.
+      </div>
+    );
+  }
+
+  if (activePrograms.length === 1) {
+    const program = activePrograms[0];
+    return (
+      <div className="rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+        Customer will be enrolled into <span className="font-semibold">{program.name}</span> after creation.
+      </div>
+    );
+  }
+
+  return (
+    <SearchableCombobox
+      label="Loyalty program"
+      name="selectedProgramUuid"
+      placeholder="Select a loyalty program"
+      emptyLabel="No active programs found."
+      required
+      options={activePrograms.map((program) => ({
+        value: program.uuid,
+        label: program.name,
+        description: `${program.rewardName} - ${program.requiredStamps} visits`,
+      }))}
+    />
   );
 }
 

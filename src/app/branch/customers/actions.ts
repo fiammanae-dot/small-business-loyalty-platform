@@ -28,8 +28,14 @@ export async function createBranchCustomerAction(formData: FormData) {
     path: "/branch/customers/new",
     forcedBranchId: user.branchId,
     forcedSource: "STAFF",
+    selectedProgramUuid: getString(formData, "selectedProgramUuid") || undefined,
+    programEnrollmentSource: "BRANCH_MANAGER",
   });
 
   revalidatePath("/branch/customers");
-  redirect(`/branch/customers/${customer.uuid}?success=Customer enrolled successfully.`);
+  const message =
+    customer.programEnrollmentStatus === "ENROLLED"
+      ? "Customer created and enrolled successfully."
+      : "Customer created successfully. No active loyalty program is available for enrollment.";
+  redirect(`/branch/customers/${customer.uuid}?success=${encodeURIComponent(message)}`);
 }

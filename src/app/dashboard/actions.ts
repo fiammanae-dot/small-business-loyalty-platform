@@ -650,11 +650,17 @@ export async function createCustomerAction(formData: FormData) {
     formData,
     path: "/dashboard/customers/new",
     forcedSource: "OWNER",
+    selectedProgramUuid: getString(formData, "selectedProgramUuid") || undefined,
+    programEnrollmentSource: "OWNER",
   });
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/customers");
-  redirect(`/dashboard/customers/${customer.uuid}?success=Customer enrolled successfully.`);
+  const message =
+    customer.programEnrollmentStatus === "ENROLLED"
+      ? "Customer created and enrolled successfully."
+      : "Customer created successfully. No active loyalty program is available for enrollment.";
+  redirect(`/dashboard/customers/${customer.uuid}?success=${encodeURIComponent(message)}`);
 }
 
 export async function updateCustomerAction(formData: FormData) {

@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { requireActiveBranch, requireUsableSubscription } from "@/lib/commercial-access";
 import { validateCsrfForm } from "@/lib/csrf";
-import { enrollCustomerForBusiness, fail } from "@/lib/customers";
+import { enrollCustomerForBusiness, fail, getString } from "@/lib/customers";
 import { requireRole } from "@/lib/session";
 
 export async function createStaffCustomerAction(formData: FormData) {
@@ -27,7 +27,16 @@ export async function createStaffCustomerAction(formData: FormData) {
     path: "/staff/customers/new",
     forcedBranchId: user.branchId,
     forcedSource: "STAFF",
+    selectedProgramUuid: getString(formData, "selectedProgramUuid") || undefined,
+    programEnrollmentSource: "BRANCH_MANAGER",
   });
 
-  redirect(`/staff/customers/success?card=${encodeURIComponent(customer.cardToken)}`);
+  const params = new URLSearchParams({
+    card: customer.cardToken,
+    success:
+      customer.programEnrollmentStatus === "ENROLLED"
+        ? "Customer created and enrolled successfully."
+        : "Customer created successfully. No active loyalty program is available for enrollment.",
+  });
+  redirect(`/staff/customers/success?${params.toString()}`);
 }

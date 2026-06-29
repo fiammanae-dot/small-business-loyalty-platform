@@ -2,12 +2,15 @@ import "server-only";
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import type { Prisma } from "@prisma/client";
 import type { AuthUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit";
 import { normalizePhone } from "@/lib/phone";
 import { generateCardToken } from "@/lib/customer-cards";
+import { createEngagementEventIfAllowed } from "@/lib/engagement";
 import { createPendingReferralForEnrollment, extractReferralCode, findActiveReferralReferrerByPhone, generateReferralCode } from "@/lib/referrals";
+import { generateScanToken } from "@/lib/scan";
 
 export const customerSourceLabels = {
   STAFF: "Staff",
@@ -24,6 +27,11 @@ export const customerStatusLabels = {
 
 export const customerSourceValues = ["STAFF", "OWNER", "IMPORT", "SELF_SIGNUP"] as const;
 export const customerStatusValues = ["ACTIVE", "INACTIVE", "BLOCKED"] as const;
+export const customerProgramEnrollmentStatuses = ["NO_ACTIVE_PROGRAM", "ENROLLED"] as const;
+
+type CustomerProgramEnrollmentSource = "OWNER" | "BRANCH_MANAGER";
+type CustomerProgramEnrollmentStatus = typeof customerProgramEnrollmentStatuses[number];
+type CustomerTransaction = Prisma.TransactionClient;
 
 export const customerIdentitySchema = z.object({
   firstName: z.string().trim().min(1, "First name is required."),
@@ -104,18 +112,65 @@ export async function assertBranchBelongsToBusiness(branchId: number | undefined
   return branch;
 }
 
+export async function createCustomerProgramMembershipForEnrollment({
+  tx,
+  businessId,
+  businessCustomerMembershipId,
+  loyaltyProgram,
+  enrollmentSource,
+}: {
+  tx: CustomerTransaction;
+  businessId: number;
+  businessCustomerMembershipId: number;
+  loyaltyProgram: { id: number; name: string; rewardName: string; startingBonusStamps: number };
+  enrollmentSource: CustomerProgramEnrollmentSource;
+}) {
+  const programMembership = await tx.customerProgramMembership.create({
+    data: {
+      businessCustomerMembershipId,
+      loyaltyProgramId: loyaltyProgram.id,
+      earnedStamps: 0,
+      bonusStamps: loyaltyProgram.startingBonusStamps,
+      enrollmentSource,
+      status: "ACTIVE",
+      scanToken: generateScanToken(),
+      scanStatus: "ACTIVE",
+      scanCreatedAt: new Date(),
+    },
+    select: { id: true },
+  });
+
+  await createEngagementEventIfAllowed({
+    tx,
+    businessId,
+    customerId: businessCustomerMembershipId,
+    eventType: "WELCOME_CUSTOMER",
+    metadata: {
+      programMembershipId: programMembership.id,
+      programName: loyaltyProgram.name,
+      rewardName: loyaltyProgram.rewardName,
+    },
+  });
+
+  return programMembership;
+}
+
 export async function enrollCustomerForBusiness({
   user,
   formData,
   path,
   forcedBranchId,
   forcedSource,
+  selectedProgramUuid,
+  programEnrollmentSource,
 }: {
   user: AuthUser & { businessId: number };
   formData: FormData;
   path: string;
   forcedBranchId?: number;
   forcedSource?: "STAFF" | "OWNER";
+  selectedProgramUuid?: string;
+  programEnrollmentSource?: CustomerProgramEnrollmentSource;
 }) {
   const identity = customerIdentitySchema.safeParse({
     firstName: getString(formData, "firstName"),
@@ -249,11 +304,42 @@ export async function enrollCustomerForBusiness({
         referralCode: referralCodeForEnrollment,
       });
 
-      return { duplicate: false, uuid: created.uuid, cardToken: created.cardToken };
+      const activePrograms = await tx.loyaltyProgram.findMany({
+        where: { businessId: user.businessId, active: true },
+        select: { id: true, uuid: true, name: true, rewardName: true, startingBonusStamps: true },
+        orderBy: { createdAt: "asc" },
+      });
+
+      let programEnrollmentStatus: CustomerProgramEnrollmentStatus = "NO_ACTIVE_PROGRAM";
+      if (activePrograms.length > 0) {
+        const selectedProgram =
+          activePrograms.length === 1
+            ? activePrograms[0]
+            : activePrograms.find((program) => program.uuid === selectedProgramUuid);
+
+        if (!selectedProgram) {
+          fail(path, activePrograms.length > 1 ? "Select an active loyalty program for this customer." : "Selected loyalty program is not available.");
+        }
+
+        await createCustomerProgramMembershipForEnrollment({
+          tx,
+          businessId: user.businessId,
+          businessCustomerMembershipId: created.id,
+          loyaltyProgram: selectedProgram,
+          enrollmentSource: programEnrollmentSource ?? "OWNER",
+        });
+        programEnrollmentStatus = "ENROLLED";
+      }
+
+      return { duplicate: false, uuid: created.uuid, cardToken: created.cardToken, programEnrollmentStatus };
     });
 
     if (result.duplicate) fail(path, "This customer is already enrolled in your business.");
-    return { uuid: result.uuid as string, cardToken: result.cardToken as string };
+    return {
+      uuid: result.uuid as string,
+      cardToken: result.cardToken as string,
+      programEnrollmentStatus: result.programEnrollmentStatus as CustomerProgramEnrollmentStatus,
+    };
   } catch (error) {
     console.error("Customer enrollment failed", error);
     fail(path, "Customer enrollment failed. Please try again.");

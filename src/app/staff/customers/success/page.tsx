@@ -8,7 +8,7 @@ import { requireRole } from "@/lib/session";
 export default async function StaffCustomerSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ card?: string }>;
+  searchParams: Promise<{ card?: string; success?: string }>;
 }) {
   const user = await requireRole("STAFF");
   const params = await searchParams;
@@ -28,7 +28,7 @@ export default async function StaffCustomerSuccessPage({
   return (
     <DashboardShell user={user} eyebrow="Staff" title="Customer enrolled" hideWelcomeMessage>
       <section className="rounded-md border border-emerald-200 bg-emerald-50 p-5">
-        <h2 className="text-lg font-semibold text-emerald-800">Customer enrolled successfully.</h2>
+        <h2 className="text-lg font-semibold text-emerald-800">{params.success ?? "Customer created and enrolled successfully."}</h2>
         {cardUrl && membership ? (
           <div className="mt-5 rounded-md border border-emerald-200 bg-white p-4">
             <p className="text-sm font-semibold text-[#111827]">Public card URL</p>
