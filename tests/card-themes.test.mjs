@@ -179,3 +179,12 @@ test("wallet card header keeps business names readable beside the tier badge", (
   assert.doesNotMatch(walletCard, /<h1 className="truncate[^"]*">\{businessName\}<\/h1>/);
   assert.doesNotMatch(frontExport, /<h1 className="truncate[^"]*">\{wallet\.businessName\}<\/h1>/);
 });
+
+test("public card support panels align with the wallet card width", () => {
+  const publicCard = read("src/app/card/[token]/page.tsx");
+
+  assert.match(publicCard, /max-w-\[360px\][^"]*rounded-\[34px\][^"]*bg-white/);
+  assert.match(publicCard, /<div className="mx-auto w-full max-w-\[360px\]">\s*<TierStatusPanel/);
+  assert.match(publicCard, /<div className="mx-auto w-full max-w-\[360px\]">\s*<ReferralPanel/);
+  assert.match(publicCard, /<section className="mx-auto w-full max-w-\[360px\] rounded-\[28px\]/);
+});

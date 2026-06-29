@@ -148,34 +148,38 @@ export default async function PublicCustomerCardPage({
           </div>
         </div>
 
-        <div className="flex flex-col gap-4 rounded-[34px] bg-white">
+        <div className="mx-auto flex w-full max-w-[360px] flex-col gap-4 rounded-[34px] bg-white">
           <LoyaltyWalletCard {...walletCardProps} />
         </div>
 
-        <TierStatusPanel
-          badgeLabel={tier.badgeLabel}
-          badgeIcon={tier.badgeIcon}
-          isVip={tier.isVip}
-          nextTier={tier.nextTier}
-          visitsRemaining={tier.visitsRemaining}
-          progressPercent={tier.progressPercent}
-          theme={primaryCardTheme}
-        />
-
-        {referralUrl ? (
-          <ReferralPanel
-            referralUrl={referralUrl}
-            referralCode={membership.referralCode}
-            businessName={membership.business.name}
-            pendingReferrals={pendingReferrals}
-            qualifiedReferrals={qualifiedReferrals}
-            rewardsEarned={`${referralRewards._sum.bonusStamps ?? 0} stamps`}
-            buttonColor={branding.buttonColor}
+        <div className="mx-auto w-full max-w-[360px]">
+          <TierStatusPanel
+            badgeLabel={tier.badgeLabel}
+            badgeIcon={tier.badgeIcon}
+            isVip={tier.isVip}
+            nextTier={tier.nextTier}
+            visitsRemaining={tier.visitsRemaining}
+            progressPercent={tier.progressPercent}
             theme={primaryCardTheme}
           />
+        </div>
+
+        {referralUrl ? (
+          <div className="mx-auto w-full max-w-[360px]">
+            <ReferralPanel
+              referralUrl={referralUrl}
+              referralCode={membership.referralCode}
+              businessName={membership.business.name}
+              pendingReferrals={pendingReferrals}
+              qualifiedReferrals={qualifiedReferrals}
+              rewardsEarned={`${referralRewards._sum.bonusStamps ?? 0} stamps`}
+              buttonColor={branding.buttonColor}
+              theme={primaryCardTheme}
+            />
+          </div>
         ) : null}
 
-        <section className="rounded-[28px] border border-[#E5E7EB] bg-white p-5 shadow-sm">
+        <section className="mx-auto w-full max-w-[360px] rounded-[28px] border border-[#E5E7EB] bg-white p-5 shadow-sm">
           <div className="flex items-center gap-2">
             <QrCode className="h-5 w-5" style={{ color: primaryCardTheme.accent }} aria-hidden="true" />
             <h2 className="text-base font-semibold text-[#1E293B]">Save Your Card</h2>
