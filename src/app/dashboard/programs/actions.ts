@@ -9,7 +9,7 @@ import { validateCsrfForm } from "@/lib/csrf";
 import { requireUsableSubscription } from "@/lib/commercial-access";
 import { createEngagementEventIfAllowed } from "@/lib/engagement";
 import { prisma } from "@/lib/prisma";
-import { parseProgramDate, programSchema } from "@/lib/programs";
+import { getStartingBonusStampsForEvent, parseProgramDate, programSchema } from "@/lib/programs";
 import { generateScanToken } from "@/lib/scan";
 import { commerciallyUsableStatuses, limitReachedMessage } from "@/lib/subscriptions";
 
@@ -38,6 +38,7 @@ function programData(formData: FormData) {
     description: getString(formData, "description"),
     requiredStamps: getString(formData, "requiredStamps"),
     startingBonusStamps: getString(formData, "startingBonusStamps") || "0",
+    startingStampPolicy: getString(formData, "startingStampPolicy") || "FIRST_ENROLLMENT_ONLY",
     referralRewardBonusStamps: getString(formData, "referralRewardBonusStamps") || "1",
     cardTheme: getString(formData, "cardTheme") || "BUSINESS_DEFAULT",
     rewardName: getString(formData, "rewardName"),
@@ -78,6 +79,7 @@ export async function createProgramAction(formData: FormData) {
       description: parsed.data.description || null,
       requiredStamps: parsed.data.requiredStamps,
       startingBonusStamps: parsed.data.startingBonusStamps,
+      startingStampPolicy: parsed.data.startingStampPolicy,
       referralRewardBonusStamps: parsed.data.referralRewardBonusStamps,
       cardTheme: parsed.data.cardTheme,
       rewardName: parsed.data.rewardName,
@@ -126,6 +128,7 @@ export async function updateProgramAction(formData: FormData) {
       description: parsed.data.description || null,
       requiredStamps: parsed.data.requiredStamps,
       startingBonusStamps: parsed.data.startingBonusStamps,
+      startingStampPolicy: parsed.data.startingStampPolicy,
       referralRewardBonusStamps: parsed.data.referralRewardBonusStamps,
       cardTheme: parsed.data.cardTheme,
       rewardName: parsed.data.rewardName,
@@ -189,7 +192,7 @@ export async function enrollCustomerInProgramAction(formData: FormData) {
 
   const program = await prisma.loyaltyProgram.findFirst({
     where: { uuid: programUuid, businessId: user.businessId, active: true },
-    select: { id: true, name: true, rewardName: true, startingBonusStamps: true },
+    select: { id: true, name: true, rewardName: true, startingBonusStamps: true, startingStampPolicy: true },
   });
   if (!program) fail("/dashboard/programs", "Program not found.");
 
@@ -206,7 +209,11 @@ export async function enrollCustomerInProgramAction(formData: FormData) {
         businessCustomerMembershipId: membership.id,
         loyaltyProgramId: program.id,
         earnedStamps: 0,
-        bonusStamps: program.startingBonusStamps,
+        bonusStamps: getStartingBonusStampsForEvent({
+          startingBonusStamps: program.startingBonusStamps,
+          startingStampPolicy: program.startingStampPolicy,
+          event: "INITIAL_ENROLLMENT",
+        }),
         enrollmentSource: "OWNER",
         status: "ACTIVE",
         scanToken: generateScanToken(),

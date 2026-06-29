@@ -20,7 +20,7 @@ import {
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { formatDate } from "@/lib/format";
 import { getProgramJoinQrDataUrl, getProgramJoinUrl } from "@/lib/program-join";
-import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
+import { progressValue, programCustomerStatusLabel, startingStampPolicyLabel } from "@/lib/programs";
 import { businessTypeLabels } from "@/lib/roles";
 import { prisma } from "@/lib/prisma";
 import { toggleProgramAction } from "@/app/dashboard/programs/actions";
@@ -144,7 +144,8 @@ export default async function ProgramDetailPage({
 
             <SectionCard title="Qualification" description="Visits, bonuses and date rules used by this program.">
               <div className="grid gap-3 md:grid-cols-2">
-                <Info label="Starting bonus" value={program.startingBonusStamps.toString()} />
+                <Info label="Starting stamps" value={program.startingBonusStamps.toString()} />
+                <Info label="Apply when" value={startingStampPolicyLabel(program.startingStampPolicy)} />
                 <Info label="Referral reward" value={program.referralRewardBonusStamps + " bonus stamp" + (program.referralRewardBonusStamps === 1 ? "" : "s")} />
                 <Info label="Start date" value={program.startDate ? formatDate(program.startDate) : "-"} />
                 <Info label="End date" value={program.endDate ? formatDate(program.endDate) : "-"} />

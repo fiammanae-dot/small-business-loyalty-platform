@@ -17,7 +17,7 @@ import {
 } from "@/components/ui";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { formatDate } from "@/lib/format";
-import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
+import { progressValue, programCustomerStatusLabel, startingStampPolicyLabel } from "@/lib/programs";
 import { prisma } from "@/lib/prisma";
 import { enrollCustomerInProgramAction } from "@/app/dashboard/programs/actions";
 
@@ -79,7 +79,7 @@ export default async function ProgramCustomersPage({
 
         {qs.error || qs.success ? <p className={"rounded-md border px-3 py-2 text-sm " + (qs.error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700")}>{qs.error ?? qs.success}</p> : null}
 
-        <SectionCard title="Enroll customer" description={"Starting bonus stamps: " + program.startingBonusStamps}>
+        <SectionCard title="Enroll customer" description={"Starting stamps: " + program.startingBonusStamps + " - Apply when: " + startingStampPolicyLabel(program.startingStampPolicy)}>
           <form action={enrollCustomerInProgramAction} className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-end">
             <CsrfInput scope="dashboard:program-enrollment" />
             <input type="hidden" name="programUuid" value={program.uuid} />

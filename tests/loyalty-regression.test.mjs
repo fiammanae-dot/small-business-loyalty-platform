@@ -45,7 +45,21 @@ test("reward redemption permissions and reset behavior remain correct", () => {
   assert.match(redemptionAction, /businessMembership\.businessId !== user\.businessId/);
   assert.match(redemptionAction, /redeemedByUserId:\s*user\.id/);
   assert.match(redemptionAction, /earnedStamps:\s*0/);
-  assert.match(redemptionAction, /bonusStamps:\s*lockedMembership\.loyaltyProgram\.startingBonusStamps/);
+  assert.match(redemptionAction, /bonusStamps:\s*getStartingBonusStampsForEvent\(\{[\s\S]*event:\s*"CARD_RESET"/);
+});
+
+test("starting stamp policy migration preserves existing program reset behavior", () => {
+  const schema = read("prisma/schema.prisma");
+  const migration = read("prisma/migrations/0037_starting_stamp_policy/migration.sql");
+  const programs = read("src/lib/programs.ts");
+
+  assert.match(schema, /enum StartingStampPolicy/);
+  assert.match(schema, /startingStampPolicy\s+StartingStampPolicy/);
+  assert.match(migration, /starting_bonus_stamps/);
+  assert.match(migration, /NEVER/);
+  assert.match(migration, /EVERY_COMPLETED_CARD/);
+  assert.match(programs, /event === "INITIAL_ENROLLMENT"/);
+  assert.match(programs, /startingStampPolicy === "EVERY_COMPLETED_CARD"/);
 });
 
 test("subscription and inactive branch restrictions guard critical workflows", () => {

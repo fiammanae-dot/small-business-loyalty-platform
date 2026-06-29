@@ -7,6 +7,7 @@ import { createEngagementEventIfAllowed } from "@/lib/engagement";
 import { generateCardToken } from "@/lib/customer-cards";
 import { normalizePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
+import { getStartingBonusStampsForEvent } from "@/lib/programs";
 import { generateReferralCode } from "@/lib/referrals";
 import { generateScanToken } from "@/lib/scan";
 
@@ -111,7 +112,11 @@ export async function joinProgramAction(formData: FormData) {
             businessCustomerMembershipId: existingMembership.id,
             loyaltyProgramId: program.id,
             earnedStamps: 0,
-            bonusStamps: program.startingBonusStamps,
+            bonusStamps: getStartingBonusStampsForEvent({
+              startingBonusStamps: program.startingBonusStamps,
+              startingStampPolicy: program.startingStampPolicy,
+              event: "INITIAL_ENROLLMENT",
+            }),
             enrollmentSource: "SELF_SIGNUP",
             status: "ACTIVE",
             scanToken: generateScanToken(),
@@ -165,7 +170,11 @@ export async function joinProgramAction(formData: FormData) {
         businessCustomerMembershipId: membership.id,
         loyaltyProgramId: program.id,
         earnedStamps: 0,
-        bonusStamps: program.startingBonusStamps,
+        bonusStamps: getStartingBonusStampsForEvent({
+              startingBonusStamps: program.startingBonusStamps,
+              startingStampPolicy: program.startingStampPolicy,
+              event: "INITIAL_ENROLLMENT",
+            }),
         enrollmentSource: "SELF_SIGNUP",
         status: "ACTIVE",
         scanToken: generateScanToken(),

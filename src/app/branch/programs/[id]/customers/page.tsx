@@ -5,7 +5,7 @@ import { Card, CardContent, EmptyState, ProgressBar } from "@/components/ui";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { formatDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
+import { progressValue, programCustomerStatusLabel, startingStampPolicyLabel } from "@/lib/programs";
 import { requireRole } from "@/lib/session";
 import { enrollBranchCustomerInProgramAction } from "@/app/branch/programs/actions";
 
@@ -63,7 +63,7 @@ export default async function BranchProgramCustomersPage({
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-[#111827]">Enroll business customer</h2>
-            <p className="text-sm text-[#6B7280]">Bonus stamps assigned on enrollment: {program.startingBonusStamps}</p>
+            <p className="text-sm text-[#6B7280]">Starting stamps: {program.startingBonusStamps} - Apply when: {startingStampPolicyLabel(program.startingStampPolicy)}</p>
           </div>
           <Link href={`/branch/programs/${program.uuid}`} className="text-sm font-semibold business-text">Back to program</Link>
         </div>

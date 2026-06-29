@@ -137,6 +137,12 @@ enum ProgramEnrollmentSource {
   BRANCH_MANAGER
 }
 
+enum StartingStampPolicy {
+  NEVER
+  FIRST_ENROLLMENT_ONLY
+  EVERY_COMPLETED_CARD
+}
+
 enum ScanStatus {
   ACTIVE
   DISABLED
@@ -677,7 +683,8 @@ model LoyaltyProgram {
   productOrServiceName      String       @map("product_or_service_name")
   description               String?
   requiredStamps            Int          @map("required_stamps")
-  startingBonusStamps       Int          @default(0) @map("starting_bonus_stamps")
+  startingBonusStamps       Int                 @default(0) @map("starting_bonus_stamps")
+  startingStampPolicy       StartingStampPolicy @default(FIRST_ENROLLMENT_ONLY) @map("starting_stamp_policy")
   rewardName                String       @map("reward_name")
   rewardDescription         String       @map("reward_description")
   referralRewardBonusStamps Int          @default(1) @map("referral_reward_bonus_stamps")

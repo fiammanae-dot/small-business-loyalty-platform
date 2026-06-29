@@ -42,6 +42,7 @@ export default async function EditProgramPage({
             description: program.description,
             requiredStamps: program.requiredStamps,
             startingBonusStamps: program.startingBonusStamps,
+            startingStampPolicy: program.startingStampPolicy,
             referralRewardBonusStamps: program.referralRewardBonusStamps,
             cardTheme: program.cardTheme,
             rewardName: program.rewardName,

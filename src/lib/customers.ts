@@ -2,7 +2,7 @@ import "server-only";
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import type { Prisma } from "@prisma/client";
+import type { Prisma, StartingStampPolicy } from "@prisma/client";
 import type { AuthUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit";
@@ -11,6 +11,7 @@ import { generateCardToken } from "@/lib/customer-cards";
 import { createEngagementEventIfAllowed } from "@/lib/engagement";
 import { getFirstZodMessage, getZodFieldErrors, isFormActionError, throwFormActionError, type FormFieldErrors } from "@/lib/form-state";
 import { createPendingReferralForEnrollment, extractReferralCode, findActiveReferralReferrerByPhone, generateReferralCode } from "@/lib/referrals";
+import { getStartingBonusStampsForEvent } from "@/lib/programs";
 import { generateScanToken } from "@/lib/scan";
 
 export const customerSourceLabels = {
@@ -123,7 +124,7 @@ export async function createCustomerProgramMembershipForEnrollment({
   tx: CustomerTransaction;
   businessId: number;
   businessCustomerMembershipId: number;
-  loyaltyProgram: { id: number; name: string; rewardName: string; startingBonusStamps: number };
+  loyaltyProgram: { id: number; name: string; rewardName: string; startingBonusStamps: number; startingStampPolicy: StartingStampPolicy };
   enrollmentSource: CustomerProgramEnrollmentSource;
 }) {
   const programMembership = await tx.customerProgramMembership.create({
@@ -131,7 +132,11 @@ export async function createCustomerProgramMembershipForEnrollment({
       businessCustomerMembershipId,
       loyaltyProgramId: loyaltyProgram.id,
       earnedStamps: 0,
-      bonusStamps: loyaltyProgram.startingBonusStamps,
+      bonusStamps: getStartingBonusStampsForEvent({
+        startingBonusStamps: loyaltyProgram.startingBonusStamps,
+        startingStampPolicy: loyaltyProgram.startingStampPolicy,
+        event: "INITIAL_ENROLLMENT",
+      }),
       enrollmentSource,
       status: "ACTIVE",
       scanToken: generateScanToken(),
@@ -320,7 +325,7 @@ export async function enrollCustomerForBusiness({
 
       const activePrograms = await tx.loyaltyProgram.findMany({
         where: { businessId: user.businessId, active: true },
-        select: { id: true, uuid: true, name: true, rewardName: true, startingBonusStamps: true },
+        select: { id: true, uuid: true, name: true, rewardName: true, startingBonusStamps: true, startingStampPolicy: true },
         orderBy: { createdAt: "asc" },
       });
 

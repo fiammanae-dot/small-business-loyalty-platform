@@ -1,7 +1,32 @@
 import "server-only";
 
 import { z } from "zod";
-import type { BusinessType } from "@prisma/client";
+import type { BusinessType, StartingStampPolicy } from "@prisma/client";
+
+export const startingStampPolicyValues = ["NEVER", "FIRST_ENROLLMENT_ONLY", "EVERY_COMPLETED_CARD"] as const;
+
+export type StartingStampPolicyEvent = "INITIAL_ENROLLMENT" | "CARD_RESET";
+
+export function getStartingBonusStampsForEvent({
+  startingBonusStamps,
+  startingStampPolicy,
+  event,
+}: {
+  startingBonusStamps: number;
+  startingStampPolicy: StartingStampPolicy;
+  event: StartingStampPolicyEvent;
+}) {
+  if (startingStampPolicy === "NEVER") return 0;
+  if (event === "INITIAL_ENROLLMENT") return startingBonusStamps;
+  if (startingStampPolicy === "EVERY_COMPLETED_CARD") return startingBonusStamps;
+  return 0;
+}
+
+export function startingStampPolicyLabel(policy: StartingStampPolicy) {
+  if (policy === "NEVER") return "Never";
+  if (policy === "EVERY_COMPLETED_CARD") return "Every completed card";
+  return "Only on first enrollment";
+}
 
 export const programTemplates: Record<
   Exclude<BusinessType, "OTHER">,
@@ -63,7 +88,8 @@ export const programSchema = z
     productOrServiceName: z.string().trim().min(1, "Product or service name is required."),
     description: z.string().trim().optional(),
     requiredStamps: z.coerce.number().int().min(1, "Required stamps must be at least 1."),
-    startingBonusStamps: z.coerce.number().int().min(0, "Starting bonus stamps cannot be negative."),
+    startingBonusStamps: z.coerce.number().int().min(0, "Starting stamps cannot be negative."),
+    startingStampPolicy: z.enum(startingStampPolicyValues).default("FIRST_ENROLLMENT_ONLY"),
     referralRewardBonusStamps: z.coerce.number().int().min(0, "Referral reward bonus stamps cannot be negative."),
     cardTheme: z.enum(["BUSINESS_DEFAULT", "COFFEE_CAFE", "RESTAURANT", "BEAUTY_SALON", "AUTOMOTIVE", "RETAIL_GENERAL"]).default("BUSINESS_DEFAULT"),
     rewardName: z.string().trim().min(1, "Reward name is required."),
@@ -73,7 +99,7 @@ export const programSchema = z
     endDate: z.string().trim().optional(),
   })
   .refine((data) => data.startingBonusStamps <= data.requiredStamps, {
-    message: "Starting bonus stamps cannot exceed required stamps.",
+    message: "Starting stamps cannot exceed required stamps.",
     path: ["startingBonusStamps"],
   })
   .refine((data) => !data.startDate || !data.endDate || new Date(data.startDate) <= new Date(data.endDate), {

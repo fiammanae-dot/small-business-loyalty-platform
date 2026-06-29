@@ -11,7 +11,7 @@ import { createCustomerNotification } from "@/lib/customer-notifications";
 import { calculateCustomerTier, isTierUpgrade } from "@/lib/customer-tiers";
 import { createEngagementEventIfAllowed, createProgramEngagementEvents } from "@/lib/engagement";
 import { prisma } from "@/lib/prisma";
-import { progressValue } from "@/lib/programs";
+import { getStartingBonusStampsForEvent, progressValue } from "@/lib/programs";
 import { qualifyReferralFromFirstStamp } from "@/lib/referrals";
 import { isRewardReady } from "@/lib/rewards";
 import { roleHomePath } from "@/lib/roles";
@@ -585,7 +585,11 @@ export async function redeemRewardAction(formData: FormData) {
       where: { id: programMembership.id },
       data: {
         earnedStamps: 0,
-        bonusStamps: lockedMembership.loyaltyProgram.startingBonusStamps,
+        bonusStamps: getStartingBonusStampsForEvent({
+          startingBonusStamps: lockedMembership.loyaltyProgram.startingBonusStamps,
+          startingStampPolicy: lockedMembership.loyaltyProgram.startingStampPolicy,
+          event: "CARD_RESET",
+        }),
       },
     });
 

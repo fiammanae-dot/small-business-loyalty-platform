@@ -5,7 +5,7 @@ import { CopyButton } from "@/components/CopyButton";
 import { DashboardShell } from "@/components/DashboardShell";
 import { getProgramJoinQrDataUrl, getProgramJoinUrl } from "@/lib/program-join";
 import { prisma } from "@/lib/prisma";
-import { progressValue } from "@/lib/programs";
+import { progressValue, startingStampPolicyLabel } from "@/lib/programs";
 import { businessTypeLabels } from "@/lib/roles";
 import { requireRole } from "@/lib/session";
 
@@ -76,9 +76,10 @@ export default async function BranchProgramDetailPage({ params }: { params: Prom
           </div>
         </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
+        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <Info label="Product/Service" value={program.productOrServiceName} />
-          <Info label="Starting progress" value={`${progressValue(0, program.startingBonusStamps)} / ${program.requiredStamps}`} />
+          <Info label="Starting stamps" value={program.startingBonusStamps.toString()} />
+          <Info label="Apply when" value={startingStampPolicyLabel(program.startingStampPolicy)} />
           <Info label="Reward" value={program.rewardName} />
         </div>
 

@@ -6,6 +6,7 @@ import { requireActiveBranch, requireUsableSubscription } from "@/lib/commercial
 import { validateCsrfForm } from "@/lib/csrf";
 import { createEngagementEventIfAllowed } from "@/lib/engagement";
 import { prisma } from "@/lib/prisma";
+import { getStartingBonusStampsForEvent } from "@/lib/programs";
 import { generateScanToken } from "@/lib/scan";
 import { requireRole } from "@/lib/session";
 
@@ -37,7 +38,7 @@ export async function enrollBranchCustomerInProgramAction(formData: FormData) {
 
   const program = await prisma.loyaltyProgram.findFirst({
     where: { uuid: programUuid, businessId: user.businessId, active: true },
-    select: { id: true, name: true, rewardName: true, startingBonusStamps: true },
+    select: { id: true, name: true, rewardName: true, startingBonusStamps: true, startingStampPolicy: true },
   });
   if (!program) fail("/branch/programs", "Program not found.");
 
@@ -59,7 +60,11 @@ export async function enrollBranchCustomerInProgramAction(formData: FormData) {
           businessCustomerMembershipId: membership.id,
           loyaltyProgramId: program.id,
           earnedStamps: 0,
-          bonusStamps: program.startingBonusStamps,
+          bonusStamps: getStartingBonusStampsForEvent({
+            startingBonusStamps: program.startingBonusStamps,
+            startingStampPolicy: program.startingStampPolicy,
+            event: "INITIAL_ENROLLMENT",
+          }),
           enrollmentSource: "BRANCH_MANAGER",
           status: "ACTIVE",
           scanToken: generateScanToken(),

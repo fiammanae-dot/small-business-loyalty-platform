@@ -1,4 +1,4 @@
-import type { BusinessType, CardTheme } from "@prisma/client";
+import type { BusinessType, CardTheme, StartingStampPolicy } from "@prisma/client";
 import { CsrfInput } from "@/components/CsrfInput";
 import { businessTypeOptions } from "@/lib/platform-options";
 import { CardThemePreviewSelector } from "@/components/CardThemePreviewSelector";
@@ -23,6 +23,7 @@ type ProgramDefaults = {
   description?: string | null;
   requiredStamps?: number;
   startingBonusStamps?: number;
+  startingStampPolicy?: StartingStampPolicy;
   referralRewardBonusStamps?: number;
   cardTheme?: CardTheme;
   rewardName?: string;
@@ -50,6 +51,7 @@ export function ProgramForm({
   const productOrServiceName = defaults.productOrServiceName ?? template?.productOrServiceName ?? "";
   const requiredStamps = defaults.requiredStamps ?? template?.requiredStamps ?? 1;
   const startingBonusStamps = defaults.startingBonusStamps ?? template?.startingBonusStamps ?? 0;
+  const startingStampPolicy = defaults.startingStampPolicy ?? "FIRST_ENROLLMENT_ONLY";
   const referralRewardBonusStamps = defaults.referralRewardBonusStamps ?? 1;
   const rewardName = defaults.rewardName ?? template?.rewardName ?? "";
   const rewardDescription = defaults.rewardDescription ?? template?.rewardDescription ?? "";
@@ -102,10 +104,38 @@ export function ProgramForm({
         </div>
       </SectionCard>
 
-      <SectionCard title="Bonus Visits" description="Set starting and referral bonus stamps without changing reward rules.">
-        <div className="grid gap-4 md:grid-cols-2">
-          <Input name="startingBonusStamps" label="Starting Bonus Stamps" type="number" min="0" defaultValue={startingBonusStamps.toString()} required />
-          <Input name="referralRewardBonusStamps" label="Referral Reward Bonus Stamps" type="number" min="0" defaultValue={referralRewardBonusStamps.toString()} required />
+      <SectionCard title="Starting Stamps" description="Starting stamps are automatically awarded according to the selected policy.">
+        <div className="grid gap-5">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Input name="startingBonusStamps" label="Starting Stamps" type="number" min="0" defaultValue={startingBonusStamps.toString()} required />
+            <Input name="referralRewardBonusStamps" label="Referral Reward Bonus Stamps" type="number" min="0" defaultValue={referralRewardBonusStamps.toString()} required />
+          </div>
+          <fieldset className="space-y-3">
+            <legend className="text-sm font-semibold text-[#111827]">Apply when</legend>
+            <div className="grid gap-3 md:grid-cols-3">
+              <label className="flex min-h-24 cursor-pointer gap-3 rounded-xl border border-[#E5E7EB] bg-white p-4 transition hover:border-[var(--business-primary)]">
+                <input type="radio" name="startingStampPolicy" value="NEVER" defaultChecked={startingStampPolicy === "NEVER"} className="mt-1 h-4 w-4" />
+                <span>
+                  <span className="block text-sm font-semibold text-[#111827]">Never</span>
+                  <span className="mt-1 block text-xs leading-5 text-[#6B7280]">Customers start each card with 0 starting stamps.</span>
+                </span>
+              </label>
+              <label className="flex min-h-24 cursor-pointer gap-3 rounded-xl border border-[var(--business-primary)] bg-[var(--business-primary-soft)] p-4 transition hover:border-[var(--business-primary)]">
+                <input type="radio" name="startingStampPolicy" value="FIRST_ENROLLMENT_ONLY" defaultChecked={startingStampPolicy === "FIRST_ENROLLMENT_ONLY"} className="mt-1 h-4 w-4" />
+                <span>
+                  <span className="block text-sm font-semibold text-[#111827]">Only on first enrollment <span className="text-xs font-bold business-text">(Recommended)</span></span>
+                  <span className="mt-1 block text-xs leading-5 text-[#6B7280]">Award starting stamps only when the customer first joins this program.</span>
+                </span>
+              </label>
+              <label className="flex min-h-24 cursor-pointer gap-3 rounded-xl border border-[#E5E7EB] bg-white p-4 transition hover:border-[var(--business-primary)]">
+                <input type="radio" name="startingStampPolicy" value="EVERY_COMPLETED_CARD" defaultChecked={startingStampPolicy === "EVERY_COMPLETED_CARD"} className="mt-1 h-4 w-4" />
+                <span>
+                  <span className="block text-sm font-semibold text-[#111827]">Every completed card</span>
+                  <span className="mt-1 block text-xs leading-5 text-[#6B7280]">Award starting stamps after enrollment and after each reward reset.</span>
+                </span>
+              </label>
+            </div>
+          </fieldset>
         </div>
       </SectionCard>
 

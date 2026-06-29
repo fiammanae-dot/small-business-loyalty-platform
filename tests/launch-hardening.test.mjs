@@ -45,7 +45,7 @@ test("redemption uses transaction row locking before resetting stamps", () => {
 
   assert.match(scanActions, /FOR UPDATE/);
   assert.match(scanActions, /earnedStamps:\s*0/);
-  assert.match(scanActions, /bonusStamps:\s*lockedMembership\.loyaltyProgram\.startingBonusStamps/);
+  assert.match(scanActions, /bonusStamps:\s*getStartingBonusStampsForEvent\(\{[\s\S]*event:\s*"CARD_RESET"/);
 });
 
 test("suspended subscriptions and inactive branches are enforced on critical workflows", () => {
