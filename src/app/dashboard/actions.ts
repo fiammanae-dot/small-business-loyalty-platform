@@ -11,6 +11,7 @@ import { logAuditEvent } from "@/lib/audit";
 import { requireBusinessOwner } from "@/lib/business-owner";
 import { validateCsrfForm } from "@/lib/csrf";
 import { requireUsableSubscription } from "@/lib/commercial-access";
+import { createFormFailure, isFormActionError, type PreservedFormState } from "@/lib/form-state";
 import { commerciallyUsableStatuses, limitReachedMessage } from "@/lib/subscriptions";
 import {
   customerIdentitySchema,
@@ -118,6 +119,30 @@ function validateActionSecurity(formData: FormData, scope: string, path: string)
   } catch {
     fail(path, "Security check failed. Please refresh and try again.");
   }
+}
+
+const customerCreateFormFields = [
+  "firstName",
+  "lastName",
+  "phone",
+  "email",
+  "birthday",
+  "createdBranchId",
+  "marketingConsent",
+  "selectedProgramUuid",
+  "referredByPhoneNumber",
+  "referralCode",
+  "notes",
+];
+
+function customerCreateFailure(formData: FormData, message: string, fieldErrors?: Record<string, string>): PreservedFormState {
+  return createFormFailure({
+    formData,
+    fields: customerCreateFormFields,
+    checkboxFields: ["marketingConsent"],
+    message,
+    fieldErrors,
+  });
 }
 
 function generateTemporaryPassword() {
@@ -641,18 +666,34 @@ export async function saveAbusePolicyAction(formData: FormData) {
   redirect("/dashboard/settings?success=Alert policy saved.");
 }
 
-export async function createCustomerAction(formData: FormData) {
-  validateActionSecurity(formData, "dashboard:customers", "/dashboard/customers/new");
+export async function createCustomerAction(_prevState: PreservedFormState, formData: FormData): Promise<PreservedFormState> {
+  try {
+    validateCsrfForm(formData, "dashboard:customers");
+  } catch {
+    return customerCreateFailure(formData, "Security check failed. Please refresh and try again.");
+  }
   const user = await requireBusinessOwner();
-  await requireUsableSubscription(user.businessId).catch((error) => fail("/dashboard/customers/new", error.message));
-  const customer = await enrollCustomerForBusiness({
-    user,
-    formData,
-    path: "/dashboard/customers/new",
-    forcedSource: "OWNER",
-    selectedProgramUuid: getString(formData, "selectedProgramUuid") || undefined,
-    programEnrollmentSource: "OWNER",
-  });
+  let customer: Awaited<ReturnType<typeof enrollCustomerForBusiness>>;
+  try {
+    await requireUsableSubscription(user.businessId);
+    customer = await enrollCustomerForBusiness({
+      user,
+      formData,
+      path: "/dashboard/customers/new",
+      forcedSource: "OWNER",
+      selectedProgramUuid: getString(formData, "selectedProgramUuid") || undefined,
+      programEnrollmentSource: "OWNER",
+      preserveFormState: true,
+    });
+  } catch (error) {
+    if (isFormActionError(error)) {
+      return customerCreateFailure(formData, error.message, error.fieldErrors);
+    }
+    if (error instanceof Error) {
+      return customerCreateFailure(formData, error.message);
+    }
+    return customerCreateFailure(formData, "Customer enrollment failed. Please try again.");
+  }
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/customers");

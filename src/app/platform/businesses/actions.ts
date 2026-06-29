@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { BillingCycle, BusinessType, RecordStatus } from "@prisma/client";
 import { validateCsrfForm } from "@/lib/csrf";
+import { createFormFailure, getFirstZodMessage, getZodFieldErrors, type PreservedFormState } from "@/lib/form-state";
 import { prisma } from "@/lib/prisma";
 import { createDefaultAbusePolicies } from "@/lib/alert-engine";
 import { requireRole } from "@/lib/session";
@@ -94,8 +95,51 @@ function validateSecurity(formData: FormData, path: string) {
   }
 }
 
-export async function createBusinessAction(formData: FormData) {
-  validateSecurity(formData, "/platform/businesses/new");
+const createBusinessFormFields = [
+  "name",
+  "businessType",
+  "status",
+  "branchName",
+  "country",
+  "city",
+  "address",
+  "ownerName",
+  "ownerEmail",
+  "temporaryPassword",
+  "subscriptionPlanId",
+  "billingCycle",
+  "logoUrl",
+  "primaryColor",
+  "secondaryColor",
+  "backgroundColor",
+  "textColor",
+  "buttonColor",
+  "whatsappEnabled",
+  "smsEnabled",
+  "emailEnabled",
+  "preferredDefaultChannel",
+  "whatsappBusinessNumber",
+  "senderEmail",
+  "senderName",
+];
+
+function createBusinessFailure(formData: FormData, message: string, fieldErrors?: Record<string, string>): PreservedFormState {
+  return createFormFailure({
+    formData,
+    fields: createBusinessFormFields,
+    checkboxFields: ["whatsappEnabled", "smsEnabled", "emailEnabled"],
+    passwordFields: ["temporaryPassword"],
+    message,
+    fieldErrors,
+  });
+}
+
+export async function createBusinessAction(_prevState: PreservedFormState, formData: FormData): Promise<PreservedFormState> {
+  try {
+    validateCsrfForm(formData, "platform:businesses");
+  } catch {
+    return createBusinessFailure(formData, "Security check failed. Please refresh and try again.");
+  }
   const platformUser = await requireRole("PLATFORM_OWNER");
 
   const parsed = createBusinessSchema.safeParse({
@@ -127,7 +171,7 @@ export async function createBusinessAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirectWithError("/platform/businesses/new", parsed.error.issues[0]?.message ?? "Validation failed.");
+    return createBusinessFailure(formData, getFirstZodMessage(parsed.error), getZodFieldErrors(parsed.error));
   }
 
   const data = parsed.data;
@@ -137,7 +181,7 @@ export async function createBusinessAction(formData: FormData) {
   });
 
   if (ownerExists) {
-    redirectWithError("/platform/businesses/new", "Owner email is already in use.");
+    return createBusinessFailure(formData, "Owner email is already in use.", { ownerEmail: "Owner email is already in use." });
   }
 
   const plan = await prisma.subscriptionPlan.findUnique({
@@ -146,11 +190,11 @@ export async function createBusinessAction(formData: FormData) {
   });
 
   if (!plan) {
-    redirectWithError("/platform/businesses/new", "Subscription plan is required.");
+    return createBusinessFailure(formData, "Subscription plan is required.", { subscriptionPlanId: "Subscription plan is required." });
   }
 
   if (!isBillingCycleSupported(plan, data.billingCycle as BillingCycle)) {
-    redirectWithError("/platform/businesses/new", "Selected billing cycle is not supported by this plan.");
+    return createBusinessFailure(formData, "Selected billing cycle is not supported by this plan.", { billingCycle: "Selected billing cycle is not supported by this plan." });
   }
 
   const passwordHash = await bcrypt.hash(data.temporaryPassword, 12);

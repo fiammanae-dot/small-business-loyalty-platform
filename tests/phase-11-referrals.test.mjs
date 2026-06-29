@@ -143,6 +143,7 @@ test("customer enrollment supports same-business referral lookup by phone", () =
   const customers = read("src/lib/customers.ts");
   const referrals = read("src/lib/referrals.ts");
   const preview = read("src/components/ReferralPhoneLookupPreview.tsx");
+  const customerForm = read("src/components/CustomerCreateForm.tsx");
   const ownerNew = read("src/app/dashboard/customers/new/page.tsx");
   const branchNew = read("src/app/branch/customers/new/page.tsx");
   const staffNew = read("src/app/staff/customers/new/page.tsx");
@@ -157,11 +158,12 @@ test("customer enrollment supports same-business referral lookup by phone", () =
   assert.match(customers, /createPendingReferralForEnrollment/);
   assert.match(preview, /Referred by:/);
   assert.match(preview, /maskPhoneNumber/);
+  assert.match(customerForm, /Referred by phone number/);
+  assert.match(customerForm, /Check referrer/);
+  assert.match(customerForm, /Referral code or link/);
 
   for (const page of [ownerNew, branchNew, staffNew]) {
-    assert.match(page, /Referred by phone number/);
+    assert.match(page, /CustomerCreateForm/);
     assert.match(page, /ReferralPhoneLookupPreview/);
-    assert.match(page, /Check referrer/);
-    assert.match(page, /Referral code or link/);
   }
 });

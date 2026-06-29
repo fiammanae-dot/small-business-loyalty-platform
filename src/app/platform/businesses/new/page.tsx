@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BusinessForm } from "@/components/BusinessForm";
+import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
@@ -24,7 +25,7 @@ export default async function NewBusinessPage({
           Back to businesses
         </Link>
       </div>
-      <BusinessForm action={createBusinessAction} plans={plans} error={params.error} mode="create" />
+      <BusinessForm action={createBusinessAction} plans={plans} error={params.error} mode="create" csrfInput={<CsrfInput scope="platform:businesses" />} />
     </DashboardShell>
   );
 }

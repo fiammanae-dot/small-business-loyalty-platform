@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BusinessForm } from "@/components/BusinessForm";
+import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
@@ -49,6 +50,7 @@ export default async function EditBusinessPage({
         plans={plans}
         error={query.error}
         mode="edit"
+        csrfInput={<CsrfInput scope="platform:businesses" />}
         business={{
           id: business.id,
           uuid: business.uuid,

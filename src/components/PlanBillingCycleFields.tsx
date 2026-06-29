@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { formatPlanPrice } from "@/lib/subscription-plans";
 
@@ -26,6 +26,9 @@ export function PlanBillingCycleFields({
 }: PlanBillingCycleFieldsProps) {
   const initialPlanId = defaultPlanId ?? plans[0]?.id.toString() ?? "";
   const [selectedPlanId, setSelectedPlanId] = useState(initialPlanId);
+  useEffect(() => {
+    setSelectedPlanId(initialPlanId);
+  }, [initialPlanId]);
   const selectedPlan = useMemo(
     () => plans.find((plan) => plan.id.toString() === selectedPlanId) ?? plans[0],
     [plans, selectedPlanId],

@@ -36,6 +36,12 @@ test("customer create actions return state-specific success messages", () => {
 });
 
 test("customer create forms expose smart program enrollment states", () => {
+  const form = read("src/components/CustomerCreateForm.tsx");
+  assert.match(form, /Customer card will be created now\. No active loyalty program is available for enrollment\./);
+  assert.match(form, /Customer will be enrolled into/);
+  assert.match(form, /name="selectedProgramUuid"/);
+  assert.match(form, /required/);
+
   for (const path of [
     "src/app/dashboard/customers/new/page.tsx",
     "src/app/branch/customers/new/page.tsx",
@@ -43,11 +49,43 @@ test("customer create forms expose smart program enrollment states", () => {
   ]) {
     const page = read(path);
     assert.match(page, /activePrograms/);
-    assert.match(page, /Customer card will be created now\. No active loyalty program is available for enrollment\./);
-    assert.match(page, /Customer will be enrolled into/);
-    assert.match(page, /name="selectedProgramUuid"/);
-    assert.match(page, /required/);
+    assert.match(page, /CustomerCreateForm/);
     assert.match(page, /where: \{ businessId: user\.businessId, active: true \}/);
+  }
+});
+
+test("create forms preserve submitted values after failed server actions", () => {
+  const formState = read("src/lib/form-state.ts");
+  const customerForm = read("src/components/CustomerCreateForm.tsx");
+  const businessForm = read("src/components/BusinessForm.tsx");
+  const customerHelper = read("src/lib/customers.ts");
+  const businessActions = read("src/app/platform/businesses/actions.ts");
+
+  assert.match(formState, /collectFormValues/);
+  assert.match(formState, /passwordFields/);
+  assert.match(customerForm, /useActionState/);
+  assert.match(customerForm, /state\.values/);
+  assert.match(customerForm, /CSS\.escape\(firstInvalidName\)/);
+  assert.match(customerForm, /data-form-error-summary/);
+  assert.match(customerForm, /aria-invalid=\{Boolean\(error\)\}/);
+  assert.match(businessForm, /useActionState/);
+  assert.match(businessActions, /passwordFields: \["temporaryPassword"\]/);
+  assert.match(businessForm, /defaultValue=\{value\("ownerEmail"\)\}/);
+  assert.match(customerHelper, /preserveFormState/);
+  assert.match(customerHelper, /throwFormActionError/);
+  assert.match(businessActions, /createBusinessFailure/);
+  assert.match(businessActions, /Owner email is already in use\./);
+
+  for (const path of [
+    "src/app/dashboard/actions.ts",
+    "src/app/branch/customers/actions.ts",
+    "src/app/staff/customers/actions.ts",
+  ]) {
+    const source = read(path);
+    assert.match(source, /PreservedFormState/);
+    assert.match(source, /customerCreateFailure/);
+    assert.match(source, /isFormActionError/);
+    assert.match(source, /preserveFormState: true/);
   }
 });
 

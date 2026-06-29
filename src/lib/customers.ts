@@ -9,6 +9,7 @@ import { logAuditEvent } from "@/lib/audit";
 import { normalizePhone } from "@/lib/phone";
 import { generateCardToken } from "@/lib/customer-cards";
 import { createEngagementEventIfAllowed } from "@/lib/engagement";
+import { getFirstZodMessage, getZodFieldErrors, isFormActionError, throwFormActionError, type FormFieldErrors } from "@/lib/form-state";
 import { createPendingReferralForEnrollment, extractReferralCode, findActiveReferralReferrerByPhone, generateReferralCode } from "@/lib/referrals";
 import { generateScanToken } from "@/lib/scan";
 
@@ -163,6 +164,7 @@ export async function enrollCustomerForBusiness({
   forcedSource,
   selectedProgramUuid,
   programEnrollmentSource,
+  preserveFormState = false,
 }: {
   user: AuthUser & { businessId: number };
   formData: FormData;
@@ -171,7 +173,15 @@ export async function enrollCustomerForBusiness({
   forcedSource?: "STAFF" | "OWNER";
   selectedProgramUuid?: string;
   programEnrollmentSource?: CustomerProgramEnrollmentSource;
+  preserveFormState?: boolean;
 }) {
+  function failForForm(message: string, fieldErrors?: FormFieldErrors): never {
+    if (preserveFormState) {
+      throwFormActionError(message, fieldErrors);
+    }
+    fail(path, message);
+  }
+
   const identity = customerIdentitySchema.safeParse({
     firstName: getString(formData, "firstName"),
     lastName: getString(formData, "lastName"),
@@ -187,15 +197,15 @@ export async function enrollCustomerForBusiness({
     notes: getString(formData, "notes"),
   });
 
-  if (!identity.success) fail(path, identity.error.issues[0]?.message ?? "Validation failed.");
-  if (!membership.success) fail(path, membership.error.issues[0]?.message ?? "Validation failed.");
+  if (!identity.success) failForForm(getFirstZodMessage(identity.error), getZodFieldErrors(identity.error));
+  if (!membership.success) failForForm(getFirstZodMessage(membership.error), getZodFieldErrors(membership.error));
 
   const branch = await assertBranchBelongsToBusiness(membership.data.createdBranchId, user.businessId);
-  if (membership.data.createdBranchId && !branch) fail(path, "Created branch must belong to your business.");
+  if (membership.data.createdBranchId && !branch) failForForm("Created branch must belong to your business.", { createdBranchId: "Created branch must belong to your business." });
 
   const normalizedPhone = normalizePhone(identity.data.phone);
   if (!normalizedPhone) {
-    fail(path, "Enter a valid UAE mobile number such as 0501234567 or +971501234567.");
+    failForForm("Enter a valid UAE mobile number such as 0501234567 or +971501234567.", { phone: "Enter a valid UAE mobile number such as 0501234567 or +971501234567." });
   }
 
   try {
@@ -233,7 +243,7 @@ export async function enrollCustomerForBusiness({
         where: { id: user.businessId },
         select: { name: true },
       });
-      if (!business) fail(path, "Business not found.");
+      if (!business) failForForm("Business not found.");
 
       const referralCode = await generateReferralCode({
         tx,
@@ -287,10 +297,14 @@ export async function enrollCustomerForBusiness({
         });
 
         if (phoneLookup.status === "INVALID_PHONE") {
-          fail(path, "Enter a valid referred-by UAE mobile number such as 0501234567 or +971501234567.");
+          failForForm("Enter a valid referred-by UAE mobile number such as 0501234567 or +971501234567.", {
+            referredByPhoneNumber: "Enter a valid referred-by UAE mobile number such as 0501234567 or +971501234567.",
+          });
         }
         if (phoneLookup.status === "NOT_FOUND" || !phoneLookup.referrer?.referralCode) {
-          fail(path, "No active customer was found for the referred-by phone number.");
+          failForForm("No active customer was found for the referred-by phone number.", {
+            referredByPhoneNumber: "No active customer was found for the referred-by phone number.",
+          });
         }
 
         referralCodeForEnrollment = phoneLookup.referrer.referralCode;
@@ -318,7 +332,9 @@ export async function enrollCustomerForBusiness({
             : activePrograms.find((program) => program.uuid === selectedProgramUuid);
 
         if (!selectedProgram) {
-          fail(path, activePrograms.length > 1 ? "Select an active loyalty program for this customer." : "Selected loyalty program is not available.");
+          failForForm(activePrograms.length > 1 ? "Select an active loyalty program for this customer." : "Selected loyalty program is not available.", {
+            selectedProgramUuid: activePrograms.length > 1 ? "Select an active loyalty program for this customer." : "Selected loyalty program is not available.",
+          });
         }
 
         await createCustomerProgramMembershipForEnrollment({
@@ -334,14 +350,17 @@ export async function enrollCustomerForBusiness({
       return { duplicate: false, uuid: created.uuid, cardToken: created.cardToken, programEnrollmentStatus };
     });
 
-    if (result.duplicate) fail(path, "This customer is already enrolled in your business.");
+    if (result.duplicate) failForForm("This customer is already enrolled in your business.", { phone: "This customer is already enrolled in your business." });
     return {
       uuid: result.uuid as string,
       cardToken: result.cardToken as string,
       programEnrollmentStatus: result.programEnrollmentStatus as CustomerProgramEnrollmentStatus,
     };
   } catch (error) {
+    if (isFormActionError(error)) {
+      throw error;
+    }
     console.error("Customer enrollment failed", error);
-    fail(path, "Customer enrollment failed. Please try again.");
+    failForForm("Customer enrollment failed. Please try again.");
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const countryCityOptions = [
   {
@@ -57,9 +57,13 @@ const countryCityOptions = [
   },
 ] as const;
 
-export function BranchLocationFields() {
-  const [selectedCountry, setSelectedCountry] = useState("");
+export function BranchLocationFields({ defaultCountry = "", defaultCity = "" }: { defaultCountry?: string; defaultCity?: string }) {
+  const [selectedCountry, setSelectedCountry] = useState(defaultCountry);
   const cities = countryCityOptions.find((option) => option.country === selectedCountry)?.cities ?? [];
+
+  useEffect(() => {
+    setSelectedCountry(defaultCountry);
+  }, [defaultCountry]);
 
   return (
     <>
@@ -86,7 +90,7 @@ export function BranchLocationFields() {
         <select
           key={selectedCountry}
           name="city"
-          defaultValue=""
+          defaultValue={cities.some((city) => city === defaultCity) ? defaultCity : ""}
           required
           disabled={!selectedCountry}
           className="h-11 w-full min-w-0 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm text-[#111827] outline-none transition disabled:cursor-not-allowed disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF] focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
