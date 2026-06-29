@@ -21,9 +21,9 @@ export default async function BusinessOwnerScannerPage({
             <PageHeader
               title="Scanner"
               description="Scan a customer card, search manually, or process a referral."
-              actions={<ButtonLink href="/dashboard" variant="outline">? Back to Dashboard</ButtonLink>}
+              actions={<ButtonLink href="/dashboard" variant="outline">Back to Dashboard</ButtonLink>}
             />
-            <CameraScanner backHref="/dashboard" />
+            <CameraScanner />
           </>
         }
         lookup={user.businessId ? <ScannerManualCustomerSearch businessId={user.businessId} query={qs.customerSearch} actionPath="/dashboard/scanner" /> : null}

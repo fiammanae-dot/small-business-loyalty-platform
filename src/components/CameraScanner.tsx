@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import jsQR from "jsqr";
 import { Camera, RotateCcw, Square } from "lucide-react";
@@ -71,7 +71,7 @@ function extractToken(value: string) {
   return { token: "", reason: "Invalid loyalty QR code." };
 }
 
-export function CameraScanner({ backHref }: { backHref: string }) {
+export function CameraScanner() {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -280,25 +280,15 @@ export function CameraScanner({ backHref }: { backHref: string }) {
   }
 
   return (
-    <SectionCard title="Camera scanner" description="Scan the QR code shown on the customer's LoyaltyBase card. If the camera is unavailable, use the universal customer lookup below." className="max-w-full overflow-x-hidden">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-sm font-semibold business-primary">Camera scanner</p>
-          <h2 className="mt-1 text-xl font-semibold text-[#111827]">Scan customer QR</h2>
-          <p className="mt-2 text-sm leading-6 text-[#6B7280]">Scan the QR code shown on the customer's LoyaltyBase card. If the camera is unavailable, use the universal customer lookup below.</p>
-        </div>
-        <a href={backHref} className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">
-          ← Back to Dashboard
-        </a>
-      </div>
+    <SectionCard aria-label="Camera scanner" className="max-w-full overflow-x-hidden">
 
       {message ? (
-        <div className="mt-4 rounded-md border border-orange-200 business-border-soft bg-orange-50 business-bg-soft px-3 py-2 text-sm font-semibold text-[#9A3412] business-text-strong">
+        <div className="rounded-md border border-orange-200 business-border-soft bg-orange-50 business-bg-soft px-3 py-2 text-sm font-semibold text-[#9A3412] business-text-strong">
           {message}
         </div>
       ) : null}
 
-      <div className="mt-5 overflow-hidden rounded-md border border-[#111827] bg-[#111827]">
+      <div className={`${message ? "mt-5 " : ""}overflow-hidden rounded-md border border-[#111827] bg-[#111827]`}>
         <video ref={videoRef} className="aspect-[3/4] w-full object-cover sm:aspect-video" muted playsInline />
       </div>
 

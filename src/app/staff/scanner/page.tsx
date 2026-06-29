@@ -22,9 +22,9 @@ export default async function StaffScannerPage({
             <PageHeader
               title="Scanner"
               description="Scan a customer card, search manually, or process a referral."
-              actions={<ButtonLink href="/staff" variant="outline">? Back to Dashboard</ButtonLink>}
+              actions={<ButtonLink href="/staff" variant="outline">Back to Dashboard</ButtonLink>}
             />
-            <CameraScanner backHref="/staff" />
+            <CameraScanner />
           </>
         }
         lookup={user.businessId ? <ScannerManualCustomerSearch businessId={user.businessId} branchId={user.branchId} query={qs.customerSearch} actionPath="/staff/scanner" /> : null}
