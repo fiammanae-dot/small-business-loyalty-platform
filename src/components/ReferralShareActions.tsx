@@ -40,7 +40,7 @@ export function ReferralShareActions({
           href={whatsappUrl}
           target="_blank"
           rel="noreferrer"
-          className="rounded-md px-4 py-3 text-center text-sm font-semibold text-white business-button"
+          className="rounded-md px-4 py-3 text-center text-sm font-semibold business-button"
           style={buttonColor ? { backgroundColor: buttonColor } : undefined}
         >
           Share via WhatsApp

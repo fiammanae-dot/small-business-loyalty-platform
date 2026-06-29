@@ -74,7 +74,7 @@ export function BranchLocationFields({ defaultCountry = "", defaultCity = "" }: 
           value={selectedCountry}
           required
           onChange={(event) => setSelectedCountry(event.target.value)}
-          className="h-11 w-full min-w-0 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm text-[#111827] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+          className="h-11 w-full min-w-0 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm text-[#111827] outline-none transition business-ring focus:ring-0"
         >
           <option value="">Select country</option>
           {countryCityOptions.map((option) => (
@@ -93,7 +93,7 @@ export function BranchLocationFields({ defaultCountry = "", defaultCity = "" }: 
           defaultValue={cities.some((city) => city === defaultCity) ? defaultCity : ""}
           required
           disabled={!selectedCountry}
-          className="h-11 w-full min-w-0 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm text-[#111827] outline-none transition disabled:cursor-not-allowed disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF] focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+          className="h-11 w-full min-w-0 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm text-[#111827] outline-none transition disabled:cursor-not-allowed disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF] business-ring focus:ring-0"
         >
           <option value="">{selectedCountry ? "Select city" : "Select country first"}</option>
           {cities.map((city) => (

@@ -31,12 +31,12 @@ export function MetricCard({ label, value, helper, icon, href, tone = "neutral",
       </div>
       <p className="mt-3 text-2xl font-bold text-[#0F172A]">{value}</p>
       {helper ? <p className="mt-1 text-sm leading-5 text-[#64748B]">{helper}</p> : null}
-      {href ? <span className="mt-3 inline-flex text-xs font-semibold text-[#EA580C]">View</span> : null}
+      {href ? <span className="mt-3 inline-flex text-xs font-semibold business-primary">View</span> : null}
     </>
   );
 
   const classes = cn(
-    "block min-w-0 rounded-lg border p-4 shadow-sm transition duration-200 ease-out md:p-5",
+    "block min-w-0 rounded-xl border p-4 shadow-sm transition duration-200 ease-out md:p-5",
     tones[tone],
     href && "cursor-pointer hover:-translate-y-0.5 hover:shadow-md active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:active:translate-y-0",
     className,

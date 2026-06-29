@@ -106,7 +106,7 @@ export function CardShareActions({
             onClick={shareViaWhatsApp}
             disabled={!whatsappUrl || sharing}
             title={!whatsappUrl ? disabledWhatsappLabel : whatsappLabel}
-            className={compact ? "whitespace-nowrap rounded-md border border-[#E5E7EB] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#111827] transition business-hover disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-500" : "rounded-md px-4 py-3 text-center text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-600 business-button"}
+            className={compact ? "whitespace-nowrap rounded-md border border-[#E5E7EB] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#111827] transition business-hover disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-500" : "rounded-md px-4 py-3 text-center text-sm font-semibold disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-600 business-button"}
             style={!compact && whatsappUrl && !sharing && buttonColor ? { backgroundColor: buttonColor } : undefined}
           >
             {sharing ? "Preparing..." : whatsappUrl ? whatsappLabel : disabledWhatsappLabel}

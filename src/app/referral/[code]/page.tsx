@@ -1,5 +1,7 @@
 import QRCode from "qrcode";
+import { BusinessBrandingProvider } from "@/components/BusinessBrandingProvider";
 import { ReferralInviteActions } from "@/components/ReferralInviteActions";
+import { resolveBusinessBranding, type ResolvedBusinessBranding } from "@/lib/business-branding";
 import { getBaseUrl } from "@/lib/customer-cards";
 import { fromStoredTier } from "@/lib/customer-tiers";
 import { prisma } from "@/lib/prisma";
@@ -24,7 +26,8 @@ export default async function ReferralLandingPage({
     return <ReferralUnavailable />;
   }
 
-  const brandColor = referrer.business.branding?.buttonColor ?? "#F97316";
+  const branding = resolveBusinessBranding(referrer.business.branding);
+  const brandColor = branding.buttonColor;
   const referralUrl = `${await getBaseUrl()}/referral/${encodeURIComponent(referralCode)}`;
   const referralQrDataUrl = await QRCode.toDataURL(referralUrl, {
     errorCorrectionLevel: "M",
@@ -63,9 +66,9 @@ export default async function ReferralLandingPage({
   if (registeredReferral) {
     return (
       <ReferralRegistered
-        brandColor={brandColor}
         businessName={referrer.business.name}
         businessType={businessTypeLabels[referrer.business.businessType]}
+        branding={branding}
         logoUrl={referrer.business.branding?.logoUrl ?? null}
         initials={initials}
       />
@@ -73,9 +76,10 @@ export default async function ReferralLandingPage({
   }
 
   return (
-    <main className="min-h-screen bg-[#FFF7ED] px-4 py-6 text-[#111827] sm:py-10">
-      <section className="mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-[#FED7AA] bg-white shadow-sm">
-        <div className="px-5 py-6 text-white" style={{ backgroundColor: brandColor }}>
+    <BusinessBrandingProvider branding={branding}>
+    <main className="min-h-screen px-4 py-6 sm:py-10" style={{ backgroundColor: branding.backgroundColor, color: branding.textColor }}>
+      <section className="mx-auto w-full max-w-md overflow-hidden rounded-3xl border border-[#E5E7EB] bg-white shadow-sm">
+        <div className="business-bg px-5 py-6">
           <div className="flex items-center gap-3">
             {referrer.business.branding?.logoUrl ? (
               <img
@@ -84,14 +88,14 @@ export default async function ReferralLandingPage({
                 className="h-14 w-14 rounded-xl bg-white object-cover p-1"
               />
             ) : (
-              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 text-base font-bold text-white">
+              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 text-base font-bold text-current">
                 {initials}
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-wide text-white/80">Referral invitation</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-current opacity-80">Referral invitation</p>
               <h1 className="mt-1 break-words text-2xl font-semibold leading-tight">{referrer.business.name}</h1>
-              <p className="mt-1 text-sm text-white/85">{businessTypeLabels[referrer.business.businessType]}</p>
+              <p className="mt-1 text-sm text-current opacity-85">{businessTypeLabels[referrer.business.businessType]}</p>
             </div>
           </div>
         </div>
@@ -101,13 +105,13 @@ export default async function ReferralLandingPage({
             <p className="text-sm text-[#6B7280]">You have been invited by</p>
             <p className="mt-1 text-xl font-semibold text-[#111827]">{referrerDisplayName}</p>
             {referrerTier ? (
-              <p className="mt-2 inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white" style={{ backgroundColor: brandColor }}>
+              <p className="mt-2 inline-flex rounded-full business-button px-3 py-1 text-xs font-semibold uppercase tracking-wide">
                 {referrerTier} member
               </p>
             ) : null}
           </div>
 
-          <p className="mt-4 rounded-xl bg-[#FFF7ED] px-4 py-3 text-center text-sm font-medium leading-6 text-[#9A3412]">
+          <p className="mt-4 rounded-xl business-bg-soft px-4 py-3 text-center text-sm font-medium leading-6 business-primary-strong">
             {rewardMessage}
           </p>
 
@@ -136,8 +140,7 @@ export default async function ReferralLandingPage({
               ].map((step, index) => (
                 <li key={step} className="flex gap-3">
                   <span
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-                    style={{ backgroundColor: brandColor }}
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full business-button text-xs font-bold"
                   >
                     {index + 1}
                   </span>
@@ -156,43 +159,45 @@ export default async function ReferralLandingPage({
         </div>
       </section>
     </main>
+    </BusinessBrandingProvider>
   );
 }
 
 function ReferralRegistered({
-  brandColor,
   businessName,
   businessType,
+  branding,
   logoUrl,
   initials,
 }: {
-  brandColor: string;
   businessName: string;
   businessType: string;
+  branding: ResolvedBusinessBranding;
   logoUrl: string | null;
   initials: string;
 }) {
   return (
-    <main className="min-h-screen bg-[#FFF7ED] px-4 py-6 text-[#111827] sm:py-10">
-      <section className="mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-[#FED7AA] bg-white shadow-sm">
-        <div className="px-5 py-6 text-white" style={{ backgroundColor: brandColor }}>
+    <BusinessBrandingProvider branding={branding}>
+    <main className="min-h-screen px-4 py-6 sm:py-10" style={{ backgroundColor: branding.backgroundColor, color: branding.textColor }}>
+      <section className="mx-auto w-full max-w-md overflow-hidden rounded-3xl border border-[#E5E7EB] bg-white shadow-sm">
+        <div className="business-bg px-5 py-6">
           <div className="flex items-center gap-3">
             {logoUrl ? (
               <img src={logoUrl} alt={`${businessName} logo`} className="h-14 w-14 rounded-xl bg-white object-cover p-1" />
             ) : (
-              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 text-base font-bold text-white">
+              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 text-base font-bold text-current">
                 {initials}
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-wide text-white/80">Referral invitation</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-current opacity-80">Referral invitation</p>
               <h1 className="mt-1 break-words text-2xl font-semibold leading-tight">{businessName}</h1>
-              <p className="mt-1 text-sm text-white/85">{businessType}</p>
+              <p className="mt-1 text-sm text-current opacity-85">{businessType}</p>
             </div>
           </div>
         </div>
         <div className="px-5 py-8 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full text-xl font-bold text-white" style={{ backgroundColor: brandColor }}>
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full business-button text-xl font-bold">
             OK
           </div>
           <h1 className="mt-5 text-2xl font-semibold text-[#111827]">Referral Registered</h1>
@@ -202,6 +207,7 @@ function ReferralRegistered({
         </div>
       </section>
     </main>
+    </BusinessBrandingProvider>
   );
 }
 function friendlyReferralId(referralCode: string) {

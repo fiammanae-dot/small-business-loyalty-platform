@@ -9,7 +9,7 @@ type SectionCardProps = HTMLAttributes<HTMLElement> & {
 
 export function SectionCard({ title, description, actions, children, className, ...props }: SectionCardProps) {
   return (
-    <section className={cn("min-w-0 rounded-lg border border-[#E2E8F0] bg-white p-4 shadow-sm md:p-5", className)} {...props}>
+    <section className={cn("min-w-0 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-sm md:p-5", className)} {...props}>
       {(title || description || actions) && (
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
