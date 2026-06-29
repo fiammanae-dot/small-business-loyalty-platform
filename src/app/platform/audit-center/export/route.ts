@@ -142,7 +142,7 @@ function classifyEventType(action: string, entityType: string) {
   if (value.includes("REWARD")) return "Reward Actions";
   if (value.includes("COOLDOWN")) return "Cooldown Actions";
   if (value.includes("LOGIN") || value.includes("AUTH")) return "Authentication Events";
-  if (value.includes("DEMO_MODE")) return "Safety Mode Events";
+  if (value.includes("DEMO_MODE")) return "Pilot Protection Events";
   if (value.includes("SETTING") || value.includes("PLATFORM")) return "Platform Settings Events";
   if (value.includes("SECURITY") || value.includes("BLOCKED") || value.includes("PERMISSION")) return "Security Events";
   return "Administrative Changes";

@@ -14,7 +14,7 @@ test("platform settings exposes environment information and health summary", () 
     "General",
     "Security",
     "Notifications",
-    "Safety Mode",
+    "Pilot Protection",
     "Audit Logs",
     "role=\"tab\"",
     "Environment Information",
@@ -45,11 +45,11 @@ test("platform settings exposes environment information and health summary", () 
   assert.match(page, /prisma\.auditEvent\.findMany/);
 });
 
-test("platform settings safety mode panel is explicit about current protections", () => {
+test("platform settings pilot protection panel is explicit about current protections", () => {
   const page = read("src/app/platform/settings/page.tsx");
 
   for (const expected of [
-    "Safety Mode Status",
+    "Pilot Protection Status",
     "Current Restrictions",
     "Manual message sending blocked",
     "Invoice payment recording blocked",
@@ -59,7 +59,7 @@ test("platform settings safety mode panel is explicit about current protections"
     "WhatsApp sending",
     "Campaign delivery",
     "External integrations",
-    "No real customer communications will be sent while Safety Mode protections are active.",
+    "No real customer communications will be sent while Pilot Protection is active.",
   ]) {
     assert.match(page, new RegExp(expected));
   }

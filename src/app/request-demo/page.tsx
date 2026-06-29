@@ -15,7 +15,7 @@ export default function RequestDemoPage() {
       <section className="relative border-y border-[#EEF2F6] bg-[radial-gradient(circle_at_18%_12%,rgba(255,122,24,0.12),transparent_28%),linear-gradient(180deg,#FFFFFF,#FFFCF9)] px-5 py-16 sm:px-8 lg:px-16 lg:py-20">
         <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[minmax(0,1fr)_500px] lg:items-start">
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.14em] text-[#EA580C]">Request a walkthrough</p>
+            <p className="text-sm font-bold uppercase tracking-[0.14em] text-[#EA580C]">Request Demo</p>
             <h1 className="mt-4 text-4xl font-extrabold tracking-[-0.045em] text-[#08111F] sm:text-6xl lg:text-7xl">
               See how LoyaltyBase fits your business.
             </h1>

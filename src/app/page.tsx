@@ -95,7 +95,7 @@ function HeroSection() {
               </MotionItem>
               <MotionItem>
                 <Link href="/request-demo" className="inline-flex h-16 w-full items-center justify-center gap-4 rounded-[12px] border border-[#E5E7EB] bg-white px-7 text-[17px] font-bold text-[#111827] shadow-sm transition hover:border-[#F97316] hover:text-[#EA580C] focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:ring-offset-2 sm:w-auto">
-                  Book a walkthrough <CalendarDays className="h-5 w-5" aria-hidden="true" />
+                  Book a Demo <CalendarDays className="h-5 w-5" aria-hidden="true" />
                 </Link>
               </MotionItem>
             </MotionStagger>

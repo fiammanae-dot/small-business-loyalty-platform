@@ -131,7 +131,7 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
                 LB
               </span>
               <span className="text-sm font-semibold text-[#111827]">LoyaltyBase</span>
-              {demoModeEnabled ? <span className="rounded-md bg-orange-50 business-bg-soft px-2 py-1 text-xs font-semibold business-primary">Safety Mode</span> : null}
+              {demoModeEnabled ? <span className="rounded-md bg-orange-50 business-bg-soft px-2 py-1 text-xs font-semibold business-primary">Pilot Protection</span> : null}
               {activeSupportSession ? (
                 <span className="rounded-md bg-red-600 px-2 py-1 text-xs font-black uppercase text-white">Support</span>
               ) : null}
@@ -200,7 +200,7 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
       >
         {demoModeEnabled ? (
           <div className="min-w-0 break-words rounded-md border border-orange-200 business-border-soft bg-orange-50 business-bg-soft px-4 py-3 text-sm font-semibold business-primary-strong lg:col-span-2">
-            Safety Mode Active - External communications and selected production actions are restricted.
+            Pilot Protection Active - External communications and selected production actions are restricted.
           </div>
         ) : null}
 

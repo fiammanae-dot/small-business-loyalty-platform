@@ -54,7 +54,7 @@ export default function ResourcesPage() {
         </div>
       </section>
 
-      <CTASection title="Launch with a cleaner plan from day one" description="Request a walkthrough and map the right loyalty setup for your business type, team, and branch count." />
+      <CTASection title="Launch with a cleaner plan from day one" description="Request Demo and map the right loyalty setup for your business type, team, and branch count." />
     </MarketingFrame>
   );
 }

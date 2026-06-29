@@ -36,7 +36,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <CTASection title="Need help choosing a plan?" description="Request a walkthrough and we will map the right plan to your branch count, program count, and launch goals." />
+      <CTASection title="Need help choosing a plan?" description="Request Demo and we will map the right plan to your branch count, program count, and launch goals." />
     </MarketingFrame>
   );
 }

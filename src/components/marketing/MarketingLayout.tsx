@@ -182,7 +182,7 @@ export function PricingPlanCards({ compact = false }: { compact?: boolean }) {
           </div>
           <p className="mt-5 text-sm leading-6 text-[#607089]">{plan.bestFor}</p>
           <Link href="/request-demo" className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#FF5A0A] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#EA580C] focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:ring-offset-2">
-            Request a walkthrough
+            Request Demo
           </Link>
         </article>
       ))}
@@ -224,7 +224,7 @@ export function MarketingFooter() {
         </div>
         <div className="grid gap-6 sm:grid-cols-3">
           <FooterColumn title="Website" links={marketingNavItems} />
-          <FooterColumn title="Start" links={[{ label: "Request a walkthrough", href: "/request-demo" }, { label: "FAQ", href: "/faq" }, { label: "Log in", href: "/login" }]} />
+          <FooterColumn title="Start" links={[{ label: "Request Demo", href: "/request-demo" }, { label: "FAQ", href: "/faq" }, { label: "Log in", href: "/login" }]} />
           <div>
             <h3 className="text-sm font-bold text-[#111827]">Included</h3>
             <ul className="mt-4 grid gap-3 text-sm text-[#64748B]">

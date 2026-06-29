@@ -75,7 +75,7 @@ export default function FaqPage() {
         </div>
       </section>
 
-      <CTASection title="Still have questions?" description="Book a walkthrough and review the workflow from customer join to reward redemption." />
+      <CTASection title="Still have questions?" description="Book a Demo and review the workflow from customer join to reward redemption." />
     </MarketingFrame>
   );
 }

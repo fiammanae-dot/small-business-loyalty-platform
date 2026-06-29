@@ -73,10 +73,10 @@ export function DemoRequestForm() {
         />
       </label>
       <button type="submit" className="min-h-12 rounded-2xl bg-[#FF5A0A] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#EA580C] focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:ring-offset-2">
-        Request a walkthrough
+        Request Demo
       </button>
       <p className="text-xs leading-5 text-[#64748B]">
-        We use your details only to prepare a relevant LoyaltyBase walkthrough.
+        We use your details only to prepare a relevant LoyaltyBase demo.
       </p>
     </form>
   );
