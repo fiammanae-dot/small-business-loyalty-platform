@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { WalletCardShell, type WalletTheme } from "@/components/public-card/WalletCardShell";
 
 export type LoyaltyWalletCardProps = {
@@ -22,6 +22,19 @@ export type LoyaltyWalletCardProps = {
   required?: number;
   remaining?: number;
   completion?: number;
+};
+
+const businessNameClampStyle: CSSProperties = {
+  display: "-webkit-box",
+  WebkitBoxOrient: "vertical",
+  WebkitLineClamp: 2,
+  overflow: "hidden",
+};
+
+const programNameClampStyle: CSSProperties = {
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
 };
 
 export function LoyaltyWalletCard({
@@ -307,32 +320,42 @@ function CardHeader({
   tierLabel: string;
 }) {
   return (
-    <div className="flex items-start justify-between gap-3">
-      <div className="flex min-w-0 items-start gap-3">
-        {businessLogoUrl ? (
-          <div
-            aria-label={`${businessName} logo`}
-            className="h-12 w-12 shrink-0 rounded-full bg-cover bg-center shadow-sm"
-            style={{ backgroundImage: `url(${businessLogoUrl})`, backgroundColor: theme.logoBackground }}
-          />
-        ) : (
-          <div
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-black shadow-sm"
-            style={{ backgroundColor: theme.logoBackground, color: theme.logoText }}
-            aria-hidden="true"
-          >
-            {theme.style === "premium-dark" ? tierIcon : businessName.slice(0, 1).toUpperCase()}
-          </div>
-        )}
-        <div className="min-w-0">
-          <h1 className="truncate text-[18px] font-bold leading-tight">{businessName}</h1>
-          <p className="pt-0.5 text-[15px]" style={{ color: theme.mutedText }}>{displayProgram}</p>
+    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3">
+      {businessLogoUrl ? (
+        <div
+          aria-label={`${businessName} logo`}
+          className="h-12 w-12 shrink-0 rounded-full bg-cover bg-center shadow-sm"
+          style={{ backgroundImage: `url(${businessLogoUrl})`, backgroundColor: theme.logoBackground }}
+        />
+      ) : (
+        <div
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-black shadow-sm"
+          style={{ backgroundColor: theme.logoBackground, color: theme.logoText }}
+          aria-hidden="true"
+        >
+          {theme.style === "premium-dark" ? tierIcon : businessName.slice(0, 1).toUpperCase()}
         </div>
+      )}
+      <div className="min-w-0 pr-1">
+        <h1
+          className="text-[18px] font-extrabold leading-[1.08] tracking-[-0.02em]"
+          style={businessNameClampStyle}
+          title={businessName}
+        >
+          {businessName}
+        </h1>
+        <p
+          className="pt-1 text-[13px] font-medium leading-tight"
+          style={{ ...programNameClampStyle, color: theme.mutedText }}
+          title={displayProgram}
+        >
+          {displayProgram}
+        </p>
       </div>
-      <div className="shrink-0 text-right">
+      <div className="w-[104px] shrink-0 text-right">
         <p className="text-[11px] uppercase tracking-[0.18em]" style={{ color: theme.mutedText }}>Tier</p>
         <span
-          className="mt-2 inline-flex rounded-full px-3 py-1 text-[14px] font-semibold ring-1"
+          className="mt-2 inline-flex max-w-full justify-center rounded-full px-3 py-1 text-center text-[12px] font-semibold leading-tight ring-1"
           style={{
             backgroundColor: theme.badgeBackground,
             color: theme.badgeText,

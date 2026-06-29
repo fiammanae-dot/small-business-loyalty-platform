@@ -164,3 +164,18 @@ test("public customer card supports saving the loyalty card as a PNG image", () 
   assert.match(themes, /minimal-light/);
   assert.match(themes, /image-background/);
 });
+
+test("wallet card header keeps business names readable beside the tier badge", () => {
+  const walletCard = read("src/components/public-card/LoyaltyWalletCard.tsx");
+  const frontExport = read("src/components/public-card/LoyaltyCardFrontExport.tsx");
+
+  for (const source of [walletCard, frontExport]) {
+    assert.match(source, /grid-cols-\[auto_minmax\(0,1fr\)_auto\]/);
+    assert.match(source, /WebkitLineClamp: 2/);
+    assert.match(source, /title=\{[^}]*businessName[^}]*\}/);
+    assert.match(source, /w-\[104px\] shrink-0 text-right/);
+  }
+
+  assert.doesNotMatch(walletCard, /<h1 className="truncate[^"]*">\{businessName\}<\/h1>/);
+  assert.doesNotMatch(frontExport, /<h1 className="truncate[^"]*">\{wallet\.businessName\}<\/h1>/);
+});
