@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { ResolvedBusinessBranding } from "@/lib/business-branding";
+import { getReadableForeground } from "@/lib/color-contrast";
 
 type BusinessBrandingProviderProps = {
   branding: ResolvedBusinessBranding | null;
@@ -12,6 +13,9 @@ type BusinessBrandingStyle = CSSProperties & {
   "--business-background"?: string;
   "--business-text"?: string;
   "--business-button"?: string;
+  "--business-primary-foreground"?: string;
+  "--business-button-foreground"?: string;
+  "--business-bg-foreground"?: string;
 };
 
 export function BusinessBrandingProvider({ branding, children }: BusinessBrandingProviderProps) {
@@ -23,6 +27,9 @@ export function BusinessBrandingProvider({ branding, children }: BusinessBrandin
     "--business-background": branding.backgroundColor,
     "--business-text": branding.textColor,
     "--business-button": branding.buttonColor,
+    "--business-primary-foreground": getReadableForeground(branding.primaryColor),
+    "--business-button-foreground": getReadableForeground(branding.buttonColor),
+    "--business-bg-foreground": getReadableForeground(branding.primaryColor),
   };
 
   return (

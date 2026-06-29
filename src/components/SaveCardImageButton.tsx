@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toPng } from "html-to-image";
+import { getReadableForeground, hasReadableContrast } from "@/lib/color-contrast";
 
 type SaveCardImageButtonProps = {
   frontTargetSelector: string;
@@ -23,6 +24,9 @@ function filenameSafe(value: string) {
 export function SaveCardImageButton({ frontTargetSelector, backTargetSelector, customerName, buttonColor }: SaveCardImageButtonProps) {
   const [message, setMessage] = useState("");
   const [savingSide, setSavingSide] = useState<"front" | "back" | null>(null);
+  const buttonForeground = getReadableForeground(buttonColor);
+  const outlineColor = buttonColor && hasReadableContrast(buttonColor, "#FFFFFF", 3) ? buttonColor : "#CBD5E1";
+  const outlineTextColor = buttonColor && hasReadableContrast(buttonColor, "#FFFFFF", 4.5) ? buttonColor : "#111827";
 
   async function saveAsImage(side: "front" | "back") {
     const targetSelector = side === "front" ? frontTargetSelector : backTargetSelector;
@@ -70,8 +74,8 @@ export function SaveCardImageButton({ frontTargetSelector, backTargetSelector, c
           type="button"
           onClick={() => saveAsImage("front")}
           disabled={savingSide !== null}
-          className="w-full rounded-md px-4 py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-600"
-          style={!savingSide && buttonColor ? { backgroundColor: buttonColor } : undefined}
+          className="w-full rounded-md px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-600"
+          style={!savingSide && buttonColor ? { backgroundColor: buttonColor, color: buttonForeground } : undefined}
         >
           {savingSide === "front" ? "Preparing front..." : "\uD83D\uDCF7 Download Front"}
         </button>
@@ -80,7 +84,7 @@ export function SaveCardImageButton({ frontTargetSelector, backTargetSelector, c
           onClick={() => saveAsImage("back")}
           disabled={savingSide !== null}
           className="w-full rounded-md border px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-500"
-          style={!savingSide && buttonColor ? { borderColor: buttonColor, color: buttonColor } : undefined}
+          style={!savingSide && buttonColor ? { borderColor: outlineColor, color: outlineTextColor } : undefined}
         >
           {savingSide === "back" ? "Preparing back..." : "\u25A3 Download Back"}
         </button>

@@ -838,8 +838,14 @@ input {
 .business-primary { color: var(--business-primary, #f97316); }
 .business-primary-strong { color: var(--business-primary-strong, #9a3412); }
 .business-text-strong { color: var(--business-primary-strong, #9a3412); }
-.business-bg { background-color: var(--business-primary, #f97316); }
-.business-button { background-color: var(--business-button, #f97316); }
+.business-bg {
+  background-color: var(--business-primary, #f97316);
+  color: var(--business-bg-foreground, #ffffff);
+}
+.business-button {
+  background-color: var(--business-button, #f97316);
+  color: var(--business-button-foreground, #ffffff);
+}
 .business-bg-soft { background-color: var(--business-primary-soft, #fff7ed); }
 .business-secondary-bg-soft { background-color: var(--business-secondary-soft, #fff7ed); }
 .business-border { border-color: var(--business-primary, #f97316); }
@@ -856,7 +862,7 @@ input {
 .business-theme .business-progress { background-color: var(--business-primary, #f97316); }
 .business-theme .business-action-primary {
   background-color: var(--business-button, #f97316);
-  color: #ffffff;
+  color: var(--business-button-foreground, #ffffff);
 }
 .business-theme .business-action-primary:hover {
   filter: brightness(0.95);

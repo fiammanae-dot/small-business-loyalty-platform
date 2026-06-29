@@ -1,4 +1,5 @@
 import type { CardTheme } from "@prisma/client";
+import { DARK_FOREGROUND, getReadableForeground, hasReadableContrast } from "@/lib/color-contrast";
 
 export type WalletVisualStyle = "modern-clean" | "premium-dark" | "minimal-light" | "image-background";
 
@@ -238,16 +239,43 @@ export function resolveCardThemeColors({
 }) {
   const theme = getCardThemeDefinition(cardTheme);
   if (theme.value === "BUSINESS_DEFAULT") {
+    const primaryForeground = getReadableForeground(branding.primaryColor);
+    const cardText = hasReadableContrast(primaryForeground, branding.secondaryColor, 4.5)
+      ? primaryForeground
+      : DARK_FOREGROUND;
+    const mutedText = cardText === DARK_FOREGROUND ? "#4B5563" : "rgba(255,255,255,0.80)";
+    const progressFill = hasReadableContrast(branding.secondaryColor, branding.backgroundColor, 3)
+      ? branding.secondaryColor
+      : branding.primaryColor;
+    const progressTrack = cardText === DARK_FOREGROUND ? "#E5E7EB" : withAlpha(branding.secondaryColor, 0.20);
+    const usesReadableSingleForeground = hasReadableContrast(cardText, branding.primaryColor, 4.5) && hasReadableContrast(cardText, branding.secondaryColor, 4.5);
+    const cardBackground = usesReadableSingleForeground
+      ? `linear-gradient(180deg, ${branding.primaryColor} 0%, ${branding.secondaryColor} 100%)`
+      : branding.backgroundColor;
+
     return {
       ...theme,
       accent: branding.primaryColor,
       secondary: branding.secondaryColor,
       pageBackground: branding.backgroundColor,
-      progressTrack: withAlpha(branding.secondaryColor, 0.16),
-      progressFill: branding.secondaryColor,
+      cardBackground,
+      cardText,
+      mutedText,
+      panelBackground: cardText === DARK_FOREGROUND ? "#F8FAFC" : withAlpha(branding.secondaryColor, 0.10),
+      border: cardText === DARK_FOREGROUND ? "#E5E7EB" : "rgba(255,255,255,0.14)",
+      logoBackground: cardText === DARK_FOREGROUND ? branding.primaryColor : "#FFFFFF",
+      logoText: cardText === DARK_FOREGROUND ? getReadableForeground(branding.primaryColor) : "#0F172A",
+      badgeBackground: cardText === DARK_FOREGROUND ? "#F8FAFC" : withAlpha(branding.secondaryColor, 0.12),
+      badgeText: cardText === DARK_FOREGROUND ? DARK_FOREGROUND : cardText,
+      badgeBorder: cardText === DARK_FOREGROUND ? "#E5E7EB" : "rgba(255,255,255,0.18)",
+      rewardPanelBackground: cardText === DARK_FOREGROUND ? "#FFFFFF" : "#FFFFFF",
+      rewardPanelText: DARK_FOREGROUND,
+      rewardPanelMuted: "#6B7280",
+      rewardPanelBorder: "rgba(15, 23, 42, 0.08)",
+      progressTrack,
+      progressFill,
       button: branding.buttonColor,
       text: branding.textColor,
-      cardBackground: `linear-gradient(180deg, ${branding.primaryColor} 0%, ${branding.secondaryColor} 100%)`,
     };
   }
 
