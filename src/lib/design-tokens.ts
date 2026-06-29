@@ -45,6 +45,8 @@ export const designTokens = {
   },
   focusRing:
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] focus-visible:ring-offset-2",
+  businessFocusRing:
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary,#F97316)] focus-visible:ring-offset-2",
   transitions: {
     fast: "duration-150",
     normal: "duration-200",

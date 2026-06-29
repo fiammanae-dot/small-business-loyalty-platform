@@ -21,14 +21,16 @@ test("design tokens define brand, semantic, spacing, focus, and breakpoint found
 
 test("core button component exposes approved variants and accessible focus states", function () {
   const button = read("src/components/ui/Button.tsx");
+  const styles = read("src/components/ui/styles.ts");
   assert.match(button, /export type ButtonVariant/);
   for (const variant of ["primary", "secondary", "outline", "ghost", "danger", "success", "business"]) {
     assert.match(button, new RegExp(`${variant}:`));
   }
-  assert.match(button, /focus-visible:ring-2/);
-  assert.match(button, /active:translate-y-px/);
-  assert.match(button, /motion-reduce:transition-none/);
-  assert.match(button, /disabled:pointer-events-none/);
+  assert.match(button, /interactiveFocusRing/);
+  assert.match(styles, /focus-visible:ring-2/);
+  assert.match(styles, /active:translate-y-px/);
+  assert.match(styles, /motion-reduce:transition-none/);
+  assert.match(styles, /disabled:pointer-events-none/);
 });
 
 test("status badge and metric card support shared variants without business logic", function () {
@@ -66,6 +68,7 @@ test("shared table, search, filters, and menus include premium responsive polish
   const filter = read("src/components/ui/FilterBar.tsx");
   const menu = read("src/components/ui/ActionMenu.tsx");
   const progress = read("src/components/ui/ProgressBar.tsx");
+  const styles = read("src/components/ui/styles.ts");
 
   assert.match(table, /\[scrollbar-gutter:stable\]/);
   assert.match(table, /shadow-sm/);
@@ -73,7 +76,8 @@ test("shared table, search, filters, and menus include premium responsive polish
   assert.match(search, /motion-reduce:transition-none/);
   assert.match(filter, /min-w-0 rounded-lg/);
   assert.match(menu, /shadow-xl/);
-  assert.match(menu, /active:translate-y-px/);
+  assert.match(menu, /interactiveMotion/);
+  assert.match(styles, /active:translate-y-px/);
   assert.match(progress, /motion-reduce:transition-none/);
 });
 

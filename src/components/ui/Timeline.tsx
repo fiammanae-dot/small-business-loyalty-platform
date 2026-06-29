@@ -20,7 +20,7 @@ export function TimelineItem({
 }) {
   return (
     <li className={cn("relative pl-8", className)}>
-      <span className="absolute left-0 top-1 flex h-5 w-5 items-center justify-center rounded-full border border-[#FED7AA] bg-[#FFF7ED] text-[#F97316]" aria-hidden>
+      <span className="absolute left-0 top-1 flex h-5 w-5 items-center justify-center rounded-full border business-border-soft business-bg-soft business-primary" aria-hidden>
         {marker}
       </span>
       <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">

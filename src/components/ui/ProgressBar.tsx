@@ -19,7 +19,7 @@ export function ProgressBar({
     <div className={cn("w-full", className)}>
       {label ? <div className="mb-2 text-sm font-medium text-[#334155]">{label}</div> : null}
       <div className="h-2.5 overflow-hidden rounded-full bg-[#E2E8F0]" role="progressbar" aria-valuemin={0} aria-valuemax={max} aria-valuenow={value} aria-label={label}>
-        <div className={cn("h-full rounded-full bg-[#F97316] transition-all duration-300 ease-out motion-reduce:transition-none", barClassName)} style={{ width: `${percent}%` }} />
+        <div className={cn("h-full rounded-full bg-[#F97316] business-progress transition-all duration-300 ease-out motion-reduce:transition-none", barClassName)} style={{ width: `${percent}%` }} />
       </div>
     </div>
   );

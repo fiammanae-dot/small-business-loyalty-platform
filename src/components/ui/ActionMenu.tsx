@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
 import { MoreHorizontal } from "lucide-react";
 import { cn } from "./utils";
+import { interactiveFocusRing, interactiveMotion } from "./styles";
 
 export function ActionMenu({ label = "More actions", children, className }: { label?: string; children: ReactNode; className?: string }) {
   return (
     <details className={cn("relative inline-block text-left", className)}>
-      <summary className="inline-flex h-9 cursor-pointer list-none items-center justify-center gap-2 rounded-lg border border-[#CBD5E1] bg-white px-3 text-sm font-semibold text-[#334155] shadow-sm transition duration-200 ease-out hover:bg-[#F8FAFC] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:active:translate-y-0">
+      <summary className={cn("inline-flex h-9 cursor-pointer list-none items-center justify-center gap-2 rounded-lg border border-[#CBD5E1] bg-white px-3 text-sm font-semibold text-[#334155] shadow-sm hover:bg-[#F8FAFC]", interactiveMotion, interactiveFocusRing)}>
         <MoreHorizontal className="h-4 w-4" aria-hidden />
         <span>{label}</span>
       </summary>
