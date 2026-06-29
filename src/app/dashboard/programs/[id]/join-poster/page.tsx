@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { BusinessBrandingProvider } from "@/components/BusinessBrandingProvider";
 import { PrintPageButton } from "@/components/PrintPageButton";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
+import { resolveBusinessBranding } from "@/lib/business-branding";
 import { getProgramJoinQrDataUrl } from "@/lib/program-join";
 import { prisma } from "@/lib/prisma";
 
@@ -34,12 +36,13 @@ export default async function ProgramJoinPosterPage({ params }: { params: Promis
     );
   }
 
-  const brandColor = program.business.branding?.buttonColor ?? program.business.branding?.primaryColor ?? "#F97316";
+  const branding = resolveBusinessBranding(program.business.branding);
   const qrCode = await getProgramJoinQrDataUrl(program.joinToken);
   const unavailable = !program.active || program.business.status !== "ACTIVE";
 
   return (
-    <main className="min-h-screen bg-[#FFF7ED] px-4 py-6 text-[#111827] print:bg-white print:p-0">
+    <BusinessBrandingProvider branding={branding}>
+    <main className="min-h-screen px-4 py-6 print:bg-white print:p-0" style={{ backgroundColor: branding.backgroundColor, color: branding.textColor }}>
       <div className="mx-auto mb-4 flex w-full max-w-3xl items-center justify-between gap-3 print:hidden">
         <Link href="/dashboard/programs" className="text-sm font-semibold text-[#475569] hover:text-[#0F172A]">
           Back to Programs
@@ -47,11 +50,11 @@ export default async function ProgramJoinPosterPage({ params }: { params: Promis
         <PrintPageButton />
       </div>
 
-      <section className="mx-auto w-full max-w-3xl overflow-hidden rounded-[36px] border border-orange-100 bg-white shadow-2xl shadow-orange-200/40 print:max-w-none print:rounded-none print:border-0 print:shadow-none">
-        <div className="px-8 py-8 text-center text-white sm:px-12" style={{ backgroundColor: brandColor }}>
-          <p className="text-sm font-bold uppercase tracking-[0.24em] text-white/80">LoyaltyBase</p>
+      <section className="mx-auto w-full max-w-3xl overflow-hidden rounded-[36px] border border-[#E5E7EB] bg-white shadow-2xl shadow-slate-200/60 print:max-w-none print:rounded-none print:border-0 print:shadow-none">
+        <div className="business-bg px-8 py-8 text-center sm:px-12">
+          <p className="text-sm font-bold uppercase tracking-[0.24em] text-current opacity-80">LoyaltyBase</p>
           <h1 className="mt-4 text-4xl font-black tracking-[-0.04em] sm:text-6xl">Scan to join</h1>
-          <p className="mt-4 text-xl font-semibold text-white/90">{business.name}</p>
+          <p className="mt-4 text-xl font-semibold text-current opacity-90">{business.name}</p>
         </div>
 
         <div className="grid gap-8 px-8 py-10 text-center sm:px-12">
@@ -62,7 +65,7 @@ export default async function ProgramJoinPosterPage({ params }: { params: Promis
           ) : null}
 
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#F97316]">Join our loyalty program</p>
+            <p className="text-sm font-bold uppercase tracking-[0.18em] business-primary-strong">Join our loyalty program</p>
             <h2 className="mt-3 text-3xl font-black tracking-[-0.03em] text-[#0F172A]">{program.name}</h2>
             <p className="mt-3 text-lg font-semibold text-[#475569]">{program.rewardName}</p>
             <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[#64748B]">{program.rewardDescription}</p>
@@ -82,5 +85,6 @@ export default async function ProgramJoinPosterPage({ params }: { params: Promis
         </div>
       </section>
     </main>
+    </BusinessBrandingProvider>
   );
 }

@@ -39,7 +39,7 @@ export default async function EditCustomerPage({
             />
             <label className="space-y-2">
               <span className="text-sm font-medium text-[#111827]">Status</span>
-              <select name="status" defaultValue={membership.status} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm">
+              <select name="status" defaultValue={membership.status} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0">
                 <option value="ACTIVE">Active</option>
                 <option value="INACTIVE">Inactive</option>
                 <option value="BLOCKED">Blocked</option>
@@ -52,10 +52,10 @@ export default async function EditCustomerPage({
           </label>
           <label className="space-y-2">
             <span className="text-sm font-medium text-[#111827]">Notes</span>
-            <textarea name="notes" rows={4} defaultValue={membership.notes ?? ""} className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100" />
+            <textarea name="notes" rows={4} defaultValue={membership.notes ?? ""} className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none business-ring focus:ring-0" />
           </label>
           <div className="flex gap-3">
-            <button type="submit" className="rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">
+            <button type="submit" className="rounded-md business-button px-4 py-2 text-sm font-semibold">
               Save customer
             </button>
             <Link href={`/dashboard/customers/${membership.uuid}`} className="rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]">
@@ -92,7 +92,7 @@ function Input({
         defaultValue={defaultValue}
         required={required}
         disabled={disabled}
-        className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100 disabled:bg-zinc-50 disabled:text-[#6B7280]"
+        className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0 disabled:bg-zinc-50 disabled:text-[#6B7280]"
       />
     </label>
   );

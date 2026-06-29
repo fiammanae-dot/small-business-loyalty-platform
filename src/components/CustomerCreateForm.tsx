@@ -33,8 +33,8 @@ export function CustomerCreateForm({
   initialValues = {},
   submitLabel = "Enroll customer",
   submittingLabel = "Enrolling...",
-  inputFocusClass = "focus:border-[#F97316] focus:ring-4 focus:ring-orange-100",
-  primaryButtonClass = "bg-[#F97316] text-white",
+  inputFocusClass = "business-ring focus:ring-0",
+  primaryButtonClass = "business-button",
 }: CustomerCreateFormProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const [state, formAction, isPending] = useActionState(action, { values: initialValues });

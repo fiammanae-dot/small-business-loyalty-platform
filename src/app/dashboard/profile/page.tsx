@@ -24,11 +24,11 @@ export default async function BusinessProfilePage({
         <div className="grid gap-4 md:grid-cols-2">
           <label className="space-y-2">
             <span className="text-sm font-medium text-[#111827]">Business name</span>
-            <input name="name" defaultValue={business.name} required className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100" />
+            <input name="name" defaultValue={business.name} required className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0" />
           </label>
           <label className="space-y-2">
             <span className="text-sm font-medium text-[#111827]">Business type</span>
-            <select name="businessType" defaultValue={business.businessType} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100">
+            <select name="businessType" defaultValue={business.businessType} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0">
               {businessTypeOptions.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
               ))}
@@ -39,7 +39,7 @@ export default async function BusinessProfilePage({
           <ReadOnly label="Created date" value={formatDate(business.createdAt)} />
           <ReadOnly label="Current business type" value={businessTypeLabels[business.businessType]} />
         </div>
-        <button type="submit" className="mt-6 h-10 rounded-md business-button px-4 text-sm font-semibold text-white hover:bg-orange-600">
+        <button type="submit" className="mt-6 h-10 rounded-md business-button px-4 text-sm font-semibold transition hover:brightness-95">
           Save profile
         </button>
       </form>

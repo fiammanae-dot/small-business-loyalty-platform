@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { joinProgramAction } from "@/app/join/program/[token]/actions";
+import { BusinessBrandingProvider } from "@/components/BusinessBrandingProvider";
+import { resolveBusinessBranding } from "@/lib/business-branding";
 import { getCardUrl } from "@/lib/customer-cards";
 import { prisma } from "@/lib/prisma";
 
@@ -36,15 +38,16 @@ export default async function ProgramJoinPage({
       })
     : null;
   const successCardUrl = successMembership ? await getCardUrl(successMembership.cardToken) : null;
-  const brandColor = program.business.branding?.buttonColor ?? program.business.branding?.primaryColor ?? "#F97316";
+  const branding = resolveBusinessBranding(program.business.branding);
 
   return (
-    <main className="min-h-screen bg-[#FFF7ED] px-4 py-8 text-[#111827]">
-      <section className="mx-auto w-full max-w-lg overflow-hidden rounded-[32px] border border-orange-100 bg-white shadow-2xl shadow-orange-200/40">
-        <div className="px-6 py-6 text-white" style={{ backgroundColor: brandColor }}>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/80">Join loyalty program</p>
+    <BusinessBrandingProvider branding={branding}>
+      <main className="min-h-screen px-4 py-8" style={{ backgroundColor: branding.backgroundColor, color: branding.textColor }}>
+      <section className="mx-auto w-full max-w-lg overflow-hidden rounded-[32px] border border-[#E5E7EB] bg-white shadow-2xl shadow-slate-200/60">
+        <div className="business-bg px-6 py-6">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-current opacity-80">Join loyalty program</p>
           <h1 className="mt-3 text-3xl font-black tracking-[-0.04em]">{program.business.name}</h1>
-          <p className="mt-2 text-lg font-semibold text-white/90">{program.name}</p>
+          <p className="mt-2 text-lg font-semibold text-current opacity-90">{program.name}</p>
         </div>
 
         {successMembership && successCardUrl ? (
@@ -60,8 +63,7 @@ export default async function ProgramJoinPage({
             </div>
             <Link
               href={successCardUrl}
-              className="mt-5 flex min-h-12 w-full items-center justify-center rounded-xl px-5 text-sm font-bold text-white"
-              style={{ backgroundColor: brandColor }}
+              className="mt-5 flex min-h-12 w-full items-center justify-center rounded-xl business-button px-5 text-sm font-bold"
             >
               Open My Loyalty Card
             </Link>
@@ -92,8 +94,7 @@ export default async function ProgramJoinPage({
               </p>
               <button
                 type="submit"
-                className="min-h-12 rounded-xl px-5 text-sm font-bold text-white transition hover:brightness-95"
-                style={{ backgroundColor: brandColor }}
+                className="min-h-12 rounded-xl business-button px-5 text-sm font-bold transition hover:brightness-95"
               >
                 Join Program
               </button>
@@ -102,6 +103,7 @@ export default async function ProgramJoinPage({
         )}
       </section>
     </main>
+    </BusinessBrandingProvider>
   );
 }
 
@@ -126,7 +128,7 @@ function Input({
         required={required}
         autoComplete={autoComplete}
         placeholder={placeholder}
-        className="h-12 rounded-xl border border-[#E5E7EB] px-4 text-sm font-normal outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+        className="h-12 rounded-xl border border-[#E5E7EB] px-4 text-sm font-normal outline-none transition business-ring focus:ring-0"
       />
     </label>
   );
@@ -136,7 +138,7 @@ function JoinUnavailable() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-white px-4">
       <section className="w-full max-w-sm rounded-2xl border border-[#E5E7EB] bg-white p-6 text-center shadow-sm">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[#FFF7ED] text-sm font-bold text-[#F97316]">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[#F8FAFC] text-sm font-bold text-[#111827]">
           LB
         </div>
         <h1 className="mt-5 text-2xl font-semibold text-[#111827]">Program not available</h1>
