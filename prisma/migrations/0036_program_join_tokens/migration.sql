@@ -1,4 +1,4 @@
-﻿ALTER TABLE "public"."loyalty_programs"
+ALTER TABLE "public"."loyalty_programs"
 ADD COLUMN IF NOT EXISTS "join_token" UUID;
 
 UPDATE "public"."loyalty_programs"
