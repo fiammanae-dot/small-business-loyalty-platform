@@ -58,8 +58,10 @@ function fail(token: string, message: string): never {
   redirect(`/scan/${token}?error=${encodeURIComponent(message)}`);
 }
 
-function success(token: string, transactionId: number): never {
-  redirect(`/scan/${token}?issued=${transactionId}`);
+function success(token: string, transactionId: number, shareAfterStamp = false): never {
+  const params = new URLSearchParams({ issued: transactionId.toString() });
+  if (shareAfterStamp) params.set("share", "whatsapp");
+  redirect(`/scan/${token}?${params.toString()}`);
 }
 
 function redemptionSuccess(token: string, redemptionId: number): never {
@@ -100,6 +102,7 @@ export async function issueStampAction(formData: FormData) {
   if (!parsed.success) fail(token, parsed.error.issues[0]?.message ?? "Validation failed.");
 
   const data = parsed.data;
+  const shareAfterStamp = getString(formData, "shareAfterStamp") === "whatsapp";
   const scannerBranch = user.branchId
     ? await prisma.branch.findFirst({
         where: { id: user.branchId, businessId: user.businessId },
@@ -167,7 +170,7 @@ export async function issueStampAction(formData: FormData) {
     existingTransaction.businessId === user.businessId &&
     existingTransaction.customerProgramMembershipId === programMembership.id
   ) {
-    success(data.scanToken, existingTransaction.id);
+    success(data.scanToken, existingTransaction.id, shareAfterStamp);
   }
 
   try {
@@ -434,12 +437,12 @@ export async function issueStampAction(formData: FormData) {
       select: { id: true, businessId: true, customerProgramMembershipId: true },
     });
     if (existing?.businessId === user.businessId && existing.customerProgramMembershipId === programMembership.id) {
-      success(data.scanToken, existing.id);
+      success(data.scanToken, existing.id, shareAfterStamp);
     }
     throw error;
   }
 
-  success(data.scanToken, transactionId);
+  success(data.scanToken, transactionId, shareAfterStamp);
 }
 
 export async function redeemRewardAction(formData: FormData) {

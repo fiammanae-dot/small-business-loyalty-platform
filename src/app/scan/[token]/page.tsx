@@ -7,11 +7,12 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { IdempotencyInput } from "@/components/IdempotencyInput";
 import { ScannerSoundFeedback } from "@/components/ScannerSoundFeedback";
 import { StatusBadge } from "@/components/StatusBadge";
+import { StampWhatsAppSharePrompt } from "@/components/StampWhatsAppSharePrompt";
 import { ButtonLink, EmptyState, MetricCard, ProgressBar, SectionCard } from "@/components/ui";
 import { ScannerResultCard } from "@/components/domain";
 import { DetailPageLayout } from "@/components/layouts";
 import { BRANCH_INACTIVE_MESSAGE, hasUsableSubscription, SUBSCRIPTION_REQUIRED_MESSAGE } from "@/lib/commercial-access";
-import { maskPhoneNumber } from "@/lib/customer-cards";
+import { getCardUrl, maskPhoneNumber } from "@/lib/customer-cards";
 import { formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { fromStoredTier } from "@/lib/customer-tiers";
@@ -102,7 +103,7 @@ export default async function ScanResultPage({
   searchParams,
 }: {
   params: Promise<{ token: string }>;
-  searchParams: Promise<{ error?: string; issued?: string; redeemed?: string; undone?: string }>;
+  searchParams: Promise<{ error?: string; issued?: string; redeemed?: string; undone?: string; share?: string }>;
 }) {
   const user = await getCurrentUser();
   const { token } = await params;
@@ -292,8 +293,10 @@ export default async function ScanResultPage({
   ]);
 
   const customer = businessMembership.globalCustomer;
+  const customerName = (customer.firstName + " " + (customer.lastName ?? "")).trim();
   const program = programMembership.loyaltyProgram;
   const progress = progressValue(programMembership.earnedStamps, programMembership.bonusStamps);
+  const cardUrl = await getCardUrl(businessMembership.cardToken);
   const issuedTransactionId = qs.issued ? Number(qs.issued) : null;
   const redeemedId = qs.redeemed ? Number(qs.redeemed) : null;
   const issuedTransaction = issuedTransactionId
@@ -367,7 +370,7 @@ export default async function ScanResultPage({
       <ScanStatusBanner tone="green" title="Valid Customer" description="This loyalty QR belongs to your business and is ready for service." />
 
       <ActionSummarySection
-        customerName={(customer.firstName + " " + (customer.lastName ?? "")).trim()}
+        customerName={customerName}
         phone={customer.normalizedPhone}
         tier={fromStoredTier(businessMembership.currentTier) ?? "Bronze"}
         status={businessMembership.status}
@@ -399,6 +402,20 @@ export default async function ScanResultPage({
           quantity={issuedTransaction.quantity}
           canUndo={undoEligibility.allowed}
           unavailableReason={undoEligibility.reason}
+          sharePrompt={
+            qs.share === "whatsapp" && successProgress !== null ? (
+              <StampWhatsAppSharePrompt
+                cardUrl={cardUrl}
+                businessName={businessMembership.business.name}
+                customerName={customerName}
+                recipientPhone={customer.normalizedPhone}
+                auditMembershipUuid={businessMembership.uuid}
+                currentVisits={successProgress}
+                requiredVisits={program.requiredStamps}
+                autoOpen
+              />
+            ) : null
+          }
         />
       ) : null}
 
@@ -544,21 +561,39 @@ function QuickScanActions({ token, rewardReady, canRedeem }: { token: string; re
           </p>
         )
       ) : (
-        <form action={issueStampAction}>
-          <CsrfInput scope="scan:stamp" />
-          <IdempotencyInput scope="stamp" />
-          <input type="hidden" name="scanToken" value={token} />
-          <input type="hidden" name="quantity" value="1" />
-          <ConfirmSubmitButton
-            title="Issue stamp?"
-            message="This will add 1 visit to the customer's selected program."
-            confirmLabel="Issue Stamp"
-            cancelLabel="Cancel"
-            className="business-button min-h-12 w-full rounded-md bg-[#F97316] px-5 text-base font-semibold text-white shadow-sm transition"
-          >
-            Issue Stamp
-          </ConfirmSubmitButton>
-        </form>
+        <div className="grid gap-3">
+          <form action={issueStampAction}>
+            <CsrfInput scope="scan:stamp" />
+            <IdempotencyInput scope="stamp" />
+            <input type="hidden" name="scanToken" value={token} />
+            <input type="hidden" name="quantity" value="1" />
+            <ConfirmSubmitButton
+              title="Issue stamp?"
+              message="This will add 1 visit to the customer's selected program."
+              confirmLabel="Issue Stamp"
+              cancelLabel="Cancel"
+              className="business-button min-h-12 w-full rounded-md bg-[#F97316] px-5 text-base font-semibold text-white shadow-sm transition"
+            >
+              Issue Stamp
+            </ConfirmSubmitButton>
+          </form>
+          <form action={issueStampAction}>
+            <CsrfInput scope="scan:stamp" />
+            <IdempotencyInput scope="stamp-share" />
+            <input type="hidden" name="scanToken" value={token} />
+            <input type="hidden" name="quantity" value="1" />
+            <input type="hidden" name="shareAfterStamp" value="whatsapp" />
+            <ConfirmSubmitButton
+              title="Issue stamp and share updated card?"
+              message="This will add 1 visit, then prepare a WhatsApp message with the customer's updated loyalty card."
+              confirmLabel="Issue Stamp & Share"
+              cancelLabel="Cancel"
+              className="min-h-12 w-full rounded-md border border-[#E5E7EB] bg-white px-5 text-base font-semibold text-[#111827] shadow-sm transition business-hover"
+            >
+              Issue Stamp &amp; Share via WhatsApp
+            </ConfirmSubmitButton>
+          </form>
+        </div>
       )}
     </section>
   );
@@ -570,12 +605,14 @@ function StampUndoPanel({
   quantity,
   canUndo,
   unavailableReason,
+  sharePrompt,
 }: {
   token: string;
   transactionId: number;
   quantity: number;
   canUndo: boolean;
   unavailableReason: string | null;
+  sharePrompt?: React.ReactNode;
 }) {
   return (
     <section className={`rounded-md border p-5 ${quantity >= 3 ? "border-orange-200 bg-orange-50 text-orange-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>
@@ -616,6 +653,7 @@ function StampUndoPanel({
           </ButtonLink>
         </div>
       </div>
+      {sharePrompt ? <div className="mt-4">{sharePrompt}</div> : null}
     </section>
   );
 }

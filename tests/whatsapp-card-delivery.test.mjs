@@ -52,6 +52,33 @@ test("authenticated WhatsApp card shares are audited and role scoped", () => {
   }
 });
 
+test("stamp workflow can issue and share the updated card through WhatsApp", () => {
+  const scanPage = read("src/app/scan/[token]/page.tsx");
+  const scanActions = read("src/app/scan/actions.ts");
+  const prompt = read("src/components/StampWhatsAppSharePrompt.tsx");
+
+  assert.match(scanPage, /Issue Stamp &amp; Share via WhatsApp/);
+  assert.match(scanPage, /shareAfterStamp/);
+  assert.match(scanPage, /StampWhatsAppSharePrompt/);
+  assert.match(scanPage, /getCardUrl\(businessMembership\.cardToken\)/);
+  assert.match(scanActions, /shareAfterStamp/);
+  assert.match(scanActions, /params\.set\("share", "whatsapp"\)/);
+
+  for (const expected of [
+    "Thank you for visiting ${businessName}!",
+    "Your loyalty card has just been updated.",
+    "Current progress:",
+    "${currentVisits} / ${requiredVisits}",
+    "View your updated loyalty card here:",
+    "${cardUrl}",
+    "We look forward to seeing you again!",
+    "formatUaePhoneForWhatsApp",
+    "auditLoyaltyCardWhatsAppShare",
+  ]) {
+    assert.match(prompt, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  }
+});
+
 test("card delivery controls are available on registration success, profiles, lists, and public card", () => {
   const staffSuccess = read("src/app/staff/customers/success/page.tsx");
   const customerProfile = read("src/app/dashboard/customers/[id]/page.tsx");
