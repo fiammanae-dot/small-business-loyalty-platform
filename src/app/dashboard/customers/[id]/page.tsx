@@ -61,6 +61,7 @@ export default async function CustomerProfilePage({
   const cardUrl = await getCardUrl(membership.cardToken);
   const nextCardStatus = membership.cardStatus === "ACTIVE" ? "DISABLED" : "ACTIVE";
   const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim();
+  const cardShareMessageType = qs.success?.includes("Customer created") ? "welcome" : "resend";
 
   const programCards = await Promise.all(
     membership.programMemberships.map(async (programMembership) => ({
@@ -278,6 +279,7 @@ return (
                   recipientPhone={customer.normalizedPhone}
                   auditMembershipUuid={membership.uuid}
                   whatsappLabel="Share Card"
+                  messageType={cardShareMessageType}
                   showCopy={false}
                   showWallet={false}
                   compact
@@ -323,6 +325,7 @@ return (
             cardLastViewedAt={membership.cardLastViewedAt}
             membershipUuid={membership.uuid}
             nextCardStatus={nextCardStatus}
+            messageType={cardShareMessageType}
             compact
           />
           <TierDetailsPanel customerTier={customerTier} rewardRedemptionsCount={rewardRedemptions.length} totalBonusStamps={totalBonusStamps} activePrograms={activePrograms} joinedAt={membership.joinedAt} compact />
@@ -648,6 +651,7 @@ function CustomerCardPanel({
   cardLastViewedAt,
   membershipUuid,
   nextCardStatus,
+  messageType,
   compact = false,
 }: {
   cardUrl: string;
@@ -660,6 +664,7 @@ function CustomerCardPanel({
   cardLastViewedAt: Date | null;
   membershipUuid: string;
   nextCardStatus: string;
+  messageType: "welcome" | "resend";
   compact?: boolean;
 }) {
   return (
@@ -719,6 +724,7 @@ function CustomerCardPanel({
           customerName={customerName}
           recipientPhone={customerPhone}
           auditMembershipUuid={membershipUuid}
+          messageType={messageType}
           showWallet={false}
         />
       </div> : null}

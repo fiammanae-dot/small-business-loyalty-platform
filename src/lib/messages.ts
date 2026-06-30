@@ -2,7 +2,7 @@ import "server-only";
 
 import type { CommunicationChannel, MessageDeliveryStatus } from "@prisma/client";
 import { maskPhoneNumber } from "@/lib/customer-cards";
-import { formatUaePhoneForWhatsApp } from "@/lib/phone";
+import { getWhatsAppManualLink as buildWhatsAppManualLink } from "@/lib/whatsapp-messages";
 
 export const messageChannelLabels: Record<CommunicationChannel, string> = {
   WHATSAPP: "WhatsApp",
@@ -35,7 +35,5 @@ export function maskEmail(email?: string | null) {
 }
 
 export function getWhatsAppManualLink(phone: string, message: string) {
-  const normalized = formatUaePhoneForWhatsApp(phone);
-  if (!normalized) return null;
-  return `https://wa.me/${normalized}?text=${encodeURIComponent(message)}`;
+  return buildWhatsAppManualLink(phone, message);
 }

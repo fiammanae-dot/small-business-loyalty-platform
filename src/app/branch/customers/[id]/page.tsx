@@ -36,6 +36,7 @@ export default async function BranchCustomerProfilePage({
   const membership = await getBusinessCustomerOrRedirect(id, user.businessId, user.branchId);
   const customer = membership.globalCustomer;
   const cardUrl = await getCardUrl(membership.cardToken);
+  const cardShareMessageType = qs.success?.includes("Customer created") ? "welcome" : "resend";
   const programCards = await Promise.all(
     membership.programMemberships.map(async (programMembership) => ({
       programMembership,
@@ -127,6 +128,7 @@ export default async function BranchCustomerProfilePage({
             customerName={`${customer.firstName} ${customer.lastName ?? ""}`.trim()}
             recipientPhone={customer.normalizedPhone}
             auditMembershipUuid={membership.uuid}
+            messageType={cardShareMessageType}
             showWallet={false}
           />
         </div>

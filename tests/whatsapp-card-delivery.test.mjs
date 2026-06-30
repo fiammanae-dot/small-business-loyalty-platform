@@ -8,6 +8,7 @@ function read(path) {
 
 test("loyalty card WhatsApp share uses the approved welcome template and secure card URL", () => {
   const component = read("src/components/CardShareActions.tsx");
+  const helper = read("src/lib/whatsapp-messages.ts");
 
   for (const expected of [
     "Hello ${customerName}",
@@ -17,12 +18,14 @@ test("loyalty card WhatsApp share uses the approved welcome template and secure 
     "${cardUrl}",
     "present the QR code when earning stamps or redeeming rewards",
     "Thank you for joining our loyalty program.",
-    "https://wa.me/${whatsappPhone}",
     "formatUaePhoneForWhatsApp",
   ]) {
-    assert.match(component, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    assert.match(helper, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }
 
+  assert.match(helper, /https:\/\/wa\.me\/\$\{normalized\}/);
+  assert.match(component, /buildWelcomeCardWhatsAppMessage/);
+  assert.match(component, /getWhatsAppManualLink/);
   assert.doesNotMatch(component, /customerId/);
   assert.doesNotMatch(component, /database ID/);
 });
@@ -56,6 +59,7 @@ test("stamp workflow can issue and share the updated card through WhatsApp", () 
   const scanPage = read("src/app/scan/[token]/page.tsx");
   const scanActions = read("src/app/scan/actions.ts");
   const prompt = read("src/components/StampWhatsAppSharePrompt.tsx");
+  const helper = read("src/lib/whatsapp-messages.ts");
 
   assert.match(scanPage, /Issue Stamp &amp; Share via WhatsApp/);
   assert.match(scanPage, /shareAfterStamp/);
@@ -73,6 +77,13 @@ test("stamp workflow can issue and share the updated card through WhatsApp", () 
     "${cardUrl}",
     "We look forward to seeing you again!",
     "formatUaePhoneForWhatsApp",
+  ]) {
+    assert.match(helper, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  }
+
+  for (const expected of [
+    "buildUpdatedCardWhatsAppMessage",
+    "getWhatsAppManualLink",
     "auditLoyaltyCardWhatsAppShare",
   ]) {
     assert.match(prompt, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
@@ -85,9 +96,10 @@ test("card delivery controls are available on registration success, profiles, li
   const branchProfile = read("src/app/branch/customers/[id]/page.tsx");
   const customerList = read("src/app/dashboard/customers/page.tsx");
   const branchList = read("src/app/branch/customers/page.tsx");
+  const staffProfile = read("src/app/staff/customers/[id]/page.tsx");
   const publicCard = read("src/app/card/[token]/page.tsx");
 
-  for (const source of [staffSuccess, customerProfile, branchProfile, customerList, branchList, publicCard]) {
+  for (const source of [staffSuccess, customerProfile, branchProfile, customerList, branchList, staffProfile, publicCard]) {
     assert.match(source, /CardShareActions/);
     assert.match(source, /recipientPhone/);
     assert.match(source, /cardUrl/);
@@ -98,4 +110,14 @@ test("card delivery controls are available on registration success, profiles, li
   assert.match(publicCard, /Last Updated:/);
   assert.match(publicCard, /always shows your latest stamps, reward status, tier, and QR code/);
   assert.match(customerList, /whatsappLabel="WhatsApp"/);
+});
+
+test("manual WhatsApp phase does not add Cloud API sending or provider environment usage", () => {
+  const helper = read("src/lib/whatsapp-messages.ts");
+  const cardActions = read("src/components/CardShareActions.tsx");
+  const stampPrompt = read("src/components/StampWhatsAppSharePrompt.tsx");
+
+  for (const source of [helper, cardActions, stampPrompt]) {
+    assert.doesNotMatch(source, /WHATSAPP_ACCESS_TOKEN|WHATSAPP_PHONE_NUMBER_ID|graph\.facebook|whatsapp_business|fetch\(/iu);
+  }
 });

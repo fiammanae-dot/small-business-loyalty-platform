@@ -275,6 +275,7 @@ function CustomerActions({ row, businessName }: { row: CustomerRow; businessName
           recipientPhone={row.raw.globalCustomer.normalizedPhone}
           auditMembershipUuid={row.raw.uuid}
           whatsappLabel="WhatsApp"
+          messageType="resend"
           showCopy
           showWallet={false}
           compact

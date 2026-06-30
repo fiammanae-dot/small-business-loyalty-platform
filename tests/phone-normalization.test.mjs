@@ -54,7 +54,7 @@ test("customer search accepts local and international UAE phone formats", () => 
 });
 
 test("WhatsApp manual links use wa.me with UAE digits only", () => {
-  const messages = read("src/lib/messages.ts");
+  const messages = read("src/lib/whatsapp-messages.ts");
 
   assert.match(messages, /formatUaePhoneForWhatsApp/);
   assert.match(messages, /https:\/\/wa\.me\/\$\{normalized\}/);

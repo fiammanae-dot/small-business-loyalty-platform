@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { auditLoyaltyCardWhatsAppShare } from "@/app/card-share-actions";
-import { formatUaePhoneForWhatsApp } from "@/lib/phone";
+import { buildUpdatedCardWhatsAppMessage, getWhatsAppManualLink } from "@/lib/whatsapp-messages";
 
 type StampWhatsAppSharePromptProps = {
   cardUrl: string;
@@ -27,16 +27,18 @@ export function StampWhatsAppSharePrompt({
 }: StampWhatsAppSharePromptProps) {
   const [message, setMessage] = useState("");
   const [opened, setOpened] = useState(false);
-  const whatsappPhone = useMemo(() => (recipientPhone ? formatUaePhoneForWhatsApp(recipientPhone) : null), [recipientPhone]);
   const whatsappMessage = useMemo(
     () =>
-      `Thank you for visiting ${businessName}!\n\nYour loyalty card has just been updated.\n\nCurrent progress:\n${currentVisits} / ${requiredVisits}\n\nView your updated loyalty card here:\n${cardUrl}\n\nWe look forward to seeing you again!`,
-    [businessName, cardUrl, currentVisits, requiredVisits],
+      buildUpdatedCardWhatsAppMessage({
+        businessName,
+        cardUrl,
+        customerName,
+        currentVisits,
+        requiredVisits,
+      }),
+    [businessName, cardUrl, customerName, currentVisits, requiredVisits],
   );
-  const whatsappUrl = useMemo(() => {
-    if (!whatsappPhone) return null;
-    return `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(whatsappMessage)}`;
-  }, [whatsappMessage, whatsappPhone]);
+  const whatsappUrl = useMemo(() => getWhatsAppManualLink(recipientPhone, whatsappMessage), [recipientPhone, whatsappMessage]);
 
   async function openWhatsApp() {
     if (!whatsappUrl) {

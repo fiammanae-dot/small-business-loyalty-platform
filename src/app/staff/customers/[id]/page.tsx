@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type React from "react";
 import QRCode from "qrcode";
+import { CardShareActions } from "@/components/CardShareActions";
 import { DashboardShell } from "@/components/DashboardShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { getCardUrl, getShortCardToken } from "@/lib/customer-cards";
@@ -128,6 +129,19 @@ export default async function StaffCustomerProfilePage({
           <p className="mt-2 break-all text-xs text-[#6B7280]">Card: {getShortCardToken(membership.cardToken)}</p>
           <Image src={cardQrCode} alt={`${customerName} loyalty card QR`} width={220} height={220} unoptimized className="mx-auto mt-4 rounded-md border border-[#E5E7EB]" />
           <p className="mt-4 break-all text-xs text-[#6B7280]">{cardUrl}</p>
+          <div className="mt-4">
+            <CardShareActions
+              cardUrl={cardUrl}
+              businessName={membership.business.name}
+              customerName={customerName}
+              recipientPhone={customer.normalizedPhone}
+              auditMembershipUuid={membership.uuid}
+              whatsappLabel="WhatsApp"
+              messageType="resend"
+              showCopy={false}
+              showWallet={false}
+            />
+          </div>
         </aside>
       </section>
     </DashboardShell>

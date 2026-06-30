@@ -3,7 +3,7 @@
 import { AlertTriangle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { auditLoyaltyCardWhatsAppShare } from "@/app/card-share-actions";
-import { formatUaePhoneForWhatsApp } from "@/lib/phone";
+import { buildResendCardWhatsAppMessage, buildWelcomeCardWhatsAppMessage, getWhatsAppManualLink } from "@/lib/whatsapp-messages";
 
 type CardShareActionsProps = {
   cardUrl: string;
@@ -16,6 +16,7 @@ type CardShareActionsProps = {
   showWallet?: boolean;
   buttonColor?: string;
   compact?: boolean;
+  messageType?: "welcome" | "resend";
 };
 
 export function CardShareActions({
@@ -29,22 +30,18 @@ export function CardShareActions({
   showWallet = true,
   buttonColor,
   compact = false,
+  messageType = "welcome",
 }: CardShareActionsProps) {
   const [message, setMessage] = useState("");
   const [sharing, setSharing] = useState(false);
-  const whatsappPhone = useMemo(
-    () => (recipientPhone ? formatUaePhoneForWhatsApp(recipientPhone) : null),
-    [recipientPhone],
-  );
   const shareText = useMemo(
-    () =>
-      `Hello ${customerName},\n\nWelcome to ${businessName}!\nYour Loyalty Card is ready.\n\nOpen your card here:\n${cardUrl}\n\nYou can save this message for future visits and present the QR code when earning stamps or redeeming rewards.\n\nThank you for joining our loyalty program.`,
-    [businessName, cardUrl, customerName],
+    () => {
+      const input = { businessName, cardUrl, customerName };
+      return messageType === "resend" ? buildResendCardWhatsAppMessage(input) : buildWelcomeCardWhatsAppMessage(input);
+    },
+    [businessName, cardUrl, customerName, messageType],
   );
-  const whatsappUrl = useMemo(() => {
-    if (!whatsappPhone) return null;
-    return `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(shareText)}`;
-  }, [shareText, whatsappPhone]);
+  const whatsappUrl = useMemo(() => getWhatsAppManualLink(recipientPhone, shareText), [recipientPhone, shareText]);
   const disabledWhatsappLabel = recipientPhone ? "Invalid phone" : "No phone";
 
   async function copyLink() {

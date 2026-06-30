@@ -152,6 +152,7 @@ export default async function BranchCustomersPage({
                         customerName={membership.customerName}
                         recipientPhone={membership.globalCustomer.normalizedPhone}
                         auditMembershipUuid={membership.uuid}
+                        messageType="resend"
                         showCopy={false}
                         showWallet={false}
                       />
@@ -192,6 +193,7 @@ export default async function BranchCustomersPage({
                     customerName={membership.customerName}
                     recipientPhone={membership.globalCustomer.normalizedPhone}
                     auditMembershipUuid={membership.uuid}
+                    messageType="resend"
                     showCopy={false}
                     showWallet={false}
                   />
