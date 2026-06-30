@@ -3,7 +3,8 @@ import type { BusinessType, CardTheme } from "@prisma/client";
 export type CardDesignVersion = "v1";
 export type CardDesignLayoutStyle = "wallet";
 export type CardDesignCardStyle = "business-default" | "modern-clean" | "premium-dark" | "minimal-light" | "image-background";
-export type CardDesignStampJourneyStyle = "progress-first";
+export const stampJourneyStyles = ["CIRCLES", "CONNECTED_DOTS", "PROGRESS_BAR", "ICON_GRID", "ROADMAP", "TICKET_PUNCH"] as const;
+export type CardDesignStampJourneyStyle = (typeof stampJourneyStyles)[number];
 export type CardDesignStampIcon = "default";
 export type CardDesignProgressStyle = "linear";
 export type CardDesignTypographyPreset = "system";
@@ -33,7 +34,7 @@ export const defaultCardDesign: CardDesign = {
   version: "v1",
   layoutStyle: "wallet",
   cardStyle: "business-default",
-  stampJourneyStyle: "progress-first",
+  stampJourneyStyle: "CIRCLES",
   stampIcon: "default",
   progressStyle: "linear",
   typographyPreset: "system",
@@ -122,7 +123,7 @@ const cardDesignValues = {
   version: ["v1"],
   layoutStyle: ["wallet"],
   cardStyle: ["business-default", "modern-clean", "premium-dark", "minimal-light", "image-background"],
-  stampJourneyStyle: ["progress-first"],
+  stampJourneyStyle: stampJourneyStyles,
   stampIcon: ["default"],
   progressStyle: ["linear"],
   typographyPreset: ["system"],
@@ -138,12 +139,20 @@ function resolveValue<T extends keyof typeof cardDesignValues>(key: T, value: un
   return (typeof value === "string" && allowed.includes(value) ? value : defaultCardDesign[key]) as CardDesign[T];
 }
 
+export function resolveStampJourneyStyle(value: unknown): CardDesignStampJourneyStyle {
+  if (value === "progress-first") {
+    return "CIRCLES";
+  }
+
+  return resolveValue("stampJourneyStyle", value);
+}
+
 export function resolveCardDesign(input?: CardDesignInput): CardDesign {
   return {
     version: resolveValue("version", input?.version),
     layoutStyle: resolveValue("layoutStyle", input?.layoutStyle),
     cardStyle: resolveValue("cardStyle", input?.cardStyle),
-    stampJourneyStyle: resolveValue("stampJourneyStyle", input?.stampJourneyStyle),
+    stampJourneyStyle: resolveStampJourneyStyle(input?.stampJourneyStyle),
     stampIcon: resolveValue("stampIcon", input?.stampIcon),
     progressStyle: resolveValue("progressStyle", input?.progressStyle),
     typographyPreset: resolveValue("typographyPreset", input?.typographyPreset),
