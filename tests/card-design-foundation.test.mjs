@@ -20,6 +20,7 @@ test("card design foundation defines future Design Studio fields without persist
     "progressStyle",
     "typographyPreset",
     "backgroundStyle",
+    "backgroundPattern",
     "decorationStyle",
     "rewardStyle",
     "footerStyle",

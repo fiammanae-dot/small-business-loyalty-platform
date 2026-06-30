@@ -51,6 +51,7 @@ export type CardRenderModel = {
   progressStyle: CardDesign["progressStyle"];
   typographyPreset: CardDesign["typographyPreset"];
   backgroundStyle: CardDesign["backgroundStyle"];
+  backgroundPattern: CardDesign["backgroundPattern"];
   decorationStyle: CardDesign["decorationStyle"];
   rewardStyle: CardDesign["rewardStyle"];
   footerStyle: CardDesign["footerStyle"];
@@ -66,6 +67,12 @@ export type CardRenderModel = {
     footer: boolean;
   };
   resolvedColors: ReturnType<typeof resolveCardThemeColors>;
+  background: {
+    style: CardDesign["backgroundStyle"];
+    pattern: CardDesign["backgroundPattern"];
+    cardBackground: string;
+    pageBackground: string;
+  };
   progress: {
     current: number;
     required: number;
@@ -128,6 +135,7 @@ export function buildCardRenderModel(input: CardRenderModelInput): CardRenderMod
     progressStyle: design.progressStyle,
     typographyPreset: design.typographyPreset,
     backgroundStyle: design.backgroundStyle,
+    backgroundPattern: design.backgroundPattern,
     decorationStyle: design.decorationStyle,
     rewardStyle: design.rewardStyle,
     footerStyle: design.footerStyle,
@@ -143,6 +151,12 @@ export function buildCardRenderModel(input: CardRenderModelInput): CardRenderMod
       footer: true,
     },
     resolvedColors,
+    background: {
+      style: design.backgroundStyle,
+      pattern: design.backgroundPattern,
+      cardBackground: resolvedColors.cardBackground,
+      pageBackground: resolvedColors.pageBackground,
+    },
     progress: {
       current,
       required,

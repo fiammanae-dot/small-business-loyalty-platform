@@ -21,6 +21,8 @@ test("card render model centralizes future Design Studio rendering inputs", () =
     "progressStyle",
     "typographyPreset",
     "backgroundStyle",
+    "backgroundPattern",
+    "background",
     "decorationStyle",
     "rewardStyle",
     "footerStyle",

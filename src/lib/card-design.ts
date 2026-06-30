@@ -23,7 +23,20 @@ export const stampIcons = [
 export type CardDesignStampIcon = (typeof stampIcons)[number];
 export type CardDesignProgressStyle = "linear";
 export type CardDesignTypographyPreset = "system";
-export type CardDesignBackgroundStyle = "theme";
+export const cardBackgroundStyles = ["SOLID", "GRADIENT", "PATTERN", "TEXTURE", "IMAGE", "INDUSTRY_PATTERN"] as const;
+export type CardDesignBackgroundStyle = (typeof cardBackgroundStyles)[number];
+export const backgroundPatternPresets = [
+  "NONE",
+  "SUBTLE_DOTS",
+  "DIAGONAL_LINES",
+  "WAVES",
+  "COFFEE_BEANS",
+  "SCISSORS",
+  "WATER_BUBBLES",
+  "FOOD_PATTERN",
+  "BEAUTY_PATTERN",
+] as const;
+export type CardDesignBackgroundPattern = (typeof backgroundPatternPresets)[number];
 export type CardDesignDecorationStyle = "none";
 export type CardDesignRewardStyle = "panel";
 export type CardDesignFooterStyle = "scan-cta";
@@ -38,6 +51,7 @@ export type CardDesign = {
   progressStyle: CardDesignProgressStyle;
   typographyPreset: CardDesignTypographyPreset;
   backgroundStyle: CardDesignBackgroundStyle;
+  backgroundPattern: CardDesignBackgroundPattern;
   decorationStyle: CardDesignDecorationStyle;
   rewardStyle: CardDesignRewardStyle;
   footerStyle: CardDesignFooterStyle;
@@ -53,7 +67,8 @@ export const defaultCardDesign: CardDesign = {
   stampIcon: "STAR",
   progressStyle: "linear",
   typographyPreset: "system",
-  backgroundStyle: "theme",
+  backgroundStyle: "SOLID",
+  backgroundPattern: "NONE",
   decorationStyle: "none",
   rewardStyle: "panel",
   footerStyle: "scan-cta",
@@ -81,6 +96,8 @@ export const industryDesignPacks: Record<IndustryDesignPackId, IndustryDesignPac
       ...defaultCardDesign,
       cardStyle: "premium-dark",
       stampIcon: "SCISSORS",
+      backgroundStyle: "INDUSTRY_PATTERN",
+      backgroundPattern: "SCISSORS",
       templateId: "industry-barbershop-v1",
     },
   },
@@ -92,6 +109,8 @@ export const industryDesignPacks: Record<IndustryDesignPackId, IndustryDesignPac
       ...defaultCardDesign,
       cardStyle: "minimal-light",
       stampIcon: "LIPSTICK",
+      backgroundStyle: "INDUSTRY_PATTERN",
+      backgroundPattern: "BEAUTY_PATTERN",
       templateId: "industry-beauty-salon-v1",
     },
   },
@@ -103,6 +122,8 @@ export const industryDesignPacks: Record<IndustryDesignPackId, IndustryDesignPac
       ...defaultCardDesign,
       cardStyle: "image-background",
       stampIcon: "WATER_DROP",
+      backgroundStyle: "INDUSTRY_PATTERN",
+      backgroundPattern: "WATER_BUBBLES",
       templateId: "industry-car-wash-v1",
     },
   },
@@ -114,6 +135,8 @@ export const industryDesignPacks: Record<IndustryDesignPackId, IndustryDesignPac
       ...defaultCardDesign,
       cardStyle: "modern-clean",
       stampIcon: "COFFEE_CUP",
+      backgroundStyle: "INDUSTRY_PATTERN",
+      backgroundPattern: "COFFEE_BEANS",
       templateId: "industry-cafe-v1",
     },
   },
@@ -125,6 +148,8 @@ export const industryDesignPacks: Record<IndustryDesignPackId, IndustryDesignPac
       ...defaultCardDesign,
       cardStyle: "premium-dark",
       stampIcon: "PLATE",
+      backgroundStyle: "INDUSTRY_PATTERN",
+      backgroundPattern: "FOOD_PATTERN",
       templateId: "industry-restaurant-v1",
     },
   },
@@ -147,7 +172,8 @@ const cardDesignValues = {
   stampIcon: stampIcons,
   progressStyle: ["linear"],
   typographyPreset: ["system"],
-  backgroundStyle: ["theme"],
+  backgroundStyle: cardBackgroundStyles,
+  backgroundPattern: backgroundPatternPresets,
   decorationStyle: ["none"],
   rewardStyle: ["panel"],
   footerStyle: ["scan-cta"],
@@ -183,6 +209,18 @@ export function resolveStampIcon(value: unknown): CardDesignStampIcon {
   return resolveValue("stampIcon", value);
 }
 
+export function resolveBackgroundStyle(value: unknown): CardDesignBackgroundStyle {
+  if (value === "theme") {
+    return "SOLID";
+  }
+
+  return resolveValue("backgroundStyle", value);
+}
+
+export function resolveBackgroundPattern(value: unknown): CardDesignBackgroundPattern {
+  return resolveValue("backgroundPattern", value);
+}
+
 export function resolveCardDesign(input?: CardDesignInput): CardDesign {
   return {
     version: resolveValue("version", input?.version),
@@ -192,7 +230,8 @@ export function resolveCardDesign(input?: CardDesignInput): CardDesign {
     stampIcon: resolveStampIcon(input?.stampIcon),
     progressStyle: resolveValue("progressStyle", input?.progressStyle),
     typographyPreset: resolveValue("typographyPreset", input?.typographyPreset),
-    backgroundStyle: resolveValue("backgroundStyle", input?.backgroundStyle),
+    backgroundStyle: resolveBackgroundStyle(input?.backgroundStyle),
+    backgroundPattern: resolveBackgroundPattern(input?.backgroundPattern),
     decorationStyle: resolveValue("decorationStyle", input?.decorationStyle),
     rewardStyle: resolveValue("rewardStyle", input?.rewardStyle),
     footerStyle: resolveValue("footerStyle", input?.footerStyle),
