@@ -1,6 +1,7 @@
 ﻿import { z } from "zod";
 import {
   generalStampIcons,
+  defaultVisibleCardSections,
   getCardStyleForLayoutStyle,
   getCardThemeForLayoutStyle,
   getRecommendedStampIconsForBusinessType,
@@ -10,11 +11,15 @@ import {
   type CardDesign,
   type CardDesignBackgroundPattern,
   type CardDesignBackgroundStyle,
+  type CardDesignDecorationStyle,
   type CardDesignInput,
   type CardDesignLayoutStyle,
   type CardDesignRewardStyle,
+  type CardSection,
+  type CardSectionVisibility,
   type CardDesignStampIcon,
   type CardDesignStampJourneyStyle,
+  type CardDesignTypographyPreset,
   type IndustryDesignPackId,
 } from "@/lib/card-design";
 import { getDefaultAssetsForIndustry } from "@/lib/card-asset-catalog";
@@ -69,6 +74,161 @@ export const designStudioRewardStyleOptions = [
   label: string;
   description: string;
 }>;
+
+export const designStudioTypographyOptions = [
+  { value: "MODERN", label: "Modern", description: "Clean and contemporary." },
+  { value: "CLASSIC", label: "Classic", description: "Balanced and timeless." },
+  { value: "PREMIUM", label: "Premium", description: "Bold and professional." },
+  { value: "LUXURY", label: "Luxury", description: "Elegant and refined." },
+  { value: "PLAYFUL", label: "Playful", description: "Friendly and welcoming." },
+  { value: "MINIMAL", label: "Minimal", description: "Simple and distraction-free." },
+] satisfies Array<{
+  value: CardDesignTypographyPreset;
+  label: string;
+  description: string;
+}>;
+
+export const designStudioCardFinishOptions = [
+  { value: "FLAT", label: "Flat", description: "Clean and distraction-free." },
+  { value: "SOFT", label: "Soft", description: "Rounded corners with gentle shadows." },
+  { value: "GLASS", label: "Glass", description: "Modern translucent appearance." },
+  { value: "PREMIUM", label: "Premium", description: "Professional depth and refined accents." },
+  { value: "LUXURY", label: "Luxury", description: "Elegant finish with premium visual emphasis." },
+] satisfies Array<{
+  value: CardDesignDecorationStyle;
+  label: string;
+  description: string;
+}>;
+
+export const designStudioCardContentOptions = [
+  { value: "logo", label: "Business Logo", description: "Show the logo in the card header." },
+  { value: "businessName", label: "Business Name", description: "Show your business name." },
+  { value: "programName", label: "Program Name", description: "Show the loyalty program name." },
+  { value: "customerName", label: "Customer Name", description: "Show the customer name." },
+  { value: "tierBadge", label: "Tier Badge", description: "Show the customer tier." },
+  { value: "rewardBox", label: "Reward Box", description: "Show the next reward panel." },
+  { value: "progress", label: "Reward Progress", description: "Show loyalty progress." },
+  { value: "visits", label: "Visits Remaining", description: "Show visits left to reward." },
+  { value: "qr", label: "QR Code", description: "Show the scan QR section." },
+  { value: "footer", label: "Footer Message", description: "Show the card footer message." },
+  { value: "referral", label: "Referral Section", description: "Show referral information when available." },
+] satisfies Array<{
+  value: CardSection;
+  label: string;
+  description: string;
+}>;
+
+export type DesignStudioProfessionalPreset = {
+  id: string;
+  category: string;
+  name: string;
+  description: string;
+  layoutStyle: Extract<CardDesignLayoutStyle, "CLASSIC" | "MODERN" | "PREMIUM" | "LUXURY">;
+  backgroundStyle: Extract<CardDesignBackgroundStyle, "SOLID" | "GRADIENT" | "PATTERN">;
+  backgroundPattern: CardDesignBackgroundPattern;
+  stampJourneyStyle: Extract<CardDesignStampJourneyStyle, "CIRCLES" | "CONNECTED_DOTS" | "PROGRESS_BAR">;
+  stampIcon: CardDesignStampIcon;
+  rewardStyle: CardDesignRewardStyle;
+  typographyPreset: CardDesignTypographyPreset;
+  decorationStyle: CardDesignDecorationStyle;
+  visibleSections: CardSectionVisibility;
+};
+
+const content = (overrides: Partial<CardSectionVisibility> = {}): CardSectionVisibility => ({
+  ...defaultVisibleCardSections,
+  ...overrides,
+});
+
+export const designStudioProfessionalPresetGroups = [
+  {
+    category: "Barbershop",
+    presets: [
+      preset("modern-barber", "Barbershop", "Modern Barber", "Sharp, clean and built for repeat grooming visits.", "MODERN", "PATTERN", "SCISSORS", "CONNECTED_DOTS", "SCISSORS", "OUTLINE", "PREMIUM", "PREMIUM"),
+      preset("luxury-barber", "Barbershop", "Luxury Barber", "A dark refined look for premium grooming programs.", "LUXURY", "PATTERN", "DIAGONAL_LINES", "CONNECTED_DOTS", "BARBER_POLE", "PREMIUM", "LUXURY", "LUXURY"),
+      preset("vintage-barber", "Barbershop", "Vintage Barber", "Classic barber character with clear stamp progress.", "CLASSIC", "PATTERN", "SCISSORS", "CIRCLES", "RAZOR", "TICKET", "CLASSIC", "SOFT"),
+      preset("classic-barber", "Barbershop", "Classic Barber", "Familiar and practical for everyday loyalty cards.", "CLASSIC", "SOLID", "NONE", "CIRCLES", "SCISSORS", "FILLED", "MODERN", "SOFT"),
+    ],
+  },
+  {
+    category: "Beauty Salon",
+    presets: [
+      preset("rose-gold", "Beauty Salon", "Rose Gold", "Warm elegant styling for beauty and self-care rewards.", "LUXURY", "GRADIENT", "BEAUTY_PATTERN", "CIRCLES", "LIPSTICK", "GLASS", "LUXURY", "GLASS"),
+      preset("luxury-beauty", "Beauty Salon", "Luxury Beauty", "Polished, high-end treatment for premium salon cards.", "LUXURY", "PATTERN", "BEAUTY_PATTERN", "CONNECTED_DOTS", "MAKEUP_BRUSH", "PREMIUM", "LUXURY", "LUXURY"),
+      preset("elegant-spa", "Beauty Salon", "Elegant Spa", "Soft, calm and refined for spa-focused visits.", "CLASSIC", "PATTERN", "WAVES", "CIRCLES", "MIRROR", "OUTLINE", "CLASSIC", "SOFT"),
+      preset("minimal-studio", "Beauty Salon", "Minimal Studio", "Quiet, spacious and distraction-free.", "MODERN", "SOLID", "NONE", "PROGRESS_BAR", "NAIL_POLISH", "OUTLINE", "MINIMAL", "FLAT"),
+    ],
+  },
+  {
+    category: "Café",
+    presets: [
+      preset("warm-espresso", "Café", "Warm Espresso", "Cozy cafe styling for frequent coffee visits.", "CLASSIC", "PATTERN", "COFFEE_BEANS", "CIRCLES", "COFFEE_CUP", "FILLED", "CLASSIC", "SOFT"),
+      preset("modern-coffee", "Café", "Modern Coffee", "Clean and contemporary for modern coffee bars.", "MODERN", "GRADIENT", "SUBTLE_DOTS", "PROGRESS_BAR", "COFFEE_CUP", "OUTLINE", "MODERN", "PREMIUM"),
+      preset("organic-cafe", "Café", "Organic Café", "Natural and friendly for neighborhood cafes.", "CLASSIC", "PATTERN", "WAVES", "CONNECTED_DOTS", "COFFEE_BEAN", "GLASS", "PLAYFUL", "SOFT"),
+      preset("dark-roast", "Café", "Dark Roast", "Bold contrast for rich coffee reward programs.", "PREMIUM", "PATTERN", "COFFEE_BEANS", "PROGRESS_BAR", "ESPRESSO", "PREMIUM", "PREMIUM", "LUXURY"),
+    ],
+  },
+  {
+    category: "Restaurant",
+    presets: [
+      preset("fine-dining", "Restaurant", "Fine Dining", "Elegant and confident for elevated dining rewards.", "LUXURY", "PATTERN", "FOOD_PATTERN", "CONNECTED_DOTS", "CHEF_HAT", "PREMIUM", "LUXURY", "LUXURY"),
+      preset("casual-kitchen", "Restaurant", "Casual Kitchen", "Friendly structure for everyday restaurant visits.", "CLASSIC", "SOLID", "NONE", "CIRCLES", "PLATE", "FILLED", "MODERN", "SOFT"),
+      preset("street-food", "Restaurant", "Street Food", "Energetic, direct and easy to scan.", "MODERN", "PATTERN", "DIAGONAL_LINES", "PROGRESS_BAR", "BURGER", "TICKET", "PLAYFUL", "PREMIUM"),
+      preset("chefs-choice", "Restaurant", "Chef's Choice", "Professional card styling with a strong reward focus.", "PREMIUM", "PATTERN", "FOOD_PATTERN", "CONNECTED_DOTS", "PLATE", "PREMIUM", "PREMIUM", "PREMIUM"),
+    ],
+  },
+  {
+    category: "Car Wash",
+    presets: [
+      preset("aqua-clean", "Car Wash", "Aqua Clean", "Fresh and clear for quick wash loyalty cards.", "MODERN", "PATTERN", "WATER_BUBBLES", "PROGRESS_BAR", "WATER_DROP", "FILLED", "MODERN", "SOFT"),
+      preset("bubble-wash", "Car Wash", "Bubble Wash", "Friendly, playful and built around visible progress.", "CLASSIC", "PATTERN", "WATER_BUBBLES", "CIRCLES", "BUBBLES", "GLASS", "PLAYFUL", "GLASS"),
+      preset("premium-detailing", "Car Wash", "Premium Detailing", "High-contrast card styling for detailing packages.", "PREMIUM", "GRADIENT", "DIAGONAL_LINES", "CONNECTED_DOTS", "CAR", "PREMIUM", "PREMIUM", "LUXURY"),
+      preset("express-wash", "Car Wash", "Express Wash", "Fast, simple and optimized for repeat visits.", "MODERN", "SOLID", "NONE", "PROGRESS_BAR", "WHEEL", "OUTLINE", "MINIMAL", "FLAT"),
+    ],
+  },
+  {
+    category: "General",
+    presets: [
+      preset("modern-business", "General", "Modern Business", "Clean, flexible and suitable for most businesses.", "MODERN", "SOLID", "NONE", "PROGRESS_BAR", "STAR", "OUTLINE", "MODERN", "SOFT"),
+      preset("professional", "General", "Professional", "Balanced professional styling with strong clarity.", "CLASSIC", "GRADIENT", "SUBTLE_DOTS", "CONNECTED_DOTS", "CHECK", "FILLED", "PREMIUM", "PREMIUM"),
+      preset("premium-general", "General", "Premium", "Elevated card presence with refined emphasis.", "PREMIUM", "PATTERN", "DIAGONAL_LINES", "CONNECTED_DOTS", "DIAMOND", "PREMIUM", "PREMIUM", "LUXURY"),
+      preset("minimal-general", "General", "Minimal", "Simple, quiet and focused on the essentials.", "MODERN", "SOLID", "NONE", "PROGRESS_BAR", "CIRCLE", "OUTLINE", "MINIMAL", "FLAT", content({ referral: false })),
+    ],
+  },
+] satisfies Array<{ category: string; presets: DesignStudioProfessionalPreset[] }>;
+
+export const designStudioProfessionalPresets = designStudioProfessionalPresetGroups.flatMap((group) => group.presets);
+
+function preset(
+  id: string,
+  category: string,
+  name: string,
+  description: string,
+  layoutStyle: DesignStudioProfessionalPreset["layoutStyle"],
+  backgroundStyle: DesignStudioProfessionalPreset["backgroundStyle"],
+  backgroundPattern: CardDesignBackgroundPattern,
+  stampJourneyStyle: DesignStudioProfessionalPreset["stampJourneyStyle"],
+  stampIcon: CardDesignStampIcon,
+  rewardStyle: CardDesignRewardStyle,
+  typographyPreset: CardDesignTypographyPreset,
+  decorationStyle: CardDesignDecorationStyle,
+  visibleSections: CardSectionVisibility = content(),
+): DesignStudioProfessionalPreset {
+  return {
+    id,
+    category,
+    name,
+    description,
+    layoutStyle,
+    backgroundStyle,
+    backgroundPattern,
+    stampJourneyStyle,
+    stampIcon,
+    rewardStyle,
+    typographyPreset,
+    decorationStyle,
+    visibleSections,
+  };
+}
 
 export const designStudioIndustryStyleOptions = [
   {
@@ -156,6 +316,21 @@ export const designStudioSchema = z.object({
   backgroundStyle: z.enum(["SOLID", "GRADIENT", "PATTERN"]),
   backgroundPattern: z.enum(["NONE", "SUBTLE_DOTS", "DIAGONAL_LINES", "WAVES", "COFFEE_BEANS", "SCISSORS", "WATER_BUBBLES", "FOOD_PATTERN", "BEAUTY_PATTERN"]),
   rewardStyle: z.enum(["FILLED", "OUTLINE", "GLASS", "PREMIUM", "TICKET"]),
+  typographyPreset: z.enum(["CLASSIC", "MODERN", "PREMIUM", "LUXURY", "PLAYFUL", "MINIMAL"]),
+  decorationStyle: z.enum(["FLAT", "SOFT", "GLASS", "PREMIUM", "LUXURY"]),
+  visibleSections: z.object({
+    logo: z.boolean(),
+    businessName: z.boolean(),
+    customerName: z.boolean(),
+    tierBadge: z.boolean(),
+    rewardBox: z.boolean(),
+    progress: z.boolean(),
+    qr: z.boolean(),
+    footer: z.boolean(),
+    referral: z.boolean(),
+    visits: z.boolean(),
+    programName: z.boolean(),
+  }),
 });
 
 export function resolveProgramCardDesign(input?: CardDesignInput): CardDesign {
@@ -172,17 +347,26 @@ export function buildProgramCardDesign(input: z.infer<typeof designStudioSchema>
     backgroundStyle: input.backgroundStyle,
     backgroundPattern: input.backgroundPattern,
     rewardStyle: input.rewardStyle,
+    typographyPreset: input.typographyPreset,
+    decorationStyle: input.decorationStyle,
+    visibleSections: input.visibleSections,
   });
 }
 
 export function getAllowedStampIconsForBusinessType(businessType: Parameters<typeof getRecommendedStampIconsForBusinessType>[0]) {
   const industryStyleIcons = designStudioIndustryStyleOptions.map((option) => option.stampIcon);
-  return Array.from(new Set([...getRecommendedStampIconsForBusinessType(businessType), ...industryStyleIcons, ...generalStampIcons])).filter((icon): icon is CardDesignStampIcon =>
+  const professionalPresetIcons = designStudioProfessionalPresets.map((option) => option.stampIcon);
+  return Array.from(new Set([...getRecommendedStampIconsForBusinessType(businessType), ...industryStyleIcons, ...professionalPresetIcons, ...generalStampIcons])).filter((icon): icon is CardDesignStampIcon =>
     (stampIcons as readonly string[]).includes(icon),
   );
 }
 
 export function parseDesignStudioForm(formData: FormData, businessType: Parameters<typeof getRecommendedStampIconsForBusinessType>[0]) {
+  const getVisibleSectionValue = (section: CardSection) => {
+    const value = formData.get(`visibleSections.${section}`);
+    return value === null ? defaultVisibleCardSections[section] : value === "true";
+  };
+
   const parsed = designStudioSchema.safeParse({
     layoutStyle: String(formData.get("layoutStyle") ?? ""),
     stampJourneyStyle: String(formData.get("stampJourneyStyle") ?? ""),
@@ -190,6 +374,21 @@ export function parseDesignStudioForm(formData: FormData, businessType: Paramete
     backgroundStyle: String(formData.get("backgroundStyle") ?? "SOLID"),
     backgroundPattern: String(formData.get("backgroundPattern") ?? "NONE"),
     rewardStyle: String(formData.get("rewardStyle") ?? "FILLED"),
+    typographyPreset: String(formData.get("typographyPreset") ?? "MODERN"),
+    decorationStyle: String(formData.get("decorationStyle") ?? "FLAT"),
+    visibleSections: {
+      logo: getVisibleSectionValue("logo"),
+      businessName: getVisibleSectionValue("businessName"),
+      customerName: getVisibleSectionValue("customerName"),
+      tierBadge: getVisibleSectionValue("tierBadge"),
+      rewardBox: getVisibleSectionValue("rewardBox"),
+      progress: getVisibleSectionValue("progress"),
+      qr: getVisibleSectionValue("qr"),
+      footer: getVisibleSectionValue("footer"),
+      referral: getVisibleSectionValue("referral"),
+      visits: getVisibleSectionValue("visits"),
+      programName: getVisibleSectionValue("programName"),
+    },
   });
   if (!parsed.success) return parsed;
 

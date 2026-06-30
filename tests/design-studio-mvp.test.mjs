@@ -58,9 +58,14 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   const page = read("src/app/dashboard/programs/[id]/design-studio/page.tsx");
 
   assert.match(helper, /designStudioTemplateOptions/);
-  assert.match(helper, /designStudioIndustryStyleOptions/);
+  assert.match(helper, /designStudioProfessionalPresetGroups/);
+  assert.match(helper, /designStudioProfessionalPresets/);
+  assert.match(helper, /DesignStudioProfessionalPreset/);
   assert.match(helper, /getDefaultAssetsForIndustry/);
-  for (const label of ["Barbershop", "Beauty Salon", "Car Wash", "CAFE", "Restaurant", "General"]) {
+  for (const label of ["Barbershop", "Beauty Salon", "Car Wash", "Café", "Restaurant", "General"]) {
+    assert.match(helper, new RegExp(label));
+  }
+  for (const label of ["Modern Barber", "Luxury Barber", "Vintage Barber", "Classic Barber", "Rose Gold", "Luxury Beauty", "Elegant Spa", "Minimal Studio", "Warm Espresso", "Modern Coffee", "Organic Café", "Dark Roast", "Fine Dining", "Casual Kitchen", "Street Food", "Chef's Choice", "Aqua Clean", "Bubble Wash", "Premium Detailing", "Express Wash", "Modern Business", "Professional"]) {
     assert.match(helper, new RegExp(label));
   }
   assert.match(helper, /CLASSIC/);
@@ -78,24 +83,42 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(helper, /designStudioBackgroundStyleOptions/);
   assert.match(helper, /designStudioBackgroundPatternOptions/);
   assert.match(helper, /designStudioRewardStyleOptions/);
+  assert.match(helper, /designStudioTypographyOptions/);
+  assert.match(helper, /designStudioCardFinishOptions/);
+  assert.match(helper, /designStudioCardContentOptions/);
   for (const label of ["Solid", "Gradient", "Pattern", "Subtle Dots", "Diagonal Lines", "Waves", "Coffee Beans", "Scissors", "Water Bubbles", "Food Pattern", "Beauty Pattern"]) {
     assert.match(helper, new RegExp(label));
   }
   for (const label of ["Filled", "Outline", "Glass", "Premium", "Ticket"]) {
     assert.match(helper, new RegExp(label));
   }
+  for (const label of ["Modern", "Classic", "Premium", "Luxury", "Playful", "Minimal"]) {
+    assert.match(helper, new RegExp(label));
+  }
+  for (const label of ["Flat", "Soft", "Glass", "Premium", "Luxury"]) {
+    assert.match(helper, new RegExp(label));
+  }
+  for (const label of ["Business Logo", "Business Name", "Program Name", "Customer Name", "Tier Badge", "Reward Box", "Reward Progress", "Visits Remaining", "QR Code", "Footer Message", "Referral Section"]) {
+    assert.match(helper, new RegExp(label));
+  }
   assert.match(helper, /getAllowedStampIconsForBusinessType/);
   assert.match(page, /Design Your Loyalty Card/);
   assert.match(page, /Make this card feel like your business/);
   assert.match(form, /Card Style/);
-  assert.match(form, /Industry Style/);
-  assert.match(form, /Start with a style made for your type of business\./);
-  assert.match(form, /setLayoutStyle\(option\.layoutStyle\)/);
-  assert.match(form, /setStampJourneyStyle\(option\.stampJourneyStyle\)/);
-  assert.match(form, /setStampIcon\(option\.stampIcon\)/);
+  assert.match(form, /Professional Presets/);
+  assert.match(form, /Start with a professionally designed loyalty card, then customize every detail\./);
+  assert.match(form, /applyProfessionalPreset/);
+  assert.match(form, /setLayoutStyle\(preset\.layoutStyle\)/);
+  assert.match(form, /setBackgroundStyle\(preset\.backgroundStyle\)/);
+  assert.match(form, /setBackgroundPattern\(preset\.backgroundPattern\)/);
+  assert.match(form, /setStampJourneyStyle\(preset\.stampJourneyStyle\)/);
+  assert.match(form, /setStampIcon\(preset\.stampIcon\)/);
+  assert.match(form, /setRewardStyle\(preset\.rewardStyle\)/);
+  assert.match(form, /setTypographyPreset\(preset\.typographyPreset\)/);
+  assert.match(form, /setDecorationStyle\(preset\.decorationStyle\)/);
+  assert.match(form, /setVisibleSections\(preset\.visibleSections\)/);
   assert.match(form, /aria-pressed=\{active\}/);
-  assert.match(form, /Stamp design/);
-  assert.match(form, /Style personality/);
+  assert.match(form, /PresetThumbnail/);
   assert.match(form, /Choose the overall personality of your loyalty card\./);
   assert.match(form, /TemplateThumbnail/);
   assert.match(form, /Selected/);
@@ -114,6 +137,26 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /RewardStyleThumbnail/);
   assert.match(form, /setRewardStyle\(option\.value\)/);
   assert.match(form, /name="rewardStyle"/);
+  assert.match(form, /Typography/);
+  assert.match(form, /Choose the personality of your loyalty card\./);
+  assert.match(form, /TypographyCardPreview/);
+  assert.match(form, /TypographyThumbnail/);
+  assert.match(form, /setTypographyPreset\(option\.value\)/);
+  assert.match(form, /name="typographyPreset"/);
+  assert.match(form, /typographyPreviewStyles/);
+  assert.match(form, /Card Finish/);
+  assert.match(form, /Choose the visual finish that best matches your brand\./);
+  assert.match(form, /CardFinishPreviewFrame/);
+  assert.match(form, /CardFinishThumbnail/);
+  assert.match(form, /setDecorationStyle\(option\.value\)/);
+  assert.match(form, /name="decorationStyle"/);
+  assert.match(form, /cardFinishStyles/);
+  assert.match(form, /Card Content/);
+  assert.match(form, /Choose what your customers see on their loyalty card\./);
+  assert.match(form, /VisibleCardPreview/);
+  assert.match(form, /setVisibleSections/);
+  assert.match(form, /visibleSections\.\$\{option\.value\}/);
+  assert.match(form, /enabledContentCount/);
   assert.match(form, /CardProgressPreview/);
   assert.match(form, /CircleJourneyPreview/);
   assert.match(form, /ConnectedDotsJourneyPreview/);
@@ -127,7 +170,7 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /order-first[\s\S]*xl:order-last/);
   assert.match(form, /xl:sticky xl:top-6/);
   assert.match(form, /sticky bottom-3/);
-  assert.match(form, /LoyaltyWalletCard/);
+  assert.doesNotMatch(form, /LoyaltyWalletCard/);
   assert.match(form, /name="layoutStyle"/);
   assert.match(form, /name="stampJourneyStyle"/);
   assert.match(form, /name="stampIcon"/);

@@ -1,25 +1,33 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import type {
   CardDesignBackgroundPattern,
   CardDesignBackgroundStyle,
+  CardDesignDecorationStyle,
   CardDesignLayoutStyle,
   CardDesignRewardStyle,
+  CardSection,
+  CardSectionVisibility,
   CardDesignStampIcon,
   CardDesignStampJourneyStyle,
+  CardDesignTypographyPreset,
 } from "@/lib/card-design";
 import { getCardThemeForLayoutStyle, getCardStyleForLayoutStyle, resolveCardDesign } from "@/lib/card-design";
 import { resolveCardThemeColors } from "@/lib/card-themes";
 import {
   designStudioBackgroundPatternOptions,
   designStudioBackgroundStyleOptions,
-  designStudioIndustryStyleOptions,
+  designStudioCardFinishOptions,
+  designStudioCardContentOptions,
+  designStudioProfessionalPresetGroups,
+  designStudioProfessionalPresets,
   designStudioRewardStyleOptions,
   designStudioStampJourneyOptions,
   designStudioTemplateOptions,
+  designStudioTypographyOptions,
+  type DesignStudioProfessionalPreset,
 } from "@/lib/design-studio";
-import { LoyaltyWalletCard } from "@/components/public-card/LoyaltyWalletCard";
 import { Button, SectionCard } from "@/components/ui";
 
 type PreviewBranding = {
@@ -58,6 +66,9 @@ export function ProgramDesignStudioForm({
     backgroundStyle: CardDesignBackgroundStyle;
     backgroundPattern: CardDesignBackgroundPattern;
     rewardStyle: CardDesignRewardStyle;
+    typographyPreset: CardDesignTypographyPreset;
+    decorationStyle: CardDesignDecorationStyle;
+    visibleSections: CardSectionVisibility;
   };
   stampIconOptions: Array<{ value: CardDesignStampIcon; label: string; recommended: boolean }>;
 }) {
@@ -73,6 +84,9 @@ export function ProgramDesignStudioForm({
   );
   const [backgroundPattern, setBackgroundPattern] = useState(initialDesign.backgroundPattern);
   const [rewardStyle, setRewardStyle] = useState(initialDesign.rewardStyle);
+  const [typographyPreset, setTypographyPreset] = useState(initialDesign.typographyPreset);
+  const [decorationStyle, setDecorationStyle] = useState(initialDesign.decorationStyle);
+  const [visibleSections, setVisibleSections] = useState<CardSectionVisibility>(initialDesign.visibleSections);
   const cardDesign = useMemo(
     () =>
       resolveCardDesign({
@@ -83,8 +97,11 @@ export function ProgramDesignStudioForm({
         backgroundStyle,
         backgroundPattern,
         rewardStyle,
+        typographyPreset,
+        decorationStyle,
+        visibleSections,
       }),
-    [backgroundPattern, backgroundStyle, layoutStyle, rewardStyle, stampJourneyStyle, stampIcon],
+    [backgroundPattern, backgroundStyle, decorationStyle, layoutStyle, rewardStyle, stampJourneyStyle, stampIcon, typographyPreset, visibleSections],
   );
   const previewTheme = useMemo(
     () =>
@@ -101,10 +118,34 @@ export function ProgramDesignStudioForm({
   const selectedBackgroundLabel = designStudioBackgroundStyleOptions.find((option) => option.value === backgroundStyle)?.label ?? backgroundStyle;
   const selectedPatternLabel = designStudioBackgroundPatternOptions.find((option) => option.value === backgroundPattern)?.label ?? backgroundPattern;
   const selectedRewardStyleLabel = designStudioRewardStyleOptions.find((option) => option.value === rewardStyle)?.label ?? rewardStyle;
-  const activeIndustryStyleId =
-    designStudioIndustryStyleOptions.find(
-      (option) => option.layoutStyle === layoutStyle && option.stampJourneyStyle === stampJourneyStyle && option.stampIcon === stampIcon,
+  const selectedTypographyLabel = designStudioTypographyOptions.find((option) => option.value === typographyPreset)?.label ?? typographyPreset;
+  const selectedFinishLabel = designStudioCardFinishOptions.find((option) => option.value === decorationStyle)?.label ?? decorationStyle;
+  const enabledContentCount = designStudioCardContentOptions.filter((option) => visibleSections[option.value]).length;
+  const activePresetId =
+    designStudioProfessionalPresets.find(
+      (option) =>
+        option.layoutStyle === layoutStyle &&
+        option.backgroundStyle === backgroundStyle &&
+        option.backgroundPattern === backgroundPattern &&
+        option.stampJourneyStyle === stampJourneyStyle &&
+        option.stampIcon === stampIcon &&
+        option.rewardStyle === rewardStyle &&
+        option.typographyPreset === typographyPreset &&
+        option.decorationStyle === decorationStyle &&
+        sectionVisibilityMatches(option.visibleSections, visibleSections),
     )?.id ?? null;
+
+  const applyProfessionalPreset = (preset: DesignStudioProfessionalPreset) => {
+    setLayoutStyle(preset.layoutStyle);
+    setBackgroundStyle(preset.backgroundStyle);
+    setBackgroundPattern(preset.backgroundPattern);
+    setStampJourneyStyle(preset.stampJourneyStyle);
+    setStampIcon(preset.stampIcon);
+    setRewardStyle(preset.rewardStyle);
+    setTypographyPreset(preset.typographyPreset);
+    setDecorationStyle(preset.decorationStyle);
+    setVisibleSections(preset.visibleSections);
+  };
 
   return (
     <form action={action} className="grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(420px,0.8fr)] xl:items-start">
@@ -113,6 +154,11 @@ export function ProgramDesignStudioForm({
       <input type="hidden" name="backgroundStyle" value={backgroundStyle} />
       <input type="hidden" name="backgroundPattern" value={backgroundPattern} />
       <input type="hidden" name="rewardStyle" value={rewardStyle} />
+      <input type="hidden" name="typographyPreset" value={typographyPreset} />
+      <input type="hidden" name="decorationStyle" value={decorationStyle} />
+      {designStudioCardContentOptions.map((option) => (
+        <input key={option.value} type="hidden" name={`visibleSections.${option.value}`} value={visibleSections[option.value] ? "true" : "false"} />
+      ))}
 
       <aside className="order-first grid h-fit gap-4 xl:sticky xl:top-6 xl:order-last">
         <SectionCard
@@ -120,77 +166,80 @@ export function ProgramDesignStudioForm({
           description="See how this program's loyalty card feels before saving."
           className="border-[var(--business-primary-soft,#E2E8F0)] bg-gradient-to-b from-white to-[#F8FAFC]"
         >
-          <div className="mx-auto max-w-[430px]">
-            <LoyaltyWalletCard
+          <TypographyCardPreview
+            businessName={businessName}
+            customerName="Mina Hanna"
+            progress="7 / 10"
+            rewardName={rewardName}
+            typographyPreset={typographyPreset}
+          />
+          <CardFinishPreviewFrame decorationStyle={decorationStyle}>
+            <VisibleCardPreview
               businessName={businessName}
               businessLogoUrl={branding.logoUrl}
               customerName="Mina Hanna"
               memberSince="Jun 2026"
               tierLabel="Silver Member"
               tierIcon="S"
-              qrCode={null}
-              rewardReady={false}
               theme={previewTheme}
               programName={programName}
               rewardName={rewardName}
-              progress={7}
-              required={10}
-              remaining={3}
-              completion={70}
+              visibleSections={visibleSections}
             />
-          </div>
-          <RewardBoxPreview rewardName={rewardName} rewardStyle={rewardStyle} />
-          <CardProgressPreview journeyStyle={stampJourneyStyle} stampIcon={stampIcon} stampIconLabel={selectedIconLabel} />
+          </CardFinishPreviewFrame>
+          {visibleSections.rewardBox ? <RewardBoxPreview rewardName={rewardName} rewardStyle={rewardStyle} /> : null}
+          {visibleSections.progress ? <CardProgressPreview journeyStyle={stampJourneyStyle} stampIcon={stampIcon} stampIconLabel={selectedIconLabel} /> : null}
           <div className="mt-5 grid gap-2 rounded-2xl border border-[#E5E7EB] bg-white/85 p-4 text-sm shadow-sm">
             <PreviewLine label="Card Style" value={selectedStyleLabel} />
             <PreviewLine label="Reward Progress" value={selectedJourneyLabel} />
             <PreviewLine label="Stamp Design" value={selectedIconLabel} />
             <PreviewLine label="Background" value={`${selectedBackgroundLabel} / ${selectedPatternLabel}`} />
             <PreviewLine label="Reward Box" value={selectedRewardStyleLabel} />
+            <PreviewLine label="Typography" value={selectedTypographyLabel} />
+            <PreviewLine label="Card Finish" value={selectedFinishLabel} />
+            <PreviewLine label="Card Content" value={`${enabledContentCount} sections shown`} />
           </div>
         </SectionCard>
       </aside>
 
       <div className="order-last grid gap-5 xl:order-first">
-        <SectionCard title="Industry Style" description="Start with a style made for your type of business.">
-          <div className="grid gap-3 md:grid-cols-2">
-            {designStudioIndustryStyleOptions.map((option) => {
-              const active = activeIndustryStyleId === option.id;
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => {
-                    setLayoutStyle(option.layoutStyle);
-                    setStampJourneyStyle(option.stampJourneyStyle);
-                    setStampIcon(option.stampIcon);
-                  }}
-                  className="group grid min-h-44 gap-4 rounded-[1.35rem] border border-[#E2E8F0] bg-white p-4 text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-lg"
-                  data-active={active}
-                  aria-pressed={active}
-                >
-                  <span className="flex items-start justify-between gap-3">
-                    <span className="min-w-0">
-                      <span className="block text-base font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
-                      <span className="mt-1 block text-sm leading-6 text-[#64748B]">{option.description}</span>
-                    </span>
-                    <span className="rounded-full border border-[#E2E8F0] bg-white px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
-                      Active
-                    </span>
-                  </span>
-                  <span className="grid gap-2 rounded-2xl border border-[#E2E8F0] bg-white/80 p-3 text-xs text-[#64748B]">
-                    <span className="flex items-center justify-between gap-3">
-                      <span>Stamp design</span>
-                      <span className="font-semibold text-[#111827]">{option.stampIconLabel}</span>
-                    </span>
-                    <span className="flex items-center justify-between gap-3">
-                      <span>Style personality</span>
-                      <span className="font-semibold text-[#111827]">{option.stylePersonality}</span>
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
+        <SectionCard title="Professional Presets" description="Start with a professionally designed loyalty card, then customize every detail.">
+          <div className="grid gap-5">
+            {designStudioProfessionalPresetGroups.map((group) => (
+              <div key={group.category} className="grid gap-3">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-sm font-black uppercase tracking-[0.18em] text-[#64748B]">{group.category}</h3>
+                  <span className="h-px flex-1 bg-[#E2E8F0]" />
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {group.presets.map((preset) => {
+                    const active = activePresetId === preset.id;
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => applyProfessionalPreset(preset)}
+                        className="group grid min-h-52 gap-4 rounded-[1.35rem] border border-[#E2E8F0] bg-white p-4 text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-lg"
+                        data-active={active}
+                        aria-pressed={active}
+                      >
+                        <PresetThumbnail preset={preset} />
+                        <span className="flex items-start justify-between gap-3">
+                          <span className="min-w-0">
+                            <span className="block text-base font-semibold text-[#111827] group-data-[active=true]:business-text">{preset.name}</span>
+                            <span className="mt-1 block text-xs font-bold uppercase tracking-[0.16em] text-[#94A3B8]">{preset.category}</span>
+                            <span className="mt-2 block text-sm leading-6 text-[#64748B]">{preset.description}</span>
+                          </span>
+                          <span className="rounded-full border border-[#E2E8F0] bg-white px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
+                            Selected
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         </SectionCard>
         <SectionCard title="Card Style" description="Choose the overall personality of your loyalty card.">
@@ -221,7 +270,6 @@ export function ProgramDesignStudioForm({
             ))}
           </div>
         </SectionCard>
-
         <SectionCard title="Background" description="Choose the background feeling for this loyalty card.">
           <div className="grid gap-3 md:grid-cols-3">
             {designStudioBackgroundStyleOptions.map((option) => {
@@ -271,35 +319,6 @@ export function ProgramDesignStudioForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="Reward Box" description="Choose how rewards are presented to your customers.">
-          <div className="grid gap-3 md:grid-cols-2">
-            {designStudioRewardStyleOptions.map((option) => {
-              const active = rewardStyle === option.value;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => setRewardStyle(option.value)}
-                  className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
-                  data-active={active}
-                  aria-pressed={active}
-                >
-                  <RewardStyleThumbnail rewardStyle={option.value} />
-                  <span className="flex items-start justify-between gap-3">
-                    <span className="min-w-0">
-                      <span className="block text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
-                      <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
-                    </span>
-                    <span className="rounded-full border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
-                      Selected
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </SectionCard>
-
         <SectionCard title="Reward Progress" description="Choose the progress pattern that best matches how customers earn their next reward.">
           <div className="grid gap-3 md:grid-cols-3">
             {designStudioStampJourneyOptions.map((option) => (
@@ -342,6 +361,123 @@ export function ProgramDesignStudioForm({
           </div>
         </SectionCard>
 
+        <SectionCard title="Reward Box" description="Choose how rewards are presented to your customers.">
+          <div className="grid gap-3 md:grid-cols-2">
+            {designStudioRewardStyleOptions.map((option) => {
+              const active = rewardStyle === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setRewardStyle(option.value)}
+                  className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
+                  data-active={active}
+                  aria-pressed={active}
+                >
+                  <RewardStyleThumbnail rewardStyle={option.value} />
+                  <span className="flex items-start justify-between gap-3">
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
+                      <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                    </span>
+                    <span className="rounded-full border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
+                      Selected
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Typography" description="Choose the personality of your loyalty card.">
+          <div className="grid gap-3 md:grid-cols-2">
+            {designStudioTypographyOptions.map((option) => {
+              const active = typographyPreset === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setTypographyPreset(option.value)}
+                  className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
+                  data-active={active}
+                  aria-pressed={active}
+                >
+                  <TypographyThumbnail typographyPreset={option.value} />
+                  <span className="flex items-start justify-between gap-3">
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
+                      <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                    </span>
+                    <span className="rounded-full border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
+                      Selected
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Card Finish" description="Choose the visual finish that best matches your brand.">
+          <div className="grid gap-3 md:grid-cols-2">
+            {designStudioCardFinishOptions.map((option) => {
+              const active = decorationStyle === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setDecorationStyle(option.value)}
+                  className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
+                  data-active={active}
+                  aria-pressed={active}
+                >
+                  <CardFinishThumbnail decorationStyle={option.value} />
+                  <span className="flex items-start justify-between gap-3">
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
+                      <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                    </span>
+                    <span className="rounded-full border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
+                      Selected
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Card Content" description="Choose what your customers see on their loyalty card.">
+          <div className="grid gap-3 md:grid-cols-2">
+            {designStudioCardContentOptions.map((option) => {
+              const active = visibleSections[option.value];
+              return (
+                <label
+                  key={option.value}
+                  className="group flex min-h-24 cursor-pointer items-start gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--business-primary)] has-[:focus-visible]:ring-offset-2"
+                >
+                  <input
+                    type="checkbox"
+                    checked={active}
+                    onChange={() =>
+                      setVisibleSections((current) => ({
+                        ...current,
+                        [option.value]: !current[option.value],
+                      }))
+                    }
+                    className="mt-1 h-5 w-5 rounded border-[#CBD5E1] text-[var(--business-primary)] focus:ring-[var(--business-primary)]"
+                  />
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-[#111827] group-has-[:checked]:business-text">{option.label}</span>
+                    <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </SectionCard>
+
         <SectionCard title="Save Design" description="Apply this design to this loyalty program only. Other programs are unchanged." className="sticky bottom-3 z-20 shadow-lg xl:static xl:shadow-sm">
           <Button type="submit" variant="business" size="lg" className="w-full sm:w-fit">
             Save Design
@@ -358,6 +494,258 @@ function PreviewLine({ label, value }: { label: string; value: string }) {
       <span className="text-[#64748B]">{label}</span>
       <span className="text-right font-semibold text-[#111827]">{value}</span>
     </div>
+  );
+}
+
+function sectionVisibilityMatches(expected: CardSectionVisibility, actual: CardSectionVisibility) {
+  return designStudioCardContentOptions.every((option) => expected[option.value] === actual[option.value]);
+}
+
+function PresetThumbnail({ preset }: { preset: DesignStudioProfessionalPreset }) {
+  const templateStyle = templateThumbnailStyles[preset.layoutStyle] ?? templateThumbnailStyles.CLASSIC;
+  const finishStyle = cardFinishStyles[preset.decorationStyle] ?? cardFinishStyles.FLAT;
+  const rewardStyle = rewardBoxStyles[preset.rewardStyle] ?? rewardBoxStyles.FILLED;
+  return (
+    <span className="block rounded-2xl bg-[#F8FAFC] p-3">
+      <span className="block rounded-[1.15rem] border p-3" style={finishStyle.frameStyle}>
+        <span className="block overflow-hidden rounded-xl p-3" style={{ ...finishStyle.innerStyle, background: templateStyle.card }}>
+          <span className="flex items-start justify-between gap-3">
+            <span className="flex items-center gap-2">
+              <span className="grid h-8 w-8 place-items-center rounded-full text-[10px] font-black" style={{ background: templateStyle.logo, color: templateStyle.card === "#FFFFFF" ? "#111827" : "#FFFFFF" }}>
+                {getStampIconMark(preset.stampIcon)}
+              </span>
+              <span className="grid gap-1">
+                <span className="h-2.5 w-20 rounded-full" style={{ background: templateStyle.primaryLine }} />
+                <span className="h-2 w-14 rounded-full" style={{ background: templateStyle.secondaryLine }} />
+              </span>
+            </span>
+            {preset.visibleSections.tierBadge ? <span className="h-6 w-12 rounded-full" style={{ background: templateStyle.badge }} /> : null}
+          </span>
+          {preset.visibleSections.progress ? (
+            <span className="mt-4 block h-3 overflow-hidden rounded-full" style={{ background: templateStyle.track }}>
+              <span className="block h-full w-2/3 rounded-full" style={{ background: templateStyle.fill }} />
+            </span>
+          ) : null}
+          {preset.visibleSections.rewardBox ? (
+            <span className="mt-4 block rounded-xl border p-3" style={rewardStyle.style}>
+              <span className="block h-2 w-16 rounded-full" style={{ background: rewardStyle.mutedColor }} />
+              <span className="mt-2 block h-3 w-24 rounded-full" style={{ background: rewardStyle.textColor }} />
+            </span>
+          ) : null}
+        </span>
+      </span>
+    </span>
+  );
+}
+
+function CardFinishPreviewFrame({ children, decorationStyle }: { children: ReactNode; decorationStyle: CardDesignDecorationStyle }) {
+  const finish = cardFinishStyles[decorationStyle] ?? cardFinishStyles.FLAT;
+  return (
+    <div className="mx-auto max-w-[430px] rounded-[2rem] p-3 transition duration-200" style={finish.frameStyle}>
+      <div className="rounded-[1.6rem]" style={finish.innerStyle}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function VisibleCardPreview({
+  businessName,
+  businessLogoUrl,
+  customerName,
+  memberSince,
+  tierLabel,
+  tierIcon,
+  theme,
+  programName,
+  rewardName,
+  visibleSections,
+}: {
+  businessName: string;
+  businessLogoUrl: string | null;
+  customerName: string;
+  memberSince: string;
+  tierLabel: string;
+  tierIcon: string;
+  theme: ReturnType<typeof resolveCardThemeColors>;
+  programName: string;
+  rewardName: string;
+  visibleSections: CardSectionVisibility;
+}) {
+  return (
+    <div className="overflow-hidden rounded-[1.6rem] p-6" style={{ background: theme.cardBackground, color: theme.cardText }}>
+      <div className="flex items-start justify-between gap-4">
+        {(visibleSections.logo || visibleSections.businessName || visibleSections.programName) ? (
+          <div className="flex min-w-0 items-start gap-3">
+            {visibleSections.logo ? (
+              <span
+                className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full text-sm font-black"
+                style={{ background: theme.logoBackground, color: theme.logoText }}
+              >
+                {businessLogoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={businessLogoUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  businessName.charAt(0).toUpperCase()
+                )}
+              </span>
+            ) : null}
+            <div className="min-w-0">
+              {visibleSections.businessName ? <p className="line-clamp-2 text-base font-black leading-tight">{businessName}</p> : null}
+              {visibleSections.programName ? (
+                <p className="mt-1 truncate text-sm font-medium" style={{ color: theme.mutedText }}>
+                  {programName}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+        {visibleSections.tierBadge ? (
+          <span
+            className="shrink-0 rounded-full border px-3 py-1 text-xs font-black uppercase tracking-wide"
+            style={{ background: theme.badgeBackground, color: theme.badgeText, borderColor: theme.badgeBorder }}
+          >
+            {tierIcon} {tierLabel}
+          </span>
+        ) : null}
+      </div>
+
+      {visibleSections.customerName ? (
+        <div className="mt-8">
+          <p className="text-xs font-bold uppercase tracking-[0.24em]" style={{ color: theme.mutedText }}>
+            Customer
+          </p>
+          <p className="mt-2 text-3xl font-black leading-tight">{customerName}</p>
+          <p className="mt-2 text-sm" style={{ color: theme.mutedText }}>
+            Member since {memberSince}
+          </p>
+        </div>
+      ) : null}
+
+      {visibleSections.progress ? (
+        <div className="mt-8">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.24em]" style={{ color: theme.mutedText }}>
+                Progress
+              </p>
+              <p className="mt-2 text-4xl font-black">7/10</p>
+            </div>
+            {visibleSections.visits ? <p className="text-right text-sm font-bold">3 visits remaining</p> : null}
+          </div>
+          <div className="mt-4 h-3 overflow-hidden rounded-full" style={{ background: theme.progressTrack }}>
+            <div className="h-full w-[70%] rounded-full" style={{ background: theme.progressFill }} />
+          </div>
+        </div>
+      ) : null}
+
+      {visibleSections.rewardBox ? (
+        <div className="mt-6 rounded-3xl border p-4" style={{ background: theme.rewardPanelBackground, color: theme.rewardPanelText, borderColor: theme.rewardPanelBorder }}>
+          <p className="text-xs font-bold uppercase tracking-[0.22em]" style={{ color: theme.rewardPanelMuted }}>
+            Next reward
+          </p>
+          <p className="mt-2 text-xl font-black">{rewardName}</p>
+        </div>
+      ) : null}
+
+      {visibleSections.qr ? (
+        <div className="mt-6 rounded-3xl p-4" style={{ background: theme.qrSurface, color: "#111827" }}>
+          <div className="flex items-center gap-4">
+            <span className="grid h-20 w-20 shrink-0 grid-cols-3 grid-rows-3 gap-1 rounded-2xl bg-white p-3 ring-1 ring-black/10">
+              {Array.from({ length: 9 }).map((_, index) => (
+                <span key={index} className={index % 2 === 0 ? "rounded-sm bg-[#111827]" : "rounded-sm bg-[#E5E7EB]"} />
+              ))}
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-black">Scan at Checkout</span>
+              <span className="mt-1 block text-xs text-[#64748B]">Present this QR to staff.</span>
+            </span>
+          </div>
+        </div>
+      ) : null}
+
+      {visibleSections.referral ? (
+        <div className="mt-4 rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-semibold">
+          Refer a friend and share this loyalty card.
+        </div>
+      ) : null}
+
+      {visibleSections.footer ? (
+        <div className="mt-6 rounded-full px-5 py-3 text-center text-sm font-black" style={{ background: theme.ctaBackground, color: theme.ctaForeground }}>
+          Scan at Checkout
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function CardFinishThumbnail({ decorationStyle }: { decorationStyle: CardDesignDecorationStyle }) {
+  const finish = cardFinishStyles[decorationStyle] ?? cardFinishStyles.FLAT;
+  return (
+    <span className="block rounded-2xl bg-[#F8FAFC] p-3">
+      <span className="block rounded-[1.15rem] border p-3" style={finish.frameStyle}>
+        <span className="block rounded-xl p-3" style={finish.innerStyle}>
+          <span className="flex items-center justify-between gap-3">
+            <span className="h-7 w-7 rounded-full business-bg" />
+            <span className="h-5 w-16 rounded-full bg-[#E2E8F0]" />
+          </span>
+          <span className="mt-4 block h-3 rounded-full bg-[#CBD5E1]" />
+          <span className="mt-3 grid grid-cols-3 gap-2">
+            <span className="h-8 rounded-xl bg-white/80" />
+            <span className="h-8 rounded-xl bg-white/80" />
+            <span className="h-8 rounded-xl bg-white/80" />
+          </span>
+        </span>
+      </span>
+    </span>
+  );
+}
+
+function TypographyCardPreview({
+  businessName,
+  customerName,
+  progress,
+  rewardName,
+  typographyPreset,
+}: {
+  businessName: string;
+  customerName: string;
+  progress: string;
+  rewardName: string;
+  typographyPreset: CardDesignTypographyPreset;
+}) {
+  const style = typographyPreviewStyles[typographyPreset] ?? typographyPreviewStyles.MODERN;
+  return (
+    <div className="mb-5 rounded-3xl border border-[#E5E7EB] bg-white/90 p-4 shadow-sm">
+      <p className="mb-3 text-xs font-bold uppercase tracking-[0.24em] text-[#94A3B8]">Typography Preview</p>
+      <div className="grid gap-3">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className={style.businessClass}>{businessName}</p>
+            <p className={style.customerClass}>{customerName}</p>
+          </div>
+          <p className={style.progressClass}>{progress}</p>
+        </div>
+        <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-3">
+          <p className={style.captionClass}>Next reward</p>
+          <p className={style.rewardClass}>{rewardName}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TypographyThumbnail({ typographyPreset }: { typographyPreset: CardDesignTypographyPreset }) {
+  const style = typographyPreviewStyles[typographyPreset] ?? typographyPreviewStyles.MODERN;
+  return (
+    <span className="block rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-3">
+      <span className={style.thumbnailHeading}>Loyalty Card</span>
+      <span className={style.thumbnailCustomer}>Mina Hanna</span>
+      <span className="mt-3 flex items-end justify-between gap-3">
+        <span className={style.thumbnailReward}>Free Coffee</span>
+        <span className={style.thumbnailProgress}>7/10</span>
+      </span>
+    </span>
   );
 }
 
@@ -610,6 +998,83 @@ const templateThumbnailStyles: Record<CardDesignLayoutStyle, {
   },
 };
 
+const cardFinishStyles: Record<CardDesignDecorationStyle, {
+  frameStyle: {
+    background?: string;
+    backgroundColor?: string;
+    border?: string;
+    boxShadow?: string;
+    backdropFilter?: string;
+  };
+  innerStyle: {
+    border?: string;
+    boxShadow?: string;
+    overflow?: "hidden";
+  };
+}> = {
+  FLAT: {
+    frameStyle: {
+      backgroundColor: "#FFFFFF",
+      border: "1px solid #E2E8F0",
+      boxShadow: "none",
+    },
+    innerStyle: {
+      border: "1px solid transparent",
+      boxShadow: "none",
+      overflow: "hidden",
+    },
+  },
+  SOFT: {
+    frameStyle: {
+      backgroundColor: "#FFFFFF",
+      border: "1px solid #E2E8F0",
+      boxShadow: "0 18px 44px rgba(15, 23, 42, 0.12)",
+    },
+    innerStyle: {
+      border: "1px solid rgba(226, 232, 240, 0.7)",
+      boxShadow: "0 10px 24px rgba(15, 23, 42, 0.08)",
+      overflow: "hidden",
+    },
+  },
+  GLASS: {
+    frameStyle: {
+      background: "linear-gradient(135deg, rgba(255,255,255,0.78), rgba(255,255,255,0.36))",
+      border: "1px solid rgba(255,255,255,0.72)",
+      boxShadow: "0 22px 52px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255,255,255,0.75)",
+      backdropFilter: "blur(10px)",
+    },
+    innerStyle: {
+      border: "1px solid rgba(255,255,255,0.62)",
+      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.5)",
+      overflow: "hidden",
+    },
+  },
+  PREMIUM: {
+    frameStyle: {
+      background: "linear-gradient(135deg, rgba(249,115,22,0.26), rgba(15,23,42,0.08))",
+      border: "1px solid rgba(249,115,22,0.42)",
+      boxShadow: "0 26px 64px rgba(15, 23, 42, 0.22)",
+    },
+    innerStyle: {
+      border: "1px solid rgba(249,115,22,0.32)",
+      boxShadow: "0 14px 34px rgba(15, 23, 42, 0.16)",
+      overflow: "hidden",
+    },
+  },
+  LUXURY: {
+    frameStyle: {
+      background: "linear-gradient(135deg, rgba(233,193,141,0.36), rgba(24,24,27,0.12))",
+      border: "1px solid rgba(233,193,141,0.58)",
+      boxShadow: "0 28px 70px rgba(24, 24, 27, 0.24)",
+    },
+    innerStyle: {
+      border: "1px solid rgba(233,193,141,0.42)",
+      boxShadow: "0 16px 40px rgba(24, 24, 27, 0.18)",
+      overflow: "hidden",
+    },
+  },
+};
+
 const rewardBoxStyles: Record<CardDesignRewardStyle, {
   className: string;
   style: {
@@ -678,6 +1143,85 @@ const rewardBoxStyles: Record<CardDesignRewardStyle, {
     mutedColor: "var(--business-primary)",
     badgeBackground: "var(--business-primary)",
     badgeColor: "var(--business-primary-foreground)",
+  },
+};
+
+const typographyPreviewStyles: Record<CardDesignTypographyPreset, {
+  businessClass: string;
+  customerClass: string;
+  progressClass: string;
+  captionClass: string;
+  rewardClass: string;
+  thumbnailHeading: string;
+  thumbnailCustomer: string;
+  thumbnailReward: string;
+  thumbnailProgress: string;
+}> = {
+  MODERN: {
+    businessClass: "truncate text-sm font-semibold tracking-normal text-[#475569]",
+    customerClass: "mt-1 truncate text-2xl font-extrabold leading-tight tracking-[-0.03em] text-[#111827]",
+    progressClass: "text-right text-2xl font-black tracking-[-0.04em] text-[#111827]",
+    captionClass: "text-[11px] font-bold uppercase tracking-[0.18em] text-[#64748B]",
+    rewardClass: "mt-1 text-lg font-extrabold tracking-[-0.02em] text-[#111827]",
+    thumbnailHeading: "block text-xs font-semibold tracking-normal text-[#64748B]",
+    thumbnailCustomer: "mt-1 block text-lg font-extrabold tracking-[-0.03em] text-[#111827]",
+    thumbnailReward: "text-sm font-bold text-[#111827]",
+    thumbnailProgress: "text-lg font-black text-[#111827]",
+  },
+  CLASSIC: {
+    businessClass: "truncate text-sm font-medium tracking-wide text-[#475569]",
+    customerClass: "mt-1 truncate text-2xl font-bold leading-tight tracking-normal text-[#111827]",
+    progressClass: "text-right text-2xl font-bold tracking-normal text-[#111827]",
+    captionClass: "text-[11px] font-semibold uppercase tracking-[0.16em] text-[#64748B]",
+    rewardClass: "mt-1 text-lg font-bold tracking-normal text-[#111827]",
+    thumbnailHeading: "block text-xs font-medium tracking-wide text-[#64748B]",
+    thumbnailCustomer: "mt-1 block text-lg font-bold tracking-normal text-[#111827]",
+    thumbnailReward: "text-sm font-semibold text-[#111827]",
+    thumbnailProgress: "text-lg font-bold text-[#111827]",
+  },
+  PREMIUM: {
+    businessClass: "truncate text-xs font-black uppercase tracking-[0.2em] text-[#475569]",
+    customerClass: "mt-1 truncate text-3xl font-black leading-none tracking-[-0.06em] text-[#111827]",
+    progressClass: "text-right text-3xl font-black tracking-[-0.06em] text-[#111827]",
+    captionClass: "text-[11px] font-black uppercase tracking-[0.22em] business-text",
+    rewardClass: "mt-1 text-xl font-black tracking-[-0.04em] text-[#111827]",
+    thumbnailHeading: "block text-[10px] font-black uppercase tracking-[0.2em] text-[#64748B]",
+    thumbnailCustomer: "mt-1 block text-xl font-black tracking-[-0.06em] text-[#111827]",
+    thumbnailReward: "text-sm font-black text-[#111827]",
+    thumbnailProgress: "text-xl font-black text-[#111827]",
+  },
+  LUXURY: {
+    businessClass: "truncate text-xs font-semibold uppercase tracking-[0.28em] text-[#64748B]",
+    customerClass: "mt-1 truncate text-2xl font-semibold leading-tight tracking-[0.02em] text-[#111827]",
+    progressClass: "text-right text-2xl font-semibold tracking-[0.04em] text-[#111827]",
+    captionClass: "text-[11px] font-semibold uppercase tracking-[0.28em] text-[#8B6F47]",
+    rewardClass: "mt-1 text-lg font-semibold tracking-[0.03em] text-[#111827]",
+    thumbnailHeading: "block text-[10px] font-semibold uppercase tracking-[0.28em] text-[#64748B]",
+    thumbnailCustomer: "mt-1 block text-lg font-semibold tracking-[0.03em] text-[#111827]",
+    thumbnailReward: "text-sm font-semibold tracking-[0.03em] text-[#111827]",
+    thumbnailProgress: "text-lg font-semibold tracking-[0.04em] text-[#111827]",
+  },
+  PLAYFUL: {
+    businessClass: "truncate text-sm font-bold tracking-wide text-[#475569]",
+    customerClass: "mt-1 truncate text-2xl font-black leading-tight tracking-normal text-[#111827]",
+    progressClass: "text-right text-2xl font-black tracking-normal business-text",
+    captionClass: "text-[11px] font-black uppercase tracking-[0.12em] text-[#64748B]",
+    rewardClass: "mt-1 text-lg font-black tracking-normal text-[#111827]",
+    thumbnailHeading: "block text-xs font-bold tracking-wide text-[#64748B]",
+    thumbnailCustomer: "mt-1 block text-lg font-black tracking-normal text-[#111827]",
+    thumbnailReward: "text-sm font-black text-[#111827]",
+    thumbnailProgress: "text-lg font-black business-text",
+  },
+  MINIMAL: {
+    businessClass: "truncate text-sm font-normal tracking-wide text-[#64748B]",
+    customerClass: "mt-1 truncate text-2xl font-light leading-tight tracking-[0.01em] text-[#111827]",
+    progressClass: "text-right text-2xl font-light tracking-[0.02em] text-[#111827]",
+    captionClass: "text-[11px] font-medium uppercase tracking-[0.2em] text-[#94A3B8]",
+    rewardClass: "mt-1 text-lg font-light tracking-[0.01em] text-[#111827]",
+    thumbnailHeading: "block text-xs font-normal tracking-wide text-[#64748B]",
+    thumbnailCustomer: "mt-1 block text-lg font-light tracking-[0.01em] text-[#111827]",
+    thumbnailReward: "text-sm font-light text-[#111827]",
+    thumbnailProgress: "text-lg font-light text-[#111827]",
   },
 };
 

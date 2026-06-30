@@ -38,7 +38,8 @@ export const backgroundPatternPresets = [
   "BEAUTY_PATTERN",
 ] as const;
 export type CardDesignBackgroundPattern = (typeof backgroundPatternPresets)[number];
-export type CardDesignDecorationStyle = "none";
+export const cardDecorationStyles = ["FLAT", "SOFT", "GLASS", "PREMIUM", "LUXURY"] as const;
+export type CardDesignDecorationStyle = (typeof cardDecorationStyles)[number];
 export const cardRewardStyles = ["FILLED", "OUTLINE", "GLASS", "PREMIUM", "TICKET"] as const;
 export type CardDesignRewardStyle = (typeof cardRewardStyles)[number];
 export type CardDesignFooterStyle = "scan-cta";
@@ -101,7 +102,7 @@ export const defaultCardDesign: CardDesign = {
   typographyPreset: "MODERN",
   backgroundStyle: "SOLID",
   backgroundPattern: "NONE",
-  decorationStyle: "none",
+  decorationStyle: "FLAT",
   rewardStyle: "FILLED",
   footerStyle: "scan-cta",
   animationStyle: "subtle",
@@ -217,7 +218,7 @@ const cardDesignValues = {
   typographyPreset: typographyPresets,
   backgroundStyle: cardBackgroundStyles,
   backgroundPattern: backgroundPatternPresets,
-  decorationStyle: ["none"],
+  decorationStyle: cardDecorationStyles,
   rewardStyle: cardRewardStyles,
   footerStyle: ["scan-cta"],
   animationStyle: ["subtle"],
@@ -272,6 +273,14 @@ export function resolveBackgroundPattern(value: unknown): CardDesignBackgroundPa
   return resolveValue("backgroundPattern", value);
 }
 
+export function resolveDecorationStyle(value: unknown): CardDesignDecorationStyle {
+  if (value === "none") {
+    return "FLAT";
+  }
+
+  return resolveValue("decorationStyle", value);
+}
+
 export function resolveVisibleSections(value: unknown): CardSectionVisibility {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return { ...defaultVisibleCardSections };
@@ -298,7 +307,7 @@ export function resolveCardDesign(input?: CardDesignInput): CardDesign {
     typographyPreset: resolveTypographyPreset(input?.typographyPreset),
     backgroundStyle: resolveBackgroundStyle(input?.backgroundStyle),
     backgroundPattern: resolveBackgroundPattern(input?.backgroundPattern),
-    decorationStyle: resolveValue("decorationStyle", input?.decorationStyle),
+    decorationStyle: resolveDecorationStyle(input?.decorationStyle),
     rewardStyle: resolveValue("rewardStyle", input?.rewardStyle),
     footerStyle: resolveValue("footerStyle", input?.footerStyle),
     animationStyle: resolveValue("animationStyle", input?.animationStyle),
