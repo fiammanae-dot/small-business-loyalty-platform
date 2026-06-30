@@ -80,6 +80,7 @@ export default async function ProgramDesignStudioPage({
             stampIcon: cardDesign.stampIcon,
             backgroundStyle: cardDesign.backgroundStyle,
             backgroundPattern: cardDesign.backgroundPattern,
+            rewardStyle: cardDesign.rewardStyle,
           }}
           stampIconOptions={stampIconOptions}
         />

@@ -39,7 +39,8 @@ export const backgroundPatternPresets = [
 ] as const;
 export type CardDesignBackgroundPattern = (typeof backgroundPatternPresets)[number];
 export type CardDesignDecorationStyle = "none";
-export type CardDesignRewardStyle = "panel";
+export const cardRewardStyles = ["FILLED", "OUTLINE", "GLASS", "PREMIUM", "TICKET"] as const;
+export type CardDesignRewardStyle = (typeof cardRewardStyles)[number];
 export type CardDesignFooterStyle = "scan-cta";
 export type CardDesignAnimationStyle = "subtle";
 export const cardSections = [
@@ -101,7 +102,7 @@ export const defaultCardDesign: CardDesign = {
   backgroundStyle: "SOLID",
   backgroundPattern: "NONE",
   decorationStyle: "none",
-  rewardStyle: "panel",
+  rewardStyle: "FILLED",
   footerStyle: "scan-cta",
   animationStyle: "subtle",
   visibleSections: defaultVisibleCardSections,
@@ -217,7 +218,7 @@ const cardDesignValues = {
   backgroundStyle: cardBackgroundStyles,
   backgroundPattern: backgroundPatternPresets,
   decorationStyle: ["none"],
-  rewardStyle: ["panel"],
+  rewardStyle: cardRewardStyles,
   footerStyle: ["scan-cta"],
   animationStyle: ["subtle"],
 } as const;

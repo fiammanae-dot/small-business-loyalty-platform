@@ -1,13 +1,21 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { CardDesignBackgroundPattern, CardDesignBackgroundStyle, CardDesignLayoutStyle, CardDesignStampIcon, CardDesignStampJourneyStyle } from "@/lib/card-design";
+import type {
+  CardDesignBackgroundPattern,
+  CardDesignBackgroundStyle,
+  CardDesignLayoutStyle,
+  CardDesignRewardStyle,
+  CardDesignStampIcon,
+  CardDesignStampJourneyStyle,
+} from "@/lib/card-design";
 import { getCardThemeForLayoutStyle, getCardStyleForLayoutStyle, resolveCardDesign } from "@/lib/card-design";
 import { resolveCardThemeColors } from "@/lib/card-themes";
 import {
   designStudioBackgroundPatternOptions,
   designStudioBackgroundStyleOptions,
   designStudioIndustryStyleOptions,
+  designStudioRewardStyleOptions,
   designStudioStampJourneyOptions,
   designStudioTemplateOptions,
 } from "@/lib/design-studio";
@@ -49,6 +57,7 @@ export function ProgramDesignStudioForm({
     stampIcon: CardDesignStampIcon;
     backgroundStyle: CardDesignBackgroundStyle;
     backgroundPattern: CardDesignBackgroundPattern;
+    rewardStyle: CardDesignRewardStyle;
   };
   stampIconOptions: Array<{ value: CardDesignStampIcon; label: string; recommended: boolean }>;
 }) {
@@ -63,6 +72,7 @@ export function ProgramDesignStudioForm({
       : "SOLID",
   );
   const [backgroundPattern, setBackgroundPattern] = useState(initialDesign.backgroundPattern);
+  const [rewardStyle, setRewardStyle] = useState(initialDesign.rewardStyle);
   const cardDesign = useMemo(
     () =>
       resolveCardDesign({
@@ -72,8 +82,9 @@ export function ProgramDesignStudioForm({
         stampIcon,
         backgroundStyle,
         backgroundPattern,
+        rewardStyle,
       }),
-    [backgroundPattern, backgroundStyle, layoutStyle, stampJourneyStyle, stampIcon],
+    [backgroundPattern, backgroundStyle, layoutStyle, rewardStyle, stampJourneyStyle, stampIcon],
   );
   const previewTheme = useMemo(
     () =>
@@ -89,6 +100,7 @@ export function ProgramDesignStudioForm({
   const selectedStyleLabel = designStudioTemplateOptions.find((option) => option.value === layoutStyle)?.label ?? layoutStyle;
   const selectedBackgroundLabel = designStudioBackgroundStyleOptions.find((option) => option.value === backgroundStyle)?.label ?? backgroundStyle;
   const selectedPatternLabel = designStudioBackgroundPatternOptions.find((option) => option.value === backgroundPattern)?.label ?? backgroundPattern;
+  const selectedRewardStyleLabel = designStudioRewardStyleOptions.find((option) => option.value === rewardStyle)?.label ?? rewardStyle;
   const activeIndustryStyleId =
     designStudioIndustryStyleOptions.find(
       (option) => option.layoutStyle === layoutStyle && option.stampJourneyStyle === stampJourneyStyle && option.stampIcon === stampIcon,
@@ -100,6 +112,7 @@ export function ProgramDesignStudioForm({
       <input type="hidden" name="programUuid" value={programUuid} />
       <input type="hidden" name="backgroundStyle" value={backgroundStyle} />
       <input type="hidden" name="backgroundPattern" value={backgroundPattern} />
+      <input type="hidden" name="rewardStyle" value={rewardStyle} />
 
       <aside className="order-first grid h-fit gap-4 xl:sticky xl:top-6 xl:order-last">
         <SectionCard
@@ -126,12 +139,14 @@ export function ProgramDesignStudioForm({
               completion={70}
             />
           </div>
+          <RewardBoxPreview rewardName={rewardName} rewardStyle={rewardStyle} />
           <CardProgressPreview journeyStyle={stampJourneyStyle} stampIcon={stampIcon} stampIconLabel={selectedIconLabel} />
           <div className="mt-5 grid gap-2 rounded-2xl border border-[#E5E7EB] bg-white/85 p-4 text-sm shadow-sm">
             <PreviewLine label="Card Style" value={selectedStyleLabel} />
             <PreviewLine label="Reward Progress" value={selectedJourneyLabel} />
             <PreviewLine label="Stamp Design" value={selectedIconLabel} />
             <PreviewLine label="Background" value={`${selectedBackgroundLabel} / ${selectedPatternLabel}`} />
+            <PreviewLine label="Reward Box" value={selectedRewardStyleLabel} />
           </div>
         </SectionCard>
       </aside>
@@ -256,6 +271,35 @@ export function ProgramDesignStudioForm({
           </div>
         </SectionCard>
 
+        <SectionCard title="Reward Box" description="Choose how rewards are presented to your customers.">
+          <div className="grid gap-3 md:grid-cols-2">
+            {designStudioRewardStyleOptions.map((option) => {
+              const active = rewardStyle === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setRewardStyle(option.value)}
+                  className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
+                  data-active={active}
+                  aria-pressed={active}
+                >
+                  <RewardStyleThumbnail rewardStyle={option.value} />
+                  <span className="flex items-start justify-between gap-3">
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
+                      <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                    </span>
+                    <span className="rounded-full border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
+                      Selected
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </SectionCard>
+
         <SectionCard title="Reward Progress" description="Choose the progress pattern that best matches how customers earn their next reward.">
           <div className="grid gap-3 md:grid-cols-3">
             {designStudioStampJourneyOptions.map((option) => (
@@ -314,6 +358,55 @@ function PreviewLine({ label, value }: { label: string; value: string }) {
       <span className="text-[#64748B]">{label}</span>
       <span className="text-right font-semibold text-[#111827]">{value}</span>
     </div>
+  );
+}
+
+function RewardBoxPreview({ rewardName, rewardStyle }: { rewardName: string; rewardStyle: CardDesignRewardStyle }) {
+  const style = rewardBoxStyles[rewardStyle] ?? rewardBoxStyles.FILLED;
+  return (
+    <div className="mt-5">
+      <p className="mb-2 text-xs font-bold uppercase tracking-[0.24em] text-[#94A3B8]">Reward Box</p>
+      <div className={`relative overflow-hidden rounded-3xl border p-4 ${style.className}`} style={style.style}>
+        {rewardStyle === "TICKET" ? (
+          <>
+            <span className="absolute -left-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-white" />
+            <span className="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-white" />
+          </>
+        ) : null}
+        <div className="relative flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: style.mutedColor }}>
+              Next reward
+            </p>
+            <p className="mt-1 text-lg font-black leading-tight" style={{ color: style.textColor }}>
+              {rewardName}
+            </p>
+          </div>
+          <span className="shrink-0 rounded-full px-3 py-1 text-xs font-black" style={{ background: style.badgeBackground, color: style.badgeColor }}>
+            3 visits
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RewardStyleThumbnail({ rewardStyle }: { rewardStyle: CardDesignRewardStyle }) {
+  const style = rewardBoxStyles[rewardStyle] ?? rewardBoxStyles.FILLED;
+  return (
+    <span className={`relative block overflow-hidden rounded-2xl border p-3 ${style.className}`} style={style.style}>
+      {rewardStyle === "TICKET" ? (
+        <>
+          <span className="absolute -left-2 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-white" />
+          <span className="absolute -right-2 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-white" />
+        </>
+      ) : null}
+      <span className="relative grid gap-2">
+        <span className="h-2 w-20 rounded-full" style={{ background: style.mutedColor }} />
+        <span className="h-3 w-28 rounded-full" style={{ background: style.textColor }} />
+        <span className="mt-1 h-5 w-16 rounded-full" style={{ background: style.badgeBackground }} />
+      </span>
+    </span>
   );
 }
 
@@ -514,6 +607,77 @@ const templateThumbnailStyles: Record<CardDesignLayoutStyle, {
     fill: "linear-gradient(90deg, #E9C18D, #FDE68A)",
     panel: "rgba(255,255,255,0.12)",
     accent: "#E9C18D",
+  },
+};
+
+const rewardBoxStyles: Record<CardDesignRewardStyle, {
+  className: string;
+  style: {
+    background?: string;
+    backgroundColor?: string;
+    borderColor: string;
+    boxShadow?: string;
+  };
+  textColor: string;
+  mutedColor: string;
+  badgeBackground: string;
+  badgeColor: string;
+}> = {
+  FILLED: {
+    className: "",
+    style: {
+      background: "var(--business-primary)",
+      borderColor: "var(--business-primary)",
+      boxShadow: "0 18px 38px rgba(15, 23, 42, 0.14)",
+    },
+    textColor: "var(--business-primary-foreground)",
+    mutedColor: "var(--business-primary-foreground)",
+    badgeBackground: "rgba(255,255,255,0.22)",
+    badgeColor: "var(--business-primary-foreground)",
+  },
+  OUTLINE: {
+    className: "bg-white",
+    style: {
+      borderColor: "var(--business-primary)",
+    },
+    textColor: "#111827",
+    mutedColor: "var(--business-primary)",
+    badgeBackground: "var(--business-primary-soft)",
+    badgeColor: "var(--business-primary)",
+  },
+  GLASS: {
+    className: "bg-white/70",
+    style: {
+      borderColor: "rgba(255,255,255,0.72)",
+      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.72), 0 18px 38px rgba(15, 23, 42, 0.10)",
+    },
+    textColor: "#111827",
+    mutedColor: "#64748B",
+    badgeBackground: "rgba(255,255,255,0.78)",
+    badgeColor: "#111827",
+  },
+  PREMIUM: {
+    className: "",
+    style: {
+      background: "linear-gradient(135deg, #111827 0%, #312E81 100%)",
+      borderColor: "rgba(249,115,22,0.48)",
+      boxShadow: "0 20px 42px rgba(17, 24, 39, 0.22)",
+    },
+    textColor: "#FFFFFF",
+    mutedColor: "#FDBA74",
+    badgeBackground: "rgba(249,115,22,0.22)",
+    badgeColor: "#FDBA74",
+  },
+  TICKET: {
+    className: "bg-white",
+    style: {
+      borderColor: "var(--business-primary)",
+      boxShadow: "0 14px 30px rgba(15, 23, 42, 0.10)",
+    },
+    textColor: "#111827",
+    mutedColor: "var(--business-primary)",
+    badgeBackground: "var(--business-primary)",
+    badgeColor: "var(--business-primary-foreground)",
   },
 };
 

@@ -12,6 +12,7 @@ import {
   type CardDesignBackgroundStyle,
   type CardDesignInput,
   type CardDesignLayoutStyle,
+  type CardDesignRewardStyle,
   type CardDesignStampIcon,
   type CardDesignStampJourneyStyle,
   type IndustryDesignPackId,
@@ -53,6 +54,18 @@ export const designStudioBackgroundPatternOptions = [
   { value: "BEAUTY_PATTERN", label: "Beauty Pattern", description: "Soft detail for salons and beauty programs." },
 ] satisfies Array<{
   value: CardDesignBackgroundPattern;
+  label: string;
+  description: string;
+}>;
+
+export const designStudioRewardStyleOptions = [
+  { value: "FILLED", label: "Filled", description: "Bold and easy to notice." },
+  { value: "OUTLINE", label: "Outline", description: "Clean and lightweight." },
+  { value: "GLASS", label: "Glass", description: "Modern translucent appearance." },
+  { value: "PREMIUM", label: "Premium", description: "Elegant highlighted reward." },
+  { value: "TICKET", label: "Ticket", description: "Looks like a redeemable coupon." },
+] satisfies Array<{
+  value: CardDesignRewardStyle;
   label: string;
   description: string;
 }>;
@@ -142,6 +155,7 @@ export const designStudioSchema = z.object({
   stampIcon: z.string().trim().min(1),
   backgroundStyle: z.enum(["SOLID", "GRADIENT", "PATTERN"]),
   backgroundPattern: z.enum(["NONE", "SUBTLE_DOTS", "DIAGONAL_LINES", "WAVES", "COFFEE_BEANS", "SCISSORS", "WATER_BUBBLES", "FOOD_PATTERN", "BEAUTY_PATTERN"]),
+  rewardStyle: z.enum(["FILLED", "OUTLINE", "GLASS", "PREMIUM", "TICKET"]),
 });
 
 export function resolveProgramCardDesign(input?: CardDesignInput): CardDesign {
@@ -157,6 +171,7 @@ export function buildProgramCardDesign(input: z.infer<typeof designStudioSchema>
     stampIcon: input.stampIcon,
     backgroundStyle: input.backgroundStyle,
     backgroundPattern: input.backgroundPattern,
+    rewardStyle: input.rewardStyle,
   });
 }
 
@@ -174,6 +189,7 @@ export function parseDesignStudioForm(formData: FormData, businessType: Paramete
     stampIcon: String(formData.get("stampIcon") ?? ""),
     backgroundStyle: String(formData.get("backgroundStyle") ?? "SOLID"),
     backgroundPattern: String(formData.get("backgroundPattern") ?? "NONE"),
+    rewardStyle: String(formData.get("rewardStyle") ?? "FILLED"),
   });
   if (!parsed.success) return parsed;
 

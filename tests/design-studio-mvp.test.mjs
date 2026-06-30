@@ -77,7 +77,11 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(helper, /PROGRESS_BAR/);
   assert.match(helper, /designStudioBackgroundStyleOptions/);
   assert.match(helper, /designStudioBackgroundPatternOptions/);
+  assert.match(helper, /designStudioRewardStyleOptions/);
   for (const label of ["Solid", "Gradient", "Pattern", "Subtle Dots", "Diagonal Lines", "Waves", "Coffee Beans", "Scissors", "Water Bubbles", "Food Pattern", "Beauty Pattern"]) {
+    assert.match(helper, new RegExp(label));
+  }
+  for (const label of ["Filled", "Outline", "Glass", "Premium", "Ticket"]) {
     assert.match(helper, new RegExp(label));
   }
   assert.match(helper, /getAllowedStampIconsForBusinessType/);
@@ -104,6 +108,12 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /setBackgroundPattern\(option\.value\)/);
   assert.match(form, /name="backgroundStyle"/);
   assert.match(form, /name="backgroundPattern"/);
+  assert.match(form, /Reward Box/);
+  assert.match(form, /Choose how rewards are presented to your customers\./);
+  assert.match(form, /RewardBoxPreview/);
+  assert.match(form, /RewardStyleThumbnail/);
+  assert.match(form, /setRewardStyle\(option\.value\)/);
+  assert.match(form, /name="rewardStyle"/);
   assert.match(form, /CardProgressPreview/);
   assert.match(form, /CircleJourneyPreview/);
   assert.match(form, /ConnectedDotsJourneyPreview/);
