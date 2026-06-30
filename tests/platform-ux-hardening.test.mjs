@@ -6,7 +6,7 @@ function read(path) {
   return readFileSync(path, "utf8");
 }
 
-test("program management center uses design-system KPIs, filters, cards, progress, and action menus", () => {
+test("program management center uses design-system KPIs, filters, cards, progress, and clickable program names", () => {
   const programs = read("src/app/dashboard/programs/page.tsx");
 
   for (const expected of [
@@ -22,12 +22,16 @@ test("program management center uses design-system KPIs, filters, cards, progres
     "Most active",
     "Program Performance",
     "ProgressBar",
-    "ActionMenu",
+    "hover:underline",
     "lg:hidden",
   ]) {
     assert.match(programs, new RegExp(expected.replace(/[{}]/g, "\$&")));
   }
 
+  assert.match(programs, /href=\{"\/dashboard\/programs\/" \+ row\.program\.uuid\}/);
+  assert.doesNotMatch(programs, /ActionMenu/);
+  assert.doesNotMatch(programs, /ProgramActions/);
+  assert.doesNotMatch(programs, /DataTableHeadCell className="text-right">Actions/);
   assert.doesNotMatch(programs, new RegExp("View<\\/Link>\\s*<Link[\\s\\S]*Edit<\\/Link>"));
 });
 

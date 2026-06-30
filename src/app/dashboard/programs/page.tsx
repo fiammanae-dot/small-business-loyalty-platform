@@ -1,8 +1,7 @@
 import { BarChart3, Gift, Plus, Trophy, Users } from "lucide-react";
+import Link from "next/link";
 import { DashboardShell } from "@/components/DashboardShell";
 import {
-  ActionMenu,
-  ActionMenuItem,
   ButtonLink,
   DataTable,
   DataTableBody,
@@ -196,14 +195,18 @@ export default async function ProgramsPage({
                       <DataTableHeadCell>Completion</DataTableHeadCell>
                       <DataTableHeadCell>Rewards</DataTableHeadCell>
                       <DataTableHeadCell>Status</DataTableHeadCell>
-                      <DataTableHeadCell className="text-right">Actions</DataTableHeadCell>
                     </tr>
                   </DataTableHeader>
                   <DataTableBody>
                     {programs.map((row) => (
                       <tr key={row.program.id}>
                         <DataTableCell className="font-semibold text-[#0F172A]">
-                          <div>{row.program.name}</div>
+                          <Link
+                            href={"/dashboard/programs/" + row.program.uuid}
+                            className="inline-flex max-w-full rounded-sm font-semibold text-[#0F172A] underline-offset-4 transition hover:text-[var(--business-primary)] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                          >
+                            <span className="break-words">{row.program.name}</span>
+                          </Link>
                           <div className="mt-1 text-xs font-normal text-[#64748B]">{businessTypeLabels[row.program.businessType]} - {row.program.productOrServiceName}</div>
                         </DataTableCell>
                         <DataTableCell>
@@ -219,7 +222,6 @@ export default async function ProgramsPage({
                           <div className="mt-1 text-xs text-[#64748B]">{row.rewardReadyCount} ready</div>
                         </DataTableCell>
                         <DataTableCell><ProgramStatus active={row.program.active} rewardReadyCount={row.rewardReadyCount} /></DataTableCell>
-                        <DataTableCell className="text-right"><ProgramActions uuid={row.program.uuid} /></DataTableCell>
                       </tr>
                     ))}
                   </DataTableBody>
@@ -264,7 +266,14 @@ function ProgramCard({ row }: { row: ProgramRow }) {
     <article className="rounded-md border border-[#E2E8F0] bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="break-words text-base font-semibold text-[#0F172A]">{row.program.name}</h3>
+          <h3 className="text-base font-semibold text-[#0F172A]">
+            <Link
+              href={"/dashboard/programs/" + row.program.uuid}
+              className="inline-flex max-w-full rounded-sm underline-offset-4 transition hover:text-[var(--business-primary)] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+            >
+              <span className="break-words">{row.program.name}</span>
+            </Link>
+          </h3>
           <p className="mt-1 text-sm text-[#64748B]">{businessTypeLabels[row.program.businessType]} - {row.program.productOrServiceName}</p>
         </div>
         <ProgramStatus active={row.program.active} rewardReadyCount={row.rewardReadyCount} />
@@ -278,21 +287,7 @@ function ProgramCard({ row }: { row: ProgramRow }) {
       <div className="mt-4">
         <ProgressBar value={row.completionRate} label={row.completionRate + "% completion"} barClassName="business-button" />
       </div>
-      <div className="mt-4 flex justify-end">
-        <ProgramActions uuid={row.program.uuid} />
-      </div>
     </article>
-  );
-}
-
-function ProgramActions({ uuid }: { uuid: string }) {
-  return (
-    <ActionMenu label="Actions">
-      <ActionMenuItem><a href={"/dashboard/programs/" + uuid} className="block rounded px-2 py-1 hover:bg-[#F8FAFC]">View</a></ActionMenuItem>
-      <ActionMenuItem><a href={"/dashboard/programs/" + uuid + "/edit"} className="block rounded px-2 py-1 hover:bg-[#F8FAFC]">Edit</a></ActionMenuItem>
-      <ActionMenuItem><a href={"/dashboard/programs/" + uuid + "/customers"} className="block rounded px-2 py-1 hover:bg-[#F8FAFC]">View Customers</a></ActionMenuItem>
-      <ActionMenuItem><a href="/dashboard/scanner" className="block rounded px-2 py-1 hover:bg-[#F8FAFC]">Open Scanner</a></ActionMenuItem>
-    </ActionMenu>
   );
 }
 

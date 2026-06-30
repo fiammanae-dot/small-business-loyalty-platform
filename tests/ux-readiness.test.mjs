@@ -109,7 +109,9 @@ test("customer and program lists include mobile card views and helpful empty sta
   assert.doesNotMatch(customers, /View<\/Link>\s*<Link[\s\S]*Edit<\/Link>/);
   assert.match(programs, /Create your first loyalty program/);
   assert.match(programs, /Program Performance/);
-  assert.match(programs, /ActionMenu/);
+  assert.match(programs, /href=\{"\/dashboard\/programs\/" \+ row\.program\.uuid\}/);
+  assert.match(programs, /hover:underline/);
+  assert.doesNotMatch(programs, /ProgramActions/);
   assert.match(programs, /ProgressBar/);
   assert.match(programs, /lg:hidden/);
 });
