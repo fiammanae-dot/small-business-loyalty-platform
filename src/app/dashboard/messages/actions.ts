@@ -104,7 +104,7 @@ export async function markMessageSentManuallyAction(formData: FormData) {
     metadata: { channel: message.channel, messageUuid },
   });
   if (blocked) {
-    fail(path, "Pilot Protection is active. External communications and selected production actions are restricted.");
+    fail(path, "This action is currently restricted. Customer messaging is paused.");
   }
 
   await prisma.messageDeliveryQueue.update({

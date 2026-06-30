@@ -35,6 +35,8 @@ export type WalletThemeTokens = {
   rewardPanelBorder: string;
   progressTrack: string;
   progressFill: string;
+  ctaBackground: string;
+  ctaForeground: string;
   decorative: string;
   button: string;
   text: string;
@@ -86,6 +88,8 @@ export const walletStyleTokens: Record<WalletVisualStyle, Omit<WalletThemeTokens
     rewardPanelBorder: "rgba(15, 23, 42, 0.06)",
     progressTrack: "rgba(255,255,255,0.25)",
     progressFill: "#34D399",
+    ctaBackground: "#34D399",
+    ctaForeground: "#111827",
     decorative: "transparent",
   },
   "premium-dark": {
@@ -120,6 +124,8 @@ export const walletStyleTokens: Record<WalletVisualStyle, Omit<WalletThemeTokens
     rewardPanelBorder: "rgba(251,191,36,0.40)",
     progressTrack: "rgba(255,255,255,0.15)",
     progressFill: "#FBBF24",
+    ctaBackground: "#FBBF24",
+    ctaForeground: "#111827",
     decorative: "transparent",
   },
   "minimal-light": {
@@ -154,6 +160,8 @@ export const walletStyleTokens: Record<WalletVisualStyle, Omit<WalletThemeTokens
     rewardPanelBorder: "#DCFCE7",
     progressTrack: "#E5E7EB",
     progressFill: "#F97316",
+    ctaBackground: "#F97316",
+    ctaForeground: "#111827",
     decorative: "transparent",
   },
   "image-background": {
@@ -188,6 +196,8 @@ export const walletStyleTokens: Record<WalletVisualStyle, Omit<WalletThemeTokens
     rewardPanelBorder: "rgba(15,23,42,0.06)",
     progressTrack: "rgba(255,255,255,0.20)",
     progressFill: "#F5D2A7",
+    ctaBackground: "#F5D2A7",
+    ctaForeground: "#111827",
     decorative: "transparent",
   },
 };
@@ -247,6 +257,8 @@ export function resolveCardThemeColors({
     const progressFill = hasReadableContrast(branding.secondaryColor, branding.backgroundColor, 3)
       ? branding.secondaryColor
       : branding.primaryColor;
+    const ctaBackground = branding.buttonColor || branding.primaryColor;
+    const ctaForeground = getReadableForeground(ctaBackground);
     const progressTrack = cardText === DARK_FOREGROUND ? "#E5E7EB" : withAlpha(branding.secondaryColor, 0.20);
     const usesReadableSingleForeground = hasReadableContrast(cardText, branding.primaryColor, 4.5) && hasReadableContrast(cardText, branding.secondaryColor, 4.5);
     const cardBackground = usesReadableSingleForeground
@@ -274,6 +286,8 @@ export function resolveCardThemeColors({
       rewardPanelBorder: "rgba(15, 23, 42, 0.08)",
       progressTrack,
       progressFill,
+      ctaBackground,
+      ctaForeground,
       button: branding.buttonColor,
       text: branding.textColor,
     };

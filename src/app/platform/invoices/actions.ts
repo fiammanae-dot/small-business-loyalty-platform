@@ -64,7 +64,7 @@ export async function updateInvoiceStatusAction(formData: FormData) {
       metadata: { invoiceUuid, previousStatus: invoice.status, nextStatus },
     });
     if (blocked) {
-      fail(path, "Pilot Protection is active. Payment processing is restricted.");
+      fail(path, "This action is currently restricted. Payment processing is paused.");
     }
   }
 
@@ -123,7 +123,7 @@ export async function recordPaymentAction(formData: FormData) {
     metadata: { invoiceUuid: data.invoiceUuid, paymentMethod: data.paymentMethod, amount: data.amount, currency: data.currency.toUpperCase() },
   });
   if (blocked) {
-    fail(path, "Pilot Protection is active. Payment processing is restricted.");
+    fail(path, "This action is currently restricted. Payment processing is paused.");
   }
 
   const existingPaid = invoice.payments.reduce((sum, payment) => sum + Number(payment.amount), 0);

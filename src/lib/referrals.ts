@@ -195,27 +195,42 @@ export async function lookupActiveReferralReferrers({
   limit?: number;
 }) {
   const trimmedQuery = query?.trim() ?? "";
-  if (!trimmedQuery) {
-    return { status: "EMPTY" as const, matches: [] as ReferralReferrerLookupMatch[] };
+  if (trimmedQuery.length < 2) {
+    return { status: "TOO_SHORT" as const, matches: [] as ReferralReferrerLookupMatch[] };
   }
 
   const referralCode = extractReferralCode(trimmedQuery);
   const normalizedPhone = normalizePhone(trimmedQuery);
+  const digitsOnly = trimmedQuery.replace(/\D/g, "");
+  const looksLikePhone = digitsOnly.length >= 5 && /^[+\d\s().-]+$/.test(trimmedQuery);
   const take = Math.max(1, limit) + 1;
-  const textFilters: Prisma.BusinessCustomerMembershipWhereInput[] = [
-    { referralCode: { contains: trimmedQuery, mode: "insensitive" } },
-    { globalCustomer: { firstName: { contains: trimmedQuery, mode: "insensitive" } } },
-    { globalCustomer: { lastName: { contains: trimmedQuery, mode: "insensitive" } } },
-    { globalCustomer: { email: { contains: trimmedQuery, mode: "insensitive" } } },
-    { globalCustomer: { normalizedPhone: { contains: trimmedQuery.replace(/\D/g, ""), mode: "insensitive" } } },
-  ];
+  const textFilters: Prisma.BusinessCustomerMembershipWhereInput[] = [];
 
   if (referralCode) {
-    textFilters.unshift({ referralCode });
+    textFilters.push({ referralCode });
+  } else if (looksLikePhone) {
+    if (normalizedPhone) {
+      textFilters.push({ globalCustomer: { normalizedPhone } });
+    }
+  } else {
+    const nameParts = trimmedQuery.split(/\s+/).filter(Boolean);
+    textFilters.push(
+      { referralCode: { contains: trimmedQuery, mode: "insensitive" } },
+      { globalCustomer: { firstName: { contains: trimmedQuery, mode: "insensitive" } } },
+      { globalCustomer: { lastName: { contains: trimmedQuery, mode: "insensitive" } } },
+    );
+    if (nameParts.length >= 2) {
+      textFilters.push({
+        AND: [
+          { globalCustomer: { firstName: { contains: nameParts[0], mode: "insensitive" } } },
+          { globalCustomer: { lastName: { contains: nameParts.slice(1).join(" "), mode: "insensitive" } } },
+        ],
+      });
+    }
   }
 
-  if (normalizedPhone) {
-    textFilters.unshift({ globalCustomer: { normalizedPhone } });
+  if (textFilters.length === 0) {
+    return { status: "NOT_FOUND" as const, matches: [] as ReferralReferrerLookupMatch[] };
   }
 
   const matches = await prisma.businessCustomerMembership.findMany({

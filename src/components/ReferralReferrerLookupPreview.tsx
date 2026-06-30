@@ -17,6 +17,14 @@ export async function ReferralReferrerLookupPreview({
 
   const lookup = await lookupActiveReferralReferrers({ businessId, query: trimmedQuery });
 
+  if (lookup.status === "TOO_SHORT") {
+    return (
+      <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+        Enter at least 2 characters to search.
+      </p>
+    );
+  }
+
   if (lookup.status === "NOT_FOUND") {
     return (
       <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">

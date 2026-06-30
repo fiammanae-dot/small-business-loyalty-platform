@@ -38,7 +38,7 @@ const settingsTabs = [
   { key: "general", label: "General", icon: Server },
   { key: "security", label: "Security", icon: ShieldCheck },
   { key: "notifications", label: "Notifications", icon: Bell },
-  { key: "demo-mode", label: "Pilot Protection", icon: FlaskConical },
+  { key: "demo-mode", label: "Action Restrictions", icon: FlaskConical },
   { key: "audit-logs", label: "Audit Logs", icon: Activity },
 ] as const;
 
@@ -170,7 +170,7 @@ function GeneralTab({
         <div className="mt-4 grid min-w-0 gap-3 md:mt-5 md:grid-cols-2 xl:grid-cols-3">
           <InfoCard icon={GitBranch} label="Environment" value={environmentName} />
           <InfoCard icon={Database} label="Current Database" value={databaseName} />
-          <InfoCard icon={FlaskConical} label="Pilot Protection" value={demoModeEnabled ? "Enabled" : "Disabled"} tone={demoModeEnabled ? "orange" : "gray"} />
+          <InfoCard icon={FlaskConical} label="Action Restrictions" value={demoModeEnabled ? "Enabled" : "Disabled"} tone={demoModeEnabled ? "orange" : "gray"} />
           <InfoCard icon={PackageCheck} label="Application Version" value={packageJson.version ?? "Configured version unavailable"} />
           <InfoCard icon={HeartPulse} label="Build Status" value="Healthy" tone="green" />
           <InfoCard icon={Activity} label="Last Deployment" value={buildTimestamp || "Not Available"} />
@@ -262,21 +262,21 @@ function DemoModeTab({ demoModeEnabled }: { demoModeEnabled: boolean }) {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <SectionHeader
           icon={FlaskConical}
-          title="Pilot Protection"
-          description="Pilot Protection restricts external communications and payment processing when the environment should not trigger real-world actions."
+          title="Action Restrictions"
+          description="Controls that prevent selected external communications and payment actions when real-world actions should be paused."
         />
         <form action={toggleDemoModeAction}>
           <CsrfInput scope="platform:settings" />
           <input type="hidden" name="enabled" value={demoModeEnabled ? "false" : "true"} />
           <button type="submit" className="rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600">
-            {demoModeEnabled ? "Disable Pilot Protection" : "Enable Pilot Protection"}
+            {demoModeEnabled ? "Disable Restrictions" : "Enable Restrictions"}
           </button>
         </form>
       </div>
 
       <div className="mt-4 grid min-w-0 gap-4 md:mt-5 lg:grid-cols-[260px_1fr_1fr]">
         <div className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">Pilot Protection Status</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">Restriction Status</p>
           <p className={`mt-3 inline-flex rounded-md px-3 py-2 text-sm font-semibold ${demoModeEnabled ? "bg-orange-50 text-[#F97316]" : "bg-zinc-100 text-zinc-700"}`}>
             {demoModeEnabled ? "Enabled" : "Disabled"}
           </p>
@@ -303,7 +303,7 @@ function DemoModeTab({ demoModeEnabled }: { demoModeEnabled: boolean }) {
       </div>
 
       <div className="mt-4 rounded-md border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-semibold text-[#C2410C]">
-        No real customer communications will be sent while Pilot Protection is active.
+        Real customer communications remain paused while restrictions are active.
       </div>
     </section>
   );

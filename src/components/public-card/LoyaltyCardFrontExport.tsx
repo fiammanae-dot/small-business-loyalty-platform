@@ -29,8 +29,6 @@ export function LoyaltyCardFrontExport({ wallet }: { wallet: Omit<LoyaltyWalletC
         ? "1 visit remaining"
         : `${remaining} visits remaining`
     : "No active program yet";
-  const ctaTextColor = wallet.theme.style === "minimal-light" ? "#FFFFFF" : "#0F172A";
-
   return (
     <div className="w-[360px] bg-transparent">
       <WalletCardShell theme={wallet.theme} exportMode>
@@ -99,7 +97,7 @@ export function LoyaltyCardFrontExport({ wallet }: { wallet: Omit<LoyaltyWalletC
           </section>
 
           <div className="pt-5">
-            <div className="flex min-h-12 w-full items-center justify-center rounded-[16px] px-5 text-[15px] font-bold" style={{ background: wallet.theme.progressFill, color: ctaTextColor }}>
+            <div className="flex min-h-12 w-full items-center justify-center rounded-[16px] px-5 text-[15px] font-bold" style={{ background: wallet.theme.ctaBackground, color: wallet.theme.ctaForeground }}>
               Scan at Checkout
             </div>
           </div>

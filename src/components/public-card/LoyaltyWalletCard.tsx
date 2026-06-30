@@ -149,8 +149,6 @@ function WalletView({
   tierLabel: string;
   onScan: () => void;
 }) {
-  const ctaTextColor = theme.style === "minimal-light" ? "#FFFFFF" : "#0F172A";
-
   return (
     <div className="px-6 pb-5 pt-7">
       <CardHeader
@@ -211,7 +209,7 @@ function WalletView({
 
       <div className="pt-5">
         {exportMode ? (
-          <div className="flex min-h-12 w-full items-center justify-center rounded-[16px] px-5 text-[15px] font-bold shadow-sm" style={{ background: theme.progressFill, color: ctaTextColor }}>
+          <div className="flex min-h-12 w-full items-center justify-center rounded-[16px] px-5 text-[15px] font-bold shadow-sm" style={{ background: theme.ctaBackground, color: theme.ctaForeground }}>
             Scan at Checkout
           </div>
         ) : (
@@ -219,7 +217,7 @@ function WalletView({
             type="button"
             onClick={onScan}
             className="flex min-h-12 w-full items-center justify-center rounded-[16px] px-5 text-[15px] font-bold shadow-sm transition duration-[180ms] hover:translate-y-[-1px] focus:outline-none focus:ring-4 focus:ring-orange-200 active:translate-y-0 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
-            style={{ background: theme.progressFill, color: ctaTextColor }}
+            style={{ background: theme.ctaBackground, color: theme.ctaForeground }}
           >
             Scan at Checkout
           </button>

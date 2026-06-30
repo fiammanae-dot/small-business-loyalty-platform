@@ -85,7 +85,7 @@ const platformNavItems: Array<{ href: string; label: string; icon: LucideIcon }>
 ];
 
 export async function DashboardShell({ user, title, eyebrow, children, headerAside, hideWelcomeMessage = false, supportSession }: DashboardShellProps) {
-  const demoModeEnabled = await isDemoModeEnabled();
+  await isDemoModeEnabled();
   const supportContext = supportSession === undefined && user.role === "BUSINESS_OWNER" ? await getActiveSupportSessionForCurrentAdmin() : null;
   const activeSupportSession = supportSession ?? supportContext?.supportSession ?? null;
   const businessBranding = await getOperationalBusinessBranding(user);
@@ -131,7 +131,6 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
                 LB
               </span>
               <span className="text-sm font-semibold text-[#111827]">LoyaltyBase</span>
-              {demoModeEnabled ? <span className="rounded-md bg-orange-50 business-bg-soft px-2 py-1 text-xs font-semibold business-primary">Pilot Protection</span> : null}
               {activeSupportSession ? (
                 <span className="rounded-md bg-red-600 px-2 py-1 text-xs font-black uppercase text-white">Support</span>
               ) : null}
@@ -198,12 +197,6 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
           user.role === "BUSINESS_OWNER" || user.role === "PLATFORM_OWNER" || user.role === "BRANCH_MANAGER" || user.role === "STAFF" ? "pb-24 lg:pb-6" : ""
         }`}
       >
-        {demoModeEnabled ? (
-          <div className="min-w-0 break-words rounded-md border border-orange-200 business-border-soft bg-orange-50 business-bg-soft px-4 py-3 text-sm font-semibold business-primary-strong lg:col-span-2">
-            Pilot Protection Active - External communications and selected production actions are restricted.
-          </div>
-        ) : null}
-
         {user.role === "PLATFORM_OWNER" ? (
           <aside className="hidden rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm lg:sticky lg:top-6 lg:block lg:self-start">
             <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-[#6B7280]">Platform</p>

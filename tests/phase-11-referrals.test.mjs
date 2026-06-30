@@ -151,8 +151,15 @@ test("customer enrollment supports same-business referral lookup by phone", () =
   assert.match(referrals, /findActiveReferralReferrerByPhone/);
   assert.match(referrals, /globalCustomer: \{ normalizedPhone \}/);
   assert.match(referrals, /lookupActiveReferralReferrers/);
+  assert.match(referrals, /trimmedQuery\.length < 2/);
+  assert.match(referrals, /status: "TOO_SHORT"/);
+  assert.match(referrals, /looksLikePhone/);
+  assert.match(referrals, /digitsOnly\.length >= 5/);
   assert.match(referrals, /firstName: \{ contains: trimmedQuery/);
   assert.match(referrals, /lastName: \{ contains: trimmedQuery/);
+  assert.match(referrals, /nameParts\.length >= 2/);
+  assert.doesNotMatch(referrals, /normalizedPhone: \{ contains: trimmedQuery\.replace\(/);
+  assert.doesNotMatch(referrals, /contains: ""/);
   assert.match(referrals, /status: "ACTIVE"/);
   assert.match(referrals, /referralEnabled: true/);
   assert.match(referrals, /businessId,/);
@@ -162,6 +169,7 @@ test("customer enrollment supports same-business referral lookup by phone", () =
   assert.match(customers, /referralCodeForEnrollment = phoneLookup\.referrer\.referralCode/);
   assert.match(customers, /createPendingReferralForEnrollment/);
   assert.match(preview, /Referred by:/);
+  assert.match(preview, /Enter at least 2 characters to search/);
   assert.match(preview, /No matching referrer found/);
   assert.match(preview, /Choose the matching referrer/);
   assert.match(preview, /maskPhoneNumber/);

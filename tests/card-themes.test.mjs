@@ -184,6 +184,22 @@ test("public customer card supports saving the loyalty card as a PNG image", () 
   assert.match(themes, /premium-dark/);
   assert.match(themes, /minimal-light/);
   assert.match(themes, /image-background/);
+  assert.match(themes, /ctaBackground/);
+  assert.match(themes, /ctaForeground/);
+  assert.match(themes, /ctaForeground: "#111827"/);
+  assert.match(themes, /const ctaForeground = getReadableForeground\(ctaBackground\)/);
+});
+
+test("wallet card CTA uses theme foreground tokens for live and exported cards", () => {
+  const walletCard = read("src/components/public-card/LoyaltyWalletCard.tsx");
+  const frontExport = read("src/components/public-card/LoyaltyCardFrontExport.tsx");
+
+  for (const source of [walletCard, frontExport]) {
+    assert.match(source, /ctaBackground/);
+    assert.match(source, /ctaForeground/);
+    assert.doesNotMatch(source, /theme\.style === "minimal-light" \? "#FFFFFF" : "#0F172A"/);
+    assert.doesNotMatch(source, /wallet\.theme\.style === "minimal-light" \? "#FFFFFF" : "#0F172A"/);
+  }
 });
 
 test("wallet card header keeps business names readable beside the tier badge", () => {

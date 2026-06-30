@@ -14,7 +14,7 @@ test("platform settings exposes environment information and health summary", () 
     "General",
     "Security",
     "Notifications",
-    "Pilot Protection",
+    "Action Restrictions",
     "Audit Logs",
     "role=\"tab\"",
     "Environment Information",
@@ -45,11 +45,11 @@ test("platform settings exposes environment information and health summary", () 
   assert.match(page, /prisma\.auditEvent\.findMany/);
 });
 
-test("platform settings pilot protection panel is explicit about current protections", () => {
+test("platform settings action restrictions panel is explicit about current protections", () => {
   const page = read("src/app/platform/settings/page.tsx");
 
   for (const expected of [
-    "Pilot Protection Status",
+    "Restriction Status",
     "Current Restrictions",
     "Manual message sending blocked",
     "Invoice payment recording blocked",
@@ -59,10 +59,12 @@ test("platform settings pilot protection panel is explicit about current protect
     "WhatsApp sending",
     "Campaign delivery",
     "External integrations",
-    "No real customer communications will be sent while Pilot Protection is active.",
+    "Real customer communications remain paused while restrictions are active.",
   ]) {
     assert.match(page, new RegExp(expected));
   }
+
+  assert.doesNotMatch(page, /Pilot\s+Protection|No real customer communications/);
 });
 
 test("platform settings has administration tabs for integrations and audit visibility", () => {

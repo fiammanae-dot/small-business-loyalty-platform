@@ -46,7 +46,7 @@ const managementCards = [
   {
     title: "Settings",
     href: "/platform/settings",
-    description: "Review environment, pilot protection, and system controls.",
+    description: "Review environment, action restrictions, and system controls.",
     icon: Settings,
   },
 ];

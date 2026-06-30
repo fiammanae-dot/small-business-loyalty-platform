@@ -6,7 +6,7 @@ function read(path) {
   return readFileSync(path, "utf8");
 }
 
-test("pilot protection is a global platform setting with explicit restriction copy", () => {
+test("action restrictions remain internal while user-facing pilot wording is hidden", () => {
   const platformSettings = read("src/lib/platform-settings.ts");
   const settingsPage = read("src/app/platform/settings/page.tsx");
   const shell = read("src/components/DashboardShell.tsx");
@@ -14,12 +14,12 @@ test("pilot protection is a global platform setting with explicit restriction co
   assert.match(platformSettings, /where: \{ key: "demo_mode" \}/);
   assert.match(platformSettings, /demoModeRestrictions/);
 
-  for (const expected of ["Pilot Protection Status", "Pilot Protection restricts external communications and payment processing"]) {
+  for (const expected of ["Action Restrictions", "Restriction Status", "Real customer communications remain paused while restrictions are active"]) {
     assert.match(settingsPage, new RegExp(expected));
   }
 
-  assert.match(shell, /Pilot Protection Active/);
-  assert.match(shell, /External communications and selected production actions are restricted/);
+  assert.doesNotMatch(shell, /Pilot\s+Protection/);
+  assert.doesNotMatch(settingsPage, /Pilot\s+Protection|No real customer communications/);
 });
 
 test("pilot protection changes and blocked external actions are audited server-side", () => {
@@ -35,9 +35,9 @@ test("pilot protection changes and blocked external actions are audited server-s
   assert.match(settingsActions, /logAuditEvent/);
   assert.match(messageActions, /blockDemoModeExternalAction/);
   assert.match(messageActions, /MESSAGE_SENT_MANUALLY/);
-  assert.match(messageActions, /Pilot Protection is active\. External communications and selected production actions are restricted\./);
+  assert.match(messageActions, /This action is currently restricted\. Customer messaging is paused\./);
   assert.match(invoiceActions, /blockDemoModeExternalAction/);
   assert.match(invoiceActions, /INVOICE_MARK_PAID/);
   assert.match(invoiceActions, /PAYMENT_RECORDED/);
-  assert.match(invoiceActions, /Pilot Protection is active\. Payment processing is restricted\./);
+  assert.match(invoiceActions, /This action is currently restricted\. Payment processing is paused\./);
 });
