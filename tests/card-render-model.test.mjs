@@ -30,6 +30,7 @@ test("card render model centralizes future Design Studio rendering inputs", () =
     "templateId",
     "visibleSections",
     "resolvedColors",
+    "typography",
     "progress",
     "business",
     "customer",

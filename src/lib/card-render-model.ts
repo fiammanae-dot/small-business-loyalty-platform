@@ -67,6 +67,13 @@ export type CardRenderModel = {
     footer: boolean;
   };
   resolvedColors: ReturnType<typeof resolveCardThemeColors>;
+  typography: {
+    preset: CardDesign["typographyPreset"];
+    headingStyle: string;
+    bodyStyle: string;
+    captionStyle: string;
+    emphasisStyle: string;
+  };
   background: {
     style: CardDesign["backgroundStyle"];
     pattern: CardDesign["backgroundPattern"];
@@ -151,6 +158,13 @@ export function buildCardRenderModel(input: CardRenderModelInput): CardRenderMod
       footer: true,
     },
     resolvedColors,
+    typography: {
+      preset: design.typographyPreset,
+      headingStyle: `${design.typographyPreset.toLowerCase()}-heading`,
+      bodyStyle: `${design.typographyPreset.toLowerCase()}-body`,
+      captionStyle: `${design.typographyPreset.toLowerCase()}-caption`,
+      emphasisStyle: `${design.typographyPreset.toLowerCase()}-emphasis`,
+    },
     background: {
       style: design.backgroundStyle,
       pattern: design.backgroundPattern,

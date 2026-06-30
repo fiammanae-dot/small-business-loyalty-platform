@@ -22,7 +22,8 @@ export const stampIcons = [
 ] as const;
 export type CardDesignStampIcon = (typeof stampIcons)[number];
 export type CardDesignProgressStyle = "linear";
-export type CardDesignTypographyPreset = "system";
+export const typographyPresets = ["CLASSIC", "MODERN", "PREMIUM", "LUXURY", "PLAYFUL", "MINIMAL"] as const;
+export type CardDesignTypographyPreset = (typeof typographyPresets)[number];
 export const cardBackgroundStyles = ["SOLID", "GRADIENT", "PATTERN", "TEXTURE", "IMAGE", "INDUSTRY_PATTERN"] as const;
 export type CardDesignBackgroundStyle = (typeof cardBackgroundStyles)[number];
 export const backgroundPatternPresets = [
@@ -66,7 +67,7 @@ export const defaultCardDesign: CardDesign = {
   stampJourneyStyle: "CIRCLES",
   stampIcon: "STAR",
   progressStyle: "linear",
-  typographyPreset: "system",
+  typographyPreset: "MODERN",
   backgroundStyle: "SOLID",
   backgroundPattern: "NONE",
   decorationStyle: "none",
@@ -96,6 +97,7 @@ export const industryDesignPacks: Record<IndustryDesignPackId, IndustryDesignPac
       ...defaultCardDesign,
       cardStyle: "premium-dark",
       stampIcon: "SCISSORS",
+      typographyPreset: "PREMIUM",
       backgroundStyle: "INDUSTRY_PATTERN",
       backgroundPattern: "SCISSORS",
       templateId: "industry-barbershop-v1",
@@ -109,6 +111,7 @@ export const industryDesignPacks: Record<IndustryDesignPackId, IndustryDesignPac
       ...defaultCardDesign,
       cardStyle: "minimal-light",
       stampIcon: "LIPSTICK",
+      typographyPreset: "LUXURY",
       backgroundStyle: "INDUSTRY_PATTERN",
       backgroundPattern: "BEAUTY_PATTERN",
       templateId: "industry-beauty-salon-v1",
@@ -122,6 +125,7 @@ export const industryDesignPacks: Record<IndustryDesignPackId, IndustryDesignPac
       ...defaultCardDesign,
       cardStyle: "image-background",
       stampIcon: "WATER_DROP",
+      typographyPreset: "MODERN",
       backgroundStyle: "INDUSTRY_PATTERN",
       backgroundPattern: "WATER_BUBBLES",
       templateId: "industry-car-wash-v1",
@@ -135,6 +139,7 @@ export const industryDesignPacks: Record<IndustryDesignPackId, IndustryDesignPac
       ...defaultCardDesign,
       cardStyle: "modern-clean",
       stampIcon: "COFFEE_CUP",
+      typographyPreset: "CLASSIC",
       backgroundStyle: "INDUSTRY_PATTERN",
       backgroundPattern: "COFFEE_BEANS",
       templateId: "industry-cafe-v1",
@@ -148,6 +153,7 @@ export const industryDesignPacks: Record<IndustryDesignPackId, IndustryDesignPac
       ...defaultCardDesign,
       cardStyle: "premium-dark",
       stampIcon: "PLATE",
+      typographyPreset: "PREMIUM",
       backgroundStyle: "INDUSTRY_PATTERN",
       backgroundPattern: "FOOD_PATTERN",
       templateId: "industry-restaurant-v1",
@@ -171,7 +177,7 @@ const cardDesignValues = {
   stampJourneyStyle: stampJourneyStyles,
   stampIcon: stampIcons,
   progressStyle: ["linear"],
-  typographyPreset: ["system"],
+  typographyPreset: typographyPresets,
   backgroundStyle: cardBackgroundStyles,
   backgroundPattern: backgroundPatternPresets,
   decorationStyle: ["none"],
@@ -209,6 +215,14 @@ export function resolveStampIcon(value: unknown): CardDesignStampIcon {
   return resolveValue("stampIcon", value);
 }
 
+export function resolveTypographyPreset(value: unknown): CardDesignTypographyPreset {
+  if (value === "system") {
+    return "MODERN";
+  }
+
+  return resolveValue("typographyPreset", value);
+}
+
 export function resolveBackgroundStyle(value: unknown): CardDesignBackgroundStyle {
   if (value === "theme") {
     return "SOLID";
@@ -229,7 +243,7 @@ export function resolveCardDesign(input?: CardDesignInput): CardDesign {
     stampJourneyStyle: resolveStampJourneyStyle(input?.stampJourneyStyle),
     stampIcon: resolveStampIcon(input?.stampIcon),
     progressStyle: resolveValue("progressStyle", input?.progressStyle),
-    typographyPreset: resolveValue("typographyPreset", input?.typographyPreset),
+    typographyPreset: resolveTypographyPreset(input?.typographyPreset),
     backgroundStyle: resolveBackgroundStyle(input?.backgroundStyle),
     backgroundPattern: resolveBackgroundPattern(input?.backgroundPattern),
     decorationStyle: resolveValue("decorationStyle", input?.decorationStyle),
