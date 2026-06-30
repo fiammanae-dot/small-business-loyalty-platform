@@ -109,21 +109,29 @@ export function ProgramDesignStudioForm({
       </aside>
 
       <div className="order-last grid gap-5 xl:order-first">
-        <SectionCard title="Card Style" description="Choose the overall look customers see when they open this program's loyalty card.">
-          <div className="grid gap-3 md:grid-cols-2">
+        <SectionCard title="Card Style" description="Choose the overall personality of your loyalty card.">
+          <div className="grid gap-4 md:grid-cols-2">
             {designStudioTemplateOptions.map((option) => (
-              <label key={option.value} className="group flex min-h-28 cursor-pointer gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-md">
+              <label key={option.value} className="group cursor-pointer rounded-[1.35rem] border border-[#E2E8F0] bg-white p-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-lg has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-lg">
                 <input
                   type="radio"
                   name="layoutStyle"
                   value={option.value}
                   checked={layoutStyle === option.value}
                   onChange={() => setLayoutStyle(option.value)}
-                  className="mt-1 h-4 w-4 accent-[var(--business-primary)]"
+                  className="sr-only"
                 />
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-[#111827] group-has-[:checked]:business-text">{option.label}</span>
-                  <span className="mt-1 block text-xs leading-5 text-[#6B7280]">{option.description}</span>
+                <span className="grid gap-4 rounded-[1.1rem] p-1 focus-within:outline-none group-focus-within:ring-2 group-focus-within:ring-[var(--business-primary)] group-focus-within:ring-offset-2">
+                  <TemplateThumbnail value={option.value} />
+                  <span className="flex min-h-28 flex-col gap-2 px-1 pb-1">
+                    <span className="flex items-start justify-between gap-3">
+                      <span className="block text-base font-semibold text-[#111827] group-has-[:checked]:business-text">{option.label}</span>
+                      <span className="rounded-full border border-[#E2E8F0] bg-white px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-has-[:checked]:border-[var(--business-primary)] group-has-[:checked]:business-bg group-has-[:checked]:opacity-100">
+                        Selected
+                      </span>
+                    </span>
+                    <span className="block text-sm leading-6 text-[#64748B]">{option.description}</span>
+                  </span>
                 </span>
               </label>
             ))}
@@ -190,3 +198,100 @@ function PreviewLine({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+function TemplateThumbnail({ value }: { value: CardDesignLayoutStyle }) {
+  const style = templateThumbnailStyles[value] ?? templateThumbnailStyles.CLASSIC;
+  return (
+    <span className="relative block overflow-hidden rounded-[1.1rem] border border-[#E2E8F0] bg-[#F8FAFC] p-3">
+      <span className="absolute right-3 top-3 h-12 w-12 rounded-full opacity-20" style={{ background: style.accent }} />
+      <span className="relative block rounded-xl p-3 shadow-sm ring-1 ring-black/5" style={{ background: style.card }}>
+        <span className="flex items-center justify-between gap-3">
+          <span className="flex items-center gap-2">
+            <span className="h-8 w-8 rounded-full" style={{ background: style.logo }} />
+            <span className="grid gap-1">
+              <span className="h-2.5 w-20 rounded-full" style={{ background: style.primaryLine }} />
+              <span className="h-2 w-14 rounded-full" style={{ background: style.secondaryLine }} />
+            </span>
+          </span>
+          <span className="h-6 w-12 rounded-full" style={{ background: style.badge }} />
+        </span>
+        <span className="mt-5 block h-3 overflow-hidden rounded-full" style={{ background: style.track }}>
+          <span className="block h-full w-2/3 rounded-full" style={{ background: style.fill }} />
+        </span>
+        <span className="mt-4 grid grid-cols-3 gap-2">
+          <span className="h-10 rounded-xl" style={{ background: style.panel }} />
+          <span className="h-10 rounded-xl" style={{ background: style.panel }} />
+          <span className="h-10 rounded-xl" style={{ background: style.panel }} />
+        </span>
+      </span>
+    </span>
+  );
+}
+
+const templateThumbnailStyles: Record<CardDesignLayoutStyle, {
+  card: string;
+  logo: string;
+  primaryLine: string;
+  secondaryLine: string;
+  badge: string;
+  track: string;
+  fill: string;
+  panel: string;
+  accent: string;
+}> = {
+  CLASSIC: {
+    card: "linear-gradient(135deg, #FFFFFF 0%, #FFF7ED 100%)",
+    logo: "#F97316",
+    primaryLine: "#111827",
+    secondaryLine: "#FDBA74",
+    badge: "#FED7AA",
+    track: "#FFEDD5",
+    fill: "linear-gradient(90deg, #F97316, #FB923C)",
+    panel: "#FFFFFF",
+    accent: "#F97316",
+  },
+  MODERN: {
+    card: "linear-gradient(135deg, #F8FAFC 0%, #FFFFFF 100%)",
+    logo: "#0F172A",
+    primaryLine: "#0F172A",
+    secondaryLine: "#94A3B8",
+    badge: "#E2E8F0",
+    track: "#E2E8F0",
+    fill: "linear-gradient(90deg, #0F172A, #475569)",
+    panel: "#EEF2F7",
+    accent: "#475569",
+  },
+  MINIMAL: {
+    card: "linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%)",
+    logo: "#111827",
+    primaryLine: "#111827",
+    secondaryLine: "#CBD5E1",
+    badge: "#F1F5F9",
+    track: "#E2E8F0",
+    fill: "linear-gradient(90deg, #111827, #334155)",
+    panel: "#F8FAFC",
+    accent: "#111827",
+  },
+  PREMIUM: {
+    card: "linear-gradient(135deg, #111827 0%, #312E81 100%)",
+    logo: "#F97316",
+    primaryLine: "#FFFFFF",
+    secondaryLine: "rgba(255,255,255,0.45)",
+    badge: "rgba(249,115,22,0.45)",
+    track: "rgba(255,255,255,0.18)",
+    fill: "linear-gradient(90deg, #F97316, #FDBA74)",
+    panel: "rgba(255,255,255,0.14)",
+    accent: "#F97316",
+  },
+  LUXURY: {
+    card: "linear-gradient(135deg, #18181B 0%, #3F2F22 100%)",
+    logo: "#E9C18D",
+    primaryLine: "#F8FAFC",
+    secondaryLine: "rgba(233,193,141,0.6)",
+    badge: "rgba(233,193,141,0.28)",
+    track: "rgba(255,255,255,0.16)",
+    fill: "linear-gradient(90deg, #E9C18D, #FDE68A)",
+    panel: "rgba(255,255,255,0.12)",
+    accent: "#E9C18D",
+  },
+};

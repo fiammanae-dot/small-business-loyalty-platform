@@ -62,6 +62,10 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(helper, /MODERN/);
   assert.match(helper, /PREMIUM/);
   assert.match(helper, /LUXURY/);
+  assert.match(helper, /Balanced design suitable for any business\./);
+  assert.match(helper, /Clean layout with generous spacing and a contemporary feel\./);
+  assert.match(helper, /High-contrast style that stands out and feels professional\./);
+  assert.match(helper, /Elegant dark treatment with refined visual emphasis\./);
   assert.match(helper, /designStudioStampJourneyOptions/);
   assert.match(helper, /CIRCLES/);
   assert.match(helper, /CONNECTED_DOTS/);
@@ -70,6 +74,10 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(page, /Design Your Loyalty Card/);
   assert.match(page, /Make this card feel like your business/);
   assert.match(form, /Card Style/);
+  assert.match(form, /Choose the overall personality of your loyalty card\./);
+  assert.match(form, /TemplateThumbnail/);
+  assert.match(form, /Selected/);
+  assert.match(form, /sr-only/);
   assert.match(form, /Reward Progress/);
   assert.match(form, /Stamp Design/);
   assert.match(form, /Live Preview/);

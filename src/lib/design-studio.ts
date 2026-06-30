@@ -10,10 +10,10 @@ import {
 } from "@/lib/card-design";
 
 export const designStudioTemplateOptions = [
-  { value: "CLASSIC", label: "Classic", description: "Balanced LoyaltyBase card structure with business branding." },
-  { value: "MODERN", label: "Modern", description: "Clean modern wallet treatment with a bright SaaS feel." },
-  { value: "PREMIUM", label: "Premium", description: "High-contrast premium card treatment." },
-  { value: "LUXURY", label: "Luxury", description: "Refined light card treatment with softer contrast." },
+  { value: "CLASSIC", label: "Classic", description: "Balanced design suitable for any business." },
+  { value: "MODERN", label: "Modern", description: "Clean layout with generous spacing and a contemporary feel." },
+  { value: "PREMIUM", label: "Premium", description: "High-contrast style that stands out and feels professional." },
+  { value: "LUXURY", label: "Luxury", description: "Elegant dark treatment with refined visual emphasis." },
 ] as const;
 
 export const designStudioStampJourneyOptions = [
