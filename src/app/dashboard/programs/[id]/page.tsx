@@ -93,6 +93,7 @@ export default async function ProgramDetailPage({
           actions={
             <PageActions>
               <ButtonLink href="/dashboard/programs" variant="outline">Back to Programs</ButtonLink>
+              <ButtonLink href={"/dashboard/programs/" + program.uuid + "/design-studio"} variant="outline">Design Studio</ButtonLink>
               <ButtonLink href={"/dashboard/programs/" + program.uuid + "/edit"} variant="business">Edit Program</ButtonLink>
               <form action={toggleProgramAction}>
                 <CsrfInput scope="dashboard:programs" />

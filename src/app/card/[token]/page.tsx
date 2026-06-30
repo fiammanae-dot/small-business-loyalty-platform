@@ -50,7 +50,6 @@ export default async function PublicCustomerCardPage({
   });
 
   const branding = resolveBranding(membership.business.branding);
-  const cardDesign = resolveCardDesign();
   const customer = membership.globalCustomer;
   const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim();
   const cardUrl = await getCardUrl(token);
@@ -63,7 +62,8 @@ export default async function PublicCustomerCardPage({
       const remaining = Math.max(required - progress, 0);
       const completion = Math.min(Math.round((progress / required) * 100), 100);
       const rewardReady = progress >= required;
-      const theme = resolveCardThemeColors({ cardTheme: programMembership.loyaltyProgram.cardTheme, branding, cardDesign });
+      const programCardDesign = resolveCardDesign(programMembership.loyaltyProgram.cardDesign);
+      const theme = resolveCardThemeColors({ cardTheme: programMembership.loyaltyProgram.cardTheme, branding, cardDesign: programCardDesign });
 
       return {
         programMembership,
@@ -78,6 +78,7 @@ export default async function PublicCustomerCardPage({
     }),
   );
   const primaryProgram = programCards[0] ?? null;
+  const cardDesign = resolveCardDesign(primaryProgram?.programMembership.loyaltyProgram.cardDesign);
   const lastUpdatedAt = [
     membership.updatedAt,
     membership.cardLastViewedAt,

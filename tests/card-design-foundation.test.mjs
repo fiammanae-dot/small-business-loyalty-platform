@@ -33,7 +33,7 @@ test("card design foundation defines future Design Studio fields without persist
     assert.match(design, new RegExp(expected));
   }
 
-  assert.doesNotMatch(schema, /cardDesign|card_design|layoutStyle|templateId/);
+  assert.doesNotMatch(schema, /layoutStyle|templateId/);
 });
 
 test("card theme resolver accepts card design without changing stored theme behavior", () => {
@@ -44,8 +44,8 @@ test("card theme resolver accepts card design without changing stored theme beha
   assert.match(themes, /cardDesign\?: CardDesignInput/);
   assert.match(themes, /resolveCardDesign\(cardDesign\)/);
   assert.match(themes, /getCardThemeDefinition\(cardTheme\)/);
-  assert.match(publicCard, /const cardDesign = resolveCardDesign\(\)/);
-  assert.match(publicCard, /resolveCardThemeColors\(\{ cardTheme: programMembership\.loyaltyProgram\.cardTheme, branding, cardDesign \}\)/);
+  assert.match(publicCard, /const cardDesign = resolveCardDesign\(primaryProgram\?\.programMembership\.loyaltyProgram\.cardDesign\)/);
+  assert.match(publicCard, /resolveCardThemeColors\(\{ cardTheme: programMembership\.loyaltyProgram\.cardTheme, branding, cardDesign: programCardDesign \}\)/);
   assert.match(preview, /const cardDesign = resolveCardDesign\(\)/);
   assert.match(preview, /resolveCardThemeColors\(\{ cardTheme: previewTheme, branding, cardDesign \}\)/);
 });

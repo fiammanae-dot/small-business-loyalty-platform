@@ -43,7 +43,7 @@ test("industry design packs define safe CardDesign presets without persistence",
     assert.match(design, new RegExp(field));
   }
 
-  assert.doesNotMatch(schema, /industryDesignPack|industry_design_pack|cardDesign|card_design|templateId/);
+  assert.doesNotMatch(schema, /industryDesignPack|industry_design_pack|templateId/);
 });
 
 test("industry design packs map existing BusinessType values to future-facing pack ids", () => {

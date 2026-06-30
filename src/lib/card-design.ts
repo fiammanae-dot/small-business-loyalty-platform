@@ -357,6 +357,17 @@ export function getCardThemeForCardDesign(cardDesign: CardDesign): CardTheme {
   return "BUSINESS_DEFAULT";
 }
 
+export function getCardStyleForLayoutStyle(layoutStyle: CardDesignLayoutStyle): CardDesignCardStyle {
+  if (layoutStyle === "MODERN") return "modern-clean";
+  if (layoutStyle === "PREMIUM") return "premium-dark";
+  if (layoutStyle === "LUXURY") return "minimal-light";
+  return "business-default";
+}
+
+export function getCardThemeForLayoutStyle(layoutStyle: CardDesignLayoutStyle): CardTheme {
+  return getCardThemeForCardDesign(resolveCardDesign({ layoutStyle, cardStyle: getCardStyleForLayoutStyle(layoutStyle) }));
+}
+
 export function getIndustryDefaultCardTheme(businessType?: BusinessType | null): CardTheme {
   return getCardThemeForCardDesign(resolveIndustryCardDesign(businessType));
 }

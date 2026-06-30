@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import type { Prisma } from "@prisma/client";
 import { requireBusinessOwner } from "@/lib/business-owner";
 import { logAuditEvent } from "@/lib/audit";
 import { validateCsrfForm } from "@/lib/csrf";
@@ -9,6 +10,7 @@ import { requireUsableSubscription } from "@/lib/commercial-access";
 import { createEngagementEventIfAllowed } from "@/lib/engagement";
 import { prisma } from "@/lib/prisma";
 import { getIndustryDefaultCardTheme } from "@/lib/card-design";
+import { buildProgramCardDesign, getCardThemeForDesignStudioTemplate, parseDesignStudioForm } from "@/lib/design-studio";
 import { getStartingBonusStampsForEvent, parseProgramDate, programSchema } from "@/lib/programs";
 import { generateScanToken } from "@/lib/scan";
 import { commerciallyUsableStatuses, limitReachedMessage } from "@/lib/subscriptions";
@@ -191,6 +193,48 @@ export async function toggleProgramAction(formData: FormData) {
   revalidatePath("/dashboard/programs");
   revalidatePath(`/dashboard/programs/${uuid}`);
   redirect(`/dashboard/programs/${uuid}?success=Program status updated.`);
+}
+
+export async function updateProgramDesignStudioAction(formData: FormData) {
+  validateActionSecurity(formData, "dashboard:program-design-studio", "/dashboard/programs");
+  const user = await requireBusinessOwner();
+  const uuid = getString(formData, "programUuid");
+  const path = `/dashboard/programs/${uuid}/design-studio`;
+  if (!uuid) fail("/dashboard/programs", "Program not found.");
+
+  const program = await prisma.loyaltyProgram.findFirst({
+    where: { uuid, businessId: user.businessId },
+    select: { id: true, uuid: true, businessType: true, cardDesign: true },
+  });
+  if (!program) fail("/dashboard/programs", "Program not found.");
+
+  const parsed = parseDesignStudioForm(formData, program.businessType);
+  if (!parsed.success) fail(path, parsed.error.issues[0]?.message ?? "Design selection is invalid.");
+
+  const cardDesign = buildProgramCardDesign(parsed.data, program.cardDesign);
+  await prisma.loyaltyProgram.update({
+    where: { id: program.id },
+    data: {
+      cardDesign: cardDesign as unknown as Prisma.InputJsonValue,
+      cardTheme: getCardThemeForDesignStudioTemplate(parsed.data.layoutStyle),
+    },
+  });
+  await logAuditEvent({
+    actorUserId: user.id,
+    businessId: user.businessId,
+    action: "PROGRAM_DESIGN_UPDATED",
+    entityType: "loyalty_program",
+    entityId: program.uuid,
+    metadata: {
+      layoutStyle: cardDesign.layoutStyle,
+      stampJourneyStyle: cardDesign.stampJourneyStyle,
+      stampIcon: cardDesign.stampIcon,
+    },
+  });
+
+  revalidatePath(`/dashboard/programs/${uuid}`);
+  revalidatePath(path);
+  redirect(`${path}?success=Design Studio settings saved.`);
 }
 
 export async function enrollCustomerInProgramAction(formData: FormData) {
