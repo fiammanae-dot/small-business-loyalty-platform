@@ -75,6 +75,11 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(helper, /CIRCLES/);
   assert.match(helper, /CONNECTED_DOTS/);
   assert.match(helper, /PROGRESS_BAR/);
+  assert.match(helper, /designStudioBackgroundStyleOptions/);
+  assert.match(helper, /designStudioBackgroundPatternOptions/);
+  for (const label of ["Solid", "Gradient", "Pattern", "Subtle Dots", "Diagonal Lines", "Waves", "Coffee Beans", "Scissors", "Water Bubbles", "Food Pattern", "Beauty Pattern"]) {
+    assert.match(helper, new RegExp(label));
+  }
   assert.match(helper, /getAllowedStampIconsForBusinessType/);
   assert.match(page, /Design Your Loyalty Card/);
   assert.match(page, /Make this card feel like your business/);
@@ -93,6 +98,12 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /sr-only/);
   assert.match(form, /Reward Progress/);
   assert.match(form, /Stamp Design/);
+  assert.match(form, /Background/);
+  assert.match(form, /Choose the background feeling for this loyalty card\./);
+  assert.match(form, /setBackgroundStyle\(option\.value\)/);
+  assert.match(form, /setBackgroundPattern\(option\.value\)/);
+  assert.match(form, /name="backgroundStyle"/);
+  assert.match(form, /name="backgroundPattern"/);
   assert.match(form, /Live Preview/);
   assert.match(form, /order-first[\s\S]*xl:order-last/);
   assert.match(form, /xl:sticky xl:top-6/);

@@ -8,6 +8,8 @@ import {
   resolveCardDesign,
   stampIcons,
   type CardDesign,
+  type CardDesignBackgroundPattern,
+  type CardDesignBackgroundStyle,
   type CardDesignInput,
   type CardDesignLayoutStyle,
   type CardDesignStampIcon,
@@ -28,6 +30,32 @@ export const designStudioStampJourneyOptions = [
   { value: "CONNECTED_DOTS", label: "Connected Dots", description: "A connected journey style for future progress rendering." },
   { value: "PROGRESS_BAR", label: "Progress Bar", description: "A compact bar-first journey style for future rendering." },
 ] as const;
+
+export const designStudioBackgroundStyleOptions = [
+  { value: "SOLID", label: "Solid", description: "A clean single-tone card background." },
+  { value: "GRADIENT", label: "Gradient", description: "A soft blended background with more depth." },
+  { value: "PATTERN", label: "Pattern", description: "A subtle decorative direction for future card styles." },
+] satisfies Array<{
+  value: Extract<CardDesignBackgroundStyle, "SOLID" | "GRADIENT" | "PATTERN">;
+  label: string;
+  description: string;
+}>;
+
+export const designStudioBackgroundPatternOptions = [
+  { value: "NONE", label: "None", description: "Keep the background simple." },
+  { value: "SUBTLE_DOTS", label: "Subtle Dots", description: "Light dot texture for quiet depth." },
+  { value: "DIAGONAL_LINES", label: "Diagonal Lines", description: "A crisp directional pattern." },
+  { value: "WAVES", label: "Waves", description: "A smooth flowing pattern." },
+  { value: "COFFEE_BEANS", label: "Coffee Beans", description: "Coffee-inspired detail for cafe programs." },
+  { value: "SCISSORS", label: "Scissors", description: "Grooming-inspired detail for barbershops." },
+  { value: "WATER_BUBBLES", label: "Water Bubbles", description: "Fresh detail for car wash programs." },
+  { value: "FOOD_PATTERN", label: "Food Pattern", description: "Dining-inspired detail for restaurants." },
+  { value: "BEAUTY_PATTERN", label: "Beauty Pattern", description: "Soft detail for salons and beauty programs." },
+] satisfies Array<{
+  value: CardDesignBackgroundPattern;
+  label: string;
+  description: string;
+}>;
 
 export const designStudioIndustryStyleOptions = [
   {
@@ -112,6 +140,8 @@ export const designStudioSchema = z.object({
   layoutStyle: z.enum(["CLASSIC", "MODERN", "PREMIUM", "LUXURY"]),
   stampJourneyStyle: z.enum(["CIRCLES", "CONNECTED_DOTS", "PROGRESS_BAR"]),
   stampIcon: z.string().trim().min(1),
+  backgroundStyle: z.enum(["SOLID", "GRADIENT", "PATTERN"]),
+  backgroundPattern: z.enum(["NONE", "SUBTLE_DOTS", "DIAGONAL_LINES", "WAVES", "COFFEE_BEANS", "SCISSORS", "WATER_BUBBLES", "FOOD_PATTERN", "BEAUTY_PATTERN"]),
 });
 
 export function resolveProgramCardDesign(input?: CardDesignInput): CardDesign {
@@ -125,6 +155,8 @@ export function buildProgramCardDesign(input: z.infer<typeof designStudioSchema>
     cardStyle: getCardStyleForLayoutStyle(input.layoutStyle),
     stampJourneyStyle: input.stampJourneyStyle,
     stampIcon: input.stampIcon,
+    backgroundStyle: input.backgroundStyle,
+    backgroundPattern: input.backgroundPattern,
   });
 }
 
@@ -140,6 +172,8 @@ export function parseDesignStudioForm(formData: FormData, businessType: Paramete
     layoutStyle: String(formData.get("layoutStyle") ?? ""),
     stampJourneyStyle: String(formData.get("stampJourneyStyle") ?? ""),
     stampIcon: String(formData.get("stampIcon") ?? ""),
+    backgroundStyle: String(formData.get("backgroundStyle") ?? "SOLID"),
+    backgroundPattern: String(formData.get("backgroundPattern") ?? "NONE"),
   });
   if (!parsed.success) return parsed;
 

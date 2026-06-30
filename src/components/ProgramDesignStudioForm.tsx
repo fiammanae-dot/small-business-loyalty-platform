@@ -1,10 +1,16 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { CardDesignLayoutStyle, CardDesignStampIcon, CardDesignStampJourneyStyle } from "@/lib/card-design";
+import type { CardDesignBackgroundPattern, CardDesignBackgroundStyle, CardDesignLayoutStyle, CardDesignStampIcon, CardDesignStampJourneyStyle } from "@/lib/card-design";
 import { getCardThemeForLayoutStyle, getCardStyleForLayoutStyle, resolveCardDesign } from "@/lib/card-design";
 import { resolveCardThemeColors } from "@/lib/card-themes";
-import { designStudioIndustryStyleOptions, designStudioStampJourneyOptions, designStudioTemplateOptions } from "@/lib/design-studio";
+import {
+  designStudioBackgroundPatternOptions,
+  designStudioBackgroundStyleOptions,
+  designStudioIndustryStyleOptions,
+  designStudioStampJourneyOptions,
+  designStudioTemplateOptions,
+} from "@/lib/design-studio";
 import { LoyaltyWalletCard } from "@/components/public-card/LoyaltyWalletCard";
 import { Button, SectionCard } from "@/components/ui";
 
@@ -41,12 +47,22 @@ export function ProgramDesignStudioForm({
     layoutStyle: CardDesignLayoutStyle;
     stampJourneyStyle: CardDesignStampJourneyStyle;
     stampIcon: CardDesignStampIcon;
+    backgroundStyle: CardDesignBackgroundStyle;
+    backgroundPattern: CardDesignBackgroundPattern;
   };
   stampIconOptions: Array<{ value: CardDesignStampIcon; label: string; recommended: boolean }>;
 }) {
   const [layoutStyle, setLayoutStyle] = useState(initialDesign.layoutStyle);
   const [stampJourneyStyle, setStampJourneyStyle] = useState(initialDesign.stampJourneyStyle);
   const [stampIcon, setStampIcon] = useState(initialDesign.stampIcon);
+  const [backgroundStyle, setBackgroundStyle] = useState<"SOLID" | "GRADIENT" | "PATTERN">(
+    initialDesign.backgroundStyle === "GRADIENT" || initialDesign.backgroundStyle === "PATTERN" || initialDesign.backgroundStyle === "INDUSTRY_PATTERN"
+      ? initialDesign.backgroundStyle === "GRADIENT"
+        ? "GRADIENT"
+        : "PATTERN"
+      : "SOLID",
+  );
+  const [backgroundPattern, setBackgroundPattern] = useState(initialDesign.backgroundPattern);
   const cardDesign = useMemo(
     () =>
       resolveCardDesign({
@@ -54,8 +70,10 @@ export function ProgramDesignStudioForm({
         cardStyle: getCardStyleForLayoutStyle(layoutStyle),
         stampJourneyStyle,
         stampIcon,
+        backgroundStyle,
+        backgroundPattern,
       }),
-    [layoutStyle, stampJourneyStyle, stampIcon],
+    [backgroundPattern, backgroundStyle, layoutStyle, stampJourneyStyle, stampIcon],
   );
   const previewTheme = useMemo(
     () =>
@@ -69,6 +87,8 @@ export function ProgramDesignStudioForm({
   const selectedIconLabel = stampIconOptions.find((option) => option.value === stampIcon)?.label ?? stampIcon;
   const selectedJourneyLabel = designStudioStampJourneyOptions.find((option) => option.value === stampJourneyStyle)?.label ?? stampJourneyStyle;
   const selectedStyleLabel = designStudioTemplateOptions.find((option) => option.value === layoutStyle)?.label ?? layoutStyle;
+  const selectedBackgroundLabel = designStudioBackgroundStyleOptions.find((option) => option.value === backgroundStyle)?.label ?? backgroundStyle;
+  const selectedPatternLabel = designStudioBackgroundPatternOptions.find((option) => option.value === backgroundPattern)?.label ?? backgroundPattern;
   const activeIndustryStyleId =
     designStudioIndustryStyleOptions.find(
       (option) => option.layoutStyle === layoutStyle && option.stampJourneyStyle === stampJourneyStyle && option.stampIcon === stampIcon,
@@ -78,6 +98,8 @@ export function ProgramDesignStudioForm({
     <form action={action} className="grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(420px,0.8fr)] xl:items-start">
       <input type="hidden" name={csrfName} value={csrfToken} />
       <input type="hidden" name="programUuid" value={programUuid} />
+      <input type="hidden" name="backgroundStyle" value={backgroundStyle} />
+      <input type="hidden" name="backgroundPattern" value={backgroundPattern} />
 
       <aside className="order-first grid h-fit gap-4 xl:sticky xl:top-6 xl:order-last">
         <SectionCard
@@ -108,6 +130,7 @@ export function ProgramDesignStudioForm({
             <PreviewLine label="Card Style" value={selectedStyleLabel} />
             <PreviewLine label="Reward Progress" value={selectedJourneyLabel} />
             <PreviewLine label="Stamp Design" value={selectedIconLabel} />
+            <PreviewLine label="Background" value={`${selectedBackgroundLabel} · ${selectedPatternLabel}`} />
           </div>
         </SectionCard>
       </aside>
@@ -180,6 +203,55 @@ export function ProgramDesignStudioForm({
                 </span>
               </label>
             ))}
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Background" description="Choose the background feeling for this loyalty card.">
+          <div className="grid gap-3 md:grid-cols-3">
+            {designStudioBackgroundStyleOptions.map((option) => {
+              const active = backgroundStyle === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setBackgroundStyle(option.value)}
+                  className="group grid min-h-28 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
+                  data-active={active}
+                  aria-pressed={active}
+                >
+                  <span className="flex items-center justify-between gap-3">
+                    <span className="text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
+                    <span className="h-8 w-12 rounded-full border border-[#E2E8F0]" style={{ background: backgroundStylePreview[option.value] }} />
+                  </span>
+                  <span className="text-xs leading-5 text-[#64748B]">{option.description}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {designStudioBackgroundPatternOptions.map((option) => {
+              const active = backgroundPattern === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    setBackgroundPattern(option.value);
+                    if (option.value !== "NONE") setBackgroundStyle("PATTERN");
+                  }}
+                  className="group flex min-h-20 items-center gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
+                  data-active={active}
+                  aria-pressed={active}
+                >
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] text-xs font-bold text-[#64748B]">{patternPreviewLabels[option.value]}</span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
+                    <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </SectionCard>
 
@@ -339,4 +411,22 @@ const templateThumbnailStyles: Record<CardDesignLayoutStyle, {
     panel: "rgba(255,255,255,0.12)",
     accent: "#E9C18D",
   },
+};
+
+const backgroundStylePreview: Record<"SOLID" | "GRADIENT" | "PATTERN", string> = {
+  SOLID: "#F8FAFC",
+  GRADIENT: "linear-gradient(135deg, #FFFFFF 0%, #FDBA74 100%)",
+  PATTERN: "radial-gradient(circle at 4px 4px, #CBD5E1 1.5px, transparent 1.5px), #F8FAFC",
+};
+
+const patternPreviewLabels: Record<CardDesignBackgroundPattern, string> = {
+  NONE: "-",
+  SUBTLE_DOTS: "DOT",
+  DIAGONAL_LINES: "///",
+  WAVES: "~~~",
+  COFFEE_BEANS: "CAF",
+  SCISSORS: "CUT",
+  WATER_BUBBLES: "H2O",
+  FOOD_PATTERN: "DINE",
+  BEAUTY_PATTERN: "SPA",
 };
