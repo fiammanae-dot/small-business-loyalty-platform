@@ -3,6 +3,7 @@ import { SaveCardImageButton } from "@/components/SaveCardImageButton";
 import { Gift, QrCode } from "lucide-react";
 import { getCardQrDataUrl, getCardUrl, resolveBranding } from "@/lib/customer-cards";
 import { resolveCardThemeColors } from "@/lib/card-themes";
+import { resolveCardDesign } from "@/lib/card-design";
 import { calculateCustomerTier } from "@/lib/customer-tiers";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -48,6 +49,7 @@ export default async function PublicCustomerCardPage({
   });
 
   const branding = resolveBranding(membership.business.branding);
+  const cardDesign = resolveCardDesign();
   const customer = membership.globalCustomer;
   const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim();
   const cardUrl = await getCardUrl(token);
@@ -60,7 +62,7 @@ export default async function PublicCustomerCardPage({
       const remaining = Math.max(required - progress, 0);
       const completion = Math.min(Math.round((progress / required) * 100), 100);
       const rewardReady = progress >= required;
-      const theme = resolveCardThemeColors({ cardTheme: programMembership.loyaltyProgram.cardTheme, branding });
+      const theme = resolveCardThemeColors({ cardTheme: programMembership.loyaltyProgram.cardTheme, branding, cardDesign });
 
       return {
         programMembership,
@@ -75,7 +77,7 @@ export default async function PublicCustomerCardPage({
     }),
   );
   const primaryProgram = programCards[0] ?? null;
-  const primaryCardTheme = primaryProgram?.theme ?? resolveCardThemeColors({ cardTheme: null, branding });
+  const primaryCardTheme = primaryProgram?.theme ?? resolveCardThemeColors({ cardTheme: null, branding, cardDesign });
   const lastUpdatedAt = [
     membership.updatedAt,
     membership.cardLastViewedAt,

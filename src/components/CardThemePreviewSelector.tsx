@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { CardTheme } from "@prisma/client";
 import { cardThemeOptions, resolveCardThemeColors } from "@/lib/card-themes";
+import { resolveCardDesign } from "@/lib/card-design";
 import { LoyaltyWalletCard } from "@/components/public-card/LoyaltyWalletCard";
 
 type PreviewBranding = {
@@ -24,7 +25,8 @@ export function CardThemePreviewSelector({
   branding: PreviewBranding;
 }) {
   const [previewTheme, setPreviewTheme] = useState<CardTheme | null>(null);
-  const activePreview = previewTheme ? resolveCardThemeColors({ cardTheme: previewTheme, branding }) : null;
+  const cardDesign = resolveCardDesign();
+  const activePreview = previewTheme ? resolveCardThemeColors({ cardTheme: previewTheme, branding, cardDesign }) : null;
 
   return (
     <section className="rounded-md border border-[#E5E7EB] bg-white p-4">
