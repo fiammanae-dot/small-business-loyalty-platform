@@ -77,6 +77,32 @@ export function parseBirthday(value?: string) {
   return value ? new Date(`${value}T00:00:00.000Z`) : null;
 }
 
+export async function findGlobalCustomerForEnrollment({
+  tx,
+  normalizedPhone,
+  email,
+}: {
+  tx: CustomerTransaction;
+  normalizedPhone: string;
+  email?: string | null;
+}) {
+  const customerByPhone = await tx.globalCustomer.findUnique({
+    where: { normalizedPhone },
+    select: { id: true },
+  });
+
+  if (customerByPhone) return customerByPhone;
+
+  const trimmedEmail = email?.trim();
+  if (!trimmedEmail) return null;
+
+  return tx.globalCustomer.findFirst({
+    where: { email: { equals: trimmedEmail, mode: "insensitive" } },
+    orderBy: { id: "asc" },
+    select: { id: true },
+  });
+}
+
 export async function getBusinessCustomerOrRedirect(uuid: string, businessId: number, branchId?: number) {
   const membership = await prisma.businessCustomerMembership.findFirst({
     where: {
@@ -216,9 +242,10 @@ export async function enrollCustomerForBusiness({
   try {
     const result = await prisma.$transaction(async (tx) => {
       const globalCustomer =
-        (await tx.globalCustomer.findUnique({
-          where: { normalizedPhone },
-          select: { id: true },
+        (await findGlobalCustomerForEnrollment({
+          tx,
+          normalizedPhone,
+          email: identity.data.email || null,
         })) ??
         (await tx.globalCustomer.create({
           data: {

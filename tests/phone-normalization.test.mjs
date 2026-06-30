@@ -32,7 +32,9 @@ test("customer creation stores normalized phone and uses it for duplicate detect
 
   assert.match(customers, /const normalizedPhone = normalizePhone\(identity\.data\.phone\)/);
   assert.match(customers, /Enter a valid UAE mobile number/);
+  assert.match(customers, /findGlobalCustomerForEnrollment/);
   assert.match(customers, /where: \{ normalizedPhone \}/);
+  assert.match(customers, /email: \{ equals: trimmedEmail, mode: "insensitive" \}/);
   assert.match(customers, /phone: normalizedPhone/);
   assert.match(customers, /businessId_globalCustomerId/);
   assert.match(actions, /const normalizedPhone = normalizePhone\(identity\.data\.phone\)/);
