@@ -237,6 +237,108 @@ export async function updateProgramDesignStudioAction(formData: FormData) {
   redirect(`${path}?success=Design Studio settings saved.`);
 }
 
+export async function saveBusinessDesignPresetAction(formData: FormData) {
+  validateActionSecurity(formData, "dashboard:program-design-studio", "/dashboard/programs");
+  const user = await requireBusinessOwner();
+  const uuid = getString(formData, "programUuid");
+  const path = `/dashboard/programs/${uuid}/design-studio`;
+  const name = getString(formData, "presetName").trim();
+  if (!uuid) fail("/dashboard/programs", "Program not found.");
+  if (!name) fail(path, "Preset name is required.");
+  if (name.length > 80) fail(path, "Preset name must be 80 characters or fewer.");
+
+  const program = await prisma.loyaltyProgram.findFirst({
+    where: { uuid, businessId: user.businessId },
+    select: { id: true, uuid: true, businessType: true, cardDesign: true },
+  });
+  if (!program) fail("/dashboard/programs", "Program not found.");
+
+  const parsed = parseDesignStudioForm(formData, program.businessType);
+  if (!parsed.success) fail(path, parsed.error.issues[0]?.message ?? "Design selection is invalid.");
+  const cardDesign = buildProgramCardDesign(parsed.data, program.cardDesign);
+
+  try {
+    await prisma.businessDesignPreset.create({
+      data: {
+        businessId: user.businessId,
+        name,
+        cardDesign: cardDesign as unknown as Prisma.InputJsonValue,
+      },
+    });
+  } catch {
+    fail(path, "A preset with this name already exists.");
+  }
+
+  await logAuditEvent({
+    actorUserId: user.id,
+    businessId: user.businessId,
+    action: "BUSINESS_DESIGN_PRESET_CREATED",
+    entityType: "business_design_preset",
+    metadata: { name },
+  });
+  revalidatePath(path);
+  redirect(`${path}?success=Business preset saved.`);
+}
+
+export async function renameBusinessDesignPresetAction(formData: FormData) {
+  validateActionSecurity(formData, "dashboard:program-design-studio", "/dashboard/programs");
+  const user = await requireBusinessOwner();
+  const programUuid = getString(formData, "programUuid");
+  const presetUuid = getString(formData, "presetUuid");
+  const name = (getString(formData, `renamePresetName:${presetUuid}`) || getString(formData, "renamePresetName")).trim();
+  const path = `/dashboard/programs/${programUuid}/design-studio`;
+  if (!programUuid) fail("/dashboard/programs", "Program not found.");
+  if (!presetUuid) fail(path, "Preset not found.");
+  if (!name) fail(path, "Preset name is required.");
+  if (name.length > 80) fail(path, "Preset name must be 80 characters or fewer.");
+
+  try {
+    const updated = await prisma.businessDesignPreset.updateMany({
+      where: { uuid: presetUuid, businessId: user.businessId },
+      data: { name },
+    });
+    if (updated.count === 0) fail(path, "Preset not found.");
+  } catch {
+    fail(path, "A preset with this name already exists.");
+  }
+
+  await logAuditEvent({
+    actorUserId: user.id,
+    businessId: user.businessId,
+    action: "BUSINESS_DESIGN_PRESET_RENAMED",
+    entityType: "business_design_preset",
+    entityId: presetUuid,
+    metadata: { name },
+  });
+  revalidatePath(path);
+  redirect(`${path}?success=Business preset renamed.`);
+}
+
+export async function deleteBusinessDesignPresetAction(formData: FormData) {
+  validateActionSecurity(formData, "dashboard:program-design-studio", "/dashboard/programs");
+  const user = await requireBusinessOwner();
+  const programUuid = getString(formData, "programUuid");
+  const presetUuid = getString(formData, "presetUuid");
+  const path = `/dashboard/programs/${programUuid}/design-studio`;
+  if (!programUuid) fail("/dashboard/programs", "Program not found.");
+  if (!presetUuid) fail(path, "Preset not found.");
+
+  const deleted = await prisma.businessDesignPreset.deleteMany({
+    where: { uuid: presetUuid, businessId: user.businessId },
+  });
+  if (deleted.count === 0) fail(path, "Preset not found.");
+
+  await logAuditEvent({
+    actorUserId: user.id,
+    businessId: user.businessId,
+    action: "BUSINESS_DESIGN_PRESET_DELETED",
+    entityType: "business_design_preset",
+    entityId: presetUuid,
+  });
+  revalidatePath(path);
+  redirect(`${path}?success=Business preset deleted.`);
+}
+
 export async function enrollCustomerInProgramAction(formData: FormData) {
   validateActionSecurity(formData, "dashboard:program-enrollment", "/dashboard/programs");
   const user = await requireBusinessOwner();

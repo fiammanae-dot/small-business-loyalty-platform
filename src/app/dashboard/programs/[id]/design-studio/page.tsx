@@ -1,7 +1,12 @@
 import { ProgramDesignStudioForm } from "@/components/ProgramDesignStudioForm";
 import { DashboardShell } from "@/components/DashboardShell";
 import { ButtonLink, EmptyState, PageActions, PageIntro, SectionCard } from "@/components/ui";
-import { updateProgramDesignStudioAction } from "@/app/dashboard/programs/actions";
+import {
+  deleteBusinessDesignPresetAction,
+  renameBusinessDesignPresetAction,
+  saveBusinessDesignPresetAction,
+  updateProgramDesignStudioAction,
+} from "@/app/dashboard/programs/actions";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { createCsrfToken, csrfFieldName } from "@/lib/csrf";
 import { resolveBranding } from "@/lib/customer-cards";
@@ -42,6 +47,16 @@ export default async function ProgramDesignStudioPage({
 
   const branding = resolveBranding(business.branding);
   const cardDesign = resolveCardDesign(program.cardDesign);
+  const businessPresets = await prisma.businessDesignPreset.findMany({
+    where: { businessId: user.businessId },
+    orderBy: { createdAt: "desc" },
+    select: {
+      uuid: true,
+      name: true,
+      cardDesign: true,
+      createdAt: true,
+    },
+  });
   const recommendedIcons = getRecommendedStampIconsForBusinessType(program.businessType);
   const stampIconOptions = getAllowedStampIconsForBusinessType(program.businessType).map((icon) => ({
     value: icon as CardDesignStampIcon,
@@ -67,6 +82,9 @@ export default async function ProgramDesignStudioPage({
 
         <ProgramDesignStudioForm
           action={updateProgramDesignStudioAction}
+          savePresetAction={saveBusinessDesignPresetAction}
+          renamePresetAction={renameBusinessDesignPresetAction}
+          deletePresetAction={deleteBusinessDesignPresetAction}
           csrfName={csrfFieldName()}
           csrfToken={createCsrfToken("dashboard:program-design-studio")}
           programUuid={program.uuid}
@@ -85,6 +103,25 @@ export default async function ProgramDesignStudioPage({
             decorationStyle: cardDesign.decorationStyle,
             visibleSections: cardDesign.visibleSections,
           }}
+          businessPresets={businessPresets.map((preset) => {
+            const presetDesign = resolveCardDesign(preset.cardDesign);
+            return {
+              uuid: preset.uuid,
+              name: preset.name,
+              createdAt: preset.createdAt.toISOString(),
+              cardDesign: {
+                layoutStyle: presetDesign.layoutStyle,
+                stampJourneyStyle: presetDesign.stampJourneyStyle,
+                stampIcon: presetDesign.stampIcon,
+                backgroundStyle: toDesignStudioBackgroundStyle(presetDesign.backgroundStyle),
+                backgroundPattern: presetDesign.backgroundPattern,
+                rewardStyle: presetDesign.rewardStyle,
+                typographyPreset: presetDesign.typographyPreset,
+                decorationStyle: presetDesign.decorationStyle,
+                visibleSections: presetDesign.visibleSections,
+              },
+            };
+          })}
           stampIconOptions={stampIconOptions}
         />
       </div>
@@ -98,4 +135,10 @@ function labelize(value: string) {
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+}
+
+function toDesignStudioBackgroundStyle(value: string): "SOLID" | "GRADIENT" | "PATTERN" {
+  if (value === "GRADIENT") return "GRADIENT";
+  if (value === "PATTERN" || value === "INDUSTRY_PATTERN") return "PATTERN";
+  return "SOLID";
 }

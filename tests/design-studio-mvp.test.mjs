@@ -9,11 +9,20 @@ function read(path) {
 test("program-level Design Studio stores card design safely", () => {
   const schema = read("prisma/schema.prisma");
   const migration = read("prisma/migrations/0038_program_card_design_json/migration.sql");
+  const presetMigration = read("prisma/migrations/0039_business_design_presets/migration.sql");
   const actions = read("src/app/dashboard/programs/actions.ts");
 
   assert.match(schema, /cardDesign\s+Json\?\s+@map\("card_design"\)/);
+  assert.match(schema, /model BusinessDesignPreset/);
+  assert.match(schema, /@@unique\(\[businessId, name\]\)/);
   assert.match(migration, /ADD COLUMN "card_design" JSONB/);
+  assert.match(presetMigration, /CREATE TABLE "business_design_presets"/);
+  assert.match(presetMigration, /"business_id" INTEGER NOT NULL/);
+  assert.match(presetMigration, /"card_design" JSONB NOT NULL/);
   assert.match(actions, /updateProgramDesignStudioAction/);
+  assert.match(actions, /saveBusinessDesignPresetAction/);
+  assert.match(actions, /renameBusinessDesignPresetAction/);
+  assert.match(actions, /deleteBusinessDesignPresetAction/);
   assert.match(actions, /validateActionSecurity\(formData, "dashboard:program-design-studio"/);
   assert.match(actions, /where: \{ uuid, businessId: user\.businessId \}/);
   assert.match(actions, /cardDesign: cardDesign as unknown as Prisma\.InputJsonValue/);
@@ -106,8 +115,14 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(page, /Make this card feel like your business/);
   assert.match(form, /Card Style/);
   assert.match(form, /Professional Presets/);
+  assert.match(form, /My Business Presets/);
+  assert.match(form, /Save Current Design/);
+  assert.match(form, /Apply Preset/);
+  assert.match(form, /Rename preset/);
+  assert.match(form, /Delete/);
   assert.match(form, /Start with a professionally designed loyalty card, then customize every detail\./);
   assert.match(form, /applyProfessionalPreset/);
+  assert.match(form, /applyBusinessPreset/);
   assert.match(form, /setLayoutStyle\(preset\.layoutStyle\)/);
   assert.match(form, /setBackgroundStyle\(preset\.backgroundStyle\)/);
   assert.match(form, /setBackgroundPattern\(preset\.backgroundPattern\)/);

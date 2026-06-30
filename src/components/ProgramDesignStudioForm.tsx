@@ -39,8 +39,30 @@ type PreviewBranding = {
   logoUrl: string | null;
 };
 
+type DesignStudioPresetDesign = {
+  layoutStyle: CardDesignLayoutStyle;
+  stampJourneyStyle: CardDesignStampJourneyStyle;
+  stampIcon: CardDesignStampIcon;
+  backgroundStyle: "SOLID" | "GRADIENT" | "PATTERN";
+  backgroundPattern: CardDesignBackgroundPattern;
+  rewardStyle: CardDesignRewardStyle;
+  typographyPreset: CardDesignTypographyPreset;
+  decorationStyle: CardDesignDecorationStyle;
+  visibleSections: CardSectionVisibility;
+};
+
+type BusinessDesignPresetOption = {
+  uuid: string;
+  name: string;
+  createdAt: string;
+  cardDesign: DesignStudioPresetDesign;
+};
+
 export function ProgramDesignStudioForm({
   action,
+  savePresetAction,
+  renamePresetAction,
+  deletePresetAction,
   csrfName,
   csrfToken,
   programUuid,
@@ -49,9 +71,13 @@ export function ProgramDesignStudioForm({
   rewardName,
   branding,
   initialDesign,
+  businessPresets,
   stampIconOptions,
 }: {
   action: (formData: FormData) => void | Promise<void>;
+  savePresetAction: (formData: FormData) => void | Promise<void>;
+  renamePresetAction: (formData: FormData) => void | Promise<void>;
+  deletePresetAction: (formData: FormData) => void | Promise<void>;
   csrfName: string;
   csrfToken: string;
   programUuid: string;
@@ -70,6 +96,7 @@ export function ProgramDesignStudioForm({
     decorationStyle: CardDesignDecorationStyle;
     visibleSections: CardSectionVisibility;
   };
+  businessPresets: BusinessDesignPresetOption[];
   stampIconOptions: Array<{ value: CardDesignStampIcon; label: string; recommended: boolean }>;
 }) {
   const [layoutStyle, setLayoutStyle] = useState(initialDesign.layoutStyle);
@@ -147,6 +174,18 @@ export function ProgramDesignStudioForm({
     setVisibleSections(preset.visibleSections);
   };
 
+  const applyBusinessPreset = (preset: BusinessDesignPresetOption) => {
+    setLayoutStyle(preset.cardDesign.layoutStyle);
+    setBackgroundStyle(preset.cardDesign.backgroundStyle);
+    setBackgroundPattern(preset.cardDesign.backgroundPattern);
+    setStampJourneyStyle(preset.cardDesign.stampJourneyStyle);
+    setStampIcon(preset.cardDesign.stampIcon);
+    setRewardStyle(preset.cardDesign.rewardStyle);
+    setTypographyPreset(preset.cardDesign.typographyPreset);
+    setDecorationStyle(preset.cardDesign.decorationStyle);
+    setVisibleSections(preset.cardDesign.visibleSections);
+  };
+
   return (
     <form action={action} className="grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(420px,0.8fr)] xl:items-start">
       <input type="hidden" name={csrfName} value={csrfToken} />
@@ -203,6 +242,74 @@ export function ProgramDesignStudioForm({
       </aside>
 
       <div className="order-last grid gap-5 xl:order-first">
+        <SectionCard title="My Business Presets" description="Save this design for reuse, or apply a saved business preset to this program.">
+          <div className="grid gap-4">
+            <div className="rounded-2xl border border-[#E5E7EB] bg-[#F8FAFC] p-4">
+              <label className="grid gap-2 text-sm font-semibold text-[#111827]">
+                Preset Name
+                <input
+                  type="text"
+                  name="presetName"
+                  placeholder="e.g. VIP coffee card"
+                  maxLength={80}
+                  className="h-11 rounded-xl border border-[#CBD5E1] bg-white px-3 text-sm font-medium text-[#111827] outline-none transition focus:border-[var(--business-primary)] focus:ring-2 focus:ring-[var(--business-primary)]/20"
+                />
+              </label>
+              <Button formAction={savePresetAction} type="submit" variant="business" className="mt-3 w-full sm:w-fit">
+                Save Current Design
+              </Button>
+            </div>
+
+            {businessPresets.length > 0 ? (
+              <div className="grid gap-3 md:grid-cols-2">
+                {businessPresets.map((preset) => (
+                  <div key={preset.uuid} className="grid gap-3 rounded-[1.35rem] border border-[#E2E8F0] bg-white p-4 shadow-sm">
+                    <PresetThumbnail preset={presetToThumbnailPreset(preset)} />
+                    <div className="min-w-0">
+                      <p className="truncate text-base font-semibold text-[#111827]">{preset.name}</p>
+                      <p className="mt-1 text-xs font-medium uppercase tracking-[0.16em] text-[#94A3B8]">Created {formatPresetDate(preset.createdAt)}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => applyBusinessPreset(preset)}
+                        className="rounded-xl border border-[var(--business-primary)] px-3 py-2 text-sm font-semibold business-text transition hover:bg-[var(--business-primary-soft)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                      >
+                        Apply Preset
+                      </button>
+                      <Button formAction={deletePresetAction} type="submit" name="presetUuid" value={preset.uuid} variant="outline" size="sm">
+                        Delete
+                      </Button>
+                    </div>
+                    <div className="grid gap-2 rounded-2xl border border-[#E5E7EB] bg-[#F8FAFC] p-3">
+                      <label className="text-xs font-bold uppercase tracking-[0.16em] text-[#64748B]" htmlFor={`rename-preset-${preset.uuid}`}>
+                        Rename preset
+                      </label>
+                      <div className="flex flex-col gap-2 sm:flex-row">
+                        <input
+                          id={`rename-preset-${preset.uuid}`}
+                          type="text"
+                          name={`renamePresetName:${preset.uuid}`}
+                          defaultValue={preset.name}
+                          maxLength={80}
+                          className="h-10 min-w-0 flex-1 rounded-xl border border-[#CBD5E1] bg-white px-3 text-sm font-medium text-[#111827] outline-none transition focus:border-[var(--business-primary)] focus:ring-2 focus:ring-[var(--business-primary)]/20"
+                        />
+                        <Button formAction={renamePresetAction} type="submit" name="presetUuid" value={preset.uuid} variant="outline" size="sm">
+                          Rename
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-white p-5 text-sm text-[#64748B]">
+                No saved business presets yet. Save your current design to reuse it on another loyalty program.
+              </div>
+            )}
+          </div>
+        </SectionCard>
+
         <SectionCard title="Professional Presets" description="Start with a professionally designed loyalty card, then customize every detail.">
           <div className="grid gap-5">
             {designStudioProfessionalPresetGroups.map((group) => (
@@ -499,6 +606,20 @@ function PreviewLine({ label, value }: { label: string; value: string }) {
 
 function sectionVisibilityMatches(expected: CardSectionVisibility, actual: CardSectionVisibility) {
   return designStudioCardContentOptions.every((option) => expected[option.value] === actual[option.value]);
+}
+
+function presetToThumbnailPreset(preset: BusinessDesignPresetOption): DesignStudioProfessionalPreset {
+  return {
+    id: preset.uuid,
+    category: "Business Preset",
+    name: preset.name,
+    description: "Saved business preset",
+    ...preset.cardDesign,
+  };
+}
+
+function formatPresetDate(value: string) {
+  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
 }
 
 function PresetThumbnail({ preset }: { preset: DesignStudioProfessionalPreset }) {

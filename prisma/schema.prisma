@@ -401,8 +401,25 @@ model Business {
   supportRequests               SupportRequest[]
   supportSessionActivities      SupportSessionActivity[]
   businessNotifications BusinessNotification[]
+  designPresets                 BusinessDesignPreset[]
 
   @@map("businesses")
+}
+
+model BusinessDesignPreset {
+  id         Int      @id @default(autoincrement())
+  uuid       String   @unique @default(uuid()) @db.Uuid
+  businessId Int      @map("business_id")
+  name       String
+  cardDesign Json     @map("card_design")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, name])
+  @@index([businessId, createdAt])
+  @@map("business_design_presets")
 }
 
 model CustomerTierSetting {
