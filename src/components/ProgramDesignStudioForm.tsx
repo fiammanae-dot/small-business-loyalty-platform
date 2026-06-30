@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import type { CardDesignLayoutStyle, CardDesignStampIcon, CardDesignStampJourneyStyle } from "@/lib/card-design";
 import { getCardThemeForLayoutStyle, getCardStyleForLayoutStyle, resolveCardDesign } from "@/lib/card-design";
 import { resolveCardThemeColors } from "@/lib/card-themes";
-import { designStudioStampJourneyOptions, designStudioTemplateOptions } from "@/lib/design-studio";
+import { designStudioIndustryStyleOptions, designStudioStampJourneyOptions, designStudioTemplateOptions } from "@/lib/design-studio";
 import { LoyaltyWalletCard } from "@/components/public-card/LoyaltyWalletCard";
 import { Button, SectionCard } from "@/components/ui";
 
@@ -69,6 +69,10 @@ export function ProgramDesignStudioForm({
   const selectedIconLabel = stampIconOptions.find((option) => option.value === stampIcon)?.label ?? stampIcon;
   const selectedJourneyLabel = designStudioStampJourneyOptions.find((option) => option.value === stampJourneyStyle)?.label ?? stampJourneyStyle;
   const selectedStyleLabel = designStudioTemplateOptions.find((option) => option.value === layoutStyle)?.label ?? layoutStyle;
+  const activeIndustryStyleId =
+    designStudioIndustryStyleOptions.find(
+      (option) => option.layoutStyle === layoutStyle && option.stampJourneyStyle === stampJourneyStyle && option.stampIcon === stampIcon,
+    )?.id ?? null;
 
   return (
     <form action={action} className="grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(420px,0.8fr)] xl:items-start">
@@ -109,6 +113,47 @@ export function ProgramDesignStudioForm({
       </aside>
 
       <div className="order-last grid gap-5 xl:order-first">
+        <SectionCard title="Industry Style" description="Start with a style made for your type of business.">
+          <div className="grid gap-3 md:grid-cols-2">
+            {designStudioIndustryStyleOptions.map((option) => {
+              const active = activeIndustryStyleId === option.id;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => {
+                    setLayoutStyle(option.layoutStyle);
+                    setStampJourneyStyle(option.stampJourneyStyle);
+                    setStampIcon(option.stampIcon);
+                  }}
+                  className="group grid min-h-44 gap-4 rounded-[1.35rem] border border-[#E2E8F0] bg-white p-4 text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-lg"
+                  data-active={active}
+                  aria-pressed={active}
+                >
+                  <span className="flex items-start justify-between gap-3">
+                    <span className="min-w-0">
+                      <span className="block text-base font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
+                      <span className="mt-1 block text-sm leading-6 text-[#64748B]">{option.description}</span>
+                    </span>
+                    <span className="rounded-full border border-[#E2E8F0] bg-white px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
+                      Active
+                    </span>
+                  </span>
+                  <span className="grid gap-2 rounded-2xl border border-[#E2E8F0] bg-white/80 p-3 text-xs text-[#64748B]">
+                    <span className="flex items-center justify-between gap-3">
+                      <span>Stamp design</span>
+                      <span className="font-semibold text-[#111827]">{option.stampIconLabel}</span>
+                    </span>
+                    <span className="flex items-center justify-between gap-3">
+                      <span>Style personality</span>
+                      <span className="font-semibold text-[#111827]">{option.stylePersonality}</span>
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </SectionCard>
         <SectionCard title="Card Style" description="Choose the overall personality of your loyalty card.">
           <div className="grid gap-4 md:grid-cols-2">
             {designStudioTemplateOptions.map((option) => (

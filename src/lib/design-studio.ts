@@ -1,13 +1,20 @@
-import { z } from "zod";
+﻿import { z } from "zod";
 import {
   generalStampIcons,
   getCardStyleForLayoutStyle,
   getCardThemeForLayoutStyle,
   getRecommendedStampIconsForBusinessType,
+  industryDesignPacks,
   resolveCardDesign,
+  stampIcons,
   type CardDesign,
   type CardDesignInput,
+  type CardDesignLayoutStyle,
+  type CardDesignStampIcon,
+  type CardDesignStampJourneyStyle,
+  type IndustryDesignPackId,
 } from "@/lib/card-design";
+import { getDefaultAssetsForIndustry } from "@/lib/card-asset-catalog";
 
 export const designStudioTemplateOptions = [
   { value: "CLASSIC", label: "Classic", description: "Balanced design suitable for any business." },
@@ -21,6 +28,85 @@ export const designStudioStampJourneyOptions = [
   { value: "CONNECTED_DOTS", label: "Connected Dots", description: "A connected journey style for future progress rendering." },
   { value: "PROGRESS_BAR", label: "Progress Bar", description: "A compact bar-first journey style for future rendering." },
 ] as const;
+
+export const designStudioIndustryStyleOptions = [
+  {
+    id: "BARBERSHOP",
+    label: "Barbershop",
+    description: "Sharp, confident styling for repeat grooming visits.",
+    layoutStyle: "PREMIUM",
+    stampJourneyStyle: "CONNECTED_DOTS",
+    stampIcon: industryDesignPacks.BARBERSHOP.cardDesign.stampIcon,
+    stampIconLabel: "Scissors",
+    stylePersonality: "Premium",
+    assetDefaults: getDefaultAssetsForIndustry("BARBERSHOP"),
+  },
+  {
+    id: "BEAUTY_SALON",
+    label: "Beauty Salon",
+    description: "Elegant styling for beauty, salon, and self-care rewards.",
+    layoutStyle: "LUXURY",
+    stampJourneyStyle: "CIRCLES",
+    stampIcon: industryDesignPacks.BEAUTY_SALON.cardDesign.stampIcon,
+    stampIconLabel: "Lipstick",
+    stylePersonality: "Luxury",
+    assetDefaults: getDefaultAssetsForIndustry("BEAUTY_SALON"),
+  },
+  {
+    id: "CAR_WASH",
+    label: "Car Wash",
+    description: "Clean, energetic styling for car wash and care programs.",
+    layoutStyle: "MODERN",
+    stampJourneyStyle: "PROGRESS_BAR",
+    stampIcon: industryDesignPacks.CAR_WASH.cardDesign.stampIcon,
+    stampIconLabel: "Water Drop",
+    stylePersonality: "Modern",
+    assetDefaults: getDefaultAssetsForIndustry("CAR_WASH"),
+  },
+  {
+    id: "CAFE",
+    label: "Café",
+    description: "Warm, familiar styling for coffee and everyday visits.",
+    layoutStyle: "CLASSIC",
+    stampJourneyStyle: "CIRCLES",
+    stampIcon: industryDesignPacks.CAFE.cardDesign.stampIcon,
+    stampIconLabel: "Coffee Cup",
+    stylePersonality: "Classic",
+    assetDefaults: getDefaultAssetsForIndustry("CAFE"),
+  },
+  {
+    id: "RESTAURANT",
+    label: "Restaurant",
+    description: "Bold styling for dining rewards and guest loyalty.",
+    layoutStyle: "PREMIUM",
+    stampJourneyStyle: "PROGRESS_BAR",
+    stampIcon: industryDesignPacks.RESTAURANT.cardDesign.stampIcon,
+    stampIconLabel: "Plate",
+    stylePersonality: "Premium",
+    assetDefaults: getDefaultAssetsForIndustry("RESTAURANT"),
+  },
+  {
+    id: "GENERAL",
+    label: "General",
+    description: "Flexible styling that works for most local businesses.",
+    layoutStyle: "CLASSIC",
+    stampJourneyStyle: "CIRCLES",
+    stampIcon: industryDesignPacks.GENERAL.cardDesign.stampIcon,
+    stampIconLabel: "Star",
+    stylePersonality: "Classic",
+    assetDefaults: getDefaultAssetsForIndustry("GENERAL"),
+  },
+] satisfies Array<{
+  id: IndustryDesignPackId;
+  label: string;
+  description: string;
+  layoutStyle: CardDesignLayoutStyle;
+  stampJourneyStyle: Extract<CardDesignStampJourneyStyle, "CIRCLES" | "CONNECTED_DOTS" | "PROGRESS_BAR">;
+  stampIcon: CardDesignStampIcon;
+  stampIconLabel: string;
+  stylePersonality: string;
+  assetDefaults: ReturnType<typeof getDefaultAssetsForIndustry>;
+}>;
 
 export const designStudioSchema = z.object({
   layoutStyle: z.enum(["CLASSIC", "MODERN", "PREMIUM", "LUXURY"]),
@@ -43,7 +129,10 @@ export function buildProgramCardDesign(input: z.infer<typeof designStudioSchema>
 }
 
 export function getAllowedStampIconsForBusinessType(businessType: Parameters<typeof getRecommendedStampIconsForBusinessType>[0]) {
-  return Array.from(new Set([...getRecommendedStampIconsForBusinessType(businessType), ...generalStampIcons]));
+  const industryStyleIcons = designStudioIndustryStyleOptions.map((option) => option.stampIcon);
+  return Array.from(new Set([...getRecommendedStampIconsForBusinessType(businessType), ...industryStyleIcons, ...generalStampIcons])).filter((icon): icon is CardDesignStampIcon =>
+    (stampIcons as readonly string[]).includes(icon),
+  );
 }
 
 export function parseDesignStudioForm(formData: FormData, businessType: Parameters<typeof getRecommendedStampIconsForBusinessType>[0]) {

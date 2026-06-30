@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
@@ -58,6 +58,11 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   const page = read("src/app/dashboard/programs/[id]/design-studio/page.tsx");
 
   assert.match(helper, /designStudioTemplateOptions/);
+  assert.match(helper, /designStudioIndustryStyleOptions/);
+  assert.match(helper, /getDefaultAssetsForIndustry/);
+  for (const label of ["Barbershop", "Beauty Salon", "Car Wash", "CAFE", "Restaurant", "General"]) {
+    assert.match(helper, new RegExp(label));
+  }
   assert.match(helper, /CLASSIC/);
   assert.match(helper, /MODERN/);
   assert.match(helper, /PREMIUM/);
@@ -74,6 +79,14 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(page, /Design Your Loyalty Card/);
   assert.match(page, /Make this card feel like your business/);
   assert.match(form, /Card Style/);
+  assert.match(form, /Industry Style/);
+  assert.match(form, /Start with a style made for your type of business\./);
+  assert.match(form, /setLayoutStyle\(option\.layoutStyle\)/);
+  assert.match(form, /setStampJourneyStyle\(option\.stampJourneyStyle\)/);
+  assert.match(form, /setStampIcon\(option\.stampIcon\)/);
+  assert.match(form, /aria-pressed=\{active\}/);
+  assert.match(form, /Stamp design/);
+  assert.match(form, /Style personality/);
   assert.match(form, /Choose the overall personality of your loyalty card\./);
   assert.match(form, /TemplateThumbnail/);
   assert.match(form, /Selected/);
