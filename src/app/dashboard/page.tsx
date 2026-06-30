@@ -207,13 +207,13 @@ export default async function BusinessDashboard({
           referralConversionsToday={referralConversionsToday}
         />
 
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="space-y-5">
+        <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="min-w-0 space-y-5">
             <QuickActions />
             <ActionRequiredSection rewardReadyCustomers={rewardsReadyTotal} pendingReferrals={pendingReferrals} customersCloseToReward={customersCloseToReward} recentScannerActivity={totalActivitiesToday} alertCount={totalOpenAlerts} subscriptionStatus={business.subscriptions[0]?.status ?? "UNASSIGNED"} onboardingPercent={onboardingPercent} onboardingItems={onboardingItems} />
             <DashboardActivityTimeline customers={recentCustomers} programs={programPerformance} />
           </div>
-          <div className="space-y-5">
+          <div className="min-w-0 space-y-5">
             <BusinessHealthPanel customerGrowth={newCustomersToday > 0 ? "Growing today" : "Needs activity"} activePrograms={loyaltyPrograms} activeStaff={staffCount} branchCount={branchCount} subscriptionStatus={business.subscriptions[0]?.status ?? "UNASSIGNED"} branchesUsed={branchCount} branchLimit={plan?.maxBranches ?? null} programsUsed={loyaltyPrograms} programLimit={plan?.maxLoyaltyPrograms ?? null} planCompliance={planCompliance} />
             <SubscriptionSummaryCard planName={plan?.name ?? "Unassigned"} branchesUsed={branchCount} branchLimit={plan?.maxBranches ?? null} programsUsed={loyaltyPrograms} programLimit={plan?.maxLoyaltyPrograms ?? null} renewalDate={business.subscriptions[0]?.renewalDate ?? business.subscriptions[0]?.expiryDate ?? null} />
             <SupportAccessCard session={latestSupportSession} />
@@ -362,7 +362,7 @@ function CompactCustomerSearch() {
             id="dashboard-customer-search"
             name="q"
             placeholder="Quick customer lookup: name, phone, card ID, referral code"
-            className="h-11 w-full rounded-md border border-[#E5E7EB] pl-10 pr-3 text-sm outline-none business-ring focus:ring-0"
+            className="h-11 w-full rounded-md border border-[#E5E7EB] pl-10 pr-3 text-base outline-none business-ring focus:ring-0 sm:text-sm"
           />
         </div>
         <button type="submit" className="h-11 rounded-md business-button px-4 text-sm font-semibold text-white">

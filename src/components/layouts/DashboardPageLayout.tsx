@@ -13,7 +13,7 @@ export function DashboardPageLayout({
   className?: string;
 }) {
   return (
-    <div className={cn("space-y-5 pb-24 md:pb-0", className)}>
+    <div className={cn("min-w-0 max-w-full space-y-5 pb-24 md:pb-0", className)}>
       {summary}
       {actions}
       {children}

@@ -10,12 +10,23 @@ function read(file) {
 
 test("dashboard quick action labels keep single-line desktop affordance", () => {
   const page = read("src/app/dashboard/page.tsx");
+  const layout = read("src/components/layouts/DashboardPageLayout.tsx");
 
+  assert.match(layout, /min-w-0 max-w-full space-y-5/, "Dashboard page layout should not allow children to widen the mobile viewport");
+  assert.match(page, /grid min-w-0 gap-5 xl:grid-cols-\[minmax\(0,1fr\)_360px\]/, "Dashboard main content grid should allow columns to shrink on mobile");
   assert.match(page, /grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 min-\[1180px\]:grid-cols-4/, "Quick action cards should use equal responsive grid tracks");
   assert.match(page, /flex min-h-24 w-full min-w-0 items-center gap-3/, "Quick action cards should fill their grid track without fixed overflow");
   assert.match(page, /shrink-0 items-center justify-center/, "Quick action icons should remain fixed size");
   assert.match(page, /sm:whitespace-nowrap/, "Quick action labels should stay on one line on desktop while allowing mobile wrapping");
   assert.doesNotMatch(page, /break-words text-lg font-semibold/, "Quick action labels should not force multi-line wrapping");
+});
+
+test("dashboard search inputs avoid mobile browser zoom", () => {
+  const page = read("src/app/dashboard/page.tsx");
+  const searchBar = read("src/components/ui/SearchBar.tsx");
+
+  assert.match(page, /text-base outline-none business-ring focus:ring-0 sm:text-sm/, "Dashboard quick search should use 16px mobile input text");
+  assert.match(searchBar, /text-base placeholder:text-\[#94A3B8\] outline-none sm:text-sm/, "Shared SearchBar should avoid iOS input auto-zoom on mobile");
 });
 
 test("referral center uses stacked full-width sections and help dialog", () => {
