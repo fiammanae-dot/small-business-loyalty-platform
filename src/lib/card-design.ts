@@ -1,3 +1,5 @@
+import type { BusinessType } from "@prisma/client";
+
 export type CardDesignVersion = "v1";
 export type CardDesignLayoutStyle = "wallet";
 export type CardDesignCardStyle = "business-default" | "modern-clean" | "premium-dark" | "minimal-light" | "image-background";
@@ -45,6 +47,77 @@ export const defaultCardDesign: CardDesign = {
 
 export type CardDesignInput = Partial<CardDesign> | null | undefined;
 
+export type IndustryDesignPackId = "BARBERSHOP" | "BEAUTY_SALON" | "CAR_WASH" | "CAFE" | "RESTAURANT" | "GENERAL";
+
+export type IndustryDesignPack = {
+  id: IndustryDesignPackId;
+  label: string;
+  businessTypes: BusinessType[];
+  cardDesign: CardDesign;
+};
+
+export const industryDesignPacks: Record<IndustryDesignPackId, IndustryDesignPack> = {
+  BARBERSHOP: {
+    id: "BARBERSHOP",
+    label: "Barbershop",
+    businessTypes: ["BARBERSHOP"],
+    cardDesign: {
+      ...defaultCardDesign,
+      cardStyle: "premium-dark",
+      templateId: "industry-barbershop-v1",
+    },
+  },
+  BEAUTY_SALON: {
+    id: "BEAUTY_SALON",
+    label: "Beauty Salon",
+    businessTypes: ["BEAUTY_SALON"],
+    cardDesign: {
+      ...defaultCardDesign,
+      cardStyle: "minimal-light",
+      templateId: "industry-beauty-salon-v1",
+    },
+  },
+  CAR_WASH: {
+    id: "CAR_WASH",
+    label: "Car Wash",
+    businessTypes: ["CAR_CARE_CENTER"],
+    cardDesign: {
+      ...defaultCardDesign,
+      cardStyle: "image-background",
+      templateId: "industry-car-wash-v1",
+    },
+  },
+  CAFE: {
+    id: "CAFE",
+    label: "Cafe",
+    businessTypes: ["COFFEE_SHOP"],
+    cardDesign: {
+      ...defaultCardDesign,
+      cardStyle: "modern-clean",
+      templateId: "industry-cafe-v1",
+    },
+  },
+  RESTAURANT: {
+    id: "RESTAURANT",
+    label: "Restaurant",
+    businessTypes: ["RESTAURANT"],
+    cardDesign: {
+      ...defaultCardDesign,
+      cardStyle: "premium-dark",
+      templateId: "industry-restaurant-v1",
+    },
+  },
+  GENERAL: {
+    id: "GENERAL",
+    label: "General",
+    businessTypes: ["OTHER"],
+    cardDesign: {
+      ...defaultCardDesign,
+      templateId: "industry-general-v1",
+    },
+  },
+};
+
 const cardDesignValues = {
   version: ["v1"],
   layoutStyle: ["wallet"],
@@ -60,10 +133,7 @@ const cardDesignValues = {
   animationStyle: ["subtle"],
 } as const;
 
-function resolveValue<T extends keyof typeof cardDesignValues>(
-  key: T,
-  value: CardDesignInput extends infer _ ? unknown : never,
-): CardDesign[T] {
+function resolveValue<T extends keyof typeof cardDesignValues>(key: T, value: unknown): CardDesign[T] {
   const allowed = cardDesignValues[key] as readonly string[];
   return (typeof value === "string" && allowed.includes(value) ? value : defaultCardDesign[key]) as CardDesign[T];
 }
@@ -84,4 +154,30 @@ export function resolveCardDesign(input?: CardDesignInput): CardDesign {
     animationStyle: resolveValue("animationStyle", input?.animationStyle),
     templateId: typeof input?.templateId === "string" && input.templateId.trim() ? input.templateId.trim() : null,
   };
+}
+
+export function getIndustryDesignPackId(businessType?: BusinessType | null): IndustryDesignPackId {
+  if (!businessType) {
+    return "GENERAL";
+  }
+
+  for (const pack of Object.values(industryDesignPacks)) {
+    if (pack.businessTypes.includes(businessType)) {
+      return pack.id;
+    }
+  }
+
+  return "GENERAL";
+}
+
+export function getIndustryDesignPack(businessType?: BusinessType | null): IndustryDesignPack {
+  return industryDesignPacks[getIndustryDesignPackId(businessType)];
+}
+
+export function resolveIndustryCardDesign(businessType?: BusinessType | null, overrides?: CardDesignInput): CardDesign {
+  const pack = getIndustryDesignPack(businessType);
+  return resolveCardDesign({
+    ...pack.cardDesign,
+    ...overrides,
+  });
 }
