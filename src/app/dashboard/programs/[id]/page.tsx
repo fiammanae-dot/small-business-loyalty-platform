@@ -93,8 +93,8 @@ export default async function ProgramDetailPage({
           actions={
             <PageActions>
               <ButtonLink href="/dashboard/programs" variant="outline">Back to Programs</ButtonLink>
-              <ButtonLink href={"/dashboard/programs/" + program.uuid + "/design-studio"} variant="outline">Design Studio</ButtonLink>
-              <ButtonLink href={"/dashboard/programs/" + program.uuid + "/edit"} variant="business">Edit Program</ButtonLink>
+              <ButtonLink href={"/dashboard/programs/" + program.uuid + "/design-studio"} variant="business">Open Design Studio</ButtonLink>
+              <ButtonLink href={"/dashboard/programs/" + program.uuid + "/edit"} variant="outline">Edit Program</ButtonLink>
               <form action={toggleProgramAction}>
                 <CsrfInput scope="dashboard:programs" />
                 <input type="hidden" name="programUuid" value={program.uuid} />
@@ -155,6 +155,17 @@ export default async function ProgramDetailPage({
           </div>
 
           <div className="grid gap-5">
+            <SectionCard title="Design Studio" description="Customize this program's customer-facing loyalty card design.">
+              <div className="grid gap-3">
+                <p className="text-sm text-[#64748B]">
+                  Choose the card template, stamp journey and stamp icon for this program only.
+                </p>
+                <ButtonLink href={"/dashboard/programs/" + program.uuid + "/design-studio"} variant="business">
+                  Open Design Studio
+                </ButtonLink>
+              </div>
+            </SectionCard>
+
             <SectionCard title="Program Join QR" description="Print or share this QR so customers can join this program themselves. No stamps are added during signup.">
               <div className="grid gap-4">
                 <div className="rounded-2xl border border-[#E2E8F0] bg-white p-4 text-center">

@@ -27,10 +27,21 @@ test("Business Owner program detail links to the Design Studio route", () => {
 
   assert.match(detail, /\/design-studio/);
   assert.match(detail, /Design Studio/);
+  assert.match(detail, /Open Design Studio/);
+  assert.match(detail, /SectionCard title="Design Studio"/);
+  assert.match(detail, /Customize this program's customer-facing loyalty card design/);
   assert.match(designPage, /getBusinessOwnerContext/);
   assert.match(designPage, /where: \{ uuid: id, businessId: user\.businessId \}/);
   assert.match(designPage, /ProgramDesignStudioForm/);
   assert.match(designPage, /createCsrfToken\("dashboard:program-design-studio"\)/);
+});
+
+test("Design Studio navigation stays Business Owner-only", () => {
+  const branchProgram = read("src/app/branch/programs/[id]/page.tsx");
+  const staffPrograms = read("src/app/staff/programs/page.tsx");
+
+  assert.doesNotMatch(branchProgram, /design-studio|Design Studio/);
+  assert.doesNotMatch(staffPrograms, /design-studio|Design Studio/);
 });
 
 test("Design Studio MVP exposes only approved controls and live preview", () => {
