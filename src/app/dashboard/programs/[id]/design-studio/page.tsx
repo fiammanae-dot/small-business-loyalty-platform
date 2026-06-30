@@ -57,6 +57,15 @@ export default async function ProgramDesignStudioPage({
       createdAt: true,
     },
   });
+  const sourcePrograms = await prisma.loyaltyProgram.findMany({
+    where: { businessId: user.businessId, uuid: { not: program.uuid } },
+    orderBy: { createdAt: "desc" },
+    select: {
+      uuid: true,
+      name: true,
+      cardDesign: true,
+    },
+  });
   const recommendedIcons = getRecommendedStampIconsForBusinessType(program.businessType);
   const stampIconOptions = getAllowedStampIconsForBusinessType(program.businessType).map((icon) => ({
     value: icon as CardDesignStampIcon,
@@ -122,6 +131,24 @@ export default async function ProgramDesignStudioPage({
               },
             };
           })}
+          sourcePrograms={sourcePrograms.map((sourceProgram) => {
+            const sourceDesign = resolveCardDesign(sourceProgram.cardDesign);
+            return {
+              uuid: sourceProgram.uuid,
+              name: sourceProgram.name,
+              cardDesign: {
+                layoutStyle: toDesignStudioLayoutStyle(sourceDesign.layoutStyle),
+                stampJourneyStyle: toDesignStudioStampJourneyStyle(sourceDesign.stampJourneyStyle),
+                stampIcon: sourceDesign.stampIcon,
+                backgroundStyle: toDesignStudioBackgroundStyle(sourceDesign.backgroundStyle),
+                backgroundPattern: sourceDesign.backgroundPattern,
+                rewardStyle: sourceDesign.rewardStyle,
+                typographyPreset: sourceDesign.typographyPreset,
+                decorationStyle: sourceDesign.decorationStyle,
+                visibleSections: sourceDesign.visibleSections,
+              },
+            };
+          })}
           stampIconOptions={stampIconOptions}
         />
       </div>
@@ -141,4 +168,17 @@ function toDesignStudioBackgroundStyle(value: string): "SOLID" | "GRADIENT" | "P
   if (value === "GRADIENT") return "GRADIENT";
   if (value === "PATTERN" || value === "INDUSTRY_PATTERN") return "PATTERN";
   return "SOLID";
+}
+
+function toDesignStudioLayoutStyle(value: string): "CLASSIC" | "MODERN" | "PREMIUM" | "LUXURY" {
+  if (value === "MODERN") return "MODERN";
+  if (value === "PREMIUM") return "PREMIUM";
+  if (value === "LUXURY") return "LUXURY";
+  return "CLASSIC";
+}
+
+function toDesignStudioStampJourneyStyle(value: string): "CIRCLES" | "CONNECTED_DOTS" | "PROGRESS_BAR" {
+  if (value === "CONNECTED_DOTS") return "CONNECTED_DOTS";
+  if (value === "PROGRESS_BAR") return "PROGRESS_BAR";
+  return "CIRCLES";
 }

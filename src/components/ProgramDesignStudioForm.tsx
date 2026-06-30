@@ -58,6 +58,12 @@ type BusinessDesignPresetOption = {
   cardDesign: DesignStudioPresetDesign;
 };
 
+type SourceProgramDesignOption = {
+  uuid: string;
+  name: string;
+  cardDesign: DesignStudioPresetDesign;
+};
+
 export function ProgramDesignStudioForm({
   action,
   savePresetAction,
@@ -72,6 +78,7 @@ export function ProgramDesignStudioForm({
   branding,
   initialDesign,
   businessPresets,
+  sourcePrograms,
   stampIconOptions,
 }: {
   action: (formData: FormData) => void | Promise<void>;
@@ -97,6 +104,7 @@ export function ProgramDesignStudioForm({
     visibleSections: CardSectionVisibility;
   };
   businessPresets: BusinessDesignPresetOption[];
+  sourcePrograms: SourceProgramDesignOption[];
   stampIconOptions: Array<{ value: CardDesignStampIcon; label: string; recommended: boolean }>;
 }) {
   const [layoutStyle, setLayoutStyle] = useState(initialDesign.layoutStyle);
@@ -184,6 +192,18 @@ export function ProgramDesignStudioForm({
     setTypographyPreset(preset.cardDesign.typographyPreset);
     setDecorationStyle(preset.cardDesign.decorationStyle);
     setVisibleSections(preset.cardDesign.visibleSections);
+  };
+
+  const applySourceProgramDesign = (sourceProgram: SourceProgramDesignOption) => {
+    setLayoutStyle(sourceProgram.cardDesign.layoutStyle);
+    setBackgroundStyle(sourceProgram.cardDesign.backgroundStyle);
+    setBackgroundPattern(sourceProgram.cardDesign.backgroundPattern);
+    setStampJourneyStyle(sourceProgram.cardDesign.stampJourneyStyle);
+    setStampIcon(sourceProgram.cardDesign.stampIcon);
+    setRewardStyle(sourceProgram.cardDesign.rewardStyle);
+    setTypographyPreset(sourceProgram.cardDesign.typographyPreset);
+    setDecorationStyle(sourceProgram.cardDesign.decorationStyle);
+    setVisibleSections(sourceProgram.cardDesign.visibleSections);
   };
 
   return (
@@ -308,6 +328,33 @@ export function ProgramDesignStudioForm({
               </div>
             )}
           </div>
+        </SectionCard>
+
+        <SectionCard title="Duplicate From Another Program" description="Copy a design from one of your existing loyalty programs.">
+          {sourcePrograms.length > 0 ? (
+            <div className="grid gap-3 md:grid-cols-2">
+              {sourcePrograms.map((sourceProgram) => (
+                <div key={sourceProgram.uuid} className="grid gap-3 rounded-[1.35rem] border border-[#E2E8F0] bg-white p-4 shadow-sm">
+                  <PresetThumbnail preset={sourceProgramToThumbnailPreset(sourceProgram)} />
+                  <div className="min-w-0">
+                    <p className="truncate text-base font-semibold text-[#111827]">{sourceProgram.name}</p>
+                    <p className="mt-1 text-sm leading-6 text-[#64748B]">{designSummary(sourceProgram.cardDesign)}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => applySourceProgramDesign(sourceProgram)}
+                    className="w-full rounded-xl border border-[var(--business-primary)] px-3 py-2 text-sm font-semibold business-text transition hover:bg-[var(--business-primary-soft)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 sm:w-fit"
+                  >
+                    Apply Design
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-white p-5 text-sm text-[#64748B]">
+              No other loyalty programs are available yet. Create another program to duplicate its card design here.
+            </div>
+          )}
         </SectionCard>
 
         <SectionCard title="Professional Presets" description="Start with a professionally designed loyalty card, then customize every detail.">
@@ -616,6 +663,23 @@ function presetToThumbnailPreset(preset: BusinessDesignPresetOption): DesignStud
     description: "Saved business preset",
     ...preset.cardDesign,
   };
+}
+
+function sourceProgramToThumbnailPreset(sourceProgram: SourceProgramDesignOption): DesignStudioProfessionalPreset {
+  return {
+    id: sourceProgram.uuid,
+    category: "Program Design",
+    name: sourceProgram.name,
+    description: "Existing program design",
+    ...sourceProgram.cardDesign,
+  };
+}
+
+function designSummary(design: DesignStudioPresetDesign) {
+  const style = designStudioTemplateOptions.find((option) => option.value === design.layoutStyle)?.label ?? design.layoutStyle;
+  const journey = designStudioStampJourneyOptions.find((option) => option.value === design.stampJourneyStyle)?.label ?? design.stampJourneyStyle;
+  const finish = designStudioCardFinishOptions.find((option) => option.value === design.decorationStyle)?.label ?? design.decorationStyle;
+  return `${style} style, ${journey} progress, ${finish} finish`;
 }
 
 function formatPresetDate(value: string) {

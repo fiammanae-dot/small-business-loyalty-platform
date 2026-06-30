@@ -49,6 +49,8 @@ test("Business Owner program detail links to the Design Studio route", () => {
   assert.match(detail, /Customize this program's customer-facing loyalty card design/);
   assert.match(designPage, /getBusinessOwnerContext/);
   assert.match(designPage, /where: \{ uuid: id, businessId: user\.businessId \}/);
+  assert.match(designPage, /sourcePrograms = await prisma\.loyaltyProgram\.findMany/);
+  assert.match(designPage, /where: \{ businessId: user\.businessId, uuid: \{ not: program\.uuid \} \}/);
   assert.match(designPage, /ProgramDesignStudioForm/);
   assert.match(designPage, /createCsrfToken\("dashboard:program-design-studio"\)/);
 });
@@ -116,6 +118,8 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /Card Style/);
   assert.match(form, /Professional Presets/);
   assert.match(form, /My Business Presets/);
+  assert.match(form, /Duplicate From Another Program/);
+  assert.match(form, /Copy a design from one of your existing loyalty programs\./);
   assert.match(form, /Save Current Design/);
   assert.match(form, /Apply Preset/);
   assert.match(form, /Rename preset/);
@@ -123,6 +127,10 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /Start with a professionally designed loyalty card, then customize every detail\./);
   assert.match(form, /applyProfessionalPreset/);
   assert.match(form, /applyBusinessPreset/);
+  assert.match(form, /applySourceProgramDesign/);
+  assert.match(form, /Apply Design/);
+  assert.match(form, /sourceProgramToThumbnailPreset/);
+  assert.match(form, /designSummary/);
   assert.match(form, /setLayoutStyle\(preset\.layoutStyle\)/);
   assert.match(form, /setBackgroundStyle\(preset\.backgroundStyle\)/);
   assert.match(form, /setBackgroundPattern\(preset\.backgroundPattern\)/);
