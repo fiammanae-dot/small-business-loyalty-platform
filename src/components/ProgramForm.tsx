@@ -38,12 +38,14 @@ export function ProgramForm({
   submitLabel,
   businessName,
   branding,
+  showCardThemeSelector = true,
 }: {
   action: (formData: FormData) => void | Promise<void>;
   defaults: ProgramDefaults;
   submitLabel: string;
   businessName: string;
   branding: ProgramPreviewBranding;
+  showCardThemeSelector?: boolean;
 }) {
   const template = defaults.businessType !== "OTHER" ? programTemplates[defaults.businessType] : null;
   const name = defaults.name ?? template?.name ?? "";
@@ -132,13 +134,17 @@ export function ProgramForm({
         </div>
       </SectionCard>
 
-      <SectionCard title="Wallet Card Style" description="Choose the visual style customers see on their public loyalty card. This is separate from the business category.">
-        <div className="mb-4 rounded-md border business-border-soft business-bg-soft p-4">
-          <p className="text-sm font-semibold business-text">Business category and wallet style are separate</p>
-          <p className="mt-1 text-sm text-[#6B7280]">Changing this style only affects the visual card design. Rewards, stamps, QR codes, referrals, and tiers stay unchanged.</p>
-        </div>
-        <CardThemePreviewSelector selectedTheme={cardTheme} businessName={businessName} branding={branding} />
-      </SectionCard>
+      {showCardThemeSelector ? (
+        <SectionCard title="Wallet Card Style" description="Choose the visual style customers see on their public loyalty card. This is separate from the business category.">
+          <div className="mb-4 rounded-md border business-border-soft business-bg-soft p-4">
+            <p className="text-sm font-semibold business-text">Business category and wallet style are separate</p>
+            <p className="mt-1 text-sm text-[#6B7280]">Changing this style only affects the visual card design. Rewards, stamps, QR codes, referrals, and tiers stay unchanged.</p>
+          </div>
+          <CardThemePreviewSelector selectedTheme={cardTheme} businessName={businessName} branding={branding} />
+        </SectionCard>
+      ) : (
+        <input type="hidden" name="cardTheme" value={cardTheme} />
+      )}
 
       <SectionCard title="Save" description="Review the details above before saving this loyalty program.">
         <Button type="submit" variant="business" className="w-fit">

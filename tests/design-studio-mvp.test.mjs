@@ -21,6 +21,14 @@ test("program-level Design Studio stores card design safely", () => {
   assert.match(actions, /PROGRAM_DESIGN_UPDATED/);
 });
 
+test("new program creation guides Business Owners to Design Studio", () => {
+  const actions = read("src/app/dashboard/programs/actions.ts");
+  const newPage = read("src/app/dashboard/programs/new/page.tsx");
+
+  assert.match(newPage, /showCardThemeSelector=\{false\}/);
+  assert.match(actions, /redirect\(`\/dashboard\/programs\/\$\{program\.uuid\}\/design-studio\?success=Program created\. Customize this card in Design Studio\.`\)/);
+});
+
 test("Business Owner program detail links to the Design Studio route", () => {
   const detail = read("src/app/dashboard/programs/[id]/page.tsx");
   const designPage = read("src/app/dashboard/programs/[id]/design-studio/page.tsx");

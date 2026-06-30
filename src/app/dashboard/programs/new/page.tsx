@@ -25,6 +25,7 @@ export default async function NewProgramPage({
           submitLabel="Create Program"
           businessName={business.name}
           branding={branding}
+          showCardThemeSelector={false}
         />
       </section>
     </DashboardShell>

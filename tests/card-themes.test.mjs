@@ -29,7 +29,7 @@ test("loyalty programs store a selected card theme with business default support
   }
 });
 
-test("program create and edit flows expose independent wallet visual style previews", () => {
+test("program edit exposes wallet visual style previews while create keeps a hidden default", () => {
   const themes = read("src/lib/card-themes.ts");
   const form = read("src/components/ProgramForm.tsx");
   const preview = read("src/components/CardThemePreviewSelector.tsx");
@@ -46,6 +46,8 @@ test("program create and edit flows expose independent wallet visual style previ
   assert.match(themes, /Business Default/);
   assert.match(themes, /Uses your business brand colors with the Modern Clean wallet style/);
   assert.match(form, /CardThemePreviewSelector/);
+  assert.match(form, /showCardThemeSelector = true/);
+  assert.match(form, /name="cardTheme" value=\{cardTheme\}/);
   assert.match(form, /businessName={businessName}/);
   assert.match(form, /branding={branding}/);
   assert.match(form, /Wallet Card Style/);
@@ -70,6 +72,7 @@ test("program create and edit flows expose independent wallet visual style previ
   assert.match(editPage, /businessName=\{business.name\}/);
   assert.match(newPage, /businessName=\{business.name\}/);
   assert.match(newPage, /resolveBranding\(business.branding\)/);
+  assert.match(newPage, /showCardThemeSelector=\{false\}/);
 });
 
 test("program forms use the business-level business type without a per-program selector", () => {

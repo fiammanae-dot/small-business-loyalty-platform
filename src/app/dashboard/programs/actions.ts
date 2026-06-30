@@ -113,7 +113,7 @@ export async function createProgramAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/programs");
-  redirect(`/dashboard/programs/${program.uuid}?success=Program created.`);
+  redirect(`/dashboard/programs/${program.uuid}/design-studio?success=Program created. Customize this card in Design Studio.`);
 }
 
 export async function updateProgramAction(formData: FormData) {
