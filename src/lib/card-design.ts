@@ -1,7 +1,8 @@
 import type { BusinessType, CardTheme } from "@prisma/client";
 
 export type CardDesignVersion = "v1";
-export type CardDesignLayoutStyle = "wallet";
+export const cardLayoutStyles = ["CLASSIC", "MODERN", "PREMIUM", "MINIMAL", "LUXURY"] as const;
+export type CardDesignLayoutStyle = (typeof cardLayoutStyles)[number];
 export type CardDesignCardStyle = "business-default" | "modern-clean" | "premium-dark" | "minimal-light" | "image-background";
 export const stampJourneyStyles = ["CIRCLES", "CONNECTED_DOTS", "PROGRESS_BAR", "ICON_GRID", "ROADMAP", "TICKET_PUNCH"] as const;
 export type CardDesignStampJourneyStyle = (typeof stampJourneyStyles)[number];
@@ -32,7 +33,7 @@ export type CardDesign = {
 
 export const defaultCardDesign: CardDesign = {
   version: "v1",
-  layoutStyle: "wallet",
+  layoutStyle: "CLASSIC",
   cardStyle: "business-default",
   stampJourneyStyle: "CIRCLES",
   stampIcon: "default",
@@ -121,7 +122,7 @@ export const industryDesignPacks: Record<IndustryDesignPackId, IndustryDesignPac
 
 const cardDesignValues = {
   version: ["v1"],
-  layoutStyle: ["wallet"],
+  layoutStyle: cardLayoutStyles,
   cardStyle: ["business-default", "modern-clean", "premium-dark", "minimal-light", "image-background"],
   stampJourneyStyle: stampJourneyStyles,
   stampIcon: ["default"],
@@ -147,10 +148,18 @@ export function resolveStampJourneyStyle(value: unknown): CardDesignStampJourney
   return resolveValue("stampJourneyStyle", value);
 }
 
+export function resolveCardLayoutStyle(value: unknown): CardDesignLayoutStyle {
+  if (value === "wallet") {
+    return "CLASSIC";
+  }
+
+  return resolveValue("layoutStyle", value);
+}
+
 export function resolveCardDesign(input?: CardDesignInput): CardDesign {
   return {
     version: resolveValue("version", input?.version),
-    layoutStyle: resolveValue("layoutStyle", input?.layoutStyle),
+    layoutStyle: resolveCardLayoutStyle(input?.layoutStyle),
     cardStyle: resolveValue("cardStyle", input?.cardStyle),
     stampJourneyStyle: resolveStampJourneyStyle(input?.stampJourneyStyle),
     stampIcon: resolveValue("stampIcon", input?.stampIcon),
