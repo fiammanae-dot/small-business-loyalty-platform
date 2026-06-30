@@ -25,6 +25,7 @@ test("card design foundation defines future Design Studio fields without persist
     "rewardStyle",
     "footerStyle",
     "animationStyle",
+    "visibleSections",
     "templateId",
     "defaultCardDesign",
     "resolveCardDesign",

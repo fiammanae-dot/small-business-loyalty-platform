@@ -42,6 +42,35 @@ export type CardDesignDecorationStyle = "none";
 export type CardDesignRewardStyle = "panel";
 export type CardDesignFooterStyle = "scan-cta";
 export type CardDesignAnimationStyle = "subtle";
+export const cardSections = [
+  "logo",
+  "businessName",
+  "customerName",
+  "tierBadge",
+  "rewardBox",
+  "progress",
+  "qr",
+  "footer",
+  "referral",
+  "visits",
+  "programName",
+] as const;
+export type CardSection = (typeof cardSections)[number];
+export type CardSectionVisibility = Record<CardSection, boolean>;
+
+export const defaultVisibleCardSections: CardSectionVisibility = {
+  logo: true,
+  businessName: true,
+  customerName: true,
+  tierBadge: true,
+  rewardBox: true,
+  progress: true,
+  qr: true,
+  footer: true,
+  referral: true,
+  visits: true,
+  programName: true,
+};
 
 export type CardDesign = {
   version: CardDesignVersion;
@@ -57,6 +86,7 @@ export type CardDesign = {
   rewardStyle: CardDesignRewardStyle;
   footerStyle: CardDesignFooterStyle;
   animationStyle: CardDesignAnimationStyle;
+  visibleSections: CardSectionVisibility;
   templateId: string | null;
 };
 
@@ -74,10 +104,16 @@ export const defaultCardDesign: CardDesign = {
   rewardStyle: "panel",
   footerStyle: "scan-cta",
   animationStyle: "subtle",
+  visibleSections: defaultVisibleCardSections,
   templateId: null,
 };
 
-export type CardDesignInput = Partial<CardDesign> | null | undefined;
+export type CardDesignInput =
+  | (Partial<Omit<CardDesign, "visibleSections">> & {
+      visibleSections?: Partial<CardSectionVisibility> | null;
+    })
+  | null
+  | undefined;
 
 export type IndustryDesignPackId = "BARBERSHOP" | "BEAUTY_SALON" | "CAR_WASH" | "CAFE" | "RESTAURANT" | "GENERAL";
 
@@ -235,6 +271,21 @@ export function resolveBackgroundPattern(value: unknown): CardDesignBackgroundPa
   return resolveValue("backgroundPattern", value);
 }
 
+export function resolveVisibleSections(value: unknown): CardSectionVisibility {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return { ...defaultVisibleCardSections };
+  }
+
+  const input = value as Partial<Record<CardSection, unknown>>;
+  return cardSections.reduce<CardSectionVisibility>(
+    (sections, section) => ({
+      ...sections,
+      [section]: typeof input[section] === "boolean" ? input[section] : defaultVisibleCardSections[section],
+    }),
+    { ...defaultVisibleCardSections },
+  );
+}
+
 export function resolveCardDesign(input?: CardDesignInput): CardDesign {
   return {
     version: resolveValue("version", input?.version),
@@ -250,6 +301,7 @@ export function resolveCardDesign(input?: CardDesignInput): CardDesign {
     rewardStyle: resolveValue("rewardStyle", input?.rewardStyle),
     footerStyle: resolveValue("footerStyle", input?.footerStyle),
     animationStyle: resolveValue("animationStyle", input?.animationStyle),
+    visibleSections: resolveVisibleSections(input?.visibleSections),
     templateId: typeof input?.templateId === "string" && input.templateId.trim() ? input.templateId.trim() : null,
   };
 }

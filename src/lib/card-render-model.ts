@@ -1,5 +1,5 @@
 import type { CardTheme } from "@prisma/client";
-import type { CardDesign, CardDesignInput } from "@/lib/card-design";
+import type { CardDesign, CardDesignInput, CardSectionVisibility } from "@/lib/card-design";
 import { resolveCardDesign } from "@/lib/card-design";
 import { resolveCardThemeColors } from "@/lib/card-themes";
 
@@ -57,15 +57,8 @@ export type CardRenderModel = {
   footerStyle: CardDesign["footerStyle"];
   animationStyle: CardDesign["animationStyle"];
   templateId: CardDesign["templateId"];
-  visibleSections: {
-    wallet: boolean;
-    scan: boolean;
-    progress: boolean;
-    reward: boolean;
-    tier: boolean;
-    qr: boolean;
-    footer: boolean;
-  };
+  sectionVisibility: CardSectionVisibility;
+  visibleSections: CardSectionVisibility;
   resolvedColors: ReturnType<typeof resolveCardThemeColors>;
   typography: {
     preset: CardDesign["typographyPreset"];
@@ -148,14 +141,19 @@ export function buildCardRenderModel(input: CardRenderModelInput): CardRenderMod
     footerStyle: design.footerStyle,
     animationStyle: design.animationStyle,
     templateId: design.templateId,
+    sectionVisibility: design.visibleSections,
     visibleSections: {
-      wallet: true,
-      scan: true,
-      progress: true,
-      reward: hasProgram,
-      tier: true,
-      qr: true,
-      footer: true,
+      logo: design.visibleSections.logo,
+      businessName: design.visibleSections.businessName,
+      customerName: design.visibleSections.customerName,
+      tierBadge: design.visibleSections.tierBadge,
+      rewardBox: design.visibleSections.rewardBox && hasProgram,
+      progress: design.visibleSections.progress,
+      qr: design.visibleSections.qr,
+      footer: design.visibleSections.footer,
+      referral: design.visibleSections.referral,
+      visits: design.visibleSections.visits && hasProgram,
+      programName: design.visibleSections.programName && hasProgram,
     },
     resolvedColors,
     typography: {

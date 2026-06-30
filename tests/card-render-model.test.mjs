@@ -28,6 +28,7 @@ test("card render model centralizes future Design Studio rendering inputs", () =
     "footerStyle",
     "animationStyle",
     "templateId",
+    "sectionVisibility",
     "visibleSections",
     "resolvedColors",
     "typography",
