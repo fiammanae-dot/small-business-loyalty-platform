@@ -66,3 +66,28 @@ test("industry design packs are not applied to live card output in phase 1", () 
   assert.doesNotMatch(preview, /resolveIndustryCardDesign|getIndustryDesignPack/);
   assert.match(themes, /getCardThemeDefinition\(cardTheme\)/);
 });
+
+test("industry design packs provide new program defaults without changing existing programs", () => {
+  const design = read("src/lib/card-design.ts");
+  const newPage = read("src/app/dashboard/programs/new/page.tsx");
+  const editPage = read("src/app/dashboard/programs/[id]/edit/page.tsx");
+  const actions = read("src/app/dashboard/programs/actions.ts");
+  const publicCard = read("src/app/card/[token]/page.tsx");
+
+  assert.match(design, /getCardThemeForCardDesign/);
+  assert.match(design, /getIndustryDefaultCardTheme/);
+  assert.match(design, /cardDesign\.cardStyle === "modern-clean"\) return "COFFEE_CAFE"/);
+  assert.match(design, /cardDesign\.cardStyle === "premium-dark"\) return "RESTAURANT"/);
+  assert.match(design, /cardDesign\.cardStyle === "minimal-light"\) return "BEAUTY_SALON"/);
+  assert.match(design, /cardDesign\.cardStyle === "image-background"\) return "AUTOMOTIVE"/);
+
+  assert.match(newPage, /const defaultCardTheme = getIndustryDefaultCardTheme\(business\.businessType\)/);
+  assert.match(newPage, /cardTheme: defaultCardTheme/);
+
+  assert.match(actions, /programData\(formData, businessType, getIndustryDefaultCardTheme\(businessType\)\)/);
+  assert.match(actions, /function programData\(formData: FormData, businessType: string, defaultCardTheme = "BUSINESS_DEFAULT"\)/);
+
+  assert.match(editPage, /cardTheme: program\.cardTheme/);
+  assert.doesNotMatch(editPage, /getIndustryDefaultCardTheme/);
+  assert.doesNotMatch(publicCard, /getIndustryDefaultCardTheme|resolveIndustryCardDesign/);
+});

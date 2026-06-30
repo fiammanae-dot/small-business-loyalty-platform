@@ -1,4 +1,4 @@
-import type { BusinessType } from "@prisma/client";
+import type { BusinessType, CardTheme } from "@prisma/client";
 
 export type CardDesignVersion = "v1";
 export type CardDesignLayoutStyle = "wallet";
@@ -180,4 +180,16 @@ export function resolveIndustryCardDesign(businessType?: BusinessType | null, ov
     ...pack.cardDesign,
     ...overrides,
   });
+}
+
+export function getCardThemeForCardDesign(cardDesign: CardDesign): CardTheme {
+  if (cardDesign.cardStyle === "modern-clean") return "COFFEE_CAFE";
+  if (cardDesign.cardStyle === "premium-dark") return "RESTAURANT";
+  if (cardDesign.cardStyle === "minimal-light") return "BEAUTY_SALON";
+  if (cardDesign.cardStyle === "image-background") return "AUTOMOTIVE";
+  return "BUSINESS_DEFAULT";
+}
+
+export function getIndustryDefaultCardTheme(businessType?: BusinessType | null): CardTheme {
+  return getCardThemeForCardDesign(resolveIndustryCardDesign(businessType));
 }

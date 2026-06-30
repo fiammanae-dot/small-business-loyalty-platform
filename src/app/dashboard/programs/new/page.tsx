@@ -3,6 +3,7 @@ import { ProgramForm } from "@/components/ProgramForm";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { createProgramAction } from "@/app/dashboard/programs/actions";
 import { resolveBranding } from "@/lib/customer-cards";
+import { getIndustryDefaultCardTheme } from "@/lib/card-design";
 
 export default async function NewProgramPage({
   searchParams,
@@ -12,6 +13,7 @@ export default async function NewProgramPage({
   const { user, business } = await getBusinessOwnerContext();
   const params = await searchParams;
   const branding = resolveBranding(business.branding);
+  const defaultCardTheme = getIndustryDefaultCardTheme(business.businessType);
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Create program">
@@ -19,7 +21,7 @@ export default async function NewProgramPage({
         {params.error ? <p className="mb-5 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{params.error}</p> : null}
         <ProgramForm
           action={createProgramAction}
-          defaults={{ businessType: business.businessType, active: true }}
+          defaults={{ businessType: business.businessType, active: true, cardTheme: defaultCardTheme }}
           submitLabel="Create Program"
           businessName={business.name}
           branding={branding}

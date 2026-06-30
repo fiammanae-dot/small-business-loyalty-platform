@@ -63,7 +63,8 @@ test("program create and edit flows expose independent wallet visual style previ
   assert.match(preview, /This card style uses illustrative card content/);
   assert.match(preview, /cardThemeOptions\.map/);
   assert.match(programs, /cardTheme: z\.enum/);
-  assert.match(actions, /cardTheme: getString\(formData, "cardTheme"\) \|\| "BUSINESS_DEFAULT"/);
+  assert.match(actions, /cardTheme: getString\(formData, "cardTheme"\) \|\| defaultCardTheme/);
+  assert.match(actions, /getIndustryDefaultCardTheme\(businessType\)/);
   assert.match(actions, /cardTheme: parsed\.data\.cardTheme/);
   assert.match(editPage, /cardTheme: program\.cardTheme/);
   assert.match(editPage, /businessName=\{business.name\}/);
@@ -87,7 +88,8 @@ test("program forms use the business-level business type without a per-program s
   assert.match(actions, /const parsed = programData\(formData, businessType\)/);
   assert.doesNotMatch(actions, /getString\(formData, "businessType"\)/);
 
-  assert.match(newPage, /defaults=\{\{ businessType: business\.businessType/);
+  assert.match(newPage, /getIndustryDefaultCardTheme\(business\.businessType\)/);
+  assert.match(newPage, /defaults=\{\{ businessType: business\.businessType, active: true, cardTheme: defaultCardTheme \}\}/);
   assert.match(editPage, /businessType: business\.businessType/);
   assert.doesNotMatch(editPage, /businessType: program\.businessType/);
 });

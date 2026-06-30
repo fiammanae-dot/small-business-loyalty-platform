@@ -8,6 +8,7 @@ import { validateCsrfForm } from "@/lib/csrf";
 import { requireUsableSubscription } from "@/lib/commercial-access";
 import { createEngagementEventIfAllowed } from "@/lib/engagement";
 import { prisma } from "@/lib/prisma";
+import { getIndustryDefaultCardTheme } from "@/lib/card-design";
 import { getStartingBonusStampsForEvent, parseProgramDate, programSchema } from "@/lib/programs";
 import { generateScanToken } from "@/lib/scan";
 import { commerciallyUsableStatuses, limitReachedMessage } from "@/lib/subscriptions";
@@ -29,7 +30,7 @@ function validateActionSecurity(formData: FormData, scope: string, path: string)
   }
 }
 
-function programData(formData: FormData, businessType: string) {
+function programData(formData: FormData, businessType: string, defaultCardTheme = "BUSINESS_DEFAULT") {
   const parsed = programSchema.safeParse({
     name: getString(formData, "name"),
     businessType,
@@ -39,7 +40,7 @@ function programData(formData: FormData, businessType: string) {
     startingBonusStamps: getString(formData, "startingBonusStamps") || "0",
     startingStampPolicy: getString(formData, "startingStampPolicy") || "FIRST_ENROLLMENT_ONLY",
     referralRewardBonusStamps: getString(formData, "referralRewardBonusStamps") || "1",
-    cardTheme: getString(formData, "cardTheme") || "BUSINESS_DEFAULT",
+    cardTheme: getString(formData, "cardTheme") || defaultCardTheme,
     rewardName: getString(formData, "rewardName"),
     rewardDescription: getString(formData, "rewardDescription"),
     active: getString(formData, "active") === "true",
@@ -65,7 +66,7 @@ export async function createProgramAction(formData: FormData) {
   await requireUsableSubscription(user.businessId).catch((error) => fail("/dashboard/programs/new", error.message));
   const path = "/dashboard/programs/new";
   const businessType = await getBusinessTypeForProgramAction(user.businessId, path);
-  const parsed = programData(formData, businessType);
+  const parsed = programData(formData, businessType, getIndustryDefaultCardTheme(businessType));
   if (!parsed.success) fail(path, parsed.error.issues[0]?.message ?? "Validation failed.");
 
   const subscription = await prisma.businessSubscription.findFirst({
