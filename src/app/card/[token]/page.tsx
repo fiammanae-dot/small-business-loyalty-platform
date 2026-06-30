@@ -4,6 +4,7 @@ import { Gift, QrCode } from "lucide-react";
 import { getCardQrDataUrl, getCardUrl, resolveBranding } from "@/lib/customer-cards";
 import { resolveCardThemeColors } from "@/lib/card-themes";
 import { resolveCardDesign } from "@/lib/card-design";
+import { buildCardRenderModel } from "@/lib/card-render-model";
 import { calculateCustomerTier } from "@/lib/customer-tiers";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -77,7 +78,6 @@ export default async function PublicCustomerCardPage({
     }),
   );
   const primaryProgram = programCards[0] ?? null;
-  const primaryCardTheme = primaryProgram?.theme ?? resolveCardThemeColors({ cardTheme: null, branding, cardDesign });
   const lastUpdatedAt = [
     membership.updatedAt,
     membership.cardLastViewedAt,
@@ -116,23 +116,55 @@ export default async function PublicCustomerCardPage({
       data: { currentTier: tier.storedTier, tierUpdatedAt: new Date() },
     });
   }
+  const primaryCardModel = buildCardRenderModel({
+    branding,
+    cardDesign,
+    cardTheme: primaryProgram?.programMembership.loyaltyProgram.cardTheme ?? null,
+    business: {
+      name: membership.business.name,
+      cardUrl,
+    },
+    customer: {
+      name: customerName,
+      memberSince: formatDate(membership.createdAt),
+      tierLabel: tier.badgeLabel,
+      tierIcon: tier.badgeIcon,
+      phone: customer.normalizedPhone,
+    },
+    program: primaryProgram
+      ? {
+          name: primaryProgram.programMembership.loyaltyProgram.name,
+          rewardName: primaryProgram.programMembership.loyaltyProgram.rewardName,
+          progress: primaryProgram.progress,
+          required: primaryProgram.required,
+          remaining: primaryProgram.remaining,
+          completion: primaryProgram.completion,
+          rewardReady: primaryProgram.rewardReady,
+        }
+      : null,
+    qr: {
+      code: primaryProgram?.qrCode ?? cardQrCode,
+      helperText: primaryProgram ? "Scan this card" : "Show this QR code to staff to find your customer card.",
+    },
+  });
+  const primaryCardTheme = primaryCardModel.resolvedColors;
   const walletCardProps = {
-    businessName: membership.business.name,
-    businessLogoUrl: branding.logoUrl,
-    customerName,
-    memberSince: formatDate(membership.createdAt),
-    tierLabel: tier.badgeLabel,
-    tierIcon: tier.badgeIcon,
-    qrCode: primaryProgram?.qrCode ?? cardQrCode,
-    theme: primaryCardTheme,
-    rewardReady: primaryProgram?.rewardReady ?? false,
-    qrHelperText: primaryProgram ? "Scan this card" : "Show this QR code to staff to find your customer card.",
-    programName: primaryProgram?.programMembership.loyaltyProgram.name ?? null,
-    rewardName: primaryProgram?.programMembership.loyaltyProgram.rewardName ?? null,
-    progress: primaryProgram?.progress ?? 0,
-    required: primaryProgram?.required ?? 0,
-    remaining: primaryProgram?.remaining ?? 0,
-    completion: primaryProgram?.completion ?? 0,
+    businessName: primaryCardModel.business.name,
+    businessLogoUrl: primaryCardModel.business.logoUrl,
+    customerName: primaryCardModel.customer.name,
+    memberSince: primaryCardModel.customer.memberSince,
+    tierLabel: primaryCardModel.customer.tierLabel,
+    tierIcon: primaryCardModel.customer.tierIcon,
+    qrCode: primaryCardModel.qr.code,
+    theme: primaryCardModel.resolvedColors,
+    rewardReady: primaryCardModel.progress.rewardReady,
+    qrHelperText: primaryCardModel.qr.helperText,
+    programName: primaryCardModel.reward.programName,
+    rewardName: primaryCardModel.reward.rewardName,
+    progress: primaryCardModel.progress.current,
+    required: primaryCardModel.progress.hasProgram ? primaryCardModel.progress.required : 0,
+    remaining: primaryCardModel.progress.remaining,
+    completion: primaryCardModel.progress.completion,
   };
 
   return (

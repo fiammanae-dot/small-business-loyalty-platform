@@ -109,8 +109,11 @@ test("public customer card renders selected program theme through shared wallet 
   assert.match(publicCard, /ReferralPanel/);
   assert.match(publicCard, /ProgramRewardCard/);
   assert.match(publicCard, /getScanQrDataUrl/);
-  assert.match(publicCard, /programName: primaryProgram\?\.programMembership\.loyaltyProgram\.name/);
-  assert.match(publicCard, /rewardName: primaryProgram\?\.programMembership\.loyaltyProgram\.rewardName/);
+  assert.match(publicCard, /buildCardRenderModel/);
+  assert.match(publicCard, /name: primaryProgram\.programMembership\.loyaltyProgram\.name/);
+  assert.match(publicCard, /rewardName: primaryProgram\.programMembership\.loyaltyProgram\.rewardName/);
+  assert.match(publicCard, /programName: primaryCardModel\.reward\.programName/);
+  assert.match(publicCard, /rewardName: primaryCardModel\.reward\.rewardName/);
   assert.match(walletShell, /phoneBackground/);
   assert.match(walletShell, /phoneRadius/);
   assert.match(walletShell, /phoneShadow/);
