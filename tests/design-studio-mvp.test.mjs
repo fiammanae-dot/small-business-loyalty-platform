@@ -104,6 +104,15 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /setBackgroundPattern\(option\.value\)/);
   assert.match(form, /name="backgroundStyle"/);
   assert.match(form, /name="backgroundPattern"/);
+  assert.match(form, /CardProgressPreview/);
+  assert.match(form, /CircleJourneyPreview/);
+  assert.match(form, /ConnectedDotsJourneyPreview/);
+  assert.match(form, /ProgressBarJourneyPreview/);
+  assert.match(form, /StampIconPreview/);
+  assert.match(form, /stampIconMarks/);
+  for (const mark of ["SC", "CC", "CAR", "H2O", "PL", "LIP", "GF"]) {
+    assert.match(form, new RegExp(mark));
+  }
   assert.match(form, /Live Preview/);
   assert.match(form, /order-first[\s\S]*xl:order-last/);
   assert.match(form, /xl:sticky xl:top-6/);

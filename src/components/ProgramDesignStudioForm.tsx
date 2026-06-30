@@ -126,11 +126,12 @@ export function ProgramDesignStudioForm({
               completion={70}
             />
           </div>
+          <CardProgressPreview journeyStyle={stampJourneyStyle} stampIcon={stampIcon} stampIconLabel={selectedIconLabel} />
           <div className="mt-5 grid gap-2 rounded-2xl border border-[#E5E7EB] bg-white/85 p-4 text-sm shadow-sm">
             <PreviewLine label="Card Style" value={selectedStyleLabel} />
             <PreviewLine label="Reward Progress" value={selectedJourneyLabel} />
             <PreviewLine label="Stamp Design" value={selectedIconLabel} />
-            <PreviewLine label="Background" value={`${selectedBackgroundLabel} · ${selectedPatternLabel}`} />
+            <PreviewLine label="Background" value={`${selectedBackgroundLabel} / ${selectedPatternLabel}`} />
           </div>
         </SectionCard>
       </aside>
@@ -316,6 +317,109 @@ function PreviewLine({ label, value }: { label: string; value: string }) {
   );
 }
 
+function CardProgressPreview({
+  journeyStyle,
+  stampIcon,
+  stampIconLabel,
+}: {
+  journeyStyle: CardDesignStampJourneyStyle;
+  stampIcon: CardDesignStampIcon;
+  stampIconLabel: string;
+}) {
+  return (
+    <div className="mt-5 rounded-3xl border border-[#E5E7EB] bg-white/90 p-4 shadow-sm">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#94A3B8]">Reward Progress</p>
+          <p className="mt-1 text-sm font-semibold text-[#111827]">{journeyStyleLabel[journeyStyle] ?? "Circles"}</p>
+        </div>
+        <StampIconPreview stampIcon={stampIcon} label={stampIconLabel} />
+      </div>
+      {journeyStyle === "PROGRESS_BAR" ? (
+        <ProgressBarJourneyPreview stampIcon={stampIcon} />
+      ) : journeyStyle === "CONNECTED_DOTS" ? (
+        <ConnectedDotsJourneyPreview stampIcon={stampIcon} />
+      ) : (
+        <CircleJourneyPreview stampIcon={stampIcon} />
+      )}
+    </div>
+  );
+}
+
+function CircleJourneyPreview({ stampIcon }: { stampIcon: CardDesignStampIcon }) {
+  return (
+    <div className="grid grid-cols-5 gap-2">
+      {Array.from({ length: 10 }).map((_, index) => {
+        const earned = index < 7;
+        return (
+          <span
+            key={index}
+            className="grid aspect-square min-h-10 place-items-center rounded-full border text-xs font-black transition"
+            style={{
+              background: earned ? "var(--business-primary)" : "#F8FAFC",
+              borderColor: earned ? "var(--business-primary)" : "#E2E8F0",
+              color: earned ? "var(--business-primary-foreground)" : "#94A3B8",
+            }}
+          >
+            {earned ? getStampIconMark(stampIcon) : index + 1}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+function ConnectedDotsJourneyPreview({ stampIcon }: { stampIcon: CardDesignStampIcon }) {
+  return (
+    <div className="relative grid grid-cols-5 gap-x-3 gap-y-4 py-2">
+      <span className="absolute left-5 right-5 top-7 hidden h-0.5 bg-[#E2E8F0] sm:block" />
+      <span className="absolute left-5 top-7 hidden h-0.5 w-[62%] bg-[var(--business-primary)] sm:block" />
+      {Array.from({ length: 10 }).map((_, index) => {
+        const earned = index < 7;
+        return (
+          <span key={index} className="relative z-10 grid place-items-center gap-1">
+            <span
+              className="grid h-10 w-10 place-items-center rounded-full border text-xs font-black shadow-sm"
+              style={{
+                background: earned ? "var(--business-primary)" : "#FFFFFF",
+                borderColor: earned ? "var(--business-primary)" : "#CBD5E1",
+                color: earned ? "var(--business-primary-foreground)" : "#94A3B8",
+              }}
+            >
+              {earned ? getStampIconMark(stampIcon) : index + 1}
+            </span>
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+function ProgressBarJourneyPreview({ stampIcon }: { stampIcon: CardDesignStampIcon }) {
+  return (
+    <div className="grid gap-3">
+      <div className="flex items-end justify-between gap-3">
+        <span className="text-3xl font-black text-[#111827]">7/10</span>
+        <span className="text-sm font-semibold business-text">3 visits remaining</span>
+      </div>
+      <div className="h-4 overflow-hidden rounded-full bg-[#E2E8F0]">
+        <div className="flex h-full w-[70%] items-center justify-end rounded-full business-bg pr-2">
+          <span className="text-[10px] font-black leading-none">{getStampIconMark(stampIcon)}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StampIconPreview({ stampIcon, label }: { stampIcon: CardDesignStampIcon; label: string }) {
+  return (
+    <div className="flex shrink-0 items-center gap-2 rounded-2xl border border-[var(--business-primary)] bg-[var(--business-primary-soft)] px-3 py-2">
+      <span className="grid h-8 w-8 place-items-center rounded-full business-bg text-xs font-black">{getStampIconMark(stampIcon)}</span>
+      <span className="max-w-24 truncate text-xs font-semibold text-[#111827]">{label}</span>
+    </div>
+  );
+}
+
 function TemplateThumbnail({ value }: { value: CardDesignLayoutStyle }) {
   const style = templateThumbnailStyles[value] ?? templateThumbnailStyles.CLASSIC;
   return (
@@ -430,3 +534,41 @@ const patternPreviewLabels: Record<CardDesignBackgroundPattern, string> = {
   FOOD_PATTERN: "DINE",
   BEAUTY_PATTERN: "SPA",
 };
+
+const journeyStyleLabel: Partial<Record<CardDesignStampJourneyStyle, string>> = {
+  CIRCLES: "Circles",
+  CONNECTED_DOTS: "Connected Dots",
+  PROGRESS_BAR: "Progress Bar",
+};
+
+const stampIconMarks: Record<CardDesignStampIcon, string> = {
+  STAR: "*",
+  HEART: "HT",
+  CHECK: "OK",
+  CIRCLE: "O",
+  DIAMOND: "DI",
+  GIFT: "GF",
+  SCISSORS: "SC",
+  RAZOR: "RZ",
+  COMB: "CB",
+  BARBER_POLE: "BP",
+  COFFEE_CUP: "CC",
+  COFFEE_BEAN: "CBN",
+  ESPRESSO: "ESP",
+  PLATE: "PL",
+  BURGER: "BG",
+  PIZZA: "PZ",
+  CHEF_HAT: "CH",
+  CAR: "CAR",
+  WATER_DROP: "H2O",
+  BUBBLES: "BUB",
+  WHEEL: "WH",
+  LIPSTICK: "LIP",
+  MIRROR: "MIR",
+  MAKEUP_BRUSH: "MB",
+  NAIL_POLISH: "NP",
+};
+
+function getStampIconMark(stampIcon: CardDesignStampIcon) {
+  return stampIconMarks[stampIcon] ?? "*";
+}
