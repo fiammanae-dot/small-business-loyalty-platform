@@ -55,6 +55,7 @@ test("Design Studio navigation stays Business Owner-only", () => {
 test("Design Studio MVP exposes only approved controls and live preview", () => {
   const helper = read("src/lib/design-studio.ts");
   const form = read("src/components/ProgramDesignStudioForm.tsx");
+  const page = read("src/app/dashboard/programs/[id]/design-studio/page.tsx");
 
   assert.match(helper, /designStudioTemplateOptions/);
   assert.match(helper, /CLASSIC/);
@@ -66,11 +67,22 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(helper, /CONNECTED_DOTS/);
   assert.match(helper, /PROGRESS_BAR/);
   assert.match(helper, /getAllowedStampIconsForBusinessType/);
+  assert.match(page, /Design Your Loyalty Card/);
+  assert.match(page, /Make this card feel like your business/);
+  assert.match(form, /Card Style/);
+  assert.match(form, /Reward Progress/);
+  assert.match(form, /Stamp Design/);
   assert.match(form, /Live Preview/);
+  assert.match(form, /order-first[\s\S]*xl:order-last/);
+  assert.match(form, /xl:sticky xl:top-6/);
+  assert.match(form, /sticky bottom-3/);
   assert.match(form, /LoyaltyWalletCard/);
   assert.match(form, /name="layoutStyle"/);
   assert.match(form, /name="stampJourneyStyle"/);
   assert.match(form, /name="stampIcon"/);
+  assert.doesNotMatch(form, /title="Card Template"/);
+  assert.doesNotMatch(form, /title="Stamp Journey"/);
+  assert.doesNotMatch(form, /title="Stamp Icon"/);
   assert.doesNotMatch(form, /\b(upload|marketplace|artificial intelligence|drag-and-drop)\b/i);
 });
 

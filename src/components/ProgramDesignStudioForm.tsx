@@ -68,27 +68,61 @@ export function ProgramDesignStudioForm({
   );
   const selectedIconLabel = stampIconOptions.find((option) => option.value === stampIcon)?.label ?? stampIcon;
   const selectedJourneyLabel = designStudioStampJourneyOptions.find((option) => option.value === stampJourneyStyle)?.label ?? stampJourneyStyle;
+  const selectedStyleLabel = designStudioTemplateOptions.find((option) => option.value === layoutStyle)?.label ?? layoutStyle;
 
   return (
-    <form action={action} className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
+    <form action={action} className="grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(420px,0.8fr)] xl:items-start">
       <input type="hidden" name={csrfName} value={csrfToken} />
       <input type="hidden" name="programUuid" value={programUuid} />
 
-      <div className="grid gap-5">
-        <SectionCard title="Card Template" description="Choose the wallet card template for this loyalty program only.">
+      <aside className="order-first grid h-fit gap-4 xl:sticky xl:top-6 xl:order-last">
+        <SectionCard
+          title="Live Preview"
+          description="See how this program's loyalty card feels before saving."
+          className="border-[var(--business-primary-soft,#E2E8F0)] bg-gradient-to-b from-white to-[#F8FAFC]"
+        >
+          <div className="mx-auto max-w-[430px]">
+            <LoyaltyWalletCard
+              businessName={businessName}
+              businessLogoUrl={branding.logoUrl}
+              customerName="Mina Hanna"
+              memberSince="Jun 2026"
+              tierLabel="Silver Member"
+              tierIcon="S"
+              qrCode={null}
+              rewardReady={false}
+              theme={previewTheme}
+              programName={programName}
+              rewardName={rewardName}
+              progress={7}
+              required={10}
+              remaining={3}
+              completion={70}
+            />
+          </div>
+          <div className="mt-5 grid gap-2 rounded-2xl border border-[#E5E7EB] bg-white/85 p-4 text-sm shadow-sm">
+            <PreviewLine label="Card Style" value={selectedStyleLabel} />
+            <PreviewLine label="Reward Progress" value={selectedJourneyLabel} />
+            <PreviewLine label="Stamp Design" value={selectedIconLabel} />
+          </div>
+        </SectionCard>
+      </aside>
+
+      <div className="order-last grid gap-5 xl:order-first">
+        <SectionCard title="Card Style" description="Choose the overall look customers see when they open this program's loyalty card.">
           <div className="grid gap-3 md:grid-cols-2">
             {designStudioTemplateOptions.map((option) => (
-              <label key={option.value} className="flex min-h-28 cursor-pointer gap-3 rounded-xl border border-[#E5E7EB] bg-white p-4 transition hover:border-[var(--business-primary)] has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)]">
+              <label key={option.value} className="group flex min-h-28 cursor-pointer gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-md">
                 <input
                   type="radio"
                   name="layoutStyle"
                   value={option.value}
                   checked={layoutStyle === option.value}
                   onChange={() => setLayoutStyle(option.value)}
-                  className="mt-1 h-4 w-4"
+                  className="mt-1 h-4 w-4 accent-[var(--business-primary)]"
                 />
-                <span>
-                  <span className="block text-sm font-semibold text-[#111827]">{option.label}</span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-[#111827] group-has-[:checked]:business-text">{option.label}</span>
                   <span className="mt-1 block text-xs leading-5 text-[#6B7280]">{option.description}</span>
                 </span>
               </label>
@@ -96,20 +130,20 @@ export function ProgramDesignStudioForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="Stamp Journey" description="Prepare the progress style this program will use as Design Studio rendering expands.">
+        <SectionCard title="Reward Progress" description="Choose the progress pattern that best matches how customers earn their next reward.">
           <div className="grid gap-3 md:grid-cols-3">
             {designStudioStampJourneyOptions.map((option) => (
-              <label key={option.value} className="flex min-h-28 cursor-pointer gap-3 rounded-xl border border-[#E5E7EB] bg-white p-4 transition hover:border-[var(--business-primary)] has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)]">
+              <label key={option.value} className="group flex min-h-28 cursor-pointer gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-md">
                 <input
                   type="radio"
                   name="stampJourneyStyle"
                   value={option.value}
                   checked={stampJourneyStyle === option.value}
                   onChange={() => setStampJourneyStyle(option.value)}
-                  className="mt-1 h-4 w-4"
+                  className="mt-1 h-4 w-4 accent-[var(--business-primary)]"
                 />
-                <span>
-                  <span className="block text-sm font-semibold text-[#111827]">{option.label}</span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-[#111827] group-has-[:checked]:business-text">{option.label}</span>
                   <span className="mt-1 block text-xs leading-5 text-[#6B7280]">{option.description}</span>
                 </span>
               </label>
@@ -117,20 +151,20 @@ export function ProgramDesignStudioForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="Stamp Icon" description="Recommended icons for this business type appear first, followed by safe general options.">
+        <SectionCard title="Stamp Design" description="Pick the stamp mark that will represent each customer visit. Recommended options appear first.">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {stampIconOptions.map((option) => (
-              <label key={option.value} className="flex min-h-20 cursor-pointer items-center gap-3 rounded-xl border border-[#E5E7EB] bg-white p-4 transition hover:border-[var(--business-primary)] has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)]">
+              <label key={option.value} className="group flex min-h-20 cursor-pointer items-center gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-md">
                 <input
                   type="radio"
                   name="stampIcon"
                   value={option.value}
                   checked={stampIcon === option.value}
                   onChange={() => setStampIcon(option.value)}
-                  className="h-4 w-4"
+                  className="h-4 w-4 accent-[var(--business-primary)]"
                 />
                 <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-[#111827]">{option.label}</span>
+                  <span className="block text-sm font-semibold text-[#111827] group-has-[:checked]:business-text">{option.label}</span>
                   {option.recommended ? <span className="mt-1 block text-xs font-semibold business-text">Recommended</span> : null}
                 </span>
               </label>
@@ -138,39 +172,12 @@ export function ProgramDesignStudioForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="Save Design" description="Saving applies this design to this loyalty program only. Other programs are unchanged.">
-          <Button type="submit" variant="business" className="w-fit">
+        <SectionCard title="Save Design" description="Apply this design to this loyalty program only. Other programs are unchanged." className="sticky bottom-3 z-20 shadow-lg xl:static xl:shadow-sm">
+          <Button type="submit" variant="business" size="lg" className="w-full sm:w-fit">
             Save Design
           </Button>
         </SectionCard>
       </div>
-
-      <aside className="grid h-fit gap-4 xl:sticky xl:top-6">
-        <SectionCard title="Live Preview" description="The card template updates immediately. Journey and icon are saved now for future renderer support.">
-          <LoyaltyWalletCard
-            businessName={businessName}
-            businessLogoUrl={branding.logoUrl}
-            customerName="Mina Hanna"
-            memberSince="Jun 2026"
-            tierLabel="Silver Member"
-            tierIcon="S"
-            qrCode={null}
-            rewardReady={false}
-            theme={previewTheme}
-            programName={programName}
-            rewardName={rewardName}
-            progress={7}
-            required={10}
-            remaining={3}
-            completion={70}
-          />
-          <div className="mt-4 grid gap-2 rounded-2xl border border-[#E5E7EB] bg-[#F8FAFC] p-4 text-sm">
-            <PreviewLine label="Template" value={designStudioTemplateOptions.find((option) => option.value === layoutStyle)?.label ?? layoutStyle} />
-            <PreviewLine label="Journey" value={selectedJourneyLabel} />
-            <PreviewLine label="Stamp icon" value={selectedIconLabel} />
-          </div>
-        </SectionCard>
-      </aside>
     </form>
   );
 }
