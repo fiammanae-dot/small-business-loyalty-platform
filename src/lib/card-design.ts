@@ -6,7 +6,21 @@ export type CardDesignLayoutStyle = (typeof cardLayoutStyles)[number];
 export type CardDesignCardStyle = "business-default" | "modern-clean" | "premium-dark" | "minimal-light" | "image-background";
 export const stampJourneyStyles = ["CIRCLES", "CONNECTED_DOTS", "PROGRESS_BAR", "ICON_GRID", "ROADMAP", "TICKET_PUNCH"] as const;
 export type CardDesignStampJourneyStyle = (typeof stampJourneyStyles)[number];
-export type CardDesignStampIcon = "default";
+export const generalStampIcons = ["STAR", "HEART", "CHECK", "CIRCLE", "DIAMOND", "GIFT"] as const;
+export const barbershopStampIcons = ["SCISSORS", "RAZOR", "COMB", "BARBER_POLE"] as const;
+export const cafeStampIcons = ["COFFEE_CUP", "COFFEE_BEAN", "ESPRESSO"] as const;
+export const restaurantStampIcons = ["PLATE", "BURGER", "PIZZA", "CHEF_HAT"] as const;
+export const carWashStampIcons = ["CAR", "WATER_DROP", "BUBBLES", "WHEEL"] as const;
+export const beautySalonStampIcons = ["LIPSTICK", "MIRROR", "MAKEUP_BRUSH", "NAIL_POLISH"] as const;
+export const stampIcons = [
+  ...generalStampIcons,
+  ...barbershopStampIcons,
+  ...cafeStampIcons,
+  ...restaurantStampIcons,
+  ...carWashStampIcons,
+  ...beautySalonStampIcons,
+] as const;
+export type CardDesignStampIcon = (typeof stampIcons)[number];
 export type CardDesignProgressStyle = "linear";
 export type CardDesignTypographyPreset = "system";
 export type CardDesignBackgroundStyle = "theme";
@@ -36,7 +50,7 @@ export const defaultCardDesign: CardDesign = {
   layoutStyle: "CLASSIC",
   cardStyle: "business-default",
   stampJourneyStyle: "CIRCLES",
-  stampIcon: "default",
+  stampIcon: "STAR",
   progressStyle: "linear",
   typographyPreset: "system",
   backgroundStyle: "theme",
@@ -66,6 +80,7 @@ export const industryDesignPacks: Record<IndustryDesignPackId, IndustryDesignPac
     cardDesign: {
       ...defaultCardDesign,
       cardStyle: "premium-dark",
+      stampIcon: "SCISSORS",
       templateId: "industry-barbershop-v1",
     },
   },
@@ -76,6 +91,7 @@ export const industryDesignPacks: Record<IndustryDesignPackId, IndustryDesignPac
     cardDesign: {
       ...defaultCardDesign,
       cardStyle: "minimal-light",
+      stampIcon: "LIPSTICK",
       templateId: "industry-beauty-salon-v1",
     },
   },
@@ -86,6 +102,7 @@ export const industryDesignPacks: Record<IndustryDesignPackId, IndustryDesignPac
     cardDesign: {
       ...defaultCardDesign,
       cardStyle: "image-background",
+      stampIcon: "WATER_DROP",
       templateId: "industry-car-wash-v1",
     },
   },
@@ -96,6 +113,7 @@ export const industryDesignPacks: Record<IndustryDesignPackId, IndustryDesignPac
     cardDesign: {
       ...defaultCardDesign,
       cardStyle: "modern-clean",
+      stampIcon: "COFFEE_CUP",
       templateId: "industry-cafe-v1",
     },
   },
@@ -106,6 +124,7 @@ export const industryDesignPacks: Record<IndustryDesignPackId, IndustryDesignPac
     cardDesign: {
       ...defaultCardDesign,
       cardStyle: "premium-dark",
+      stampIcon: "PLATE",
       templateId: "industry-restaurant-v1",
     },
   },
@@ -125,7 +144,7 @@ const cardDesignValues = {
   layoutStyle: cardLayoutStyles,
   cardStyle: ["business-default", "modern-clean", "premium-dark", "minimal-light", "image-background"],
   stampJourneyStyle: stampJourneyStyles,
-  stampIcon: ["default"],
+  stampIcon: stampIcons,
   progressStyle: ["linear"],
   typographyPreset: ["system"],
   backgroundStyle: ["theme"],
@@ -156,13 +175,21 @@ export function resolveCardLayoutStyle(value: unknown): CardDesignLayoutStyle {
   return resolveValue("layoutStyle", value);
 }
 
+export function resolveStampIcon(value: unknown): CardDesignStampIcon {
+  if (value === "default") {
+    return "STAR";
+  }
+
+  return resolveValue("stampIcon", value);
+}
+
 export function resolveCardDesign(input?: CardDesignInput): CardDesign {
   return {
     version: resolveValue("version", input?.version),
     layoutStyle: resolveCardLayoutStyle(input?.layoutStyle),
     cardStyle: resolveValue("cardStyle", input?.cardStyle),
     stampJourneyStyle: resolveStampJourneyStyle(input?.stampJourneyStyle),
-    stampIcon: resolveValue("stampIcon", input?.stampIcon),
+    stampIcon: resolveStampIcon(input?.stampIcon),
     progressStyle: resolveValue("progressStyle", input?.progressStyle),
     typographyPreset: resolveValue("typographyPreset", input?.typographyPreset),
     backgroundStyle: resolveValue("backgroundStyle", input?.backgroundStyle),
@@ -190,6 +217,23 @@ export function getIndustryDesignPackId(businessType?: BusinessType | null): Ind
 
 export function getIndustryDesignPack(businessType?: BusinessType | null): IndustryDesignPack {
   return industryDesignPacks[getIndustryDesignPackId(businessType)];
+}
+
+export const industryRecommendedStampIcons: Record<IndustryDesignPackId, readonly CardDesignStampIcon[]> = {
+  BARBERSHOP: barbershopStampIcons,
+  BEAUTY_SALON: beautySalonStampIcons,
+  CAR_WASH: carWashStampIcons,
+  CAFE: cafeStampIcons,
+  RESTAURANT: restaurantStampIcons,
+  GENERAL: generalStampIcons,
+};
+
+export function getRecommendedStampIconsForIndustry(industryPackId: IndustryDesignPackId): readonly CardDesignStampIcon[] {
+  return industryRecommendedStampIcons[industryPackId] ?? generalStampIcons;
+}
+
+export function getRecommendedStampIconsForBusinessType(businessType?: BusinessType | null): readonly CardDesignStampIcon[] {
+  return getRecommendedStampIconsForIndustry(getIndustryDesignPackId(businessType));
 }
 
 export function resolveIndustryCardDesign(businessType?: BusinessType | null, overrides?: CardDesignInput): CardDesign {
