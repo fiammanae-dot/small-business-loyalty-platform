@@ -175,21 +175,20 @@ export function ProgramDesignStudioForm({
   const activePresetId = activeProfessionalPreset?.id ?? null;
   const manualEditorVisible = designStartMode === "manual" || presetApplied;
   const normalizedPresetSearch = professionalPresetSearch.trim().toLowerCase();
-  const filteredProfessionalPresetGroups = useMemo(
+  const filteredProfessionalPresets = useMemo(
     () =>
       designStudioProfessionalPresetGroups
         .filter((group) => professionalPresetCategory === "All" || group.category === professionalPresetCategory)
-        .map((group) => ({
-          ...group,
-          presets: group.presets.filter((preset) => {
+        .flatMap((group) =>
+          group.presets.filter((preset) => {
             if (!normalizedPresetSearch) return true;
             const searchable = `${preset.name} ${preset.category} ${preset.description}`.toLowerCase();
             return searchable.includes(normalizedPresetSearch);
           }),
-        }))
-        .filter((group) => group.presets.length > 0),
+        ),
     [normalizedPresetSearch, professionalPresetCategory],
   );
+  const selectedProfessionalCategoryLabel = professionalPresetCategoryOptions.find((option) => option.value === professionalPresetCategory)?.label ?? professionalPresetCategory;
 
   const applyProfessionalPreset = (preset: DesignStudioProfessionalPreset) => {
     setLayoutStyle(preset.layoutStyle);
@@ -424,10 +423,21 @@ export function ProgramDesignStudioForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="Professional Presets" description="Choose your business type, then apply a professional starting point.">
+        <SectionCard title="Professional Templates" description="Choose a business type, then browse professional starting points.">
           <div className="grid gap-5">
+            <label className="grid gap-2 text-sm font-semibold text-[#111827]">
+              Search Templates
+              <input
+                type="search"
+                value={professionalPresetSearch}
+                onChange={(event) => setProfessionalPresetSearch(event.target.value)}
+                placeholder="Search templates..."
+                className="h-11 rounded-xl border border-[#CBD5E1] bg-white px-3 text-sm font-medium text-[#111827] outline-none transition focus:border-[var(--business-primary)] focus:ring-2 focus:ring-[var(--business-primary)]/20"
+              />
+            </label>
+
             <div className="grid gap-3">
-              <p className="text-sm font-semibold text-[#111827]">Choose your business type</p>
+              <p className="text-sm font-semibold text-[#111827]">Business Type</p>
               <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1" aria-label="Professional preset categories">
                 {professionalPresetCategoryOptions.map((option) => {
                   const active = professionalPresetCategory === option.value;
@@ -447,57 +457,74 @@ export function ProgramDesignStudioForm({
               </div>
             </div>
 
-            <label className="grid gap-2 text-sm font-semibold text-[#111827]">
-              Search templates
-              <input
-                type="search"
-                value={professionalPresetSearch}
-                onChange={(event) => setProfessionalPresetSearch(event.target.value)}
-                placeholder="Search templates..."
-                className="h-11 rounded-xl border border-[#CBD5E1] bg-white px-3 text-sm font-medium text-[#111827] outline-none transition focus:border-[var(--business-primary)] focus:ring-2 focus:ring-[var(--business-primary)]/20"
-              />
-            </label>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-black uppercase tracking-[0.18em] text-[#64748B]">
+                Showing: {selectedProfessionalCategoryLabel} Templates
+              </p>
+              <span className="rounded-full bg-[#F8FAFC] px-3 py-1 text-xs font-bold text-[#64748B]">{filteredProfessionalPresets.length} templates</span>
+            </div>
 
-            {filteredProfessionalPresetGroups.length > 0 ? (
-              filteredProfessionalPresetGroups.map((group) => (
-              <div key={group.category} className="grid gap-3">
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-sm font-black uppercase tracking-[0.18em] text-[#64748B]">{group.category}</h3>
-                  <span className="h-px flex-1 bg-[#E2E8F0]" />
-                </div>
-                <div className="grid gap-3 md:grid-cols-2">
-                  {group.presets.map((preset) => {
-                    const active = activePresetId === preset.id;
-                    return (
+            {filteredProfessionalPresets.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                {filteredProfessionalPresets.map((preset) => {
+                  const active = activePresetId === preset.id;
+                  return (
+                    <article
+                      key={preset.id}
+                      className="group grid overflow-hidden rounded-[1.35rem] border border-[#E2E8F0] bg-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:border-[var(--business-primary)] hover:shadow-xl data-[active=true]:border-blue-500 data-[active=true]:ring-2 data-[active=true]:ring-blue-100"
+                      data-active={active}
+                    >
                       <button
-                        key={preset.id}
                         type="button"
                         onClick={() => applyProfessionalPreset(preset)}
-                        className="group grid min-h-52 gap-4 rounded-[1.35rem] border border-[#E2E8F0] bg-white p-4 text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-lg"
-                        data-active={active}
+                        className="grid gap-3 p-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-inset"
                         aria-pressed={active}
                       >
-                        <PresetThumbnail preset={preset} />
-                        <span className="flex items-start justify-between gap-3">
-                          <span className="min-w-0">
-                            <span className="block text-base font-semibold text-[#111827] group-data-[active=true]:business-text">{preset.name}</span>
-                            <span className="mt-1 block text-xs font-bold uppercase tracking-[0.16em] text-[#94A3B8]">{preset.category}</span>
-                            <span className="mt-2 block text-sm leading-6 text-[#64748B]">{preset.description}</span>
-                          </span>
-                          <span className="rounded-full border border-[#E2E8F0] bg-white px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
-                            Selected
-                          </span>
+                        <span className="relative">
+                          <PresetThumbnail preset={preset} />
+                          {active ? (
+                            <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-blue-600 px-2.5 py-1 text-[11px] font-black text-white shadow-sm">
+                              <span aria-hidden="true">✓</span>
+                              Selected
+                            </span>
+                          ) : null}
+                        </span>
+                        <span className="min-w-0 px-1">
+                          <span className="block truncate text-base font-black text-[#111827]">{preset.name}</span>
+                          <span className="mt-1 block truncate text-xs font-semibold text-[#64748B]">{preset.category} template</span>
                         </span>
                       </button>
-                    );
-                  })}
-                </div>
+                      <div className="flex items-center justify-between gap-2 border-t border-[#E2E8F0] bg-[#F8FAFC] p-3">
+                        <button
+                          type="button"
+                          onClick={() => applyProfessionalPreset(preset)}
+                          className="rounded-xl px-3 py-2 text-sm font-bold text-[#64748B] transition hover:bg-white hover:text-[#111827] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)]"
+                        >
+                          Preview
+                        </button>
+                        {active ? (
+                          <span className="inline-flex items-center gap-1 rounded-xl bg-blue-600 px-3 py-2 text-sm font-black text-white">
+                            <span aria-hidden="true">✓</span>
+                            Selected
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => applyProfessionalPreset(preset)}
+                            className="rounded-xl business-bg px-3 py-2 text-sm font-black transition hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                          >
+                            Use Template
+                          </button>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
-              ))
             ) : (
               <div className="grid gap-3 rounded-2xl border border-dashed border-[#CBD5E1] bg-white p-5 text-sm text-[#64748B]">
-                <p className="font-semibold text-[#111827]">No templates match your search.</p>
-                <p>Try another business type or clear the search field.</p>
+                <p className="font-semibold text-[#111827]">No templates found.</p>
+                <p>Try another keyword or choose another business type.</p>
                 <button
                   type="button"
                   onClick={() => {
@@ -506,7 +533,7 @@ export function ProgramDesignStudioForm({
                   }}
                   className="w-fit rounded-xl border border-[var(--business-primary)] px-3 py-2 text-sm font-semibold business-text transition hover:bg-[var(--business-primary-soft)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
                 >
-                  Reset templates
+                  Reset Filters
                 </button>
               </div>
             )}
