@@ -64,6 +64,8 @@ type SourceProgramDesignOption = {
   cardDesign: DesignStudioPresetDesign;
 };
 
+type DesignStartMode = "quick" | "manual";
+
 export function ProgramDesignStudioForm({
   action,
   savePresetAction,
@@ -122,6 +124,8 @@ export function ProgramDesignStudioForm({
   const [typographyPreset, setTypographyPreset] = useState(initialDesign.typographyPreset);
   const [decorationStyle, setDecorationStyle] = useState(initialDesign.decorationStyle);
   const [visibleSections, setVisibleSections] = useState<CardSectionVisibility>(initialDesign.visibleSections);
+  const [designStartMode, setDesignStartMode] = useState<DesignStartMode>("quick");
+  const [presetApplied, setPresetApplied] = useState(false);
   const cardDesign = useMemo(
     () =>
       resolveCardDesign({
@@ -169,6 +173,7 @@ export function ProgramDesignStudioForm({
         option.decorationStyle === decorationStyle &&
         sectionVisibilityMatches(option.visibleSections, visibleSections),
     )?.id ?? null;
+  const manualEditorVisible = designStartMode === "manual" || presetApplied;
 
   const applyProfessionalPreset = (preset: DesignStudioProfessionalPreset) => {
     setLayoutStyle(preset.layoutStyle);
@@ -180,6 +185,7 @@ export function ProgramDesignStudioForm({
     setTypographyPreset(preset.typographyPreset);
     setDecorationStyle(preset.decorationStyle);
     setVisibleSections(preset.visibleSections);
+    setPresetApplied(true);
   };
 
   const applyBusinessPreset = (preset: BusinessDesignPresetOption) => {
@@ -192,6 +198,7 @@ export function ProgramDesignStudioForm({
     setTypographyPreset(preset.cardDesign.typographyPreset);
     setDecorationStyle(preset.cardDesign.decorationStyle);
     setVisibleSections(preset.cardDesign.visibleSections);
+    setPresetApplied(true);
   };
 
   const applySourceProgramDesign = (sourceProgram: SourceProgramDesignOption) => {
@@ -204,6 +211,7 @@ export function ProgramDesignStudioForm({
     setTypographyPreset(sourceProgram.cardDesign.typographyPreset);
     setDecorationStyle(sourceProgram.cardDesign.decorationStyle);
     setVisibleSections(sourceProgram.cardDesign.visibleSections);
+    setPresetApplied(true);
   };
 
   return (
@@ -262,6 +270,52 @@ export function ProgramDesignStudioForm({
       </aside>
 
       <div className="order-last grid min-w-0 gap-6 lg:order-first lg:max-w-[920px] [&>section]:rounded-2xl [&>section]:p-5 md:[&>section]:p-6">
+        <SectionCard title="How would you like to start?" description="Choose a guided preset or open the full editor immediately.">
+          <div className="grid gap-4 md:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => setDesignStartMode("quick")}
+              className="group grid min-h-48 gap-4 rounded-[1.35rem] border border-[var(--business-primary)] bg-[var(--business-primary-soft)] p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=false]:border-[#E2E8F0] data-[active=false]:bg-white"
+              data-active={designStartMode === "quick"}
+              aria-pressed={designStartMode === "quick"}
+            >
+              <span className="flex items-start justify-between gap-3">
+                <span className="grid gap-2">
+                  <span className="text-xs font-black uppercase tracking-[0.18em] business-text">Recommended</span>
+                  <span className="text-xl font-black text-[#111827]">Quick Start</span>
+                </span>
+                <span className="rounded-full border border-[var(--business-primary)] bg-white px-3 py-1 text-xs font-bold business-text">Preset</span>
+              </span>
+              <span className="text-sm leading-6 text-[#64748B]">Start with a professionally designed template recommended for your business.</span>
+              <span className="mt-auto inline-flex w-fit items-center rounded-xl business-bg px-4 py-2 text-sm font-bold transition group-hover:shadow-md">
+                Choose a Preset
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setDesignStartMode("manual")}
+              className="group grid min-h-48 gap-4 rounded-[1.35rem] border border-[#E2E8F0] bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)]"
+              data-active={designStartMode === "manual"}
+              aria-pressed={designStartMode === "manual"}
+            >
+              <span className="flex items-start justify-between gap-3">
+                <span className="grid gap-2">
+                  <span className="text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">Full control</span>
+                  <span className="text-xl font-black text-[#111827]">Build Manually</span>
+                </span>
+                <span className="rounded-full border border-[#E2E8F0] bg-white px-3 py-1 text-xs font-bold text-[#64748B] group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-text">
+                  Editor
+                </span>
+              </span>
+              <span className="text-sm leading-6 text-[#64748B]">Customize every part of your loyalty card from scratch.</span>
+              <span className="mt-auto inline-flex w-fit items-center rounded-xl border border-[var(--business-primary)] px-4 py-2 text-sm font-bold business-text transition group-hover:bg-[var(--business-primary-soft)]">
+                Start Designing
+              </span>
+            </button>
+          </div>
+        </SectionCard>
+
         <SectionCard title="My Business Presets" description="Save this design for reuse, or apply a saved business preset to this program.">
           <div className="grid gap-4">
             <div className="rounded-2xl border border-[#E5E7EB] bg-[#F8FAFC] p-4">
@@ -396,7 +450,10 @@ export function ProgramDesignStudioForm({
             ))}
           </div>
         </SectionCard>
-        <SectionCard title="Card Style" description="Choose the overall personality of your loyalty card.">
+
+        {manualEditorVisible ? (
+          <div className="grid gap-6 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200">
+            <SectionCard title="Card Style" description="Choose the overall personality of your loyalty card.">
           <div className="grid gap-4 md:grid-cols-2">
             {designStudioTemplateOptions.map((option) => (
               <label key={option.value} className="group cursor-pointer rounded-[1.35rem] border border-[#E2E8F0] bg-white p-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-lg has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-lg">
@@ -423,8 +480,8 @@ export function ProgramDesignStudioForm({
               </label>
             ))}
           </div>
-        </SectionCard>
-        <SectionCard title="Background" description="Choose the background feeling for this loyalty card.">
+            </SectionCard>
+            <SectionCard title="Background" description="Choose the background feeling for this loyalty card.">
           <div className="grid gap-3 md:grid-cols-3">
             {designStudioBackgroundStyleOptions.map((option) => {
               const active = backgroundStyle === option.value;
@@ -471,9 +528,9 @@ export function ProgramDesignStudioForm({
               );
             })}
           </div>
-        </SectionCard>
+            </SectionCard>
 
-        <SectionCard title="Reward Progress" description="Choose the progress pattern that best matches how customers earn their next reward.">
+            <SectionCard title="Reward Progress" description="Choose the progress pattern that best matches how customers earn their next reward.">
           <div className="grid gap-3 md:grid-cols-3">
             {designStudioStampJourneyOptions.map((option) => (
               <label key={option.value} className="group flex min-h-28 cursor-pointer gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-md">
@@ -492,9 +549,9 @@ export function ProgramDesignStudioForm({
               </label>
             ))}
           </div>
-        </SectionCard>
+            </SectionCard>
 
-        <SectionCard title="Stamp Design" description="Pick the stamp mark that will represent each customer visit. Recommended options appear first.">
+            <SectionCard title="Stamp Design" description="Pick the stamp mark that will represent each customer visit. Recommended options appear first.">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {stampIconOptions.map((option) => (
               <label key={option.value} className="group flex min-h-20 cursor-pointer items-center gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-md">
@@ -513,9 +570,9 @@ export function ProgramDesignStudioForm({
               </label>
             ))}
           </div>
-        </SectionCard>
+            </SectionCard>
 
-        <SectionCard title="Reward Box" description="Choose how rewards are presented to your customers.">
+            <SectionCard title="Reward Box" description="Choose how rewards are presented to your customers.">
           <div className="grid gap-3 md:grid-cols-2">
             {designStudioRewardStyleOptions.map((option) => {
               const active = rewardStyle === option.value;
@@ -542,9 +599,9 @@ export function ProgramDesignStudioForm({
               );
             })}
           </div>
-        </SectionCard>
+            </SectionCard>
 
-        <SectionCard title="Typography" description="Choose the personality of your loyalty card.">
+            <SectionCard title="Typography" description="Choose the personality of your loyalty card.">
           <div className="grid gap-3 md:grid-cols-2">
             {designStudioTypographyOptions.map((option) => {
               const active = typographyPreset === option.value;
@@ -571,9 +628,9 @@ export function ProgramDesignStudioForm({
               );
             })}
           </div>
-        </SectionCard>
+            </SectionCard>
 
-        <SectionCard title="Card Finish" description="Choose the visual finish that best matches your brand.">
+            <SectionCard title="Card Finish" description="Choose the visual finish that best matches your brand.">
           <div className="grid gap-3 md:grid-cols-2">
             {designStudioCardFinishOptions.map((option) => {
               const active = decorationStyle === option.value;
@@ -600,9 +657,9 @@ export function ProgramDesignStudioForm({
               );
             })}
           </div>
-        </SectionCard>
+            </SectionCard>
 
-        <SectionCard title="Card Content" description="Choose what your customers see on their loyalty card.">
+            <SectionCard title="Card Content" description="Choose what your customers see on their loyalty card.">
           <div className="grid gap-3 md:grid-cols-2">
             {designStudioCardContentOptions.map((option) => {
               const active = visibleSections[option.value];
@@ -630,13 +687,19 @@ export function ProgramDesignStudioForm({
               );
             })}
           </div>
-        </SectionCard>
+            </SectionCard>
 
-        <SectionCard title="Save Design" description="Apply this design to this loyalty program only. Other programs are unchanged." className="shadow-sm">
+            <SectionCard title="Save Design" description="Apply this design to this loyalty program only. Other programs are unchanged." className="shadow-sm">
           <Button type="submit" variant="business" size="lg" className="w-full sm:w-fit">
             Save Design
           </Button>
-        </SectionCard>
+            </SectionCard>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-white p-5 text-sm leading-6 text-[#64748B]">
+            Choose a business or professional preset to reveal the full editor, or select Build Manually to customize every section yourself.
+          </div>
+        )}
       </div>
     </form>
   );
