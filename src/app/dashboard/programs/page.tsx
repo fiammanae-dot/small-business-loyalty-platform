@@ -155,6 +155,7 @@ export default async function ProgramsPage({
           <form className="grid gap-4">
             <SearchBar name="q" defaultValue={params.q ?? ""} label="Search" placeholder="Search program name..." />
             <FilterBar
+              asForm={false}
               title="Program filters"
               actions={
                 <>
