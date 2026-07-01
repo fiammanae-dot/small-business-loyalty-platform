@@ -1,6 +1,6 @@
 import { ProgramDesignStudioForm } from "@/components/ProgramDesignStudioForm";
 import { DashboardShell } from "@/components/DashboardShell";
-import { ButtonLink, EmptyState, PageActions, PageIntro, SectionCard } from "@/components/ui";
+import { Button, ButtonLink, EmptyState, PageActions, PageIntro, SectionCard } from "@/components/ui";
 import {
   deleteBusinessDesignPresetAction,
   renameBusinessDesignPresetAction,
@@ -75,16 +75,20 @@ export default async function ProgramDesignStudioPage({
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Design Your Loyalty Card" hideWelcomeMessage>
-      <div className="grid gap-5">
+      <div className="mx-auto grid w-full max-w-screen-2xl gap-6">
         {qs.success ? <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{qs.success}</p> : null}
         {qs.error ? <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{qs.error}</p> : null}
         <PageIntro
           eyebrow={program.name}
-          description="Make this card feel like your business. Customize the style, progress, and stamp design for this program."
+          description="Customize the appearance of your customer's digital loyalty card."
+          className="rounded-3xl border border-[#E2E8F0] bg-gradient-to-br from-white to-[#F8FAFC] p-5 shadow-sm md:p-6"
           actions={
             <PageActions>
               <ButtonLink href={"/dashboard/programs/" + program.uuid} variant="outline">Back to Program</ButtonLink>
               <ButtonLink href={"/dashboard/programs/" + program.uuid + "/edit"} variant="outline">Edit Program</ButtonLink>
+              <Button type="button" variant="outline" disabled className="opacity-60">
+                Preview on Phone
+              </Button>
             </PageActions>
           }
         />

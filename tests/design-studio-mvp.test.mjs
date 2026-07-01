@@ -114,7 +114,8 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   }
   assert.match(helper, /getAllowedStampIconsForBusinessType/);
   assert.match(page, /Design Your Loyalty Card/);
-  assert.match(page, /Make this card feel like your business/);
+  assert.match(page, /Customize the appearance of your customer's digital loyalty card\./);
+  assert.match(page, /Preview on Phone/);
   assert.match(form, /Card Style/);
   assert.match(form, /Professional Presets/);
   assert.match(form, /My Business Presets/);
@@ -190,9 +191,10 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
     assert.match(form, new RegExp(mark));
   }
   assert.match(form, /Live Preview/);
-  assert.match(form, /order-first[\s\S]*xl:order-last/);
-  assert.match(form, /xl:sticky xl:top-6/);
-  assert.match(form, /sticky bottom-3/);
+  assert.match(form, /lg:grid-cols-\[minmax\(0,65fr\)_minmax\(340px,35fr\)\]/);
+  assert.match(form, /order-first[\s\S]*lg:order-last/);
+  assert.match(form, /lg:sticky lg:top-6/);
+  assert.doesNotMatch(form, /sticky bottom-3/);
   assert.doesNotMatch(form, /LoyaltyWalletCard/);
   assert.match(form, /name="layoutStyle"/);
   assert.match(form, /name="stampJourneyStyle"/);

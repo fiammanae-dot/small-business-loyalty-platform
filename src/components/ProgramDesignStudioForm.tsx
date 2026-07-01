@@ -207,7 +207,7 @@ export function ProgramDesignStudioForm({
   };
 
   return (
-    <form action={action} className="grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(420px,0.8fr)] xl:items-start">
+    <form action={action} className="grid gap-8 lg:grid-cols-[minmax(0,65fr)_minmax(340px,35fr)] lg:items-start xl:grid-cols-[minmax(0,65fr)_minmax(400px,35fr)] 2xl:gap-10">
       <input type="hidden" name={csrfName} value={csrfToken} />
       <input type="hidden" name="programUuid" value={programUuid} />
       <input type="hidden" name="backgroundStyle" value={backgroundStyle} />
@@ -219,11 +219,11 @@ export function ProgramDesignStudioForm({
         <input key={option.value} type="hidden" name={`visibleSections.${option.value}`} value={visibleSections[option.value] ? "true" : "false"} />
       ))}
 
-      <aside className="order-first grid h-fit gap-4 xl:sticky xl:top-6 xl:order-last">
+      <aside className="order-first grid h-fit min-w-0 gap-5 lg:sticky lg:top-6 lg:order-last lg:self-start">
         <SectionCard
           title="Live Preview"
           description="See how this program's loyalty card feels before saving."
-          className="border-[var(--business-primary-soft,#E2E8F0)] bg-gradient-to-b from-white to-[#F8FAFC]"
+          className="rounded-3xl border-[var(--business-primary-soft,#E2E8F0)] bg-gradient-to-b from-white to-[#F8FAFC] p-5 shadow-lg shadow-slate-200/60 md:p-6"
         >
           <TypographyCardPreview
             businessName={businessName}
@@ -261,7 +261,7 @@ export function ProgramDesignStudioForm({
         </SectionCard>
       </aside>
 
-      <div className="order-last grid gap-5 xl:order-first">
+      <div className="order-last grid min-w-0 gap-6 lg:order-first lg:max-w-[920px] [&>section]:rounded-2xl [&>section]:p-5 md:[&>section]:p-6">
         <SectionCard title="My Business Presets" description="Save this design for reuse, or apply a saved business preset to this program.">
           <div className="grid gap-4">
             <div className="rounded-2xl border border-[#E5E7EB] bg-[#F8FAFC] p-4">
@@ -632,7 +632,7 @@ export function ProgramDesignStudioForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="Save Design" description="Apply this design to this loyalty program only. Other programs are unchanged." className="sticky bottom-3 z-20 shadow-lg xl:static xl:shadow-sm">
+        <SectionCard title="Save Design" description="Apply this design to this loyalty program only. Other programs are unchanged." className="shadow-sm">
           <Button type="submit" variant="business" size="lg" className="w-full sm:w-fit">
             Save Design
           </Button>
