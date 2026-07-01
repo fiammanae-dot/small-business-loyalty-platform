@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { toPng } from "html-to-image";
@@ -96,7 +96,7 @@ type DesignHistorySnapshot = DesignStudioPresetDesign;
 type DesignStartMode = "template" | "manual" | "duplicate";
 type PreviewContext = "phone" | "apple-wallet" | "google-wallet";
 type PreviewZoom = "fit" | "75" | "100" | "125";
-type ProfessionalPresetCategory = "All" | DesignStudioProfessionalPreset["category"];
+type ProfessionalPresetCategory = DesignStudioProfessionalPreset["category"];
 
 export function ProgramDesignStudioForm({
   action,
@@ -109,6 +109,7 @@ export function ProgramDesignStudioForm({
   businessName,
   programName,
   rewardName,
+  businessType,
   branding,
   initialDesign,
   businessPresets,
@@ -125,6 +126,7 @@ export function ProgramDesignStudioForm({
   businessName: string;
   programName: string;
   rewardName: string;
+  businessType: string | null;
   branding: PreviewBranding;
   initialDesign: {
     layoutStyle: CardDesignLayoutStyle;
@@ -160,7 +162,7 @@ export function ProgramDesignStudioForm({
   const [presetApplied, setPresetApplied] = useState(false);
   const [previewContext, setPreviewContext] = useState<PreviewContext>("phone");
   const [previewZoom, setPreviewZoom] = useState<PreviewZoom>("fit");
-  const [professionalPresetCategory, setProfessionalPresetCategory] = useState<ProfessionalPresetCategory>("All");
+  const [professionalPresetCategory, setProfessionalPresetCategory] = useState<ProfessionalPresetCategory>(() => getDefaultProfessionalPresetCategory(businessType));
   const [professionalPresetSearch, setProfessionalPresetSearch] = useState("");
   const [copiedSourceProgramUuid, setCopiedSourceProgramUuid] = useState<string | null>(null);
   const [previewActionMessage, setPreviewActionMessage] = useState("");
@@ -238,7 +240,7 @@ export function ProgramDesignStudioForm({
   const filteredProfessionalPresets = useMemo(
     () =>
       designStudioProfessionalPresetGroups
-        .filter((group) => professionalPresetCategory === "All" || group.category === professionalPresetCategory)
+        .filter((group) => group.category === professionalPresetCategory)
         .flatMap((group) =>
           group.presets.filter((preset) => {
             if (!normalizedPresetSearch) return true;
@@ -398,7 +400,7 @@ export function ProgramDesignStudioForm({
           ["Typography", selectedTypographyLabel],
           ["Reward Progress", selectedJourneyLabel],
           ["Stamp Design", selectedStampIconLabel],
-          ["Background", `${selectedBackgroundLabel}${backgroundStyle === "PATTERN" ? ` · ${selectedPatternLabel}` : ""}`],
+          ["Background", `${selectedBackgroundLabel}${backgroundStyle === "PATTERN" ? ` Â· ${selectedPatternLabel}` : ""}`],
           ["Finish", selectedFinishLabel],
           ["Visibility", `${visibleSectionCount}/${designStudioCardContentOptions.length} sections`],
         ],
@@ -768,7 +770,7 @@ export function ProgramDesignStudioForm({
                 <label className="relative w-full lg:max-w-sm">
                   <span className="sr-only">Search Templates</span>
                   <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" aria-hidden="true">
-                    ⌕
+                    âŒ•
                   </span>
                   <input
                     type="search"
@@ -790,36 +792,30 @@ export function ProgramDesignStudioForm({
               </div>
             </div>
 
-            <div className="grid gap-3">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">Business Type</p>
-              <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1" aria-label="Professional preset categories">
-                {professionalPresetCategoryOptions.map((option) => {
-                  const active = professionalPresetCategory === option.value;
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => setProfessionalPresetCategory(option.value)}
-                      className="shrink-0 rounded-full border border-[#E2E8F0] bg-white px-5 py-3 text-sm font-black text-[#64748B] shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:bg-[var(--business-primary-soft)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:business-bg"
-                      data-active={active}
-                      aria-pressed={active}
-                    >
-                      {option.icon} {option.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            <label className="grid gap-2 text-sm font-semibold text-[#111827]" htmlFor="professional-template-category">
+              Business Category
+              <select
+                id="professional-template-category"
+                value={professionalPresetCategory}
+                onChange={(event) => setProfessionalPresetCategory(event.target.value as ProfessionalPresetCategory)}
+                className="h-12 rounded-2xl border border-[#CBD5E1] bg-white px-4 text-sm font-black text-[#111827] shadow-sm outline-none transition focus:border-[var(--business-primary)] focus:ring-2 focus:ring-[var(--business-primary)]/20"
+              >
+                {professionalPresetCategoryOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-xl font-black tracking-tight text-[#111827]">Showing {filteredProfessionalPresets.length} Templates</p>
+                <p className="text-xl font-black tracking-tight text-[#111827]">Showing {selectedProfessionalCategoryLabel} Templates</p>
                 <p className="mt-1 text-sm text-[#64748B]">
-                  {professionalPresetCategory === "All" ? "Restaurant • Cafe • Beauty • Barbershop • Car Wash • General" : `${selectedProfessionalCategoryLabel} templates`}
+                  {filteredProfessionalPresets.length} templates available for {selectedProfessionalCategoryLabel}.
                 </p>
               </div>
             </div>
-
             {filteredProfessionalPresets.length > 0 ? (
               <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                 {filteredProfessionalPresets.map((preset) => {
@@ -840,7 +836,7 @@ export function ProgramDesignStudioForm({
                           <PresetThumbnail preset={preset} />
                           {active ? (
                             <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-blue-600 px-2.5 py-1 text-[11px] font-black text-white shadow-sm">
-                              <span aria-hidden="true">✓</span>
+                              <span aria-hidden="true">âœ“</span>
                               Selected
                             </span>
                           ) : null}
@@ -861,7 +857,7 @@ export function ProgramDesignStudioForm({
                         </button>
                         {active ? (
                           <span className="inline-flex items-center gap-1 rounded-xl bg-blue-600 px-3 py-2 text-sm font-black text-white">
-                            <span aria-hidden="true">✓</span>
+                            <span aria-hidden="true">âœ“</span>
                             Selected
                           </span>
                         ) : (
@@ -880,18 +876,17 @@ export function ProgramDesignStudioForm({
               </div>
             ) : (
               <div className="grid place-items-center gap-4 rounded-[1.5rem] border border-dashed border-[#CBD5E1] bg-white p-10 text-center text-sm text-[#64748B]">
-                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#F8FAFC] text-2xl" aria-hidden="true">⌕</div>
-                <p className="text-lg font-black text-[#111827]">No templates found</p>
-                <p>Try another keyword or choose another business type.</p>
+                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#F8FAFC] text-2xl" aria-hidden="true">âŒ•</div>
+                <p className="text-lg font-black text-[#111827]">No templates found for this category.</p>
+                <p>Try another keyword or clear the current search.</p>
                 <button
                   type="button"
                   onClick={() => {
-                    setProfessionalPresetCategory("All");
                     setProfessionalPresetSearch("");
                   }}
                   className="w-fit rounded-xl border border-[var(--business-primary)] px-3 py-2 text-sm font-semibold business-text transition hover:bg-[var(--business-primary-soft)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
                 >
-                  Reset Filters
+                  Clear search
                 </button>
               </div>
             )}
@@ -934,7 +929,7 @@ export function ProgramDesignStudioForm({
                         <PresetThumbnail preset={sourceProgramToThumbnailPreset(sourceProgram)} />
                         {active ? (
                           <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-blue-600 px-2.5 py-1 text-[11px] font-black text-white shadow-sm">
-                            <span aria-hidden="true">✓</span>
+                            <span aria-hidden="true">âœ“</span>
                             Copied
                           </span>
                         ) : null}
@@ -1357,7 +1352,7 @@ function buildPreviewPdfHtml({
     <section class="sheet">
       <p class="eyebrow">LoyaltyBase Design Preview</p>
       <h1>${escapeHtml(businessName)}</h1>
-      <p class="meta">${escapeHtml(programName)} · Generated ${escapeHtml(generatedAt)}</p>
+      <p class="meta">${escapeHtml(programName)} Â· Generated ${escapeHtml(generatedAt)}</p>
       <img class="preview" src="${imageDataUrl}" alt="Loyalty card design preview" />
       <p class="eyebrow">Design Summary</p>
       <div class="summary">${summaryHtml}</div>
@@ -2296,16 +2291,23 @@ function nextPreviewZoom(value: PreviewZoom): PreviewZoom {
   return previewZoomOrder[Math.min(previewZoomOrder.length - 1, index + 1)] ?? "fit";
 }
 
-const professionalPresetCategoryOptions: Array<{ value: ProfessionalPresetCategory; label: string; icon: string }> = [
-  { value: "All", label: "All", icon: "All" },
-  { value: "Restaurant", label: "Restaurant", icon: "Dine" },
-  { value: "Café", label: "Cafe", icon: "Cafe" },
-  { value: "Beauty Salon", label: "Beauty", icon: "Beauty" },
-  { value: "Barbershop", label: "Barbershop", icon: "Cut" },
-  { value: "Car Wash", label: "Car Wash", icon: "Auto" },
-  { value: "General", label: "General", icon: "Biz" },
-];
+function getDefaultProfessionalPresetCategory(businessType: string | null): ProfessionalPresetCategory {
+  if (businessType === "COFFEE_SHOP") return "Café";
+  if (businessType === "RESTAURANT") return "Restaurant";
+  if (businessType === "BARBERSHOP") return "Barbershop";
+  if (businessType === "BEAUTY_SALON") return "Beauty Salon";
+  if (businessType === "CAR_CARE_CENTER") return "Car Wash";
+  return "General";
+}
 
+const professionalPresetCategoryOptions: Array<{ value: ProfessionalPresetCategory; label: string }> = [
+  { value: "Restaurant", label: "Restaurant" },
+  { value: "Café", label: "Cafe" },
+  { value: "Beauty Salon", label: "Beauty Salon" },
+  { value: "Barbershop", label: "Barbershop" },
+  { value: "Car Wash", label: "Car Wash" },
+  { value: "General", label: "General" },
+];
 const designStartOptions: Array<{ value: DesignStartMode; label: string; description: string }> = [
   { value: "template", label: "Professional Template", description: "Recommended" },
   { value: "manual", label: "Build From Scratch", description: "Open the full editor" },
@@ -2344,3 +2346,9 @@ function StampIconGraphic({ stampIcon, className = "h-4 w-4" }: { stampIcon: Car
   const Icon = stampIconComponents[stampIcon] ?? Star;
   return <Icon className={className} aria-hidden="true" strokeWidth={2.4} />;
 }
+
+
+
+
+
+

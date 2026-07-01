@@ -104,6 +104,7 @@ export default async function ProgramDesignStudioPage({
           businessName={business.name}
           programName={program.name}
           rewardName={program.rewardName}
+          businessType={program.businessType}
           branding={branding}
           initialDesign={{
             layoutStyle: cardDesign.layoutStyle,
@@ -186,3 +187,6 @@ function toDesignStudioStampJourneyStyle(value: string): "CIRCLES" | "CONNECTED_
   if (value === "PROGRESS_BAR") return "PROGRESS_BAR";
   return "CIRCLES";
 }
+
+
+

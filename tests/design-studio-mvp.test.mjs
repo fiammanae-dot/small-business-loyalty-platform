@@ -135,11 +135,14 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /Search Templates/);
   assert.match(form, /Search templates by name or business/);
   assert.match(form, /Clear/);
-  assert.match(form, /Showing \{filteredProfessionalPresets\.length\} Templates/);
+  assert.match(form, /Business Category/);
+  assert.match(form, /getDefaultProfessionalPresetCategory/);
+  assert.match(form, /Showing \{selectedProfessionalCategoryLabel\} Templates/);
   assert.match(form, /Use Template/);
   assert.match(form, /Choose Another Template/);
   assert.match(form, /No templates found/);
-  assert.match(form, /Reset Filters/);
+  assert.match(form, /Clear search/);
+  assert.match(form, /No templates found for this category/);
   assert.match(form, /applyProfessionalPreset/);
   assert.match(form, /applyBusinessPreset/);
   assert.match(form, /applySourceProgramDesign/);
@@ -291,3 +294,6 @@ test("public card reads saved program card design with fallback behavior", () =>
   assert.match(publicCard, /cardDesign,/);
   assert.match(publicCard, /cardTheme: primaryProgram\?\.programMembership\.loyaltyProgram\.cardTheme \?\? null/);
 });
+
+
+
