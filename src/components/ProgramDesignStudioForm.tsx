@@ -65,7 +65,7 @@ type SourceProgramDesignOption = {
 };
 
 type DesignStartMode = "template" | "manual" | "duplicate";
-type PreviewBackdrop = "light" | "dark" | "wallet";
+type PreviewContext = "phone" | "apple-wallet" | "google-wallet";
 type PreviewZoom = "fit" | "75" | "100" | "125";
 type ProfessionalPresetCategory = "All" | DesignStudioProfessionalPreset["category"];
 
@@ -129,7 +129,7 @@ export function ProgramDesignStudioForm({
   const [visibleSections, setVisibleSections] = useState<CardSectionVisibility>(initialDesign.visibleSections);
   const [designStartMode, setDesignStartMode] = useState<DesignStartMode>("template");
   const [presetApplied, setPresetApplied] = useState(false);
-  const [previewBackdrop, setPreviewBackdrop] = useState<PreviewBackdrop>("light");
+  const [previewContext, setPreviewContext] = useState<PreviewContext>("phone");
   const [previewZoom, setPreviewZoom] = useState<PreviewZoom>("fit");
   const [professionalPresetCategory, setProfessionalPresetCategory] = useState<ProfessionalPresetCategory>("All");
   const [professionalPresetSearch, setProfessionalPresetSearch] = useState("");
@@ -162,6 +162,7 @@ export function ProgramDesignStudioForm({
   const selectedJourneyLabel = designStudioStampJourneyOptions.find((option) => option.value === stampJourneyStyle)?.label ?? stampJourneyStyle;
   const selectedStyleLabel = designStudioTemplateOptions.find((option) => option.value === layoutStyle)?.label ?? layoutStyle;
   const selectedTypographyLabel = designStudioTypographyOptions.find((option) => option.value === typographyPreset)?.label ?? typographyPreset;
+  const selectedPreviewContextLabel = previewContextOptions.find((option) => option.value === previewContext)?.label ?? "Phone";
   const activeProfessionalPreset =
     designStudioProfessionalPresets.find(
       (option) =>
@@ -268,14 +269,16 @@ export function ProgramDesignStudioForm({
               </div>
 
               <div className="mt-3 grid gap-2">
-                <div className="grid grid-cols-3 rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-1" aria-label="Preview background">
-                  {previewBackdropOptions.map((option) => {
-                    const active = previewBackdrop === option.value;
+                <div className="grid gap-1">
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#64748B]">Preview Context</p>
+                  <div className="grid grid-cols-3 rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-1" aria-label="Preview context">
+                  {previewContextOptions.map((option) => {
+                    const active = previewContext === option.value;
                     return (
                       <button
                         key={option.value}
                         type="button"
-                        onClick={() => setPreviewBackdrop(option.value)}
+                        onClick={() => setPreviewContext(option.value)}
                         className="rounded-xl px-2 py-2 text-xs font-black text-[#64748B] transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:business-bg"
                         data-active={active}
                         aria-pressed={active}
@@ -284,8 +287,11 @@ export function ProgramDesignStudioForm({
                       </button>
                     );
                   })}
+                  </div>
                 </div>
 
+                <div className="grid gap-1">
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#64748B]">Zoom</p>
                 <div className="flex items-center justify-between gap-2 rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-1">
                   <button
                     type="button"
@@ -321,41 +327,32 @@ export function ProgramDesignStudioForm({
                     +
                   </button>
                 </div>
-              </div>
-            </div>
-
-            <div className={`rounded-[2rem] p-3 transition-colors duration-200 ${previewBackdropClasses[previewBackdrop]}`}>
-              <p className="mb-3 text-center text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">iPhone Preview</p>
-              <div className="mx-auto max-w-[258px] rounded-[2rem] border-[5px] border-[#111827] bg-[#111827] p-1 shadow-2xl shadow-slate-950/25">
-                <div className="relative overflow-hidden rounded-[1.65rem] bg-white p-1">
-                  <div className="absolute left-1/2 top-1.5 z-10 h-3 w-16 -translate-x-1/2 rounded-full bg-[#111827]" aria-hidden="true" />
-                  <div className="h-[520px] overflow-hidden rounded-[1.45rem] bg-[#F8FAFC] pt-5">
-                    <div className="flex min-h-full items-start justify-center overflow-hidden px-1 pb-2">
-                      <div
-                        key={`${layoutStyle}-${stampJourneyStyle}-${stampIcon}-${rewardStyle}-${typographyPreset}-${decorationStyle}-${previewZoom}`}
-                        className="w-full origin-top transition duration-200 ease-out motion-reduce:transition-none"
-                        style={{ transform: `scale(${previewZoomScales[previewZoom]})` }}
-                      >
-                        <CardFinishPreviewFrame decorationStyle={decorationStyle}>
-                          <VisibleCardPreview
-                            businessName={businessName}
-                            businessLogoUrl={branding.logoUrl}
-                            customerName="Mina Hanna"
-                            memberSince="Jun 2026"
-                            tierLabel="Silver Member"
-                            tierIcon="S"
-                            theme={previewTheme}
-                            programName={programName}
-                            rewardName={rewardName}
-                            visibleSections={visibleSections}
-                          />
-                        </CardFinishPreviewFrame>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
+
+            <PreviewContextFrame context={previewContext} label={selectedPreviewContextLabel}>
+              <div
+                key={`${layoutStyle}-${stampJourneyStyle}-${stampIcon}-${rewardStyle}-${typographyPreset}-${decorationStyle}-${previewZoom}-${previewContext}`}
+                className="w-full origin-top transition duration-200 ease-out motion-reduce:transition-none"
+                style={{ transform: `scale(${previewZoomScales[previewZoom]})` }}
+              >
+                <CardFinishPreviewFrame decorationStyle={decorationStyle}>
+                  <VisibleCardPreview
+                    businessName={businessName}
+                    businessLogoUrl={branding.logoUrl}
+                    customerName="Mina Hanna"
+                    memberSince="Jun 2026"
+                    tierLabel="Silver Member"
+                    tierIcon="S"
+                    theme={previewTheme}
+                    programName={programName}
+                    rewardName={rewardName}
+                    visibleSections={visibleSections}
+                  />
+                </CardFinishPreviewFrame>
+              </div>
+            </PreviewContextFrame>
 
             <div className="grid gap-3">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">Card Status</p>
@@ -370,7 +367,7 @@ export function ProgramDesignStudioForm({
 
             <div className="rounded-2xl border border-[#E2E8F0] bg-white/90 p-3 text-sm text-[#64748B] shadow-sm">
               <p className="font-semibold text-[#111827]">Preview updates live as you edit</p>
-              <p className="mt-1">Apple Wallet compatible design preview.</p>
+              <p className="mt-1">{previewContextFooter[previewContext]}</p>
             </div>
           </div>
         </SectionCard>
@@ -1078,6 +1075,62 @@ function CardFinishPreviewFrame({ children, decorationStyle }: { children: React
   );
 }
 
+function PreviewContextFrame({ children, context, label }: { children: ReactNode; context: PreviewContext; label: string }) {
+  if (context === "apple-wallet") {
+    return (
+      <div className="rounded-[2rem] bg-[radial-gradient(circle_at_top,#F8FAFC_0%,#EEF2FF_46%,#CBD5E1_100%)] p-3 transition-colors duration-200">
+        <div className="mx-auto max-w-[286px] overflow-hidden rounded-[2rem] border border-white/70 bg-[#F8FAFC] shadow-2xl shadow-slate-950/20">
+          <div className="flex items-center justify-between border-b border-[#E2E8F0] bg-white/85 px-4 py-3">
+            <span className="text-sm font-black text-[#111827]">Wallet</span>
+            <span className="rounded-full bg-[#EEF2FF] px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#475569]">Pass</span>
+          </div>
+          <div className="grid min-h-[540px] content-start gap-3 bg-[linear-gradient(180deg,#F8FAFC_0%,#E2E8F0_100%)] px-3 py-5">
+            <div className="mx-auto h-5 w-40 rounded-t-[1.3rem] bg-white/60 shadow-sm" aria-hidden="true" />
+            <div className="mx-auto flex w-full justify-center overflow-hidden rounded-[1.8rem] bg-white/40 px-1 pb-3 pt-1 shadow-xl shadow-slate-950/10">
+              {children}
+            </div>
+          </div>
+        </div>
+        <p className="mt-3 text-center text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">{label} Preview</p>
+      </div>
+    );
+  }
+
+  if (context === "google-wallet") {
+    return (
+      <div className="rounded-[2rem] bg-[linear-gradient(135deg,#EFF6FF_0%,#F8FAFC_48%,#DCFCE7_100%)] p-3 transition-colors duration-200">
+        <div className="mx-auto max-w-[286px] overflow-hidden rounded-[1.8rem] border border-[#D8E2EF] bg-[#F8FAFC] shadow-2xl shadow-slate-950/20">
+          <div className="flex items-center justify-between bg-white px-4 py-3">
+            <span className="text-sm font-black text-[#1F2937]">Google Wallet</span>
+            <span className="grid h-7 w-7 place-items-center rounded-full bg-[#E0F2FE] text-xs font-black text-[#0369A1]">G</span>
+          </div>
+          <div className="min-h-[540px] bg-[#F1F5F9] px-3 py-5">
+            <div className="mb-4 rounded-2xl bg-white px-3 py-2 text-xs font-bold text-[#64748B] shadow-sm">Loyalty passes</div>
+            <div className="mx-auto flex w-full justify-center overflow-hidden rounded-[1.65rem] bg-white/75 px-1 pb-3 pt-1 shadow-lg shadow-slate-950/10">
+              {children}
+            </div>
+          </div>
+        </div>
+        <p className="mt-3 text-center text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">{label} Preview</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-[2rem] bg-[#F8FAFC] p-3 transition-colors duration-200">
+      <p className="mb-3 text-center text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">iPhone Preview</p>
+      <div className="mx-auto max-w-[258px] rounded-[2rem] border-[5px] border-[#111827] bg-[#111827] p-1 shadow-2xl shadow-slate-950/25">
+        <div className="relative overflow-hidden rounded-[1.65rem] bg-white p-1">
+          <div className="absolute left-1/2 top-1.5 z-10 h-3 w-16 -translate-x-1/2 rounded-full bg-[#111827]" aria-hidden="true" />
+          <div className="h-[520px] overflow-hidden rounded-[1.45rem] bg-[#F8FAFC] pt-5">
+            <div className="flex min-h-full items-start justify-center overflow-hidden px-1 pb-2">{children}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function VisibleCardPreview({
   businessName,
   businessLogoUrl,
@@ -1603,16 +1656,16 @@ const patternPreviewLabels: Record<CardDesignBackgroundPattern, string> = {
   BEAUTY_PATTERN: "SPA",
 };
 
-const previewBackdropOptions: Array<{ value: PreviewBackdrop; label: string }> = [
-  { value: "light", label: "Light" },
-  { value: "dark", label: "Dark" },
-  { value: "wallet", label: "Wallet" },
+const previewContextOptions: Array<{ value: PreviewContext; label: string }> = [
+  { value: "phone", label: "Phone" },
+  { value: "apple-wallet", label: "Apple Wallet" },
+  { value: "google-wallet", label: "Google Wallet" },
 ];
 
-const previewBackdropClasses: Record<PreviewBackdrop, string> = {
-  light: "bg-[#F8FAFC]",
-  dark: "bg-[#111827]",
-  wallet: "bg-[radial-gradient(circle_at_top,#FED7AA_0%,#FFF7ED_42%,#E2E8F0_100%)]",
+const previewContextFooter: Record<PreviewContext, string> = {
+  phone: "Previewing your loyalty card on a customer's phone.",
+  "apple-wallet": "Previewing your loyalty card inside Apple Wallet.",
+  "google-wallet": "Previewing your loyalty card inside Google Wallet.",
 };
 
 const previewZoomOptions: Array<{ value: PreviewZoom; label: string }> = [
