@@ -315,10 +315,10 @@ export default async function PlatformUsersPage({
         </div>
 
         <div className="mt-4 hidden overflow-x-auto lg:block">
-          <table className="w-full min-w-[1020px] border-separate border-spacing-0 text-left text-sm">
+          <table className="w-full min-w-[920px] border-separate border-spacing-0 text-left text-sm">
             <thead>
               <tr className="text-[#6B7280]">
-                {["Name", "Email", "Role", "Business", "Branch", "Status", "Created date", ""].map((heading) => (
+                {["Name", "Role", "Business", "Branch", "Status", "Created date", ""].map((heading) => (
                   <th key={heading} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">
                     {heading}
                   </th>
@@ -367,22 +367,17 @@ function UserRow({ user }: { user: UserWithListData }) {
       </td>
       <td className="border-b border-[#E5E7EB] p-0">
         <Link href={href} className="block px-3 py-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] focus-visible:ring-inset">
-          <span className="font-mono text-xs text-[#374151]">{user.email}</span>
-        </Link>
-      </td>
-      <td className="border-b border-[#E5E7EB] p-0">
-        <Link href={href} className="block px-3 py-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] focus-visible:ring-inset">
           <RoleBadge role={user.role} />
         </Link>
       </td>
-      <td className="max-w-[260px] border-b border-[#E5E7EB] p-0 text-[#6B7280]" title={user.business?.name ?? "-"}>
+      <td className="max-w-[340px] border-b border-[#E5E7EB] p-0 text-[#6B7280]" title={user.business?.name ?? "-"}>
         <Link href={href} className="block px-3 py-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] focus-visible:ring-inset">
-          <span className="line-clamp-2">{user.business?.name ?? "-"}</span>
+          <span className="line-clamp-2 leading-5">{user.business?.name ?? "-"}</span>
         </Link>
       </td>
-      <td className="max-w-[240px] border-b border-[#E5E7EB] p-0 text-[#6B7280]" title={user.branch?.name ?? "-"}>
+      <td className="max-w-[300px] border-b border-[#E5E7EB] p-0 text-[#6B7280]" title={user.branch?.name ?? "-"}>
         <Link href={href} className="block px-3 py-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] focus-visible:ring-inset">
-          <span className="line-clamp-2">{user.branch?.name ?? "-"}</span>
+          <span className="line-clamp-2 leading-5">{user.branch?.name ?? "-"}</span>
         </Link>
       </td>
       <td className="border-b border-[#E5E7EB] p-0">
