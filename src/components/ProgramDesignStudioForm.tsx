@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
+import { toPng } from "html-to-image";
 import type {
   CardDesignBackgroundPattern,
   CardDesignBackgroundStyle,
@@ -134,6 +135,9 @@ export function ProgramDesignStudioForm({
   const [professionalPresetCategory, setProfessionalPresetCategory] = useState<ProfessionalPresetCategory>("All");
   const [professionalPresetSearch, setProfessionalPresetSearch] = useState("");
   const [copiedSourceProgramUuid, setCopiedSourceProgramUuid] = useState<string | null>(null);
+  const [previewActionMessage, setPreviewActionMessage] = useState("");
+  const [previewActionPending, setPreviewActionPending] = useState<"png" | "pdf" | "link" | null>(null);
+  const previewExportRef = useRef<HTMLDivElement | null>(null);
   const cardDesign = useMemo(
     () =>
       resolveCardDesign({
@@ -163,6 +167,11 @@ export function ProgramDesignStudioForm({
   const selectedStyleLabel = designStudioTemplateOptions.find((option) => option.value === layoutStyle)?.label ?? layoutStyle;
   const selectedTypographyLabel = designStudioTypographyOptions.find((option) => option.value === typographyPreset)?.label ?? typographyPreset;
   const selectedPreviewContextLabel = previewContextOptions.find((option) => option.value === previewContext)?.label ?? "Phone";
+  const selectedStampIconLabel = stampIconOptions.find((option) => option.value === stampIcon)?.label ?? labelizeLocal(stampIcon);
+  const selectedBackgroundLabel = designStudioBackgroundStyleOptions.find((option) => option.value === backgroundStyle)?.label ?? backgroundStyle;
+  const selectedPatternLabel = designStudioBackgroundPatternOptions.find((option) => option.value === backgroundPattern)?.label ?? labelizeLocal(backgroundPattern);
+  const selectedFinishLabel = designStudioCardFinishOptions.find((option) => option.value === decorationStyle)?.label ?? decorationStyle;
+  const visibleSectionCount = designStudioCardContentOptions.filter((option) => visibleSections[option.value]).length;
   const activeProfessionalPreset =
     designStudioProfessionalPresets.find(
       (option) =>
@@ -237,6 +246,96 @@ export function ProgramDesignStudioForm({
     setVisibleSections(sourceProgram.cardDesign.visibleSections);
     setCopiedSourceProgramUuid(sourceProgram.uuid);
     setPresetApplied(true);
+  };
+
+  const capturePreviewPng = async () => {
+    if (!previewExportRef.current) {
+      throw new Error("Preview is not available yet.");
+    }
+
+    return toPng(previewExportRef.current, {
+      cacheBust: true,
+      pixelRatio: Math.max(2, Math.min(window.devicePixelRatio || 2, 3)),
+      backgroundColor: "#ffffff",
+      includeQueryParams: true,
+      style: {
+        transform: "none",
+        transformOrigin: "top left",
+      },
+    });
+  };
+
+  const downloadPreviewPng = async () => {
+    setPreviewActionPending("png");
+    setPreviewActionMessage("");
+    try {
+      const dataUrl = await capturePreviewPng();
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = `loyalty-card-design-preview-${filenameSafeLocal(programName)}.png`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setPreviewActionMessage("PNG downloaded.");
+    } catch (error) {
+      console.error("Design preview PNG export failed", error);
+      setPreviewActionMessage("Preview image could not be downloaded. Please try again.");
+    } finally {
+      setPreviewActionPending(null);
+    }
+  };
+
+  const downloadPreviewPdf = async () => {
+    setPreviewActionPending("pdf");
+    setPreviewActionMessage("");
+    try {
+      const dataUrl = await capturePreviewPng();
+      const printWindow = window.open("", "_blank", "width=900,height=1100");
+      if (!printWindow) {
+        setPreviewActionMessage("PDF preview could not open. Please allow popups and try again.");
+        return;
+      }
+      const generatedAt = new Date().toLocaleString();
+      printWindow.document.write(buildPreviewPdfHtml({
+        businessName,
+        programName,
+        generatedAt,
+        imageDataUrl: dataUrl,
+        summary: [
+          ["Card Style", selectedStyleLabel],
+          ["Typography", selectedTypographyLabel],
+          ["Reward Progress", selectedJourneyLabel],
+          ["Stamp Design", selectedStampIconLabel],
+          ["Background", `${selectedBackgroundLabel}${backgroundStyle === "PATTERN" ? ` · ${selectedPatternLabel}` : ""}`],
+          ["Finish", selectedFinishLabel],
+          ["Visibility", `${visibleSectionCount}/${designStudioCardContentOptions.length} sections`],
+        ],
+      }));
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+      setPreviewActionMessage("PDF opened for download.");
+    } catch (error) {
+      console.error("Design preview PDF export failed", error);
+      setPreviewActionMessage("PDF could not be prepared. Please try again.");
+    } finally {
+      setPreviewActionPending(null);
+    }
+  };
+
+  const copyPreviewLink = async () => {
+    setPreviewActionPending("link");
+    setPreviewActionMessage("");
+    try {
+      const previewUrl = `${window.location.origin}/dashboard/programs/${programUuid}/design-studio?preview=true`;
+      await navigator.clipboard.writeText(previewUrl);
+      setPreviewActionMessage("Link copied.");
+    } catch (error) {
+      console.error("Design preview link copy failed", error);
+      setPreviewActionMessage("Preview link could not be copied. Copy it from the browser address bar instead.");
+    } finally {
+      setPreviewActionPending(null);
+    }
   };
 
   return (
@@ -331,28 +430,87 @@ export function ProgramDesignStudioForm({
               </div>
             </div>
 
-            <PreviewContextFrame context={previewContext} label={selectedPreviewContextLabel}>
-              <div
-                key={`${layoutStyle}-${stampJourneyStyle}-${stampIcon}-${rewardStyle}-${typographyPreset}-${decorationStyle}-${previewZoom}-${previewContext}`}
-                className="w-full origin-top transition duration-200 ease-out motion-reduce:transition-none"
-                style={{ transform: `scale(${previewZoomScales[previewZoom]})` }}
-              >
-                <CardFinishPreviewFrame decorationStyle={decorationStyle}>
-                  <VisibleCardPreview
-                    businessName={businessName}
-                    businessLogoUrl={branding.logoUrl}
-                    customerName="Mina Hanna"
-                    memberSince="Jun 2026"
-                    tierLabel="Silver Member"
-                    tierIcon="S"
-                    theme={previewTheme}
-                    programName={programName}
-                    rewardName={rewardName}
-                    visibleSections={visibleSections}
-                  />
-                </CardFinishPreviewFrame>
+            <div ref={previewExportRef}>
+              <PreviewContextFrame context={previewContext} label={selectedPreviewContextLabel}>
+                <div
+                  key={`${layoutStyle}-${stampJourneyStyle}-${stampIcon}-${rewardStyle}-${typographyPreset}-${decorationStyle}-${previewZoom}-${previewContext}`}
+                  className="w-full origin-top transition duration-200 ease-out motion-reduce:transition-none"
+                  style={{ transform: `scale(${previewZoomScales[previewZoom]})` }}
+                >
+                  <CardFinishPreviewFrame decorationStyle={decorationStyle}>
+                    <VisibleCardPreview
+                      businessName={businessName}
+                      businessLogoUrl={branding.logoUrl}
+                      customerName="Mina Hanna"
+                      memberSince="Jun 2026"
+                      tierLabel="Silver Member"
+                      tierIcon="S"
+                      theme={previewTheme}
+                      programName={programName}
+                      rewardName={rewardName}
+                      visibleSections={visibleSections}
+                    />
+                  </CardFinishPreviewFrame>
+                </div>
+              </PreviewContextFrame>
+            </div>
+
+            <div className="rounded-2xl border border-[#E2E8F0] bg-white/90 p-4 shadow-sm">
+              <div className="mb-3">
+                <p className="text-sm font-black text-[#111827]">Preview Actions</p>
+                <p className="mt-1 text-xs leading-5 text-[#64748B]">Export or share this design preview before saving.</p>
               </div>
-            </PreviewContextFrame>
+              <div className="grid gap-3">
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <button
+                    type="button"
+                    onClick={downloadPreviewPng}
+                    disabled={previewActionPending !== null}
+                    className="rounded-xl business-bg px-3 py-2.5 text-sm font-black transition hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                  >
+                    {previewActionPending === "png" ? "Preparing..." : "Download PNG"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={downloadPreviewPdf}
+                    disabled={previewActionPending !== null}
+                    className="rounded-xl border border-[#CBD5E1] bg-white px-3 py-2.5 text-sm font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                  >
+                    {previewActionPending === "pdf" ? "Preparing..." : "Download PDF"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={copyPreviewLink}
+                    disabled={previewActionPending !== null}
+                    className="rounded-xl border border-[#CBD5E1] bg-white px-3 py-2.5 text-sm font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                  >
+                    {previewActionPending === "link" ? "Copying..." : "Copy Preview Link"}
+                  </button>
+                </div>
+                {previewActionMessage ? (
+                  <p className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm font-semibold text-[#475569]" aria-live="polite">
+                    {previewActionMessage}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-[#E2E8F0] bg-white/90 p-4 shadow-sm">
+              <div className="mb-3">
+                <p className="text-sm font-black text-[#111827]">Design Summary</p>
+                <p className="mt-1 text-xs leading-5 text-[#64748B]">A read-only summary of the current preview configuration.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <PreviewChip label={`Card Style: ${selectedStyleLabel}`} />
+                <PreviewChip label={`Typography: ${selectedTypographyLabel}`} />
+                <PreviewChip label={`Reward Progress: ${selectedJourneyLabel}`} />
+                <PreviewChip label={`Stamp Design: ${selectedStampIconLabel}`} />
+                <PreviewChip label={`Background: ${selectedBackgroundLabel}`} />
+                {backgroundStyle === "PATTERN" ? <PreviewChip label={`Pattern: ${selectedPatternLabel}`} /> : null}
+                <PreviewChip label={`Finish: ${selectedFinishLabel}`} />
+                <PreviewChip label={`Visibility: ${visibleSectionCount}/${designStudioCardContentOptions.length}`} />
+              </div>
+            </div>
 
             <div className="grid gap-3">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">Card Status</p>
@@ -990,6 +1148,90 @@ function ManualBuilderGroup({
 
 function PreviewChip({ label }: { label: string }) {
   return <span className="rounded-full border border-[#E2E8F0] bg-white px-3 py-1.5 text-xs font-bold text-[#475569] shadow-sm">{label}</span>;
+}
+
+function filenameSafeLocal(value: string) {
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return normalized || "design";
+}
+
+function labelizeLocal(value: string) {
+  return value
+    .toLowerCase()
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function buildPreviewPdfHtml({
+  businessName,
+  programName,
+  generatedAt,
+  imageDataUrl,
+  summary,
+}: {
+  businessName: string;
+  programName: string;
+  generatedAt: string;
+  imageDataUrl: string;
+  summary: Array<[string, string]>;
+}) {
+  const summaryHtml = summary
+    .map(([label, value]) => `<div class="chip"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`)
+    .join("");
+
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>${escapeHtml(programName)} Design Preview</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f8fafc; color: #111827; font-family: Arial, sans-serif; }
+    main { width: min(860px, 100%); margin: 0 auto; padding: 40px; }
+    .sheet { min-height: 100vh; border: 1px solid #e2e8f0; border-radius: 28px; background: white; padding: 36px; }
+    .eyebrow { color: #64748b; font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+    h1 { margin: 10px 0 0; font-size: 30px; line-height: 1.1; }
+    .meta { margin-top: 8px; color: #64748b; font-size: 13px; }
+    .preview { margin: 28px auto; display: block; max-width: 420px; width: 100%; border-radius: 28px; }
+    .summary { margin-top: 24px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .chip { border: 1px solid #e2e8f0; border-radius: 16px; background: #f8fafc; padding: 12px 14px; }
+    .chip span { display: block; color: #64748b; font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    .chip strong { display: block; margin-top: 5px; font-size: 13px; }
+    @media print {
+      body { background: white; }
+      main { padding: 0; width: 100%; }
+      .sheet { min-height: auto; border: 0; border-radius: 0; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="sheet">
+      <p class="eyebrow">LoyaltyBase Design Preview</p>
+      <h1>${escapeHtml(businessName)}</h1>
+      <p class="meta">${escapeHtml(programName)} · Generated ${escapeHtml(generatedAt)}</p>
+      <img class="preview" src="${imageDataUrl}" alt="Loyalty card design preview" />
+      <p class="eyebrow">Design Summary</p>
+      <div class="summary">${summaryHtml}</div>
+    </section>
+  </main>
+</body>
+</html>`;
 }
 
 function sectionVisibilityMatches(expected: CardSectionVisibility, actual: CardSectionVisibility) {
