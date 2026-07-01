@@ -453,7 +453,8 @@ export function ProgramDesignStudioForm({
 
         {manualEditorVisible ? (
           <div className="grid gap-6 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200">
-            <SectionCard title="Card Style" description="Choose the overall personality of your loyalty card.">
+            <ManualBuilderGroup title="Appearance" description="Customize the overall visual style of your loyalty card." defaultOpen>
+              <SectionCard title="Card Style" description="Choose the overall personality of your loyalty card.">
           <div className="grid gap-4 md:grid-cols-2">
             {designStudioTemplateOptions.map((option) => (
               <label key={option.value} className="group cursor-pointer rounded-[1.35rem] border border-[#E2E8F0] bg-white p-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-lg has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-lg">
@@ -530,7 +531,67 @@ export function ProgramDesignStudioForm({
           </div>
             </SectionCard>
 
-            <SectionCard title="Reward Progress" description="Choose the progress pattern that best matches how customers earn their next reward.">
+              <SectionCard title="Typography" description="Choose the personality of your loyalty card.">
+          <div className="grid gap-3 md:grid-cols-2">
+            {designStudioTypographyOptions.map((option) => {
+              const active = typographyPreset === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setTypographyPreset(option.value)}
+                  className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
+                  data-active={active}
+                  aria-pressed={active}
+                >
+                  <TypographyThumbnail typographyPreset={option.value} />
+                  <span className="flex items-start justify-between gap-3">
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
+                      <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                    </span>
+                    <span className="rounded-full border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
+                      Selected
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+            </SectionCard>
+
+            <SectionCard title="Card Finish" description="Choose the visual finish that best matches your brand.">
+          <div className="grid gap-3 md:grid-cols-2">
+            {designStudioCardFinishOptions.map((option) => {
+              const active = decorationStyle === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setDecorationStyle(option.value)}
+                  className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
+                  data-active={active}
+                  aria-pressed={active}
+                >
+                  <CardFinishThumbnail decorationStyle={option.value} />
+                  <span className="flex items-start justify-between gap-3">
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
+                      <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                    </span>
+                    <span className="rounded-full border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
+                      Selected
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+            </SectionCard>
+            </ManualBuilderGroup>
+
+            <ManualBuilderGroup title="Loyalty Experience" description="Customize how customers experience collecting rewards.">
+              <SectionCard title="Reward Progress" description="Choose the progress pattern that best matches how customers earn their next reward.">
           <div className="grid gap-3 md:grid-cols-3">
             {designStudioStampJourneyOptions.map((option) => (
               <label key={option.value} className="group flex min-h-28 cursor-pointer gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-md">
@@ -600,66 +661,10 @@ export function ProgramDesignStudioForm({
             })}
           </div>
             </SectionCard>
+            </ManualBuilderGroup>
 
-            <SectionCard title="Typography" description="Choose the personality of your loyalty card.">
-          <div className="grid gap-3 md:grid-cols-2">
-            {designStudioTypographyOptions.map((option) => {
-              const active = typographyPreset === option.value;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => setTypographyPreset(option.value)}
-                  className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
-                  data-active={active}
-                  aria-pressed={active}
-                >
-                  <TypographyThumbnail typographyPreset={option.value} />
-                  <span className="flex items-start justify-between gap-3">
-                    <span className="min-w-0">
-                      <span className="block text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
-                      <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
-                    </span>
-                    <span className="rounded-full border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
-                      Selected
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-            </SectionCard>
-
-            <SectionCard title="Card Finish" description="Choose the visual finish that best matches your brand.">
-          <div className="grid gap-3 md:grid-cols-2">
-            {designStudioCardFinishOptions.map((option) => {
-              const active = decorationStyle === option.value;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => setDecorationStyle(option.value)}
-                  className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
-                  data-active={active}
-                  aria-pressed={active}
-                >
-                  <CardFinishThumbnail decorationStyle={option.value} />
-                  <span className="flex items-start justify-between gap-3">
-                    <span className="min-w-0">
-                      <span className="block text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
-                      <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
-                    </span>
-                    <span className="rounded-full border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
-                      Selected
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-            </SectionCard>
-
-            <SectionCard title="Card Content" description="Choose what your customers see on their loyalty card.">
+            <ManualBuilderGroup title="Card Content" description="Choose which information appears on the loyalty card.">
+              <SectionCard title="Card Content" description="Choose what your customers see on their loyalty card.">
           <div className="grid gap-3 md:grid-cols-2">
             {designStudioCardContentOptions.map((option) => {
               const active = visibleSections[option.value];
@@ -688,6 +693,7 @@ export function ProgramDesignStudioForm({
             })}
           </div>
             </SectionCard>
+            </ManualBuilderGroup>
 
             <SectionCard title="Save Design" description="Apply this design to this loyalty program only. Other programs are unchanged." className="shadow-sm">
           <Button type="submit" variant="business" size="lg" className="w-full sm:w-fit">
@@ -711,6 +717,48 @@ function PreviewLine({ label, value }: { label: string; value: string }) {
       <span className="text-[#64748B]">{label}</span>
       <span className="text-right font-semibold text-[#111827]">{value}</span>
     </div>
+  );
+}
+
+function ManualBuilderGroup({
+  title,
+  description,
+  defaultOpen = false,
+  children,
+}: {
+  title: string;
+  description: string;
+  defaultOpen?: boolean;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <section className="overflow-hidden rounded-[1.6rem] border border-[#E2E8F0] bg-white shadow-sm transition hover:shadow-md">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className="flex w-full items-center justify-between gap-4 p-5 text-left transition hover:bg-[#F8FAFC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-inset md:p-6"
+        aria-expanded={open}
+      >
+        <span className="min-w-0">
+          <span className="block text-lg font-black text-[#111827]">{title}</span>
+          <span className="mt-1 block text-sm leading-6 text-[#64748B]">{description}</span>
+        </span>
+        <span
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#E2E8F0] bg-white text-lg font-black business-text transition-transform duration-200 data-[open=true]:rotate-180"
+          data-open={open}
+          aria-hidden="true"
+        >
+          v
+        </span>
+      </button>
+      <div className="grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none" style={{ gridTemplateRows: open ? "1fr" : "0fr" }}>
+        <div className="min-h-0 overflow-hidden">
+          <div className="grid gap-5 border-t border-[#E2E8F0] bg-[#F8FAFC]/70 p-4 md:p-5">{children}</div>
+        </div>
+      </div>
+    </section>
   );
 }
 
