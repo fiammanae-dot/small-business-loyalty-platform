@@ -2,6 +2,33 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { toPng } from "html-to-image";
+import {
+  Bean,
+  Beaker,
+  Brush,
+  Car,
+  Check,
+  ChefHat,
+  Circle,
+  CircleDot,
+  CircleDotDashed,
+  Coffee,
+  Diamond,
+  Droplets,
+  Gift,
+  GlassWater,
+  Hamburger,
+  Heart,
+  Paintbrush,
+  Pizza,
+  Scissors,
+  Sparkles,
+  Star,
+  Utensils,
+  UtilityPole,
+  Waves,
+  type LucideIcon,
+} from "lucide-react";
 import type {
   CardDesignBackgroundPattern,
   CardDesignBackgroundStyle,
@@ -1114,6 +1141,12 @@ export function ProgramDesignStudioForm({
                   onChange={() => commitDesignChange({ ...currentDesignSnapshot, stampIcon: option.value })}
                   className="h-4 w-4 accent-[var(--business-primary)]"
                 />
+                <span
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[#E2E8F0] bg-white text-[#111827] group-has-[:checked]:border-[var(--business-primary)] group-has-[:checked]:business-bg"
+                  aria-hidden="true"
+                >
+                  <StampIconGraphic stampIcon={option.value} className="h-5 w-5" />
+                </span>
                 <span className="min-w-0">
                   <span className="block text-sm font-semibold text-[#111827] group-has-[:checked]:business-text">{option.label}</span>
                   {option.recommended ? <span className="mt-1 block text-xs font-semibold business-text">Recommended</span> : null}
@@ -1420,8 +1453,8 @@ function PresetThumbnail({ preset }: { preset: DesignStudioProfessionalPreset })
         <span className="block overflow-hidden rounded-xl p-3" style={{ ...finishStyle.innerStyle, background: templateStyle.card }}>
           <span className="flex items-start justify-between gap-3">
             <span className="flex items-center gap-2">
-              <span className="grid h-8 w-8 place-items-center rounded-full text-[10px] font-black" style={{ background: templateStyle.logo, color: templateStyle.card === "#FFFFFF" ? "#111827" : "#FFFFFF" }}>
-                {getStampIconMark(preset.stampIcon)}
+              <span className="grid h-8 w-8 place-items-center rounded-full" style={{ background: templateStyle.logo, color: templateStyle.card === "#FFFFFF" ? "#111827" : "#FFFFFF" }}>
+                <StampIconGraphic stampIcon={preset.stampIcon} className="h-4 w-4" />
               </span>
               <span className="grid gap-1">
                 <span className="h-2.5 w-20 rounded-full" style={{ background: templateStyle.primaryLine }} />
@@ -1681,7 +1714,6 @@ type PreviewProgressProps = {
 };
 
 function PreviewProgress({ stampJourneyStyle, stampIcon, theme, typography, showVisits }: PreviewProgressProps) {
-  const stampMark = getStampIconMark(stampIcon);
   const completed = 7;
   const total = 10;
   const steps = Array.from({ length: total });
@@ -1706,7 +1738,7 @@ function PreviewProgress({ stampJourneyStyle, stampIcon, theme, typography, show
                   color: filled ? theme.ctaForeground : theme.mutedText,
                 }}
               >
-                {filled ? stampMark : ""}
+                {filled ? <StampIconGraphic stampIcon={stampIcon} className="h-3.5 w-3.5" /> : null}
               </span>
             );
           })}
@@ -1737,7 +1769,7 @@ function PreviewProgress({ stampJourneyStyle, stampIcon, theme, typography, show
                   color: filled ? theme.ctaForeground : theme.mutedText,
                 }}
               >
-                {filled ? stampMark : ""}
+                {filled ? <StampIconGraphic stampIcon={stampIcon} className="h-3 w-3" /> : null}
               </span>
             );
           })}
@@ -2280,34 +2312,35 @@ const designStartOptions: Array<{ value: DesignStartMode; label: string; descrip
   { value: "duplicate", label: "Duplicate Existing Design", description: "Copy another program" },
 ];
 
-const stampIconMarks: Record<CardDesignStampIcon, string> = {
-  STAR: "*",
-  HEART: "HT",
-  CHECK: "OK",
-  CIRCLE: "O",
-  DIAMOND: "DI",
-  GIFT: "GF",
-  SCISSORS: "SC",
-  RAZOR: "RZ",
-  COMB: "CB",
-  BARBER_POLE: "BP",
-  COFFEE_CUP: "CC",
-  COFFEE_BEAN: "CBN",
-  ESPRESSO: "ESP",
-  PLATE: "PL",
-  BURGER: "BG",
-  PIZZA: "PZ",
-  CHEF_HAT: "CH",
-  CAR: "CAR",
-  WATER_DROP: "H2O",
-  BUBBLES: "BUB",
-  WHEEL: "WH",
-  LIPSTICK: "LIP",
-  MIRROR: "MIR",
-  MAKEUP_BRUSH: "MB",
-  NAIL_POLISH: "NP",
+const stampIconComponents: Record<CardDesignStampIcon, LucideIcon> = {
+  STAR: Star,
+  HEART: Heart,
+  CHECK: Check,
+  CIRCLE: Circle,
+  DIAMOND: Diamond,
+  GIFT: Gift,
+  SCISSORS: Scissors,
+  RAZOR: Beaker,
+  COMB: Waves,
+  BARBER_POLE: UtilityPole,
+  COFFEE_CUP: Coffee,
+  COFFEE_BEAN: Bean,
+  ESPRESSO: Coffee,
+  PLATE: Utensils,
+  BURGER: Hamburger,
+  PIZZA: Pizza,
+  CHEF_HAT: ChefHat,
+  CAR: Car,
+  WATER_DROP: Droplets,
+  BUBBLES: Sparkles,
+  WHEEL: CircleDot,
+  LIPSTICK: Brush,
+  MIRROR: CircleDotDashed,
+  MAKEUP_BRUSH: Paintbrush,
+  NAIL_POLISH: GlassWater,
 };
 
-function getStampIconMark(stampIcon: CardDesignStampIcon) {
-  return stampIconMarks[stampIcon] ?? "*";
+function StampIconGraphic({ stampIcon, className = "h-4 w-4" }: { stampIcon: CardDesignStampIcon; className?: string }) {
+  const Icon = stampIconComponents[stampIcon] ?? Star;
+  return <Icon className={className} aria-hidden="true" strokeWidth={2.4} />;
 }

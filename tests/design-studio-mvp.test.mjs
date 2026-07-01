@@ -196,7 +196,9 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /backgroundStyle=\{backgroundStyle\}/);
   assert.match(form, /backgroundPattern=\{backgroundPattern\}/);
   assert.match(form, /PreviewProgress/);
-  assert.match(form, /getStampIconMark\(stampIcon\)/);
+  assert.match(form, /StampIconGraphic stampIcon=\{stampIcon\}/);
+  assert.match(form, /StampIconGraphic stampIcon=\{option\.value\}/);
+  assert.match(form, /StampIconGraphic stampIcon=\{preset\.stampIcon\}/);
   assert.match(form, /rewardBoxStyles\[rewardStyle\]/);
   assert.match(form, /liveTypographyStyles\[typographyPreset\]/);
   assert.match(form, /getLivePreviewBackground\(theme\.cardBackground, backgroundStyle, backgroundPattern\)/);
@@ -259,10 +261,11 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /Card Status/);
   assert.match(form, /PreviewChip/);
   assert.doesNotMatch(form, /Typography Preview/);
-  assert.match(form, /stampIconMarks/);
-  for (const mark of ["SC", "CC", "CAR", "H2O", "PL", "LIP", "GF"]) {
-    assert.match(form, new RegExp(mark));
+  assert.match(form, /stampIconComponents/);
+  for (const icon of ["Scissors", "Coffee", "Car", "Droplets", "Utensils", "Brush", "Gift"]) {
+    assert.match(form, new RegExp(icon));
   }
+  assert.doesNotMatch(form, /getStampIconMark|stampIconMarks/);
   assert.match(form, /lg:grid-cols-\[minmax\(0,70fr\)_minmax\(300px,30fr\)\]/);
   assert.match(form, /order-first[\s\S]*lg:order-last/);
   assert.match(form, /lg:sticky lg:top-6/);
