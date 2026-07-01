@@ -157,13 +157,11 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /name="backgroundPattern"/);
   assert.match(form, /Reward Box/);
   assert.match(form, /Choose how rewards are presented to your customers\./);
-  assert.match(form, /RewardBoxPreview/);
   assert.match(form, /RewardStyleThumbnail/);
   assert.match(form, /setRewardStyle\(option\.value\)/);
   assert.match(form, /name="rewardStyle"/);
   assert.match(form, /Typography/);
   assert.match(form, /Choose the personality of your loyalty card\./);
-  assert.match(form, /TypographyCardPreview/);
   assert.match(form, /TypographyThumbnail/);
   assert.match(form, /setTypographyPreset\(option\.value\)/);
   assert.match(form, /name="typographyPreset"/);
@@ -180,17 +178,19 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /VisibleCardPreview/);
   assert.match(form, /setVisibleSections/);
   assert.match(form, /visibleSections\.\$\{option\.value\}/);
-  assert.match(form, /enabledContentCount/);
-  assert.match(form, /CardProgressPreview/);
-  assert.match(form, /CircleJourneyPreview/);
-  assert.match(form, /ConnectedDotsJourneyPreview/);
-  assert.match(form, /ProgressBarJourneyPreview/);
-  assert.match(form, /StampIconPreview/);
+  assert.match(form, /Customer Preview/);
+  assert.match(form, /This is how your loyalty card will appear\./);
+  assert.match(form, /previewBackdropOptions/);
+  assert.match(form, /previewBackdropClasses/);
+  assert.match(form, /Quick Actions/);
+  assert.match(form, /Card Status/);
+  assert.match(form, /PreviewChip/);
+  assert.doesNotMatch(form, /Typography Preview/);
   assert.match(form, /stampIconMarks/);
   for (const mark of ["SC", "CC", "CAR", "H2O", "PL", "LIP", "GF"]) {
     assert.match(form, new RegExp(mark));
   }
-  assert.match(form, /Live Preview/);
+  assert.doesNotMatch(form, /Live Preview/);
   assert.match(form, /lg:grid-cols-\[minmax\(0,65fr\)_minmax\(340px,35fr\)\]/);
   assert.match(form, /order-first[\s\S]*lg:order-last/);
   assert.match(form, /lg:sticky lg:top-6/);
