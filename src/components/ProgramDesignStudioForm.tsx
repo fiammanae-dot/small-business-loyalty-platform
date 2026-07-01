@@ -1075,13 +1075,13 @@ function VisibleCardPreview({
   visibleSections: CardSectionVisibility;
 }) {
   return (
-    <div className="overflow-hidden rounded-[1.6rem] p-5" style={{ background: theme.cardBackground, color: theme.cardText }}>
-      <div className="flex items-start justify-between gap-4">
+    <div className="overflow-hidden rounded-[1.45rem] p-4" style={{ background: theme.cardBackground, color: theme.cardText }}>
+      <div className="flex items-start justify-between gap-3">
         {(visibleSections.logo || visibleSections.businessName || visibleSections.programName) ? (
-          <div className="flex min-w-0 items-start gap-3">
+          <div className="flex min-w-0 items-start gap-2.5">
             {visibleSections.logo ? (
               <span
-                className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full text-sm font-black"
+                className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full text-xs font-black"
                 style={{ background: theme.logoBackground, color: theme.logoText }}
               >
                 {businessLogoUrl ? (
@@ -1093,9 +1093,9 @@ function VisibleCardPreview({
               </span>
             ) : null}
             <div className="min-w-0">
-              {visibleSections.businessName ? <p className="line-clamp-2 text-[15px] font-black leading-tight">{businessName}</p> : null}
+              {visibleSections.businessName ? <p className="line-clamp-2 text-[13px] font-black leading-tight">{businessName}</p> : null}
               {visibleSections.programName ? (
-                <p className="mt-1 truncate text-xs font-semibold" style={{ color: theme.mutedText }}>
+                <p className="mt-0.5 truncate text-[11px] font-semibold" style={{ color: theme.mutedText }}>
                   {programName}
                 </p>
               ) : null}
@@ -1104,7 +1104,7 @@ function VisibleCardPreview({
         ) : null}
         {visibleSections.tierBadge ? (
           <span
-            className="shrink-0 rounded-full border px-3 py-1 text-xs font-black uppercase tracking-wide"
+            className="shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[0.12em]"
             style={{ background: theme.badgeBackground, color: theme.badgeText, borderColor: theme.badgeBorder }}
           >
             {tierIcon} {tierLabel}
@@ -1113,65 +1113,65 @@ function VisibleCardPreview({
       </div>
 
       {visibleSections.customerName ? (
-        <div className="mt-7">
-          <p className="text-xs font-bold uppercase tracking-[0.24em]" style={{ color: theme.mutedText }}>
+        <div className="mt-5">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.mutedText }}>
             Customer
           </p>
-          <p className="mt-2 text-[2rem] font-black leading-[1.05]">{customerName}</p>
-          <p className="mt-2 text-sm" style={{ color: theme.mutedText }}>
+          <p className="mt-1.5 text-[1.6rem] font-black leading-[1.05]">{customerName}</p>
+          <p className="mt-1.5 text-xs" style={{ color: theme.mutedText }}>
             Member since {memberSince}
           </p>
         </div>
       ) : null}
 
       {visibleSections.progress ? (
-        <div className="mt-7 rounded-3xl border border-white/15 bg-white/10 p-4">
-          <p className="text-xs font-bold uppercase tracking-[0.24em]" style={{ color: theme.mutedText }}>
+        <div className="mt-5 rounded-2xl border border-white/15 bg-white/10 p-3.5">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.mutedText }}>
             Progress
           </p>
-          <div className="mt-2 flex items-end justify-between gap-4">
-            <p className="text-2xl font-black">7 / 10 Visits</p>
-            {visibleSections.visits ? <p className="text-right text-xs font-bold" style={{ color: theme.mutedText }}>3 left</p> : null}
+          <div className="mt-1.5 flex items-end justify-between gap-3">
+            <p className="text-xl font-black">7 / 10 Visits</p>
+            {visibleSections.visits ? <p className="text-right text-[11px] font-bold" style={{ color: theme.mutedText }}>3 left</p> : null}
           </div>
-          <div className="mt-4 h-3.5 overflow-hidden rounded-full" style={{ background: theme.progressTrack }}>
+          <div className="mt-3 h-2.5 overflow-hidden rounded-full" style={{ background: theme.progressTrack }}>
             <div className="h-full w-[70%] rounded-full" style={{ background: theme.progressFill }} />
           </div>
-          {visibleSections.visits ? <p className="mt-3 text-sm font-semibold" style={{ color: theme.mutedText }}>3 visits until reward</p> : null}
+          {visibleSections.visits ? <p className="mt-2 text-xs font-medium" style={{ color: theme.mutedText }}>3 visits until reward</p> : null}
         </div>
       ) : null}
 
       {visibleSections.rewardBox ? (
-        <div className="mt-5 rounded-3xl border p-5 shadow-sm" style={{ background: theme.rewardPanelBackground, color: theme.rewardPanelText, borderColor: theme.rewardPanelBorder }}>
-          <p className="text-xs font-black uppercase tracking-[0.22em]" style={{ color: theme.rewardPanelMuted }}>
+        <div className="mt-4 rounded-2xl border p-4 shadow-sm" style={{ background: theme.rewardPanelBackground, color: theme.rewardPanelText, borderColor: theme.rewardPanelBorder }}>
+          <p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: theme.rewardPanelMuted }}>
             Next reward
           </p>
-          <p className="mt-2 text-2xl font-black leading-tight">{rewardName}</p>
-          <p className="mt-2 text-sm font-bold" style={{ color: theme.rewardPanelMuted }}>3 Visits Remaining</p>
+          <p className="mt-1.5 text-xl font-black leading-tight">{rewardName}</p>
+          <p className="mt-1.5 text-xs font-semibold" style={{ color: theme.rewardPanelMuted }}>3 Visits Remaining</p>
         </div>
       ) : null}
 
       {visibleSections.qr ? (
-        <div className="mt-5 rounded-3xl p-5" style={{ background: theme.qrSurface, color: "#111827" }}>
-          <div className="grid gap-4 text-center">
-            <span className="block text-base font-black">Scan at Checkout</span>
-            <span className="mx-auto grid h-28 w-28 shrink-0 grid-cols-3 grid-rows-3 gap-1.5 rounded-3xl bg-white p-4 ring-1 ring-black/10">
+        <div className="mt-4 rounded-2xl p-4" style={{ background: theme.qrSurface, color: "#111827" }}>
+          <div className="grid gap-3 text-center">
+            <span className="block text-sm font-black">Scan at Checkout</span>
+            <span className="mx-auto grid h-24 w-24 shrink-0 grid-cols-3 grid-rows-3 gap-1 rounded-2xl bg-white p-3.5 ring-1 ring-black/10">
               {Array.from({ length: 9 }).map((_, index) => (
                 <span key={index} className={index % 2 === 0 ? "rounded-sm bg-[#111827]" : "rounded-sm bg-[#E5E7EB]"} />
               ))}
             </span>
-            <span className="mx-auto max-w-36 text-sm font-semibold text-[#64748B]">Present this QR to staff</span>
+            <span className="mx-auto max-w-32 text-xs font-semibold text-[#64748B]">Present this QR to staff</span>
           </div>
         </div>
       ) : null}
 
       {visibleSections.referral ? (
-        <div className="mt-4 rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-semibold">
+        <div className="mt-3 rounded-2xl border border-white/20 bg-white/10 px-3 py-2.5 text-xs font-semibold">
           Refer a friend and share this loyalty card.
         </div>
       ) : null}
 
       {visibleSections.footer ? (
-        <div className="mt-6 rounded-full px-5 py-3 text-center text-sm font-black" style={{ background: theme.ctaBackground, color: theme.ctaForeground }}>
+        <div className="mt-4 rounded-full px-4 py-2.5 text-center text-xs font-black" style={{ background: theme.ctaBackground, color: theme.ctaForeground }}>
           Scan at Checkout
         </div>
       ) : null}
