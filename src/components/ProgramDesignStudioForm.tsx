@@ -133,6 +133,7 @@ export function ProgramDesignStudioForm({
   const [previewZoom, setPreviewZoom] = useState<PreviewZoom>("fit");
   const [professionalPresetCategory, setProfessionalPresetCategory] = useState<ProfessionalPresetCategory>("All");
   const [professionalPresetSearch, setProfessionalPresetSearch] = useState("");
+  const [copiedSourceProgramUuid, setCopiedSourceProgramUuid] = useState<string | null>(null);
   const cardDesign = useMemo(
     () =>
       resolveCardDesign({
@@ -206,6 +207,7 @@ export function ProgramDesignStudioForm({
     setDecorationStyle(preset.decorationStyle);
     setVisibleSections(preset.visibleSections);
     setPresetApplied(true);
+    setCopiedSourceProgramUuid(null);
   };
 
   const applyBusinessPreset = (preset: BusinessDesignPresetOption) => {
@@ -219,6 +221,7 @@ export function ProgramDesignStudioForm({
     setDecorationStyle(preset.cardDesign.decorationStyle);
     setVisibleSections(preset.cardDesign.visibleSections);
     setPresetApplied(true);
+    setCopiedSourceProgramUuid(null);
   };
 
   const applySourceProgramDesign = (sourceProgram: SourceProgramDesignOption) => {
@@ -231,8 +234,8 @@ export function ProgramDesignStudioForm({
     setTypographyPreset(sourceProgram.cardDesign.typographyPreset);
     setDecorationStyle(sourceProgram.cardDesign.decorationStyle);
     setVisibleSections(sourceProgram.cardDesign.visibleSections);
+    setCopiedSourceProgramUuid(sourceProgram.uuid);
     setPresetApplied(true);
-    setDesignStartMode("manual");
   };
 
   return (
@@ -636,23 +639,47 @@ export function ProgramDesignStudioForm({
         {duplicateDesignVisible ? (
         <SectionCard title="Duplicate From Another Program" description="Copy a design from one of your existing loyalty programs.">
           {sourcePrograms.length > 0 ? (
-            <div className="grid gap-3 md:grid-cols-2">
-              {sourcePrograms.map((sourceProgram) => (
-                <div key={sourceProgram.uuid} className="grid gap-3 rounded-[1.35rem] border border-[#E2E8F0] bg-white p-4 shadow-sm">
-                  <PresetThumbnail preset={sourceProgramToThumbnailPreset(sourceProgram)} />
-                  <div className="min-w-0">
-                    <p className="truncate text-base font-semibold text-[#111827]">{sourceProgram.name}</p>
-                    <p className="mt-1 text-sm leading-6 text-[#64748B]">{designSummary(sourceProgram.cardDesign)}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => applySourceProgramDesign(sourceProgram)}
-                    className="w-full rounded-xl border border-[var(--business-primary)] px-3 py-2 text-sm font-semibold business-text transition hover:bg-[var(--business-primary-soft)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 sm:w-fit"
-                  >
-                    Apply Design
-                  </button>
+            <div className="grid gap-4">
+              {copiedSourceProgramUuid ? (
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
+                  Design copied into the preview. Review the manual builder below, then click Save Design to apply it to this program.
                 </div>
-              ))}
+              ) : null}
+              <div className="grid gap-4 md:grid-cols-2">
+                {sourcePrograms.map((sourceProgram) => {
+                  const active = copiedSourceProgramUuid === sourceProgram.uuid;
+                  return (
+                    <article
+                      key={sourceProgram.uuid}
+                      className="grid gap-4 rounded-[1.5rem] border border-[#E2E8F0] bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-lg data-[active=true]:border-blue-500 data-[active=true]:shadow-xl data-[active=true]:ring-2 data-[active=true]:ring-blue-100"
+                      data-active={active}
+                    >
+                      <div className="relative">
+                        <PresetThumbnail preset={sourceProgramToThumbnailPreset(sourceProgram)} />
+                        {active ? (
+                          <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-blue-600 px-2.5 py-1 text-[11px] font-black text-white shadow-sm">
+                            <span aria-hidden="true">✓</span>
+                            Copied
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-base font-black text-[#111827]">{sourceProgram.name}</p>
+                        <p className="mt-1 text-sm leading-6 text-[#64748B]">{designSummary(sourceProgram.cardDesign)}</p>
+                        <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#94A3B8]">Design only</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => applySourceProgramDesign(sourceProgram)}
+                        className="w-full rounded-xl border border-[var(--business-primary)] px-3 py-2 text-sm font-semibold business-text transition hover:bg-[var(--business-primary-soft)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 sm:w-fit"
+                        aria-pressed={active}
+                      >
+                        {active ? "Applied to Preview" : "Apply Design"}
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
             </div>
           ) : (
             <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-white p-5 text-sm text-[#64748B]">

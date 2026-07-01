@@ -143,6 +143,11 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /applyProfessionalPreset/);
   assert.match(form, /applyBusinessPreset/);
   assert.match(form, /applySourceProgramDesign/);
+  assert.match(form, /copiedSourceProgramUuid/);
+  assert.match(form, /Design copied into the preview/);
+  assert.match(form, /Review the manual builder below, then click Save Design/);
+  assert.match(form, /Design only/);
+  assert.match(form, /Applied to Preview/);
   assert.match(form, /Apply Design/);
   assert.match(form, /sourceProgramToThumbnailPreset/);
   assert.match(form, /designSummary/);
@@ -221,6 +226,9 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /name="layoutStyle"/);
   assert.match(form, /name="stampJourneyStyle"/);
   assert.match(form, /name="stampIcon"/);
+  assert.match(page, /where: \{ businessId: user\.businessId, uuid: \{ not: program\.uuid \} \}/);
+  assert.match(page, /const sourceDesign = resolveCardDesign\(sourceProgram\.cardDesign\)/);
+  assert.match(page, /select: \{\s*uuid: true,\s*name: true,\s*cardDesign: true,\s*\}/);
   assert.doesNotMatch(form, /title="Card Template"/);
   assert.doesNotMatch(form, /title="Stamp Journey"/);
   assert.doesNotMatch(form, /title="Stamp Icon"/);
