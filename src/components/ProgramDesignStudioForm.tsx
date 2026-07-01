@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { toPng } from "html-to-image";
 import type {
   CardDesignBackgroundPattern,
@@ -65,6 +65,7 @@ type SourceProgramDesignOption = {
   cardDesign: DesignStudioPresetDesign;
 };
 
+type DesignHistorySnapshot = DesignStudioPresetDesign;
 type DesignStartMode = "template" | "manual" | "duplicate";
 type PreviewContext = "phone" | "apple-wallet" | "google-wallet";
 type PreviewZoom = "fit" | "75" | "100" | "125";
@@ -137,7 +138,23 @@ export function ProgramDesignStudioForm({
   const [copiedSourceProgramUuid, setCopiedSourceProgramUuid] = useState<string | null>(null);
   const [previewActionMessage, setPreviewActionMessage] = useState("");
   const [previewActionPending, setPreviewActionPending] = useState<"png" | "pdf" | "link" | null>(null);
+  const [designHistoryPast, setDesignHistoryPast] = useState<DesignHistorySnapshot[]>([]);
+  const [designHistoryFuture, setDesignHistoryFuture] = useState<DesignHistorySnapshot[]>([]);
   const previewExportRef = useRef<HTMLDivElement | null>(null);
+  const currentDesignSnapshot = useMemo<DesignHistorySnapshot>(
+    () => ({
+      layoutStyle,
+      stampJourneyStyle,
+      stampIcon,
+      backgroundStyle,
+      backgroundPattern,
+      rewardStyle,
+      typographyPreset,
+      decorationStyle,
+      visibleSections: { ...visibleSections },
+    }),
+    [backgroundPattern, backgroundStyle, decorationStyle, layoutStyle, rewardStyle, stampJourneyStyle, stampIcon, typographyPreset, visibleSections],
+  );
   const cardDesign = useMemo(
     () =>
       resolveCardDesign({
@@ -205,45 +222,93 @@ export function ProgramDesignStudioForm({
     [normalizedPresetSearch, professionalPresetCategory],
   );
   const selectedProfessionalCategoryLabel = professionalPresetCategoryOptions.find((option) => option.value === professionalPresetCategory)?.label ?? professionalPresetCategory;
+  const canUndoDesign = designHistoryPast.length > 0;
+  const canRedoDesign = designHistoryFuture.length > 0;
+
+  const applyDesignSnapshot = useCallback((snapshot: DesignHistorySnapshot) => {
+    setLayoutStyle(snapshot.layoutStyle);
+    setBackgroundStyle(snapshot.backgroundStyle);
+    setBackgroundPattern(snapshot.backgroundPattern);
+    setStampJourneyStyle(snapshot.stampJourneyStyle);
+    setStampIcon(snapshot.stampIcon);
+    setRewardStyle(snapshot.rewardStyle);
+    setTypographyPreset(snapshot.typographyPreset);
+    setDecorationStyle(snapshot.decorationStyle);
+    setVisibleSections({ ...snapshot.visibleSections });
+  }, []);
+
+  const commitDesignChange = useCallback(
+    (nextSnapshot: DesignHistorySnapshot) => {
+      if (designSnapshotsMatch(currentDesignSnapshot, nextSnapshot)) return;
+      setDesignHistoryPast((past) => [...past, cloneDesignSnapshot(currentDesignSnapshot)].slice(-50));
+      setDesignHistoryFuture([]);
+      applyDesignSnapshot(nextSnapshot);
+    },
+    [applyDesignSnapshot, currentDesignSnapshot],
+  );
+
+  const undoDesignChange = useCallback(() => {
+    setDesignHistoryPast((past) => {
+      const previous = past[past.length - 1];
+      if (!previous) return past;
+      setDesignHistoryFuture((future) => [cloneDesignSnapshot(currentDesignSnapshot), ...future].slice(0, 50));
+      applyDesignSnapshot(previous);
+      return past.slice(0, -1);
+    });
+  }, [applyDesignSnapshot, currentDesignSnapshot]);
+
+  const redoDesignChange = useCallback(() => {
+    setDesignHistoryFuture((future) => {
+      const next = future[0];
+      if (!next) return future;
+      setDesignHistoryPast((past) => [...past, cloneDesignSnapshot(currentDesignSnapshot)].slice(-50));
+      applyDesignSnapshot(next);
+      return future.slice(1);
+    });
+  }, [applyDesignSnapshot, currentDesignSnapshot]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (isEditableKeyboardTarget(target)) return;
+      const modifierPressed = event.ctrlKey || event.metaKey;
+      if (!modifierPressed) return;
+
+      const key = event.key.toLowerCase();
+      if (key === "z" && event.shiftKey) {
+        event.preventDefault();
+        redoDesignChange();
+        return;
+      }
+      if (key === "z") {
+        event.preventDefault();
+        undoDesignChange();
+        return;
+      }
+      if (key === "y") {
+        event.preventDefault();
+        redoDesignChange();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [redoDesignChange, undoDesignChange]);
 
   const applyProfessionalPreset = (preset: DesignStudioProfessionalPreset) => {
-    setLayoutStyle(preset.layoutStyle);
-    setBackgroundStyle(preset.backgroundStyle);
-    setBackgroundPattern(preset.backgroundPattern);
-    setStampJourneyStyle(preset.stampJourneyStyle);
-    setStampIcon(preset.stampIcon);
-    setRewardStyle(preset.rewardStyle);
-    setTypographyPreset(preset.typographyPreset);
-    setDecorationStyle(preset.decorationStyle);
-    setVisibleSections(preset.visibleSections);
+    commitDesignChange(presetToDesignSnapshot(preset));
     setPresetApplied(true);
     setCopiedSourceProgramUuid(null);
   };
 
   const applyBusinessPreset = (preset: BusinessDesignPresetOption) => {
-    setLayoutStyle(preset.cardDesign.layoutStyle);
-    setBackgroundStyle(preset.cardDesign.backgroundStyle);
-    setBackgroundPattern(preset.cardDesign.backgroundPattern);
-    setStampJourneyStyle(preset.cardDesign.stampJourneyStyle);
-    setStampIcon(preset.cardDesign.stampIcon);
-    setRewardStyle(preset.cardDesign.rewardStyle);
-    setTypographyPreset(preset.cardDesign.typographyPreset);
-    setDecorationStyle(preset.cardDesign.decorationStyle);
-    setVisibleSections(preset.cardDesign.visibleSections);
+    commitDesignChange(preset.cardDesign);
     setPresetApplied(true);
     setCopiedSourceProgramUuid(null);
   };
 
   const applySourceProgramDesign = (sourceProgram: SourceProgramDesignOption) => {
-    setLayoutStyle(sourceProgram.cardDesign.layoutStyle);
-    setBackgroundStyle(sourceProgram.cardDesign.backgroundStyle);
-    setBackgroundPattern(sourceProgram.cardDesign.backgroundPattern);
-    setStampJourneyStyle(sourceProgram.cardDesign.stampJourneyStyle);
-    setStampIcon(sourceProgram.cardDesign.stampIcon);
-    setRewardStyle(sourceProgram.cardDesign.rewardStyle);
-    setTypographyPreset(sourceProgram.cardDesign.typographyPreset);
-    setDecorationStyle(sourceProgram.cardDesign.decorationStyle);
-    setVisibleSections(sourceProgram.cardDesign.visibleSections);
+    commitDesignChange(sourceProgram.cardDesign);
     setCopiedSourceProgramUuid(sourceProgram.uuid);
     setPresetApplied(true);
   };
@@ -367,6 +432,29 @@ export function ProgramDesignStudioForm({
                 <p className="text-xs font-bold text-[#94A3B8]">Last updated just now</p>
               </div>
 
+              <div className="mt-3 grid grid-cols-2 gap-2" aria-label="Design history controls">
+                <button
+                  type="button"
+                  onClick={undoDesignChange}
+                  disabled={!canUndoDesign}
+                  className="rounded-xl border border-[#CBD5E1] bg-white px-3 py-2 text-xs font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-45 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                  aria-label="Undo last design change"
+                  title="Undo (Ctrl/Cmd+Z)"
+                >
+                  Undo
+                </button>
+                <button
+                  type="button"
+                  onClick={redoDesignChange}
+                  disabled={!canRedoDesign}
+                  className="rounded-xl border border-[#CBD5E1] bg-white px-3 py-2 text-xs font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-45 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                  aria-label="Redo design change"
+                  title="Redo (Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y)"
+                >
+                  Redo
+                </button>
+              </div>
+
               <div className="mt-3 grid gap-2">
                 <div className="grid gap-1">
                   <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#64748B]">Preview Context</p>
@@ -447,11 +535,17 @@ export function ProgramDesignStudioForm({
                       tierIcon="S"
                       theme={previewTheme}
                       programName={programName}
-                      rewardName={rewardName}
-                      visibleSections={visibleSections}
-                    />
-                  </CardFinishPreviewFrame>
-                </div>
+                    rewardName={rewardName}
+                    visibleSections={visibleSections}
+                    stampJourneyStyle={stampJourneyStyle}
+                    stampIcon={stampIcon}
+                    rewardStyle={rewardStyle}
+                    typographyPreset={typographyPreset}
+                    backgroundStyle={backgroundStyle}
+                    backgroundPattern={backgroundPattern}
+                  />
+                </CardFinishPreviewFrame>
+              </div>
               </PreviewContextFrame>
             </div>
 
@@ -856,7 +950,7 @@ export function ProgramDesignStudioForm({
                   name="layoutStyle"
                   value={option.value}
                   checked={layoutStyle === option.value}
-                  onChange={() => setLayoutStyle(option.value)}
+                  onChange={() => commitDesignChange({ ...currentDesignSnapshot, layoutStyle: option.value })}
                   className="sr-only"
                 />
                 <span className="grid gap-4 rounded-[1.1rem] p-1 focus-within:outline-none group-focus-within:ring-2 group-focus-within:ring-[var(--business-primary)] group-focus-within:ring-offset-2">
@@ -883,7 +977,7 @@ export function ProgramDesignStudioForm({
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() => setBackgroundStyle(option.value)}
+                  onClick={() => commitDesignChange({ ...currentDesignSnapshot, backgroundStyle: option.value })}
                   className="group grid min-h-28 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
                   data-active={active}
                   aria-pressed={active}
@@ -906,8 +1000,11 @@ export function ProgramDesignStudioForm({
                   key={option.value}
                   type="button"
                   onClick={() => {
-                    setBackgroundPattern(option.value);
-                    if (option.value !== "NONE") setBackgroundStyle("PATTERN");
+                    commitDesignChange({
+                      ...currentDesignSnapshot,
+                      backgroundPattern: option.value,
+                      backgroundStyle: option.value !== "NONE" ? "PATTERN" : currentDesignSnapshot.backgroundStyle,
+                    });
                   }}
                   className="group flex min-h-20 items-center gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
                   data-active={active}
@@ -932,7 +1029,7 @@ export function ProgramDesignStudioForm({
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() => setTypographyPreset(option.value)}
+                  onClick={() => commitDesignChange({ ...currentDesignSnapshot, typographyPreset: option.value })}
                   className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
                   data-active={active}
                   aria-pressed={active}
@@ -961,7 +1058,7 @@ export function ProgramDesignStudioForm({
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() => setDecorationStyle(option.value)}
+                  onClick={() => commitDesignChange({ ...currentDesignSnapshot, decorationStyle: option.value })}
                   className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
                   data-active={active}
                   aria-pressed={active}
@@ -993,7 +1090,7 @@ export function ProgramDesignStudioForm({
                   name="stampJourneyStyle"
                   value={option.value}
                   checked={stampJourneyStyle === option.value}
-                  onChange={() => setStampJourneyStyle(option.value)}
+                  onChange={() => commitDesignChange({ ...currentDesignSnapshot, stampJourneyStyle: option.value })}
                   className="mt-1 h-4 w-4 accent-[var(--business-primary)]"
                 />
                 <span className="min-w-0">
@@ -1014,7 +1111,7 @@ export function ProgramDesignStudioForm({
                   name="stampIcon"
                   value={option.value}
                   checked={stampIcon === option.value}
-                  onChange={() => setStampIcon(option.value)}
+                  onChange={() => commitDesignChange({ ...currentDesignSnapshot, stampIcon: option.value })}
                   className="h-4 w-4 accent-[var(--business-primary)]"
                 />
                 <span className="min-w-0">
@@ -1034,7 +1131,7 @@ export function ProgramDesignStudioForm({
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() => setRewardStyle(option.value)}
+                  onClick={() => commitDesignChange({ ...currentDesignSnapshot, rewardStyle: option.value })}
                   className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
                   data-active={active}
                   aria-pressed={active}
@@ -1070,10 +1167,13 @@ export function ProgramDesignStudioForm({
                     type="checkbox"
                     checked={active}
                     onChange={() =>
-                      setVisibleSections((current) => ({
-                        ...current,
-                        [option.value]: !current[option.value],
-                      }))
+                      commitDesignChange({
+                        ...currentDesignSnapshot,
+                        visibleSections: {
+                          ...currentDesignSnapshot.visibleSections,
+                          [option.value]: !currentDesignSnapshot.visibleSections[option.value],
+                        },
+                      })
                     }
                     className="mt-1 h-5 w-5 rounded border-[#CBD5E1] text-[var(--business-primary)] focus:ring-[var(--business-primary)]"
                   />
@@ -1238,6 +1338,47 @@ function sectionVisibilityMatches(expected: CardSectionVisibility, actual: CardS
   return designStudioCardContentOptions.every((option) => expected[option.value] === actual[option.value]);
 }
 
+function cloneDesignSnapshot(snapshot: DesignHistorySnapshot): DesignHistorySnapshot {
+  return {
+    ...snapshot,
+    visibleSections: { ...snapshot.visibleSections },
+  };
+}
+
+function designSnapshotsMatch(left: DesignHistorySnapshot, right: DesignHistorySnapshot) {
+  return (
+    left.layoutStyle === right.layoutStyle &&
+    left.backgroundStyle === right.backgroundStyle &&
+    left.backgroundPattern === right.backgroundPattern &&
+    left.stampJourneyStyle === right.stampJourneyStyle &&
+    left.stampIcon === right.stampIcon &&
+    left.rewardStyle === right.rewardStyle &&
+    left.typographyPreset === right.typographyPreset &&
+    left.decorationStyle === right.decorationStyle &&
+    sectionVisibilityMatches(left.visibleSections, right.visibleSections)
+  );
+}
+
+function presetToDesignSnapshot(preset: DesignStudioProfessionalPreset): DesignHistorySnapshot {
+  return {
+    layoutStyle: preset.layoutStyle,
+    backgroundStyle: preset.backgroundStyle,
+    backgroundPattern: preset.backgroundPattern,
+    stampJourneyStyle: preset.stampJourneyStyle,
+    stampIcon: preset.stampIcon,
+    rewardStyle: preset.rewardStyle,
+    typographyPreset: preset.typographyPreset,
+    decorationStyle: preset.decorationStyle,
+    visibleSections: { ...preset.visibleSections },
+  };
+}
+
+function isEditableKeyboardTarget(target: HTMLElement | null) {
+  if (!target) return false;
+  const tagName = target.tagName.toLowerCase();
+  return target.isContentEditable || tagName === "input" || tagName === "textarea" || tagName === "select";
+}
+
 function presetToThumbnailPreset(preset: BusinessDesignPresetOption): DesignStudioProfessionalPreset {
   return {
     id: preset.uuid,
@@ -1384,6 +1525,12 @@ function VisibleCardPreview({
   programName,
   rewardName,
   visibleSections,
+  stampJourneyStyle,
+  stampIcon,
+  rewardStyle,
+  typographyPreset,
+  backgroundStyle,
+  backgroundPattern,
 }: {
   businessName: string;
   businessLogoUrl: string | null;
@@ -1395,9 +1542,19 @@ function VisibleCardPreview({
   programName: string;
   rewardName: string;
   visibleSections: CardSectionVisibility;
+  stampJourneyStyle: CardDesignStampJourneyStyle;
+  stampIcon: CardDesignStampIcon;
+  rewardStyle: CardDesignRewardStyle;
+  typographyPreset: CardDesignTypographyPreset;
+  backgroundStyle: "SOLID" | "GRADIENT" | "PATTERN";
+  backgroundPattern: CardDesignBackgroundPattern;
 }) {
+  const typography = liveTypographyStyles[typographyPreset] ?? liveTypographyStyles.MODERN;
+  const reward = rewardBoxStyles[rewardStyle] ?? rewardBoxStyles.FILLED;
+  const liveBackground = getLivePreviewBackground(theme.cardBackground, backgroundStyle, backgroundPattern);
+
   return (
-    <div className="overflow-hidden rounded-[1.45rem] p-4" style={{ background: theme.cardBackground, color: theme.cardText }}>
+    <div className="overflow-hidden rounded-[1.45rem] p-4" style={{ background: liveBackground, color: theme.cardText }}>
       <div className="flex items-start justify-between gap-3">
         {(visibleSections.logo || visibleSections.businessName || visibleSections.programName) ? (
           <div className="flex min-w-0 items-start gap-2.5">
@@ -1436,11 +1593,11 @@ function VisibleCardPreview({
 
       {visibleSections.customerName ? (
         <div className="mt-5">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.mutedText }}>
+          <p className={typography.label} style={{ color: theme.mutedText }}>
             Customer
           </p>
-          <p className="mt-1.5 text-[1.6rem] font-black leading-[1.05]">{customerName}</p>
-          <p className="mt-1.5 text-xs" style={{ color: theme.mutedText }}>
+          <p className={typography.customer}>{customerName}</p>
+          <p className={typography.supporting} style={{ color: theme.mutedText }}>
             Member since {memberSince}
           </p>
         </div>
@@ -1448,27 +1605,33 @@ function VisibleCardPreview({
 
       {visibleSections.progress ? (
         <div className="mt-5 rounded-2xl border border-white/15 bg-white/10 p-3.5">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.mutedText }}>
+          <p className={typography.label} style={{ color: theme.mutedText }}>
             Progress
           </p>
-          <div className="mt-1.5 flex items-end justify-between gap-3">
-            <p className="text-xl font-black">7 / 10 Visits</p>
-            {visibleSections.visits ? <p className="text-right text-[11px] font-bold" style={{ color: theme.mutedText }}>3 left</p> : null}
-          </div>
-          <div className="mt-3 h-2.5 overflow-hidden rounded-full" style={{ background: theme.progressTrack }}>
-            <div className="h-full w-[70%] rounded-full" style={{ background: theme.progressFill }} />
-          </div>
+          <PreviewProgress
+            stampJourneyStyle={stampJourneyStyle}
+            stampIcon={stampIcon}
+            theme={theme}
+            typography={typography}
+            showVisits={visibleSections.visits}
+          />
           {visibleSections.visits ? <p className="mt-2 text-xs font-medium" style={{ color: theme.mutedText }}>3 visits until reward</p> : null}
         </div>
       ) : null}
 
       {visibleSections.rewardBox ? (
-        <div className="mt-4 rounded-2xl border p-4 shadow-sm" style={{ background: theme.rewardPanelBackground, color: theme.rewardPanelText, borderColor: theme.rewardPanelBorder }}>
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em]" style={{ color: theme.rewardPanelMuted }}>
+        <div className={`relative mt-4 overflow-hidden rounded-2xl border p-4 ${reward.className}`} style={{ ...reward.style, color: reward.textColor }}>
+          {rewardStyle === "TICKET" ? (
+            <>
+              <span className="absolute -left-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full" style={{ background: liveBackground }} />
+              <span className="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full" style={{ background: liveBackground }} />
+            </>
+          ) : null}
+          <p className={typography.label} style={{ color: reward.mutedColor }}>
             Next reward
           </p>
-          <p className="mt-1.5 text-xl font-black leading-tight">{rewardName}</p>
-          <p className="mt-1.5 text-xs font-semibold" style={{ color: theme.rewardPanelMuted }}>3 Visits Remaining</p>
+          <p className={typography.reward}>{rewardName}</p>
+          <p className="mt-1.5 inline-flex rounded-full px-2.5 py-1 text-[11px] font-black" style={{ background: reward.badgeBackground, color: reward.badgeColor }}>3 Visits Remaining</p>
         </div>
       ) : null}
 
@@ -1497,6 +1660,101 @@ function VisibleCardPreview({
           Scan at Checkout
         </div>
       ) : null}
+    </div>
+  );
+}
+
+type LiveTypographyStyle = {
+  label: string;
+  customer: string;
+  progress: string;
+  reward: string;
+  supporting: string;
+};
+
+type PreviewProgressProps = {
+  stampJourneyStyle: CardDesignStampJourneyStyle;
+  stampIcon: CardDesignStampIcon;
+  theme: ReturnType<typeof resolveCardThemeColors>;
+  typography: LiveTypographyStyle;
+  showVisits: boolean;
+};
+
+function PreviewProgress({ stampJourneyStyle, stampIcon, theme, typography, showVisits }: PreviewProgressProps) {
+  const stampMark = getStampIconMark(stampIcon);
+  const completed = 7;
+  const total = 10;
+  const steps = Array.from({ length: total });
+
+  if (stampJourneyStyle === "CIRCLES") {
+    return (
+      <div className="mt-2 grid gap-3">
+        <div className="flex items-end justify-between gap-3">
+          <p className={typography.progress}>7 / 10 Visits</p>
+          {showVisits ? <p className="text-[11px] font-black uppercase tracking-[0.14em]" style={{ color: theme.mutedText }}>3 left</p> : null}
+        </div>
+        <div className="grid grid-cols-5 gap-2">
+          {steps.map((_, index) => {
+            const filled = index < completed;
+            return (
+              <span
+                key={index}
+                className="grid aspect-square place-items-center rounded-full border text-[9px] font-black"
+                style={{
+                  background: filled ? theme.progressFill : theme.progressTrack,
+                  borderColor: filled ? theme.progressFill : "rgba(255,255,255,0.3)",
+                  color: filled ? theme.ctaForeground : theme.mutedText,
+                }}
+              >
+                {filled ? stampMark : ""}
+              </span>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  if (stampJourneyStyle === "CONNECTED_DOTS") {
+    return (
+      <div className="mt-2 grid gap-3">
+        <div className="flex items-end justify-between gap-3">
+          <p className={typography.progress}>7 / 10 Visits</p>
+          {showVisits ? <p className="text-[11px] font-black uppercase tracking-[0.14em]" style={{ color: theme.mutedText }}>3 left</p> : null}
+        </div>
+        <div className="relative flex items-center justify-between gap-1 py-2">
+          <span className="absolute left-3 right-3 top-1/2 h-1 -translate-y-1/2 rounded-full" style={{ background: theme.progressTrack }} />
+          <span className="absolute left-3 top-1/2 h-1 w-[68%] -translate-y-1/2 rounded-full" style={{ background: theme.progressFill }} />
+          {steps.map((_, index) => {
+            const filled = index < completed;
+            return (
+              <span
+                key={index}
+                className="relative z-10 grid h-6 w-6 place-items-center rounded-full border text-[7px] font-black"
+                style={{
+                  background: filled ? theme.progressFill : theme.cardBackground,
+                  borderColor: filled ? theme.progressFill : theme.progressTrack,
+                  color: filled ? theme.ctaForeground : theme.mutedText,
+                }}
+              >
+                {filled ? stampMark : ""}
+              </span>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-2 grid gap-3">
+      <div className="flex items-end justify-between gap-3">
+        <p className={typography.progress}>7 / 10 Visits</p>
+        {showVisits ? <p className="text-[11px] font-black uppercase tracking-[0.14em]" style={{ color: theme.mutedText }}>3 left</p> : null}
+      </div>
+      <div className="h-2.5 overflow-hidden rounded-full" style={{ background: theme.progressTrack }}>
+        <div className="h-full w-[70%] rounded-full" style={{ background: theme.progressFill }} />
+      </div>
     </div>
   );
 }
@@ -1880,11 +2138,81 @@ const typographyPreviewStyles: Record<CardDesignTypographyPreset, {
   },
 };
 
+const liveTypographyStyles: Record<CardDesignTypographyPreset, LiveTypographyStyle> = {
+  MODERN: {
+    label: "text-[10px] font-semibold uppercase tracking-[0.24em]",
+    customer: "mt-1.5 text-[1.6rem] font-black leading-[1.05]",
+    progress: "text-xl font-black",
+    reward: "mt-1.5 text-xl font-black leading-tight",
+    supporting: "mt-1.5 text-xs",
+  },
+  CLASSIC: {
+    label: "text-[10px] font-semibold uppercase tracking-[0.18em]",
+    customer: "mt-1.5 text-[1.55rem] font-bold leading-[1.12]",
+    progress: "text-lg font-bold",
+    reward: "mt-1.5 text-lg font-bold leading-tight",
+    supporting: "mt-1.5 text-xs",
+  },
+  PREMIUM: {
+    label: "text-[10px] font-black uppercase tracking-[0.26em]",
+    customer: "mt-1.5 text-[1.7rem] font-black leading-none tracking-tight",
+    progress: "text-xl font-black tracking-tight",
+    reward: "mt-1.5 text-xl font-black leading-tight tracking-tight",
+    supporting: "mt-1.5 text-xs font-semibold",
+  },
+  LUXURY: {
+    label: "text-[10px] font-semibold uppercase tracking-[0.32em]",
+    customer: "mt-1.5 text-[1.55rem] font-semibold leading-[1.15] tracking-wide",
+    progress: "text-lg font-semibold tracking-wide",
+    reward: "mt-1.5 text-lg font-semibold leading-tight tracking-wide",
+    supporting: "mt-1.5 text-xs",
+  },
+  PLAYFUL: {
+    label: "text-[10px] font-black uppercase tracking-[0.16em]",
+    customer: "mt-1.5 text-[1.65rem] font-black leading-[1.08]",
+    progress: "text-xl font-black",
+    reward: "mt-1.5 text-xl font-black leading-tight",
+    supporting: "mt-1.5 text-xs font-semibold",
+  },
+  MINIMAL: {
+    label: "text-[10px] font-medium uppercase tracking-[0.24em]",
+    customer: "mt-1.5 text-[1.5rem] font-light leading-[1.15] tracking-wide",
+    progress: "text-lg font-light tracking-wide",
+    reward: "mt-1.5 text-lg font-light leading-tight tracking-wide",
+    supporting: "mt-1.5 text-xs",
+  },
+};
+
 const backgroundStylePreview: Record<"SOLID" | "GRADIENT" | "PATTERN", string> = {
   SOLID: "#F8FAFC",
   GRADIENT: "linear-gradient(135deg, #FFFFFF 0%, #FDBA74 100%)",
   PATTERN: "radial-gradient(circle at 4px 4px, #CBD5E1 1.5px, transparent 1.5px), #F8FAFC",
 };
+
+const liveBackgroundPatterns: Record<CardDesignBackgroundPattern, string> = {
+  NONE: "none",
+  SUBTLE_DOTS: "radial-gradient(circle at 8px 8px, rgba(255,255,255,0.28) 1.5px, transparent 1.5px)",
+  DIAGONAL_LINES: "repeating-linear-gradient(135deg, rgba(255,255,255,0.18) 0 2px, transparent 2px 12px)",
+  WAVES: "radial-gradient(ellipse at 20% 20%, rgba(255,255,255,0.18) 0 18%, transparent 19%), radial-gradient(ellipse at 80% 70%, rgba(255,255,255,0.14) 0 16%, transparent 17%)",
+  COFFEE_BEANS: "radial-gradient(ellipse at 14px 12px, rgba(255,255,255,0.22) 0 5px, transparent 6px)",
+  SCISSORS: "repeating-linear-gradient(45deg, rgba(255,255,255,0.16) 0 1px, transparent 1px 18px)",
+  WATER_BUBBLES: "radial-gradient(circle at 12px 12px, rgba(255,255,255,0.24) 0 4px, transparent 5px), radial-gradient(circle at 32px 28px, rgba(255,255,255,0.16) 0 3px, transparent 4px)",
+  FOOD_PATTERN: "repeating-radial-gradient(circle at 10px 10px, rgba(255,255,255,0.16) 0 2px, transparent 3px 18px)",
+  BEAUTY_PATTERN: "radial-gradient(circle at 16px 16px, rgba(255,255,255,0.2) 0 5px, transparent 6px)",
+};
+
+function getLivePreviewBackground(baseBackground: string, backgroundStyle: "SOLID" | "GRADIENT" | "PATTERN", backgroundPattern: CardDesignBackgroundPattern) {
+  if (backgroundStyle === "GRADIENT") {
+    return `linear-gradient(135deg, ${baseBackground} 0%, rgba(249,115,22,0.18) 100%)`;
+  }
+
+  if (backgroundStyle === "PATTERN") {
+    const pattern = liveBackgroundPatterns[backgroundPattern] ?? liveBackgroundPatterns.NONE;
+    return pattern === "none" ? baseBackground : `${pattern}, ${baseBackground}`;
+  }
+
+  return baseBackground;
+}
 
 const patternPreviewLabels: Record<CardDesignBackgroundPattern, string> = {
   NONE: "-",
