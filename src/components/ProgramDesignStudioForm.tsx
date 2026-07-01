@@ -66,6 +66,7 @@ type SourceProgramDesignOption = {
 
 type DesignStartMode = "quick" | "manual";
 type PreviewBackdrop = "light" | "dark" | "wallet";
+type ProfessionalPresetCategory = "All" | DesignStudioProfessionalPreset["category"];
 
 export function ProgramDesignStudioForm({
   action,
@@ -128,6 +129,8 @@ export function ProgramDesignStudioForm({
   const [designStartMode, setDesignStartMode] = useState<DesignStartMode>("quick");
   const [presetApplied, setPresetApplied] = useState(false);
   const [previewBackdrop, setPreviewBackdrop] = useState<PreviewBackdrop>("light");
+  const [professionalPresetCategory, setProfessionalPresetCategory] = useState<ProfessionalPresetCategory>("All");
+  const [professionalPresetSearch, setProfessionalPresetSearch] = useState("");
   const cardDesign = useMemo(
     () =>
       resolveCardDesign({
@@ -171,6 +174,22 @@ export function ProgramDesignStudioForm({
     ) ?? null;
   const activePresetId = activeProfessionalPreset?.id ?? null;
   const manualEditorVisible = designStartMode === "manual" || presetApplied;
+  const normalizedPresetSearch = professionalPresetSearch.trim().toLowerCase();
+  const filteredProfessionalPresetGroups = useMemo(
+    () =>
+      designStudioProfessionalPresetGroups
+        .filter((group) => professionalPresetCategory === "All" || group.category === professionalPresetCategory)
+        .map((group) => ({
+          ...group,
+          presets: group.presets.filter((preset) => {
+            if (!normalizedPresetSearch) return true;
+            const searchable = `${preset.name} ${preset.category} ${preset.description}`.toLowerCase();
+            return searchable.includes(normalizedPresetSearch);
+          }),
+        }))
+        .filter((group) => group.presets.length > 0),
+    [normalizedPresetSearch, professionalPresetCategory],
+  );
 
   const applyProfessionalPreset = (preset: DesignStudioProfessionalPreset) => {
     setLayoutStyle(preset.layoutStyle);
@@ -405,36 +424,42 @@ export function ProgramDesignStudioForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="Duplicate From Another Program" description="Copy a design from one of your existing loyalty programs.">
-          {sourcePrograms.length > 0 ? (
-            <div className="grid gap-3 md:grid-cols-2">
-              {sourcePrograms.map((sourceProgram) => (
-                <div key={sourceProgram.uuid} className="grid gap-3 rounded-[1.35rem] border border-[#E2E8F0] bg-white p-4 shadow-sm">
-                  <PresetThumbnail preset={sourceProgramToThumbnailPreset(sourceProgram)} />
-                  <div className="min-w-0">
-                    <p className="truncate text-base font-semibold text-[#111827]">{sourceProgram.name}</p>
-                    <p className="mt-1 text-sm leading-6 text-[#64748B]">{designSummary(sourceProgram.cardDesign)}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => applySourceProgramDesign(sourceProgram)}
-                    className="w-full rounded-xl border border-[var(--business-primary)] px-3 py-2 text-sm font-semibold business-text transition hover:bg-[var(--business-primary-soft)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 sm:w-fit"
-                  >
-                    Apply Design
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-white p-5 text-sm text-[#64748B]">
-              No other loyalty programs are available yet. Create another program to duplicate its card design here.
-            </div>
-          )}
-        </SectionCard>
-
-        <SectionCard title="Professional Presets" description="Start with a professionally designed loyalty card, then customize every detail.">
+        <SectionCard title="Professional Presets" description="Choose your business type, then apply a professional starting point.">
           <div className="grid gap-5">
-            {designStudioProfessionalPresetGroups.map((group) => (
+            <div className="grid gap-3">
+              <p className="text-sm font-semibold text-[#111827]">Choose your business type</p>
+              <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1" aria-label="Professional preset categories">
+                {professionalPresetCategoryOptions.map((option) => {
+                  const active = professionalPresetCategory === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setProfessionalPresetCategory(option.value)}
+                      className="shrink-0 rounded-full border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-bold text-[#64748B] transition hover:border-[var(--business-primary)] hover:bg-[var(--business-primary-soft)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:business-bg"
+                      data-active={active}
+                      aria-pressed={active}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <label className="grid gap-2 text-sm font-semibold text-[#111827]">
+              Search templates
+              <input
+                type="search"
+                value={professionalPresetSearch}
+                onChange={(event) => setProfessionalPresetSearch(event.target.value)}
+                placeholder="Search templates..."
+                className="h-11 rounded-xl border border-[#CBD5E1] bg-white px-3 text-sm font-medium text-[#111827] outline-none transition focus:border-[var(--business-primary)] focus:ring-2 focus:ring-[var(--business-primary)]/20"
+              />
+            </label>
+
+            {filteredProfessionalPresetGroups.length > 0 ? (
+              filteredProfessionalPresetGroups.map((group) => (
               <div key={group.category} className="grid gap-3">
                 <div className="flex items-center justify-between gap-3">
                   <h3 className="text-sm font-black uppercase tracking-[0.18em] text-[#64748B]">{group.category}</h3>
@@ -468,8 +493,51 @@ export function ProgramDesignStudioForm({
                   })}
                 </div>
               </div>
-            ))}
+              ))
+            ) : (
+              <div className="grid gap-3 rounded-2xl border border-dashed border-[#CBD5E1] bg-white p-5 text-sm text-[#64748B]">
+                <p className="font-semibold text-[#111827]">No templates match your search.</p>
+                <p>Try another business type or clear the search field.</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setProfessionalPresetCategory("All");
+                    setProfessionalPresetSearch("");
+                  }}
+                  className="w-fit rounded-xl border border-[var(--business-primary)] px-3 py-2 text-sm font-semibold business-text transition hover:bg-[var(--business-primary-soft)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                >
+                  Reset templates
+                </button>
+              </div>
+            )}
           </div>
+        </SectionCard>
+
+        <SectionCard title="Duplicate From Another Program" description="Copy a design from one of your existing loyalty programs.">
+          {sourcePrograms.length > 0 ? (
+            <div className="grid gap-3 md:grid-cols-2">
+              {sourcePrograms.map((sourceProgram) => (
+                <div key={sourceProgram.uuid} className="grid gap-3 rounded-[1.35rem] border border-[#E2E8F0] bg-white p-4 shadow-sm">
+                  <PresetThumbnail preset={sourceProgramToThumbnailPreset(sourceProgram)} />
+                  <div className="min-w-0">
+                    <p className="truncate text-base font-semibold text-[#111827]">{sourceProgram.name}</p>
+                    <p className="mt-1 text-sm leading-6 text-[#64748B]">{designSummary(sourceProgram.cardDesign)}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => applySourceProgramDesign(sourceProgram)}
+                    className="w-full rounded-xl border border-[var(--business-primary)] px-3 py-2 text-sm font-semibold business-text transition hover:bg-[var(--business-primary-soft)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 sm:w-fit"
+                  >
+                    Apply Design
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-white p-5 text-sm text-[#64748B]">
+              No other loyalty programs are available yet. Create another program to duplicate its card design here.
+            </div>
+          )}
         </SectionCard>
 
         {manualEditorVisible ? (
@@ -1399,6 +1467,16 @@ const previewBackdropClasses: Record<PreviewBackdrop, string> = {
   dark: "bg-[#111827]",
   wallet: "bg-[radial-gradient(circle_at_top,#FED7AA_0%,#FFF7ED_42%,#E2E8F0_100%)]",
 };
+
+const professionalPresetCategoryOptions: Array<{ value: ProfessionalPresetCategory; label: string }> = [
+  { value: "All", label: "All" },
+  { value: "Restaurant", label: "Restaurant" },
+  { value: "Café", label: "Cafe" },
+  { value: "Beauty Salon", label: "Beauty" },
+  { value: "Barbershop", label: "Barbershop" },
+  { value: "Car Wash", label: "Car Wash" },
+  { value: "General", label: "General" },
+];
 
 const stampIconMarks: Record<CardDesignStampIcon, string> = {
   STAR: "*",

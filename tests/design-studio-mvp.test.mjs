@@ -125,7 +125,13 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /Apply Preset/);
   assert.match(form, /Rename preset/);
   assert.match(form, /Delete/);
-  assert.match(form, /Start with a professionally designed loyalty card, then customize every detail\./);
+  assert.match(form, /Choose your business type, then apply a professional starting point\./);
+  assert.match(form, /professionalPresetCategoryOptions/);
+  assert.match(form, /professionalPresetSearch/);
+  assert.match(form, /filteredProfessionalPresetGroups/);
+  assert.match(form, /Search templates/);
+  assert.match(form, /No templates match your search\./);
+  assert.match(form, /Reset templates/);
   assert.match(form, /applyProfessionalPreset/);
   assert.match(form, /applyBusinessPreset/);
   assert.match(form, /applySourceProgramDesign/);
