@@ -64,7 +64,7 @@ type SourceProgramDesignOption = {
   cardDesign: DesignStudioPresetDesign;
 };
 
-type DesignStartMode = "quick" | "manual";
+type DesignStartMode = "template" | "manual" | "duplicate";
 type PreviewBackdrop = "light" | "dark" | "wallet";
 type ProfessionalPresetCategory = "All" | DesignStudioProfessionalPreset["category"];
 
@@ -126,7 +126,7 @@ export function ProgramDesignStudioForm({
   const [typographyPreset, setTypographyPreset] = useState(initialDesign.typographyPreset);
   const [decorationStyle, setDecorationStyle] = useState(initialDesign.decorationStyle);
   const [visibleSections, setVisibleSections] = useState<CardSectionVisibility>(initialDesign.visibleSections);
-  const [designStartMode, setDesignStartMode] = useState<DesignStartMode>("quick");
+  const [designStartMode, setDesignStartMode] = useState<DesignStartMode>("template");
   const [presetApplied, setPresetApplied] = useState(false);
   const [previewBackdrop, setPreviewBackdrop] = useState<PreviewBackdrop>("light");
   const [professionalPresetCategory, setProfessionalPresetCategory] = useState<ProfessionalPresetCategory>("All");
@@ -174,6 +174,9 @@ export function ProgramDesignStudioForm({
     ) ?? null;
   const activePresetId = activeProfessionalPreset?.id ?? null;
   const manualEditorVisible = designStartMode === "manual" || presetApplied;
+  const professionalTemplatesVisible = designStartMode === "template" && !presetApplied;
+  const businessPresetsVisible = designStartMode === "template";
+  const duplicateDesignVisible = designStartMode === "duplicate";
   const normalizedPresetSearch = professionalPresetSearch.trim().toLowerCase();
   const filteredProfessionalPresets = useMemo(
     () =>
@@ -227,10 +230,11 @@ export function ProgramDesignStudioForm({
     setDecorationStyle(sourceProgram.cardDesign.decorationStyle);
     setVisibleSections(sourceProgram.cardDesign.visibleSections);
     setPresetApplied(true);
+    setDesignStartMode("manual");
   };
 
   return (
-    <form action={action} className="grid gap-8 lg:grid-cols-[minmax(0,65fr)_minmax(340px,35fr)] lg:items-start xl:grid-cols-[minmax(0,65fr)_minmax(400px,35fr)] 2xl:gap-10">
+    <form action={action} className="grid gap-8 lg:grid-cols-[minmax(0,70fr)_minmax(300px,30fr)] lg:items-start xl:grid-cols-[minmax(0,70fr)_minmax(340px,30fr)] 2xl:gap-10">
       <input type="hidden" name={csrfName} value={csrfToken} />
       <input type="hidden" name="programUuid" value={programUuid} />
       <input type="hidden" name="backgroundStyle" value={backgroundStyle} />
@@ -250,10 +254,10 @@ export function ProgramDesignStudioForm({
         >
           <div className="grid gap-5">
             <div className={`rounded-[2rem] p-4 transition-colors duration-200 ${previewBackdropClasses[previewBackdrop]}`}>
-              <div className="mx-auto max-w-[310px] rounded-[2.5rem] border-[10px] border-[#111827] bg-[#111827] p-2 shadow-2xl shadow-slate-950/25">
-                <div className="relative overflow-hidden rounded-[1.85rem] bg-white p-2">
-                  <div className="absolute left-1/2 top-2 h-5 w-24 -translate-x-1/2 rounded-full bg-[#111827]" aria-hidden="true" />
-                  <div className="pt-6">
+              <div className="mx-auto max-w-[240px] rounded-[2.15rem] border-8 border-[#111827] bg-[#111827] p-1.5 shadow-2xl shadow-slate-950/25">
+                <div className="relative overflow-hidden rounded-[1.55rem] bg-white p-1.5">
+                  <div className="absolute left-1/2 top-1.5 h-4 w-20 -translate-x-1/2 rounded-full bg-[#111827]" aria-hidden="true" />
+                  <div className="pt-5">
                     <CardFinishPreviewFrame decorationStyle={decorationStyle}>
                       <VisibleCardPreview
                         businessName={businessName}
@@ -308,53 +312,39 @@ export function ProgramDesignStudioForm({
         </SectionCard>
       </aside>
 
-      <div className="order-last grid min-w-0 gap-6 lg:order-first lg:max-w-[920px] [&>section]:rounded-2xl [&>section]:p-5 md:[&>section]:p-6">
-        <SectionCard title="How would you like to start?" description="Choose a guided preset or open the full editor immediately.">
-          <div className="grid gap-4 md:grid-cols-2">
-            <button
-              type="button"
-              onClick={() => setDesignStartMode("quick")}
-              className="group grid min-h-48 gap-4 rounded-[1.35rem] border border-[var(--business-primary)] bg-[var(--business-primary-soft)] p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=false]:border-[#E2E8F0] data-[active=false]:bg-white"
-              data-active={designStartMode === "quick"}
-              aria-pressed={designStartMode === "quick"}
-            >
-              <span className="flex items-start justify-between gap-3">
-                <span className="grid gap-2">
-                  <span className="text-xs font-black uppercase tracking-[0.18em] business-text">Recommended</span>
-                  <span className="text-xl font-black text-[#111827]">Quick Start</span>
-                </span>
-                <span className="rounded-full border border-[var(--business-primary)] bg-white px-3 py-1 text-xs font-bold business-text">Preset</span>
-              </span>
-              <span className="text-sm leading-6 text-[#64748B]">Start with a professionally designed template recommended for your business.</span>
-              <span className="mt-auto inline-flex w-fit items-center rounded-xl business-bg px-4 py-2 text-sm font-bold transition group-hover:shadow-md">
-                Choose a Preset
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setDesignStartMode("manual")}
-              className="group grid min-h-48 gap-4 rounded-[1.35rem] border border-[#E2E8F0] bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)]"
-              data-active={designStartMode === "manual"}
-              aria-pressed={designStartMode === "manual"}
-            >
-              <span className="flex items-start justify-between gap-3">
-                <span className="grid gap-2">
-                  <span className="text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">Full control</span>
-                  <span className="text-xl font-black text-[#111827]">Build Manually</span>
-                </span>
-                <span className="rounded-full border border-[#E2E8F0] bg-white px-3 py-1 text-xs font-bold text-[#64748B] group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-text">
-                  Editor
-                </span>
-              </span>
-              <span className="text-sm leading-6 text-[#64748B]">Customize every part of your loyalty card from scratch.</span>
-              <span className="mt-auto inline-flex w-fit items-center rounded-xl border border-[var(--business-primary)] px-4 py-2 text-sm font-bold business-text transition group-hover:bg-[var(--business-primary-soft)]">
-                Start Designing
-              </span>
-            </button>
+      <div className="order-last grid min-w-0 gap-8 lg:order-first lg:max-w-[1080px] [&>section]:rounded-2xl [&>section]:p-5 md:[&>section]:p-6">
+        <SectionCard title="Choose how you'd like to start" description="Pick a professional template, build from scratch, or copy an existing design.">
+          <div className="grid gap-3">
+            <div className="grid gap-2 rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-2 md:grid-cols-3">
+              {designStartOptions.map((option) => {
+                const active = designStartMode === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      setDesignStartMode(option.value);
+                      if (option.value === "manual") setPresetApplied(true);
+                    }}
+                    className="flex items-center gap-3 rounded-xl border border-transparent bg-transparent px-4 py-3 text-left transition hover:bg-white hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-white data-[active=true]:shadow-sm"
+                    data-active={active}
+                    aria-pressed={active}
+                  >
+                    <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full border border-[#CBD5E1] bg-white text-[10px] font-black data-[active=true]:border-[var(--business-primary)] data-[active=true]:business-bg" data-active={active}>
+                      {active ? "●" : ""}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-black text-[#111827]">{option.label}</span>
+                      <span className="mt-0.5 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </SectionCard>
 
+        {businessPresetsVisible ? (
         <SectionCard title="My Business Presets" description="Save this design for reuse, or apply a saved business preset to this program.">
           <div className="grid gap-4">
             <div className="rounded-2xl border border-[#E5E7EB] bg-[#F8FAFC] p-4">
@@ -422,23 +412,47 @@ export function ProgramDesignStudioForm({
             )}
           </div>
         </SectionCard>
+        ) : null}
 
+        {professionalTemplatesVisible ? (
         <SectionCard title="Professional Templates" description="Choose a business type, then browse professional starting points.">
-          <div className="grid gap-5">
-            <label className="grid gap-2 text-sm font-semibold text-[#111827]">
-              Search Templates
-              <input
-                type="search"
-                value={professionalPresetSearch}
-                onChange={(event) => setProfessionalPresetSearch(event.target.value)}
-                placeholder="Search templates..."
-                className="h-11 rounded-xl border border-[#CBD5E1] bg-white px-3 text-sm font-medium text-[#111827] outline-none transition focus:border-[var(--business-primary)] focus:ring-2 focus:ring-[var(--business-primary)]/20"
-              />
-            </label>
+          <div className="grid gap-8">
+            <div className="grid gap-3">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                  <p className="text-2xl font-black tracking-tight text-[#111827]">Professional Templates</p>
+                  <p className="mt-1 text-sm text-[#64748B]">
+                    {filteredProfessionalPresets.length} templates available across Restaurant, Cafe, Beauty, Car Wash, and more.
+                  </p>
+                </div>
+                <label className="relative w-full lg:max-w-sm">
+                  <span className="sr-only">Search Templates</span>
+                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" aria-hidden="true">
+                    ⌕
+                  </span>
+                  <input
+                    type="search"
+                    value={professionalPresetSearch}
+                    onChange={(event) => setProfessionalPresetSearch(event.target.value)}
+                    placeholder="Search templates by name or business..."
+                    className="h-14 w-full rounded-2xl border border-[#CBD5E1] bg-white pl-11 pr-11 text-sm font-medium text-[#111827] shadow-sm outline-none transition focus:border-[var(--business-primary)] focus:ring-2 focus:ring-[var(--business-primary)]/20"
+                  />
+                  {professionalPresetSearch ? (
+                    <button
+                      type="button"
+                      onClick={() => setProfessionalPresetSearch("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full px-2 py-1 text-xs font-bold text-[#64748B] transition hover:bg-[#F1F5F9] hover:text-[#111827] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)]"
+                    >
+                      Clear
+                    </button>
+                  ) : null}
+                </label>
+              </div>
+            </div>
 
             <div className="grid gap-3">
-              <p className="text-sm font-semibold text-[#111827]">Business Type</p>
-              <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1" aria-label="Professional preset categories">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">Business Type</p>
+              <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1" aria-label="Professional preset categories">
                 {professionalPresetCategoryOptions.map((option) => {
                   const active = professionalPresetCategory === option.value;
                   return (
@@ -446,41 +460,43 @@ export function ProgramDesignStudioForm({
                       key={option.value}
                       type="button"
                       onClick={() => setProfessionalPresetCategory(option.value)}
-                      className="shrink-0 rounded-full border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-bold text-[#64748B] transition hover:border-[var(--business-primary)] hover:bg-[var(--business-primary-soft)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:business-bg"
+                      className="shrink-0 rounded-full border border-[#E2E8F0] bg-white px-5 py-3 text-sm font-black text-[#64748B] shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:bg-[var(--business-primary-soft)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:business-bg"
                       data-active={active}
                       aria-pressed={active}
                     >
-                      {option.label}
+                      {option.icon} {option.label}
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-black uppercase tracking-[0.18em] text-[#64748B]">
-                Showing: {selectedProfessionalCategoryLabel} Templates
-              </p>
-              <span className="rounded-full bg-[#F8FAFC] px-3 py-1 text-xs font-bold text-[#64748B]">{filteredProfessionalPresets.length} templates</span>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xl font-black tracking-tight text-[#111827]">Showing {filteredProfessionalPresets.length} Templates</p>
+                <p className="mt-1 text-sm text-[#64748B]">
+                  {professionalPresetCategory === "All" ? "Restaurant • Cafe • Beauty • Barbershop • Car Wash • General" : `${selectedProfessionalCategoryLabel} templates`}
+                </p>
+              </div>
             </div>
 
             {filteredProfessionalPresets.length > 0 ? (
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                 {filteredProfessionalPresets.map((preset) => {
                   const active = activePresetId === preset.id;
                   return (
                     <article
                       key={preset.id}
-                      className="group grid overflow-hidden rounded-[1.35rem] border border-[#E2E8F0] bg-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:border-[var(--business-primary)] hover:shadow-xl data-[active=true]:border-blue-500 data-[active=true]:ring-2 data-[active=true]:ring-blue-100"
+                      className="group grid overflow-hidden rounded-[1.65rem] border border-[#E2E8F0] bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:scale-[1.01] hover:border-[var(--business-primary)] hover:shadow-2xl data-[active=true]:border-blue-500 data-[active=true]:shadow-xl data-[active=true]:ring-2 data-[active=true]:ring-blue-100"
                       data-active={active}
                     >
                       <button
                         type="button"
                         onClick={() => applyProfessionalPreset(preset)}
-                        className="grid gap-3 p-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-inset"
+                        className="grid gap-5 p-5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-inset"
                         aria-pressed={active}
                       >
-                        <span className="relative">
+                        <span className="relative [&>span]:min-h-[190px] [&>span]:p-5">
                           <PresetThumbnail preset={preset} />
                           {active ? (
                             <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-blue-600 px-2.5 py-1 text-[11px] font-black text-white shadow-sm">
@@ -489,12 +505,13 @@ export function ProgramDesignStudioForm({
                             </span>
                           ) : null}
                         </span>
-                        <span className="min-w-0 px-1">
-                          <span className="block truncate text-base font-black text-[#111827]">{preset.name}</span>
-                          <span className="mt-1 block truncate text-xs font-semibold text-[#64748B]">{preset.category} template</span>
+                        <span className="min-w-0 px-1 pb-1">
+                          <span className="block truncate text-lg font-black text-[#111827]">{preset.name}</span>
+                          <span className="mt-1 block text-xs font-black uppercase tracking-[0.16em] text-[#94A3B8]">{preset.category}</span>
+                          <span className="mt-3 line-clamp-1 block text-sm leading-6 text-[#64748B]">{preset.description}</span>
                         </span>
                       </button>
-                      <div className="flex items-center justify-between gap-2 border-t border-[#E2E8F0] bg-[#F8FAFC] p-3">
+                      <div className="flex items-center justify-between gap-2 border-t border-[#E2E8F0] bg-[#F8FAFC] p-4">
                         <button
                           type="button"
                           onClick={() => applyProfessionalPreset(preset)}
@@ -522,8 +539,9 @@ export function ProgramDesignStudioForm({
                 })}
               </div>
             ) : (
-              <div className="grid gap-3 rounded-2xl border border-dashed border-[#CBD5E1] bg-white p-5 text-sm text-[#64748B]">
-                <p className="font-semibold text-[#111827]">No templates found.</p>
+              <div className="grid place-items-center gap-4 rounded-[1.5rem] border border-dashed border-[#CBD5E1] bg-white p-10 text-center text-sm text-[#64748B]">
+                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#F8FAFC] text-2xl" aria-hidden="true">⌕</div>
+                <p className="text-lg font-black text-[#111827]">No templates found</p>
                 <p>Try another keyword or choose another business type.</p>
                 <button
                   type="button"
@@ -539,7 +557,22 @@ export function ProgramDesignStudioForm({
             )}
           </div>
         </SectionCard>
+        ) : presetApplied && designStartMode === "template" ? (
+          <div className="rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-sm">
+            <button
+              type="button"
+              onClick={() => {
+                setPresetApplied(false);
+                setDesignStartMode("template");
+              }}
+              className="rounded-xl border border-[var(--business-primary)] px-4 py-2 text-sm font-black business-text transition hover:bg-[var(--business-primary-soft)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+            >
+              Choose Another Template
+            </button>
+          </div>
+        ) : null}
 
+        {duplicateDesignVisible ? (
         <SectionCard title="Duplicate From Another Program" description="Copy a design from one of your existing loyalty programs.">
           {sourcePrograms.length > 0 ? (
             <div className="grid gap-3 md:grid-cols-2">
@@ -566,6 +599,7 @@ export function ProgramDesignStudioForm({
             </div>
           )}
         </SectionCard>
+        ) : null}
 
         {manualEditorVisible ? (
           <div className="grid gap-6 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200">
@@ -1495,14 +1529,20 @@ const previewBackdropClasses: Record<PreviewBackdrop, string> = {
   wallet: "bg-[radial-gradient(circle_at_top,#FED7AA_0%,#FFF7ED_42%,#E2E8F0_100%)]",
 };
 
-const professionalPresetCategoryOptions: Array<{ value: ProfessionalPresetCategory; label: string }> = [
-  { value: "All", label: "All" },
-  { value: "Restaurant", label: "Restaurant" },
-  { value: "Café", label: "Cafe" },
-  { value: "Beauty Salon", label: "Beauty" },
-  { value: "Barbershop", label: "Barbershop" },
-  { value: "Car Wash", label: "Car Wash" },
-  { value: "General", label: "General" },
+const professionalPresetCategoryOptions: Array<{ value: ProfessionalPresetCategory; label: string; icon: string }> = [
+  { value: "All", label: "All", icon: "All" },
+  { value: "Restaurant", label: "Restaurant", icon: "Dine" },
+  { value: "Café", label: "Cafe", icon: "Cafe" },
+  { value: "Beauty Salon", label: "Beauty", icon: "Beauty" },
+  { value: "Barbershop", label: "Barbershop", icon: "Cut" },
+  { value: "Car Wash", label: "Car Wash", icon: "Auto" },
+  { value: "General", label: "General", icon: "Biz" },
+];
+
+const designStartOptions: Array<{ value: DesignStartMode; label: string; description: string }> = [
+  { value: "template", label: "Professional Template", description: "Recommended" },
+  { value: "manual", label: "Build From Scratch", description: "Open the full editor" },
+  { value: "duplicate", label: "Duplicate Existing Design", description: "Copy another program" },
 ];
 
 const stampIconMarks: Record<CardDesignStampIcon, string> = {

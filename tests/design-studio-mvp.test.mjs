@@ -118,6 +118,9 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(page, /Preview on Phone/);
   assert.match(form, /Card Style/);
   assert.match(form, /Professional Templates/);
+  assert.match(form, /Professional Template/);
+  assert.match(form, /Build From Scratch/);
+  assert.match(form, /Duplicate Existing Design/);
   assert.match(form, /My Business Presets/);
   assert.match(form, /Duplicate From Another Program/);
   assert.match(form, /Copy a design from one of your existing loyalty programs\./);
@@ -130,9 +133,12 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /professionalPresetSearch/);
   assert.match(form, /filteredProfessionalPresets/);
   assert.match(form, /Search Templates/);
-  assert.match(form, /Showing: \{selectedProfessionalCategoryLabel\} Templates/);
+  assert.match(form, /Search templates by name or business/);
+  assert.match(form, /Clear/);
+  assert.match(form, /Showing \{filteredProfessionalPresets\.length\} Templates/);
   assert.match(form, /Use Template/);
-  assert.match(form, /No templates found\./);
+  assert.match(form, /Choose Another Template/);
+  assert.match(form, /No templates found/);
   assert.match(form, /Reset Filters/);
   assert.match(form, /applyProfessionalPreset/);
   assert.match(form, /applyBusinessPreset/);
@@ -199,7 +205,7 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
     assert.match(form, new RegExp(mark));
   }
   assert.doesNotMatch(form, /Live Preview/);
-  assert.match(form, /lg:grid-cols-\[minmax\(0,65fr\)_minmax\(340px,35fr\)\]/);
+  assert.match(form, /lg:grid-cols-\[minmax\(0,70fr\)_minmax\(300px,30fr\)\]/);
   assert.match(form, /order-first[\s\S]*lg:order-last/);
   assert.match(form, /lg:sticky lg:top-6/);
   assert.doesNotMatch(form, /sticky bottom-3/);
