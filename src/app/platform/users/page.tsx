@@ -1,12 +1,9 @@
 import type { Prisma, RecordStatus, UserRole } from "@prisma/client";
-import { MoreHorizontal, RotateCcw, Search, SlidersHorizontal } from "lucide-react";
+import { ChevronRight, RotateCcw, Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
-import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
-import { PlatformUserPasswordResetAction } from "@/components/PlatformUserPasswordResetAction";
 import { ButtonLink, EmptyState } from "@/components/ui";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -14,8 +11,6 @@ import { formatDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { getDisplayUserName, roleLabels } from "@/lib/roles";
 import { requireRole } from "@/lib/session";
-import { createCsrfToken } from "@/lib/csrf";
-import { archivePlatformUserAction, forceLogoutPlatformUserAction, setPlatformUserStatusAction } from "./actions";
 
 type UsersSearchParams = {
   name?: string;
@@ -323,7 +318,7 @@ export default async function PlatformUsersPage({
           <table className="w-full min-w-[1020px] border-separate border-spacing-0 text-left text-sm">
             <thead>
               <tr className="text-[#6B7280]">
-                {["Name", "Email", "Role", "Business", "Branch", "Status", "Created date", "Actions"].map((heading) => (
+                {["Name", "Email", "Role", "Business", "Branch", "Status", "Created date", ""].map((heading) => (
                   <th key={heading} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">
                     {heading}
                   </th>
@@ -332,7 +327,7 @@ export default async function PlatformUsersPage({
             </thead>
             <tbody>
               {users.map((user) => (
-                <UserRow key={user.id} user={user} currentUserId={currentUser.id} />
+                <UserRow key={user.id} user={user} />
               ))}
             </tbody>
           </table>
@@ -340,7 +335,7 @@ export default async function PlatformUsersPage({
 
         <div className="mt-4 grid gap-3 lg:hidden">
           {users.map((user) => (
-            <UserMobileCard key={user.id} user={user} currentUserId={currentUser.id} />
+            <UserMobileCard key={user.id} user={user} />
           ))}
         </div>
 
@@ -356,45 +351,64 @@ export default async function PlatformUsersPage({
   );
 }
 
-function UserRow({ user, currentUserId }: { user: UserWithListData; currentUserId: number }) {
+function UserRow({ user }: { user: UserWithListData }) {
   const displayName = getDisplayUserName(user);
+  const href = `/platform/users/${user.id}`;
 
   return (
-    <tr className="align-top">
-      <td className="border-b border-[#E5E7EB] px-3 py-4">
-        <div className="flex flex-col gap-2">
+    <tr className="group align-top transition hover:bg-[#F8FAFC] focus-within:bg-[#F8FAFC]">
+      <td className="border-b border-[#E5E7EB] p-0">
+        <Link href={href} className="block px-3 py-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] focus-visible:ring-inset" aria-label={`Open ${displayName} user details`}>
+          <div className="flex flex-col gap-2">
           <span className="font-semibold text-[#111827]">{displayName}</span>
           {isSuspiciousUser(user) ? <SuspiciousBadge /> : null}
-        </div>
+          </div>
+        </Link>
       </td>
-      <td className="border-b border-[#E5E7EB] px-3 py-4">
-        <span className="font-mono text-xs text-[#374151]">{user.email}</span>
+      <td className="border-b border-[#E5E7EB] p-0">
+        <Link href={href} className="block px-3 py-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] focus-visible:ring-inset">
+          <span className="font-mono text-xs text-[#374151]">{user.email}</span>
+        </Link>
       </td>
-      <td className="border-b border-[#E5E7EB] px-3 py-4">
-        <RoleBadge role={user.role} />
+      <td className="border-b border-[#E5E7EB] p-0">
+        <Link href={href} className="block px-3 py-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] focus-visible:ring-inset">
+          <RoleBadge role={user.role} />
+        </Link>
       </td>
-      <td className="max-w-[220px] border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]" title={user.business?.name ?? "-"}>
-        <span className="line-clamp-2">{user.business?.name ?? "-"}</span>
+      <td className="max-w-[260px] border-b border-[#E5E7EB] p-0 text-[#6B7280]" title={user.business?.name ?? "-"}>
+        <Link href={href} className="block px-3 py-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] focus-visible:ring-inset">
+          <span className="line-clamp-2">{user.business?.name ?? "-"}</span>
+        </Link>
       </td>
-      <td className="max-w-[200px] border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]" title={user.branch?.name ?? "-"}>
-        <span className="line-clamp-2">{user.branch?.name ?? "-"}</span>
+      <td className="max-w-[240px] border-b border-[#E5E7EB] p-0 text-[#6B7280]" title={user.branch?.name ?? "-"}>
+        <Link href={href} className="block px-3 py-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] focus-visible:ring-inset">
+          <span className="line-clamp-2">{user.branch?.name ?? "-"}</span>
+        </Link>
       </td>
-      <td className="border-b border-[#E5E7EB] px-3 py-4">
-        <StatusBadge status={user.status} />
+      <td className="border-b border-[#E5E7EB] p-0">
+        <Link href={href} className="block px-3 py-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] focus-visible:ring-inset">
+          <StatusBadge status={user.status} />
+        </Link>
       </td>
-      <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(user.createdAt)}</td>
-      <td className="border-b border-[#E5E7EB] px-3 py-4">
-        <UserActions user={user} currentUserId={currentUserId} />
+      <td className="border-b border-[#E5E7EB] p-0 text-[#6B7280]">
+        <Link href={href} className="block px-3 py-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] focus-visible:ring-inset">
+          {formatDate(user.createdAt)}
+        </Link>
+      </td>
+      <td className="border-b border-[#E5E7EB] p-0">
+        <Link href={href} className="flex px-3 py-4 text-[#94A3B8] transition group-hover:text-[#F97316] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] focus-visible:ring-inset" aria-label={`Open ${displayName}`}>
+          <ChevronRight className="h-4 w-4" aria-hidden="true" />
+        </Link>
       </td>
     </tr>
   );
 }
 
-function UserMobileCard({ user, currentUserId }: { user: UserWithListData; currentUserId: number }) {
+function UserMobileCard({ user }: { user: UserWithListData }) {
   const displayName = getDisplayUserName(user);
 
   return (
-    <article className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
+    <Link href={`/platform/users/${user.id}`} className="block rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:border-[#F97316] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316]">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="font-semibold text-[#111827]">{displayName}</h3>
@@ -412,38 +426,12 @@ function UserMobileCard({ user, currentUserId }: { user: UserWithListData; curre
         <Detail label="Business" value={user.business?.name ?? "-"} />
         <Detail label="Branch" value={user.branch?.name ?? "-"} />
         <Detail label="Created" value={formatDate(user.createdAt)} />
-        <div className="col-span-2">
-        <UserActions user={user} currentUserId={currentUserId} />
-      </div>
+        <div className="col-span-2 flex items-center justify-between rounded-md border border-[#E5E7EB] bg-[#F9FAFB] p-3 text-sm font-semibold text-[#111827]">
+          View user details
+          <ChevronRight className="h-4 w-4 text-[#F97316]" aria-hidden="true" />
+        </div>
       </dl>
-    </article>
-  );
-}
-
-function UserActions({ user, currentUserId }: { user: UserWithListData; currentUserId: number }) {
-  const displayName = getDisplayUserName(user);
-  const isCurrentUser = user.id === currentUserId;
-  const statusAction = user.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE";
-  const statusLabel = statusAction === "ACTIVE" ? "Enable" : "Suspend";
-  let statusMessage = "Suspend this user? They will lose workspace access.";
-  if (statusAction === "ACTIVE") {
-    statusMessage = "Enable this user and restore login access?";
-  }
-  if (statusAction !== "ACTIVE") {
-    if (user.role === "PLATFORM_OWNER") {
-      statusMessage = "Suspend this System Administrator? This is a dangerous platform access change.";
-    }
-  }
-  return (
-    <div className="flex min-w-[260px] flex-wrap items-center gap-2">
-      <Link href={`/platform/users/${user.id}`} className="inline-flex h-8 items-center rounded-md border border-[#D1D5DB] bg-white px-2.5 text-xs font-semibold text-[#111827] transition hover:bg-[#F9FAFB]">View</Link>
-      <Link href={`/platform/users/${user.id}/edit`} className="inline-flex h-8 items-center rounded-md border border-[#D1D5DB] bg-white px-2.5 text-xs font-semibold text-[#111827] transition hover:bg-[#F9FAFB]">Edit</Link>
-      <PlatformUserPasswordResetAction userId={user.id} userName={displayName} csrfToken={createCsrfToken("platform:users")} />
-      <form action={forceLogoutPlatformUserAction}><CsrfInput scope="platform:users" /><input type="hidden" name="userId" value={user.id} /><ConfirmSubmitButton message="Force this user to log out of active sessions?" confirmLabel="Force logout" className="inline-flex h-8 items-center rounded-md border border-[#D1D5DB] bg-white px-2.5 text-xs font-semibold text-[#374151] transition hover:bg-[#F9FAFB]">Force Logout</ConfirmSubmitButton></form>
-      <form action={setPlatformUserStatusAction}><CsrfInput scope="platform:users" /><input type="hidden" name="userId" value={user.id} /><input type="hidden" name="nextStatus" value={statusAction} /><ConfirmSubmitButton message={statusMessage} confirmLabel={statusLabel} disabled={isCurrentUser} className={statusAction === "ACTIVE" ? "inline-flex h-8 items-center rounded-md border border-emerald-200 bg-white px-2.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50" : "inline-flex h-8 items-center rounded-md border border-red-200 bg-white px-2.5 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"}>{statusLabel}</ConfirmSubmitButton></form>
-      {user.status !== "ARCHIVED" ? <form action={archivePlatformUserAction}><CsrfInput scope="platform:users" /><input type="hidden" name="userId" value={user.id} /><ConfirmSubmitButton message="Archive this user? They cannot log in, but all history will be preserved." confirmLabel="Archive" disabled={isCurrentUser} className="inline-flex h-8 items-center rounded-md border border-red-200 bg-red-50 px-2.5 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50">Archive</ConfirmSubmitButton></form> : null}
-      <Link href="/platform/audit-center?entityType=user" className="inline-flex h-8 items-center gap-1 rounded-md border border-[#D1D5DB] bg-white px-2.5 text-xs font-semibold text-[#374151] transition hover:bg-[#F9FAFB]"><MoreHorizontal className="h-3.5 w-3.5" aria-hidden="true" />Audit</Link>
-    </div>
+    </Link>
   );
 }
 
