@@ -66,6 +66,7 @@ type SourceProgramDesignOption = {
 
 type DesignStartMode = "template" | "manual" | "duplicate";
 type PreviewBackdrop = "light" | "dark" | "wallet";
+type PreviewZoom = "fit" | "75" | "100" | "125";
 type ProfessionalPresetCategory = "All" | DesignStudioProfessionalPreset["category"];
 
 export function ProgramDesignStudioForm({
@@ -129,6 +130,7 @@ export function ProgramDesignStudioForm({
   const [designStartMode, setDesignStartMode] = useState<DesignStartMode>("template");
   const [presetApplied, setPresetApplied] = useState(false);
   const [previewBackdrop, setPreviewBackdrop] = useState<PreviewBackdrop>("light");
+  const [previewZoom, setPreviewZoom] = useState<PreviewZoom>("fit");
   const [professionalPresetCategory, setProfessionalPresetCategory] = useState<ProfessionalPresetCategory>("All");
   const [professionalPresetSearch, setProfessionalPresetSearch] = useState("");
   const cardDesign = useMemo(
@@ -249,52 +251,106 @@ export function ProgramDesignStudioForm({
       <aside className="order-first grid h-fit min-w-0 gap-5 lg:sticky lg:top-6 lg:order-last lg:self-start">
         <SectionCard
           title="Customer Preview"
-          description="This is how your loyalty card will appear."
-          className="rounded-3xl border-[var(--business-primary-soft,#E2E8F0)] bg-gradient-to-b from-white to-[#F8FAFC] p-5 shadow-lg shadow-slate-200/60 md:p-6"
+          description="Live Preview"
+          className="rounded-3xl border-[var(--business-primary-soft,#E2E8F0)] bg-gradient-to-b from-white to-[#F8FAFC] p-4 shadow-lg shadow-slate-200/60 md:p-5"
         >
-          <div className="grid gap-5">
-            <div className={`rounded-[2rem] p-4 transition-colors duration-200 ${previewBackdropClasses[previewBackdrop]}`}>
-              <div className="mx-auto max-w-[240px] rounded-[2.15rem] border-8 border-[#111827] bg-[#111827] p-1.5 shadow-2xl shadow-slate-950/25">
-                <div className="relative overflow-hidden rounded-[1.55rem] bg-white p-1.5">
-                  <div className="absolute left-1/2 top-1.5 h-4 w-20 -translate-x-1/2 rounded-full bg-[#111827]" aria-hidden="true" />
-                  <div className="pt-5">
-                    <CardFinishPreviewFrame decorationStyle={decorationStyle}>
-                      <VisibleCardPreview
-                        businessName={businessName}
-                        businessLogoUrl={branding.logoUrl}
-                        customerName="Mina Hanna"
-                        memberSince="Jun 2026"
-                        tierLabel="Silver Member"
-                        tierIcon="S"
-                        theme={previewTheme}
-                        programName={programName}
-                        rewardName={rewardName}
-                        visibleSections={visibleSections}
-                      />
-                    </CardFinishPreviewFrame>
+          <div className="grid gap-4">
+            <div className="rounded-2xl border border-[#E2E8F0] bg-white/90 p-3 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">Preview</p>
+                  <p className="mt-1 text-sm font-semibold text-[#111827]">Updated automatically</p>
+                </div>
+                <p className="text-xs font-bold text-[#94A3B8]">Last updated just now</p>
+              </div>
+
+              <div className="mt-3 grid gap-2">
+                <div className="grid grid-cols-3 rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-1" aria-label="Preview background">
+                  {previewBackdropOptions.map((option) => {
+                    const active = previewBackdrop === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setPreviewBackdrop(option.value)}
+                        className="rounded-xl px-2 py-2 text-xs font-black text-[#64748B] transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:business-bg"
+                        data-active={active}
+                        aria-pressed={active}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex items-center justify-between gap-2 rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-1">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewZoom(previousPreviewZoom(previewZoom))}
+                    className="grid h-9 w-9 place-items-center rounded-xl text-sm font-black text-[#64748B] transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)]"
+                    aria-label="Zoom out"
+                  >
+                    -
+                  </button>
+                  <div className="flex flex-1 justify-center gap-1">
+                    {previewZoomOptions.map((option) => {
+                      const active = previewZoom === option.value;
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setPreviewZoom(option.value)}
+                          className="rounded-xl px-2.5 py-2 text-xs font-black text-[#64748B] transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:bg-white data-[active=true]:text-[#111827] data-[active=true]:shadow-sm"
+                          data-active={active}
+                          aria-pressed={active}
+                        >
+                          {option.label}
+                        </button>
+                      );
+                    })}
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewZoom(nextPreviewZoom(previewZoom))}
+                    className="grid h-9 w-9 place-items-center rounded-xl text-sm font-black text-[#64748B] transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)]"
+                    aria-label="Zoom in"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
             </div>
 
-            <div className="grid gap-3">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">Quick Actions</p>
-              <div className="grid grid-cols-3 rounded-2xl border border-[#E2E8F0] bg-white p-1 shadow-sm" aria-label="Preview background">
-                {previewBackdropOptions.map((option) => {
-                  const active = previewBackdrop === option.value;
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => setPreviewBackdrop(option.value)}
-                      className="rounded-xl px-3 py-2 text-sm font-bold text-[#64748B] transition hover:bg-[#F8FAFC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:business-bg"
-                      data-active={active}
-                      aria-pressed={active}
-                    >
-                      {option.label}
-                    </button>
-                  );
-                })}
+            <div className={`rounded-[2rem] p-3 transition-colors duration-200 ${previewBackdropClasses[previewBackdrop]}`}>
+              <p className="mb-3 text-center text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">iPhone Preview</p>
+              <div className="mx-auto max-w-[258px] rounded-[2rem] border-[5px] border-[#111827] bg-[#111827] p-1 shadow-2xl shadow-slate-950/25">
+                <div className="relative overflow-hidden rounded-[1.65rem] bg-white p-1">
+                  <div className="absolute left-1/2 top-1.5 z-10 h-3 w-16 -translate-x-1/2 rounded-full bg-[#111827]" aria-hidden="true" />
+                  <div className="h-[520px] overflow-hidden rounded-[1.45rem] bg-[#F8FAFC] pt-5">
+                    <div className="flex min-h-full items-start justify-center overflow-hidden px-1 pb-2">
+                      <div
+                        key={`${layoutStyle}-${stampJourneyStyle}-${stampIcon}-${rewardStyle}-${typographyPreset}-${decorationStyle}-${previewZoom}`}
+                        className="w-full origin-top transition duration-200 ease-out motion-reduce:transition-none"
+                        style={{ transform: `scale(${previewZoomScales[previewZoom]})` }}
+                      >
+                        <CardFinishPreviewFrame decorationStyle={decorationStyle}>
+                          <VisibleCardPreview
+                            businessName={businessName}
+                            businessLogoUrl={branding.logoUrl}
+                            customerName="Mina Hanna"
+                            memberSince="Jun 2026"
+                            tierLabel="Silver Member"
+                            tierIcon="S"
+                            theme={previewTheme}
+                            programName={programName}
+                            rewardName={rewardName}
+                            visibleSections={visibleSections}
+                          />
+                        </CardFinishPreviewFrame>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -307,6 +363,11 @@ export function ProgramDesignStudioForm({
                 <PreviewChip label={selectedTypographyLabel} />
                 <PreviewChip label={selectedJourneyLabel} />
               </div>
+            </div>
+
+            <div className="rounded-2xl border border-[#E2E8F0] bg-white/90 p-3 text-sm text-[#64748B] shadow-sm">
+              <p className="font-semibold text-[#111827]">Preview updates live as you edit</p>
+              <p className="mt-1">Apple Wallet compatible design preview.</p>
             </div>
           </div>
         </SectionCard>
@@ -331,7 +392,7 @@ export function ProgramDesignStudioForm({
                     aria-pressed={active}
                   >
                     <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full border border-[#CBD5E1] bg-white text-[10px] font-black data-[active=true]:border-[var(--business-primary)] data-[active=true]:business-bg" data-active={active}>
-                      {active ? "●" : ""}
+                      {active ? "*" : ""}
                     </span>
                     <span className="min-w-0">
                       <span className="block text-sm font-black text-[#111827]">{option.label}</span>
@@ -1014,7 +1075,7 @@ function VisibleCardPreview({
   visibleSections: CardSectionVisibility;
 }) {
   return (
-    <div className="overflow-hidden rounded-[1.6rem] p-6" style={{ background: theme.cardBackground, color: theme.cardText }}>
+    <div className="overflow-hidden rounded-[1.6rem] p-5" style={{ background: theme.cardBackground, color: theme.cardText }}>
       <div className="flex items-start justify-between gap-4">
         {(visibleSections.logo || visibleSections.businessName || visibleSections.programName) ? (
           <div className="flex min-w-0 items-start gap-3">
@@ -1032,9 +1093,9 @@ function VisibleCardPreview({
               </span>
             ) : null}
             <div className="min-w-0">
-              {visibleSections.businessName ? <p className="line-clamp-2 text-base font-black leading-tight">{businessName}</p> : null}
+              {visibleSections.businessName ? <p className="line-clamp-2 text-[15px] font-black leading-tight">{businessName}</p> : null}
               {visibleSections.programName ? (
-                <p className="mt-1 truncate text-sm font-medium" style={{ color: theme.mutedText }}>
+                <p className="mt-1 truncate text-xs font-semibold" style={{ color: theme.mutedText }}>
                   {programName}
                 </p>
               ) : null}
@@ -1052,11 +1113,11 @@ function VisibleCardPreview({
       </div>
 
       {visibleSections.customerName ? (
-        <div className="mt-8">
+        <div className="mt-7">
           <p className="text-xs font-bold uppercase tracking-[0.24em]" style={{ color: theme.mutedText }}>
             Customer
           </p>
-          <p className="mt-2 text-3xl font-black leading-tight">{customerName}</p>
+          <p className="mt-2 text-[2rem] font-black leading-[1.05]">{customerName}</p>
           <p className="mt-2 text-sm" style={{ color: theme.mutedText }}>
             Member since {memberSince}
           </p>
@@ -1064,43 +1125,41 @@ function VisibleCardPreview({
       ) : null}
 
       {visibleSections.progress ? (
-        <div className="mt-8">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.24em]" style={{ color: theme.mutedText }}>
-                Progress
-              </p>
-              <p className="mt-2 text-4xl font-black">7/10</p>
-            </div>
-            {visibleSections.visits ? <p className="text-right text-sm font-bold">3 visits remaining</p> : null}
+        <div className="mt-7 rounded-3xl border border-white/15 bg-white/10 p-4">
+          <p className="text-xs font-bold uppercase tracking-[0.24em]" style={{ color: theme.mutedText }}>
+            Progress
+          </p>
+          <div className="mt-2 flex items-end justify-between gap-4">
+            <p className="text-2xl font-black">7 / 10 Visits</p>
+            {visibleSections.visits ? <p className="text-right text-xs font-bold" style={{ color: theme.mutedText }}>3 left</p> : null}
           </div>
-          <div className="mt-4 h-3 overflow-hidden rounded-full" style={{ background: theme.progressTrack }}>
+          <div className="mt-4 h-3.5 overflow-hidden rounded-full" style={{ background: theme.progressTrack }}>
             <div className="h-full w-[70%] rounded-full" style={{ background: theme.progressFill }} />
           </div>
+          {visibleSections.visits ? <p className="mt-3 text-sm font-semibold" style={{ color: theme.mutedText }}>3 visits until reward</p> : null}
         </div>
       ) : null}
 
       {visibleSections.rewardBox ? (
-        <div className="mt-6 rounded-3xl border p-4" style={{ background: theme.rewardPanelBackground, color: theme.rewardPanelText, borderColor: theme.rewardPanelBorder }}>
-          <p className="text-xs font-bold uppercase tracking-[0.22em]" style={{ color: theme.rewardPanelMuted }}>
+        <div className="mt-5 rounded-3xl border p-5 shadow-sm" style={{ background: theme.rewardPanelBackground, color: theme.rewardPanelText, borderColor: theme.rewardPanelBorder }}>
+          <p className="text-xs font-black uppercase tracking-[0.22em]" style={{ color: theme.rewardPanelMuted }}>
             Next reward
           </p>
-          <p className="mt-2 text-xl font-black">{rewardName}</p>
+          <p className="mt-2 text-2xl font-black leading-tight">{rewardName}</p>
+          <p className="mt-2 text-sm font-bold" style={{ color: theme.rewardPanelMuted }}>3 Visits Remaining</p>
         </div>
       ) : null}
 
       {visibleSections.qr ? (
-        <div className="mt-6 rounded-3xl p-4" style={{ background: theme.qrSurface, color: "#111827" }}>
-          <div className="flex items-center gap-4">
-            <span className="grid h-20 w-20 shrink-0 grid-cols-3 grid-rows-3 gap-1 rounded-2xl bg-white p-3 ring-1 ring-black/10">
+        <div className="mt-5 rounded-3xl p-5" style={{ background: theme.qrSurface, color: "#111827" }}>
+          <div className="grid gap-4 text-center">
+            <span className="block text-base font-black">Scan at Checkout</span>
+            <span className="mx-auto grid h-28 w-28 shrink-0 grid-cols-3 grid-rows-3 gap-1.5 rounded-3xl bg-white p-4 ring-1 ring-black/10">
               {Array.from({ length: 9 }).map((_, index) => (
                 <span key={index} className={index % 2 === 0 ? "rounded-sm bg-[#111827]" : "rounded-sm bg-[#E5E7EB]"} />
               ))}
             </span>
-            <span className="min-w-0">
-              <span className="block text-sm font-black">Scan at Checkout</span>
-              <span className="mt-1 block text-xs text-[#64748B]">Present this QR to staff.</span>
-            </span>
+            <span className="mx-auto max-w-36 text-sm font-semibold text-[#64748B]">Present this QR to staff</span>
           </div>
         </div>
       ) : null}
@@ -1528,6 +1587,32 @@ const previewBackdropClasses: Record<PreviewBackdrop, string> = {
   dark: "bg-[#111827]",
   wallet: "bg-[radial-gradient(circle_at_top,#FED7AA_0%,#FFF7ED_42%,#E2E8F0_100%)]",
 };
+
+const previewZoomOptions: Array<{ value: PreviewZoom; label: string }> = [
+  { value: "75", label: "75%" },
+  { value: "100", label: "100%" },
+  { value: "125", label: "125%" },
+  { value: "fit", label: "Fit" },
+];
+
+const previewZoomOrder: PreviewZoom[] = ["75", "100", "125", "fit"];
+
+const previewZoomScales: Record<PreviewZoom, number> = {
+  "75": 0.75,
+  "100": 0.88,
+  "125": 1,
+  fit: 0.82,
+};
+
+function previousPreviewZoom(value: PreviewZoom): PreviewZoom {
+  const index = previewZoomOrder.indexOf(value);
+  return previewZoomOrder[Math.max(0, index - 1)] ?? "fit";
+}
+
+function nextPreviewZoom(value: PreviewZoom): PreviewZoom {
+  const index = previewZoomOrder.indexOf(value);
+  return previewZoomOrder[Math.min(previewZoomOrder.length - 1, index + 1)] ?? "fit";
+}
 
 const professionalPresetCategoryOptions: Array<{ value: ProfessionalPresetCategory; label: string; icon: string }> = [
   { value: "All", label: "All", icon: "All" },

@@ -193,10 +193,19 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /setVisibleSections/);
   assert.match(form, /visibleSections\.\$\{option\.value\}/);
   assert.match(form, /Customer Preview/);
-  assert.match(form, /This is how your loyalty card will appear\./);
+  assert.match(form, /Live Preview/);
+  assert.match(form, /Last updated just now/);
   assert.match(form, /previewBackdropOptions/);
   assert.match(form, /previewBackdropClasses/);
-  assert.match(form, /Quick Actions/);
+  assert.match(form, /previewZoomOptions/);
+  assert.match(form, /previewZoomScales/);
+  assert.match(form, /Zoom out/);
+  assert.match(form, /Zoom in/);
+  assert.match(form, /iPhone Preview/);
+  assert.match(form, /Preview updates live as you edit/);
+  assert.match(form, /Apple Wallet compatible design preview/);
+  assert.match(form, /7 \/ 10 Visits/);
+  assert.match(form, /3 visits until reward/);
   assert.match(form, /Card Status/);
   assert.match(form, /PreviewChip/);
   assert.doesNotMatch(form, /Typography Preview/);
@@ -204,7 +213,6 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   for (const mark of ["SC", "CC", "CAR", "H2O", "PL", "LIP", "GF"]) {
     assert.match(form, new RegExp(mark));
   }
-  assert.doesNotMatch(form, /Live Preview/);
   assert.match(form, /lg:grid-cols-\[minmax\(0,70fr\)_minmax\(300px,30fr\)\]/);
   assert.match(form, /order-first[\s\S]*lg:order-last/);
   assert.match(form, /lg:sticky lg:top-6/);
