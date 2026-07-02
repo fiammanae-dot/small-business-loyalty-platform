@@ -17,6 +17,15 @@ const WARNING = "THIS WILL DELETE ALL CURRENT USERS, BUSINESSES, CUSTOMERS, PROG
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
 
+function logStep(message, details = undefined) {
+  const timestamp = new Date().toISOString();
+  if (details === undefined) {
+    console.log(`[full-qa-debug] ${timestamp} ${message}`);
+    return;
+  }
+  console.log(`[full-qa-debug] ${timestamp} ${message}`, details);
+}
+
 const subscriptionPlans = [
   { code: "STARTER", name: "Starter", maxBranches: 1, maxLoyaltyPrograms: 1, monthlyPrice: "100.00", annualPrice: "1000.00", billingCycleSupport: ["MONTHLY", "YEARLY"] },
   { code: "GROWTH", name: "Growth", maxBranches: 3, maxLoyaltyPrograms: 5, monthlyPrice: "200.00", annualPrice: "2000.00", billingCycleSupport: ["MONTHLY", "YEARLY"] },
@@ -100,11 +109,17 @@ function patternForBusinessType(type) {
 }
 
 function assertSafeTarget() {
+  logStep("assertSafeTarget: environment snapshot before safety checks", {
+    NODE_ENV: process.env.NODE_ENV,
+    ALLOW_QA_RESET: process.env.ALLOW_QA_RESET,
+    QA_DATABASE: process.env.QA_DATABASE,
+    CONFIRM_FULL_DATA_WIPE: process.env.CONFIRM_FULL_DATA_WIPE,
+  });
   if (process.env.NODE_ENV === "production" || process.env.APP_ENV === "production" || process.env.VERCEL_ENV === "production") {
     throw new Error("Refusing full QA wipe in a production runtime.");
   }
   for (const [key, expected] of Object.entries({ ALLOW_QA_RESET: "true", QA_DATABASE: "true", CONFIRM_FULL_DATA_WIPE: "true" })) {
-    if (process.env[key] !== expected) throw new Error(`Refusing full QA wipe. Set ${key}=${expected}.`);
+    if (String(process.env[key] ?? "").trim() !== expected) throw new Error(`Refusing full QA wipe. Set ${key}=${expected}.`);
   }
   if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required.");
   const parsed = new URL(process.env.DATABASE_URL);
@@ -119,6 +134,7 @@ function maskDatabaseUrl(value) {
 }
 
 async function fullWipe() {
+  logStep("fullWipe: table discovery query starting");
   const rows = await prisma.$queryRaw`
     SELECT table_schema, table_name
     FROM information_schema.tables
@@ -127,17 +143,39 @@ async function fullWipe() {
       AND table_name <> '_prisma_migrations'
     ORDER BY table_name
   `;
-  if (!rows.length) return 0;
+  logStep("fullWipe: table discovery query completed", { tableCount: rows.length });
+  if (!rows.length) {
+    logStep("fullWipe: no tables found to truncate");
+    return 0;
+  }
   const tableList = rows.map((row) => `"${row.table_schema}"."${row.table_name}"`).join(", ");
+  logStep("fullWipe: lock diagnostic query starting");
+  const lockRows = await prisma.$queryRaw`
+    SELECT pid, state, wait_event_type, wait_event, query
+    FROM pg_stat_activity
+    WHERE datname = current_database()
+      AND pid <> pg_backend_pid()
+      AND state <> 'idle'
+    ORDER BY query_start ASC
+    LIMIT 10
+  `;
+  logStep("fullWipe: lock diagnostic query completed", { activeSessions: lockRows.length });
+  if (lockRows.length) console.table(lockRows);
+  logStep("fullWipe: TRUNCATE starting", { tableCount: rows.length });
   await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${tableList} RESTART IDENTITY CASCADE`);
+  logStep("fullWipe: TRUNCATE completed", { tableCount: rows.length });
   return rows.length;
 }
 
 async function ensurePlans() {
+  logStep("ensurePlans: starting");
   const plans = {};
   for (const plan of subscriptionPlans) {
+    logStep("ensurePlans: creating plan", { code: plan.code });
     plans[plan.code] = await prisma.subscriptionPlan.create({ data: plan });
+    logStep("ensurePlans: created plan", { code: plan.code, id: plans[plan.code].id });
   }
+  logStep("ensurePlans: completed");
   return plans;
 }
 
@@ -210,6 +248,7 @@ function customerPhone(seedIndex, customerIndex) {
 }
 
 async function createCustomer({ seed, seedIndex, customerIndex, business, branches, owner, staffUsers, programs }) {
+  if (customerIndex % 10 === 0) logStep("createCustomer: batch starting", { business: seed.name, customerIndex });
   const scenario = customerScenario(customerIndex);
   const [firstName, lastName] = customerName(seed, customerIndex);
   const normalizedPhone = normalizePhone(customerPhone(seedIndex, customerIndex));
@@ -301,19 +340,28 @@ async function createCustomer({ seed, seedIndex, customerIndex, business, branch
   if (scenario.progress >= 10) await prisma.customerNotification.create({ data: { businessId: business.id, businessCustomerMembershipId: membership.id, notificationType: "REWARD_AVAILABLE", channel: "WHATSAPP", title: "Reward Available", messageBody: `${program.rewardName} is ready.`, deliveryStatus: "READY", metadata: { source: "full-qa-seed" } } });
   if (customerIndex < 12) await prisma.scanEvent.create({ data: { businessId: business.id, branchId: branch.id, scannedByUserId: staff.id, customerProgramMembershipId: programMembership.id, scanToken: programMembership.scanToken, result: "VALID" } });
 
+  if (customerIndex % 10 === 9 || customerIndex === 49) logStep("createCustomer: batch completed", { business: seed.name, customerIndex });
   return { membership, globalCustomer, programMembership, scenario, branch, staff };
 }
 
 async function createBusiness(seed, seedIndex, passwordHash, plans, admin) {
+  logStep("createBusiness: starting", { business: seed.name });
+  logStep("createBusiness: creating business", { business: seed.name });
   const business = await prisma.business.create({ data: { name: seed.name, businessType: seed.businessType, status: "ACTIVE", supportAccessPolicy: seedIndex % 3 === 0 ? "APPROVAL_REQUIRED" : "IMMEDIATE" } });
+  logStep("createBusiness: business created", { business: seed.name, id: business.id });
+  logStep("createBusiness: creating business settings", { business: seed.name });
   await prisma.businessBranding.create({ data: { businessId: business.id, ...seed.branding } });
   await prisma.customerTierSetting.create({ data: { businessId: business.id, criteria: "VISITS_ONLY", tierQualificationWindow: "DAYS_90", tierMaintenanceMode: "DYNAMIC", silverVisitRequirement: 5, goldVisitRequirement: 15, vipVisitRequirement: 30 } });
   await prisma.businessScannerSettings.create({ data: { businessId: business.id, soundEffectsEnabled: true } });
   await prisma.businessCommunicationSettings.create({ data: { businessId: business.id, whatsappEnabled: false, smsEnabled: false, emailEnabled: false, preferredDefaultChannel: "NONE" } });
+  logStep("createBusiness: business settings created", { business: seed.name });
 
   const branches = [];
+  logStep("createBusiness: creating branches", { business: seed.name, count: seed.branches.length });
   for (const branchSeed of seed.branches) branches.push(await prisma.branch.create({ data: { businessId: business.id, ...branchSeed, status: "ACTIVE" } }));
+  logStep("createBusiness: branches created", { business: seed.name, count: branches.length });
 
+  logStep("createBusiness: creating users", { business: seed.name });
   const owner = await createUser({ name: `${seed.name} Owner`, email: email(seed, "owner"), role: "BUSINESS_OWNER", passwordHash, businessId: business.id, branchId: branches[0].id });
   const manager = await createUser({ name: `${seed.name} Branch Manager`, email: email(seed, "manager"), role: "BRANCH_MANAGER", passwordHash, businessId: business.id, branchId: branches[0].id });
   const staffUsers = [];
@@ -321,35 +369,52 @@ async function createBusiness(seed, seedIndex, passwordHash, plans, admin) {
     const branch = branches[(staffIndex - 1) % branches.length];
     staffUsers.push(await createUser({ name: `${seed.name} Staff ${staffIndex}`, email: email(seed, `staff${staffIndex}`), role: "STAFF", passwordHash, businessId: business.id, branchId: branch.id }));
   }
+  logStep("createBusiness: users created", { business: seed.name, count: staffUsers.length + 2 });
 
   const programs = [];
+  logStep("createBusiness: creating programs", { business: seed.name, count: seed.programs.length });
   for (const programSeed of seed.programs) {
     programs.push(await prisma.loyaltyProgram.create({
       data: { businessId: business.id, businessType: seed.businessType, requiredStamps: REQUIRED_STAMPS, startingBonusStamps: 0, startingStampPolicy: "NEVER", referralRewardBonusStamps: 1, active: true, ...programSeed },
     }));
   }
+  logStep("createBusiness: programs created", { business: seed.name, count: programs.length });
 
+  logStep("createBusiness: creating subscription and preset", { business: seed.name });
   const subscription = await prisma.businessSubscription.create({ data: { businessId: business.id, subscriptionPlanId: plans[seed.planCode].id, status: "ACTIVE", billingCycle: seed.planCode === "STARTER" ? "MONTHLY" : "YEARLY", startDate: addDays(new Date(), -20), expiryDate: addDays(new Date(), seed.planCode === "STARTER" ? 10 : 345), renewalDate: addDays(new Date(), seed.planCode === "STARTER" ? 10 : 345) } });
   await prisma.subscriptionAuditLog.create({ data: { businessId: business.id, businessSubscriptionId: subscription.id, userId: admin.id, action: "STATUS_CHANGED", newValue: "ACTIVE" } });
   await prisma.businessDesignPreset.create({ data: { businessId: business.id, name: "Full QA Baseline", cardDesign: seed.programs[0].cardDesign } });
+  logStep("createBusiness: subscription and preset created", { business: seed.name });
 
   const customers = [];
+  logStep("createBusiness: creating customers", { business: seed.name, count: 50 });
   for (let customerIndex = 0; customerIndex < 50; customerIndex += 1) customers.push(await createCustomer({ seed, seedIndex, customerIndex, business, branches, owner, staffUsers, programs }));
+  logStep("createBusiness: customers created", { business: seed.name, count: customers.length });
 
+  logStep("createBusiness: creating referrals", { business: seed.name });
   await createReferrals(seed, business, customers, programs[0]);
+  logStep("createBusiness: referrals created", { business: seed.name });
+  logStep("createBusiness: creating activity alert", { business: seed.name });
   await createActivityAlert(seed, business, branches[0], staffUsers[0], customers[9].programMembership);
+  logStep("createBusiness: activity alert created", { business: seed.name });
+  logStep("createBusiness: creating support records", { business: seed.name });
   await createSupportRecords(seedIndex, business, admin);
+  logStep("createBusiness: support records created", { business: seed.name });
+  logStep("createBusiness: creating audit events", { business: seed.name });
   await prisma.auditEvent.createMany({
     data: [
       { actorUserId: owner.id, businessId: business.id, branchId: branches[0].id, action: "FULL_QA_BUSINESS_CREATED", entityType: "Business", entityId: String(business.id), metadata: { source: "full-qa-seed" } },
       { actorUserId: staffUsers[0].id, businessId: business.id, branchId: branches[0].id, action: "FULL_QA_CUSTOMERS_CREATED", entityType: "BusinessCustomerMembership", entityId: String(customers[0].membership.id), metadata: { source: "full-qa-seed", count: customers.length } },
     ],
   });
+  logStep("createBusiness: audit events created", { business: seed.name });
 
+  logStep("createBusiness: completed", { business: seed.name });
   return { business, branches, owner, manager, staffUsers, programs, customers };
 }
 
 async function createActivityAlert(seed, business, branch, staff, programMembership) {
+  logStep("createActivityAlert: create alert starting", { business: business.name });
   const alert = await prisma.activityAlert.create({
     data: {
       businessId: business.id,
@@ -367,6 +432,8 @@ async function createActivityAlert(seed, business, branch, staff, programMembers
       status: "OPEN",
     },
   });
+  logStep("createActivityAlert: create alert completed", { business: business.name, alertId: alert.id });
+  logStep("createActivityAlert: create alert event starting", { business: business.name });
   await prisma.alertEvent.create({
     data: {
       alertId: alert.id,
@@ -376,10 +443,13 @@ async function createActivityAlert(seed, business, branch, staff, programMembers
       metadata: { source: "full-qa-seed" },
     },
   });
+  logStep("createActivityAlert: create alert event completed", { business: business.name });
 }
 
 async function createReferrals(seed, business, customers, program) {
+  logStep("createReferrals: starting", { business: business.name });
   for (let index = 0; index < 5; index += 1) {
+    logStep("createReferrals: creating referral", { business: business.name, index });
     const referrer = customers[index].membership;
     const referred = customers[index + 10].membership;
     const firstStamp = await prisma.stampTransaction.findFirst({ where: { customerProgramMembershipId: customers[index + 10].programMembership.id }, orderBy: { createdAt: "asc" } });
@@ -388,13 +458,21 @@ async function createReferrals(seed, business, customers, program) {
     });
     await prisma.referralEvent.create({ data: { businessId: business.id, referralId: referral.id, eventType: firstStamp ? "REFERRAL_QUALIFIED" : "REFERRAL_CREATED", metadata: { source: "full-qa-seed" } } });
     if (firstStamp) await prisma.referralReward.create({ data: { businessId: business.id, referralId: referral.id, loyaltyProgramId: program.id, referrerProgramMembershipId: customers[index].programMembership.id, bonusStamps: 1, status: "GRANTED", grantedAt: new Date() } });
+    logStep("createReferrals: referral created", { business: business.name, index, status: referral.status });
   }
+  logStep("createReferrals: completed", { business: business.name });
 }
 
 async function createSupportRecords(index, business, admin) {
+  logStep("createSupportRecords: create request starting", { business: business.name });
   const request = await prisma.supportRequest.create({ data: { businessId: business.id, requestedByUserId: admin.id, reason: `Full QA support request for ${business.name}`, durationMinutes: 30, readOnly: true, emergency: index % 4 === 0, status: index % 2 === 0 ? "PENDING" : "APPROVED", expiresAt: addDays(new Date(), 1), reviewedByUserId: index % 2 === 0 ? null : admin.id, reviewedAt: index % 2 === 0 ? null : new Date(), responseNote: index % 2 === 0 ? null : "Approved for QA testing." } });
+  logStep("createSupportRecords: create request completed", { business: business.name, requestId: request.id, status: request.status });
+  logStep("createSupportRecords: create session starting", { business: business.name });
   const session = await prisma.supportSession.create({ data: { businessId: business.id, adminUserId: admin.id, reason: `QA support visibility for ${business.name}`, expiresAt: addDays(new Date(), 1), readOnly: true, status: "ENDED", endedAt: new Date(), supportSummary: "QA support session completed.", supportRequestId: request.status === "APPROVED" ? request.id : null } });
+  logStep("createSupportRecords: create session completed", { business: business.name, sessionId: session.id });
+  logStep("createSupportRecords: create activity starting", { business: business.name });
   await prisma.supportSessionActivity.create({ data: { supportSessionId: session.id, adminUserId: admin.id, businessId: business.id, activityType: "SESSION_STARTED", path: "/dashboard", description: "QA support session started." } });
+  logStep("createSupportRecords: create activity completed", { business: business.name });
 }
 
 function csvEscape(value) {
@@ -403,28 +481,47 @@ function csvEscape(value) {
 }
 
 function writeCredentials(rows) {
+  logStep("writeCredentials: starting", { rowCount: rows.length });
   const filePath = join(process.cwd(), "qa-credentials.csv");
   const header = ["Business name", "Role", "Full name", "Email", "Password", "Branch", "Notes"];
   const csv = [header, ...rows.map((row) => [row.business, row.role, row.name, row.email, row.password, row.branch, row.notes])].map((row) => row.map(csvEscape).join(",")).join("\n");
   writeFileSync(filePath, csv, "utf8");
+  logStep("writeCredentials: completed", { filePath });
   return filePath;
 }
 
 async function main() {
+  logStep("main: safety guard starting");
   const target = assertSafeTarget();
+  logStep("main: safety guard completed", { database: target.databaseName, host: target.host });
   console.warn(WARNING);
   console.warn(`Target database: ${target.maskedUrl}`);
 
+  logStep("main: database connection check starting");
+  await prisma.$queryRaw`SELECT 1 AS ok`;
+  logStep("main: database connection check completed");
+  logStep("main: full wipe starting");
   const tableCount = await fullWipe();
+  logStep("main: full wipe completed", { tableCount });
+  logStep("main: password hash starting");
   const passwordHash = await bcrypt.hash(QA_PASSWORD, 12);
+  logStep("main: password hash completed");
+  logStep("main: plan creation starting");
   const plans = await ensurePlans();
+  logStep("main: plan creation completed");
+  logStep("main: platform setting creation starting");
   await prisma.platformSetting.create({ data: { key: "demo_mode", value: { enabled: false, source: "full-qa-seed" } } });
+  logStep("main: platform setting creation completed");
+  logStep("main: system admin creation starting");
   const admin = await createUser({ name: "LoyaltyBase QA System Administrator", email: "admin@loyaltybase.test", role: "PLATFORM_OWNER", passwordHash });
+  logStep("main: system admin creation completed", { id: admin.id, email: admin.email });
   const credentialRows = [{ business: "LoyaltyBase", role: "System Admin", name: admin.name, email: admin.email, password: QA_PASSWORD, branch: "-", notes: "Can see all QA businesses." }];
 
   const created = [];
   for (const [index, businessSeed] of businesses.entries()) {
+    logStep("main: business seed starting", { index: index + 1, total: businesses.length, business: businessSeed.name });
     const entry = await createBusiness(businessSeed, index, passwordHash, plans, admin);
+    logStep("main: business seed completed", { index: index + 1, total: businesses.length, business: businessSeed.name });
     created.push(entry);
     credentialRows.push(
       { business: entry.business.name, role: "Business Owner", name: entry.owner.name, email: entry.owner.email, password: QA_PASSWORD, branch: entry.branches[0].name, notes: "Owner can see only this business." },
@@ -433,7 +530,9 @@ async function main() {
     );
   }
 
+  logStep("main: credential CSV generation starting");
   const credentialsPath = writeCredentials(credentialRows);
+  logStep("main: credential CSV generation completed", { credentialsPath });
   console.log("");
   console.log("Full QA seed completed.");
   console.log(`Database: ${target.databaseName} @ ${target.host}`);
