@@ -28,7 +28,7 @@ test("card layout resolver keeps legacy wallet layouts safe", () => {
   assert.match(design, /return resolveValue\("layoutStyle", value\)/);
 });
 
-test("card layout styles are not applied to live card renderers yet", () => {
+test("saved card layout styles are applied through the public wallet renderer", () => {
   const walletShell = read("src/components/public-card/WalletCardShell.tsx");
   const wallet = read("src/components/public-card/LoyaltyWalletCard.tsx");
   const frontExport = read("src/components/public-card/LoyaltyCardFrontExport.tsx");
@@ -36,7 +36,10 @@ test("card layout styles are not applied to live card renderers yet", () => {
   const preview = read("src/components/CardThemePreviewSelector.tsx");
   const publicCard = read("src/app/card/[token]/page.tsx");
 
-  for (const source of [walletShell, wallet, frontExport, backExport, preview, publicCard]) {
-    assert.doesNotMatch(source, /cardLayoutStyles|resolveCardLayoutStyle|layoutStyle|PREMIUM|MINIMAL|LUXURY/);
-  }
+  assert.match(publicCard, /cardDesign: primaryCardModel\.design/);
+  assert.match(wallet, /design\.layoutStyle/);
+  assert.match(walletShell, /resolveCardDesign\(cardDesign\)/);
+  assert.match(frontExport, /resolveCardDesign\(wallet\.cardDesign\)/);
+  assert.match(backExport, /resolveCardDesign\(wallet\.cardDesign\)/);
+  assert.doesNotMatch(preview, /resolveCardDesign\(\)/);
 });

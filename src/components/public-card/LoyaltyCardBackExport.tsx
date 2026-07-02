@@ -1,7 +1,9 @@
 import { WalletCardShell } from "@/components/public-card/WalletCardShell";
 import type { LoyaltyWalletCardProps } from "@/components/public-card/LoyaltyWalletCard";
+import { resolveCardDesign } from "@/lib/card-design";
 
 export function LoyaltyCardBackExport({ wallet }: { wallet: Omit<LoyaltyWalletCardProps, "exportMode"> }) {
+  const design = resolveCardDesign(wallet.cardDesign);
   const displayRequired = wallet.required && wallet.required > 0 ? wallet.required : 1;
   const displayProgress = wallet.required && wallet.required > 0 ? (wallet.progress ?? 0) : 0;
   const displayReward = wallet.rewardName ?? "Loyalty reward";
@@ -15,17 +17,17 @@ export function LoyaltyCardBackExport({ wallet }: { wallet: Omit<LoyaltyWalletCa
         : `${remaining} visits remaining`
     : "No active program yet";
   const summaryRows = [
-    ["Business", wallet.businessName],
-    ["Customer", wallet.customerName],
-    ["Program", displayProgram],
-    ["Progress", `${displayProgress} / ${displayRequired} visits`],
-    ["Reward", displayReward],
-    ["Status", wallet.rewardReady ? "Reward Ready" : statusText],
+    ...(design.visibleSections.businessName ? [["Business", wallet.businessName]] : []),
+    ...(design.visibleSections.customerName ? [["Customer", wallet.customerName]] : []),
+    ...(design.visibleSections.programName ? [["Program", displayProgram]] : []),
+    ...(design.visibleSections.progress ? [["Progress", `${displayProgress} / ${displayRequired} visits`]] : []),
+    ...(design.visibleSections.rewardBox ? [["Reward", displayReward]] : []),
+    ...(design.visibleSections.visits ? [["Status", wallet.rewardReady ? "Reward Ready" : statusText]] : []),
   ];
 
   return (
     <div className="w-[360px] bg-transparent">
-      <WalletCardShell theme={wallet.theme} exportMode>
+      <WalletCardShell theme={wallet.theme} cardDesign={design} exportMode>
         <div className="px-5 pb-5 pt-6">
           <div className="grid gap-2">
             <div className="min-w-0">
@@ -36,7 +38,7 @@ export function LoyaltyCardBackExport({ wallet }: { wallet: Omit<LoyaltyWalletCa
             </div>
           </div>
 
-          <section className="pt-5 text-center">
+          {design.visibleSections.qr ? <section className="pt-5 text-center">
             <div className="mx-auto flex h-[214px] w-[214px] items-center justify-center rounded-[18px] border border-black/5 bg-white p-4">
               {wallet.qrCode ? (
                 <div
@@ -56,9 +58,9 @@ export function LoyaltyCardBackExport({ wallet }: { wallet: Omit<LoyaltyWalletCa
             <p className="pt-1 text-[13px]" style={{ color: wallet.theme.mutedText }}>
               {wallet.qrHelperText ?? "Scan this card"}
             </p>
-          </section>
+          </section> : null}
 
-          <section className="pt-5">
+          {summaryRows.length ? <section className="pt-5">
             <div className="rounded-[18px] border px-4 py-2.5" style={{ backgroundColor: wallet.theme.rewardPanelBackground, color: wallet.theme.rewardPanelText, borderColor: wallet.theme.rewardPanelBorder }}>
               <div className="grid">
                 {summaryRows.map(([label, value], index) => (
@@ -72,7 +74,7 @@ export function LoyaltyCardBackExport({ wallet }: { wallet: Omit<LoyaltyWalletCa
                 ))}
               </div>
             </div>
-          </section>
+          </section> : null}
         </div>
       </WalletCardShell>
     </div>

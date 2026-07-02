@@ -2,7 +2,26 @@
 
 import Image from "next/image";
 import { useState, type CSSProperties } from "react";
+import {
+  Car,
+  Check,
+  ChefHat,
+  Circle,
+  CircleDot,
+  Coffee,
+  Diamond,
+  Droplets,
+  Gift,
+  Heart,
+  Pizza,
+  Scissors,
+  Sparkles,
+  Star,
+  Utensils,
+  type LucideIcon,
+} from "lucide-react";
 import { WalletCardShell, type WalletTheme } from "@/components/public-card/WalletCardShell";
+import { resolveCardDesign, type CardDesign, type CardDesignInput } from "@/lib/card-design";
 
 export type LoyaltyWalletCardProps = {
   businessName: string;
@@ -22,6 +41,7 @@ export type LoyaltyWalletCardProps = {
   required?: number;
   remaining?: number;
   completion?: number;
+  cardDesign?: CardDesignInput;
 };
 
 const businessNameClampStyle: CSSProperties = {
@@ -55,8 +75,10 @@ export function LoyaltyWalletCard({
   required = 0,
   remaining = 0,
   completion = 0,
+  cardDesign,
 }: LoyaltyWalletCardProps) {
   const [mode, setMode] = useState<"wallet" | "scan">("wallet");
+  const design = resolveCardDesign(cardDesign);
   const displayRequired = required > 0 ? required : 1;
   const displayProgress = required > 0 ? progress : 0;
   const displayCompletion = required > 0 ? completion : 0;
@@ -67,7 +89,7 @@ export function LoyaltyWalletCard({
   const showScanView = !exportMode && mode === "scan";
 
   return (
-    <WalletCardShell theme={theme} exportMode={exportMode}>
+    <WalletCardShell theme={theme} exportMode={exportMode} cardDesign={design}>
       <div
         className="transition-opacity duration-[220ms] motion-reduce:transition-none"
         aria-live="polite"
@@ -85,6 +107,7 @@ export function LoyaltyWalletCard({
             rewardReady={rewardReady}
             statusText={statusText}
             theme={theme}
+            design={design}
             onBack={() => setMode("wallet")}
           />
         ) : (
@@ -102,6 +125,7 @@ export function LoyaltyWalletCard({
             rewardReady={rewardReady}
             statusText={statusText}
             theme={theme}
+            design={design}
             tierIcon={tierIcon}
             tierLabel={tierLabel}
             onScan={() => setMode("scan")}
@@ -128,6 +152,7 @@ function WalletView({
   rewardReady,
   statusText,
   theme,
+  design,
   tierIcon,
   tierLabel,
   onScan,
@@ -145,84 +170,79 @@ function WalletView({
   rewardReady: boolean;
   statusText: string;
   theme: WalletTheme;
+  design: CardDesign;
   tierIcon: string;
   tierLabel: string;
   onScan: () => void;
 }) {
   return (
-    <div className="px-6 pb-5 pt-7">
-      <CardHeader
-        businessLogoUrl={businessLogoUrl}
-        businessName={businessName}
-        displayProgram={displayProgram}
-        theme={theme}
-        tierIcon={tierIcon}
-        tierLabel={tierLabel}
-      />
+    <div className={`px-6 pb-5 pt-7 ${cardPaddingClass(design)}`}>
+      {(design.visibleSections.logo || design.visibleSections.businessName || design.visibleSections.programName || design.visibleSections.tierBadge) ? (
+        <CardHeader
+          businessLogoUrl={businessLogoUrl}
+          businessName={businessName}
+          displayProgram={displayProgram}
+          theme={theme}
+          design={design}
+          tierIcon={tierIcon}
+          tierLabel={tierLabel}
+        />
+      ) : null}
 
-      <section className="pt-7">
-        <p className="text-[12px] font-semibold uppercase tracking-[0.18em]" style={{ color: theme.mutedText }}>
-          Customer
-        </p>
-        <h2 className="mt-2 text-[30px] font-extrabold leading-[1.05] tracking-[-0.05em]">
-          {customerName}
-        </h2>
-        <p className="mt-2 text-[14px]" style={{ color: theme.mutedText }}>
-          Member since {memberSince}
-        </p>
-      </section>
+      {design.visibleSections.customerName ? (
+        <section className="pt-7">
+          <p className={labelClass(design)} style={{ color: theme.mutedText }}>
+            Customer
+          </p>
+          <h2 className={customerClass(design)}>
+            {customerName}
+          </h2>
+          <p className={supportingClass(design)} style={{ color: theme.mutedText }}>
+            Member since {memberSince}
+          </p>
+        </section>
+      ) : null}
 
-      <section className="pt-7">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <p className="text-[12px] font-semibold uppercase tracking-[0.16em]" style={{ color: theme.mutedText }}>
-              Progress
-            </p>
-            <p className="mt-1 text-[44px] font-black leading-none tracking-[-0.06em]">
-              {displayProgress}
-              <span className="text-[20px] font-extrabold" style={{ color: theme.mutedText }}>
-                /{displayRequired}
-              </span>
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.16em]" style={{ color: theme.mutedText }}>
-              Visits
-            </p>
-            <p className="mt-1 text-[16px] font-bold">{rewardReady ? "Complete" : statusText}</p>
-          </div>
+      {design.visibleSections.progress ? (
+        <ProgressSection
+          completion={displayCompletion}
+          current={displayProgress}
+          design={design}
+          required={displayRequired}
+          rewardReady={rewardReady}
+          statusText={statusText}
+          theme={theme}
+        />
+      ) : null}
+
+      {design.visibleSections.rewardBox ? (
+        <RewardPanel
+          design={design}
+          displayReward={displayReward}
+          rewardReady={rewardReady}
+          statusText={statusText}
+          theme={theme}
+        />
+      ) : null}
+
+      {design.visibleSections.footer ? (
+        <div className="pt-5">
+          {exportMode ? (
+            <div className="flex min-h-12 w-full items-center justify-center rounded-[16px] px-5 text-[15px] font-bold shadow-sm" style={{ background: theme.ctaBackground, color: theme.ctaForeground }}>
+              Scan at Checkout
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={onScan}
+              className="flex min-h-12 w-full items-center justify-center rounded-[16px] px-5 text-[15px] font-bold shadow-sm transition duration-[180ms] hover:translate-y-[-1px] focus:outline-none focus:ring-4 focus:ring-orange-200 active:translate-y-0 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+              style={{ background: theme.ctaBackground, color: theme.ctaForeground }}
+            >
+              Scan at Checkout
+            </button>
+          )}
         </div>
-        <div className="mt-4 h-[12px] overflow-hidden rounded-full" style={{ backgroundColor: theme.progressTrack }}>
-          <div
-            className="h-full rounded-full transition-all duration-[220ms] motion-reduce:transition-none"
-            style={{ width: `${displayCompletion}%`, background: theme.progressFill }}
-          />
-        </div>
-      </section>
-
-      <RewardPanel
-        displayReward={displayReward}
-        rewardReady={rewardReady}
-        statusText={statusText}
-        theme={theme}
-      />
-
-      <div className="pt-5">
-        {exportMode ? (
-          <div className="flex min-h-12 w-full items-center justify-center rounded-[16px] px-5 text-[15px] font-bold shadow-sm" style={{ background: theme.ctaBackground, color: theme.ctaForeground }}>
-            Scan at Checkout
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={onScan}
-            className="flex min-h-12 w-full items-center justify-center rounded-[16px] px-5 text-[15px] font-bold shadow-sm transition duration-[180ms] hover:translate-y-[-1px] focus:outline-none focus:ring-4 focus:ring-orange-200 active:translate-y-0 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
-            style={{ background: theme.ctaBackground, color: theme.ctaForeground }}
-          >
-            Scan at Checkout
-          </button>
-        )}
-      </div>
+      ) : null}
     </div>
   );
 }
@@ -239,6 +259,7 @@ function ScanView({
   rewardReady,
   statusText,
   theme,
+  design,
   onBack,
 }: {
   businessName: string;
@@ -252,6 +273,7 @@ function ScanView({
   rewardReady: boolean;
   statusText: string;
   theme: WalletTheme;
+  design: CardDesign;
   onBack: () => void;
 }) {
   return (
@@ -273,6 +295,7 @@ function ScanView({
         </button>
       </div>
 
+      {design.visibleSections.qr ? (
       <section className="pt-7 text-center">
         <QrBlock
           businessName={businessName}
@@ -287,14 +310,15 @@ function ScanView({
           {qrHelperText}
         </p>
       </section>
+      ) : null}
 
       <section className="pt-7">
         <div className="rounded-[18px] px-4 py-4 ring-1" style={{ backgroundColor: theme.rewardPanelBackground, color: theme.rewardPanelText, borderColor: theme.rewardPanelBorder }}>
           <div className="grid gap-3">
-            <SummaryLine label="Program" value={displayProgram} theme={theme} />
-            <SummaryLine label="Progress" value={`${displayProgress} / ${displayRequired} visits`} theme={theme} />
-            <SummaryLine label="Next reward" value={displayReward} theme={theme} />
-            <SummaryLine label="Status" value={rewardReady ? "Reward Ready" : statusText} theme={theme} />
+            {design.visibleSections.programName ? <SummaryLine label="Program" value={displayProgram} theme={theme} /> : null}
+            {design.visibleSections.progress ? <SummaryLine label="Progress" value={`${displayProgress} / ${displayRequired} visits`} theme={theme} /> : null}
+            {design.visibleSections.rewardBox ? <SummaryLine label="Next reward" value={displayReward} theme={theme} /> : null}
+            {design.visibleSections.visits ? <SummaryLine label="Status" value={rewardReady ? "Reward Ready" : statusText} theme={theme} /> : null}
           </div>
         </div>
       </section>
@@ -307,6 +331,7 @@ function CardHeader({
   businessName,
   displayProgram,
   theme,
+  design,
   tierIcon,
   tierLabel,
 }: {
@@ -314,18 +339,19 @@ function CardHeader({
   businessName: string;
   displayProgram: string;
   theme: WalletTheme;
+  design: CardDesign;
   tierIcon: string;
   tierLabel: string;
 }) {
   return (
     <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3">
-      {businessLogoUrl ? (
+      {design.visibleSections.logo && businessLogoUrl ? (
         <div
           aria-label={`${businessName} logo`}
           className="h-12 w-12 shrink-0 rounded-full bg-cover bg-center shadow-sm"
           style={{ backgroundImage: `url(${businessLogoUrl})`, backgroundColor: theme.logoBackground }}
         />
-      ) : (
+      ) : design.visibleSections.logo ? (
         <div
           className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-black shadow-sm"
           style={{ backgroundColor: theme.logoBackground, color: theme.logoText }}
@@ -333,24 +359,24 @@ function CardHeader({
         >
           {theme.style === "premium-dark" ? tierIcon : businessName.slice(0, 1).toUpperCase()}
         </div>
-      )}
+      ) : null}
       <div className="min-w-0 pr-1">
-        <h1
+        {design.visibleSections.businessName ? <h1
           className="text-[18px] font-extrabold leading-[1.08] tracking-[-0.02em]"
           style={businessNameClampStyle}
           title={businessName}
         >
           {businessName}
-        </h1>
-        <p
+        </h1> : null}
+        {design.visibleSections.programName ? <p
           className="pt-1 text-[13px] font-medium leading-tight"
           style={{ ...programNameClampStyle, color: theme.mutedText }}
           title={displayProgram}
         >
           {displayProgram}
-        </p>
+        </p> : null}
       </div>
-      <div className="w-[104px] shrink-0 text-right">
+      {design.visibleSections.tierBadge ? <div className="w-[104px] shrink-0 text-right">
         <p className="text-[11px] uppercase tracking-[0.18em]" style={{ color: theme.mutedText }}>Tier</p>
         <span
           className="mt-2 inline-flex max-w-full justify-center rounded-full px-3 py-1 text-center text-[12px] font-semibold leading-tight ring-1"
@@ -363,30 +389,29 @@ function CardHeader({
         >
           {tierLabel}
         </span>
-      </div>
+      </div> : null}
     </div>
   );
 }
 
 function RewardPanel({
+  design,
   displayReward,
   rewardReady,
   statusText,
   theme,
 }: {
+  design: CardDesign;
   displayReward: string;
   rewardReady: boolean;
   statusText: string;
   theme: WalletTheme;
 }) {
+  const style = rewardPanelStyle(design, theme, rewardReady);
   return (
     <section
-      className="mt-7 rounded-[18px] px-4 py-4 shadow-md ring-1"
-      style={{
-        backgroundColor: rewardReady ? "#E9F7EE" : theme.rewardPanelBackground,
-        color: rewardReady ? "#14532D" : theme.rewardPanelText,
-        borderColor: rewardReady ? "rgba(47, 111, 68, 0.28)" : theme.rewardPanelBorder,
-      }}
+      className={`mt-7 rounded-[18px] px-4 py-4 ring-1 ${style.className}`}
+      style={style.style}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
@@ -398,6 +423,67 @@ function RewardPanel({
         <div className="shrink-0 rounded-full px-3 py-1 text-[13px] font-black" style={{ backgroundColor: rewardReady ? "#DCFCE7" : theme.badgeBackground, color: rewardReady ? "#15803D" : theme.badgeText }}>
           {rewardReady ? "Reward Ready" : statusText}
         </div>
+      </div>
+    </section>
+  );
+}
+
+function ProgressSection({
+  completion,
+  current,
+  design,
+  required,
+  rewardReady,
+  statusText,
+  theme,
+}: {
+  completion: number;
+  current: number;
+  design: CardDesign;
+  required: number;
+  rewardReady: boolean;
+  statusText: string;
+  theme: WalletTheme;
+}) {
+  const StampIcon = stampIconComponent(design.stampIcon);
+  const nodes = Array.from({ length: Math.min(required, 10) }, (_, index) => index < current);
+  const visitsVisible = design.visibleSections.visits;
+  if (design.stampJourneyStyle === "PROGRESS_BAR") {
+    return (
+      <section className="pt-7">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <p className={labelClass(design)} style={{ color: theme.mutedText }}>Progress</p>
+            <p className={progressClass(design)}>
+              {current}
+              <span className="text-[20px] font-extrabold" style={{ color: theme.mutedText }}>/{required}</span>
+            </p>
+          </div>
+          {visitsVisible ? <div className="text-right"><p className={labelClass(design)} style={{ color: theme.mutedText }}>Visits</p><p className="mt-1 text-[16px] font-bold">{rewardReady ? "Complete" : statusText}</p></div> : null}
+        </div>
+        <div className="mt-4 h-[10px] overflow-hidden rounded-full" style={{ backgroundColor: theme.progressTrack }}>
+          <div className="h-full rounded-full transition-all duration-[220ms] motion-reduce:transition-none" style={{ width: `${completion}%`, background: theme.progressFill }} />
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="pt-7">
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <p className={labelClass(design)} style={{ color: theme.mutedText }}>Progress</p>
+          <p className={progressClass(design)}>{current}<span className="text-[20px] font-extrabold" style={{ color: theme.mutedText }}>/{required}</span></p>
+        </div>
+        {visitsVisible ? <div className="text-right"><p className={labelClass(design)} style={{ color: theme.mutedText }}>Visits</p><p className="mt-1 text-[16px] font-bold">{rewardReady ? "Complete" : statusText}</p></div> : null}
+      </div>
+      <div className={`mt-4 grid ${nodes.length > 5 ? "grid-cols-5" : "grid-cols-3"} gap-2`}>
+        {nodes.map((filled, index) => (
+          <span key={index} className="relative grid h-9 place-items-center rounded-full border" style={{ background: filled ? theme.progressFill : theme.progressTrack, borderColor: filled ? "transparent" : theme.border, color: filled ? theme.ctaForeground : theme.mutedText }}>
+            {design.stampJourneyStyle === "CONNECTED_DOTS" && index > 0 ? <span className="absolute right-full top-1/2 h-0.5 w-2 -translate-y-1/2" style={{ background: filled ? theme.progressFill : theme.progressTrack }} /> : null}
+            <StampIcon className="h-4 w-4" aria-hidden="true" />
+          </span>
+        ))}
       </div>
     </section>
   );
@@ -442,4 +528,130 @@ function SummaryLine({ label, value, theme }: { label: string; value: string; th
       <span className="text-right text-[14px] font-bold">{value}</span>
     </div>
   );
+}
+
+function labelClass(design: CardDesign) {
+  if (design.typographyPreset === "LUXURY") return "text-[11px] font-medium uppercase tracking-[0.24em]";
+  if (design.typographyPreset === "PLAYFUL") return "text-[12px] font-black uppercase tracking-[0.12em]";
+  if (design.typographyPreset === "MINIMAL") return "text-[11px] font-medium uppercase tracking-[0.20em]";
+  return "text-[12px] font-semibold uppercase tracking-[0.18em]";
+}
+
+function customerClass(design: CardDesign) {
+  if (design.typographyPreset === "PREMIUM") return "mt-2 text-[32px] font-black leading-[1.02] tracking-[-0.05em]";
+  if (design.typographyPreset === "LUXURY") return "mt-2 text-[28px] font-semibold leading-[1.08] tracking-[0.02em]";
+  if (design.typographyPreset === "PLAYFUL") return "mt-2 text-[31px] font-black leading-[1.05]";
+  if (design.typographyPreset === "MINIMAL") return "mt-2 text-[28px] font-light leading-[1.12] tracking-[-0.01em]";
+  if (design.typographyPreset === "CLASSIC") return "mt-2 text-[30px] font-bold leading-[1.08]";
+  return "mt-2 text-[30px] font-extrabold leading-[1.05] tracking-[-0.05em]";
+}
+
+function progressClass(design: CardDesign) {
+  if (design.typographyPreset === "MINIMAL") return "mt-1 text-[38px] font-light leading-none";
+  if (design.typographyPreset === "LUXURY") return "mt-1 text-[40px] font-semibold leading-none tracking-[0.02em]";
+  return "mt-1 text-[44px] font-black leading-none tracking-[-0.06em]";
+}
+
+function supportingClass(design: CardDesign) {
+  if (design.typographyPreset === "MINIMAL") return "mt-2 text-[13px] font-light";
+  if (design.typographyPreset === "PREMIUM") return "mt-2 text-[14px] font-semibold";
+  return "mt-2 text-[14px]";
+}
+
+function cardPaddingClass(design: CardDesign) {
+  if (design.layoutStyle === "MINIMAL") return "px-5";
+  if (design.layoutStyle === "LUXURY") return "px-7";
+  return "";
+}
+
+function rewardPanelStyle(design: CardDesign, theme: WalletTheme, rewardReady: boolean) {
+  if (rewardReady) {
+    return {
+      className: "shadow-md",
+      style: {
+        backgroundColor: "#E9F7EE",
+        color: "#14532D",
+        borderColor: "rgba(47, 111, 68, 0.28)",
+      },
+    };
+  }
+  if (design.rewardStyle === "OUTLINE") {
+    return {
+      className: "",
+      style: {
+        backgroundColor: "transparent",
+        color: theme.cardText,
+        borderColor: theme.badgeBorder,
+      },
+    };
+  }
+  if (design.rewardStyle === "GLASS") {
+    return {
+      className: "backdrop-blur-sm shadow-sm",
+      style: {
+        backgroundColor: "rgba(255,255,255,0.18)",
+        color: theme.cardText,
+        borderColor: "rgba(255,255,255,0.30)",
+      },
+    };
+  }
+  if (design.rewardStyle === "PREMIUM") {
+    return {
+      className: "shadow-lg",
+      style: {
+        backgroundColor: theme.rewardPanelBackground,
+        color: theme.rewardPanelText,
+        borderColor: theme.accent,
+      },
+    };
+  }
+  if (design.rewardStyle === "TICKET") {
+    return {
+      className: "border-dashed shadow-sm",
+      style: {
+        backgroundColor: theme.rewardPanelBackground,
+        color: theme.rewardPanelText,
+        borderColor: theme.rewardPanelBorder,
+      },
+    };
+  }
+  return {
+    className: "shadow-md",
+    style: {
+      backgroundColor: theme.rewardPanelBackground,
+      color: theme.rewardPanelText,
+      borderColor: theme.rewardPanelBorder,
+    },
+  };
+}
+
+function stampIconComponent(value: CardDesign["stampIcon"]): LucideIcon {
+  const icons: Partial<Record<CardDesign["stampIcon"], LucideIcon>> = {
+    STAR: Star,
+    HEART: Heart,
+    CHECK: Check,
+    CIRCLE: Circle,
+    DIAMOND: Diamond,
+    GIFT: Gift,
+    SCISSORS: Scissors,
+    RAZOR: Sparkles,
+    COMB: Sparkles,
+    BARBER_POLE: CircleDot,
+    COFFEE_CUP: Coffee,
+    COFFEE_BEAN: CircleDot,
+    ESPRESSO: Coffee,
+    PLATE: Utensils,
+    BURGER: Utensils,
+    PIZZA: Pizza,
+    CHEF_HAT: ChefHat,
+    CAR: Car,
+    WATER_DROP: Droplets,
+    BUBBLES: Sparkles,
+    WHEEL: CircleDot,
+    LIPSTICK: Sparkles,
+    MIRROR: Circle,
+    MAKEUP_BRUSH: Sparkles,
+    NAIL_POLISH: Sparkles,
+  };
+  return icons[value] ?? Star;
 }

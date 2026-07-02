@@ -28,14 +28,17 @@ test("stamp journey resolver keeps safe fallback behavior", () => {
   assert.match(design, /return resolveValue\("stampJourneyStyle", value\)/);
 });
 
-test("stamp journey styles are not applied to live card renderers yet", () => {
+test("saved stamp journey styles are applied to live customer card progress", () => {
   const wallet = read("src/components/public-card/LoyaltyWalletCard.tsx");
   const frontExport = read("src/components/public-card/LoyaltyCardFrontExport.tsx");
   const backExport = read("src/components/public-card/LoyaltyCardBackExport.tsx");
   const preview = read("src/components/CardThemePreviewSelector.tsx");
   const publicCard = read("src/app/card/[token]/page.tsx");
 
-  for (const source of [wallet, frontExport, backExport, preview, publicCard]) {
-    assert.doesNotMatch(source, /stampJourneyStyle|stampJourneyStyles|resolveStampJourneyStyle|CONNECTED_DOTS|ICON_GRID|ROADMAP|TICKET_PUNCH/);
-  }
+  assert.match(publicCard, /cardDesign: primaryCardModel\.design/);
+  assert.match(wallet, /design\.stampJourneyStyle === "PROGRESS_BAR"/);
+  assert.match(wallet, /design\.stampJourneyStyle === "CONNECTED_DOTS"/);
+  assert.match(frontExport, /resolveCardDesign\(wallet\.cardDesign\)/);
+  assert.match(backExport, /resolveCardDesign\(wallet\.cardDesign\)/);
+  assert.doesNotMatch(preview, /resolveStampJourneyStyle/);
 });

@@ -67,14 +67,19 @@ test("industry packs include default stamp icons and recommended icon groups", (
   assert.match(design, /getRecommendedStampIconsForBusinessType/);
 });
 
-test("stamp icons are not applied to live card renderers yet", () => {
+test("saved stamp icons are applied to live customer card progress markers", () => {
   const wallet = read("src/components/public-card/LoyaltyWalletCard.tsx");
   const frontExport = read("src/components/public-card/LoyaltyCardFrontExport.tsx");
   const backExport = read("src/components/public-card/LoyaltyCardBackExport.tsx");
   const preview = read("src/components/CardThemePreviewSelector.tsx");
   const publicCard = read("src/app/card/[token]/page.tsx");
 
-  for (const source of [wallet, frontExport, backExport, preview, publicCard]) {
-    assert.doesNotMatch(source, /stampIcon|stampIcons|resolveStampIcon|COFFEE_CUP|SCISSORS|WATER_DROP|LIPSTICK|PLATE/);
-  }
+  assert.match(publicCard, /cardDesign: primaryCardModel\.design/);
+  assert.match(wallet, /stampIconComponent\(design\.stampIcon\)/);
+  assert.match(wallet, /COFFEE_CUP/);
+  assert.match(wallet, /SCISSORS/);
+  assert.match(wallet, /WATER_DROP/);
+  assert.match(frontExport, /resolveCardDesign\(wallet\.cardDesign\)/);
+  assert.match(backExport, /resolveCardDesign\(wallet\.cardDesign\)/);
+  assert.doesNotMatch(preview, /resolveStampIcon/);
 });

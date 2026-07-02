@@ -168,6 +168,7 @@ export default async function PublicCustomerCardPage({
     required: primaryCardModel.progress.hasProgram ? primaryCardModel.progress.required : 0,
     remaining: primaryCardModel.progress.remaining,
     completion: primaryCardModel.progress.completion,
+    cardDesign: primaryCardModel.design,
   };
 
   return (

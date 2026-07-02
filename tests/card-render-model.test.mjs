@@ -55,7 +55,7 @@ test("card render model preserves existing fallback display behavior", () => {
   assert.match(model, /helperText: input\.qr\.helperText \|\| \(hasProgram \? "Scan this card" : "Show this QR code to staff to find your customer card\."\)/);
 });
 
-test("public card uses render model without changing wallet card renderers", () => {
+test("public card passes render model design into wallet card renderers", () => {
   const publicCard = read("src/app/card/[token]/page.tsx");
   const wallet = read("src/components/public-card/LoyaltyWalletCard.tsx");
   const frontExport = read("src/components/public-card/LoyaltyCardFrontExport.tsx");
@@ -67,8 +67,9 @@ test("public card uses render model without changing wallet card renderers", () 
   assert.match(publicCard, /theme: primaryCardModel\.resolvedColors/);
   assert.match(publicCard, /programName: primaryCardModel\.reward\.programName/);
   assert.match(publicCard, /required: primaryCardModel\.progress\.hasProgram \? primaryCardModel\.progress\.required : 0/);
-
-  for (const source of [wallet, frontExport, backExport, preview]) {
-    assert.doesNotMatch(source, /CardRenderModel|buildCardRenderModel|visibleSections/);
-  }
+  assert.match(publicCard, /cardDesign: primaryCardModel\.design/);
+  assert.match(wallet, /design\.visibleSections/);
+  assert.match(frontExport, /resolveCardDesign\(wallet\.cardDesign\)/);
+  assert.match(backExport, /resolveCardDesign\(wallet\.cardDesign\)/);
+  assert.doesNotMatch(preview, /CardRenderModel|buildCardRenderModel/);
 });

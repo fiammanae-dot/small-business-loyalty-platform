@@ -1,5 +1,6 @@
 import { WalletCardShell } from "@/components/public-card/WalletCardShell";
 import type { LoyaltyWalletCardProps } from "@/components/public-card/LoyaltyWalletCard";
+import { resolveCardDesign, type CardDesign } from "@/lib/card-design";
 import type { CSSProperties } from "react";
 
 const exportBusinessNameClampStyle: CSSProperties = {
@@ -16,6 +17,7 @@ const exportProgramNameClampStyle: CSSProperties = {
 };
 
 export function LoyaltyCardFrontExport({ wallet }: { wallet: Omit<LoyaltyWalletCardProps, "exportMode"> }) {
+  const design = resolveCardDesign(wallet.cardDesign);
   const displayRequired = wallet.required && wallet.required > 0 ? wallet.required : 1;
   const displayProgress = wallet.required && wallet.required > 0 ? (wallet.progress ?? 0) : 0;
   const displayCompletion = wallet.required && wallet.required > 0 ? (wallet.completion ?? 0) : 0;
@@ -31,11 +33,13 @@ export function LoyaltyCardFrontExport({ wallet }: { wallet: Omit<LoyaltyWalletC
     : "No active program yet";
   return (
     <div className="w-[360px] bg-transparent">
-      <WalletCardShell theme={wallet.theme} exportMode>
+      <WalletCardShell theme={wallet.theme} cardDesign={design} exportMode>
         <div className="px-5 pb-5 pt-6">
-          <ExportHeader wallet={wallet} displayProgram={displayProgram} />
+          {(design.visibleSections.logo || design.visibleSections.businessName || design.visibleSections.programName || design.visibleSections.tierBadge) ? (
+            <ExportHeader wallet={wallet} displayProgram={displayProgram} design={design} />
+          ) : null}
 
-          <section className="pt-5">
+          {design.visibleSections.customerName ? <section className="pt-5">
             <p className="text-[12px] font-semibold uppercase tracking-[0.18em]" style={{ color: wallet.theme.mutedText }}>
               Customer
             </p>
@@ -45,9 +49,9 @@ export function LoyaltyCardFrontExport({ wallet }: { wallet: Omit<LoyaltyWalletC
             <p className="mt-2 text-[14px]" style={{ color: wallet.theme.mutedText }}>
               Member since {wallet.memberSince}
             </p>
-          </section>
+          </section> : null}
 
-          <section className="pt-5">
+          {design.visibleSections.progress ? <section className="pt-5">
             <div className="flex items-end justify-between gap-4">
               <div>
                 <p className="text-[12px] font-semibold uppercase tracking-[0.16em]" style={{ color: wallet.theme.mutedText }}>
@@ -60,12 +64,12 @@ export function LoyaltyCardFrontExport({ wallet }: { wallet: Omit<LoyaltyWalletC
                   </span>
                 </p>
               </div>
-              <div className="text-right">
+              {design.visibleSections.visits ? <div className="text-right">
                 <p className="text-[12px] font-semibold uppercase tracking-[0.16em]" style={{ color: wallet.theme.mutedText }}>
                   Visits
                 </p>
                 <p className="mt-1 text-[16px] font-bold">{wallet.rewardReady ? "Complete" : statusText}</p>
-              </div>
+              </div> : null}
             </div>
             <div className="mt-4 h-[12px] overflow-hidden rounded-full" style={{ backgroundColor: wallet.theme.progressTrack }}>
               <div
@@ -73,14 +77,12 @@ export function LoyaltyCardFrontExport({ wallet }: { wallet: Omit<LoyaltyWalletC
                 style={{ width: `${displayCompletion}%`, background: wallet.theme.progressFill }}
               />
             </div>
-          </section>
+          </section> : null}
 
-          <section
+          {design.visibleSections.rewardBox ? <section
             className="mt-5 rounded-[18px] border px-4 py-3"
             style={{
-              backgroundColor: wallet.rewardReady ? "#E9F7EE" : wallet.theme.rewardPanelBackground,
-              color: wallet.rewardReady ? "#14532D" : wallet.theme.rewardPanelText,
-              borderColor: wallet.rewardReady ? "rgba(47, 111, 68, 0.28)" : wallet.theme.rewardPanelBorder,
+              ...exportRewardStyle(design, wallet),
             }}
           >
             <div className="flex items-start justify-between gap-4">
@@ -94,13 +96,13 @@ export function LoyaltyCardFrontExport({ wallet }: { wallet: Omit<LoyaltyWalletC
                 {wallet.rewardReady ? "Reward Ready" : statusText}
               </div>
             </div>
-          </section>
+          </section> : null}
 
-          <div className="pt-5">
+          {design.visibleSections.footer ? <div className="pt-5">
             <div className="flex min-h-12 w-full items-center justify-center rounded-[16px] px-5 text-[15px] font-bold" style={{ background: wallet.theme.ctaBackground, color: wallet.theme.ctaForeground }}>
               Scan at Checkout
             </div>
-          </div>
+          </div> : null}
         </div>
       </WalletCardShell>
     </div>
@@ -110,19 +112,21 @@ export function LoyaltyCardFrontExport({ wallet }: { wallet: Omit<LoyaltyWalletC
 function ExportHeader({
   wallet,
   displayProgram,
+  design,
 }: {
   wallet: Omit<LoyaltyWalletCardProps, "exportMode">;
   displayProgram: string;
+  design: CardDesign;
 }) {
   return (
     <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3">
-      {wallet.businessLogoUrl ? (
+      {design.visibleSections.logo && wallet.businessLogoUrl ? (
         <div
           aria-label={`${wallet.businessName} logo`}
           className="h-12 w-12 shrink-0 rounded-full bg-cover bg-center"
           style={{ backgroundImage: `url(${wallet.businessLogoUrl})`, backgroundColor: wallet.theme.logoBackground }}
         />
-      ) : (
+      ) : design.visibleSections.logo ? (
         <div
           className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-black"
           style={{ backgroundColor: wallet.theme.logoBackground, color: wallet.theme.logoText }}
@@ -130,24 +134,24 @@ function ExportHeader({
         >
           {wallet.theme.style === "premium-dark" ? wallet.tierIcon : wallet.businessName.slice(0, 1).toUpperCase()}
         </div>
-      )}
+      ) : null}
       <div className="min-w-0 pr-1">
-        <h1
+        {design.visibleSections.businessName ? <h1
           className="text-[18px] font-extrabold leading-[1.08] tracking-[-0.02em]"
           style={exportBusinessNameClampStyle}
           title={wallet.businessName}
         >
           {wallet.businessName}
-        </h1>
-        <p
+        </h1> : null}
+        {design.visibleSections.programName ? <p
           className="pt-1 text-[13px] font-medium leading-tight"
           style={{ ...exportProgramNameClampStyle, color: wallet.theme.mutedText }}
           title={displayProgram}
         >
           {displayProgram}
-        </p>
+        </p> : null}
       </div>
-      <div className="w-[104px] shrink-0 text-right">
+      {design.visibleSections.tierBadge ? <div className="w-[104px] shrink-0 text-right">
         <p className="text-[11px] uppercase tracking-[0.18em]" style={{ color: wallet.theme.mutedText }}>Tier</p>
         <span
           className="mt-2 inline-flex max-w-full justify-center rounded-full border px-3 py-1 text-center text-[12px] font-semibold leading-tight"
@@ -159,7 +163,15 @@ function ExportHeader({
         >
           {wallet.tierLabel}
         </span>
-      </div>
+      </div> : null}
     </div>
   );
+}
+
+function exportRewardStyle(design: CardDesign, wallet: Omit<LoyaltyWalletCardProps, "exportMode">): CSSProperties {
+  if (wallet.rewardReady) return { backgroundColor: "#E9F7EE", color: "#14532D", borderColor: "rgba(47, 111, 68, 0.28)" };
+  if (design.rewardStyle === "OUTLINE") return { backgroundColor: "transparent", color: wallet.theme.cardText, borderColor: wallet.theme.badgeBorder };
+  if (design.rewardStyle === "GLASS") return { backgroundColor: "rgba(255,255,255,0.18)", color: wallet.theme.cardText, borderColor: "rgba(255,255,255,0.30)" };
+  if (design.rewardStyle === "PREMIUM") return { backgroundColor: wallet.theme.rewardPanelBackground, color: wallet.theme.rewardPanelText, borderColor: wallet.theme.accent };
+  return { backgroundColor: wallet.theme.rewardPanelBackground, color: wallet.theme.rewardPanelText, borderColor: wallet.theme.rewardPanelBorder };
 }

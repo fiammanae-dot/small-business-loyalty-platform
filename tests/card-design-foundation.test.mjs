@@ -50,13 +50,20 @@ test("card theme resolver prefers saved program design while preserving legacy t
   assert.doesNotMatch(preview, /resolveCardDesign\(\)/);
 });
 
-test("Design Studio phase 0 keeps customer-facing card components unchanged", () => {
+test("customer-facing card components consume saved Design Studio metadata safely", () => {
   const wallet = read("src/components/public-card/LoyaltyWalletCard.tsx");
   const frontExport = read("src/components/public-card/LoyaltyCardFrontExport.tsx");
   const backExport = read("src/components/public-card/LoyaltyCardBackExport.tsx");
   const saveButton = read("src/components/SaveCardImageButton.tsx");
 
-  for (const source of [wallet, frontExport, backExport, saveButton]) {
-    assert.doesNotMatch(source, /CardDesign|cardDesign|templateId|layoutStyle/);
-  }
+  assert.match(wallet, /cardDesign\?: CardDesignInput/);
+  assert.match(wallet, /resolveCardDesign\(cardDesign\)/);
+  assert.match(wallet, /design\.visibleSections/);
+  assert.match(wallet, /design\.stampJourneyStyle/);
+  assert.match(wallet, /design\.stampIcon/);
+  assert.match(wallet, /design\.rewardStyle/);
+  assert.match(wallet, /design\.typographyPreset/);
+  assert.match(frontExport, /resolveCardDesign\(wallet\.cardDesign\)/);
+  assert.match(backExport, /resolveCardDesign\(wallet\.cardDesign\)/);
+  assert.doesNotMatch(saveButton, /cardDesign|templateId|layoutStyle/);
 });

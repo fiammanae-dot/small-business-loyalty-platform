@@ -294,6 +294,7 @@ test("public card reads saved program card design with fallback behavior", () =>
   assert.match(publicCard, /export const revalidate = 0/);
   assert.match(publicCard, /programMembership\.loyaltyProgram\.cardDesign as CardDesignInput/);
   assert.match(publicCard, /cardDesign,/);
+  assert.match(publicCard, /cardDesign: primaryCardModel\.design/);
   assert.match(publicCard, /cardTheme: primaryProgram\?\.programMembership\.loyaltyProgram\.cardTheme \?\? null/);
   assert.match(actions, /cardDesign: cardDesign as unknown as Prisma\.InputJsonValue/);
   assert.match(actions, /revalidatePath\("\/dashboard\/customers"\)/);

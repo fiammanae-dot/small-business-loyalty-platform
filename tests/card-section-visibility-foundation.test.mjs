@@ -59,7 +59,7 @@ test("section visibility resolver is defensive and defaults every current sectio
   assert.match(design, /\[section\]: typeof input\[section\] === "boolean" \? input\[section\] : defaultVisibleCardSections\[section\]/);
 });
 
-test("card render model exposes section visibility metadata without applying it visually", () => {
+test("card render model section visibility is applied by customer-facing renderers", () => {
   const model = read("src/lib/card-render-model.ts");
   const publicCard = read("src/app/card/[token]/page.tsx");
   const wallet = read("src/components/public-card/LoyaltyWalletCard.tsx");
@@ -73,7 +73,10 @@ test("card render model exposes section visibility metadata without applying it 
   assert.match(model, /rewardBox: design\.visibleSections\.rewardBox && hasProgram/);
   assert.match(model, /programName: design\.visibleSections\.programName && hasProgram/);
 
-  for (const source of [publicCard, wallet, frontExport, backExport, preview]) {
-    assert.doesNotMatch(source, /sectionVisibility|visibleSections\.logo|visibleSections\.rewardBox|resolveVisibleSections/);
-  }
+  assert.match(publicCard, /cardDesign: primaryCardModel\.design/);
+  assert.match(wallet, /visibleSections\.logo/);
+  assert.match(wallet, /visibleSections\.rewardBox/);
+  assert.match(frontExport, /visibleSections\.businessName/);
+  assert.match(backExport, /visibleSections\.qr/);
+  assert.doesNotMatch(preview, /resolveVisibleSections/);
 });
