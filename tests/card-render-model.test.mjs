@@ -70,6 +70,8 @@ test("public card passes render model design into wallet card renderers", () => 
   assert.match(publicCard, /cardDesign: primaryCardModel\.design/);
   assert.match(wallet, /design\.visibleSections/);
   assert.match(frontExport, /resolveCardDesign\(wallet\.cardDesign\)/);
+  assert.match(frontExport, /LoyaltyWalletCard/);
+  assert.doesNotMatch(frontExport, /displayCompletion|progressTrack|displayProgress/);
   assert.match(backExport, /resolveCardDesign\(wallet\.cardDesign\)/);
   assert.doesNotMatch(preview, /CardRenderModel|buildCardRenderModel/);
 });

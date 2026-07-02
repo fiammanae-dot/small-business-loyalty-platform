@@ -76,7 +76,7 @@ test("card render model section visibility is applied by customer-facing rendere
   assert.match(publicCard, /cardDesign: primaryCardModel\.design/);
   assert.match(wallet, /visibleSections\.logo/);
   assert.match(wallet, /visibleSections\.rewardBox/);
-  assert.match(frontExport, /visibleSections\.businessName/);
+  assert.match(frontExport, /LoyaltyWalletCard/);
   assert.match(backExport, /visibleSections\.qr/);
   assert.doesNotMatch(preview, /resolveVisibleSections/);
 });

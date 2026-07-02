@@ -175,7 +175,8 @@ test("public customer card supports saving the loyalty card as a PNG image", () 
   assert.match(saveButton, /loyalty-card-.*side/);
   assert.match(frontExport, /LoyaltyCardFrontExport/);
   assert.match(frontExport, /resolveCardDesign\(wallet\.cardDesign\)/);
-  assert.match(frontExport, /Scan at Checkout/);
+  assert.match(frontExport, /LoyaltyWalletCard/);
+  assert.match(frontExport, /exportMode/);
   assert.match(backExport, /LoyaltyCardBackExport/);
   assert.match(backExport, /resolveCardDesign\(wallet\.cardDesign\)/);
   assert.match(backExport, /Present this QR at checkout/);
@@ -204,24 +205,22 @@ test("wallet card CTA uses theme foreground tokens for live and exported cards",
   const walletCard = read("src/components/public-card/LoyaltyWalletCard.tsx");
   const frontExport = read("src/components/public-card/LoyaltyCardFrontExport.tsx");
 
-  for (const source of [walletCard, frontExport]) {
-    assert.match(source, /ctaBackground/);
-    assert.match(source, /ctaForeground/);
-    assert.doesNotMatch(source, /theme\.style === "minimal-light" \? "#FFFFFF" : "#0F172A"/);
-    assert.doesNotMatch(source, /wallet\.theme\.style === "minimal-light" \? "#FFFFFF" : "#0F172A"/);
-  }
+  assert.match(walletCard, /ctaBackground/);
+  assert.match(walletCard, /ctaForeground/);
+  assert.match(frontExport, /<LoyaltyWalletCard \{\.\.\.wallet\} cardDesign=\{design\} exportMode \/>/);
+  assert.doesNotMatch(walletCard, /theme\.style === "minimal-light" \? "#FFFFFF" : "#0F172A"/);
+  assert.doesNotMatch(frontExport, /wallet\.theme\.style === "minimal-light" \? "#FFFFFF" : "#0F172A"/);
 });
 
 test("wallet card header keeps business names readable beside the tier badge", () => {
   const walletCard = read("src/components/public-card/LoyaltyWalletCard.tsx");
   const frontExport = read("src/components/public-card/LoyaltyCardFrontExport.tsx");
 
-  for (const source of [walletCard, frontExport]) {
-    assert.match(source, /grid-cols-\[auto_minmax\(0,1fr\)_auto\]/);
-    assert.match(source, /WebkitLineClamp: 2/);
-    assert.match(source, /title=\{[^}]*businessName[^}]*\}/);
-    assert.match(source, /w-\[104px\] shrink-0 text-right/);
-  }
+  assert.match(walletCard, /grid-cols-\[auto_minmax\(0,1fr\)_auto\]/);
+  assert.match(walletCard, /WebkitLineClamp: 2/);
+  assert.match(walletCard, /title=\{[^}]*businessName[^}]*\}/);
+  assert.match(walletCard, /w-\[104px\] shrink-0 text-right/);
+  assert.match(frontExport, /LoyaltyWalletCard/);
 
   assert.doesNotMatch(walletCard, /<h1 className="truncate[^"]*">\{businessName\}<\/h1>/);
   assert.doesNotMatch(frontExport, /<h1 className="truncate[^"]*">\{wallet\.businessName\}<\/h1>/);
