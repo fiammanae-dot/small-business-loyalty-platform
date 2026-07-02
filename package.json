@@ -12,11 +12,12 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:push": "prisma db push",
     "prisma:seed": "prisma db seed",
-    "prisma:seed-demo": "node prisma/seed-demo.js",
-    "prisma:seed-pilot": "node prisma/seed-pilot.js",
-    "prisma:verify-pilot": "node scripts/verify-pilot-db.js",
-    "production:check": "node scripts/check-production-readiness.js",
-    "prisma:seed-manual-audit": "node prisma/seed-manual-audit.js"
+      "prisma:seed-demo": "node prisma/seed-demo.js",
+      "prisma:seed-pilot": "node prisma/seed-pilot.js",
+      "seed:tenant-qa": "node scripts/seed-tenant-isolation-qa.js",
+      "prisma:verify-pilot": "node scripts/verify-pilot-db.js",
+      "production:check": "node scripts/check-production-readiness.js",
+      "prisma:seed-manual-audit": "node prisma/seed-manual-audit.js"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
