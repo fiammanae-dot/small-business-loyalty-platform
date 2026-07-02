@@ -1,3701 +1,473 @@
 # LoyaltyBase UI/UX File Map
 
-Generated from real project files on 2026-06-21. This file intentionally lists only files and routes that exist in the repository.
-
-## Verified Project Structure
-
-### src/app
-Files found: 98
-
-- src/app/api/session/idle-logout/route.ts
-- src/app/benefits/page.tsx
-- src/app/branch/customers/actions.ts
-- src/app/branch/customers/new/page.tsx
-- src/app/branch/customers/page.tsx
-- src/app/branch/customers/[id]/page.tsx
-- src/app/branch/page.tsx
-- src/app/branch/programs/actions.ts
-- src/app/branch/programs/page.tsx
-- src/app/branch/programs/[id]/customers/page.tsx
-- src/app/branch/programs/[id]/page.tsx
-- src/app/branch/scanner/actions.ts
-- src/app/branch/scanner/page.tsx
-- src/app/card/[token]/page.tsx
-- src/app/card-share-actions.ts
-- src/app/change-password/actions.ts
-- src/app/change-password/page.tsx
-- src/app/dashboard/actions.ts
-- src/app/dashboard/activity/page.tsx
-- src/app/dashboard/activity/[id]/page.tsx
-- src/app/dashboard/billing/page.tsx
-- src/app/dashboard/branches/page.tsx
-- src/app/dashboard/customers/new/page.tsx
-- src/app/dashboard/customers/page.tsx
-- src/app/dashboard/customers/[id]/edit/page.tsx
-- src/app/dashboard/customers/[id]/page.tsx
-- src/app/dashboard/engagement/page.tsx
-- src/app/dashboard/engagement/[id]/page.tsx
-- src/app/dashboard/exports/[type]/route.ts
-- src/app/dashboard/messages/actions.ts
-- src/app/dashboard/messages/page.tsx
-- src/app/dashboard/messages/[id]/page.tsx
-- src/app/dashboard/notifications/actions.ts
-- src/app/dashboard/notifications/page.tsx
-- src/app/dashboard/notifications/[id]/page.tsx
-- src/app/dashboard/page.tsx
-- src/app/dashboard/profile/page.tsx
-- src/app/dashboard/programs/actions.ts
-- src/app/dashboard/programs/new/page.tsx
-- src/app/dashboard/programs/page.tsx
-- src/app/dashboard/programs/[id]/customers/page.tsx
-- src/app/dashboard/programs/[id]/edit/page.tsx
-- src/app/dashboard/programs/[id]/page.tsx
-- src/app/dashboard/referrals/page.tsx
-- src/app/dashboard/referrals/[id]/page.tsx
-- src/app/dashboard/scanner/page.tsx
-- src/app/dashboard/settings/page.tsx
-- src/app/dashboard/staff/page.tsx
-- src/app/dashboard/staff/[id]/page.tsx
-- src/app/favicon.ico
-- src/app/forgot-password/actions.ts
-- src/app/forgot-password/page.tsx
-- src/app/globals.css
-- src/app/layout.tsx
-- src/app/login/actions.ts
-- src/app/login/page.tsx
-- src/app/logout/route.ts
-- src/app/page.tsx
-- src/app/platform/audit-center/export/route.ts
-- src/app/platform/audit-center/page.tsx
-- src/app/platform/billing-center/export/route.ts
-- src/app/platform/billing-center/page.tsx
-- src/app/platform/businesses/actions.ts
-- src/app/platform/businesses/new/page.tsx
-- src/app/platform/businesses/page.tsx
-- src/app/platform/businesses/[id]/edit/page.tsx
-- src/app/platform/businesses/[id]/page.tsx
-- src/app/platform/database/page.tsx
-- src/app/platform/health-analytics/export/route.ts
-- src/app/platform/health-analytics/page.tsx
-- src/app/platform/invoices/actions.ts
-- src/app/platform/invoices/page.tsx
-- src/app/platform/invoices/[id]/page.tsx
-- src/app/platform/launch-readiness/page.tsx
-- src/app/platform/page.tsx
-- src/app/platform/plans/page.tsx
-- src/app/platform/settings/actions.ts
-- src/app/platform/settings/page.tsx
-- src/app/platform/subscriptions/actions.ts
-- src/app/platform/subscriptions/page.tsx
-- src/app/platform/tenant-center/export/route.ts
-- src/app/platform/tenant-center/page.tsx
-- src/app/platform/users/page.tsx
-- src/app/referral/[code]/page.tsx
-- src/app/request-demo/page.tsx
-- src/app/reset-password/actions.ts
-- src/app/reset-password/page.tsx
-- src/app/scan/actions.ts
-- src/app/scan/[token]/page.tsx
-- src/app/staff/customers/actions.ts
-- src/app/staff/customers/new/page.tsx
-- src/app/staff/customers/page.tsx
-- src/app/staff/customers/success/page.tsx
-- src/app/staff/customers/[id]/page.tsx
-- src/app/staff/page.tsx
-- src/app/staff/programs/page.tsx
-- src/app/staff/scanner/actions.ts
-- src/app/staff/scanner/page.tsx
-
-### src/components
-Files found: 32
-
-- src/components/AppToaster.tsx
-- src/components/BranchLocationFields.tsx
-- src/components/BusinessBrandingProvider.tsx
-- src/components/BusinessForm.tsx
-- src/components/CameraScanner.tsx
-- src/components/CardShareActions.tsx
-- src/components/ChangePasswordForm.tsx
-- src/components/ConfirmSubmitButton.tsx
-- src/components/CopyButton.tsx
-- src/components/CsrfInput.tsx
-- src/components/DashboardShell.tsx
-- src/components/DemoRequestForm.tsx
-- src/components/ForgotPasswordForm.tsx
-- src/components/HomepageMotion.tsx
-- src/components/IdempotencyInput.tsx
-- src/components/IdleSessionTimeout.tsx
-- src/components/InvoiceBadge.tsx
-- src/components/LoginForm.tsx
-- src/components/MobileAccordionSection.tsx
-- src/components/MobileFilterDrawer.tsx
-- src/components/MobileTabSelector.tsx
-- src/components/PlanBillingCycleFields.tsx
-- src/components/PlatformCards.tsx
-- src/components/PlatformKpiGrid.tsx
-- src/components/ProgramForm.tsx
-- src/components/ReferralShareActions.tsx
-- src/components/ResetPasswordForm.tsx
-- src/components/RoleNavigation.tsx
-- src/components/ScannerSoundFeedback.tsx
-- src/components/SearchableCombobox.tsx
-- src/components/StaffPasswordResetAction.tsx
-- src/components/StatusBadge.tsx
-
-### src/lib
-Files found: 41
-
-- src/lib/alert-engine.ts
-- src/lib/alert-investigation.ts
-- src/lib/alert-labels.ts
-- src/lib/app-url.ts
-- src/lib/audit.ts
-- src/lib/billing.ts
-- src/lib/business-branding.ts
-- src/lib/business-display.ts
-- src/lib/business-owner.ts
-- src/lib/commercial-access.ts
-- src/lib/cooldowns.ts
-- src/lib/csrf.ts
-- src/lib/csv.ts
-- src/lib/customer-cards.ts
-- src/lib/customer-notifications.ts
-- src/lib/customer-tiers.ts
-- src/lib/customers.ts
-- src/lib/database-health.ts
-- src/lib/dev-auth.ts
-- src/lib/engagement.ts
-- src/lib/export-files.ts
-- src/lib/format.ts
-- src/lib/login-protection.ts
-- src/lib/messages.ts
-- src/lib/password-reset-email.ts
-- src/lib/password-reset.ts
-- src/lib/phone.ts
-- src/lib/platform-options.ts
-- src/lib/platform-settings.ts
-- src/lib/prisma.ts
-- src/lib/programs.ts
-- src/lib/referrals.ts
-- src/lib/request-info.ts
-- src/lib/rewards.ts
-- src/lib/roles.ts
-- src/lib/scan.ts
-- src/lib/secrets.ts
-- src/lib/seed-data.ts
-- src/lib/session.ts
-- src/lib/subscription-plans.ts
-- src/lib/subscriptions.ts
-
-### prisma
-Files found: 35
-
-- prisma/migrations/0001_init/migration.sql
-- prisma/migrations/0002_customer_foundation/migration.sql
-- prisma/migrations/0003_customer_card_foundation/migration.sql
-- prisma/migrations/0004_session_invalidation/migration.sql
-- prisma/migrations/0005_loyalty_program_engine/migration.sql
-- prisma/migrations/0006_qr_scanner_foundation/migration.sql
-- prisma/migrations/0007_performance_indexes/migration.sql
-- prisma/migrations/0008_phase_7a_subscription_lifecycle/migration.sql
-- prisma/migrations/0008_stamp_issuance_engine/migration.sql
-- prisma/migrations/0009_phase_7b_manual_billing/migration.sql
-- prisma/migrations/0009_stamp_transaction_immutability/migration.sql
-- prisma/migrations/0010_phase_7c_reward_redemptions/migration.sql
-- prisma/migrations/0011_reward_redemption_immutability/migration.sql
-- prisma/migrations/0012_launch_hardening_phase_1/migration.sql
-- prisma/migrations/0013_database_rules_tenant_isolation/migration.sql
-- prisma/migrations/0014_phase_7d_engagement_engine/migration.sql
-- prisma/migrations/0015_phase_7e_message_delivery_preparation/migration.sql
-- prisma/migrations/0016_phase_7f_operational_readiness/migration.sql
-- prisma/migrations/0017_phase_11_referrals/migration.sql
-- prisma/migrations/0018_phase_12a_audit_cooldowns/migration.sql
-- prisma/migrations/0019_phase_12b_alert_engine_hardening/migration.sql
-- prisma/migrations/0020_phase_12b_high_reward_policy/migration.sql
-- prisma/migrations/0021_customer_tier_system/migration.sql
-- prisma/migrations/0022_staff_password_reset_security/migration.sql
-- prisma/migrations/0023_subscription_plan_single_source/migration.sql
-- prisma/migrations/0024_visit_based_customer_tiers/migration.sql
-- prisma/migrations/0025_customer_notifications_foundation/migration.sql
-- prisma/migrations/0026_password_reset_tokens/migration.sql
-- prisma/migrations/0027_business_specific_referral_codes/migration.sql
-- prisma/migrations/0028_scanner_sound_settings/migration.sql
-- prisma/schema.prisma
-- prisma/seed-demo.js
-- prisma/seed-manual-audit.js
-- prisma/seed-pilot.js
-- prisma/seed.js
-
-### tests
-Files found: 40
-
-- tests/auth-navigation.test.mjs
-- tests/business-dashboard-hero.test.mjs
-- tests/customer-notifications.test.mjs
-- tests/customer-tiers.test.mjs
-- tests/database-rules.test.mjs
-- tests/demo-mode-hardening.test.mjs
-- tests/engagement-engine.test.mjs
-- tests/high-risk-confirmations.test.mjs
-- tests/launch-hardening.test.mjs
-- tests/loyalty-regression.test.mjs
-- tests/manual-audit-seed.test.mjs
-- tests/message-delivery.test.mjs
-- tests/multi-program-scanner.test.mjs
-- tests/password-reset.test.mjs
-- tests/phase-11-referrals.test.mjs
-- tests/phase-12a-audit-cooldowns.test.mjs
-- tests/phase-12b-alert-engine.test.mjs
-- tests/phase-13g-scalability-ux.test.mjs
-- tests/phase-8-scanner.test.mjs
-- tests/phone-normalization.test.mjs
-- tests/pilot-seed-cleanliness.test.mjs
-- tests/platform-analytics-upgrade.test.mjs
-- tests/platform-audit-center.test.mjs
-- tests/platform-billing-center.test.mjs
-- tests/platform-businesses-filters.test.mjs
-- tests/platform-dashboard-ui.test.mjs
-- tests/platform-exports.test.mjs
-- tests/platform-plans-ui.test.mjs
-- tests/platform-settings-environment.test.mjs
-- tests/platform-subscriptions-ui.test.mjs
-- tests/platform-tenant-center.test.mjs
-- tests/platform-users-filters.test.mjs
-- tests/platform-ux-hardening.test.mjs
-- tests/route-permissions.test.mjs
-- tests/session-idle-timeout.test.mjs
-- tests/staff-password-reset.test.mjs
-- tests/subscription-plan-single-source.test.mjs
-- tests/tenant-isolation.test.mjs
-- tests/ux-readiness.test.mjs
-- tests/whatsapp-card-delivery.test.mjs
-
-## Verified Routes
-
-### /
-
-Route: /
-
-Main file: src/app/page.tsx
-
-Purpose: Public marketing homepage
-
-Role access: Public/auth flow
-
-Imported components: Link, "next/link";, ArrowRight, BarChart3, CircleHelp, Gift, MessageSquare, QrCode, ScanLine, ShieldCheck, Sparkles, Users, "lucide-react";, LucideIcon, MotionItem, MotionOnScroll, MotionReveal, MotionStagger
-
-Local sections/functions: HomePage, PublicHeader, HeroSection, LoyaltyCardPreview, TrustSection, FeaturesSection, HowItWorksSection, PricingTeaserSection, FaqSection, Footer, SectionHeading, TrustMetric, FeatureCard
-
-Connected actions: None detected
-
-Connected lib/data files: None detected
-
-Tables/cards/forms/modals: cards/KPIs, responsive layout
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/page.tsx
-
-### /api/session/idle-logout
-
-Route: /api/session/idle-logout
-
-Main file: src/app/api/session/idle-logout/route.ts
-
-Purpose: Workspace page
-
-Role access: Public/auth flow
-
-Imported components: None detected
-
-Local sections/functions: POST
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/session
-
-Tables/cards/forms/modals: basic JSX layout
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: No explicit mobile-only structure detected
-
-Risk level when editing: Low
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/api/session/idle-logout/route.ts
-
-### /benefits
-
-Route: /benefits
-
-Main file: src/app/benefits/page.tsx
-
-Purpose: Workspace page
-
-Role access: Public/auth flow
-
-Imported components: None detected
-
-Local sections/functions: BenefitsPage, PublicHeader, Footer
-
-Connected actions: None detected
-
-Connected lib/data files: None detected
-
-Tables/cards/forms/modals: cards/KPIs, responsive layout
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: mobile-specific view; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/benefits/page.tsx
-
-### /branch
-
-Route: /branch
-
-Main file: src/app/branch/page.tsx
-
-Purpose: Branch workflow
-
-Role access: Branch Manager
-
-Imported components: Link, "next/link";, Bell, Gift, QrCode, Search, TicketCheck, UserCheck, Users, "lucide-react";, LucideIcon, DashboardShell
-
-Local sections/functions: BranchDashboard, ActivityRow, StaffStat, Action, Metric, Info
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/format, @/lib/prisma, @/lib/session
-
-Tables/cards/forms/modals: cards/KPIs, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/branch/page.tsx, src/components/DashboardShell.tsx
-
-### /branch/customers
-
-Route: /branch/customers
-
-Main file: src/app/branch/customers/page.tsx
-
-Purpose: Customer workflow
-
-Role access: Branch Manager
-
-Imported components: Link, "next/link";, CardShareActions, DashboardShell, StatusBadge
-
-Local sections/functions: BranchCustomersPage, Message
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/customer-cards, @/lib/customers, @/lib/format, @/lib/phone, @/lib/prisma, @/lib/session
-
-Tables/cards/forms/modals: forms/actions, tables, cards/KPIs, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: overflow/table handling
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/branch/customers/page.tsx, src/components/CardShareActions.tsx, src/components/DashboardShell.tsx, src/components/StatusBadge.tsx
-
-### /branch/customers/[id]
-
-Route: /branch/customers/[id]
-
-Main file: src/app/branch/customers/[id]/page.tsx
-
-Purpose: Customer workflow
-
-Role access: Branch Manager
-
-Imported components: Link, "next/link";, Image, "next/image";, React, "react";, CardShareActions, DashboardShell, StatusBadge
-
-Local sections/functions: BranchCustomerProfilePage, Info
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/customer-cards, @/lib/customers, @/lib/format, @/lib/phone, @/lib/prisma, @/lib/programs, @/lib/scan, @/lib/session
-
-Tables/cards/forms/modals: tables, cards/KPIs, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: overflow/table handling; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/branch/customers/[id]/page.tsx, src/components/CardShareActions.tsx, src/components/DashboardShell.tsx, src/components/StatusBadge.tsx
-
-### /branch/customers/new
-
-Route: /branch/customers/new
-
-Main file: src/app/branch/customers/new/page.tsx
-
-Purpose: Customer workflow
-
-Role access: Branch Manager
-
-Imported components: Link, "next/link";, CsrfInput, DashboardShell
-
-Local sections/functions: NewBranchCustomerPage, Input
-
-Connected actions: @/app/branch/customers/actions
-
-Connected lib/data files: @/lib/session
-
-Tables/cards/forms/modals: forms/actions, cards/KPIs, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: Medium
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/branch/customers/new/page.tsx, src/components/CsrfInput.tsx, src/components/DashboardShell.tsx
-
-### /branch/programs
-
-Route: /branch/programs
-
-Main file: src/app/branch/programs/page.tsx
-
-Purpose: Loyalty program workflow
-
-Role access: Branch Manager
-
-Imported components: Link, "next/link";, Gift, TicketCheck, Trophy, Users, "lucide-react";, LucideIcon, DashboardShell
-
-Local sections/functions: BranchProgramsPage, ProgramStat
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/prisma, @/lib/programs, @/lib/session
-
-Tables/cards/forms/modals: cards/KPIs, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/branch/programs/page.tsx, src/components/DashboardShell.tsx
-
-### /branch/programs/[id]
-
-Route: /branch/programs/[id]
-
-Main file: src/app/branch/programs/[id]/page.tsx
-
-Purpose: Loyalty program workflow
-
-Role access: Branch Manager
-
-Imported components: Link, "next/link";, Gift, TicketCheck, Trophy, Users, "lucide-react";, LucideIcon, DashboardShell
-
-Local sections/functions: BranchProgramDetailPage, PerformanceStat, Info
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/prisma, @/lib/programs, @/lib/roles, @/lib/session
-
-Tables/cards/forms/modals: cards/KPIs, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/branch/programs/[id]/page.tsx, src/components/DashboardShell.tsx
-
-### /branch/programs/[id]/customers
-
-Route: /branch/programs/[id]/customers
-
-Main file: src/app/branch/programs/[id]/customers/page.tsx
-
-Purpose: Customer workflow
-
-Role access: Branch Manager
-
-Imported components: Link, "next/link";, CsrfInput, DashboardShell, SearchableCombobox
-
-Local sections/functions: BranchProgramCustomersPage
-
-Connected actions: @/app/branch/programs/actions
-
-Connected lib/data files: @/lib/format, @/lib/prisma, @/lib/programs, @/lib/session
-
-Tables/cards/forms/modals: forms/actions, tables, cards/KPIs, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: overflow/table handling; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/branch/programs/[id]/customers/page.tsx, src/components/CsrfInput.tsx, src/components/DashboardShell.tsx, src/components/SearchableCombobox.tsx
-
-### /branch/scanner
-
-Route: /branch/scanner
-
-Main file: src/app/branch/scanner/page.tsx
-
-Purpose: Scanner and QR validation
-
-Role access: Branch Manager
-
-Imported components: CameraScanner, DashboardShell
-
-Local sections/functions: BranchScannerPage
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/session
-
-Tables/cards/forms/modals: cards/KPIs
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: No explicit mobile-only structure detected
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/branch/scanner/page.tsx, src/components/CameraScanner.tsx, src/components/DashboardShell.tsx
-
-### /card/[token]
-
-Route: /card/[token]
-
-Main file: src/app/card/[token]/page.tsx
-
-Purpose: Public customer loyalty card
-
-Role access: Public/auth flow
-
-Imported components: CardShareActions, ReferralShareActions
-
-Local sections/functions: PublicCustomerCardPage, LoyaltyWalletCard, LoyaltyProgressSection, RewardStatusSection, TierStatusSection, ReferralCardSection, WalletPlaceholderSection, ProgramRewardCard, Info, CardUnavailable
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/customer-cards, @/lib/customer-tiers, @/lib/format, @/lib/prisma, @/lib/programs, @/lib/scan, @/lib/referrals
-
-Tables/cards/forms/modals: cards/KPIs, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: responsive grids; bottom navigation/safe area
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/card/[token]/page.tsx, src/components/CardShareActions.tsx, src/components/ReferralShareActions.tsx
-
-### /change-password
-
-Route: /change-password
-
-Main file: src/app/change-password/page.tsx
-
-Purpose: Workspace page
-
-Role access: Public/auth flow
-
-Imported components: Link, "next/link";, "next/navigation";, ChangePasswordForm
-
-Local sections/functions: ChangePasswordPage
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/csrf, @/lib/session
-
-Tables/cards/forms/modals: cards/KPIs
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: No explicit mobile-only structure detected
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/change-password/page.tsx, src/components/ChangePasswordForm.tsx
-
-### /dashboard
-
-Route: /dashboard
-
-Main file: src/app/dashboard/page.tsx
-
-Purpose: Workspace page
-
-Role access: Business Owner
-
-Imported components: Link, "next/link";, React, "react";, CheckCircle2, Gift, Search, ScanLine, ShieldAlert, TicketCheck, UserPlus, Users, "lucide-react";, LucideIcon, DashboardShell, StatusBadge
-
-Local sections/functions: BusinessDashboard, HeaderSummary, SecondaryBusinessMetric, CompactCustomerSearch, MainActions, RecentCustomers, ProgramPerformance, RecentActivity, ActivityMetric, OnboardingSummary, SummaryTile, PrimaryAction, SectionCard, EmptyState
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/business-display, @/lib/business-owner, @/lib/format, @/lib/prisma, @/lib/roles
-
-Tables/cards/forms/modals: forms/actions, cards/KPIs, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/page.tsx, src/components/DashboardShell.tsx, src/components/StatusBadge.tsx
-
-### /dashboard/activity
-
-Route: /dashboard/activity
-
-Main file: src/app/dashboard/activity/page.tsx
-
-Purpose: Workspace page
-
-Role access: Business Owner
-
-Imported components: Link, "next/link";, Gift, History, Share2, TicketCheck, Users, "lucide-react";, LucideIcon, DashboardShell
-
-Local sections/functions: BusinessActivityPage, ActivityMetric, ActivityRow
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/business-owner, @/lib/format, @/lib/prisma
-
-Tables/cards/forms/modals: cards/KPIs, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/activity/page.tsx, src/components/DashboardShell.tsx
-
-### /dashboard/activity/[id]
-
-Route: /dashboard/activity/[id]
-
-Main file: src/app/dashboard/activity/[id]/page.tsx
-
-Purpose: Workspace page
-
-Role access: Business Owner
-
-Imported components: Link, "next/link";, "next/navigation";, DashboardShell
-
-Local sections/functions: ActivityDetailPage, Info
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/business-owner, @/lib/alert-investigation, @/lib/format, @/lib/prisma, @/lib/programs, @/lib/roles
-
-Tables/cards/forms/modals: cards/KPIs, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/activity/[id]/page.tsx, src/components/DashboardShell.tsx
-
-### /dashboard/billing
-
-Route: /dashboard/billing
-
-Main file: src/app/dashboard/billing/page.tsx
-
-Purpose: Billing/subscription workflow
-
-Role access: Business Owner
-
-Imported components: DashboardShell, InvoiceBadge
-
-Local sections/functions: BusinessBillingPage, BillingMetric
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/billing, @/lib/business-owner, @/lib/format, @/lib/prisma
-
-Tables/cards/forms/modals: tables, cards/KPIs, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: mobile-specific view; overflow/table handling; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/billing/page.tsx, src/components/DashboardShell.tsx, src/components/InvoiceBadge.tsx
-
-### /dashboard/branches
-
-Route: /dashboard/branches
-
-Main file: src/app/dashboard/branches/page.tsx
-
-Purpose: Branch workflow
-
-Role access: Business Owner
-
-Imported components: ConfirmSubmitButton, DashboardShell, CsrfInput, StatusBadge
-
-Local sections/functions: BranchesPage, BranchForm, Input, Message
-
-Connected actions: @/app/dashboard/actions
-
-Connected lib/data files: @/lib/business-owner, @/lib/format, @/lib/platform-options
-
-Tables/cards/forms/modals: forms/actions, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/branches/page.tsx, src/components/ConfirmSubmitButton.tsx, src/components/DashboardShell.tsx, src/components/CsrfInput.tsx, src/components/StatusBadge.tsx
-
-### /dashboard/customers
-
-Route: /dashboard/customers
-
-Main file: src/app/dashboard/customers/page.tsx
-
-Purpose: Customer workflow
-
-Role access: Business Owner
-
-Imported components: Link, "next/link";, CardShareActions, DashboardShell, StatusBadge
-
-Local sections/functions: CustomersPage, Select, Message
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/customer-cards, @/lib/business-owner, @/lib/customers, @/lib/format, @/lib/phone, @/lib/prisma
-
-Tables/cards/forms/modals: forms/actions, tables, cards/KPIs, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: mobile-specific view; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/customers/page.tsx, src/components/CardShareActions.tsx, src/components/DashboardShell.tsx, src/components/StatusBadge.tsx
-
-### /dashboard/customers/[id]
-
-Route: /dashboard/customers/[id]
-
-Main file: src/app/dashboard/customers/[id]/page.tsx
-
-Purpose: Customer workflow
-
-Role access: Business Owner
-
-Imported components: Link, "next/link";, Image, "next/image";, React, "react";, CalendarDays, CreditCard, Crown, Gift, History, ShieldAlert, Sparkles, TicketCheck, UserRound, Users, "lucide-react";, LucideIcon, DashboardShell, CardShareActions, ConfirmSubmitButton, CopyButton, CsrfInput, StatusBadge
-
-Local sections/functions: CustomerProfilePage, KpiCard, TabLink, ProfileSummaryCard, LoyaltyOverviewPanel, LatestActivityPreview, TierDetailsPanel, ReferralSummaryPanel, RewardsPanel, CustomerCardPanel, LoyaltyProgramsPanel, TimelineRow, RiskMetric, InsightMetric, SeverityBadge, StatusPill, AuditCell, Info
-
-Connected actions: @/app/dashboard/actions
-
-Connected lib/data files: @/lib/business-owner, @/lib/alert-investigation, @/lib/alert-labels, @/lib/customer-cards, @/lib/customer-tiers, @/lib/customers, @/lib/format, @/lib/phone, @/lib/prisma, @/lib/programs, @/lib/scan
-
-Tables/cards/forms/modals: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: overflow/table handling; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/customers/[id]/page.tsx, src/components/DashboardShell.tsx, src/components/CardShareActions.tsx, src/components/ConfirmSubmitButton.tsx, src/components/CopyButton.tsx, src/components/CsrfInput.tsx, src/components/StatusBadge.tsx
-
-### /dashboard/customers/[id]/edit
-
-Route: /dashboard/customers/[id]/edit
-
-Main file: src/app/dashboard/customers/[id]/edit/page.tsx
-
-Purpose: Customer workflow
-
-Role access: Business Owner
-
-Imported components: Link, "next/link";, CsrfInput, DashboardShell
-
-Local sections/functions: EditCustomerPage, Input
-
-Connected actions: @/app/dashboard/actions
-
-Connected lib/data files: @/lib/business-owner, @/lib/customers, @/lib/phone
-
-Tables/cards/forms/modals: forms/actions, cards/KPIs, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/customers/[id]/edit/page.tsx, src/components/CsrfInput.tsx, src/components/DashboardShell.tsx
-
-### /dashboard/customers/new
-
-Route: /dashboard/customers/new
-
-Main file: src/app/dashboard/customers/new/page.tsx
-
-Purpose: Customer workflow
-
-Role access: Business Owner
-
-Imported components: Link, "next/link";, CsrfInput, DashboardShell, SearchableCombobox
-
-Local sections/functions: NewCustomerPage, Input
-
-Connected actions: @/app/dashboard/actions
-
-Connected lib/data files: @/lib/business-owner
-
-Tables/cards/forms/modals: forms/actions, cards/KPIs, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/customers/new/page.tsx, src/components/CsrfInput.tsx, src/components/DashboardShell.tsx, src/components/SearchableCombobox.tsx
-
-### /dashboard/engagement
-
-Route: /dashboard/engagement
-
-Main file: src/app/dashboard/engagement/page.tsx
-
-Purpose: Workspace page
-
-Role access: Business Owner
-
-Imported components: Link, "next/link";, EngagementEventType, "@prisma/client";, DashboardShell, SearchableCombobox
-
-Local sections/functions: EngagementCenterPage, Metric
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/business-owner, @/lib/engagement, @/lib/format, @/lib/prisma
-
-Tables/cards/forms/modals: forms/actions, tables, cards/KPIs, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: mobile-specific view; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/engagement/page.tsx, src/components/DashboardShell.tsx, src/components/SearchableCombobox.tsx
-
-### /dashboard/engagement/[id]
-
-Route: /dashboard/engagement/[id]
-
-Main file: src/app/dashboard/engagement/[id]/page.tsx
-
-Purpose: Workspace page
-
-Role access: Business Owner
-
-Imported components: Link, "next/link";, "next/navigation";, React, "react";, CopyButton, CsrfInput, DashboardShell
-
-Local sections/functions: EngagementEventDetailPage, PrepareButton, Info
-
-Connected actions: @/app/dashboard/messages/actions
-
-Connected lib/data files: @/lib/business-owner, @/lib/engagement, @/lib/format, @/lib/prisma
-
-Tables/cards/forms/modals: forms/actions, cards/KPIs, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/engagement/[id]/page.tsx, src/components/CopyButton.tsx, src/components/CsrfInput.tsx, src/components/DashboardShell.tsx
-
-### /dashboard/exports/[type]
-
-Route: /dashboard/exports/[type]
-
-Main file: src/app/dashboard/exports/[type]/route.ts
-
-Purpose: Workspace page
-
-Role access: Business Owner
-
-Imported components: None detected
-
-Local sections/functions: GET
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/alert-labels, @/lib/csv, @/lib/format, @/lib/prisma, @/lib/session
-
-Tables/cards/forms/modals: inputs/filters
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: No explicit mobile-only structure detected
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/exports/[type]/route.ts
-
-### /dashboard/messages
-
-Route: /dashboard/messages
-
-Main file: src/app/dashboard/messages/page.tsx
-
-Purpose: Workspace page
-
-Role access: Business Owner
-
-Imported components: Link, "next/link";, ReactNode, "react";, CheckCircle2, MessageSquare, Search, XCircle, "lucide-react";, DashboardShell
-
-Local sections/functions: MessageOutboxPage, MessageKpi, StatusBadge, EmptyMessages
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/business-owner, @/lib/engagement, @/lib/format, @/lib/messages, @/lib/prisma
-
-Tables/cards/forms/modals: forms/actions, tables, cards/KPIs, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: mobile-specific view; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/messages/page.tsx, src/components/DashboardShell.tsx
-
-### /dashboard/messages/[id]
-
-Route: /dashboard/messages/[id]
-
-Main file: src/app/dashboard/messages/[id]/page.tsx
-
-Purpose: Workspace page
-
-Role access: Business Owner
-
-Imported components: Link, "next/link";, "next/navigation";, React, "react";, CopyButton, CsrfInput, DashboardShell
-
-Local sections/functions: MessageDetailPage, MessageActionForm, Info
-
-Connected actions: @/app/dashboard/messages/actions
-
-Connected lib/data files: @/lib/business-owner, @/lib/engagement, @/lib/format, @/lib/messages, @/lib/prisma
-
-Tables/cards/forms/modals: forms/actions, cards/KPIs, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/messages/[id]/page.tsx, src/components/CopyButton.tsx, src/components/CsrfInput.tsx, src/components/DashboardShell.tsx
-
-### /dashboard/notifications
-
-Route: /dashboard/notifications
-
-Main file: src/app/dashboard/notifications/page.tsx
-
-Purpose: Workspace page
-
-Role access: Business Owner
-
-Imported components: Link, "next/link";, ActivityAlertSeverity, ActivityAlertStatus, Prisma, "@prisma/client";, ReactNode, "react";, BarChart3, Bell, ChevronDown, Clock, Search, ShieldAlert, UserCheck, "lucide-react";, CsrfInput, DashboardShell, SearchableCombobox
-
-Local sections/functions: NotificationsPage, AlertCard, AlertActionsDropdown, ActionForm, CompactInfo, RiskMeter, InvestigationPanel, TimelineItem, InvestigationLink, SeverityBadge, FilterSummary, MiniChart
-
-Connected actions: @/app/dashboard/notifications/actions
-
-Connected lib/data files: @/lib/alert-engine, @/lib/business-owner, @/lib/alert-investigation, @/lib/alert-labels, @/lib/format, @/lib/prisma
-
-Tables/cards/forms/modals: forms/actions, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/notifications/page.tsx, src/components/CsrfInput.tsx, src/components/DashboardShell.tsx, src/components/SearchableCombobox.tsx
-
-### /dashboard/notifications/[id]
-
-Route: /dashboard/notifications/[id]
-
-Main file: src/app/dashboard/notifications/[id]/page.tsx
-
-Purpose: Workspace page
-
-Role access: Business Owner
-
-Imported components: Link, "next/link";, "next/navigation";, React, "react";, CsrfInput, DashboardShell
-
-Local sections/functions: NotificationDetailPage, ActionLink, Info
-
-Connected actions: @/app/dashboard/notifications/actions
-
-Connected lib/data files: @/lib/business-owner, @/lib/alert-investigation, @/lib/alert-labels, @/lib/format, @/lib/prisma
-
-Tables/cards/forms/modals: forms/actions, cards/KPIs, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/notifications/[id]/page.tsx, src/components/CsrfInput.tsx, src/components/DashboardShell.tsx
-
-### /dashboard/profile
-
-Route: /dashboard/profile
-
-Main file: src/app/dashboard/profile/page.tsx
-
-Purpose: Workspace page
-
-Role access: Business Owner
-
-Imported components: DashboardShell, CsrfInput, StatusBadge
-
-Local sections/functions: BusinessProfilePage, Message, ReadOnly
-
-Connected actions: @/app/dashboard/actions
-
-Connected lib/data files: @/lib/business-owner, @/lib/format, @/lib/platform-options, @/lib/roles
-
-Tables/cards/forms/modals: forms/actions, cards/KPIs, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/profile/page.tsx, src/components/DashboardShell.tsx, src/components/CsrfInput.tsx, src/components/StatusBadge.tsx
-
-### /dashboard/programs
-
-Route: /dashboard/programs
-
-Main file: src/app/dashboard/programs/page.tsx
-
-Purpose: Loyalty program workflow
-
-Role access: Business Owner
-
-Imported components: Link, "next/link";, ReactNode, "react";, Gift, Search, Trophy, Users, "lucide-react";, DashboardShell
-
-Local sections/functions: ProgramsPage, KpiCard, StatusBadge, EmptyPrograms
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/business-owner, @/lib/format, @/lib/programs, @/lib/roles, @/lib/prisma
-
-Tables/cards/forms/modals: forms/actions, tables, cards/KPIs, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: mobile-specific view; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/programs/page.tsx, src/components/DashboardShell.tsx
-
-### /dashboard/programs/[id]
-
-Route: /dashboard/programs/[id]
-
-Main file: src/app/dashboard/programs/[id]/page.tsx
-
-Purpose: Loyalty program workflow
-
-Role access: Business Owner
-
-Imported components: Link, "next/link";, ConfirmSubmitButton, CsrfInput, DashboardShell
-
-Local sections/functions: ProgramDetailPage, NotFound, Info, Metric, CompletionMetric
-
-Connected actions: @/app/dashboard/programs/actions
-
-Connected lib/data files: @/lib/business-owner, @/lib/format, @/lib/programs, @/lib/roles, @/lib/prisma
-
-Tables/cards/forms/modals: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: overflow/table handling; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/programs/[id]/page.tsx, src/components/ConfirmSubmitButton.tsx, src/components/CsrfInput.tsx, src/components/DashboardShell.tsx
-
-### /dashboard/programs/[id]/customers
-
-Route: /dashboard/programs/[id]/customers
-
-Main file: src/app/dashboard/programs/[id]/customers/page.tsx
-
-Purpose: Customer workflow
-
-Role access: Business Owner
-
-Imported components: Link, "next/link";, CsrfInput, DashboardShell, SearchableCombobox
-
-Local sections/functions: ProgramCustomersPage, ProgramMembersTable
-
-Connected actions: @/app/dashboard/programs/actions
-
-Connected lib/data files: @/lib/business-owner, @/lib/format, @/lib/programs, @/lib/prisma
-
-Tables/cards/forms/modals: forms/actions, tables, cards/KPIs, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: overflow/table handling; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/programs/[id]/customers/page.tsx, src/components/CsrfInput.tsx, src/components/DashboardShell.tsx, src/components/SearchableCombobox.tsx
-
-### /dashboard/programs/[id]/edit
-
-Route: /dashboard/programs/[id]/edit
-
-Main file: src/app/dashboard/programs/[id]/edit/page.tsx
-
-Purpose: Loyalty program workflow
-
-Role access: Business Owner
-
-Imported components: DashboardShell, ProgramForm
-
-Local sections/functions: EditProgramPage
-
-Connected actions: @/app/dashboard/programs/actions
-
-Connected lib/data files: @/lib/business-owner, @/lib/prisma
-
-Tables/cards/forms/modals: forms/actions, cards/KPIs
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: No explicit mobile-only structure detected
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/programs/[id]/edit/page.tsx, src/components/DashboardShell.tsx, src/components/ProgramForm.tsx
-
-### /dashboard/programs/new
-
-Route: /dashboard/programs/new
-
-Main file: src/app/dashboard/programs/new/page.tsx
-
-Purpose: Loyalty program workflow
-
-Role access: Business Owner
-
-Imported components: DashboardShell, ProgramForm
-
-Local sections/functions: NewProgramPage
-
-Connected actions: @/app/dashboard/programs/actions
-
-Connected lib/data files: @/lib/business-owner
-
-Tables/cards/forms/modals: forms/actions, cards/KPIs
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: No explicit mobile-only structure detected
-
-Risk level when editing: Medium
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/programs/new/page.tsx, src/components/DashboardShell.tsx, src/components/ProgramForm.tsx
-
-### /dashboard/referrals
-
-Route: /dashboard/referrals
-
-Main file: src/app/dashboard/referrals/page.tsx
-
-Purpose: Referral workflow
-
-Role access: Business Owner
-
-Imported components: Link, "next/link";, Prisma, ReferralRewardStatus, ReferralStatus, "@prisma/client";, Gift, Search, Share2, Sparkles, Trophy, Users, "lucide-react";, LucideIcon, DashboardShell
-
-Local sections/functions: ReferralsPage, ReferralCard, Kpi, StatusPill
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/business-owner, @/lib/format, @/lib/prisma
-
-Tables/cards/forms/modals: forms/actions, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/referrals/page.tsx, src/components/DashboardShell.tsx
-
-### /dashboard/referrals/[id]
-
-Route: /dashboard/referrals/[id]
-
-Main file: src/app/dashboard/referrals/[id]/page.tsx
-
-Purpose: Referral workflow
-
-Role access: Business Owner
-
-Imported components: Link, "next/link";, "next/navigation";, ArrowLeft, Gift, History, Share2, Stamp, Users, "lucide-react";, LucideIcon, Prisma, "@prisma/client";, DashboardShell
-
-Local sections/functions: ReferralDetailPage, CustomerPanel, Info, StatusPill
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/business-owner, @/lib/format, @/lib/prisma
-
-Tables/cards/forms/modals: cards/KPIs, confirmations/modals/drawers, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/referrals/[id]/page.tsx, src/components/DashboardShell.tsx
-
-### /dashboard/scanner
-
-Route: /dashboard/scanner
-
-Main file: src/app/dashboard/scanner/page.tsx
-
-Purpose: Scanner and QR validation
-
-Role access: Business Owner
-
-Imported components: CameraScanner, DashboardShell
-
-Local sections/functions: BusinessOwnerScannerPage
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/session
-
-Tables/cards/forms/modals: basic JSX layout
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: No explicit mobile-only structure detected
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/scanner/page.tsx, src/components/CameraScanner.tsx, src/components/DashboardShell.tsx
-
-### /dashboard/settings
-
-Route: /dashboard/settings
-
-Main file: src/app/dashboard/settings/page.tsx
-
-Purpose: Settings/configuration
-
-Role access: Business Owner
-
-Imported components: ConfirmSubmitButton, CsrfInput, DashboardShell, StatusBadge
-
-Local sections/functions: BusinessSettingsPage, Input, Item
-
-Connected actions: @/app/dashboard/actions
-
-Connected lib/data files: @/lib/business-owner, @/lib/customer-tiers, @/lib/format, @/lib/prisma, @/lib/roles, @/lib/subscriptions, @/lib/messages
-
-Tables/cards/forms/modals: forms/actions, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: overflow/table handling; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/settings/page.tsx, src/components/ConfirmSubmitButton.tsx, src/components/CsrfInput.tsx, src/components/DashboardShell.tsx, src/components/StatusBadge.tsx
-
-### /dashboard/staff
-
-Route: /dashboard/staff
-
-Main file: src/app/dashboard/staff/page.tsx
-
-Purpose: User/staff management
-
-Role access: Business Owner
-
-Imported components: ConfirmSubmitButton, DashboardShell, Link, "next/link";, CsrfInput, SearchableCombobox, StaffPasswordResetAction, StatusBadge
-
-Local sections/functions: StaffUsersPage, StaffCreateForm, Input, Message
-
-Connected actions: @/app/dashboard/actions
-
-Connected lib/data files: @/lib/business-owner, @/lib/csrf, @/lib/format, @/lib/prisma, @/lib/roles
-
-Tables/cards/forms/modals: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: overflow/table handling; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/staff/page.tsx, src/components/ConfirmSubmitButton.tsx, src/components/DashboardShell.tsx, src/components/CsrfInput.tsx, src/components/SearchableCombobox.tsx, src/components/StaffPasswordResetAction.tsx, src/components/StatusBadge.tsx
-
-### /dashboard/staff/[id]
-
-Route: /dashboard/staff/[id]
-
-Main file: src/app/dashboard/staff/[id]/page.tsx
-
-Purpose: User/staff management
-
-Role access: Business Owner
-
-Imported components: Link, "next/link";, "next/navigation";, React, "react";, DashboardShell, StatusBadge
-
-Local sections/functions: StaffDetailPage, Info
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/business-owner, @/lib/alert-investigation, @/lib/alert-labels, @/lib/format, @/lib/prisma, @/lib/roles
-
-Tables/cards/forms/modals: cards/KPIs, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/dashboard/staff/[id]/page.tsx, src/components/DashboardShell.tsx, src/components/StatusBadge.tsx
-
-### /forgot-password
-
-Route: /forgot-password
-
-Main file: src/app/forgot-password/page.tsx
-
-Purpose: Password reset/authentication
-
-Role access: Public/auth flow
-
-Imported components: Link, "next/link";, ForgotPasswordForm
-
-Local sections/functions: ForgotPasswordPage
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/csrf, @/lib/session
-
-Tables/cards/forms/modals: cards/KPIs
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: No explicit mobile-only structure detected
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/forgot-password/page.tsx, src/components/ForgotPasswordForm.tsx
-
-### /login
-
-Route: /login
-
-Main file: src/app/login/page.tsx
-
-Purpose: Login/authentication
-
-Role access: Public/auth flow
-
-Imported components: Link, "next/link";, CheckCircle2, ShieldCheck, Sparkles, "lucide-react";, LoginForm
-
-Local sections/functions: LoginPage, LoginBenefit
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/csrf, @/lib/session
-
-Tables/cards/forms/modals: cards/KPIs, responsive layout
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: mobile-specific view; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/login/page.tsx, src/components/LoginForm.tsx
-
-### /logout
-
-Route: /logout
-
-Main file: src/app/logout/route.ts
-
-Purpose: Workspace page
-
-Role access: Public/auth flow
-
-Imported components: None detected
-
-Local sections/functions: POST
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/csrf, @/lib/session
-
-Tables/cards/forms/modals: basic JSX layout
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: No explicit mobile-only structure detected
-
-Risk level when editing: Medium
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/logout/route.ts
-
-### /platform
-
-Route: /platform
-
-Main file: src/app/platform/page.tsx
-
-Purpose: Workspace page
-
-Role access: System Administrator
-
-Imported components: Link, "next/link";, BarChart3, Building2, CreditCard, Package, Plus, Receipt, Settings, ShieldAlert, UserPlus, Users, "lucide-react";, LucideIcon, DashboardShell, PlatformKpiGrid, PlatformCards
-
-Local sections/functions: PlatformDashboard, KpiCard, QuickAction, SeverityBadge
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/format, @/lib/prisma, @/lib/roles, @/lib/session
-
-Tables/cards/forms/modals: forms/actions, cards/KPIs, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/platform/page.tsx, src/components/DashboardShell.tsx, src/components/PlatformKpiGrid.tsx, src/components/PlatformCards.tsx
-
-### /platform/audit-center
-
-Route: /platform/audit-center
-
-Main file: src/app/platform/audit-center/page.tsx
-
-Purpose: Audit/security review
-
-Role access: System Administrator
-
-Imported components: Link, "next/link";, ReactNode, "react";, Prisma, "@prisma/client";, Activity, AlertTriangle, Ban, Building2, CalendarClock, CheckCircle2, ClipboardList, Download, FileSpreadsheet, FileText, Filter, KeyRound, Search, ShieldAlert, UserCog, XCircle, "lucide-react";, LucideIcon, DashboardShell, MobileFilterDrawer, PlatformKpiGrid, SearchableCombobox
-
-Local sections/functions: PlatformAuditCenterPage, KpiLink, Select, SeverityBadge, StatusBadge, AuditEventMobileCard, MobileAuditDetail, AuditDetailsDrawer, Detail, MetadataBlock, ExportButton, SecurityMetric, SummaryTable, SummaryMobileCard, HealthMetric
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/format, @/lib/roles, @/lib/prisma, @/lib/session
-
-Tables/cards/forms/modals: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: mobile-specific view; overflow/table handling; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/platform/audit-center/page.tsx, src/components/DashboardShell.tsx, src/components/MobileFilterDrawer.tsx, src/components/PlatformKpiGrid.tsx, src/components/SearchableCombobox.tsx
-
-### /platform/audit-center/export
-
-Route: /platform/audit-center/export
-
-Main file: src/app/platform/audit-center/export/route.ts
-
-Purpose: Audit/security review
-
-Role access: System Administrator
-
-Imported components: None detected
-
-Local sections/functions: GET
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/export-files, @/lib/format, @/lib/prisma, @/lib/roles, @/lib/session
-
-Tables/cards/forms/modals: inputs/filters
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: No explicit mobile-only structure detected
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/platform/audit-center/export/route.ts
-
-### /platform/billing-center
-
-Route: /platform/billing-center
-
-Main file: src/app/platform/billing-center/page.tsx
-
-Purpose: Billing/subscription workflow
-
-Role access: System Administrator
-
-Imported components: Link, "next/link";, ReactNode, "react";, Prisma, "@prisma/client";, AlertTriangle, CalendarClock, CircleDollarSign, CreditCard, Download, FileSpreadsheet, FileText, Filter, Receipt, TrendingDown, TrendingUp, "lucide-react";, LucideIcon, DashboardShell, MobileAccordionSection, MobileFilterDrawer, PlatformKpiGrid, SearchableCombobox
-
-Local sections/functions: PlatformBillingCenterPage, BillingCenterTabs, AdvancedSubscriptionTable, SubscriptionMobileCard, RenewalCenter, TrialManagement, PlanPerformance, InvoiceStatusDashboard, InvoiceTable, InvoiceMobileCard, BillingMobileLine, PaymentTracking, ChurnAnalytics, BillingAlerts, KpiCard, Panel, MiniMetric, HealthLine, Chart, Distribution, LifecycleBadge, ActionLink, BillingActionRow, MetricLine, EmptyText, ExportButton
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/format, @/lib/billing, @/lib/prisma, @/lib/session, @/lib/subscription-plans, @/lib/subscriptions
-
-Tables/cards/forms/modals: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: mobile-specific view; overflow/table handling; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/platform/billing-center/page.tsx, src/components/DashboardShell.tsx, src/components/MobileAccordionSection.tsx, src/components/MobileFilterDrawer.tsx, src/components/PlatformKpiGrid.tsx, src/components/SearchableCombobox.tsx
-
-### /platform/billing-center/export
-
-Route: /platform/billing-center/export
-
-Main file: src/app/platform/billing-center/export/route.ts
-
-Purpose: Billing/subscription workflow
-
-Role access: System Administrator
-
-Imported components: None detected
-
-Local sections/functions: GET
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/export-files, @/lib/billing, @/lib/format, @/lib/prisma, @/lib/session, @/lib/subscription-plans, @/lib/subscriptions
-
-Tables/cards/forms/modals: cards/KPIs, inputs/filters
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: No explicit mobile-only structure detected
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/platform/billing-center/export/route.ts
-
-### /platform/businesses
-
-Route: /platform/businesses
-
-Main file: src/app/platform/businesses/page.tsx
-
-Purpose: Tenant/business management
-
-Role access: System Administrator
-
-Imported components: BusinessType, Prisma, RecordStatus, "@prisma/client";, Eye, MoreHorizontal, Pencil, Plus, Power, Search, SlidersHorizontal, X, "lucide-react";, Link, "next/link";, ReactNode, "react";, ConfirmSubmitButton, CsrfInput, DashboardShell, MobileFilterDrawer, SearchableCombobox, StatusBadge
-
-Local sections/functions: BusinessesPage, SelectField, InputField, QuickChip, BusinessSummaryCard, BusinessRow, BusinessMobileCard, BusinessActions, Detail, SuspiciousBadge
-
-Connected actions: @/app/platform/businesses/actions
-
-Connected lib/data files: @/lib/format, @/lib/prisma, @/lib/roles, @/lib/session
-
-Tables/cards/forms/modals: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: mobile-specific view; overflow/table handling; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/platform/businesses/page.tsx, src/components/ConfirmSubmitButton.tsx, src/components/CsrfInput.tsx, src/components/DashboardShell.tsx, src/components/MobileFilterDrawer.tsx, src/components/SearchableCombobox.tsx, src/components/StatusBadge.tsx
-
-### /platform/businesses/[id]
-
-Route: /platform/businesses/[id]
-
-Main file: src/app/platform/businesses/[id]/page.tsx
-
-Purpose: Tenant/business management
-
-Role access: System Administrator
-
-Imported components: Link, "next/link";, "next/navigation";, ConfirmSubmitButton, CsrfInput, DashboardShell, StatusBadge
-
-Local sections/functions: BusinessDetailPage, InfoMetric, InfoCard, InfoRow, ColorRow, MobileDetail
-
-Connected actions: @/app/platform/businesses/actions
-
-Connected lib/data files: @/lib/format, @/lib/billing, @/lib/subscription-plans, @/lib/prisma, @/lib/roles, @/lib/session
-
-Tables/cards/forms/modals: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: mobile-specific view; overflow/table handling; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/platform/businesses/[id]/page.tsx, src/components/ConfirmSubmitButton.tsx, src/components/CsrfInput.tsx, src/components/DashboardShell.tsx, src/components/StatusBadge.tsx
-
-### /platform/businesses/[id]/edit
-
-Route: /platform/businesses/[id]/edit
-
-Main file: src/app/platform/businesses/[id]/edit/page.tsx
-
-Purpose: Tenant/business management
-
-Role access: System Administrator
-
-Imported components: Link, "next/link";, "next/navigation";, BusinessForm, DashboardShell
-
-Local sections/functions: EditBusinessPage
-
-Connected actions: @/app/platform/businesses/actions
-
-Connected lib/data files: @/lib/prisma, @/lib/session
-
-Tables/cards/forms/modals: forms/actions, inputs/filters
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: No explicit mobile-only structure detected
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/platform/businesses/[id]/edit/page.tsx, src/components/BusinessForm.tsx, src/components/DashboardShell.tsx
-
-### /platform/businesses/new
-
-Route: /platform/businesses/new
-
-Main file: src/app/platform/businesses/new/page.tsx
-
-Purpose: Tenant/business management
-
-Role access: System Administrator
-
-Imported components: Link, "next/link";, BusinessForm, DashboardShell
-
-Local sections/functions: NewBusinessPage
-
-Connected actions: @/app/platform/businesses/actions
-
-Connected lib/data files: @/lib/prisma, @/lib/session
-
-Tables/cards/forms/modals: forms/actions, inputs/filters
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: No explicit mobile-only structure detected
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/platform/businesses/new/page.tsx, src/components/BusinessForm.tsx, src/components/DashboardShell.tsx
-
-### /platform/database
-
-Route: /platform/database
-
-Main file: src/app/platform/database/page.tsx
-
-Purpose: Workspace page
-
-Role access: System Administrator
-
-Imported components: Link, "next/link";, DashboardShell, PlatformKpiGrid
-
-Local sections/functions: DatabaseHealthPage, HealthTile
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/database-health, @/lib/session
-
-Tables/cards/forms/modals: cards/KPIs, responsive layout
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/platform/database/page.tsx, src/components/DashboardShell.tsx, src/components/PlatformKpiGrid.tsx
-
-### /platform/health-analytics
-
-Route: /platform/health-analytics
-
-Main file: src/app/platform/health-analytics/page.tsx
-
-Purpose: Workspace page
-
-Role access: System Administrator
-
-Imported components: Link, "next/link";, ReactNode, "react";, BarChart3, Download, FileSpreadsheet, FileText, TrendingUp, "lucide-react";, DashboardShell, MobileAccordionSection, PlatformKpiGrid
-
-Local sections/functions: PlatformHealthAnalyticsPage, RecentActivityCard, Section, MetricGrid, Metric, HealthMetric, ChartCard, DistributionCard, TopBusinessTable, ExportButton
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/database-health, @/lib/format, @/lib/prisma, @/lib/session
-
-Tables/cards/forms/modals: tables, cards/KPIs, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: mobile-specific view; overflow/table handling; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/platform/health-analytics/page.tsx, src/components/DashboardShell.tsx, src/components/MobileAccordionSection.tsx, src/components/PlatformKpiGrid.tsx
-
-### /platform/health-analytics/export
-
-Route: /platform/health-analytics/export
-
-Main file: src/app/platform/health-analytics/export/route.ts
-
-Purpose: Workspace page
-
-Role access: System Administrator
-
-Imported components: None detected
-
-Local sections/functions: GET
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/export-files, @/lib/database-health, @/lib/prisma, @/lib/session
-
-Tables/cards/forms/modals: cards/KPIs
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: No explicit mobile-only structure detected
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/platform/health-analytics/export/route.ts
-
-### /platform/invoices
-
-Route: /platform/invoices
-
-Main file: src/app/platform/invoices/page.tsx
-
-Purpose: Billing/subscription workflow
-
-Role access: System Administrator
-
-Imported components: Link, "next/link";, InvoiceStatus, Prisma, "@prisma/client";, ConfirmSubmitButton, CsrfInput, DashboardShell, MobileFilterDrawer, InvoiceBadge, SearchableCombobox
-
-Local sections/functions: PlatformInvoicesPage, InvoiceDesktopRows, InvoiceDetail, InvoiceKpi, InvoiceActions, InvoiceEmpty, StatusForm, Message
-
-Connected actions: @/app/platform/invoices/actions
-
-Connected lib/data files: @/lib/format, @/lib/prisma, @/lib/session, @/lib/billing
-
-Tables/cards/forms/modals: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: mobile-specific view; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/platform/invoices/page.tsx, src/components/ConfirmSubmitButton.tsx, src/components/CsrfInput.tsx, src/components/DashboardShell.tsx, src/components/MobileFilterDrawer.tsx, src/components/InvoiceBadge.tsx, src/components/SearchableCombobox.tsx
-
-### /platform/invoices/[id]
-
-Route: /platform/invoices/[id]
-
-Main file: src/app/platform/invoices/[id]/page.tsx
-
-Purpose: Billing/subscription workflow
-
-Role access: System Administrator
-
-Imported components: Link, "next/link";, "next/navigation";, InvoiceStatus, "@prisma/client";, ConfirmSubmitButton, CsrfInput, DashboardShell, InvoiceBadge
-
-Local sections/functions: PlatformInvoiceDetailPage, StatusForm, Info, Input
-
-Connected actions: @/app/platform/invoices/actions
-
-Connected lib/data files: @/lib/billing, @/lib/format, @/lib/prisma, @/lib/session
-
-Tables/cards/forms/modals: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: overflow/table handling; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/platform/invoices/[id]/page.tsx, src/components/ConfirmSubmitButton.tsx, src/components/CsrfInput.tsx, src/components/DashboardShell.tsx, src/components/InvoiceBadge.tsx
-
-### /platform/launch-readiness
-
-Route: /platform/launch-readiness
-
-Main file: src/app/platform/launch-readiness/page.tsx
-
-Purpose: Workspace page
-
-Role access: System Administrator
-
-Imported components: CheckCircle2, XCircle, "lucide-react";, DashboardShell
-
-Local sections/functions: LaunchReadinessPage
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/prisma, @/lib/session
-
-Tables/cards/forms/modals: cards/KPIs
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: No explicit mobile-only structure detected
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/platform/launch-readiness/page.tsx, src/components/DashboardShell.tsx
-
-### /platform/plans
-
-Route: /platform/plans
-
-Main file: src/app/platform/plans/page.tsx
-
-Purpose: Workspace page
-
-Role access: System Administrator
-
-Imported components: Link, "next/link";, ReactNode, "react";, CreditCard, GitBranch, Package, Search, Star, TrendingUp, "lucide-react";, DashboardShell, MobileFilterDrawer, PlatformKpiGrid
-
-Local sections/functions: PlatformPlansPage, KpiCard, PlanCard, PlanAnalysisCard, PlanAnalysisRow, PlanStat, UtilizationBar
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/subscription-plans, @/lib/prisma, @/lib/session
-
-Tables/cards/forms/modals: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: mobile-specific view; overflow/table handling; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/platform/plans/page.tsx, src/components/DashboardShell.tsx, src/components/MobileFilterDrawer.tsx, src/components/PlatformKpiGrid.tsx
-
-### /platform/settings
-
-Route: /platform/settings
-
-Main file: src/app/platform/settings/page.tsx
-
-Purpose: Settings/configuration
-
-Role access: System Administrator
-
-Imported components: Activity, Bell, Building2, CheckCircle2, Database, FlaskConical, GitBranch, HeartPulse, KeyRound, Link2Off, Lock, Mail, MessageSquareOff, PackageCheck, RadioTower, Receipt, Server, ShieldCheck, Smartphone, Users, "lucide-react";, LucideIcon, ActivityAlertStatus, "@prisma/client";, Link, "next/link";, "../../../../package.json";, CsrfInput, DashboardShell, MobileTabSelector
-
-Local sections/functions: PlatformSettingsPage, GeneralTab, SecurityTab, NotificationsTab, DemoModeTab, AuditLogsTab, SectionHeader, InfoCard, MetricCard, RestrictionPanel, PlaceholderPanel, FutureCapabilitiesPanel, MobileDetailLine, AdminLink
-
-Connected actions: @/app/platform/settings/actions
-
-Connected lib/data files: @/lib/format, @/lib/platform-settings, @/lib/prisma, @/lib/session
-
-Tables/cards/forms/modals: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: mobile-specific view; overflow/table handling; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/platform/settings/page.tsx, src/components/CsrfInput.tsx, src/components/DashboardShell.tsx, src/components/MobileTabSelector.tsx
-
-### /platform/subscriptions
-
-Route: /platform/subscriptions
-
-Main file: src/app/platform/subscriptions/page.tsx
-
-Purpose: Billing/subscription workflow
-
-Role access: System Administrator
-
-Imported components: Prisma, SubscriptionStatus, "@prisma/client";, ChevronDown, ExternalLink, RotateCcw, "lucide-react";, Link, "next/link";, ConfirmSubmitButton, CsrfInput, DashboardShell, MobileFilterDrawer, PlatformKpiGrid, SearchableCombobox, StatusBadge
-
-Local sections/functions: PlatformSubscriptionsPage, SubscriptionKpiCard, SubscriptionRow, SubscriptionCard, SubscriptionActions, ActionButton, DetailRow, CompactBadge, Detail, Message
-
-Connected actions: @/app/platform/subscriptions/actions
-
-Connected lib/data files: @/lib/format, @/lib/prisma, @/lib/session, @/lib/subscription-plans, @/lib/subscriptions
-
-Tables/cards/forms/modals: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: mobile-specific view; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/platform/subscriptions/page.tsx, src/components/ConfirmSubmitButton.tsx, src/components/CsrfInput.tsx, src/components/DashboardShell.tsx, src/components/MobileFilterDrawer.tsx, src/components/PlatformKpiGrid.tsx, src/components/SearchableCombobox.tsx, src/components/StatusBadge.tsx
-
-### /platform/tenant-center
-
-Route: /platform/tenant-center
-
-Main file: src/app/platform/tenant-center/page.tsx
-
-Purpose: Tenant/business management
-
-Role access: System Administrator
-
-Imported components: Link, "next/link";, ReactNode, "react";, ActivityAlertStatus, Prisma, RecordStatus, SubscriptionStatus, "@prisma/client";, Activity, AlertTriangle, Building2, CheckCircle2, Download, FileSpreadsheet, FileText, Filter, Search, ShieldCheck, Users, "lucide-react";, LucideIcon, DashboardShell, MobileFilterDrawer, PlatformKpiGrid, SearchableCombobox
-
-Local sections/functions: PlatformTenantCenterPage, TenantDirectory, KpiCard, Panel, HealthBadge, StatusBadge, SmallBadge, ActionLink, ExportButton, MetricLine, EmptyState
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/format, @/lib/prisma, @/lib/roles, @/lib/session
-
-Tables/cards/forms/modals: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: mobile-specific view; overflow/table handling; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/platform/tenant-center/page.tsx, src/components/DashboardShell.tsx, src/components/MobileFilterDrawer.tsx, src/components/PlatformKpiGrid.tsx, src/components/SearchableCombobox.tsx
-
-### /platform/tenant-center/export
-
-Route: /platform/tenant-center/export
-
-Main file: src/app/platform/tenant-center/export/route.ts
-
-Purpose: Tenant/business management
-
-Role access: System Administrator
-
-Imported components: None detected
-
-Local sections/functions: GET
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/export-files, @/lib/format, @/lib/prisma, @/lib/roles, @/lib/session
-
-Tables/cards/forms/modals: inputs/filters
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: No explicit mobile-only structure detected
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/platform/tenant-center/export/route.ts
-
-### /platform/users
-
-Route: /platform/users
-
-Main file: src/app/platform/users/page.tsx
-
-Purpose: User/staff management
-
-Role access: System Administrator
-
-Imported components: Prisma, RecordStatus, UserRole, "@prisma/client";, RotateCcw, Search, SlidersHorizontal, "lucide-react";, Link, "next/link";, ReactNode, "react";, DashboardShell, MobileFilterDrawer, SearchableCombobox, StatusBadge
-
-Local sections/functions: PlatformUsersPage, UserRow, UserMobileCard, SelectField, InputField, QuickChip, RoleBadge, SuspiciousBadge, Detail
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/format, @/lib/prisma, @/lib/roles, @/lib/session
-
-Tables/cards/forms/modals: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: mobile-specific view; overflow/table handling; responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/platform/users/page.tsx, src/components/DashboardShell.tsx, src/components/MobileFilterDrawer.tsx, src/components/SearchableCombobox.tsx, src/components/StatusBadge.tsx
-
-### /referral/[code]
-
-Route: /referral/[code]
-
-Main file: src/app/referral/[code]/page.tsx
-
-Purpose: Referral workflow
-
-Role access: Public/auth flow
-
-Imported components: None detected
-
-Local sections/functions: ReferralLandingPage, ReferralUnavailable
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/prisma, @/lib/roles, @/lib/referrals
-
-Tables/cards/forms/modals: cards/KPIs, responsive layout
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/referral/[code]/page.tsx
-
-### /request-demo
-
-Route: /request-demo
-
-Main file: src/app/request-demo/page.tsx
-
-Purpose: Workspace page
-
-Role access: Public/auth flow
-
-Imported components: Link, "next/link";, Building2, Clock3, MessageSquare, ShieldCheck, "lucide-react";, DemoRequestForm
-
-Local sections/functions: RequestDemoPage, PublicHeader, Footer
-
-Connected actions: None detected
-
-Connected lib/data files: None detected
-
-Tables/cards/forms/modals: cards/KPIs, confirmations/modals/drawers, responsive layout
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/request-demo/page.tsx, src/components/DemoRequestForm.tsx
-
-### /reset-password
-
-Route: /reset-password
-
-Main file: src/app/reset-password/page.tsx
-
-Purpose: Password reset/authentication
-
-Role access: Public/auth flow
-
-Imported components: Link, "next/link";, ResetPasswordForm
-
-Local sections/functions: ResetPasswordPage
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/csrf, @/lib/session
-
-Tables/cards/forms/modals: cards/KPIs
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: No explicit mobile-only structure detected
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/reset-password/page.tsx, src/components/ResetPasswordForm.tsx
-
-### /scan/[token]
-
-Route: /scan/[token]
-
-Main file: src/app/scan/[token]/page.tsx
-
-Purpose: Scanner and QR validation
-
-Role access: Public/auth flow
-
-Imported components: Link, "next/link";, "next/navigation";, React, "react";, ConfirmSubmitButton, CsrfInput, DashboardShell, IdempotencyInput, ScannerSoundFeedback, StatusBadge
-
-Local sections/functions: ScanResultPage, ScanMessage, ProgramSelectionScreen, ScanStatusBanner, StampIssuanceSection, Info, SummaryItem
-
-Connected actions: @/app/scan/actions
-
-Connected lib/data files: @/lib/commercial-access, @/lib/customer-cards, @/lib/format, @/lib/prisma, @/lib/programs, @/lib/rewards, @/lib/roles, @/lib/session
-
-Tables/cards/forms/modals: forms/actions, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/scan/[token]/page.tsx, src/components/ConfirmSubmitButton.tsx, src/components/CsrfInput.tsx, src/components/DashboardShell.tsx, src/components/IdempotencyInput.tsx, src/components/ScannerSoundFeedback.tsx, src/components/StatusBadge.tsx
-
-### /staff
-
-Route: /staff
-
-Main file: src/app/staff/page.tsx
-
-Purpose: User/staff management
-
-Role access: Staff
-
-Imported components: Link, "next/link";, Gift, QrCode, Search, TicketCheck, UserPlus, Users, "lucide-react";, LucideIcon, DashboardShell
-
-Local sections/functions: StaffDashboard, Action, Metric, Info
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/format, @/lib/prisma, @/lib/session
-
-Tables/cards/forms/modals: cards/KPIs, confirmations/modals/drawers, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/staff/page.tsx, src/components/DashboardShell.tsx
-
-### /staff/customers
-
-Route: /staff/customers
-
-Main file: src/app/staff/customers/page.tsx
-
-Purpose: Customer workflow
-
-Role access: Staff
-
-Imported components: Link, "next/link";, Search, "lucide-react";, DashboardShell, StatusBadge
-
-Local sections/functions: StaffCustomerSearchPage
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/customer-cards, @/lib/phone, @/lib/prisma, @/lib/programs, @/lib/session
-
-Tables/cards/forms/modals: forms/actions, cards/KPIs, inputs/filters
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: No explicit mobile-only structure detected
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/staff/customers/page.tsx, src/components/DashboardShell.tsx, src/components/StatusBadge.tsx
-
-### /staff/customers/[id]
-
-Route: /staff/customers/[id]
-
-Main file: src/app/staff/customers/[id]/page.tsx
-
-Purpose: Customer workflow
-
-Role access: Staff
-
-Imported components: Image, "next/image";, Link, "next/link";, React, "react";, QRCode, "qrcode";, DashboardShell, StatusBadge
-
-Local sections/functions: StaffCustomerProfilePage, Info
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/customer-cards, @/lib/phone, @/lib/prisma, @/lib/programs, @/lib/session
-
-Tables/cards/forms/modals: cards/KPIs, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/staff/customers/[id]/page.tsx, src/components/DashboardShell.tsx, src/components/StatusBadge.tsx
-
-### /staff/customers/new
-
-Route: /staff/customers/new
-
-Main file: src/app/staff/customers/new/page.tsx
-
-Purpose: Customer workflow
-
-Role access: Staff
-
-Imported components: Link, "next/link";, CsrfInput, DashboardShell
-
-Local sections/functions: NewStaffCustomerPage, Input
-
-Connected actions: @/app/staff/customers/actions
-
-Connected lib/data files: @/lib/session
-
-Tables/cards/forms/modals: forms/actions, cards/KPIs, inputs/filters, responsive layout
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: Medium
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/staff/customers/new/page.tsx, src/components/CsrfInput.tsx, src/components/DashboardShell.tsx
-
-### /staff/customers/success
-
-Route: /staff/customers/success
-
-Main file: src/app/staff/customers/success/page.tsx
-
-Purpose: Customer workflow
-
-Role access: Staff
-
-Imported components: Link, "next/link";, CardShareActions, DashboardShell
-
-Local sections/functions: StaffCustomerSuccessPage
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/customer-cards, @/lib/prisma, @/lib/session
-
-Tables/cards/forms/modals: cards/KPIs
-
-Styling method: Tailwind utilities/shared components, business theme utilities.
-
-Mobile layout notes: No explicit mobile-only structure detected
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/staff/customers/success/page.tsx, src/components/CardShareActions.tsx, src/components/DashboardShell.tsx
-
-### /staff/programs
-
-Route: /staff/programs
-
-Main file: src/app/staff/programs/page.tsx
-
-Purpose: Loyalty program workflow
-
-Role access: Staff
-
-Imported components: DashboardShell
-
-Local sections/functions: StaffProgramsPage
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/prisma, @/lib/programs, @/lib/session
-
-Tables/cards/forms/modals: cards/KPIs, responsive layout
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: responsive grids
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/staff/programs/page.tsx, src/components/DashboardShell.tsx
-
-### /staff/scanner
-
-Route: /staff/scanner
-
-Main file: src/app/staff/scanner/page.tsx
-
-Purpose: Scanner and QR validation
-
-Role access: Staff
-
-Imported components: CameraScanner, DashboardShell
-
-Local sections/functions: StaffScannerPage
-
-Connected actions: None detected
-
-Connected lib/data files: @/lib/session
-
-Tables/cards/forms/modals: cards/KPIs
-
-Styling method: Tailwind utilities/shared components.
-
-Mobile layout notes: No explicit mobile-only structure detected
-
-Risk level when editing: High
-
-Safe redesign notes: Preserve route params, auth helpers, Prisma filters, server actions, form names, CSRF/idempotency fields, and role-specific scoping.
-
-Files to send to external UI/UX AI: src/app/staff/scanner/page.tsx, src/components/CameraScanner.tsx, src/components/DashboardShell.tsx
+Generated from the real project tree on 2026-07-02. This map documents verified files only. It does not include guessed routes, invented folders, or stale paths from older maps.
+
+## Scan Summary
+
+- Scanned folders: `src/app`, `src/components`, `src/lib`, `prisma`, `tests`.
+- Verified Next route/layout/handler files: 98.
+- Verified page files: 88.
+- Verified route handlers: 9.
+- Verified component files under `src/components`: 100.
+- Prisma root files found: `prisma/schema.prisma`, seed scripts, and migrations `0001` through `0040`.
+- Tests folder contains Node/MJS regression suites for permissions, scanning, public cards, Design Studio, tenant isolation, subscriptions, support sessions, and UI readiness.
+
+## Existing Project Folders
+
+### `src/app`
+
+Real top-level app areas:
+
+- Public/marketing: `page.tsx`, `benefits`, `company`, `faq`, `pricing`, `request-demo`, `resources`, `solutions`, `business-inactive`.
+- Auth/account: `login`, `logout`, `forgot-password`, `reset-password`, `change-password`, `api/session/idle-logout`.
+- Public customer flows: `card/[token]`, `join/program/[token]`, `referral/[code]`, `scan/[token]`, `scan/referral/[code]`.
+- Business Owner: `dashboard/**`.
+- Branch Manager: `branch/**`.
+- Staff: `staff/**`.
+- System Administrator: `platform/**`.
+- Support session route handlers: `support-session/activity`, `support-session/expired`.
+
+### `src/components`
+
+Real component groups:
+
+- Root shared components: forms, scanner, sharing, dashboard shell, support controls, Design Studio.
+- `src/components/ui`: shared UI system primitives.
+- `src/components/domain`: domain display cards and badges.
+- `src/components/layouts`: page layout wrappers.
+- `src/components/marketing`: marketing shell.
+- `src/components/public-card`: public wallet/card renderers and export renderers.
+
+### `src/lib`
+
+Important UI-connected data/helper areas:
+
+- Auth/session/roles: `session`, `roles`, `business-owner`, `business-context`.
+- Customers/cards/scanner: `customers`, `customer-cards`, `customer-tiers`, `scan`, `rewards`, `referrals`.
+- Business/branding/programs: `business-branding`, `business-display`, `programs`, `program-join`, `card-themes`.
+- Design Studio: `card-design`, `card-render-model`, `card-asset-catalog`, `design-studio`.
+- Platform/admin: `billing`, `subscriptions`, `subscription-plans`, `database-health`, `platform-settings`, `support-sessions`, `support-activity`.
+- UI support: `format`, `phone`, `csv`, `export-files`, `whatsapp-messages`, `form-state`, `color-contrast`.
+
+## Verified Route Map
+
+Each entry below is a verified Next.js route/layout/handler file. The fields match the requested mapping format, compressed for readability.
+
+### Public, Auth, Customer, and Root Routes
+
+| Route | Main file | Purpose | Role access | Imported components | Local sections/functions | Connected actions | Connected lib/data files | Tables/cards/forms/modals | Styling method | Mobile layout notes | Risk level when editing | Safe redesign notes | Files to send to external UI/UX AI |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| root layout | `src/app/layout.tsx` | Global app HTML shell, toaster, global CSS | All users | `AppToaster` | Metadata/root body | None | None | Global toast only | `globals.css` | Affects every page | HIGH | Only redesign global wrappers/styles with regression checks | `src/app/layout.tsx`, `src/app/globals.css`, `src/components/AppToaster.tsx` |
+| `/` | `src/app/page.tsx` | Public marketing homepage | Public | `HomepageMotion`, `MarketingLayout` | Hero, product story, feature/CTA sections | None | None | Marketing cards/buttons | Tailwind, marketing shell | Responsive marketing sections | MEDIUM | Safe for visual redesign if links stay intact | `src/app/page.tsx`, `src/components/HomepageMotion.tsx`, `src/components/marketing/MarketingLayout.tsx` |
+| `/benefits` | `src/app/benefits/page.tsx` | Marketing benefits page | Public | `MarketingLayout` | Benefits copy/cards | None | None | Marketing cards | Tailwind | Responsive grid | LOW | Copy/layout safe | file + `MarketingLayout` |
+| `/company` | `src/app/company/page.tsx` | Company marketing page | Public | `MarketingLayout` | Company story/cards | None | None | Cards | Tailwind | Responsive sections | LOW | Copy/layout safe | file + `MarketingLayout` |
+| `/faq` | `src/app/faq/page.tsx` | FAQ marketing page | Public | `MarketingLayout` | FAQ sections | None | None | FAQ blocks | Tailwind | Stacked mobile | LOW | Copy/layout safe | file + `MarketingLayout` |
+| `/pricing` | `src/app/pricing/page.tsx` | Pricing marketing page | Public | `MarketingLayout` | Pricing cards/CTA | None | None | Pricing cards | Tailwind | Responsive pricing grid | LOW | Visual safe if plan claims remain accurate | file + `MarketingLayout` |
+| `/request-demo` | `src/app/request-demo/page.tsx` | Request demo form | Public | `DemoRequestForm`, `MarketingLayout` | Form shell/copy | Form action inside component | Request/demo helpers in component | Form | Tailwind | Mobile stacked | MEDIUM | Preserve form fields/action | file + `DemoRequestForm` |
+| `/resources` | `src/app/resources/page.tsx` | Marketing resources page | Public | `MarketingLayout` | Resource cards | None | None | Cards | Tailwind | Responsive grid | LOW | Copy/layout safe | file + `MarketingLayout` |
+| `/solutions` | `src/app/solutions/page.tsx` | Marketing solutions page | Public | `MarketingLayout` | Solutions table/cards | None | None | Cards/table-like sections | Tailwind | Responsive sections | LOW | Copy/layout safe | file + `MarketingLayout` |
+| `/business-inactive` | `src/app/business-inactive/page.tsx` | Safe inactive-business state | Authenticated business roles | None | Message/actions | None | `session` | Status panel | Tailwind | Centered mobile | MEDIUM | Preserve neutral wording and logout/navigation | file |
+| `/login` | `src/app/login/page.tsx` | Login page | Public/redirects authenticated users | `LoginForm` | Auth shell | Login action inside component | `csrf`, `session` | Login form | Tailwind | Two-column/stacked auth layout | MEDIUM | Preserve CSRF and redirect behavior | file + `LoginForm` |
+| `/logout` | `src/app/logout/route.ts` | Logout route handler | Authenticated | None | Route handler | Logout/session cleanup | `csrf`, `session` | No UI | N/A | N/A | HIGH | No UI redesign; route handler only | Not UI AI material |
+| `/forgot-password` | `src/app/forgot-password/page.tsx` | Forgot password request page | Public | `ForgotPasswordForm` | Auth shell | Form action inside component | `csrf`, `session` | Form | Tailwind | Mobile stacked | MEDIUM | Preserve CSRF and email flow | file + component |
+| `/reset-password` | `src/app/reset-password/page.tsx` | Password reset page | Public token flow | `ResetPasswordForm` | Auth shell | Form action inside component | `csrf`, `session` | Form | Tailwind | Mobile stacked | MEDIUM | Preserve token inputs/errors | file + component |
+| `/change-password` | `src/app/change-password/page.tsx` | Authenticated password change | Authenticated | `ChangePasswordForm` | Account security form | Form action inside component | `csrf`, `session` | Form | Tailwind | Mobile stacked | MEDIUM | Preserve password field clearing/security | file + component |
+| `/api/session/idle-logout` | `src/app/api/session/idle-logout/route.ts` | Idle logout API route | Authenticated/API | None | Route handler | Session cleanup | `session` | No UI | N/A | N/A | HIGH | Not UI material | Not UI AI material |
+| `/card/[token]` | `src/app/card/[token]/page.tsx` | Public customer loyalty card | Public token | `CardShareActions`, `SaveCardImageButton`, `public-card/*` | Wallet card, tier, referral, save card sections | None | `customer-cards`, `card-themes`, `card-design`, `card-render-model`, `customer-tiers`, `programs`, `scan`, `referrals`, `prisma` | Public card, tier/refer/save cards, export buttons | Tailwind, business/card theme tokens | Centered narrow card layout | HIGH | Safe visual edits only if QR/token/export remain intact | file, `src/components/public-card/*`, `SaveCardImageButton`, `CardShareActions`, `src/lib/card-render-model.ts` |
+| `/join/program/[token]` | `src/app/join/program/[token]/page.tsx` | Public program join/enrollment page | Public token | `BusinessBrandingProvider` | Enrollment form/success/error states | `src/app/join/program/[token]/actions.ts` | `business-branding`, `customer-cards`, `prisma` | Form/cards | Tailwind, business tokens | Centered mobile-first form | HIGH | Preserve token validation and enrollment action | file + actions + `CustomerCreateForm` patterns |
+| `/referral/[code]` | `src/app/referral/[code]/page.tsx` | Public referral landing page | Public code | `BusinessBrandingProvider`, `ReferralInviteActions` | Referral landing/invite sections | Invite actions in component | `business-branding`, `customer-cards`, `customer-tiers`, `referrals`, `roles`, `prisma` | Invite panel | Tailwind, business tokens | Mobile centered | HIGH | Preserve referral code handling | file + `ReferralInviteActions` |
+| `/scan/[token]` | `src/app/scan/[token]/page.tsx` | Staff/manager/owner scan result and issue stamp workflow | Authenticated scanner roles | `DashboardShell`, `ScannerSoundFeedback`, `StampWhatsAppSharePrompt`, `ScannerResultCard`, UI/layouts | Customer result, issue stamp, redeem, undo/share prompts | `src/app/scan/actions.ts` | `commercial-access`, `customer-cards`, `customer-tiers`, `programs`, `referrals`, `rewards`, `scan`, `prisma` | Forms, action cards, status badges | Tailwind, dashboard shell | Responsive scanner result layout | HIGH | Redesign carefully; this is operational and permission-sensitive | file, `src/app/scan/actions.ts`, scanner components |
+| `/scan/referral/[code]` | `src/app/scan/referral/[code]/page.tsx` | Referral scan redirect/landing | Authenticated scanner roles | None imported | Referral scan handler page | None in file | None imported | Minimal UI | Tailwind/Next page | Mobile simple | MEDIUM | Inspect before redesign due sparse imports | file |
+| `/support-session/activity` | `src/app/support-session/activity/route.ts` | Support activity route handler | Support session | None | Route handler | Support activity writes | `support-activity`, `support-sessions` | No UI | N/A | N/A | HIGH | Not UI material | Not UI AI material |
+| `/support-session/expired` | `src/app/support-session/expired/route.ts` | Expired support session route handler | Support session | None | Route handler | Support expiration | `support-activity`, `support-sessions`, `prisma`, `session` | No UI | N/A | N/A | HIGH | Not UI material | Not UI AI material |
+
+### Business Owner Routes
+
+| Route | Main file | Purpose | Role access | Imported components | Local sections/functions | Connected actions | Connected lib/data files | Tables/cards/forms/modals | Styling method | Mobile layout notes | Risk level when editing | Safe redesign notes | Files to send to external UI/UX AI |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `/dashboard` | `src/app/dashboard/page.tsx` | Business Owner dashboard | Business Owner | `DashboardShell`, `DashboardPageLayout`, `MetricCard`, UI | KPIs, support session prompt, quick actions, activity | `platform/businesses/support-actions` | `business-owner`, `business-display`, `plan-compliance`, `support-sessions`, `roles`, `prisma` | KPI cards, action cards | Tailwind, business tokens | Responsive grids | HIGH | Safe UI redesign if data queries/actions untouched | file, `DashboardShell`, UI/layout components |
+| `/dashboard/activity` | `src/app/dashboard/activity/page.tsx` | Activity/alerts list | Business Owner | `DashboardShell`, `EmptyState`, `MetricCard` | Metrics, activity list | None | `business-owner`, `format`, `prisma` | Metric/list cards | Tailwind | Stacked lists mobile | MEDIUM | Preserve filters/detail links | file |
+| `/dashboard/activity/[id]` | `src/app/dashboard/activity/[id]/page.tsx` | Activity detail | Business Owner | `DashboardShell` | Detail summary/timeline | None | `business-owner`, `alert-investigation`, `format`, `programs`, `roles`, `prisma` | Detail cards | Tailwind | Stacked mobile | MEDIUM | Preserve investigation data | file |
+| `/dashboard/billing` | `src/app/dashboard/billing/page.tsx` | Business billing and plan page | Business Owner | `DashboardShell`, `InvoiceBadge`, UI | Plan summary, invoices, usage | None | `billing`, `business-owner`, `subscriptions`, `subscription-plans`, `prisma` | Tables/cards | Tailwind | Responsive billing cards/table | HIGH | Avoid billing logic changes | file |
+| `/dashboard/branches` | `src/app/dashboard/branches/page.tsx` | Branch management | Business Owner | `DashboardShell`, `ConfirmSubmitButton`, `CsrfInput`, `StatusBadge` | Branch list/create/update forms | `dashboard/actions.ts` | `business-owner`, `platform-options`, `format` | Forms/list rows | Tailwind | Stacked forms mobile | HIGH | Preserve branch actions and CSRF | file + actions |
+| `/dashboard/customers` | `src/app/dashboard/customers/page.tsx` | Customer directory | Business Owner | `DashboardShell`, UI | Search/filter, KPI cards, customer table/cards | None | `business-owner`, `customers`, `phone`, `format`, `prisma` | FilterBar, SearchBar, DataTable/cards | Tailwind, UI primitives | Desktop table/mobile cards | HIGH | Safe redesign around row/card layout only | file, UI table/filter/search components |
+| `/dashboard/customers/new` | `src/app/dashboard/customers/new/page.tsx` | Create customer | Business Owner | `CustomerCreateForm`, `CsrfInput`, `DashboardShell`, `ReferralReferrerLookupPreview` | Create form | `dashboard/actions.ts` | `business-owner`, `prisma` | Customer form/referral lookup | Tailwind + shared form | Mobile form stack | HIGH | Preserve submitted values, referral validation, program selector | file + `CustomerCreateForm` + actions |
+| `/dashboard/customers/[id]` | `src/app/dashboard/customers/[id]/page.tsx` | Customer 360 | Business Owner | `DashboardShell`, `CardShareActions`, `ConfirmSubmitButton`, `CopyButton`, `CsrfInput`, UI | Overview, card/share, progress, history, rewards/referrals, actions | `dashboard/actions.ts` | `business-owner`, `customer-cards`, `customer-tiers`, `customers`, `programs`, `scan`, `alert-*`, `phone`, `prisma` | Cards, forms, action menus, timeline | Tailwind + UI primitives | Dense responsive panels | HIGH | Redesign section layout carefully; preserve action forms | file, `CardShareActions`, UI, actions |
+| `/dashboard/customers/[id]/edit` | `src/app/dashboard/customers/[id]/edit/page.tsx` | Edit customer | Business Owner | `DashboardShell`, `CsrfInput` | Edit form | `dashboard/actions.ts` | `business-owner`, `customers`, `phone` | Form | Tailwind | Mobile stack | HIGH | Preserve business-scoped customer update | file + actions |
+| `/dashboard/engagement` | `src/app/dashboard/engagement/page.tsx` | Engagement campaigns/messages | Business Owner | `DashboardShell`, `MetricCard`, `EmptyState`, `SearchableCombobox` | Metrics, filter/list | None | `business-owner`, `engagement`, `format`, `prisma` | Form filters, table/list, cards | Tailwind | Responsive list | MEDIUM | Preserve message/customer targeting | file |
+| `/dashboard/engagement/[id]` | `src/app/dashboard/engagement/[id]/page.tsx` | Engagement detail | Business Owner | `DashboardShell`, `CopyButton`, `CsrfInput` | Message detail/actions | `dashboard/messages/actions.ts` | `business-owner`, `engagement`, `format`, `prisma` | Forms/detail cards | Tailwind | Stacked mobile | MEDIUM | Preserve send/duplicate actions | file + actions |
+| `/dashboard/exports/[type]` | `src/app/dashboard/exports/[type]/route.ts` | CSV export route | Business Owner | None | Route handler | None | `alert-labels`, `csv`, `format`, `prisma`, `session` | No UI | N/A | N/A | HIGH | Not UI material | Not UI AI material |
+| `/dashboard/messages` | `src/app/dashboard/messages/page.tsx` | Business messages | Business Owner | `DashboardShell`, `EmptyState`, `MetricCard`, `SectionCard` | Metrics, messages list | None | `business-owner`, `engagement`, `messages`, `format`, `prisma` | Tables/cards/forms | Tailwind | Responsive list | MEDIUM | Preserve message state/actions | file |
+| `/dashboard/messages/[id]` | `src/app/dashboard/messages/[id]/page.tsx` | Message detail | Business Owner | `DashboardShell`, `CopyButton`, `CsrfInput` | Message detail/actions | `dashboard/messages/actions.ts` | `business-owner`, `engagement`, `messages`, `format`, `prisma` | Forms/detail cards | Tailwind | Stacked mobile | MEDIUM | Preserve message action forms | file + actions |
+| `/dashboard/notifications` | `src/app/dashboard/notifications/page.tsx` | Notifications/alert center | Business Owner | `DashboardShell`, `CsrfInput`, `EmptyState`, `MetricCard`, `SearchableCombobox`, UI tabs | Metrics, filters, tabs, alerts list | `dashboard/notifications/actions.ts` | `alert-engine`, `business-owner`, `alert-*`, `format`, `prisma` | Forms, cards, tabs | Tailwind + UI | Responsive tabs/list | HIGH | Preserve alert actions and statuses | file + actions |
+| `/dashboard/notifications/[id]` | `src/app/dashboard/notifications/[id]/page.tsx` | Notification detail | Business Owner | `DashboardShell`, `CsrfInput` | Detail and action forms | `dashboard/notifications/actions.ts` | `business-owner`, `alert-*`, `format`, `prisma` | Forms/detail cards | Tailwind | Stacked mobile | MEDIUM | Preserve alert investigation workflow | file + actions |
+| `/dashboard/profile` | `src/app/dashboard/profile/page.tsx` | Owner/business profile | Business Owner | `DashboardShell`, `CsrfInput`, `StatusBadge` | Profile/settings forms | `dashboard/actions.ts` | `business-owner`, `platform-options`, `roles`, `format` | Forms/cards | Tailwind | Mobile stack | MEDIUM | Preserve profile action names | file |
+| `/dashboard/programs` | `src/app/dashboard/programs/page.tsx` | Programs directory/performance | Business Owner | `DashboardShell`, UI | Program metrics, filter/search, program table/cards | None | `business-owner`, `programs`, `roles`, `prisma` | DataTable/cards/forms | Tailwind + UI | Desktop table/mobile cards | HIGH | Preserve program detail/edit/design links | file, UI table components |
+| `/dashboard/programs/new` | `src/app/dashboard/programs/new/page.tsx` | Create loyalty program | Business Owner | `DashboardShell`, `ProgramForm` | Create form | `dashboard/programs/actions.ts` | `business-owner`, `customer-cards`, `card-design` | Program form | Tailwind | Mobile form stack | HIGH | Preserve defaults and redirect to Design Studio | file + `ProgramForm` + actions |
+| `/dashboard/programs/[id]` | `src/app/dashboard/programs/[id]/page.tsx` | Program details | Business Owner | `DashboardShell`, `ConfirmSubmitButton`, `CopyButton`, `CsrfInput`, UI | Overview, join QR, customers, actions | `dashboard/programs/actions.ts` | `business-owner`, `program-join`, `programs`, `roles`, `prisma` | Cards, tables, forms | Tailwind + UI | Responsive panels | HIGH | Preserve action routing and QR tools | file + actions |
+| `/dashboard/programs/[id]/customers` | `src/app/dashboard/programs/[id]/customers/page.tsx` | Program enrollment/customer list | Business Owner | `DashboardShell`, `CsrfInput`, `SearchableCombobox`, UI | Enroll form and customer table | `dashboard/programs/actions.ts` | `business-owner`, `programs`, `format`, `prisma` | Form, table/cards | Tailwind + UI | Responsive table/cards | HIGH | Preserve enrollment action | file + actions |
+| `/dashboard/programs/[id]/design-studio` | `src/app/dashboard/programs/[id]/design-studio/page.tsx` | Design Studio per program | Business Owner | `ProgramDesignStudioForm`, `DashboardShell`, UI | Header, preview, presets, editor sections | `dashboard/programs/actions.ts` | `business-owner`, `csrf`, `customer-cards`, `card-design`, `design-studio`, `prisma` | Large form/editor, cards, preview | Tailwind, business tokens | Two-column desktop, preview-first mobile | HIGH | UI-only redesign safe inside component; preserve save action/hidden values | file + `ProgramDesignStudioForm`, design libs |
+| `/dashboard/programs/[id]/edit` | `src/app/dashboard/programs/[id]/edit/page.tsx` | Edit program | Business Owner | `DashboardShell`, `ProgramForm` | Edit form | `dashboard/programs/actions.ts` | `business-owner`, `customer-cards`, `prisma` | Program form | Tailwind | Mobile form stack | HIGH | Preserve rewards/program business rules | file + `ProgramForm` |
+| `/dashboard/programs/[id]/join-poster` | `src/app/dashboard/programs/[id]/join-poster/page.tsx` | Printable join QR poster | Business Owner | `BusinessBrandingProvider`, `PrintPageButton` | Print poster | None | `business-owner`, `business-branding`, `program-join`, `prisma` | Poster/print button | Tailwind + print styles | Print/mobile centered | MEDIUM | Visual redesign safe if QR/link intact | file |
+| `/dashboard/referrals` | `src/app/dashboard/referrals/page.tsx` | Referrals dashboard | Business Owner | `DashboardShell`, UI | Referral metrics/list | None | `business-owner`, `format`, `prisma` | Cards/list/filter | Tailwind + UI | Responsive cards/list | HIGH | Preserve referral statuses/rewards | file |
+| `/dashboard/referrals/[id]` | `src/app/dashboard/referrals/[id]/page.tsx` | Referral detail | Business Owner | `DashboardShell` | Referral detail cards | None | `business-owner`, `format`, `prisma` | Cards | Tailwind | Stacked mobile | MEDIUM | Preserve referral data semantics | file |
+| `/dashboard/scanner` | `src/app/dashboard/scanner/page.tsx` | Business Owner scanner landing | Business Owner | `CameraScanner`, `DashboardShell`, `ScannerManualCustomerSearch`, UI/layouts | Camera preview, manual search, referral scanner | None | `session` | Scanner cards/search form | Tailwind + `ScannerPageLayout` | Mobile-first scanner controls | HIGH | Do not change scanner behavior or route targets | file + scanner components |
+| `/dashboard/settings` | `src/app/dashboard/settings/page.tsx` | Business settings | Business Owner | `DashboardShell`, `SettingsMobileSectionSelect`, `ConfirmSubmitButton`, `CsrfInput`, UI | Settings tabs/sections/forms | `dashboard/actions.ts`, `platform/businesses/support-actions` | `business-owner`, `customer-tiers`, `messages`, `subscriptions`, `roles`, `prisma` | Forms/cards/tabs | Tailwind + UI | Mobile section selector | HIGH | Preserve settings boundaries/actions | file + actions |
+| `/dashboard/staff` | `src/app/dashboard/staff/page.tsx` | Staff management | Business Owner | `DashboardShell`, `SearchableCombobox`, `StaffPasswordResetAction`, `ConfirmSubmitButton`, `CsrfInput`, UI | Staff list/create/invite/actions | `dashboard/actions.ts` | `business-owner`, `csrf`, `roles`, `format`, `prisma` | Forms, table/cards, menus | Tailwind + UI | Responsive staff cards/table | HIGH | Preserve permissions and role options | file + actions |
+| `/dashboard/staff/[id]` | `src/app/dashboard/staff/[id]/page.tsx` | Staff detail | Business Owner | `DashboardShell`, UI | Overview/activity/permissions | None | `business-owner`, `alert-*`, `roles`, `format`, `prisma` | Cards/timeline | Tailwind + UI | Stacked mobile | HIGH | Preserve permission display and action routing | file |
+| `/dashboard/support-history` | `src/app/dashboard/support-history/page.tsx` | Business support history | Business Owner | `DashboardShell`, `CsrfInput`, UI | Support requests/history, WhatsApp support CTA | `platform/businesses/support-actions` | `business-owner`, `support-sessions`, `format`, `prisma` | Forms, tables/cards | Tailwind + UI | Floating WhatsApp CTA above mobile safe area | MEDIUM | Preserve support request actions | file + actions |
+
+### Branch Manager Routes
+
+| Route | Main file | Purpose | Role access | Imported components | Local sections/functions | Connected actions | Connected lib/data files | Tables/cards/forms/modals | Styling method | Mobile layout notes | Risk level when editing | Safe redesign notes | Files to send to external UI/UX AI |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `/branch` | `src/app/branch/page.tsx` | Branch dashboard | Branch Manager | `DashboardShell`, `EmptyState`, `MetricCard` | KPIs/activity/quick actions | None | `session`, `prisma`, `format` | KPI cards/lists | Tailwind | Responsive cards | HIGH | Preserve branch scoping | file |
+| `/branch/customers` | `src/app/branch/customers/page.tsx` | Branch customers | Branch Manager | `DashboardShell`, `CardShareActions`, `StatusBadge`, UI cards | Search/list/customer cards | None | `session`, `customers`, `customer-cards`, `programs`, `phone`, `prisma` | Forms, tables/cards | Tailwind | Mobile cards | HIGH | Preserve branch/customer scope | file |
+| `/branch/customers/new` | `src/app/branch/customers/new/page.tsx` | Branch create customer | Branch Manager | `CustomerCreateForm`, `CsrfInput`, `DashboardShell`, `ReferralReferrerLookupPreview` | Create form | `branch/customers/actions.ts` | `session`, `prisma` | Form | Tailwind | Mobile stack | HIGH | Preserve branch attribution | file + actions |
+| `/branch/customers/[id]` | `src/app/branch/customers/[id]/page.tsx` | Branch customer detail | Branch Manager | `DashboardShell`, `CardShareActions`, `StatusBadge`, UI | Profile/progress/history | None/action links | `session`, `customers`, `customer-cards`, `programs`, `scan`, `phone`, `prisma` | Cards/tables | Tailwind | Stacked mobile | HIGH | Preserve branch scope and card links | file |
+| `/branch/programs` | `src/app/branch/programs/page.tsx` | Branch program view | Branch Manager | `DashboardShell`, `EmptyState`, `MetricCard`, `SectionCard` | Program list/KPIs | None | `session`, `programs`, `prisma` | Cards | Tailwind | Responsive grid | MEDIUM | View-only program UI | file |
+| `/branch/programs/[id]` | `src/app/branch/programs/[id]/page.tsx` | Branch program detail | Branch Manager | `DashboardShell`, `CopyButton` | Program details/join QR | None | `session`, `programs`, `program-join`, `roles`, `prisma` | Tables/cards | Tailwind | Stacked mobile | MEDIUM | Preserve no-edit behavior | file |
+| `/branch/programs/[id]/customers` | `src/app/branch/programs/[id]/customers/page.tsx` | Branch program customers/enrollment | Branch Manager | `DashboardShell`, `CsrfInput`, `SearchableCombobox`, UI | Enroll/search/customer list | `branch/programs/actions.ts` | `session`, `programs`, `format`, `prisma` | Forms/tables/cards | Tailwind + UI | Responsive | HIGH | Preserve branch scope | file + actions |
+| `/branch/programs/[id]/join-poster` | `src/app/branch/programs/[id]/join-poster/page.tsx` | Branch printable join poster | Branch Manager | `BusinessBrandingProvider`, `PrintPageButton` | Print poster | None | `session`, `business-branding`, `program-join`, `prisma` | Poster | Tailwind/print | Print/mobile centered | MEDIUM | View/print only | file |
+| `/branch/scanner` | `src/app/branch/scanner/page.tsx` | Branch scanner landing | Branch Manager | `CameraScanner`, `DashboardShell`, `ScannerManualCustomerSearch`, UI/layouts | Camera/manual/referral scanner | None | `session` | Scanner cards | Tailwind + scanner layout | Mobile-first | HIGH | Preserve scanner permission flow | file + scanner components |
+
+### Staff Routes
+
+| Route | Main file | Purpose | Role access | Imported components | Local sections/functions | Connected actions | Connected lib/data files | Tables/cards/forms/modals | Styling method | Mobile layout notes | Risk level when editing | Safe redesign notes | Files to send to external UI/UX AI |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `/staff` | `src/app/staff/page.tsx` | Staff dashboard | Staff | `DashboardShell`, `EmptyState`, `MetricCard` | KPIs/quick actions | None | `session`, `format`, `prisma` | Cards | Tailwind | Mobile cards | HIGH | Preserve limited staff scope | file |
+| `/staff/customers` | `src/app/staff/customers/page.tsx` | Staff customer search/list | Staff | `DashboardShell`, `StatusBadge` | Search/list cards | None | `session`, `customer-cards`, `programs`, `phone`, `prisma` | Forms/cards | Tailwind | Mobile-first cards | HIGH | Preserve business-wide search but branch-limited actions | file |
+| `/staff/customers/new` | `src/app/staff/customers/new/page.tsx` | Staff create customer | Staff | `CustomerCreateForm`, `CsrfInput`, `DashboardShell`, `ReferralReferrerLookupPreview` | Create form | `staff/customers/actions.ts` | `session`, `prisma` | Form | Tailwind | Mobile stack | HIGH | Preserve branch attribution and program enrollment limits | file + actions |
+| `/staff/customers/success` | `src/app/staff/customers/success/page.tsx` | Staff customer creation success/share | Staff | `CardShareActions`, `DashboardShell` | Success card/share actions | None | `session`, `customer-cards`, `prisma` | Cards/share buttons | Tailwind | Stacked mobile | MEDIUM | Preserve card URL/share data | file |
+| `/staff/customers/[id]` | `src/app/staff/customers/[id]/page.tsx` | Staff customer detail | Staff | `DashboardShell`, `CardShareActions`, `StatusBadge` | Profile/progress/share | None | `session`, `customer-cards`, `programs`, `phone`, `prisma` | Cards | Tailwind | Stacked mobile | HIGH | Preserve action restrictions | file |
+| `/staff/programs` | `src/app/staff/programs/page.tsx` | Staff program list | Staff | `DashboardShell`, `EmptyState`, `SectionCard` | View-only programs | None | `session`, `programs`, `prisma` | Cards | Tailwind | Responsive cards | MEDIUM | Preserve no management actions | file |
+| `/staff/scanner` | `src/app/staff/scanner/page.tsx` | Staff scanner landing | Staff | `CameraScanner`, `DashboardShell`, `ScannerManualCustomerSearch`, UI/layouts | Camera/manual/referral scanner | None | `session` | Scanner cards | Tailwind + scanner layout | Mobile-first | HIGH | Preserve scanner action permissions | file + scanner components |
+
+### System Administrator Platform Routes
+
+| Route | Main file | Purpose | Role access | Imported components | Local sections/functions | Connected actions | Connected lib/data files | Tables/cards/forms/modals | Styling method | Mobile layout notes | Risk level when editing | Safe redesign notes | Files to send to external UI/UX AI |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `/platform` | `src/app/platform/page.tsx` | System Admin dashboard | System Administrator | `DashboardShell`, `PlatformKpiGrid`, `PlatformCards` | KPIs/cards | None | `session`, `roles`, `format`, `prisma` | KPI/cards | Tailwind | Responsive grid | HIGH | Preserve platform-only access | file + platform components |
+| `/platform/audit-center` | `src/app/platform/audit-center/page.tsx` | Audit center | System Administrator | `DashboardShell`, `MobileFilterDrawer`, `PlatformKpiGrid`, `SearchableCombobox`, UI | Filters, KPIs, audit list | Export route links | `session`, `roles`, `format`, `prisma` | Forms, tables/cards | Tailwind + UI | Mobile filter drawer | HIGH | Preserve audit filters/export links | file |
+| `/platform/audit-center/export` | `src/app/platform/audit-center/export/route.ts` | Audit export route | System Administrator | None | Route handler | None | `export-files`, `format`, `roles`, `session`, `prisma` | No UI | N/A | N/A | HIGH | Not UI material | Not UI AI material |
+| `/platform/billing-center` | `src/app/platform/billing-center/page.tsx` | Billing center | System Administrator | `DashboardShell`, `MobileAccordionSection`, `MobileFilterDrawer`, `PlatformKpiGrid`, `SearchableCombobox`, UI | Billing filters/KPIs/lists | Export route links | `billing`, `subscriptions`, `subscription-plans`, `session`, `prisma` | Tables/cards/forms/tabs | Tailwind + UI | Mobile accordions/drawer | HIGH | Preserve billing data/actions | file |
+| `/platform/billing-center/export` | `src/app/platform/billing-center/export/route.ts` | Billing export route | System Administrator | None | Route handler | None | `export-files`, `billing`, `subscriptions`, `subscription-plans`, `session`, `prisma` | No UI | N/A | N/A | HIGH | Not UI material | Not UI AI material |
+| `/platform/businesses` | `src/app/platform/businesses/page.tsx` | Business directory | System Administrator | `DashboardShell`, `MobileFilterDrawer`, `SearchableCombobox`, `StatusBadge`, UI | Filters/table/cards | None | `session`, `roles`, `format`, `prisma` | Search/filter/table/cards | Tailwind + UI | Mobile filters/cards | HIGH | Preserve row navigation/filtering | file |
+| `/platform/businesses/new` | `src/app/platform/businesses/new/page.tsx` | Create business | System Administrator | `BusinessForm`, `CsrfInput`, `DashboardShell` | Business form | `platform/businesses/actions.ts` | `session`, `prisma` | Form | Tailwind | Mobile stack | HIGH | Preserve create action/default branding | file + `BusinessForm` + actions |
+| `/platform/businesses/[id]` | `src/app/platform/businesses/[id]/page.tsx` | Business detail | System Administrator | `DashboardShell`, `ConfirmSubmitButton`, `CsrfInput`, `StatusBadge` | Overview, subscription, actions | `platform/businesses/actions.ts`, `platform/subscriptions/actions.ts` | `session`, `roles`, `billing`, `subscriptions`, `subscription-plans`, `format`, `prisma` | Cards, tables, action forms | Tailwind | Responsive detail layout | HIGH | Preserve admin-only actions | file + actions |
+| `/platform/businesses/[id]/edit` | `src/app/platform/businesses/[id]/edit/page.tsx` | Edit business | System Administrator | `BusinessForm`, `CsrfInput`, `DashboardShell` | Edit form | `platform/businesses/actions.ts` | `session`, `prisma` | Form | Tailwind | Mobile stack | HIGH | Preserve update action/branding fields | file + `BusinessForm` |
+| `/platform/businesses/[id]/support-session` | `src/app/platform/businesses/[id]/support-session/page.tsx` | Business support session detail | System Administrator | `DashboardShell`, `CsrfInput`, `SupportCountdown` | Support session controls | `platform/businesses/support-actions.ts` | `session`, `format`, `prisma` | Forms/status cards | Tailwind | Stacked mobile | HIGH | Preserve support permission flow | file + support actions |
+| `/platform/database` | `src/app/platform/database/page.tsx` | Database health | System Administrator | `DashboardShell`, `PlatformKpiGrid` | Health KPIs/details | None | `database-health`, `session` | KPI/cards | Tailwind | Responsive grid | MEDIUM | UI safe if health semantics intact | file |
+| `/platform/health-analytics` | `src/app/platform/health-analytics/page.tsx` | Platform health analytics | System Administrator | `DashboardShell`, `MobileAccordionSection`, `PlatformKpiGrid` | Health tables/cards | Export route links | `database-health`, `format`, `session`, `prisma` | Tables/cards | Tailwind | Mobile accordions | MEDIUM | Preserve metrics names | file |
+| `/platform/health-analytics/export` | `src/app/platform/health-analytics/export/route.ts` | Health export route | System Administrator | None | Route handler | None | `export-files`, `database-health`, `session`, `prisma` | No UI | N/A | N/A | HIGH | Not UI material | Not UI AI material |
+| `/platform/invoices` | `src/app/platform/invoices/page.tsx` | Invoice management | System Administrator | `DashboardShell`, `MobileFilterDrawer`, `InvoiceBadge`, `SearchableCombobox`, UI | Filters/table/action forms | `platform/invoices/actions.ts` | `billing`, `session`, `format`, `prisma` | Forms, table/cards | Tailwind + UI | Mobile filter drawer | HIGH | Preserve invoice actions | file + actions |
+| `/platform/invoices/[id]` | `src/app/platform/invoices/[id]/page.tsx` | Invoice detail | System Administrator | `DashboardShell`, `ConfirmSubmitButton`, `CsrfInput`, `InvoiceBadge` | Invoice overview/actions | `platform/invoices/actions.ts` | `billing`, `session`, `format`, `prisma` | Forms/tables | Tailwind | Stacked mobile | HIGH | Preserve billing actions | file + actions |
+| `/platform/launch-readiness` | `src/app/platform/launch-readiness/page.tsx` | Launch readiness report | System Administrator | `DashboardShell` | Readiness tables/sections | None | `session`, `prisma` | Tables | Tailwind | Responsive tables | MEDIUM | UI-only safe | file |
+| `/platform/operations-center` | `src/app/platform/operations-center/page.tsx` | Operations Center monitoring | System Administrator | `DashboardShell`, `SupportCountdown`, UI | KPIs, pending requests, active sessions, mobile lite | Support action links/forms | `support-sessions`, `format`, `session`, `prisma` | Forms/cards/dashboard | Tailwind + UI | Desktop full center, mobile lite | HIGH | Preserve support workflow/route links | file + support detail pages |
+| `/platform/operations-center/requests/[id]` | `src/app/platform/operations-center/requests/[id]/page.tsx` | Support request detail | System Administrator | `DashboardShell`, `CsrfInput`, `SupportCountdown`, `TerminateSupportSessionButton`, UI | Request info/session/actions | `platform/businesses/support-actions.ts` | `support-sessions`, `format`, `session`, `prisma` | Forms/cards | Tailwind + UI | Stacked mobile | HIGH | Preserve action visibility/state | file + support actions |
+| `/platform/operations-center/support/start` | `src/app/platform/operations-center/support/start/page.tsx` | Start support session | System Administrator | `DashboardShell`, `CsrfInput`, `SupportCountdown`, UI | Start form/context | `platform/businesses/support-actions.ts` | `support-sessions`, `format`, `session`, `prisma` | Forms/cards | Tailwind + UI | Mobile stack | HIGH | Preserve mode/business selection | file |
+| `/platform/operations-center/support/[id]` | `src/app/platform/operations-center/support/[id]/page.tsx` | Support session detail | System Administrator | `DashboardShell`, `CsrfInput`, `SupportCountdown`, `TerminateSupportSessionButton`, UI | Session info/actions/logs | `platform/businesses/support-actions.ts` | `support-sessions`, `format`, `session`, `prisma` | Forms/cards | Tailwind + UI | Mobile stack | HIGH | Preserve support session actions | file |
+| `/platform/plans` | `src/app/platform/plans/page.tsx` | Platform plan management/list | System Administrator | `DashboardShell`, `MobileFilterDrawer`, `PlatformKpiGrid` | Plan table/cards | None | `subscription-plans`, `session`, `prisma` | Forms/tables/cards | Tailwind | Mobile filters | HIGH | Preserve plan display/actions | file |
+| `/platform/settings` | `src/app/platform/settings/page.tsx` | Platform settings | System Administrator | `DashboardShell`, `MobileTabSelector`, `CsrfInput` | Settings tabs/forms | `platform/settings/actions.ts` | `platform-settings`, `format`, `session`, `prisma`, `package.json` | Forms/tables/cards/tabs | Tailwind | Mobile tab selector | HIGH | Preserve settings keys/actions | file + actions |
+| `/platform/subscriptions` | `src/app/platform/subscriptions/page.tsx` | Subscription directory/details | System Administrator | `DashboardShell`, `MobileFilterDrawer`, `PlatformKpiGrid`, `SearchableCombobox`, `StatusBadge`, UI | Filters, table, selected detail/actions | `platform/subscriptions/actions.ts` | `subscriptions`, `subscription-plans`, `session`, `format`, `prisma` | Forms, table/cards | Tailwind + UI | Mobile filters/cards | HIGH | Preserve lifecycle actions | file + actions |
+| `/platform/tenant-center` | `src/app/platform/tenant-center/page.tsx` | Tenant center | System Administrator | `DashboardShell`, `MobileFilterDrawer`, `PlatformKpiGrid`, `SearchableCombobox` | Tenant filters/KPIs/list | Export links | `roles`, `session`, `format`, `prisma` | Forms/tables/cards | Tailwind | Mobile filter drawer | HIGH | Preserve tenant isolation/admin visibility | file |
+| `/platform/tenant-center/export` | `src/app/platform/tenant-center/export/route.ts` | Tenant export route | System Administrator | None | Route handler | None | `export-files`, `roles`, `session`, `format`, `prisma` | No UI | N/A | N/A | HIGH | Not UI material | Not UI AI material |
+| `/platform/users` | `src/app/platform/users/page.tsx` | Platform users directory | System Administrator | `DashboardShell`, `MobileFilterDrawer`, `SearchableCombobox`, `StatusBadge`, UI | Filters/table/cards row nav | `platform/users/actions.ts` indirectly | `roles`, `session`, `format`, `prisma` | Forms/table/cards | Tailwind + UI | Mobile cards/no horizontal overflow | HIGH | Preserve row navigation and filters | file + user detail/edit pages |
+| `/platform/users/[id]` | `src/app/platform/users/[id]/page.tsx` | Platform user detail | System Administrator | `DashboardShell`, `PlatformUserPasswordResetAction`, `ConfirmSubmitButton`, `CsrfInput`, `StatusBadge` | Overview, account, security, audit, actions | `platform/users/actions.ts` | `roles`, `csrf`, `session`, `format`, `prisma` | Forms/action panel/cards | Tailwind | Stacked mobile | HIGH | Preserve admin-only user lifecycle actions | file + actions |
+| `/platform/users/[id]/edit` | `src/app/platform/users/[id]/edit/page.tsx` | Platform user edit | System Administrator | `DashboardShell`, `CsrfInput` | Edit form | `platform/users/actions.ts` | `roles`, `session`, `prisma` | Form | Tailwind | Mobile stack | HIGH | Preserve role/business assignment validation | file + actions |
 
 ## Component Map
 
-### AppToaster
+Risk and global impact are based on verified usage count from `src`. Components imported by multiple pages are marked higher impact.
+
+| Component | File | Used by | Purpose | Risk level | Global impact | Safe editing notes |
+|---|---|---|---|---|---|---|
+| AppToaster | `src/components/AppToaster.tsx` | `src/app/layout.tsx` | Global toast host | MEDIUM | HIGH | Visual/toast positioning only; affects all pages |
+| BranchLocationFields | `src/components/BranchLocationFields.tsx` | `BusinessForm` | Branch fields inside business form | MEDIUM | MEDIUM | Preserve field names and validation bindings |
+| BusinessBrandingProvider | `src/components/BusinessBrandingProvider.tsx` | Dashboard shell, join/poster/referral pages | CSS business theme token provider | HIGH | HIGH | Token changes affect many branded views |
+| BusinessForm | `src/components/BusinessForm.tsx` | Platform business create/edit | System admin business form | HIGH | MEDIUM | Preserve action fields and defaults |
+| CameraScanner | `src/components/CameraScanner.tsx` | Owner/branch/staff scanner pages | Camera QR scanner | HIGH | HIGH | Do not alter scanner callbacks without tests |
+| CardShareActions | `src/components/CardShareActions.tsx` | Customer detail, public card, staff/branch customer pages | Copy/share/WhatsApp card actions | HIGH | HIGH | Preserve generated URLs and phone handling |
+| CardThemePreviewSelector | `src/components/CardThemePreviewSelector.tsx` | `ProgramForm` | Legacy card theme selector/preview | MEDIUM | LOW | Check create/edit visibility before redesign |
+| ChangePasswordForm | `src/components/ChangePasswordForm.tsx` | `/change-password` | Password change form | HIGH | LOW | Preserve password clearing/security |
+| ConfirmSubmitButton | `src/components/ConfirmSubmitButton.tsx` | Many action forms | Confirmation submit UX | HIGH | HIGH | Shared destructive/action confirmation |
+| CopyButton | `src/components/CopyButton.tsx` | Program/customer/message pages | Clipboard button | MEDIUM | HIGH | UI safe; preserve clipboard fallback |
+| CsrfInput | `src/components/CsrfInput.tsx` | 33 form pages | CSRF hidden input | HIGH | HIGH | Do not redesign into non-input |
+| CustomerCreateForm | `src/components/CustomerCreateForm.tsx` | Owner/branch/staff create customer pages | Shared create customer form | HIGH | HIGH | Preserve form state, referral lookup, program selection |
+| DashboardShell | `src/components/DashboardShell.tsx` | 69 authenticated pages | Authenticated layout/nav/header | HIGH | HIGH | Any edit affects all role dashboards |
+| DemoRequestForm | `src/components/DemoRequestForm.tsx` | `/request-demo` | Marketing request demo form | MEDIUM | LOW | Preserve submit behavior |
+| ForgotPasswordForm | `src/components/ForgotPasswordForm.tsx` | `/forgot-password` | Password reset request form | MEDIUM | LOW | Preserve CSRF and success messaging |
+| HomepageLoyaltyCardDemo | `src/components/HomepageLoyaltyCardDemo.tsx` | No verified direct import | Homepage/demo visual component | LOW | LOW | Suspicious unused component; verify before deleting |
+| HomepageMotion | `src/components/HomepageMotion.tsx` | `/` | Homepage motion/client effects | MEDIUM | LOW | Keep reduced motion behavior |
+| IdempotencyInput | `src/components/IdempotencyInput.tsx` | `/scan/[token]` | Hidden idempotency token input | HIGH | MEDIUM | Do not remove from stamp/redeem forms |
+| IdleSessionTimeout | `src/components/IdleSessionTimeout.tsx` | `DashboardShell` | Idle timeout UX | HIGH | HIGH | Auth/session-sensitive |
+| InvoiceBadge | `src/components/InvoiceBadge.tsx` | Billing/invoice pages | Invoice status badge | MEDIUM | MEDIUM | Preserve status mapping |
+| LoginForm | `src/components/LoginForm.tsx` | `/login` | Login form | HIGH | LOW | Preserve auth fields/errors |
+| MobileAccordionSection | `src/components/MobileAccordionSection.tsx` | Platform billing/health pages | Mobile collapsible section | MEDIUM | MEDIUM | Safe visual edits with keyboard checks |
+| MobileFilterDrawer | `src/components/MobileFilterDrawer.tsx` | 8 platform list pages | Mobile filters drawer | HIGH | HIGH | Preserve filter form submission |
+| MobileTabSelector | `src/components/MobileTabSelector.tsx` | Platform settings | Mobile tab selector | MEDIUM | LOW | Preserve active tab state |
+| PlanBillingCycleFields | `src/components/PlanBillingCycleFields.tsx` | `BusinessForm` | Plan billing fields | HIGH | MEDIUM | Billing-sensitive form fields |
+| PlatformCards | `src/components/PlatformCards.tsx` | Platform dashboard | Admin dashboard cards | MEDIUM | LOW | UI safe |
+| PlatformKpiGrid | `src/components/PlatformKpiGrid.tsx` | 8 platform pages | KPI grid | HIGH | HIGH | Shared platform dashboard/list metric layout |
+| PlatformUserPasswordResetAction | `src/components/PlatformUserPasswordResetAction.tsx` | Platform user detail | Admin password reset action | HIGH | MEDIUM | Preserve action form/security |
+| PrintPageButton | `src/components/PrintPageButton.tsx` | Join poster pages | Print button | LOW | MEDIUM | UI safe |
+| ProgramDesignStudioForm | `src/components/ProgramDesignStudioForm.tsx` | Design Studio page | Large Design Studio editor/preview | HIGH | MEDIUM | High complexity; preserve state/save hidden fields |
+| ProgramForm | `src/components/ProgramForm.tsx` | Program create/edit | Program form | HIGH | HIGH | Preserve reward/program/businessType/default design fields |
+| ReferralInviteActions | `src/components/ReferralInviteActions.tsx` | Public referral page | Referral invite/share actions | HIGH | LOW | Preserve referral code and contact logic |
+| ReferralReferrerLookupPreview | `src/components/ReferralReferrerLookupPreview.tsx` | Customer create forms | Referrer validation/search UI | HIGH | HIGH | Preserve tenant-scoped lookup |
+| ReferralShareActions | `src/components/ReferralShareActions.tsx` | `ReferralPanel` | Public card referral share actions | HIGH | MEDIUM | Preserve share URLs |
+| ResetPasswordForm | `src/components/ResetPasswordForm.tsx` | `/reset-password` | Reset password form | HIGH | LOW | Preserve token/password handling |
+| RoleNavigation | `src/components/RoleNavigation.tsx` | `DashboardShell` | Role-specific navigation config/UI | HIGH | HIGH | Navigation changes affect all roles |
+| SaveCardImageButton | `src/components/SaveCardImageButton.tsx` | Public card page | Download card images | HIGH | MEDIUM | Export rendering/QR-sensitive |
+| ScannerManualCustomerSearch | `src/components/ScannerManualCustomerSearch.tsx` | Owner/branch/staff scanners | Manual scanner search | HIGH | HIGH | Preserve business/branch search behavior |
+| ScannerSoundFeedback | `src/components/ScannerSoundFeedback.tsx` | Scan result page | Scanner sound status | LOW | LOW | UI safe |
+| SearchableCombobox | `src/components/SearchableCombobox.tsx` | 14 pages/forms | Searchable select | HIGH | HIGH | Shared form accessibility/search behavior |
+| SettingsMobileSectionSelect | `src/components/SettingsMobileSectionSelect.tsx` | Owner settings | Mobile settings selector | MEDIUM | LOW | Preserve section anchors/state |
+| StaffPasswordResetAction | `src/components/StaffPasswordResetAction.tsx` | Owner staff page | Staff reset action | HIGH | MEDIUM | Preserve action form |
+| StampWhatsAppSharePrompt | `src/components/StampWhatsAppSharePrompt.tsx` | Scan result page | Post-stamp WhatsApp share prompt | HIGH | MEDIUM | Preserve wa.me message behavior |
+| StatusBadge | `src/components/StatusBadge.tsx` | 38 pages/components | Root status badge | HIGH | HIGH | Duplicate name with `ui/StatusBadge`; edit carefully |
+| SupportActivityTracker | `src/components/SupportActivityTracker.tsx` | `DashboardShell` | Support session activity tracking | HIGH | HIGH | Support audit-sensitive |
+| SupportCountdown | `src/components/SupportCountdown.tsx` | Support pages/banner | Support countdown | MEDIUM | HIGH | Keep time calculations/display accurate |
+| SupportEndSessionButton | `src/components/SupportEndSessionButton.tsx` | `DashboardShell` | End support session button | HIGH | HIGH | Preserve action |
+| SupportModeBanner | `src/components/SupportModeBanner.tsx` | `DashboardShell` | Active support mode banner | HIGH | HIGH | Support/audit-sensitive |
+| TerminateSupportSessionButton | `src/components/TerminateSupportSessionButton.tsx` | Operations detail pages | Terminate support session action | HIGH | MEDIUM | Preserve state/action |
+| BusinessStatusBadge | `src/components/domain/BusinessStatusBadge.tsx` | Domain barrel | Business status badge | MEDIUM | LOW | Check barrel consumers |
+| CardQrTools | `src/components/domain/CardQrTools.tsx` | Domain barrel | QR tool display | MEDIUM | LOW | Preserve QR semantics |
+| CustomerSummaryCard | `src/components/domain/CustomerSummaryCard.tsx` | Domain barrel | Customer summary card | MEDIUM | LOW | Check consumers through barrel |
+| PlanUsageCard | `src/components/domain/PlanUsageCard.tsx` | Domain barrel | Plan usage display | MEDIUM | LOW | Preserve plan labels |
+| ProgramProgressCard | `src/components/domain/ProgramProgressCard.tsx` | Domain barrel | Program progress display | MEDIUM | LOW | Preserve progress data |
+| ReferralStatusBadge | `src/components/domain/ReferralStatusBadge.tsx` | Domain barrel | Referral status badge | MEDIUM | LOW | Preserve status mapping |
+| ScannerResultCard | `src/components/domain/ScannerResultCard.tsx` | Scan token page/domain barrel | Scanner result card | HIGH | MEDIUM | Scanner operational UI |
+| StaffActionButtons | `src/components/domain/StaffActionButtons.tsx` | Domain barrel | Staff action buttons | MEDIUM | LOW | Verify consumers through barrel |
+| domain index | `src/components/domain/index.ts` | Barrel imports | Domain component exports | MEDIUM | HIGH | Export-only; do not remove without import audit |
+| DashboardPageLayout | `src/components/layouts/DashboardPageLayout.tsx` | Dashboard page/layout barrel | Dashboard page wrapper | HIGH | MEDIUM | Layout affects dashboard pages using it |
+| DetailPageLayout | `src/components/layouts/DetailPageLayout.tsx` | Scan page/layout barrel | Detail wrapper | MEDIUM | MEDIUM | UI safe |
+| ManagementPageLayout | `src/components/layouts/ManagementPageLayout.tsx` | Layout barrel | Management wrapper | LOW | LOW | Verify active use before edits |
+| PublicCardLayout | `src/components/layouts/PublicCardLayout.tsx` | Layout barrel | Public card wrapper | MEDIUM | LOW | Verify active use |
+| ScannerPageLayout | `src/components/layouts/ScannerPageLayout.tsx` | Scanner pages/layout barrel | Scanner page wrapper | HIGH | MEDIUM | Affects all scanner landing pages |
+| SettingsPageLayout | `src/components/layouts/SettingsPageLayout.tsx` | Layout barrel | Settings wrapper | MEDIUM | LOW | Verify active use |
+| layouts index | `src/components/layouts/index.ts` | Barrel imports | Layout exports | MEDIUM | HIGH | Export-only |
+| MarketingLayout | `src/components/marketing/MarketingLayout.tsx` | 8 marketing pages | Public marketing nav/footer shell | HIGH | HIGH | Public nav/footer impact |
+| LoyaltyCardBackExport | `src/components/public-card/LoyaltyCardBackExport.tsx` | Public card/export barrel | Back export renderer | HIGH | MEDIUM | Export/QR-sensitive |
+| LoyaltyCardExport | `src/components/public-card/LoyaltyCardExport.tsx` | Public-card barrel | Legacy/full export wrapper | MEDIUM | LOW | Verify before large changes |
+| LoyaltyCardFrontExport | `src/components/public-card/LoyaltyCardFrontExport.tsx` | Public card/export barrel | Front export renderer | HIGH | MEDIUM | Export visual parity |
+| LoyaltyProgressPanel | `src/components/public-card/LoyaltyProgressPanel.tsx` | Public-card barrel | Progress panel | HIGH | LOW | Card visual logic |
+| LoyaltyWalletCard | `src/components/public-card/LoyaltyWalletCard.tsx` | Public card, previews, exports | Main customer wallet card | HIGH | HIGH | Customer-facing card renderer |
+| ProgramRewardCard | `src/components/public-card/ProgramRewardCard.tsx` | Public card | Program reward section | HIGH | MEDIUM | Customer-facing reward copy |
+| ReferralPanel | `src/components/public-card/ReferralPanel.tsx` | Public card | Referral section | HIGH | MEDIUM | Referral/share behavior |
+| TierStatusPanel | `src/components/public-card/TierStatusPanel.tsx` | Public card | Tier status section | HIGH | MEDIUM | Tier display only |
+| WalletCardShell | `src/components/public-card/WalletCardShell.tsx` | Public-card renderers | Shared wallet shell/frame | HIGH | HIGH | Affects live and exported cards |
+| public-card index | `src/components/public-card/index.ts` | Barrel imports | Public-card exports | MEDIUM | HIGH | Export-only |
+| ActionMenu | `src/components/ui/ActionMenu.tsx` | Customer 360, staff page, UI barrel | Dropdown actions | HIGH | MEDIUM | Accessibility and action menu behavior |
+| Avatar | `src/components/ui/Avatar.tsx` | Domain card/UI barrel | Avatar primitive | LOW | MEDIUM | UI safe |
+| Button | `src/components/ui/Button.tsx` | 41 files | Shared button primitive | HIGH | HIGH | Critical shared UI/brand tokens |
+| Card | `src/components/ui/Card.tsx` | 78 files | Shared card primitive | HIGH | HIGH | Global visual impact |
+| ConfirmationDialog | `src/components/ui/ConfirmationDialog.tsx` | Confirm button/UI barrel | Confirmation modal | HIGH | MEDIUM | Destructive action UX |
+| DataTable | `src/components/ui/DataTable.tsx` | 7 tables | Shared data table | HIGH | HIGH | Affects key dashboards |
+| EmptyState | `src/components/ui/EmptyState.tsx` | 35 files | Shared empty state | MEDIUM | HIGH | Global copy/layout impact |
+| FilterBar | `src/components/ui/FilterBar.tsx` | 4 list pages | Shared filter wrapper | HIGH | MEDIUM | Must avoid nested forms |
+| IconButton | `src/components/ui/IconButton.tsx` | UI barrel | Icon button primitive | MEDIUM | LOW | UI safe but shared |
+| LoadingSkeleton | `src/components/ui/LoadingSkeleton.tsx` | UI barrel | Skeleton primitive | LOW | LOW | UI safe |
+| MetricCard | `src/components/ui/MetricCard.tsx` | 27 files | Shared KPI card | HIGH | HIGH | Dashboard visual impact |
+| PageActions | `src/components/ui/PageActions.tsx` | 8 pages | Page header actions wrapper | HIGH | HIGH | Header/action layout impact |
+| PageHeader | `src/components/ui/PageHeader.tsx` | Dashboard pages/UI barrel | Page title component | HIGH | MEDIUM | Avoid duplicate heading regressions |
+| PageIntro | `src/components/ui/PageIntro.tsx` | 13 pages | Page intro/title copy | HIGH | HIGH | Global page hierarchy |
+| ProgressBar | `src/components/ui/ProgressBar.tsx` | 12 pages | Shared progress bar | HIGH | HIGH | Progress display across card/program/billing |
+| SearchBar | `src/components/ui/SearchBar.tsx` | 4 list pages | Shared search input | HIGH | MEDIUM | Preserve query names/form behavior |
+| SectionCard | `src/components/ui/SectionCard.tsx` | 29 files | Shared section card | HIGH | HIGH | Global spacing/card style |
+| ui StatusBadge | `src/components/ui/StatusBadge.tsx` | 37 files | UI status badge | HIGH | HIGH | Duplicate name with root badge |
+| Tabs | `src/components/ui/Tabs.tsx` | 5 pages | Shared tabs | HIGH | HIGH | Accessibility/state impact |
+| Timeline | `src/components/ui/Timeline.tsx` | 7 pages | Shared timeline | MEDIUM | HIGH | Activity/audit display |
+| Tooltip | `src/components/ui/Tooltip.tsx` | UI barrel | Tooltip primitive | LOW | LOW | UI safe |
+| ui index | `src/components/ui/index.ts` | Barrel imports | UI exports | MEDIUM | HIGH | Export-only |
+| styles | `src/components/ui/styles.ts` | 6 UI components | Shared UI class maps | HIGH | HIGH | Design-system impact |
+| utils | `src/components/ui/utils.ts` | 26 components | UI utility helpers/classes | HIGH | HIGH | Design-system impact |
 
-Component: AppToaster
+## Important Page Section Maps
 
-File: src/components/AppToaster.tsx
+### Public Homepage
 
-Used by: src/app/layout.tsx
+- Section name: Marketing shell/navigation/footer. Where defined: `src/components/marketing/MarketingLayout.tsx`. Component/local function: `MarketingLayout`. Can external AI redesign safely? Yes, if links remain real. Notes: HIGH impact for all marketing pages.
+- Section name: Homepage content sections. Where defined: `src/app/page.tsx`. Component/local function: local JSX sections plus `HomepageMotion`. Can external AI redesign safely? Yes. Notes: Root file is public homepage, not dashboard.
+- Section name: Motion/client effects. Where defined: `src/components/HomepageMotion.tsx`. Can external AI redesign safely? Yes with reduced-motion check.
 
-Purpose: basic JSX layout
+### Login Page
 
-Risk level: High
+- Section name: Auth page shell. Where defined: `src/app/login/page.tsx`. Component/local function: page JSX. Can external AI redesign safely? Yes. Notes: Preserve redirect/session checks.
+- Section name: Login form. Where defined: `src/components/LoginForm.tsx`. Can external AI redesign safely? Limited. Notes: Keep field names, CSRF, errors, submit action.
 
-Global impact: Local/medium impact (1 references detected)
+### System Administrator Dashboard
 
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
+- Section name: Authenticated platform shell/nav. Where defined: `src/components/DashboardShell.tsx` and `src/components/RoleNavigation.tsx`. Can external AI redesign safely? Carefully. Notes: HIGH impact across all roles.
+- Section name: Platform KPI grid. Where defined: `src/app/platform/page.tsx`, `src/components/PlatformKpiGrid.tsx`. Can external AI redesign safely? Yes if metric data unchanged.
+- Section name: Platform action cards. Where defined: `src/components/PlatformCards.tsx`. Can external AI redesign safely? Yes.
 
-### BranchLocationFields
+### Business Owner Dashboard
 
-Component: BranchLocationFields
+- Section name: Dashboard wrapper/header. Where defined: `src/app/dashboard/page.tsx`, `DashboardShell`, `DashboardPageLayout`. Can external AI redesign safely? Yes with layout-only scope.
+- Section name: KPI cards. Where defined: `src/app/dashboard/page.tsx`, `MetricCard`. Can external AI redesign safely? Yes; shared primitive is HIGH impact.
+- Section name: Quick actions/support card. Where defined: `src/app/dashboard/page.tsx`. Can external AI redesign safely? Yes if action forms/links preserved.
+- Section name: Activity/timeline panels. Where defined: `src/app/dashboard/page.tsx`, `Timeline`. Can external AI redesign safely? Yes.
 
-File: src/components/BranchLocationFields.tsx
+### Customer 360 Page
 
-Used by: src/components/BusinessForm.tsx
+- Section name: Customer header/overview. Where defined: `src/app/dashboard/customers/[id]/page.tsx`. Can external AI redesign safely? Yes with data/actions preserved.
+- Section name: Loyalty progress/rewards. Where defined: same page plus `ProgressBar`. Can external AI redesign safely? Visual only.
+- Section name: Card/share actions. Where defined: same page plus `CardShareActions`, `CopyButton`. Can external AI redesign safely? Limited; preserve generated URLs.
+- Section name: Activity/audit timeline. Where defined: same page plus `Timeline`. Can external AI redesign safely? Yes.
+- Section name: Action forms. Where defined: same page plus `ConfirmSubmitButton`, `CsrfInput`, `dashboard/actions.ts`. Can external AI redesign safely? No without engineering review.
 
-Purpose: cards/KPIs, inputs/filters
+### Customers Page
 
-Risk level: High
+- Section name: Page header/actions. Where defined: `src/app/dashboard/customers/page.tsx`, `PageIntro`, `PageActions`. Can external AI redesign safely? Yes.
+- Section name: Search/filter bar. Where defined: same page, `SearchBar`, `FilterBar`. Can external AI redesign safely? Yes if form behavior preserved.
+- Section name: Customer table/cards. Where defined: same page, `DataTable`/UI cards. Can external AI redesign safely? Yes; preserve row navigation and pagination/filtering.
+- Section name: KPI/empty states. Where defined: same page, `MetricCard`, `EmptyState`. Can external AI redesign safely? Yes.
 
-Global impact: Local/medium impact (1 references detected)
+### Programs Page
 
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
+- Section name: Program performance/list. Where defined: `src/app/dashboard/programs/page.tsx`, `DataTable`, UI cards. Can external AI redesign safely? Yes; preserve program name links.
+- Section name: Program filters/search. Where defined: same page, UI search/filter primitives. Can external AI redesign safely? Yes.
+- Section name: Create/design links. Where defined: same page and program detail files. Can external AI redesign safely? Preserve routes.
 
-### BusinessBrandingProvider
+### Referrals Page
 
-Component: BusinessBrandingProvider
+- Section name: Referral metrics. Where defined: `src/app/dashboard/referrals/page.tsx`, UI/MetricCard usage. Can external AI redesign safely? Yes.
+- Section name: Referral list/details link. Where defined: same page. Can external AI redesign safely? Yes if statuses/reward data unchanged.
 
-File: src/components/BusinessBrandingProvider.tsx
+### Staff Page
 
-Used by: src/components/DashboardShell.tsx
+- Section name: Staff directory. Where defined: `src/app/dashboard/staff/page.tsx`, `DataTable`, `SearchableCombobox`. Can external AI redesign safely? Yes.
+- Section name: Staff create/edit actions. Where defined: same page, `ConfirmSubmitButton`, `CsrfInput`, `dashboard/actions.ts`. Can external AI redesign safely? Limited; preserve actions and roles.
+- Section name: Staff password reset. Where defined: `StaffPasswordResetAction`. Can external AI redesign safely? Visual only.
 
-Purpose: basic JSX layout
+### Branches Page
 
-Risk level: Low
+- Section name: Branch list/cards. Where defined: `src/app/dashboard/branches/page.tsx`. Can external AI redesign safely? Yes.
+- Section name: Branch forms/actions. Where defined: same page, `ConfirmSubmitButton`, `CsrfInput`, `dashboard/actions.ts`. Can external AI redesign safely? Limited.
 
-Global impact: Local/medium impact (1 references detected)
+### Scanner Page
 
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
+- Section name: Scanner landing wrapper. Where defined: `src/app/dashboard/scanner/page.tsx`, `ScannerPageLayout`. Can external AI redesign safely? Yes if scanner props unchanged.
+- Section name: Camera preview. Where defined: `src/components/CameraScanner.tsx`. Can external AI redesign safely? Limited; camera/browser APIs.
+- Section name: Manual search. Where defined: `src/components/ScannerManualCustomerSearch.tsx`. Can external AI redesign safely? Limited; tenant/branch scoping.
+- Section name: Scan token result/action page. Where defined: `src/app/scan/[token]/page.tsx`. Can external AI redesign safely? Very carefully; operational actions.
 
-### BusinessForm
+### Public Customer Card
 
-Component: BusinessForm
+- Section name: Public card route/data assembly. Where defined: `src/app/card/[token]/page.tsx`. Can external AI redesign safely? Limited; token data/QR/export.
+- Section name: Wallet card front/scan view. Where defined: `src/components/public-card/LoyaltyWalletCard.tsx`, `WalletCardShell.tsx`. Can external AI redesign safely? Yes with QR/export tests.
+- Section name: Export front/back. Where defined: `LoyaltyCardFrontExport.tsx`, `LoyaltyCardBackExport.tsx`, `SaveCardImageButton.tsx`. Can external AI redesign safely? Limited; HTML-to-image fragile.
+- Section name: Tier/referral/save sections. Where defined: `TierStatusPanel`, `ReferralPanel`, `ProgramRewardCard`, route page. Can external AI redesign safely? Yes if routes/share links preserved.
 
-File: src/components/BusinessForm.tsx
+### Scan Token Page
 
-Used by: src/app/platform/businesses/[id]/edit/page.tsx, src/app/platform/businesses/new/page.tsx
-
-Purpose: forms/actions, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout
-
-Risk level: High
-
-Global impact: Local/medium impact (2 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### CameraScanner
-
-Component: CameraScanner
-
-File: src/components/CameraScanner.tsx
-
-Used by: src/app/branch/scanner/page.tsx, src/app/dashboard/scanner/page.tsx, src/app/staff/scanner/page.tsx
-
-Purpose: cards/KPIs, inputs/filters, responsive layout
-
-Risk level: High
-
-Global impact: HIGH IMPACT (3 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### CardShareActions
-
-Component: CardShareActions
-
-File: src/components/CardShareActions.tsx
-
-Used by: src/app/branch/customers/[id]/page.tsx, src/app/branch/customers/page.tsx, src/app/card/[token]/page.tsx, src/app/dashboard/customers/[id]/page.tsx, src/app/dashboard/customers/page.tsx, src/app/staff/customers/success/page.tsx
-
-Purpose: cards/KPIs, responsive layout
-
-Risk level: High
-
-Global impact: HIGH IMPACT (6 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### ChangePasswordForm
-
-Component: ChangePasswordForm
-
-File: src/components/ChangePasswordForm.tsx
-
-Used by: src/app/change-password/page.tsx
-
-Purpose: forms/actions, cards/KPIs, inputs/filters
-
-Risk level: High
-
-Global impact: Local/medium impact (1 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### ConfirmSubmitButton
-
-Component: ConfirmSubmitButton
-
-File: src/components/ConfirmSubmitButton.tsx
-
-Used by: src/app/dashboard/branches/page.tsx, src/app/dashboard/customers/[id]/page.tsx, src/app/dashboard/programs/[id]/page.tsx, src/app/dashboard/settings/page.tsx, src/app/dashboard/staff/page.tsx, src/app/platform/businesses/[id]/page.tsx, src/app/platform/businesses/page.tsx, src/app/platform/invoices/[id]/page.tsx, src/app/platform/invoices/page.tsx, src/app/platform/subscriptions/page.tsx, src/app/scan/[token]/page.tsx
-
-Purpose: cards/KPIs, confirmations/modals/drawers, responsive layout
-
-Risk level: High
-
-Global impact: HIGH IMPACT (11 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### CopyButton
-
-Component: CopyButton
-
-File: src/components/CopyButton.tsx
-
-Used by: src/app/dashboard/customers/[id]/page.tsx, src/app/dashboard/engagement/[id]/page.tsx, src/app/dashboard/messages/[id]/page.tsx
-
-Purpose: cards/KPIs
-
-Risk level: Low
-
-Global impact: HIGH IMPACT (3 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### CsrfInput
-
-Component: CsrfInput
-
-File: src/components/CsrfInput.tsx
-
-Used by: src/app/branch/customers/new/page.tsx, src/app/branch/programs/[id]/customers/page.tsx, src/app/dashboard/branches/page.tsx, src/app/dashboard/customers/[id]/edit/page.tsx, src/app/dashboard/customers/[id]/page.tsx, src/app/dashboard/customers/new/page.tsx, src/app/dashboard/engagement/[id]/page.tsx, src/app/dashboard/messages/[id]/page.tsx, src/app/dashboard/notifications/[id]/page.tsx, src/app/dashboard/notifications/page.tsx, src/app/dashboard/profile/page.tsx, src/app/dashboard/programs/[id]/customers/page.tsx, src/app/dashboard/programs/[id]/page.tsx, src/app/dashboard/settings/page.tsx, src/app/dashboard/staff/page.tsx, src/app/platform/businesses/[id]/page.tsx, src/app/platform/businesses/page.tsx, src/app/platform/invoices/[id]/page.tsx, src/app/platform/invoices/page.tsx, src/app/platform/settings/page.tsx, src/app/platform/subscriptions/page.tsx, src/app/scan/[token]/page.tsx, src/app/staff/customers/new/page.tsx, src/components/BusinessForm.tsx, src/components/DashboardShell.tsx, src/components/ProgramForm.tsx
-
-Purpose: inputs/filters
-
-Risk level: Low
-
-Global impact: HIGH IMPACT (26 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### DashboardShell
-
-Component: DashboardShell
-
-File: src/components/DashboardShell.tsx
-
-Used by: src/app/branch/customers/[id]/page.tsx, src/app/branch/customers/new/page.tsx, src/app/branch/customers/page.tsx, src/app/branch/page.tsx, src/app/branch/programs/[id]/customers/page.tsx, src/app/branch/programs/[id]/page.tsx, src/app/branch/programs/page.tsx, src/app/branch/scanner/page.tsx, src/app/dashboard/activity/[id]/page.tsx, src/app/dashboard/activity/page.tsx, src/app/dashboard/billing/page.tsx, src/app/dashboard/branches/page.tsx, src/app/dashboard/customers/[id]/edit/page.tsx, src/app/dashboard/customers/[id]/page.tsx, src/app/dashboard/customers/new/page.tsx, src/app/dashboard/customers/page.tsx, src/app/dashboard/engagement/[id]/page.tsx, src/app/dashboard/engagement/page.tsx, src/app/dashboard/messages/[id]/page.tsx, src/app/dashboard/messages/page.tsx, src/app/dashboard/notifications/[id]/page.tsx, src/app/dashboard/notifications/page.tsx, src/app/dashboard/page.tsx, src/app/dashboard/profile/page.tsx, src/app/dashboard/programs/[id]/customers/page.tsx, src/app/dashboard/programs/[id]/edit/page.tsx, src/app/dashboard/programs/[id]/page.tsx, src/app/dashboard/programs/new/page.tsx, src/app/dashboard/programs/page.tsx, src/app/dashboard/referrals/[id]/page.tsx, src/app/dashboard/referrals/page.tsx, src/app/dashboard/scanner/page.tsx, src/app/dashboard/settings/page.tsx, src/app/dashboard/staff/[id]/page.tsx, src/app/dashboard/staff/page.tsx, src/app/platform/audit-center/page.tsx, src/app/platform/billing-center/page.tsx, src/app/platform/businesses/[id]/edit/page.tsx, src/app/platform/businesses/[id]/page.tsx, src/app/platform/businesses/new/page.tsx, src/app/platform/businesses/page.tsx, src/app/platform/database/page.tsx, src/app/platform/health-analytics/page.tsx, src/app/platform/invoices/[id]/page.tsx, src/app/platform/invoices/page.tsx, src/app/platform/launch-readiness/page.tsx, src/app/platform/page.tsx, src/app/platform/plans/page.tsx, src/app/platform/settings/page.tsx, src/app/platform/subscriptions/page.tsx, src/app/platform/tenant-center/page.tsx, src/app/platform/users/page.tsx, src/app/scan/[token]/page.tsx, src/app/staff/customers/[id]/page.tsx, src/app/staff/customers/new/page.tsx, src/app/staff/customers/page.tsx, src/app/staff/customers/success/page.tsx, src/app/staff/page.tsx, src/app/staff/programs/page.tsx, src/app/staff/scanner/page.tsx
-
-Purpose: forms/actions, cards/KPIs, inputs/filters, responsive layout
-
-Risk level: High
-
-Global impact: HIGH IMPACT (60 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### DemoRequestForm
-
-Component: DemoRequestForm
-
-File: src/components/DemoRequestForm.tsx
-
-Used by: src/app/request-demo/page.tsx
-
-Purpose: forms/actions, cards/KPIs, inputs/filters, responsive layout
-
-Risk level: Medium
-
-Global impact: Local/medium impact (1 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### ForgotPasswordForm
-
-Component: ForgotPasswordForm
-
-File: src/components/ForgotPasswordForm.tsx
-
-Used by: src/app/forgot-password/page.tsx
-
-Purpose: forms/actions, cards/KPIs, inputs/filters
-
-Risk level: High
-
-Global impact: Local/medium impact (1 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### HomepageMotion
-
-Component: HomepageMotion
-
-File: src/components/HomepageMotion.tsx
-
-Used by: src/app/page.tsx
-
-Purpose: basic JSX layout
-
-Risk level: Low
-
-Global impact: Local/medium impact (1 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### IdempotencyInput
-
-Component: IdempotencyInput
-
-File: src/components/IdempotencyInput.tsx
-
-Used by: src/app/scan/[token]/page.tsx
-
-Purpose: inputs/filters
-
-Risk level: Low
-
-Global impact: Local/medium impact (1 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### IdleSessionTimeout
-
-Component: IdleSessionTimeout
-
-File: src/components/IdleSessionTimeout.tsx
-
-Used by: src/components/DashboardShell.tsx
-
-Purpose: basic JSX layout
-
-Risk level: Low
-
-Global impact: Local/medium impact (1 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### InvoiceBadge
-
-Component: InvoiceBadge
-
-File: src/components/InvoiceBadge.tsx
-
-Used by: src/app/dashboard/billing/page.tsx, src/app/platform/invoices/[id]/page.tsx, src/app/platform/invoices/page.tsx
-
-Purpose: cards/KPIs
-
-Risk level: High
-
-Global impact: HIGH IMPACT (3 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### LoginForm
-
-Component: LoginForm
-
-File: src/components/LoginForm.tsx
-
-Used by: src/app/login/page.tsx
-
-Purpose: forms/actions, cards/KPIs, inputs/filters
-
-Risk level: High
-
-Global impact: Local/medium impact (1 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### MobileAccordionSection
-
-Component: MobileAccordionSection
-
-File: src/components/MobileAccordionSection.tsx
-
-Used by: src/app/platform/billing-center/page.tsx, src/app/platform/health-analytics/page.tsx
-
-Purpose: cards/KPIs, responsive layout
-
-Risk level: Low
-
-Global impact: Local/medium impact (2 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### MobileFilterDrawer
-
-Component: MobileFilterDrawer
-
-File: src/components/MobileFilterDrawer.tsx
-
-Used by: src/app/platform/audit-center/page.tsx, src/app/platform/billing-center/page.tsx, src/app/platform/businesses/page.tsx, src/app/platform/invoices/page.tsx, src/app/platform/plans/page.tsx, src/app/platform/subscriptions/page.tsx, src/app/platform/tenant-center/page.tsx, src/app/platform/users/page.tsx
-
-Purpose: cards/KPIs, confirmations/modals/drawers, responsive layout
-
-Risk level: Low
-
-Global impact: HIGH IMPACT (8 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### MobileTabSelector
-
-Component: MobileTabSelector
-
-File: src/components/MobileTabSelector.tsx
-
-Used by: src/app/platform/settings/page.tsx
-
-Purpose: cards/KPIs, inputs/filters, responsive layout
-
-Risk level: Low
-
-Global impact: Local/medium impact (1 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### PlanBillingCycleFields
-
-Component: PlanBillingCycleFields
-
-File: src/components/PlanBillingCycleFields.tsx
-
-Used by: src/components/BusinessForm.tsx
-
-Purpose: cards/KPIs, inputs/filters, responsive layout
-
-Risk level: High
-
-Global impact: Local/medium impact (1 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### PlatformCards
-
-Component: PlatformCards
-
-File: src/components/PlatformCards.tsx
-
-Used by: src/app/platform/page.tsx
-
-Purpose: cards/KPIs, responsive layout
-
-Risk level: Medium
-
-Global impact: Local/medium impact (1 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### PlatformKpiGrid
-
-Component: PlatformKpiGrid
-
-File: src/components/PlatformKpiGrid.tsx
-
-Used by: src/app/platform/audit-center/page.tsx, src/app/platform/billing-center/page.tsx, src/app/platform/database/page.tsx, src/app/platform/health-analytics/page.tsx, src/app/platform/page.tsx, src/app/platform/plans/page.tsx, src/app/platform/subscriptions/page.tsx, src/app/platform/tenant-center/page.tsx
-
-Purpose: cards/KPIs, responsive layout
-
-Risk level: Medium
-
-Global impact: HIGH IMPACT (8 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### ProgramForm
-
-Component: ProgramForm
-
-File: src/components/ProgramForm.tsx
-
-Used by: src/app/dashboard/programs/[id]/edit/page.tsx, src/app/dashboard/programs/new/page.tsx
-
-Purpose: forms/actions, cards/KPIs, inputs/filters, responsive layout
-
-Risk level: High
-
-Global impact: Local/medium impact (2 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### ReferralShareActions
-
-Component: ReferralShareActions
-
-File: src/components/ReferralShareActions.tsx
-
-Used by: src/app/card/[token]/page.tsx
-
-Purpose: cards/KPIs, responsive layout
-
-Risk level: Medium
-
-Global impact: Local/medium impact (1 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### ResetPasswordForm
-
-Component: ResetPasswordForm
-
-File: src/components/ResetPasswordForm.tsx
-
-Used by: src/app/reset-password/page.tsx
-
-Purpose: forms/actions, cards/KPIs, inputs/filters
-
-Risk level: High
-
-Global impact: Local/medium impact (1 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### RoleNavigation
-
-Component: RoleNavigation
-
-File: src/components/RoleNavigation.tsx
-
-Used by: src/components/DashboardShell.tsx
-
-Purpose: cards/KPIs, responsive layout
-
-Risk level: High
-
-Global impact: Local/medium impact (1 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### ScannerSoundFeedback
-
-Component: ScannerSoundFeedback
-
-File: src/components/ScannerSoundFeedback.tsx
-
-Used by: src/app/scan/[token]/page.tsx
-
-Purpose: basic JSX layout
-
-Risk level: High
-
-Global impact: Local/medium impact (1 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### SearchableCombobox
-
-Component: SearchableCombobox
-
-File: src/components/SearchableCombobox.tsx
-
-Used by: src/app/branch/programs/[id]/customers/page.tsx, src/app/dashboard/customers/new/page.tsx, src/app/dashboard/engagement/page.tsx, src/app/dashboard/notifications/page.tsx, src/app/dashboard/programs/[id]/customers/page.tsx, src/app/dashboard/staff/page.tsx, src/app/platform/audit-center/page.tsx, src/app/platform/billing-center/page.tsx, src/app/platform/businesses/page.tsx, src/app/platform/invoices/page.tsx, src/app/platform/subscriptions/page.tsx, src/app/platform/tenant-center/page.tsx, src/app/platform/users/page.tsx, src/components/PlanBillingCycleFields.tsx
-
-Purpose: cards/KPIs, inputs/filters
-
-Risk level: High
-
-Global impact: HIGH IMPACT (14 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### StaffPasswordResetAction
-
-Component: StaffPasswordResetAction
-
-File: src/components/StaffPasswordResetAction.tsx
-
-Used by: src/app/dashboard/staff/page.tsx
-
-Purpose: forms/actions, cards/KPIs, inputs/filters
-
-Risk level: High
-
-Global impact: Local/medium impact (1 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-### StatusBadge
-
-Component: StatusBadge
-
-File: src/components/StatusBadge.tsx
-
-Used by: src/app/branch/customers/[id]/page.tsx, src/app/branch/customers/page.tsx, src/app/dashboard/branches/page.tsx, src/app/dashboard/customers/[id]/page.tsx, src/app/dashboard/customers/page.tsx, src/app/dashboard/messages/page.tsx, src/app/dashboard/page.tsx, src/app/dashboard/profile/page.tsx, src/app/dashboard/programs/page.tsx, src/app/dashboard/settings/page.tsx, src/app/dashboard/staff/[id]/page.tsx, src/app/dashboard/staff/page.tsx, src/app/platform/audit-center/page.tsx, src/app/platform/businesses/[id]/page.tsx, src/app/platform/businesses/page.tsx, src/app/platform/subscriptions/page.tsx, src/app/platform/tenant-center/page.tsx, src/app/platform/users/page.tsx, src/app/scan/[token]/page.tsx, src/app/staff/customers/[id]/page.tsx, src/app/staff/customers/page.tsx
-
-Purpose: cards/KPIs
-
-Risk level: High
-
-Global impact: HIGH IMPACT (21 references detected)
-
-Safe editing notes: Preserve props, client/server boundary, action behavior, ARIA labels, and exported names.
-
-## Section Map for Important Pages
-
-### Public homepage
-
-Route: /
-
-Main file: src/app/page.tsx
-
-Section name: Turn occasional customers into loyal regulars.
-
-Where defined: src/app/page.tsx
-
-Component or local function: HomePage, PublicHeader, HeroSection, LoyaltyCardPreview, TrustSection, FeaturesSection, HowItWorksSection, PricingTeaserSection, FaqSection, Footer, SectionHeading, TrustMetric, FeatureCard
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: cards/KPIs, responsive layout; responsive grids.
-
-Section name: Features
-
-Where defined: src/app/page.tsx
-
-Component or local function: HomePage, PublicHeader, HeroSection, LoyaltyCardPreview, TrustSection, FeaturesSection, HowItWorksSection, PricingTeaserSection, FaqSection, Footer, SectionHeading, TrustMetric, FeatureCard
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: cards/KPIs, responsive layout; responsive grids.
-
-Section name: How it works
-
-Where defined: src/app/page.tsx
-
-Component or local function: HomePage, PublicHeader, HeroSection, LoyaltyCardPreview, TrustSection, FeaturesSection, HowItWorksSection, PricingTeaserSection, FaqSection, Footer, SectionHeading, TrustMetric, FeatureCard
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: cards/KPIs, responsive layout; responsive grids.
-
-Section name: Start small, grow by branch.
-
-Where defined: src/app/page.tsx
-
-Component or local function: HomePage, PublicHeader, HeroSection, LoyaltyCardPreview, TrustSection, FeaturesSection, HowItWorksSection, PricingTeaserSection, FaqSection, Footer, SectionHeading, TrustMetric, FeatureCard
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: cards/KPIs, responsive layout; responsive grids.
-
-Section name: FAQ
-
-Where defined: src/app/page.tsx
-
-Component or local function: HomePage, PublicHeader, HeroSection, LoyaltyCardPreview, TrustSection, FeaturesSection, HowItWorksSection, PricingTeaserSection, FaqSection, Footer, SectionHeading, TrustMetric, FeatureCard
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: cards/KPIs, responsive layout; responsive grids.
-
-### Login page
-
-Route: /login
-
-Main file: src/app/login/page.tsx
-
-Section name: Sign in to manage loyalty operations.
-
-Where defined: src/app/login/page.tsx
-
-Component or local function: LoginPage, LoginBenefit
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: cards/KPIs, responsive layout; mobile-specific view; responsive grids.
-
-Section name: Welcome back
-
-Where defined: src/app/login/page.tsx
-
-Component or local function: LoginPage, LoginBenefit
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: cards/KPIs, responsive layout; mobile-specific view; responsive grids.
-
-### System Administrator dashboard
-
-Route: /platform
-
-Main file: src/app/platform/page.tsx
-
-Section name: Common platform tasks
-
-Where defined: src/app/platform/page.tsx
-
-Component or local function: PlatformDashboard, KpiCard, QuickAction, SeverityBadge
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, cards/KPIs, inputs/filters, responsive layout; responsive grids.
-
-Section name: Primary operations
-
-Where defined: src/app/platform/page.tsx
-
-Component or local function: PlatformDashboard, KpiCard, QuickAction, SeverityBadge
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, cards/KPIs, inputs/filters, responsive layout; responsive grids.
-
-Section name: Latest platform events
-
-Where defined: src/app/platform/page.tsx
-
-Component or local function: PlatformDashboard, KpiCard, QuickAction, SeverityBadge
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, cards/KPIs, inputs/filters, responsive layout; responsive grids.
-
-### Business Owner dashboard
-
-Route: /dashboard
-
-Main file: src/app/dashboard/page.tsx
-
-Section name: dynamic
-
-Where defined: src/app/dashboard/page.tsx
-
-Component or local function: BusinessDashboard, HeaderSummary, SecondaryBusinessMetric, CompactCustomerSearch, MainActions, RecentCustomers, ProgramPerformance, RecentActivity, ActivityMetric, OnboardingSummary, SummaryTile, PrimaryAction, SectionCard, EmptyState
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, cards/KPIs, inputs/filters, responsive layout; responsive grids.
-
-Section name: Quick Actions
-
-Where defined: src/app/dashboard/page.tsx
-
-Component or local function: BusinessDashboard, HeaderSummary, SecondaryBusinessMetric, CompactCustomerSearch, MainActions, RecentCustomers, ProgramPerformance, RecentActivity, ActivityMetric, OnboardingSummary, SummaryTile, PrimaryAction, SectionCard, EmptyState
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, cards/KPIs, inputs/filters, responsive layout; responsive grids.
-
-### Customer 360 page
-
-Route: /dashboard/customers/[id]
-
-Main file: src/app/dashboard/customers/[id]/page.tsx
-
-Section name: dynamic
-
-Where defined: src/app/dashboard/customers/[id]/page.tsx
-
-Component or local function: CustomerProfilePage, KpiCard, TabLink, ProfileSummaryCard, LoyaltyOverviewPanel, LatestActivityPreview, TierDetailsPanel, ReferralSummaryPanel, RewardsPanel, CustomerCardPanel, LoyaltyProgramsPanel, TimelineRow, RiskMetric, InsightMetric, SeverityBadge, StatusPill, AuditCell, Info
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout; overflow/table handling; responsive grids.
-
-Section name: Customer history
-
-Where defined: src/app/dashboard/customers/[id]/page.tsx
-
-Component or local function: CustomerProfilePage, KpiCard, TabLink, ProfileSummaryCard, LoyaltyOverviewPanel, LatestActivityPreview, TierDetailsPanel, ReferralSummaryPanel, RewardsPanel, CustomerCardPanel, LoyaltyProgramsPanel, TimelineRow, RiskMetric, InsightMetric, SeverityBadge, StatusPill, AuditCell, Info
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout; overflow/table handling; responsive grids.
-
-Section name: Stamp issuance history
-
-Where defined: src/app/dashboard/customers/[id]/page.tsx
-
-Component or local function: CustomerProfilePage, KpiCard, TabLink, ProfileSummaryCard, LoyaltyOverviewPanel, LatestActivityPreview, TierDetailsPanel, ReferralSummaryPanel, RewardsPanel, CustomerCardPanel, LoyaltyProgramsPanel, TimelineRow, RiskMetric, InsightMetric, SeverityBadge, StatusPill, AuditCell, Info
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout; overflow/table handling; responsive grids.
-
-Section name: Member details
-
-Where defined: src/app/dashboard/customers/[id]/page.tsx
-
-Component or local function: CustomerProfilePage, KpiCard, TabLink, ProfileSummaryCard, LoyaltyOverviewPanel, LatestActivityPreview, TierDetailsPanel, ReferralSummaryPanel, RewardsPanel, CustomerCardPanel, LoyaltyProgramsPanel, TimelineRow, RiskMetric, InsightMetric, SeverityBadge, StatusPill, AuditCell, Info
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout; overflow/table handling; responsive grids.
-
-Section name: Programs
-
-Where defined: src/app/dashboard/customers/[id]/page.tsx
-
-Component or local function: CustomerProfilePage, KpiCard, TabLink, ProfileSummaryCard, LoyaltyOverviewPanel, LatestActivityPreview, TierDetailsPanel, ReferralSummaryPanel, RewardsPanel, CustomerCardPanel, LoyaltyProgramsPanel, TimelineRow, RiskMetric, InsightMetric, SeverityBadge, StatusPill, AuditCell, Info
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout; overflow/table handling; responsive grids.
-
-Section name: Recent movement
-
-Where defined: src/app/dashboard/customers/[id]/page.tsx
-
-Component or local function: CustomerProfilePage, KpiCard, TabLink, ProfileSummaryCard, LoyaltyOverviewPanel, LatestActivityPreview, TierDetailsPanel, ReferralSummaryPanel, RewardsPanel, CustomerCardPanel, LoyaltyProgramsPanel, TimelineRow, RiskMetric, InsightMetric, SeverityBadge, StatusPill, AuditCell, Info
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout; overflow/table handling; responsive grids.
-
-Section name: Customer grade
-
-Where defined: src/app/dashboard/customers/[id]/page.tsx
-
-Component or local function: CustomerProfilePage, KpiCard, TabLink, ProfileSummaryCard, LoyaltyOverviewPanel, LatestActivityPreview, TierDetailsPanel, ReferralSummaryPanel, RewardsPanel, CustomerCardPanel, LoyaltyProgramsPanel, TimelineRow, RiskMetric, InsightMetric, SeverityBadge, StatusPill, AuditCell, Info
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout; overflow/table handling; responsive grids.
-
-Section name: Referral investigation
-
-Where defined: src/app/dashboard/customers/[id]/page.tsx
-
-Component or local function: CustomerProfilePage, KpiCard, TabLink, ProfileSummaryCard, LoyaltyOverviewPanel, LatestActivityPreview, TierDetailsPanel, ReferralSummaryPanel, RewardsPanel, CustomerCardPanel, LoyaltyProgramsPanel, TimelineRow, RiskMetric, InsightMetric, SeverityBadge, StatusPill, AuditCell, Info
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout; overflow/table handling; responsive grids.
-
-Section name: Ready to redeem
-
-Where defined: src/app/dashboard/customers/[id]/page.tsx
-
-Component or local function: CustomerProfilePage, KpiCard, TabLink, ProfileSummaryCard, LoyaltyOverviewPanel, LatestActivityPreview, TierDetailsPanel, ReferralSummaryPanel, RewardsPanel, CustomerCardPanel, LoyaltyProgramsPanel, TimelineRow, RiskMetric, InsightMetric, SeverityBadge, StatusPill, AuditCell, Info
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout; overflow/table handling; responsive grids.
-
-Section name: Public member card
-
-Where defined: src/app/dashboard/customers/[id]/page.tsx
-
-Component or local function: CustomerProfilePage, KpiCard, TabLink, ProfileSummaryCard, LoyaltyOverviewPanel, LatestActivityPreview, TierDetailsPanel, ReferralSummaryPanel, RewardsPanel, CustomerCardPanel, LoyaltyProgramsPanel, TimelineRow, RiskMetric, InsightMetric, SeverityBadge, StatusPill, AuditCell, Info
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout; overflow/table handling; responsive grids.
-
-Section name: Program progress
-
-Where defined: src/app/dashboard/customers/[id]/page.tsx
-
-Component or local function: CustomerProfilePage, KpiCard, TabLink, ProfileSummaryCard, LoyaltyOverviewPanel, LatestActivityPreview, TierDetailsPanel, ReferralSummaryPanel, RewardsPanel, CustomerCardPanel, LoyaltyProgramsPanel, TimelineRow, RiskMetric, InsightMetric, SeverityBadge, StatusPill, AuditCell, Info
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout; overflow/table handling; responsive grids.
-
-### Customers page
-
-Route: /dashboard/customers
-
-Main file: src/app/dashboard/customers/page.tsx
-
-Section name: Business customer memberships
-
-Where defined: src/app/dashboard/customers/page.tsx
-
-Component or local function: CustomersPage, Select, Message
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, tables, cards/KPIs, inputs/filters, responsive layout; mobile-specific view; responsive grids.
-
-### Programs page
-
-Route: /dashboard/programs
-
-Main file: src/app/dashboard/programs/page.tsx
-
-Section name: Programs
-
-Where defined: src/app/dashboard/programs/page.tsx
-
-Component or local function: ProgramsPage, KpiCard, StatusBadge, EmptyPrograms
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, tables, cards/KPIs, inputs/filters, responsive layout; mobile-specific view; responsive grids.
-
-### Referrals page
-
-Route: /dashboard/referrals
-
-Main file: src/app/dashboard/referrals/page.tsx
-
-Section name: Customer referral tracking
-
-Where defined: src/app/dashboard/referrals/page.tsx
-
-Component or local function: ReferralsPage, ReferralCard, Kpi, StatusPill
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout; responsive grids.
-
-Section name: Referral list
-
-Where defined: src/app/dashboard/referrals/page.tsx
-
-Component or local function: ReferralsPage, ReferralCard, Kpi, StatusPill
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout; responsive grids.
-
-Section name: Top referrers
-
-Where defined: src/app/dashboard/referrals/page.tsx
-
-Component or local function: ReferralsPage, ReferralCard, Kpi, StatusPill
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout; responsive grids.
-
-### Staff page
-
-Route: /dashboard/staff
-
-Main file: src/app/dashboard/staff/page.tsx
-
-Section name: Staff list
-
-Where defined: src/app/dashboard/staff/page.tsx
-
-Component or local function: StaffUsersPage, StaffCreateForm, Input, Message
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, tables, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout; overflow/table handling; responsive grids.
-
-### Branches page
-
-Route: /dashboard/branches
-
-Main file: src/app/dashboard/branches/page.tsx
-
-Section name: Branch list
-
-Where defined: src/app/dashboard/branches/page.tsx
-
-Component or local function: BranchesPage, BranchForm, Input, Message
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout; responsive grids.
-
-### Scanner page
-
-Route: /dashboard/scanner
-
-Main file: src/app/dashboard/scanner/page.tsx
-
-Section name: Main content
-
-Where defined: src/app/dashboard/scanner/page.tsx
-
-Component or local function: BusinessOwnerScannerPage
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: basic JSX layout; No explicit mobile-only structure detected.
-
-### Public customer card
-
-Route: /card/[token]
-
-Main file: src/app/card/[token]/page.tsx
-
-Section name: No active loyalty program yet
-
-Where defined: src/app/card/[token]/page.tsx
-
-Component or local function: PublicCustomerCardPage, LoyaltyWalletCard, LoyaltyProgressSection, RewardStatusSection, TierStatusSection, ReferralCardSection, WalletPlaceholderSection, ProgramRewardCard, Info, CardUnavailable
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: cards/KPIs, inputs/filters, responsive layout; responsive grids; bottom navigation/safe area.
-
-Section name: Save Your Card
-
-Where defined: src/app/card/[token]/page.tsx
-
-Component or local function: PublicCustomerCardPage, LoyaltyWalletCard, LoyaltyProgressSection, RewardStatusSection, TierStatusSection, ReferralCardSection, WalletPlaceholderSection, ProgramRewardCard, Info, CardUnavailable
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: cards/KPIs, inputs/filters, responsive layout; responsive grids; bottom navigation/safe area.
-
-Section name: Additional programs
-
-Where defined: src/app/card/[token]/page.tsx
-
-Component or local function: PublicCustomerCardPage, LoyaltyWalletCard, LoyaltyProgressSection, RewardStatusSection, TierStatusSection, ReferralCardSection, WalletPlaceholderSection, ProgramRewardCard, Info, CardUnavailable
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: cards/KPIs, inputs/filters, responsive layout; responsive grids; bottom navigation/safe area.
-
-Section name: dynamic
-
-Where defined: src/app/card/[token]/page.tsx
-
-Component or local function: PublicCustomerCardPage, LoyaltyWalletCard, LoyaltyProgressSection, RewardStatusSection, TierStatusSection, ReferralCardSection, WalletPlaceholderSection, ProgramRewardCard, Info, CardUnavailable
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: cards/KPIs, inputs/filters, responsive layout; responsive grids; bottom navigation/safe area.
-
-Section name: dynamic
-
-Where defined: src/app/card/[token]/page.tsx
-
-Component or local function: PublicCustomerCardPage, LoyaltyWalletCard, LoyaltyProgressSection, RewardStatusSection, TierStatusSection, ReferralCardSection, WalletPlaceholderSection, ProgramRewardCard, Info, CardUnavailable
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: cards/KPIs, inputs/filters, responsive layout; responsive grids; bottom navigation/safe area.
-
-Section name: dynamic Visit$dynamic Remaining`}
-
-Where defined: src/app/card/[token]/page.tsx
-
-Component or local function: PublicCustomerCardPage, LoyaltyWalletCard, LoyaltyProgressSection, RewardStatusSection, TierStatusSection, ReferralCardSection, WalletPlaceholderSection, ProgramRewardCard, Info, CardUnavailable
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: cards/KPIs, inputs/filters, responsive layout; responsive grids; bottom navigation/safe area.
-
-Section name: dynamic
-
-Where defined: src/app/card/[token]/page.tsx
-
-Component or local function: PublicCustomerCardPage, LoyaltyWalletCard, LoyaltyProgressSection, RewardStatusSection, TierStatusSection, ReferralCardSection, WalletPlaceholderSection, ProgramRewardCard, Info, CardUnavailable
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: cards/KPIs, inputs/filters, responsive layout; responsive grids; bottom navigation/safe area.
-
-Section name: Refer a friend
-
-Where defined: src/app/card/[token]/page.tsx
-
-Component or local function: PublicCustomerCardPage, LoyaltyWalletCard, LoyaltyProgressSection, RewardStatusSection, TierStatusSection, ReferralCardSection, WalletPlaceholderSection, ProgramRewardCard, Info, CardUnavailable
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: cards/KPIs, inputs/filters, responsive layout; responsive grids; bottom navigation/safe area.
-
-Section name: Wallet Area
-
-Where defined: src/app/card/[token]/page.tsx
-
-Component or local function: PublicCustomerCardPage, LoyaltyWalletCard, LoyaltyProgressSection, RewardStatusSection, TierStatusSection, ReferralCardSection, WalletPlaceholderSection, ProgramRewardCard, Info, CardUnavailable
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: cards/KPIs, inputs/filters, responsive layout; responsive grids; bottom navigation/safe area.
-
-Section name: Card not available
-
-Where defined: src/app/card/[token]/page.tsx
-
-Component or local function: PublicCustomerCardPage, LoyaltyWalletCard, LoyaltyProgressSection, RewardStatusSection, TierStatusSection, ReferralCardSection, WalletPlaceholderSection, ProgramRewardCard, Info, CardUnavailable
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: cards/KPIs, inputs/filters, responsive layout; responsive grids; bottom navigation/safe area.
-
-### Scan token page
-
-Route: /scan/[token]
-
-Main file: src/app/scan/[token]/page.tsx
-
-Section name: dynamic dynamic
-
-Where defined: src/app/scan/[token]/page.tsx
-
-Component or local function: ScanResultPage, ScanMessage, ProgramSelectionScreen, ScanStatusBanner, StampIssuanceSection, Info, SummaryItem
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout; responsive grids.
-
-Section name: dynamic
-
-Where defined: src/app/scan/[token]/page.tsx
-
-Component or local function: ScanResultPage, ScanMessage, ProgramSelectionScreen, ScanStatusBanner, StampIssuanceSection, Info, SummaryItem
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout; responsive grids.
-
-Section name: dynamic dynamic
-
-Where defined: src/app/scan/[token]/page.tsx
-
-Component or local function: ScanResultPage, ScanMessage, ProgramSelectionScreen, ScanStatusBanner, StampIssuanceSection, Info, SummaryItem
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout; responsive grids.
-
-Section name: dynamic
-
-Where defined: src/app/scan/[token]/page.tsx
-
-Component or local function: ScanResultPage, ScanMessage, ProgramSelectionScreen, ScanStatusBanner, StampIssuanceSection, Info, SummaryItem
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout; responsive grids.
-
-Section name: dynamic
-
-Where defined: src/app/scan/[token]/page.tsx
-
-Component or local function: ScanResultPage, ScanMessage, ProgramSelectionScreen, ScanStatusBanner, StampIssuanceSection, Info, SummaryItem
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout; responsive grids.
-
-Section name: Which program should receive this scan?
-
-Where defined: src/app/scan/[token]/page.tsx
-
-Component or local function: ScanResultPage, ScanMessage, ProgramSelectionScreen, ScanStatusBanner, StampIssuanceSection, Info, SummaryItem
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout; responsive grids.
-
-Section name: dynamic
-
-Where defined: src/app/scan/[token]/page.tsx
-
-Component or local function: ScanResultPage, ScanMessage, ProgramSelectionScreen, ScanStatusBanner, StampIssuanceSection, Info, SummaryItem
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout; responsive grids.
-
-Section name: Add earned stamps
-
-Where defined: src/app/scan/[token]/page.tsx
-
-Component or local function: ScanResultPage, ScanMessage, ProgramSelectionScreen, ScanStatusBanner, StampIssuanceSection, Info, SummaryItem
-
-Can external AI redesign safely? Yes, for visual structure/classes only while preserving data helpers and actions.
-
-Notes: forms/actions, cards/KPIs, confirmations/modals/drawers, inputs/filters, responsive layout; responsive grids.
+- Section name: Customer/program scan result. Where defined: `src/app/scan/[token]/page.tsx`, `ScannerResultCard`. Can external AI redesign safely? Limited.
+- Section name: Issue stamp/redeem forms. Where defined: `src/app/scan/[token]/page.tsx`, `ConfirmSubmitButton`, `IdempotencyInput`, `src/app/scan/actions.ts`. Can external AI redesign safely? No without engineering validation.
+- Section name: Post-stamp WhatsApp prompt. Where defined: `StampWhatsAppSharePrompt`. Can external AI redesign safely? Visual only.
 
 ## Mapping Issues Found
 
-- Expected/older route not found in current project: /dashboard/branding
-- Expected/older route not found in current project: /platform/invoices/new
-- src/app/page.tsx is present and mapped as public homepage, not dashboard.
-- Dynamic routes such as [id], [token], and [code] are listed only where real page files exist.
-- Some pages use desktop tables with overflow wrappers and/or separate mobile card sections; verify before mobile redesign.
-- Static analysis may miss runtime-only component use, but no invented paths were added.
+- `src/app/page.tsx` is verified as the public marketing homepage. It is not the Business Owner dashboard.
+- There is no verified `/product` or `/features` route file. Public marketing routes that do exist are `/benefits`, `/solutions`, `/pricing`, `/resources`, `/company`, `/faq`, and `/request-demo`.
+- `actions.ts` files under app folders are server action modules, not Next routes unless named `route.ts`.
+- `src/app/dashboard/exports/[type]/route.ts`, platform export files, logout, idle logout, and support-session files are route handlers, not UI pages.
+- `src/components/HomepageLoyaltyCardDemo.tsx` exists but had no verified direct import in the static usage scan. Confirm before deleting or sending to external UI work.
+- Two status badge components exist: `src/components/StatusBadge.tsx` and `src/components/ui/StatusBadge.tsx`. They are both real and both widely used; do not merge casually.
+- Public card export architecture has multiple real files: `LoyaltyCardExport.tsx`, `LoyaltyCardFrontExport.tsx`, and `LoyaltyCardBackExport.tsx`. External UI work must know which renderer is being changed.
+- Large/high-risk UI files that combine UI and actions/data: `src/app/dashboard/customers/[id]/page.tsx`, `src/app/scan/[token]/page.tsx`, `src/components/ProgramDesignStudioForm.tsx`, `src/app/platform/operations-center/page.tsx`.
+- No duplicated route files were found for the same exact route path in the scanned route set.
 
 ## Recommended Files to Send to External AI
 
 ### Homepage redesign
-- src/app/page.tsx
-- src/app/benefits/page.tsx
-- src/app/request-demo/page.tsx
-- src/components/DemoRequestForm.tsx
+
+- `src/app/page.tsx`
+- `src/components/HomepageMotion.tsx`
+- `src/components/marketing/MarketingLayout.tsx`
+- `src/app/globals.css`
+- Optional after confirming usage: `src/components/HomepageLoyaltyCardDemo.tsx`
 
 ### Business Owner dashboard redesign
-- src/app/dashboard/page.tsx
-- src/components/DashboardShell.tsx
-- src/components/RoleNavigation.tsx
+
+- `src/app/dashboard/page.tsx`
+- `src/components/DashboardShell.tsx`
+- `src/components/RoleNavigation.tsx`
+- `src/components/BusinessBrandingProvider.tsx`
+- `src/components/layouts/DashboardPageLayout.tsx`
+- `src/components/ui/MetricCard.tsx`
+- `src/components/ui/SectionCard.tsx`
+- `src/components/ui/PageIntro.tsx`
+- `src/components/ui/PageActions.tsx`
+- `src/components/ui/Timeline.tsx`
+- `src/app/globals.css`
 
 ### Customer 360 redesign
-- src/app/dashboard/customers/[id]/page.tsx
-- src/components/CardShareActions.tsx
-- src/components/ConfirmSubmitButton.tsx
+
+- `src/app/dashboard/customers/[id]/page.tsx`
+- `src/components/CardShareActions.tsx`
+- `src/components/CopyButton.tsx`
+- `src/components/ConfirmSubmitButton.tsx`
+- `src/components/CsrfInput.tsx`
+- `src/components/ui/ActionMenu.tsx`
+- `src/components/ui/SectionCard.tsx`
+- `src/components/ui/MetricCard.tsx`
+- `src/components/ui/Timeline.tsx`
+- `src/components/ui/ProgressBar.tsx`
 
 ### Public customer card redesign
-- src/app/card/[token]/page.tsx
-- src/components/CardShareActions.tsx
-- src/components/ReferralShareActions.tsx
+
+- `src/app/card/[token]/page.tsx`
+- `src/components/public-card/LoyaltyWalletCard.tsx`
+- `src/components/public-card/WalletCardShell.tsx`
+- `src/components/public-card/LoyaltyCardFrontExport.tsx`
+- `src/components/public-card/LoyaltyCardBackExport.tsx`
+- `src/components/public-card/ProgramRewardCard.tsx`
+- `src/components/public-card/ReferralPanel.tsx`
+- `src/components/public-card/TierStatusPanel.tsx`
+- `src/components/SaveCardImageButton.tsx`
+- `src/components/CardShareActions.tsx`
+- `src/lib/card-design.ts`
+- `src/lib/card-render-model.ts`
+- `src/lib/card-themes.ts`
 
 ### Scanner redesign
-- src/app/dashboard/scanner/page.tsx
-- src/app/branch/scanner/page.tsx
-- src/app/staff/scanner/page.tsx
-- src/app/scan/[token]/page.tsx
-- src/components/CameraScanner.tsx
+
+- `src/app/dashboard/scanner/page.tsx`
+- `src/app/branch/scanner/page.tsx`
+- `src/app/staff/scanner/page.tsx`
+- `src/app/scan/[token]/page.tsx`
+- `src/app/scan/actions.ts`
+- `src/components/CameraScanner.tsx`
+- `src/components/ScannerManualCustomerSearch.tsx`
+- `src/components/ScannerSoundFeedback.tsx`
+- `src/components/StampWhatsAppSharePrompt.tsx`
+- `src/components/domain/ScannerResultCard.tsx`
+- `src/components/layouts/ScannerPageLayout.tsx`
 
 ### Global navigation redesign
-- src/components/DashboardShell.tsx
-- src/components/RoleNavigation.tsx
-- src/app/globals.css
+
+- `src/components/DashboardShell.tsx`
+- `src/components/RoleNavigation.tsx`
+- `src/components/BusinessBrandingProvider.tsx`
+- `src/components/marketing/MarketingLayout.tsx`
+- `src/app/layout.tsx`
+- `src/app/globals.css`
+- `src/components/ui/Button.tsx`
+- `src/components/ui/PageHeader.tsx`
+- `src/components/ui/PageActions.tsx`
+- `src/components/ui/styles.ts`
+- `src/components/ui/utils.ts`
 
 ## Verification Checklist
 
-- Project tree scanned
-- All routes verified from existing files
-- No guessed folders
-- No invented paths
-- All recommended files exist
-- All high-impact components marked
-- Old incorrect mappings removed
+- Project tree scanned.
+- All routes verified from existing `page.tsx`, `route.ts`, `layout.tsx`, `loading.tsx`, `error.tsx`, and `not-found.tsx` files.
+- No guessed folders included.
+- No invented paths included.
+- All recommended files exist in the scanned project.
+- High-impact components marked.
+- Old incorrect mappings removed.
+- Route handlers are separated from UI pages.
+- Known suspicious/large mappings documented under "Mapping Issues Found".
 
-## Generation Summary
-
-- Real routes documented: 76
-- Real components documented: 32
-- App files scanned: 98
-- Component files scanned: 32
-- Lib files scanned: 41
-- Prisma files scanned: 35
-- Test files scanned: 40
