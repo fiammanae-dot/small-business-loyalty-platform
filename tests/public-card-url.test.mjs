@@ -13,6 +13,9 @@ test("public card URLs use production-safe base URL resolution", () => {
   const scan = read("src/lib/scan.ts");
 
   assert.match(appUrl, /NEXT_PUBLIC_APP_URL/);
+  assert.match(appUrl, /NEXT_PUBLIC_SITE_URL/);
+  assert.match(appUrl, /AUTH_URL/);
+  assert.match(appUrl, /NEXTAUTH_URL/);
   assert.match(appUrl, /VERCEL_PROJECT_PRODUCTION_URL/);
   assert.match(appUrl, /VERCEL_URL/);
   assert.match(appUrl, /isProductionRuntime/);

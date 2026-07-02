@@ -2,7 +2,7 @@ import "server-only";
 
 import { headers } from "next/headers";
 
-const APP_URL_ENV_KEYS = ["NEXT_PUBLIC_APP_URL", "APP_URL", "BASE_URL"] as const;
+export const APP_URL_ENV_KEYS = ["NEXT_PUBLIC_APP_URL", "NEXT_PUBLIC_SITE_URL", "APP_URL", "AUTH_URL", "NEXTAUTH_URL", "BASE_URL"] as const;
 
 export function getConfiguredAppUrl() {
   for (const key of APP_URL_ENV_KEYS) {
@@ -30,7 +30,7 @@ export function getConfiguredAppUrl() {
 export function requireConfiguredAppUrl() {
   const configuredUrl = getConfiguredAppUrl();
   if (!configuredUrl) {
-    throw new Error("NEXT_PUBLIC_APP_URL, APP_URL, or BASE_URL must be configured.");
+    throw new Error("NEXT_PUBLIC_APP_URL, NEXT_PUBLIC_SITE_URL, APP_URL, AUTH_URL, NEXTAUTH_URL, or BASE_URL must be configured.");
   }
 
   return configuredUrl;
@@ -43,7 +43,7 @@ export async function getRequestBaseUrl() {
   const headerStore = await headers();
   const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
   if (!host) {
-    throw new Error("Unable to determine application URL. Configure NEXT_PUBLIC_APP_URL, APP_URL, or BASE_URL.");
+    throw new Error("Unable to determine application URL. Configure NEXT_PUBLIC_APP_URL, NEXT_PUBLIC_SITE_URL, APP_URL, AUTH_URL, NEXTAUTH_URL, or BASE_URL.");
   }
 
   const protocol = headerStore.get("x-forwarded-proto") ?? (isLocalOrPrivateHost(host) ? "http" : "https");

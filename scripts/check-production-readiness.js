@@ -43,7 +43,7 @@ if (process.env.DEV_AUTH_FALLBACK === "true") {
   pass("Development auth fallback is disabled");
 }
 
-for (const key of ["APP_URL", "NEXT_PUBLIC_APP_URL", "BASE_URL"]) {
+for (const key of ["APP_URL", "NEXT_PUBLIC_APP_URL", "NEXT_PUBLIC_SITE_URL", "AUTH_URL", "NEXTAUTH_URL", "BASE_URL"]) {
   const value = process.env[key];
   if (!value) continue;
   if (value.includes("localhost") || value.includes("127.0.0.1") || value.includes("loyalty.local")) {

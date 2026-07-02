@@ -78,6 +78,7 @@ test("password reset requests use generic messaging, rate limiting, Resend email
   assert.match(resetLib, /PASSWORD_RESET_RATE_LIMITED/);
   assert.match(resetLib, /ipAddress: meta\.ipAddress/);
   assert.match(resetLib, /userAgent: meta\.userAgent/);
+  assert.match(resetLib, /getConfiguredAppUrl/);
 
   assert.match(email, /Reset Your LoyaltyBase Password/);
   assert.match(email, /Reset Password/);
