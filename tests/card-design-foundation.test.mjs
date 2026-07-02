@@ -36,18 +36,18 @@ test("card design foundation defines future Design Studio fields without persist
   assert.doesNotMatch(schema, /layoutStyle|templateId/);
 });
 
-test("card theme resolver accepts card design without changing stored theme behavior", () => {
+test("card theme resolver prefers saved program design while preserving legacy theme previews", () => {
   const themes = read("src/lib/card-themes.ts");
   const publicCard = read("src/app/card/[token]/page.tsx");
   const preview = read("src/components/CardThemePreviewSelector.tsx");
 
   assert.match(themes, /cardDesign\?: CardDesignInput/);
-  assert.match(themes, /resolveCardDesign\(cardDesign\)/);
-  assert.match(themes, /getCardThemeDefinition\(cardTheme\)/);
-  assert.match(publicCard, /const cardDesign = resolveCardDesign\(primaryProgram\?\.programMembership\.loyaltyProgram\.cardDesign\)/);
+  assert.match(themes, /const design = resolveCardDesign\(cardDesign\)/);
+  assert.match(themes, /cardDesign \? getCardThemeForCardDesign\(design\) : cardTheme/);
+  assert.match(publicCard, /programMembership\.loyaltyProgram\.cardDesign as CardDesignInput/);
   assert.match(publicCard, /resolveCardThemeColors\(\{ cardTheme: programMembership\.loyaltyProgram\.cardTheme, branding, cardDesign: programCardDesign \}\)/);
-  assert.match(preview, /const cardDesign = resolveCardDesign\(\)/);
-  assert.match(preview, /resolveCardThemeColors\(\{ cardTheme: previewTheme, branding, cardDesign \}\)/);
+  assert.match(preview, /resolveCardThemeColors\(\{ cardTheme: previewTheme, branding \}\)/);
+  assert.doesNotMatch(preview, /resolveCardDesign\(\)/);
 });
 
 test("Design Studio phase 0 keeps customer-facing card components unchanged", () => {

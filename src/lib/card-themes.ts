@@ -1,6 +1,6 @@
 import type { CardTheme } from "@prisma/client";
 import type { CardDesignInput } from "@/lib/card-design";
-import { resolveCardDesign } from "@/lib/card-design";
+import { getCardThemeForCardDesign, resolveCardDesign } from "@/lib/card-design";
 import { DARK_FOREGROUND, getReadableForeground, hasReadableContrast } from "@/lib/color-contrast";
 
 export type WalletVisualStyle = "modern-clean" | "premium-dark" | "minimal-light" | "image-background";
@@ -251,8 +251,8 @@ export function resolveCardThemeColors({
   branding: BrandingInput;
   cardDesign?: CardDesignInput;
 }) {
-  resolveCardDesign(cardDesign);
-  const theme = getCardThemeDefinition(cardTheme);
+  const design = resolveCardDesign(cardDesign);
+  const theme = getCardThemeDefinition(cardDesign ? getCardThemeForCardDesign(design) : cardTheme);
   if (theme.value === "BUSINESS_DEFAULT") {
     const primaryForeground = getReadableForeground(branding.primaryColor);
     const cardText = hasReadableContrast(primaryForeground, branding.secondaryColor, 4.5)

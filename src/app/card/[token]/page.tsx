@@ -3,7 +3,7 @@ import { SaveCardImageButton } from "@/components/SaveCardImageButton";
 import { Gift, QrCode } from "lucide-react";
 import { getCardQrDataUrl, getCardUrl, resolveBranding } from "@/lib/customer-cards";
 import { resolveCardThemeColors } from "@/lib/card-themes";
-import { resolveCardDesign } from "@/lib/card-design";
+import type { CardDesignInput } from "@/lib/card-design";
 import { buildCardRenderModel } from "@/lib/card-render-model";
 import { calculateCustomerTier } from "@/lib/customer-tiers";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -19,6 +19,9 @@ import {
   ReferralPanel,
   TierStatusPanel,
 } from "@/components/public-card";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function PublicCustomerCardPage({
   params,
@@ -62,7 +65,7 @@ export default async function PublicCustomerCardPage({
       const remaining = Math.max(required - progress, 0);
       const completion = Math.min(Math.round((progress / required) * 100), 100);
       const rewardReady = progress >= required;
-      const programCardDesign = resolveCardDesign(programMembership.loyaltyProgram.cardDesign);
+      const programCardDesign = programMembership.loyaltyProgram.cardDesign as CardDesignInput;
       const theme = resolveCardThemeColors({ cardTheme: programMembership.loyaltyProgram.cardTheme, branding, cardDesign: programCardDesign });
 
       return {
@@ -78,7 +81,7 @@ export default async function PublicCustomerCardPage({
     }),
   );
   const primaryProgram = programCards[0] ?? null;
-  const cardDesign = resolveCardDesign(primaryProgram?.programMembership.loyaltyProgram.cardDesign);
+  const cardDesign = primaryProgram?.programMembership.loyaltyProgram.cardDesign as CardDesignInput;
   const lastUpdatedAt = [
     membership.updatedAt,
     membership.cardLastViewedAt,

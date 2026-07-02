@@ -94,12 +94,11 @@ test("card delivery controls are available on registration success, profiles, li
   const staffSuccess = read("src/app/staff/customers/success/page.tsx");
   const customerProfile = read("src/app/dashboard/customers/[id]/page.tsx");
   const branchProfile = read("src/app/branch/customers/[id]/page.tsx");
-  const customerList = read("src/app/dashboard/customers/page.tsx");
   const branchList = read("src/app/branch/customers/page.tsx");
   const staffProfile = read("src/app/staff/customers/[id]/page.tsx");
   const publicCard = read("src/app/card/[token]/page.tsx");
 
-  for (const source of [staffSuccess, customerProfile, branchProfile, customerList, branchList, staffProfile, publicCard]) {
+  for (const source of [staffSuccess, customerProfile, branchProfile, branchList, staffProfile, publicCard]) {
     assert.match(source, /CardShareActions/);
     assert.match(source, /recipientPhone/);
     assert.match(source, /cardUrl/);
@@ -109,7 +108,6 @@ test("card delivery controls are available on registration success, profiles, li
   assert.match(publicCard, /Save Your Card/);
   assert.match(publicCard, /Last Updated:/);
   assert.match(publicCard, /always shows your latest stamps, reward status, tier, and QR code/);
-  assert.match(customerList, /whatsappLabel="WhatsApp"/);
 });
 
 test("manual WhatsApp phase does not add Cloud API sending or provider environment usage", () => {

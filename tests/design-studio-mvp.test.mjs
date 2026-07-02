@@ -288,11 +288,18 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
 
 test("public card reads saved program card design with fallback behavior", () => {
   const publicCard = read("src/app/card/[token]/page.tsx");
+  const actions = read("src/app/dashboard/programs/actions.ts");
 
-  assert.match(publicCard, /resolveCardDesign\(programMembership\.loyaltyProgram\.cardDesign\)/);
-  assert.match(publicCard, /resolveCardDesign\(primaryProgram\?\.programMembership\.loyaltyProgram\.cardDesign\)/);
+  assert.match(publicCard, /export const dynamic = "force-dynamic"/);
+  assert.match(publicCard, /export const revalidate = 0/);
+  assert.match(publicCard, /programMembership\.loyaltyProgram\.cardDesign as CardDesignInput/);
   assert.match(publicCard, /cardDesign,/);
   assert.match(publicCard, /cardTheme: primaryProgram\?\.programMembership\.loyaltyProgram\.cardTheme \?\? null/);
+  assert.match(actions, /cardDesign: cardDesign as unknown as Prisma\.InputJsonValue/);
+  assert.match(actions, /revalidatePath\("\/dashboard\/customers"\)/);
+  assert.match(actions, /revalidatePath\("\/dashboard\/customers\/\[id\]", "page"\)/);
+  assert.match(actions, /revalidatePath\("\/card\/\[token\]", "page"\)/);
+  assert.doesNotMatch(actions, /businessCustomerMembership\.updateMany|customerProgramMembership\.updateMany/);
 });
 
 

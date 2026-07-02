@@ -234,6 +234,9 @@ export async function updateProgramDesignStudioAction(formData: FormData) {
 
   revalidatePath(`/dashboard/programs/${uuid}`);
   revalidatePath(path);
+  revalidatePath("/dashboard/customers");
+  revalidatePath("/dashboard/customers/[id]", "page");
+  revalidatePath("/card/[token]", "page");
   redirect(`${path}?success=Design Studio settings saved.`);
 }
 

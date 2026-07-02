@@ -1,10 +1,7 @@
 import Link from "next/link";
-import { MessageCircle, QrCode, UserPlus } from "lucide-react";
-import { CardShareActions } from "@/components/CardShareActions";
+import { ChevronRight, MessageCircle, QrCode, UserPlus } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
 import {
-  ActionMenu,
-  ActionMenuItem,
   ButtonLink,
   DataTable,
   DataTableBody,
@@ -21,7 +18,6 @@ import {
   SectionCard,
   StatusBadge,
 } from "@/components/ui";
-import { getCardUrl } from "@/lib/customer-cards";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { customerSourceLabels } from "@/lib/customers";
 import { formatDate } from "@/lib/format";
@@ -101,14 +97,11 @@ export default async function CustomersPage({
   ]);
 
   const allRows = allCustomers.map(toCustomerSummary);
-  const rowsWithUrls = await Promise.all(
-    customers.map(async (membership) => ({
-      ...toCustomerSummary(membership),
-      raw: membership,
-      cardUrl: await getCardUrl(membership.cardToken),
-      customerName: getCustomerName(membership.globalCustomer),
-    })),
-  );
+  const rowsWithUrls = customers.map((membership) => ({
+    ...toCustomerSummary(membership),
+    raw: membership,
+    customerName: getCustomerName(membership.globalCustomer),
+  }));
   const customerRows = rowsWithUrls.filter((row) => {
     if (rewardFilter === "ready") return row.rewardReady;
     if (rewardFilter === "near") return row.nearReward;
@@ -189,17 +182,17 @@ export default async function CustomersPage({
                         "Progress",
                         "Last Visit",
                         "Status",
-                        "Actions",
+                        "",
                       ].map((heading) => <DataTableHeadCell key={heading}>{heading}</DataTableHeadCell>)}
                     </tr>
                   </DataTableHeader>
                   <DataTableBody>
-                    {customerRows.map((row) => <CustomerTableRow key={row.raw.id} row={row} businessName={business.name} />)}
+                    {customerRows.map((row) => <CustomerTableRow key={row.raw.id} row={row} />)}
                   </DataTableBody>
                 </DataTable>
               </div>
               <div className="grid gap-3 lg:hidden">
-                {customerRows.map((row) => <CustomerMobileCard key={row.raw.id} row={row} businessName={business.name} />)}
+                {customerRows.map((row) => <CustomerMobileCard key={row.raw.id} row={row} />)}
               </div>
             </>
           ) : (
@@ -227,62 +220,58 @@ const customerInclude = {
   },
 };
 
-function CustomerTableRow({ row, businessName }: { row: CustomerRow; businessName: string }) {
+function CustomerTableRow({ row }: { row: CustomerRow }) {
+  const customerHref = `/dashboard/customers/${row.raw.uuid}`;
   return (
-    <tr>
+    <tr className="group cursor-pointer transition hover:bg-[#F8FAFC] focus-within:bg-[#F8FAFC]">
       <DataTableCell>
-        <Link href={`/dashboard/customers/${row.raw.uuid}`} className="font-semibold text-[#0F172A] transition business-hover">{row.customerName}</Link>
-        <p className="mt-1 text-xs text-[#64748B]">{formatUaePhoneDisplay(row.raw.globalCustomer.normalizedPhone)}</p>
+        <Link href={customerHref} className="block rounded-md py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2" aria-label={`Open ${row.customerName} Customer 360`}>
+          <span className="font-semibold text-[#0F172A] transition group-hover:business-text">{row.customerName}</span>
+          <span className="mt-1 block text-xs text-[#64748B]">{formatUaePhoneDisplay(row.raw.globalCustomer.normalizedPhone)}</span>
+        </Link>
       </DataTableCell>
-      <DataTableCell><TierBadge tier={row.tier} /></DataTableCell>
-      <DataTableCell>{row.activePrograms} active</DataTableCell>
-      <DataTableCell><CustomerProgress row={row} /></DataTableCell>
-      <DataTableCell>{row.lastVisit ? formatDate(row.lastVisit) : "No visits"}</DataTableCell>
-      <DataTableCell><StatusBadge tone={row.status === "ACTIVE" ? "success" : row.status === "BLOCKED" ? "danger" : "neutral"}>{row.status}</StatusBadge></DataTableCell>
-      <DataTableCell><CustomerActions row={row} businessName={businessName} /></DataTableCell>
+      <DataTableCell>
+        <Link href={customerHref} className="block rounded-md py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2">
+          <TierBadge tier={row.tier} />
+        </Link>
+      </DataTableCell>
+      <DataTableCell>
+        <Link href={customerHref} className="block rounded-md py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2">{row.activePrograms} active</Link>
+      </DataTableCell>
+      <DataTableCell>
+        <Link href={customerHref} className="block rounded-md py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"><CustomerProgress row={row} /></Link>
+      </DataTableCell>
+      <DataTableCell>
+        <Link href={customerHref} className="block rounded-md py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2">{row.lastVisit ? formatDate(row.lastVisit) : "No visits"}</Link>
+      </DataTableCell>
+      <DataTableCell>
+        <Link href={customerHref} className="block rounded-md py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2">
+          <StatusBadge tone={row.status === "ACTIVE" ? "success" : row.status === "BLOCKED" ? "danger" : "neutral"}>{row.status}</StatusBadge>
+        </Link>
+      </DataTableCell>
+      <DataTableCell className="w-12 text-right">
+        <Link href={customerHref} className="inline-flex h-9 w-9 items-center justify-center rounded-full text-[#94A3B8] transition hover:bg-white hover:text-[#0F172A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2" aria-label={`Open ${row.customerName} Customer 360`}>
+          <ChevronRight className="h-4 w-4" aria-hidden />
+        </Link>
+      </DataTableCell>
     </tr>
   );
 }
 
-function CustomerMobileCard({ row, businessName }: { row: CustomerRow; businessName: string }) {
+function CustomerMobileCard({ row }: { row: CustomerRow }) {
   return (
-    <article className="rounded-md border border-[#E2E8F0] bg-white p-4 shadow-sm">
+    <Link href={`/dashboard/customers/${row.raw.uuid}`} className="block rounded-md border border-[#E2E8F0] bg-white p-4 shadow-sm transition hover:border-[var(--business-primary)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2" aria-label={`Open ${row.customerName} Customer 360`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <Link href={`/dashboard/customers/${row.raw.uuid}`} className="font-semibold text-[#0F172A] business-hover">{row.customerName}</Link>
+          <p className="font-semibold text-[#0F172A]">{row.customerName}</p>
           <p className="mt-1 text-sm text-[#64748B]">{formatUaePhoneDisplay(row.raw.globalCustomer.normalizedPhone)}</p>
         </div>
-        <CustomerActions row={row} businessName={businessName} />
+        <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-[#94A3B8]" aria-hidden />
       </div>
       <div className="mt-3 flex flex-wrap gap-2"><TierBadge tier={row.tier} /><StatusBadge tone={row.status === "ACTIVE" ? "success" : row.status === "BLOCKED" ? "danger" : "neutral"}>{row.status}</StatusBadge>{row.rewardReady ? <StatusBadge tone="warning">Reward Ready</StatusBadge> : null}</div>
       <div className="mt-4"><CustomerProgress row={row} /></div>
       <p className="mt-3 text-sm text-[#64748B]">Last visit: {row.lastVisit ? formatDate(row.lastVisit) : "No visits"}</p>
-    </article>
-  );
-}
-
-function CustomerActions({ row, businessName }: { row: CustomerRow; businessName: string }) {
-  return (
-    <ActionMenu label="Actions">
-      <ActionMenuItem><Link href={`/dashboard/customers/${row.raw.uuid}`}>Open Customer</Link></ActionMenuItem>
-      <ActionMenuItem><Link href={`/scan/${row.raw.cardToken}`}>Open Scanner</Link></ActionMenuItem>
-      <ActionMenuItem><Link href={`/scan/${row.raw.cardToken}`}>Issue Stamp</Link></ActionMenuItem>
-      <ActionMenuItem>
-        <CardShareActions
-          cardUrl={row.cardUrl}
-          businessName={businessName}
-          customerName={row.customerName}
-          recipientPhone={row.raw.globalCustomer.normalizedPhone}
-          auditMembershipUuid={row.raw.uuid}
-          whatsappLabel="WhatsApp"
-          messageType="resend"
-          showCopy
-          showWallet={false}
-          compact
-        />
-      </ActionMenuItem>
-      <ActionMenuItem><Link href={`/dashboard/customers/${row.raw.uuid}/edit`}>Edit Customer</Link></ActionMenuItem>
-    </ActionMenu>
+    </Link>
   );
 }
 
@@ -372,6 +361,5 @@ function getCustomerName(customer: { firstName: string; lastName?: string | null
 type CustomerMembershipWithRelations = Awaited<ReturnType<typeof prisma.businessCustomerMembership.findMany<{ include: typeof customerInclude }>>>[number];
 type CustomerRow = ReturnType<typeof toCustomerSummary> & {
   raw: CustomerMembershipWithRelations;
-  cardUrl: string;
   customerName: string;
 };

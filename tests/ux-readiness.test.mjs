@@ -103,7 +103,9 @@ test("customer and program lists include mobile card views and helpful empty sta
   assert.match(customers, /PageIntro/);
   assert.match(customers, /MetricCard/);
   assert.match(customers, /SavedViews/);
-  assert.match(customers, /ActionMenu/);
+  assert.doesNotMatch(customers, /ActionMenu/);
+  assert.match(customers, /ChevronRight/);
+  assert.match(customers, /Open \$\{row\.customerName\} Customer 360/);
   assert.match(customers, /ProgressBar/);
   assert.match(customers, /Reward Ready/);
   assert.doesNotMatch(customers, /View<\/Link>\s*<Link[\s\S]*Edit<\/Link>/);
