@@ -1,13 +1,10 @@
 import type { Prisma, SupportRequestStatus, SupportSessionStatus } from "@prisma/client";
-import { Activity, AlertTriangle, Clock, FileText, LifeBuoy, RefreshCw, Search, Timer, Users } from "lucide-react";
+import { Activity, AlertTriangle, ChevronRight, Clock, FileText, LifeBuoy, RefreshCw, Search, Timer, Users } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { SupportCountdown } from "@/components/SupportCountdown";
-import { TerminateSupportSessionButton } from "@/components/TerminateSupportSessionButton";
 import { EmptyState, MetricCard, SectionCard, StatusBadge } from "@/components/ui";
-import { endSupportSessionAction, joinSupportSessionAction } from "@/app/platform/businesses/support-actions";
 import { formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { expireStaleSupportRequests, expireStaleSupportSessions } from "@/lib/support-sessions";
@@ -299,50 +296,52 @@ function TabItem({ label, active, comingSoon }: { label: string; active?: boolea
 
 function SupportRequestCard({ request }: { request: SupportRequestListItem }) {
   const requester = request.requestedByUser.name ?? request.requestedByUser.email;
+  const detailsHref = `/platform/operations-center/requests/${request.id}`;
   return (
-    <article className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] p-4">
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto] xl:items-start">
+    <article className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] transition hover:border-[#F97316] hover:bg-[#FFF7ED]">
+      <Link href={detailsHref} className="group block p-4 focus-visible:rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F97316]" aria-label={`Open support request details for ${request.business.name}`}>
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1.2fr)_24px] xl:items-start">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">Business</p>
-          <h3 className="mt-1 break-words text-base font-bold text-[#0F172A]">{request.business.name}</h3>
+          <span className="mt-1 inline-flex min-w-0 items-center gap-1 break-words text-base font-bold text-[#0F172A] transition group-hover:text-[#F97316]">
+            {request.business.name}
+          </span>
           <p className="mt-2 text-sm text-[#64748B]">
             Requested by: <span className="font-semibold text-[#334155]">{requester}</span>
           </p>
         </div>
         <dl className="grid gap-2 text-sm sm:grid-cols-2">
           <Info label="Status" value={<StatusBadge tone={request.status === "PENDING" ? "warning" : request.status === "APPROVED" ? "success" : request.status === "REJECTED" ? "danger" : "neutral"}>{request.status}</StatusBadge>} />
-          <Info label="Expires" value={request.status === "PENDING" ? <SupportCountdown expiresAt={request.expiresAt.toISOString()} /> : formatDateTime(request.expiresAt)} />
+          <Info label="Time Remaining" value={request.status === "PENDING" ? <SupportCountdown expiresAt={request.expiresAt.toISOString()} /> : formatDateTime(request.expiresAt)} />
           <Info label="Mode" value={request.readOnly ? "Read Only" : "Edit"} />
-          <Info label="Emergency" value={request.emergency ? "Yes" : "No"} />
+          <Info label="Emergency" value={request.emergency ? <span className="rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-xs font-bold text-red-700">Emergency</span> : "No"} />
         </dl>
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">Reason</p>
-          <p className="mt-1 break-words text-sm font-medium text-[#334155]">{request.reason}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">Request</p>
+          <p className="mt-1 text-sm font-medium text-[#334155]">Requested {formatDateTime(request.createdAt)}</p>
           <p className="mt-2 text-xs font-semibold text-[#64748B]">Duration: {request.durationMinutes} minutes</p>
         </div>
-        <div className="flex flex-wrap gap-2 xl:justify-end">
-          {request.supportSession ? (
-            <Link href={`/platform/operations-center/support/${request.supportSession.id}`} className="inline-flex min-h-10 items-center rounded-md border border-[#CBD5E1] bg-white px-3 text-sm font-semibold text-[#0F172A] transition hover:border-[#F97316] hover:text-[#F97316]">
-              View Session
-            </Link>
-          ) : null}
-          <Link href={`/platform/businesses/${request.business.uuid}`} className="inline-flex min-h-10 items-center rounded-md border border-[#CBD5E1] bg-white px-3 text-sm font-semibold text-[#0F172A] transition hover:border-[#F97316] hover:text-[#F97316]">
-            Business
-          </Link>
+        <span className="flex h-10 w-6 items-center justify-end text-[#94A3B8] transition">
+          <ChevronRight className="h-5 w-5" aria-hidden="true" />
+        </span>
         </div>
-      </div>
+      </Link>
     </article>
   );
 }
 
 function SupportSessionCard({ session, active = false }: { session: SupportSessionListItem; active?: boolean }) {
   const adminName = session.adminUser.name ?? session.adminUser.email;
+  const detailsHref = `/platform/operations-center/support/${session.id}`;
   return (
-    <article className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] p-4">
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto] xl:items-start">
+    <article className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] transition hover:border-[#F97316] hover:bg-[#FFF7ED]">
+      <Link href={detailsHref} className="group block p-4 focus-visible:rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F97316]" aria-label={`Open support session details for ${session.business.name}`}>
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1.2fr)_24px] xl:items-start">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">Business</p>
-          <h3 className="mt-1 break-words text-base font-bold text-[#0F172A]">{session.business.name}</h3>
+          <span className="mt-1 inline-flex min-w-0 items-center gap-1 break-words text-base font-bold text-[#0F172A] transition group-hover:text-[#F97316]">
+            {session.business.name}
+          </span>
           <p className="mt-2 text-sm text-[#64748B]">
             Administrator: <span className="font-semibold text-[#334155]">{adminName}</span>
           </p>
@@ -358,31 +357,11 @@ function SupportSessionCard({ session, active = false }: { session: SupportSessi
           <p className="mt-1 break-words text-sm font-medium text-[#334155]">{session.reason}</p>
           <p className="mt-2 text-xs font-semibold text-[#64748B]">{session._count.activities} activities</p>
         </div>
-        <div className="flex flex-wrap gap-2 xl:justify-end">
-          {active ? (
-            <form action={joinSupportSessionAction}>
-              <CsrfInput scope="platform:support-sessions" />
-              <input type="hidden" name="supportSessionId" value={session.id} />
-              <input type="hidden" name="businessUuid" value={session.business.uuid} />
-              <button type="submit" className="inline-flex min-h-10 items-center rounded-md bg-[#F97316] px-3 text-sm font-semibold text-white transition hover:bg-orange-600">
-                Open Session
-              </button>
-            </form>
-          ) : null}
-          <Link href={`/platform/operations-center/support/${session.id}`} className="inline-flex min-h-10 items-center rounded-md border border-[#CBD5E1] bg-white px-3 text-sm font-semibold text-[#0F172A] transition hover:border-[#F97316] hover:text-[#F97316]">
-            {active ? "View Details" : "View Report"}
-          </Link>
-          {active ? (
-            <form action={endSupportSessionAction}>
-              <CsrfInput scope="platform:support-sessions" />
-              <input type="hidden" name="supportSessionId" value={session.id} />
-              <input type="hidden" name="businessUuid" value={session.business.uuid} />
-              <input type="hidden" name="redirectTo" value="/platform/operations-center" />
-              <TerminateSupportSessionButton businessName={session.business.name} adminName={adminName} reason={session.reason} />
-            </form>
-          ) : null}
+        <span className="flex h-10 w-6 items-center justify-end text-[#94A3B8] transition">
+          <ChevronRight className="h-5 w-5" aria-hidden="true" />
+        </span>
         </div>
-      </div>
+      </Link>
     </article>
   );
 }
@@ -390,11 +369,14 @@ function SupportSessionCard({ session, active = false }: { session: SupportSessi
 function MobileSupportSessionCard({ session }: { session: SupportSessionListItem }) {
   const adminName = session.adminUser.name ?? session.adminUser.email;
   return (
-    <article className="rounded-lg border border-red-100 bg-red-50/60 p-4 shadow-sm">
+    <Link href={`/platform/operations-center/support/${session.id}`} className="block rounded-lg border border-red-100 bg-red-50/60 p-4 shadow-sm transition hover:border-[#F97316] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F97316]">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-bold uppercase tracking-wide text-red-700">Business</p>
-          <h3 className="mt-1 break-words text-lg font-bold text-[#0F172A]">{session.business.name}</h3>
+          <h3 className="mt-1 flex items-center gap-1 break-words text-lg font-bold text-[#0F172A]">
+            {session.business.name}
+            <ChevronRight className="h-4 w-4" aria-hidden="true" />
+          </h3>
         </div>
         <StatusBadge tone="success">{session.status}</StatusBadge>
       </div>
@@ -403,27 +385,7 @@ function MobileSupportSessionCard({ session }: { session: SupportSessionListItem
         <Info label="Remaining Time" value={<SupportCountdown expiresAt={session.expiresAt.toISOString()} />} />
         <Info label="Reason" value={session.reason} />
       </dl>
-      <div className="mt-4 grid grid-cols-3 gap-2">
-        <Link href={`/platform/operations-center/support/${session.id}`} className="inline-flex min-h-10 items-center justify-center rounded-md border border-[#CBD5E1] bg-white px-3 text-sm font-bold text-[#0F172A] transition hover:border-[#F97316] hover:text-[#F97316]">
-          Open
-        </Link>
-        <form action={joinSupportSessionAction}>
-          <CsrfInput scope="platform:support-sessions" />
-          <input type="hidden" name="supportSessionId" value={session.id} />
-          <input type="hidden" name="businessUuid" value={session.business.uuid} />
-          <button type="submit" className="inline-flex min-h-10 w-full items-center justify-center rounded-md bg-[#F97316] px-3 text-sm font-bold text-white transition hover:bg-orange-600">
-            Join
-          </button>
-        </form>
-        <form action={endSupportSessionAction}>
-          <CsrfInput scope="platform:support-sessions" />
-          <input type="hidden" name="supportSessionId" value={session.id} />
-          <input type="hidden" name="businessUuid" value={session.business.uuid} />
-          <input type="hidden" name="redirectTo" value="/platform/operations-center" />
-          <TerminateSupportSessionButton businessName={session.business.name} adminName={adminName} reason={session.reason} label="End" />
-        </form>
-      </div>
-    </article>
+    </Link>
   );
 }
 

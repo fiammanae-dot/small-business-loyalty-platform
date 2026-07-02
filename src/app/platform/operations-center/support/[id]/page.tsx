@@ -6,7 +6,7 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { SupportCountdown } from "@/components/SupportCountdown";
 import { TerminateSupportSessionButton } from "@/components/TerminateSupportSessionButton";
 import { EmptyState, MetricCard, SectionCard, StatusBadge } from "@/components/ui";
-import { endSupportSessionAction } from "@/app/platform/businesses/support-actions";
+import { endSupportSessionAction, joinSupportSessionAction } from "@/app/platform/businesses/support-actions";
 import { formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
@@ -131,7 +131,7 @@ export default async function SupportSessionReportPage({
           <SectionCard
             title="Session Summary"
             description="Operational details for this support access window."
-            actions={<span className="rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1 text-xs font-bold uppercase text-[#64748B]">{session.status}</span>}
+            actions={<SessionActions sessionId={session.id} businessUuid={session.business.uuid} businessName={session.business.name} adminName={adminName} reason={session.reason} isActive={isActive} status={session.status} />}
           >
             <dl className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               <SummaryItem label="Started" value={formatDateTime(session.startedAt)} />
@@ -181,6 +181,49 @@ export default async function SupportSessionReportPage({
         </div>
       </div>
     </DashboardShell>
+  );
+}
+
+function SessionActions({
+  sessionId,
+  businessUuid,
+  businessName,
+  adminName,
+  reason,
+  isActive,
+  status,
+}: {
+  sessionId: number;
+  businessUuid: string;
+  businessName: string;
+  adminName: string;
+  reason: string;
+  isActive: boolean;
+  status: string;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-end gap-2">
+      <span className="rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1 text-xs font-bold uppercase text-[#64748B]">{status}</span>
+      {isActive ? (
+        <>
+          <form action={joinSupportSessionAction}>
+            <CsrfInput scope="platform:support-sessions" />
+            <input type="hidden" name="supportSessionId" value={sessionId} />
+            <input type="hidden" name="businessUuid" value={businessUuid} />
+            <button type="submit" className="inline-flex min-h-10 items-center justify-center rounded-md bg-red-600 px-4 text-sm font-semibold text-white transition hover:bg-red-700">
+              Join Session
+            </button>
+          </form>
+          <form action={endSupportSessionAction}>
+            <CsrfInput scope="platform:support-sessions" />
+            <input type="hidden" name="supportSessionId" value={sessionId} />
+            <input type="hidden" name="businessUuid" value={businessUuid} />
+            <input type="hidden" name="redirectTo" value={`/platform/operations-center/support/${sessionId}`} />
+            <TerminateSupportSessionButton businessName={businessName} adminName={adminName} reason={reason} label="End Session" />
+          </form>
+        </>
+      ) : null}
+    </div>
   );
 }
 
