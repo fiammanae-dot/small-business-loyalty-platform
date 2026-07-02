@@ -1,4 +1,4 @@
-﻿ALTER TABLE "business_customer_memberships"
+ALTER TABLE "business_customer_memberships"
   ADD COLUMN "first_name" TEXT,
   ADD COLUMN "last_name" TEXT,
   ADD COLUMN "phone" TEXT,
