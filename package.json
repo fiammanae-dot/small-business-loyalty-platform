@@ -15,6 +15,7 @@
       "prisma:seed-demo": "node prisma/seed-demo.js",
       "prisma:seed-pilot": "node prisma/seed-pilot.js",
       "seed:tenant-qa": "node scripts/seed-tenant-isolation-qa.js",
+      "seed:full-qa": "node scripts/seed-full-qa.js",
       "prisma:verify-pilot": "node scripts/verify-pilot-db.js",
       "production:check": "node scripts/check-production-readiness.js",
       "prisma:seed-manual-audit": "node prisma/seed-manual-audit.js"
