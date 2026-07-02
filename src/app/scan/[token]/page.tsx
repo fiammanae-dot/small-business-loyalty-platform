@@ -368,7 +368,7 @@ export default async function ScanResultPage({
 
       <ActionSummarySection
         customerName={customerName}
-        phone={customer.normalizedPhone}
+        phone={businessMembership.normalizedPhone}
         tier={fromStoredTier(businessMembership.currentTier) ?? "Bronze"}
         status={businessMembership.status}
         businessName={businessMembership.business.name}
@@ -405,7 +405,7 @@ export default async function ScanResultPage({
                 cardUrl={cardUrl}
                 businessName={businessMembership.business.name}
                 customerName={customerName}
-                recipientPhone={customer.normalizedPhone}
+                recipientPhone={businessMembership.normalizedPhone}
                 auditMembershipUuid={businessMembership.uuid}
                 currentVisits={successProgress}
                 requiredVisits={program.requiredStamps}
@@ -431,7 +431,7 @@ export default async function ScanResultPage({
             <Info label="Card number" value={cardNumber} />
             <Info label="Join date" value={formatDateTime(businessMembership.joinedAt)} />
             <Info label="Last Visit" value={lastVisit ? `${formatDateTime(lastVisit.createdAt)}${lastVisit.branch?.name ? ` at ${lastVisit.branch.name}` : ""}` : "No visits yet"} />
-            <Info label="Phone" value={maskPhoneNumber(customer.normalizedPhone)} />
+            <Info label="Phone" value={maskPhoneNumber(businessMembership.normalizedPhone)} />
             <Info label="Business membership status" value={<StatusBadge status={businessMembership.status} />} />
           </div>
         </DetailAccordion>
