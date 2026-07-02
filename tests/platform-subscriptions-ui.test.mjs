@@ -6,8 +6,9 @@ function read(path) {
   return readFileSync(path, "utf8");
 }
 
-test("platform subscriptions page uses compact toolbar, dropdown actions, badges, and mobile cards", () => {
+test("platform subscriptions page uses compact toolbar, directory rows, badges, and mobile cards", () => {
   const page = read("src/app/platform/subscriptions/page.tsx");
+  const detail = read("src/app/platform/businesses/[id]/page.tsx");
 
   for (const expected of [
     "Business subscriptions",
@@ -18,13 +19,6 @@ test("platform subscriptions page uses compact toolbar, dropdown actions, badges
     "Apply filters",
     "Clear filters",
     "Showing {subscriptions.length} subscriptions",
-    "View",
-    "More",
-    "Subscription details",
-    "Billing Cycle",
-    "Audit History",
-    "Start Trial",
-    "Extend",
     "Review flagged",
     "SubscriptionCard",
     "CompactBadge",
@@ -32,12 +26,20 @@ test("platform subscriptions page uses compact toolbar, dropdown actions, badges
     assert.match(page, new RegExp(expected.replace(/[{}]/g, "\\$&")));
   }
 
-  assert.match(page, /<details className=/);
+  assert.match(page, /Open \$\{subscription\.business\.name\} subscription details/);
+  assert.match(page, /href=\{`\/platform\/businesses\/\$\{subscription\.business\.uuid\}`\}/);
+  assert.doesNotMatch(page, /"Actions"/);
+  assert.doesNotMatch(page, /SubscriptionActions/);
+  assert.doesNotMatch(page, /startTrialAction/);
+  assert.doesNotMatch(page, /extendSubscriptionAction/);
+  assert.doesNotMatch(page, /updateSubscriptionStatusAction/);
+  assert.doesNotMatch(page, /<details className=/);
   assert.doesNotMatch(page, /min-w-\[1080px\]/);
   assert.doesNotMatch(page, /overflow-x-auto/);
   assert.match(page, /suspiciousBusinessNamePattern/);
-  assert.match(page, /startTrialAction/);
-  assert.match(page, /extendSubscriptionAction/);
-  assert.match(page, /updateSubscriptionStatusAction/);
   assert.match(page, /href="\/platform\/subscriptions"/);
+  assert.match(detail, /SubscriptionActionsPanel/);
+  assert.match(detail, /Start Trial/);
+  assert.match(detail, /Extend/);
+  assert.match(detail, /Audit history/);
 });

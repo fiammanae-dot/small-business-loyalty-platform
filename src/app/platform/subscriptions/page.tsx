@@ -1,8 +1,6 @@
 import type { Prisma, SubscriptionStatus } from "@prisma/client";
-import { ChevronDown, ExternalLink, RotateCcw } from "lucide-react";
+import { ChevronRight, RotateCcw } from "lucide-react";
 import Link from "next/link";
-import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
-import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
 import { PlatformKpiGrid } from "@/components/PlatformKpiGrid";
@@ -14,7 +12,6 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 import { formatBillingCycle, formatPlanPrice } from "@/lib/subscription-plans";
 import { getSubscriptionRemainingDays, getTrialRemainingDays } from "@/lib/subscriptions";
-import { extendSubscriptionAction, startTrialAction, updateSubscriptionStatusAction } from "@/app/platform/subscriptions/actions";
 
 const statuses = ["TRIAL", "ACTIVE", "SUSPENDED", "EXPIRED", "CANCELLED"] as const;
 const suspiciousBusinessNamePattern = /(demo|test|phase|debug|updated|\d{10,})/i;
@@ -143,14 +140,14 @@ export default async function PlatformSubscriptionsPage({
       <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
         <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm font-semibold text-[#111827]">Showing {subscriptions.length} subscriptions</p>
-          <p className="text-xs text-[#6B7280]">Use More for lifecycle actions, trial setup, and extensions.</p>
+          <p className="text-xs text-[#6B7280]">Open a business to review details and manage subscription lifecycle actions.</p>
         </div>
 
         <div className="hidden lg:block">
           <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm">
             <thead>
               <tr className="text-[#6B7280]">
-                {["Business", "Plan", "Status", "Expiry Date", "Days Remaining", "Actions"].map((heading) => (
+                {["Business", "Plan", "Status", "Expiry Date", "Days Remaining", ""].map((heading) => (
                   <th key={heading} className="border-b border-[#E5E7EB] px-3 py-2 font-semibold">
                     {heading}
                   </th>
@@ -178,67 +175,54 @@ export default async function PlatformSubscriptionsPage({
 }
 
 function SubscriptionRow({ subscription }: { subscription: SubscriptionWithListData }) {
-  const lastAudit = subscription.auditLogs[0];
   const remainingDays = getSubscriptionRemainingDays(subscription);
-  const trialDays = getTrialRemainingDays(subscription);
 
   return (
-    <>
-      <tr className="align-middle">
-        <td className="border-b border-[#E5E7EB] px-3 py-3">
-          <div className="flex min-w-0 flex-col gap-1">
-            <Link href={`/platform/businesses/${subscription.business.uuid}`} className="truncate font-semibold text-[#111827] hover:text-[#F97316]">
-              {subscription.business.name}
-            </Link>
-            <div className="flex flex-wrap gap-1">
-              <CompactBadge label={subscription.business.status === "ACTIVE" ? "Business active" : "Business inactive"} tone={subscription.business.status === "ACTIVE" ? "green" : "gray"} />
-              {isSuspiciousBusinessName(subscription.business.name) ? <CompactBadge label="Review flagged" tone="orange" /> : null}
-            </div>
+    <tr className="group align-middle transition hover:bg-[#FFF7ED]">
+      <td className="border-b border-[#E5E7EB] px-3 py-3">
+        <div className="flex min-w-0 flex-col gap-1">
+          <Link
+            href={`/platform/businesses/${subscription.business.uuid}`}
+            className="inline-flex min-w-0 items-center gap-1 truncate font-semibold text-[#111827] transition hover:text-[#F97316] hover:underline focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F97316] group-hover:text-[#F97316]"
+          >
+            <span className="truncate">{subscription.business.name}</span>
+          </Link>
+          <div className="flex flex-wrap gap-1">
+            <CompactBadge label={subscription.business.status === "ACTIVE" ? "Business active" : "Business inactive"} tone={subscription.business.status === "ACTIVE" ? "green" : "gray"} />
+            {isSuspiciousBusinessName(subscription.business.name) ? <CompactBadge label="Review flagged" tone="orange" /> : null}
           </div>
-        </td>
-        <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{subscription.subscriptionPlan.name}</td>
-        <td className="border-b border-[#E5E7EB] px-3 py-3">
-          <StatusBadge status={subscription.status} />
-        </td>
-        <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{subscription.expiryDate ? formatDate(subscription.expiryDate) : "-"}</td>
-        <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{remainingDays === null ? "-" : `${remainingDays} day(s)`}</td>
-        <td className="border-b border-[#E5E7EB] px-3 py-3">
-          <SubscriptionActions subscriptionId={subscription.id} businessUuid={subscription.business.uuid} />
-        </td>
-      </tr>
-      <tr>
-        <td colSpan={6} className="border-b border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2">
-          <details className="group">
-            <summary className="inline-flex h-9 cursor-pointer list-none items-center gap-2 rounded-md border border-[#E5E7EB] bg-white px-3 text-xs font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]">
-              Subscription details
-              <ChevronDown className="h-3.5 w-3.5 transition group-open:rotate-180" />
-            </summary>
-            <dl className="mt-3 grid gap-3 rounded-md border border-[#E5E7EB] bg-white p-3 text-sm md:grid-cols-2 xl:grid-cols-3">
-              <DetailRow label="Billing Cycle" value={formatBillingCycle(subscription.billingCycle)} />
-              <DetailRow label="Trial Information" value={trialDays === null ? "No active trial" : `${trialDays} day(s) left`} />
-              <DetailRow label="Trial Dates" value={formatNullableDateRange(subscription.trialStartDate, subscription.trialEndDate)} />
-              <DetailRow label="Renewal Date" value={subscription.renewalDate ? formatDate(subscription.renewalDate) : "-"} />
-              <DetailRow label="Created By" value={lastAudit?.user?.name ?? lastAudit?.user?.email ?? "System"} />
-              <DetailRow label="Audit History" value={lastAudit ? `${lastAudit.action.replaceAll("_", " ").toLowerCase()} - ${formatDateTime(lastAudit.createdAt)}` : "No audit activity"} />
-            </dl>
-          </details>
-        </td>
-      </tr>
-    </>
+        </div>
+      </td>
+      <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{subscription.subscriptionPlan.name}</td>
+      <td className="border-b border-[#E5E7EB] px-3 py-3">
+        <StatusBadge status={subscription.status} />
+      </td>
+      <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{subscription.expiryDate ? formatDate(subscription.expiryDate) : "-"}</td>
+      <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{remainingDays === null ? "-" : `${remainingDays} day(s)`}</td>
+      <td className="w-10 border-b border-[#E5E7EB] px-3 py-3 text-right text-[#9CA3AF]">
+        <ChevronRight className="ml-auto h-4 w-4 transition group-hover:text-[#F97316]" aria-hidden="true" />
+      </td>
+    </tr>
   );
 }
+
 function SubscriptionCard({ subscription }: { subscription: SubscriptionWithListData }) {
   const lastAudit = subscription.auditLogs[0];
   const remainingDays = getSubscriptionRemainingDays(subscription);
   const trialDays = getTrialRemainingDays(subscription);
 
   return (
-    <article className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
+    <Link
+      href={`/platform/businesses/${subscription.business.uuid}`}
+      className="group block rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:border-[#F97316] hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F97316]"
+      aria-label={`Open ${subscription.business.name} subscription details`}
+    >
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <Link href={`/platform/businesses/${subscription.business.uuid}`} className="font-semibold text-[#111827] hover:text-[#F97316]">
+        <div className="min-w-0">
+          <p className="flex min-w-0 items-center gap-1 break-words font-semibold text-[#111827] transition group-hover:text-[#F97316] group-hover:underline">
             {subscription.business.name}
-          </Link>
+            <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+          </p>
           <p className="mt-1 text-sm text-[#6B7280]">{subscription.subscriptionPlan.name} - {formatBillingCycle(subscription.billingCycle)}</p>
         </div>
         <StatusBadge status={subscription.status} />
@@ -261,101 +245,7 @@ function SubscriptionCard({ subscription }: { subscription: SubscriptionWithList
           Last audit: <span className="font-medium text-[#111827]">{lastAudit.action.replaceAll("_", " ").toLowerCase()}</span> on {formatDateTime(lastAudit.createdAt)}
         </p>
       ) : null}
-
-      <div className="mt-4">
-        <SubscriptionActions subscriptionId={subscription.id} businessUuid={subscription.business.uuid} />
-      </div>
-    </article>
-  );
-}
-
-function SubscriptionActions({ subscriptionId, businessUuid }: { subscriptionId: number; businessUuid: string }) {
-  return (
-    <div className="flex flex-wrap items-start gap-2">
-      <Link
-        href={`/platform/businesses/${businessUuid}`}
-        className="inline-flex h-8 items-center justify-center gap-1 rounded-md bg-[#111827] px-3 text-xs font-semibold text-white hover:bg-[#374151]"
-      >
-        <ExternalLink className="h-3.5 w-3.5" />
-        View
-      </Link>
-      <details className="group min-w-fit">
-        <summary className="inline-flex h-8 cursor-pointer list-none items-center justify-center gap-1 rounded-md border border-[#E5E7EB] px-3 text-xs font-semibold text-[#111827] hover:border-[#F97316] hover:text-[#F97316]">
-          More
-          <ChevronDown className="h-3.5 w-3.5" />
-        </summary>
-        <div className="mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-md border border-[#E5E7EB] bg-white p-3 shadow-lg">
-          <div className="grid gap-2">
-            <ActionButton subscriptionId={subscriptionId} nextStatus="ACTIVE" label="Activate" />
-            <ActionButton subscriptionId={subscriptionId} nextStatus="SUSPENDED" label="Suspend" />
-            <ActionButton subscriptionId={subscriptionId} nextStatus="CANCELLED" label="Cancel" />
-            <form action={startTrialAction} className="rounded-md border border-[#E5E7EB] p-2">
-              <CsrfInput scope="platform:subscriptions" />
-              <input type="hidden" name="subscriptionId" value={subscriptionId} />
-              <label className="text-xs font-semibold text-[#111827]">
-                Start Trial
-                <div className="mt-2 flex gap-2">
-                  <input name="days" type="number" min="1" max="365" defaultValue="14" className="h-8 w-20 rounded-md border border-[#E5E7EB] px-2 text-sm" />
-                  <button type="submit" className="h-8 flex-1 rounded-md border border-[#F97316] px-3 text-xs font-semibold text-[#F97316] hover:bg-orange-50">
-                    Apply
-                  </button>
-                </div>
-              </label>
-            </form>
-            <form action={extendSubscriptionAction} className="rounded-md border border-[#E5E7EB] p-2">
-              <CsrfInput scope="platform:subscriptions" />
-              <input type="hidden" name="subscriptionId" value={subscriptionId} />
-              <label className="text-xs font-semibold text-[#111827]">
-                Extend
-                <div className="mt-2 flex gap-2">
-                  <input name="days" type="number" min="1" max="3650" defaultValue="30" className="h-8 w-20 rounded-md border border-[#E5E7EB] px-2 text-sm" />
-                  <button type="submit" className="h-8 flex-1 rounded-md bg-[#F97316] px-3 text-xs font-semibold text-white hover:bg-orange-600">
-                    Apply
-                  </button>
-                </div>
-              </label>
-            </form>
-          </div>
-        </div>
-      </details>
-    </div>
-  );
-}
-
-function ActionButton({ subscriptionId, nextStatus, label }: { subscriptionId: number; nextStatus: SubscriptionStatus; label: string }) {
-  return (
-    <form action={updateSubscriptionStatusAction}>
-      <CsrfInput scope="platform:subscriptions" />
-      <input type="hidden" name="subscriptionId" value={subscriptionId} />
-      <input type="hidden" name="nextStatus" value={nextStatus} />
-      <ConfirmSubmitButton
-        message={subscriptionConfirmationMessage(nextStatus)}
-        className="h-8 w-full rounded-md border border-[#E5E7EB] px-3 text-xs font-semibold text-[#111827] hover:border-[#F97316] hover:text-[#F97316]"
-      >
-        {label}
-      </ConfirmSubmitButton>
-    </form>
-  );
-}
-
-function subscriptionConfirmationMessage(nextStatus: SubscriptionStatus) {
-  if (nextStatus === "ACTIVE") return "Activate this subscription now?";
-  if (nextStatus === "SUSPENDED") return "Suspend this subscription? Business operations may be restricted.";
-  if (nextStatus === "CANCELLED") return "Cancel this subscription? This may block business access and billing lifecycle changes.";
-  return "Update this subscription status?";
-}
-
-function formatNullableDateRange(start: Date | null, end: Date | null) {
-  if (!start) return "-";
-  return `${formatDate(start)} to ${end ? formatDate(end) : "open"}`;
-}
-
-function DetailRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="min-w-0">
-      <dt className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{label}</dt>
-      <dd className="mt-1 break-words font-semibold text-[#111827]">{value}</dd>
-    </div>
+    </Link>
   );
 }
 function CompactBadge({ label, tone }: { label: string; tone: "green" | "gray" | "orange" }) {

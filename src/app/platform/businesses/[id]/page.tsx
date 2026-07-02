@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { SubscriptionStatus } from "@prisma/client";
 import { ChevronRight, Pencil, Power } from "lucide-react";
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CsrfInput } from "@/components/CsrfInput";
@@ -11,7 +12,9 @@ import { formatBillingCycle } from "@/lib/subscription-plans";
 import { prisma } from "@/lib/prisma";
 import { businessTypeLabels, roleLabels } from "@/lib/roles";
 import { requireRole } from "@/lib/session";
+import { getSubscriptionRemainingDays, getTrialRemainingDays } from "@/lib/subscriptions";
 import { toggleBusinessStatusAction } from "@/app/platform/businesses/actions";
+import { extendSubscriptionAction, startTrialAction, updateSubscriptionStatusAction } from "@/app/platform/subscriptions/actions";
 
 export default async function BusinessDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; success?: string }> }) {
   const user = await requireRole("PLATFORM_OWNER");
@@ -24,10 +27,16 @@ export default async function BusinessDetailPage({ params, searchParams }: { par
       branches: { orderBy: { createdAt: "asc" } },
       users: { where: { role: "BUSINESS_OWNER" }, orderBy: { createdAt: "asc" } },
       subscriptions: {
-        where: { status: { in: ["TRIAL", "ACTIVE"] } },
         orderBy: { createdAt: "desc" },
         take: 1,
-        include: { subscriptionPlan: true },
+        include: {
+          subscriptionPlan: true,
+          auditLogs: {
+            orderBy: { createdAt: "desc" },
+            take: 5,
+            include: { user: { select: { name: true, email: true } } },
+          },
+        },
       },
       invoices: {
         orderBy: { createdAt: "desc" },
@@ -59,6 +68,8 @@ export default async function BusinessDetailPage({ params, searchParams }: { par
   const activeSupportSession = business.supportSessions.find((session) => session.status === "ACTIVE" && !session.endedAt && session.expiresAt > now);
   const lastSupportSession = business.supportSessions[0] ?? null;
   const planName = currentSubscription?.subscriptionPlan.name ?? "Unassigned Plan";
+  const remainingDays = currentSubscription ? getSubscriptionRemainingDays(currentSubscription) : null;
+  const trialDays = currentSubscription ? getTrialRemainingDays(currentSubscription) : null;
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title={business.name}>
@@ -172,6 +183,37 @@ export default async function BusinessDetailPage({ params, searchParams }: { par
           <InfoMetric label="Renewal Date" value={currentSubscription?.renewalDate ? formatDate(currentSubscription.renewalDate) : "-"} />
           <InfoMetric label="Lifetime Revenue" value={formatMoney(lifetimeRevenue)} />
           <InfoMetric label="Invoices" value={business.invoices.length.toString()} />
+        </div>
+        <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_360px]">
+          <div className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-[#6B7280]">Subscription summary</h3>
+            <dl className="mt-4 grid gap-3 text-sm md:grid-cols-2">
+              <InfoRow label="Plan" value={currentSubscription?.subscriptionPlan.name ?? "Unassigned"} />
+              <InfoRow label="Status" value={currentSubscription ? <StatusBadge status={currentSubscription.status} /> : "Unassigned"} />
+              <InfoRow label="Expiry Date" value={currentSubscription?.expiryDate ? formatDate(currentSubscription.expiryDate) : "-"} />
+              <InfoRow label="Renewal Date" value={currentSubscription?.renewalDate ? formatDate(currentSubscription.renewalDate) : "-"} />
+              <InfoRow label="Days Remaining" value={remainingDays === null ? "-" : `${remainingDays} day(s)`} />
+              <InfoRow label="Trial" value={trialDays === null ? "No active trial" : `${trialDays} day(s) left`} />
+            </dl>
+            <div className="mt-4 border-t border-[#E5E7EB] pt-4">
+              <h4 className="text-sm font-semibold text-[#111827]">Audit history</h4>
+              <div className="mt-3 space-y-3">
+                {currentSubscription?.auditLogs.length ? (
+                  currentSubscription.auditLogs.map((log) => (
+                    <div key={log.id} className="rounded-md border border-[#E5E7EB] bg-white p-3 text-sm">
+                      <p className="font-semibold text-[#111827]">{log.action.replaceAll("_", " ").toLowerCase()}</p>
+                      <p className="mt-1 text-xs text-[#6B7280]">
+                        {formatDate(log.createdAt)} by {log.user?.name ?? log.user?.email ?? "System"}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="rounded-md border border-dashed border-[#E5E7EB] bg-white p-3 text-sm text-[#6B7280]">No subscription audit activity yet.</p>
+                )}
+              </div>
+            </div>
+          </div>
+          {currentSubscription ? <SubscriptionActionsPanel subscriptionId={currentSubscription.id} /> : null}
         </div>
         <h3 className="mt-6 text-sm font-semibold uppercase tracking-wide text-[#6B7280]">Invoice History & Payment History</h3>
         <div className="mt-5 grid gap-3 md:hidden">
@@ -291,4 +333,69 @@ function MobileDetail({ label, value }: { label: string; value: string }) {
       <dd className="mt-1 break-words text-sm font-semibold text-[#111827]">{value}</dd>
     </div>
   );
+}
+
+function SubscriptionActionsPanel({ subscriptionId }: { subscriptionId: number }) {
+  return (
+    <aside className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
+      <p className="text-sm font-black uppercase tracking-[0.16em] text-[#6B7280]">Actions</p>
+      <h3 className="mt-2 text-lg font-semibold text-[#111827]">Subscription lifecycle</h3>
+      <div className="mt-4 grid gap-2">
+        <SubscriptionStatusButton subscriptionId={subscriptionId} nextStatus="ACTIVE" label="Activate" />
+        <SubscriptionStatusButton subscriptionId={subscriptionId} nextStatus="SUSPENDED" label="Suspend" />
+        <SubscriptionStatusButton subscriptionId={subscriptionId} nextStatus="CANCELLED" label="Cancel" />
+      </div>
+      <div className="mt-5 grid gap-3 border-t border-[#E5E7EB] pt-5">
+        <form action={startTrialAction} className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3">
+          <CsrfInput scope="platform:subscriptions" />
+          <input type="hidden" name="subscriptionId" value={subscriptionId} />
+          <label className="text-sm font-semibold text-[#111827]">
+            Start Trial
+            <div className="mt-2 flex gap-2">
+              <input name="days" type="number" min="1" max="365" defaultValue="14" className="h-10 w-24 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm" />
+              <button type="submit" className="h-10 flex-1 rounded-md border border-[#F97316] px-3 text-sm font-semibold text-[#F97316] transition hover:bg-orange-50">
+                Apply
+              </button>
+            </div>
+          </label>
+        </form>
+        <form action={extendSubscriptionAction} className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3">
+          <CsrfInput scope="platform:subscriptions" />
+          <input type="hidden" name="subscriptionId" value={subscriptionId} />
+          <label className="text-sm font-semibold text-[#111827]">
+            Extend
+            <div className="mt-2 flex gap-2">
+              <input name="days" type="number" min="1" max="3650" defaultValue="30" className="h-10 w-24 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm" />
+              <button type="submit" className="h-10 flex-1 rounded-md bg-[#F97316] px-3 text-sm font-semibold text-white transition hover:bg-orange-600">
+                Apply
+              </button>
+            </div>
+          </label>
+        </form>
+      </div>
+    </aside>
+  );
+}
+
+function SubscriptionStatusButton({ subscriptionId, nextStatus, label }: { subscriptionId: number; nextStatus: SubscriptionStatus; label: string }) {
+  return (
+    <form action={updateSubscriptionStatusAction}>
+      <CsrfInput scope="platform:subscriptions" />
+      <input type="hidden" name="subscriptionId" value={subscriptionId} />
+      <input type="hidden" name="nextStatus" value={nextStatus} />
+      <ConfirmSubmitButton
+        message={subscriptionConfirmationMessage(nextStatus)}
+        className="min-h-10 w-full rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]"
+      >
+        {label}
+      </ConfirmSubmitButton>
+    </form>
+  );
+}
+
+function subscriptionConfirmationMessage(nextStatus: SubscriptionStatus) {
+  if (nextStatus === "ACTIVE") return "Activate this subscription now?";
+  if (nextStatus === "SUSPENDED") return "Suspend this subscription? Business operations may be restricted.";
+  if (nextStatus === "CANCELLED") return "Cancel this subscription? This may block business access and billing lifecycle changes.";
+  return "Update this subscription status?";
 }

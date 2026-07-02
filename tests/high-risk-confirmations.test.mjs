@@ -36,15 +36,14 @@ test("highest-risk business owner actions require confirmation", () => {
 
 test("highest-risk System Administrator actions require confirmation", () => {
   const businessDetailPage = read("src/app/platform/businesses/[id]/page.tsx");
-  const subscriptionsPage = read("src/app/platform/subscriptions/page.tsx");
   const invoicesPage = read("src/app/platform/invoices/page.tsx");
   const invoiceDetailPage = read("src/app/platform/invoices/[id]/page.tsx");
 
   assert.match(businessDetailPage, /Disable this business\? Owners, staff, scanners, and customer activity may be blocked\./);
   assert.match(businessDetailPage, /Enable this business and restore access\?/);
-  assert.match(subscriptionsPage, /Suspend this subscription\? Business operations may be restricted\./);
-  assert.match(subscriptionsPage, /Cancel this subscription\? This may block business access and billing lifecycle changes\./);
-  assert.match(subscriptionsPage, /Activate this subscription now\?/);
+  assert.match(businessDetailPage, /Suspend this subscription\? Business operations may be restricted\./);
+  assert.match(businessDetailPage, /Cancel this subscription\? This may block business access and billing lifecycle changes\./);
+  assert.match(businessDetailPage, /Activate this subscription now\?/);
   assert.match(invoicesPage, /Mark this invoice as paid\? Confirm payment was received\./);
   assert.match(invoicesPage, /Cancel this invoice\? This cannot be used for payment tracking afterward\./);
   assert.match(invoiceDetailPage, /Mark this invoice as paid\? Confirm payment was received\./);
