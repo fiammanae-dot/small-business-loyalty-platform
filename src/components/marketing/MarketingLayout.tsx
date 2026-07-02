@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Menu } from "lucide-react";
 
 export const marketingNavItems = [
   { label: "Product", href: "/benefits" },
@@ -53,7 +53,7 @@ export function MarketingFrame({ children }: { children: React.ReactNode }) {
 export function PublicHeader() {
   return (
     <header className="relative z-30 bg-white/90 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-[1720px] items-center justify-between gap-4 px-5 py-6 sm:px-8 lg:px-16">
+      <div className="mx-auto flex max-w-[1720px] items-center justify-between gap-2 px-4 py-5 sm:gap-4 sm:px-8 sm:py-6 lg:px-16">
         <LogoLink />
 
         <nav className="hidden items-center gap-10 text-[15px] font-semibold text-[#111827] lg:flex" aria-label="Main navigation">
@@ -65,34 +65,43 @@ export function PublicHeader() {
         </nav>
 
         <div className="flex items-center gap-3 sm:gap-4">
-          <Link href="/login" className="hidden text-[15px] font-semibold text-[#111827] transition hover:text-[#F97316] focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:ring-offset-4 sm:inline">
+          <Link href="/login" className="hidden text-[15px] font-semibold text-[#111827] transition hover:text-[#F97316] focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:ring-offset-4 lg:inline">
             Log in
           </Link>
-          <Link href="/request-demo" className="inline-flex h-12 items-center justify-center rounded-[12px] bg-[#FF5A0A] px-5 text-[15px] font-bold text-white shadow-[0_12px_26px_rgba(249,115,22,0.22)] transition hover:bg-[#EA580C] focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:ring-offset-4 sm:px-6">
+          <Link href="/request-demo" className="inline-flex h-11 shrink-0 items-center justify-center rounded-[12px] bg-[#FF5A0A] px-3 text-[13px] font-bold text-white shadow-[0_12px_26px_rgba(249,115,22,0.22)] transition hover:bg-[#EA580C] focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:ring-offset-4 sm:h-12 sm:px-6 sm:text-[15px]">
             Start free trial
           </Link>
+          <details className="group relative lg:hidden">
+            <summary className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-[12px] border border-[#E5E7EB] bg-white text-[#111827] shadow-sm transition hover:border-[#F97316] hover:text-[#EA580C] focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:ring-offset-2 [&::-webkit-details-marker]:hidden" aria-label="Open navigation menu">
+              <Menu className="h-5 w-5" aria-hidden="true" />
+            </summary>
+            <div className="absolute right-0 top-[calc(100%+10px)] z-40 w-[min(82vw,280px)] rounded-2xl border border-[#E5E7EB] bg-white p-2 shadow-[0_24px_60px_rgba(15,23,42,0.16)]">
+              <nav className="grid gap-1 text-sm font-semibold text-[#334155]" aria-label="Mobile public navigation">
+                <Link href="/login" className="rounded-xl px-4 py-3 text-[#111827] transition hover:bg-[#FFF7ED] hover:text-[#EA580C] focus:outline-none focus:ring-2 focus:ring-[#F97316]">
+                  Log in
+                </Link>
+                {marketingNavItems.map((item) => (
+                  <Link key={item.href} href={item.href} className="rounded-xl px-4 py-3 transition hover:bg-[#FFF7ED] hover:text-[#EA580C] focus:outline-none focus:ring-2 focus:ring-[#F97316]">
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+            </div>
+          </details>
         </div>
       </div>
-
-      <nav className="mx-auto flex max-w-[1720px] gap-2 overflow-x-auto px-5 pb-4 text-sm font-semibold text-[#475569] sm:px-8 lg:hidden" aria-label="Mobile public navigation">
-        {marketingNavItems.map((item) => (
-          <Link key={item.href} href={item.href} className="shrink-0 rounded-full border border-[#E5E7EB] bg-white px-4 py-2 transition hover:border-[#F97316] hover:text-[#EA580C]">
-            {item.label}
-          </Link>
-        ))}
-      </nav>
     </header>
   );
 }
 
 export function LogoLink() {
   return (
-    <Link href="/" className="flex min-w-0 items-center gap-3" aria-label="LoyaltyBase home">
-      <span className="relative flex h-11 w-11 shrink-0 items-center justify-center" aria-hidden="true">
-        <span className="absolute h-8 w-8 rotate-45 rounded-[9px] border-[5px] border-[#FF5A0A]" />
-        <span className="absolute top-[9px] h-4 w-4 rotate-45 rounded-[4px] bg-white" />
+    <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3" aria-label="LoyaltyBase home">
+      <span className="relative flex h-9 w-9 shrink-0 items-center justify-center sm:h-11 sm:w-11" aria-hidden="true">
+        <span className="absolute h-7 w-7 rotate-45 rounded-[8px] border-[4px] border-[#FF5A0A] sm:h-8 sm:w-8 sm:rounded-[9px] sm:border-[5px]" />
+        <span className="absolute top-[8px] h-3.5 w-3.5 rotate-45 rounded-[4px] bg-white sm:top-[9px] sm:h-4 sm:w-4" />
       </span>
-      <span className="truncate text-[24px] font-extrabold tracking-[-0.04em] text-[#0B1220] sm:text-[26px]">LoyaltyBase</span>
+      <span className="truncate text-[19px] font-extrabold tracking-[-0.04em] text-[#0B1220] sm:text-[26px]">LoyaltyBase</span>
     </Link>
   );
 }
