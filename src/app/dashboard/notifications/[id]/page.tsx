@@ -36,9 +36,7 @@ export default async function NotificationDetailPage({
       customerProgramMembership: {
         include: {
           loyaltyProgram: true,
-          businessCustomerMembership: {
-            include: { globalCustomer: true },
-          },
+          businessCustomerMembership: true,
         },
       },
     },
@@ -46,7 +44,7 @@ export default async function NotificationDetailPage({
 
   if (!alert) notFound();
 
-  const customer = alert.customerProgramMembership?.businessCustomerMembership.globalCustomer;
+  const customer = alert.customerProgramMembership?.businessCustomerMembership;
   const customerName = customer ? `${customer.firstName} ${customer.lastName ?? ""}` : "-";
   const relatedTransaction = await findRelatedStampTransaction(alert);
   const customerHref = customerProfileHref(

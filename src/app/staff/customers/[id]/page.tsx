@@ -30,7 +30,6 @@ export default async function StaffCustomerProfilePage({
   const membership = await prisma.businessCustomerMembership.findFirst({
     where: { uuid: id, businessId: user.businessId },
     include: {
-      globalCustomer: true,
       business: true,
       programMemberships: {
         where: { status: "ACTIVE" },
@@ -51,8 +50,7 @@ export default async function StaffCustomerProfilePage({
     );
   }
 
-  const customer = membership.globalCustomer;
-  const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim();
+  const customerName = `${membership.firstName} ${membership.lastName ?? ""}`.trim();
   const cardUrl = await getCardUrl(membership.cardToken);
   const cardQrCode = await QRCode.toDataURL(cardUrl, {
     errorCorrectionLevel: "M",
@@ -68,7 +66,7 @@ export default async function StaffCustomerProfilePage({
           <div className="min-w-0">
             <p className="text-sm font-semibold business-primary">Read-only customer view</p>
             <h2 className="mt-1 break-words text-2xl font-semibold text-[#111827]">{customerName}</h2>
-            <p className="mt-2 text-sm text-[#6B7280]">{formatUaePhoneDisplay(customer.normalizedPhone)}</p>
+            <p className="mt-2 text-sm text-[#6B7280]">{formatUaePhoneDisplay(membership.normalizedPhone)}</p>
           </div>
           <Link href="/staff/customers" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">
             Back
@@ -134,7 +132,7 @@ export default async function StaffCustomerProfilePage({
               cardUrl={cardUrl}
               businessName={membership.business.name}
               customerName={customerName}
-              recipientPhone={customer.normalizedPhone}
+              recipientPhone={membership.normalizedPhone}
               auditMembershipUuid={membership.uuid}
               whatsappLabel="WhatsApp"
               messageType="resend"

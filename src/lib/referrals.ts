@@ -120,7 +120,6 @@ function activeReferralMembershipWhere(referralCode: string) {
 function referralLandingInclude() {
   return {
     business: { include: { branding: true } },
-    globalCustomer: true,
   };
 }
 type TxClient = Prisma.TransactionClient | typeof prisma;
@@ -144,20 +143,16 @@ export async function findActiveReferralReferrerByPhone({
       businessId,
       status: "ACTIVE",
       referralEnabled: true,
-      globalCustomer: { normalizedPhone },
+      normalizedPhone,
     },
     select: {
       id: true,
       globalCustomerId: true,
       referralCode: true,
       currentTier: true,
-      globalCustomer: {
-        select: {
-          firstName: true,
-          lastName: true,
-          normalizedPhone: true,
-        },
-      },
+      firstName: true,
+      lastName: true,
+      normalizedPhone: true,
     },
   });
 
@@ -177,12 +172,10 @@ export type ReferralReferrerLookupMatch = {
   globalCustomerId: number;
   referralCode: string;
   currentTier: string;
-  globalCustomer: {
-    firstName: string;
-    lastName: string | null;
-    normalizedPhone: string;
-    email: string | null;
-  };
+  firstName: string;
+  lastName: string | null;
+  normalizedPhone: string;
+  email: string | null;
 };
 
 export async function lookupActiveReferralReferrers({
@@ -210,20 +203,20 @@ export async function lookupActiveReferralReferrers({
     textFilters.push({ referralCode });
   } else if (looksLikePhone) {
     if (normalizedPhone) {
-      textFilters.push({ globalCustomer: { normalizedPhone } });
+      textFilters.push({ normalizedPhone });
     }
   } else {
     const nameParts = trimmedQuery.split(/\s+/).filter(Boolean);
     textFilters.push(
       { referralCode: { contains: trimmedQuery, mode: "insensitive" } },
-      { globalCustomer: { firstName: { contains: trimmedQuery, mode: "insensitive" } } },
-      { globalCustomer: { lastName: { contains: trimmedQuery, mode: "insensitive" } } },
+      { firstName: { contains: trimmedQuery, mode: "insensitive" } },
+      { lastName: { contains: trimmedQuery, mode: "insensitive" } },
     );
     if (nameParts.length >= 2) {
       textFilters.push({
         AND: [
-          { globalCustomer: { firstName: { contains: nameParts[0], mode: "insensitive" } } },
-          { globalCustomer: { lastName: { contains: nameParts.slice(1).join(" "), mode: "insensitive" } } },
+          { firstName: { contains: nameParts[0], mode: "insensitive" } },
+          { lastName: { contains: nameParts.slice(1).join(" "), mode: "insensitive" } },
         ],
       });
     }
@@ -246,14 +239,10 @@ export async function lookupActiveReferralReferrers({
       globalCustomerId: true,
       referralCode: true,
       currentTier: true,
-      globalCustomer: {
-        select: {
-          firstName: true,
-          lastName: true,
-          normalizedPhone: true,
-          email: true,
-        },
-      },
+      firstName: true,
+      lastName: true,
+      normalizedPhone: true,
+      email: true,
     },
     orderBy: [{ joinedAt: "desc" }, { id: "desc" }],
     take,

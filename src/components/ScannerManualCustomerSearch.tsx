@@ -40,17 +40,16 @@ export async function ScannerManualCustomerSearch({ businessId, branchId, query,
           businessId,
           ...(branchId ? { createdBranchId: branchId } : {}),
           OR: [
-            { globalCustomer: { firstName: { contains: trimmedQuery, mode: "insensitive" } } },
-            { globalCustomer: { lastName: { contains: trimmedQuery, mode: "insensitive" } } },
-            { globalCustomer: { phone: { contains: trimmedQuery, mode: "insensitive" } } },
-            { globalCustomer: { normalizedPhone: { contains: trimmedQuery, mode: "insensitive" } } },
-            ...(normalizedPhone ? [{ globalCustomer: { normalizedPhone } }] : []),
+            { firstName: { contains: trimmedQuery, mode: "insensitive" } },
+            { lastName: { contains: trimmedQuery, mode: "insensitive" } },
+            { phone: { contains: trimmedQuery, mode: "insensitive" } },
+            { normalizedPhone: { contains: trimmedQuery, mode: "insensitive" } },
+            ...(normalizedPhone ? [{ normalizedPhone }] : []),
             { cardToken: { contains: trimmedQuery, mode: "insensitive" } },
             { referralCode: { contains: trimmedQuery, mode: "insensitive" } },
           ],
         },
         include: {
-          globalCustomer: true,
           createdBranch: true,
           programMemberships: {
             where: {
@@ -113,7 +112,7 @@ export async function ScannerManualCustomerSearch({ businessId, branchId, query,
       {shouldSearch ? (
         <div className="mt-4 grid gap-3">
           {results.map((membership) => {
-            const customerName = `${membership.globalCustomer.firstName} ${membership.globalCustomer.lastName ?? ""}`.trim();
+            const customerName = `${membership.firstName} ${membership.lastName ?? ""}`.trim();
             const activePrograms = membership.programMemberships;
             const scanToken = activePrograms.length === 1 ? activePrograms[0].scanToken : membership.cardToken;
             const canOpenScanFlow = membership.status === "ACTIVE" && membership.cardStatus === "ACTIVE" && activePrograms.length > 0;
@@ -127,7 +126,7 @@ export async function ScannerManualCustomerSearch({ businessId, branchId, query,
                       <StatusBadge status={membership.status} />
                     </div>
                     <div className="mt-2 grid gap-1 text-sm text-[#6B7280] sm:grid-cols-2 lg:grid-cols-4">
-                      <p>{formatUaePhoneDisplay(membership.globalCustomer.normalizedPhone)}</p>
+                      <p>{formatUaePhoneDisplay(membership.normalizedPhone)}</p>
                       <p>{membership.createdBranch?.name ?? "No branch"}</p>
                       <p>Joined {formatDate(membership.joinedAt)}</p>
                       <p>{activePrograms.length} active program{activePrograms.length === 1 ? "" : "s"}</p>

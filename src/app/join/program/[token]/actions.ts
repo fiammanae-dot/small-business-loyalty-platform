@@ -32,7 +32,7 @@ async function findExistingProgramCardToken(normalizedPhone: string, businessId:
     where: {
       businessId,
       status: "ACTIVE",
-      globalCustomer: { normalizedPhone },
+      normalizedPhone,
       programMemberships: { some: { loyaltyProgramId: programId } },
     },
     select: { cardToken: true },
@@ -84,9 +84,9 @@ export async function joinProgramAction(formData: FormData) {
 
     const existingMembership = await tx.businessCustomerMembership.findUnique({
       where: {
-        businessId_globalCustomerId: {
+        businessId_normalizedPhone: {
           businessId: program.businessId,
-          globalCustomerId: globalCustomer.id,
+          normalizedPhone,
         },
       },
       select: {
@@ -153,6 +153,12 @@ export async function joinProgramAction(formData: FormData) {
       data: {
         globalCustomerId: globalCustomer.id,
         businessId: program.businessId,
+        firstName: parsed.data.firstName,
+        lastName: parsed.data.lastName || null,
+        phone: normalizedPhone,
+        normalizedPhone,
+        email: null,
+        birthday: null,
         marketingConsent: false,
         source: "SELF_SIGNUP",
         status: "ACTIVE",

@@ -650,6 +650,12 @@ model BusinessCustomerMembership {
   uuid             String                   @unique @default(uuid()) @db.Uuid
   globalCustomerId Int                      @map("global_customer_id")
   businessId       Int                      @map("business_id")
+  firstName        String                   @map("first_name")
+  lastName         String?                  @map("last_name")
+  phone            String
+  normalizedPhone  String                   @map("normalized_phone")
+  email            String?
+  birthday         DateTime?
   createdBranchId  Int?                     @map("created_branch_id")
   createdByUserId  Int?                     @map("created_by_user_id")
   marketingConsent Boolean                  @default(false) @map("marketing_consent")
@@ -680,9 +686,12 @@ model BusinessCustomerMembership {
   referralsReceived     Referral[]                  @relation("ReferralReferredMembership")
 
   @@unique([businessId, globalCustomerId])
+  @@unique([businessId, normalizedPhone])
   @@unique([businessId, referralCode])
   @@index([globalCustomerId])
   @@index([businessId])
+  @@index([businessId, firstName])
+  @@index([businessId, lastName])
   @@index([businessId, status])
   @@index([businessId, createdBranchId, status])
   @@index([createdBranchId])

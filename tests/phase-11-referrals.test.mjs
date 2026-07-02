@@ -149,7 +149,7 @@ test("customer enrollment supports same-business referral lookup by phone", () =
   const staffNew = read("src/app/staff/customers/new/page.tsx");
 
   assert.match(referrals, /findActiveReferralReferrerByPhone/);
-  assert.match(referrals, /globalCustomer: \{ normalizedPhone \}/);
+  assert.match(referrals, /normalizedPhone,/);
   assert.match(referrals, /lookupActiveReferralReferrers/);
   assert.match(referrals, /trimmedQuery\.length < 2/);
   assert.match(referrals, /status: "TOO_SHORT"/);

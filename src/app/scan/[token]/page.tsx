@@ -154,7 +154,7 @@ export default async function ScanResultPage({
         user={authUser}
         referralCode={referralCode}
         businessName={referrer.business.name}
-        referrerName={`${referrer.globalCustomer.firstName} ${referrer.globalCustomer.lastName ?? ""}`.trim() || "Customer"}
+        referrerName={`${referrer.firstName} ${referrer.lastName ?? ""}`.trim() || "Customer"}
         referrerTier={fromStoredTier(referrer.currentTier)}
         soundEffectsEnabled={scannerSoundEffectsEnabled}
       />
@@ -167,7 +167,6 @@ export default async function ScanResultPage({
       loyaltyProgram: true,
       businessCustomerMembership: {
         include: {
-          globalCustomer: true,
           business: true,
           createdBranch: true,
         },
@@ -193,7 +192,6 @@ export default async function ScanResultPage({
     const cardMembership = await prisma.businessCustomerMembership.findUnique({
       where: { cardToken: token },
       include: {
-        globalCustomer: true,
         business: true,
         createdBranch: true,
         programMemberships: {
@@ -292,8 +290,7 @@ export default async function ScanResultPage({
     }),
   ]);
 
-  const customer = businessMembership.globalCustomer;
-  const customerName = (customer.firstName + " " + (customer.lastName ?? "")).trim();
+  const customerName = (businessMembership.firstName + " " + (businessMembership.lastName ?? "")).trim();
   const program = programMembership.loyaltyProgram;
   const progress = progressValue(programMembership.earnedStamps, programMembership.bonusStamps);
   const cardUrl = await getCardUrl(businessMembership.cardToken);
@@ -822,7 +819,9 @@ function ProgramSelectionScreen({
   user: NonNullable<Awaited<ReturnType<typeof getCurrentUser>>> & { businessId: number };
   membership: {
     cardToken: string;
-    globalCustomer: { firstName: string; lastName: string | null; normalizedPhone: string };
+    firstName: string;
+    lastName: string | null;
+    normalizedPhone: string;
     business: { name: string };
     createdBranch: { name: string } | null;
   };
@@ -839,8 +838,7 @@ function ProgramSelectionScreen({
   }>;
   soundEffectsEnabled: boolean;
 }) {
-  const customer = membership.globalCustomer;
-  const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim();
+  const customerName = `${membership.firstName} ${membership.lastName ?? ""}`.trim();
   const cardNumber = membership.cardToken.length > 12 ? `${membership.cardToken.slice(0, 8)}...${membership.cardToken.slice(-4)}` : membership.cardToken;
 
   return (

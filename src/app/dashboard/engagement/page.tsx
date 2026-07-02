@@ -57,7 +57,6 @@ export default async function EngagementCenterPage({
       include: {
         customer: {
           include: {
-            globalCustomer: true,
             createdBranch: true,
             programMemberships: { include: { loyaltyProgram: true } },
           },
@@ -129,7 +128,7 @@ export default async function EngagementCenterPage({
         <h2 className="text-lg font-semibold text-[#111827]">Engagement events</h2>
         <div className="mt-5 grid gap-3 lg:hidden">
           {visibleEvents.map((event) => {
-            const customerName = `${event.customer.globalCustomer.firstName} ${event.customer.globalCustomer.lastName ?? ""}`.trim();
+            const customerName = `${event.customer.firstName} ${event.customer.lastName ?? ""}`.trim();
             const metadata = event.metadata && typeof event.metadata === "object" && !Array.isArray(event.metadata) ? event.metadata : {};
             const programName = String(metadata.programName ?? event.customer.programMemberships[0]?.loyaltyProgram.name ?? "-");
             return (
@@ -162,7 +161,7 @@ export default async function EngagementCenterPage({
             </thead>
             <tbody>
               {visibleEvents.map((event) => {
-                const customerName = `${event.customer.globalCustomer.firstName} ${event.customer.globalCustomer.lastName ?? ""}`.trim();
+                const customerName = `${event.customer.firstName} ${event.customer.lastName ?? ""}`.trim();
                 const metadata = event.metadata && typeof event.metadata === "object" && !Array.isArray(event.metadata) ? event.metadata : {};
                 const programName = String(metadata.programName ?? event.customer.programMemberships[0]?.loyaltyProgram.name ?? "-");
                 return (

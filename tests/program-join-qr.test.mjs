@@ -32,7 +32,8 @@ test("public program join page renders enrollment and verified card success", ()
 
   assert.match(action, /normalizePhone/);
   assert.match(action, /findUnique\(\{\s*where: \{ joinToken: parsed\.data\.token \}/s);
-  assert.match(action, /businessId_globalCustomerId/);
+  assert.match(action, /businessId_normalizedPhone/);
+  assert.match(action, /firstName: parsed\.data\.firstName/);
   assert.match(action, /programMemberships\.length === 0/);
   assert.match(action, /enrollmentSource: "SELF_SIGNUP"/);
   assert.match(action, /scanToken: generateScanToken\(\)/);

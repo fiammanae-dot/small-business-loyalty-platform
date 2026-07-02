@@ -18,8 +18,8 @@ export default async function ReferralDetailPage({
   const referral = await prisma.referral.findFirst({
     where: { uuid: id, businessId: user.businessId },
     include: {
-      referrerMembership: { include: { globalCustomer: true, programMemberships: { include: { loyaltyProgram: true } } } },
-      referredMembership: { include: { globalCustomer: true, programMemberships: { include: { loyaltyProgram: true } } } },
+      referrerMembership: { include: { programMemberships: { include: { loyaltyProgram: true } } } },
+      referredMembership: { include: { programMemberships: { include: { loyaltyProgram: true } } } },
       referredGlobalCustomer: true,
       referredFirstStampBranch: true,
       firstStampTransaction: {
@@ -36,7 +36,7 @@ export default async function ReferralDetailPage({
 
   if (!referral) notFound();
 
-  const referred = referral.referredMembership?.globalCustomer ?? referral.referredGlobalCustomer;
+  const referred = referral.referredMembership ?? referral.referredGlobalCustomer;
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Referral details" hideWelcomeMessage>
@@ -55,7 +55,7 @@ export default async function ReferralDetailPage({
               <span className="rounded-md business-bg-soft px-2 py-1 text-xs font-semibold business-text-strong">{referral.referralCode}</span>
             </div>
             <h2 className="mt-4 text-2xl font-semibold text-[#111827]">
-              {customerName(referral.referrerMembership.globalCustomer)} referred {referred ? customerName(referred) : "a customer"}
+              {customerName(referral.referrerMembership)} referred {referred ? customerName(referred) : "a customer"}
             </h2>
             <p className="mt-2 text-sm text-[#6B7280]">Created {formatDateTime(referral.createdAt)}</p>
           </div>
@@ -169,7 +169,7 @@ function CustomerPanel({
   membership: CustomerMembership | null;
   fallbackCustomer?: { firstName: string; lastName: string | null; phone: string } | null;
 }) {
-  const customer = membership?.globalCustomer ?? fallbackCustomer;
+  const customer = membership ?? fallbackCustomer;
   return (
     <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
       <div className="flex items-center gap-2">
@@ -224,5 +224,5 @@ function customerName(customer: { firstName: string; lastName: string | null }) 
 }
 
 type CustomerMembership = Prisma.BusinessCustomerMembershipGetPayload<{
-  include: { globalCustomer: true; programMemberships: { include: { loyaltyProgram: true } } };
+  include: { programMemberships: { include: { loyaltyProgram: true } } };
 }>;

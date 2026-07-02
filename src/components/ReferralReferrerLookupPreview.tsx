@@ -72,7 +72,7 @@ function ConfirmedReferrerCard({ referrer }: { referrer: ReferralReferrerLookupM
         <StatusBadge status="ACTIVE" />
       </div>
       <p className="mt-1">
-        {maskPhoneNumber(referrer.globalCustomer.normalizedPhone)} - {fromStoredTier(referrer.currentTier) ?? "Bronze"}
+        {maskPhoneNumber(referrer.normalizedPhone)} - {fromStoredTier(referrer.currentTier) ?? "Bronze"}
       </p>
       <p className="mt-1 font-mono text-xs text-emerald-800">{referrer.referralCode}</p>
     </div>
@@ -84,7 +84,7 @@ function ReferrerSummary({ referrer }: { referrer: ReferralReferrerLookupMatch }
     <span className="min-w-0">
       <span className="block font-semibold text-[#111827]">{referrerName(referrer)}</span>
       <span className="block text-[#6B7280]">
-        {maskPhoneNumber(referrer.globalCustomer.normalizedPhone)} - {fromStoredTier(referrer.currentTier) ?? "Bronze"}
+        {maskPhoneNumber(referrer.normalizedPhone)} - {fromStoredTier(referrer.currentTier) ?? "Bronze"}
       </span>
       <span className="block break-all font-mono text-xs text-[#6B7280]">{referrer.referralCode}</span>
     </span>
@@ -92,5 +92,5 @@ function ReferrerSummary({ referrer }: { referrer: ReferralReferrerLookupMatch }
 }
 
 function referrerName(referrer: ReferralReferrerLookupMatch) {
-  return `${referrer.globalCustomer.firstName} ${referrer.globalCustomer.lastName ?? ""}`.trim();
+  return `${referrer.firstName} ${referrer.lastName ?? ""}`.trim();
 }

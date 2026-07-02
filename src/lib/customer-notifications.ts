@@ -51,14 +51,15 @@ export async function createCustomerNotification({
     where: { id: customerId, businessId },
     select: {
       id: true,
-      globalCustomer: { select: { firstName: true, lastName: true } },
+      firstName: true,
+      lastName: true,
       business: { select: { name: true } },
     },
   });
   if (!membership) return null;
 
   const template = await getCustomerNotificationTemplate(tx, businessId, notificationType);
-  const customerName = `${membership.globalCustomer.firstName} ${membership.globalCustomer.lastName ?? ""}`.trim();
+  const customerName = `${membership.firstName} ${membership.lastName ?? ""}`.trim();
   const messageBody = renderCustomerNotificationMessage(template.message, {
     ...metadata,
     customer_name: customerName,

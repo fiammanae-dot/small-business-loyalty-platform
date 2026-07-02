@@ -73,12 +73,12 @@ export default async function CustomersPage({
         ...(query
           ? {
               OR: [
-                { globalCustomer: { firstName: { contains: query, mode: "insensitive" } } },
-                { globalCustomer: { lastName: { contains: query, mode: "insensitive" } } },
-                { globalCustomer: { phone: { contains: query, mode: "insensitive" } } },
-                { globalCustomer: { normalizedPhone: { contains: query, mode: "insensitive" } } },
-                ...(normalizedQueryPhone ? [{ globalCustomer: { normalizedPhone: normalizedQueryPhone } }] : []),
-                { globalCustomer: { email: { contains: query, mode: "insensitive" } } },
+                { firstName: { contains: query, mode: "insensitive" } },
+                { lastName: { contains: query, mode: "insensitive" } },
+                { phone: { contains: query, mode: "insensitive" } },
+                { normalizedPhone: { contains: query, mode: "insensitive" } },
+                ...(normalizedQueryPhone ? [{ normalizedPhone: normalizedQueryPhone }] : []),
+                { email: { contains: query, mode: "insensitive" } },
                 { cardToken: { contains: query, mode: "insensitive" } },
                 { referralCode: { contains: query, mode: "insensitive" } },
                 { programMemberships: { some: { loyaltyProgram: { name: { contains: query, mode: "insensitive" } } } } },
@@ -100,7 +100,7 @@ export default async function CustomersPage({
   const rowsWithUrls = customers.map((membership) => ({
     ...toCustomerSummary(membership),
     raw: membership,
-    customerName: getCustomerName(membership.globalCustomer),
+    customerName: getCustomerName(membership),
   }));
   const customerRows = rowsWithUrls.filter((row) => {
     if (rewardFilter === "ready") return row.rewardReady;
@@ -209,7 +209,6 @@ export default async function CustomersPage({
 }
 
 const customerInclude = {
-  globalCustomer: true,
   createdBranch: true,
   programMemberships: {
     where: { status: "ACTIVE" as const },
@@ -227,7 +226,7 @@ function CustomerTableRow({ row }: { row: CustomerRow }) {
       <DataTableCell>
         <Link href={customerHref} className="block rounded-md py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2" aria-label={`Open ${row.customerName} Customer 360`}>
           <span className="font-semibold text-[#0F172A] transition group-hover:business-text">{row.customerName}</span>
-          <span className="mt-1 block text-xs text-[#64748B]">{formatUaePhoneDisplay(row.raw.globalCustomer.normalizedPhone)}</span>
+          <span className="mt-1 block text-xs text-[#64748B]">{formatUaePhoneDisplay(row.raw.normalizedPhone)}</span>
         </Link>
       </DataTableCell>
       <DataTableCell>
@@ -264,7 +263,7 @@ function CustomerMobileCard({ row }: { row: CustomerRow }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="font-semibold text-[#0F172A]">{row.customerName}</p>
-          <p className="mt-1 text-sm text-[#64748B]">{formatUaePhoneDisplay(row.raw.globalCustomer.normalizedPhone)}</p>
+          <p className="mt-1 text-sm text-[#64748B]">{formatUaePhoneDisplay(row.raw.normalizedPhone)}</p>
         </div>
         <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-[#94A3B8]" aria-hidden />
       </div>

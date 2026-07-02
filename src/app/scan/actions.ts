@@ -116,7 +116,6 @@ export async function issueStampAction(formData: FormData) {
       loyaltyProgram: true,
       businessCustomerMembership: {
         include: {
-          globalCustomer: true,
           createdBranch: true,
         },
       },
@@ -156,7 +155,7 @@ export async function issueStampAction(formData: FormData) {
 
   const now = new Date();
   const since24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-  const customerName = `${businessMembership.globalCustomer.firstName} ${businessMembership.globalCustomer.lastName ?? ""}`.trim();
+  const customerName = `${businessMembership.firstName} ${businessMembership.lastName ?? ""}`.trim();
   const issuedByName = user.name;
   const branchId = scannerBranch?.id ?? businessMembership.createdBranchId ?? null;
   const branchName = scannerBranch?.name ?? businessMembership.createdBranch?.name ?? "Unassigned";
@@ -481,7 +480,6 @@ export async function redeemRewardAction(formData: FormData) {
       loyaltyProgram: true,
       businessCustomerMembership: {
         include: {
-          globalCustomer: true,
           createdBranch: true,
         },
       },
@@ -665,7 +663,6 @@ export async function undoStampAction(formData: FormData) {
           loyaltyProgram: true,
           businessCustomerMembership: {
             include: {
-              globalCustomer: true,
               createdBranch: true,
             },
           },
@@ -747,7 +744,7 @@ export async function undoStampAction(formData: FormData) {
         reason: data.reason,
         issuedByUserId: stampTransaction.issuedByUserId,
         issuedByUserName: stampTransaction.issuedByUser.name,
-        customerName: `${businessMembership.globalCustomer.firstName} ${businessMembership.globalCustomer.lastName ?? ""}`.trim(),
+        customerName: `${businessMembership.firstName} ${businessMembership.lastName ?? ""}`.trim(),
         programName: programMembership.loyaltyProgram.name,
       },
     });

@@ -37,7 +37,7 @@ export default async function StaffDetailPage({
         include: {
           branch: true,
           customerProgramMembership: {
-            include: { loyaltyProgram: true, businessCustomerMembership: { include: { globalCustomer: true } } },
+            include: { loyaltyProgram: true, businessCustomerMembership: true },
           },
         },
       },
@@ -45,7 +45,7 @@ export default async function StaffDetailPage({
         where: { businessId: user.businessId },
         orderBy: { createdAt: "desc" },
         take: 20,
-        include: { customerProgramMembership: { include: { loyaltyProgram: true, businessCustomerMembership: { include: { globalCustomer: true } } } } },
+        include: { customerProgramMembership: { include: { loyaltyProgram: true, businessCustomerMembership: true } } },
       },
     },
   });
@@ -100,7 +100,6 @@ export default async function StaffDetailPage({
               <Timeline>
                 {staffUser.stampTransactions.map((transaction) => {
                   const membership = transaction.customerProgramMembership.businessCustomerMembership;
-                  const customer = membership.globalCustomer;
                   const isHighlighted = highlightedTransactionId === transaction.id;
                   return (
                     <TimelineItem
@@ -111,7 +110,7 @@ export default async function StaffDetailPage({
                       time={formatDateTime(transaction.createdAt)}
                       description={
                         <span>
-                          {customer.firstName} {customer.lastName ?? ""} - {transaction.customerProgramMembership.loyaltyProgram.name} - {transaction.branch?.name ?? "No branch"}
+                          {membership.firstName} {membership.lastName ?? ""} - {transaction.customerProgramMembership.loyaltyProgram.name} - {transaction.branch?.name ?? "No branch"}
                           {transaction.reason ? <span className="block">Reason: {transaction.reason}</span> : null}
                           <Link href={customerProfileHref(membership.uuid, alertId, transaction.id) ?? "#"} className="mt-1 inline-flex font-semibold business-text">Open Customer</Link>
                         </span>

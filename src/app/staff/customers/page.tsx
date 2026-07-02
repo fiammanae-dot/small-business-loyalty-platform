@@ -31,19 +31,18 @@ export default async function StaffCustomerSearchPage({
         where: {
           businessId: user.businessId,
           OR: [
-            { globalCustomer: { firstName: { contains: query, mode: "insensitive" } } },
-            { globalCustomer: { lastName: { contains: query, mode: "insensitive" } } },
-            { globalCustomer: { email: { contains: query, mode: "insensitive" } } },
-            { globalCustomer: { phone: { contains: query, mode: "insensitive" } } },
-            { globalCustomer: { normalizedPhone: { contains: query, mode: "insensitive" } } },
-            ...(normalizedQueryPhone ? [{ globalCustomer: { normalizedPhone: normalizedQueryPhone } }] : []),
+            { firstName: { contains: query, mode: "insensitive" } },
+            { lastName: { contains: query, mode: "insensitive" } },
+            { email: { contains: query, mode: "insensitive" } },
+            { phone: { contains: query, mode: "insensitive" } },
+            { normalizedPhone: { contains: query, mode: "insensitive" } },
+            ...(normalizedQueryPhone ? [{ normalizedPhone: normalizedQueryPhone }] : []),
             { cardToken: { contains: query, mode: "insensitive" } },
             { referralCode: { contains: query, mode: "insensitive" } },
             { programMemberships: { some: { scanToken: { contains: query, mode: "insensitive" } } } },
           ],
         },
         include: {
-          globalCustomer: true,
           programMemberships: {
             where: { status: "ACTIVE" },
             include: { loyaltyProgram: true },
@@ -87,7 +86,7 @@ export default async function StaffCustomerSearchPage({
         </div>
         <div className="mt-5 grid gap-3">
           {customers.map((membership) => {
-            const customerName = `${membership.globalCustomer.firstName} ${membership.globalCustomer.lastName ?? ""}`.trim();
+            const customerName = `${membership.firstName} ${membership.lastName ?? ""}`.trim();
             return (
               <Link
                 key={membership.uuid}
@@ -97,7 +96,7 @@ export default async function StaffCustomerSearchPage({
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <p className="break-words font-semibold text-[#111827]">{customerName}</p>
-                    <p className="mt-1 text-sm text-[#6B7280]">{formatUaePhoneDisplay(membership.globalCustomer.normalizedPhone)}</p>
+                    <p className="mt-1 text-sm text-[#6B7280]">{formatUaePhoneDisplay(membership.normalizedPhone)}</p>
                     <p className="mt-1 text-xs text-[#6B7280]">Card: {getShortCardToken(membership.cardToken)}</p>
                   </div>
                   <div className="flex flex-wrap gap-2">

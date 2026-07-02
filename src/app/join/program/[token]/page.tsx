@@ -34,7 +34,6 @@ export default async function ProgramJoinPage({
           status: "ACTIVE",
           programMemberships: { some: { loyaltyProgramId: program.id } },
         },
-        include: { globalCustomer: true },
       })
     : null;
   const successCardUrl = successMembership ? await getCardUrl(successMembership.cardToken) : null;
@@ -55,7 +54,7 @@ export default async function ProgramJoinPage({
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
               <p className="text-sm font-semibold uppercase tracking-[0.14em] text-emerald-700">You're in</p>
               <h2 className="mt-2 text-2xl font-bold text-emerald-950">
-                Welcome, {successMembership.globalCustomer.firstName}
+                Welcome, {successMembership.firstName}
               </h2>
               <p className="mt-2 text-sm leading-6 text-emerald-800">
                 Your digital loyalty card is ready. Show it at checkout so staff can add stamps.

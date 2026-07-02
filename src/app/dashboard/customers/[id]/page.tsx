@@ -57,10 +57,9 @@ export default async function CustomerProfilePage({
   const membership = await getBusinessCustomerOrRedirect(id, user.businessId);
   const highlightedTransactionId = qs.highlightTransaction ? Number(qs.highlightTransaction) : null;
   const highlightedAlertId = qs.alert ? Number(qs.alert) : null;
-  const customer = membership.globalCustomer;
   const cardUrl = await getCardUrl(membership.cardToken);
   const nextCardStatus = membership.cardStatus === "ACTIVE" ? "DISABLED" : "ACTIVE";
-  const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim();
+  const customerName = `${membership.firstName} ${membership.lastName ?? ""}`.trim();
   const cardShareMessageType = qs.success?.includes("Customer created") ? "welcome" : "resend";
 
   const programCards = await Promise.all(
@@ -248,7 +247,7 @@ return (
               {primaryRewardReady ? <span className="rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">Reward Ready</span> : null}
             </div>
             <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <CommandInfo label="Phone" value={formatUaePhoneDisplay(customer.normalizedPhone)} />
+              <CommandInfo label="Phone" value={formatUaePhoneDisplay(membership.normalizedPhone)} />
               <CommandInfo label="Active program" value={primaryProgram ? primaryProgram.loyaltyProgram.name : "No active program"} />
               <CommandInfo label="Progress" value={primaryProgram ? `${primaryProgress} / ${primaryRequired}` : "-"} />
               <CommandInfo label="Reward status" value={primaryRewardReady ? "Ready to redeem" : rewardsReady > 0 ? `${rewardsReady} available` : "No rewards ready"} />
@@ -276,7 +275,7 @@ return (
                   cardUrl={cardUrl}
                   businessName={membership.business.name}
                   customerName={customerName}
-                  recipientPhone={customer.normalizedPhone}
+                  recipientPhone={membership.normalizedPhone}
                   auditMembershipUuid={membership.uuid}
                   whatsappLabel="Share Card"
                   messageType={cardShareMessageType}
@@ -313,12 +312,12 @@ return (
           <ReferralSummaryPanel memberReference={membership.referralCode ?? getShortCardToken(membership.cardToken)} referralCode={membership.referralCode} compact />
         </div>
         <aside className="grid min-w-0 content-start gap-5">
-          <ProfileSummaryCard membership={membership} customer={customer} />
+          <ProfileSummaryCard membership={membership} />
           <CustomerCardPanel
             cardUrl={cardUrl}
             businessName={membership.business.name}
             customerName={customerName}
-            customerPhone={customer.normalizedPhone}
+            customerPhone={membership.normalizedPhone}
             cardToken={membership.cardToken}
             cardStatus={membership.cardStatus}
             cardCreatedAt={membership.cardCreatedAt}
@@ -353,10 +352,8 @@ function CommandInfo({ label, value }: { label: string; value: React.ReactNode }
 
 function ProfileSummaryCard({
   membership,
-  customer,
 }: {
   membership: Awaited<ReturnType<typeof getBusinessCustomerOrRedirect>>;
-  customer: Awaited<ReturnType<typeof getBusinessCustomerOrRedirect>>["globalCustomer"];
 }) {
   return (
     <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
@@ -368,7 +365,7 @@ function ProfileSummaryCard({
         <UserRound className="h-5 w-5 business-text" aria-hidden="true" />
       </div>
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        <Info label="Email" value={customer.email ?? "-"} />
+        <Info label="Email" value={membership.email ?? "-"} />
         <Info label="Customer since" value={formatDate(membership.joinedAt)} />
         <Info label="Card issued branch" value={membership.createdBranch?.name ?? "-"} />
         <Info label="Card issued by" value={membership.createdByUser?.name ?? "-"} />

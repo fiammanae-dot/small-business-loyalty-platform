@@ -129,6 +129,10 @@ export async function getBusinessCustomerOrRedirect(uuid: string, businessId: nu
   return membership;
 }
 
+export function getBusinessCustomerName(customer: { firstName: string; lastName?: string | null }) {
+  return `${customer.firstName} ${customer.lastName ?? ""}`.trim();
+}
+
 export async function assertBranchBelongsToBusiness(branchId: number | undefined, businessId: number) {
   if (!branchId) return null;
 
@@ -259,12 +263,13 @@ export async function enrollCustomerForBusiness({
           select: { id: true },
         }));
 
-      const existingMembership = await tx.businessCustomerMembership.findUnique({
+      const existingMembership = await tx.businessCustomerMembership.findFirst({
         where: {
-          businessId_globalCustomerId: {
-            businessId: user.businessId,
-            globalCustomerId: globalCustomer.id,
-          },
+          businessId: user.businessId,
+          OR: [
+            { normalizedPhone },
+            ...(identity.data.email ? [{ email: { equals: identity.data.email, mode: "insensitive" as const } }] : []),
+          ],
         },
         select: { id: true },
       });
@@ -288,6 +293,12 @@ export async function enrollCustomerForBusiness({
         data: {
           globalCustomerId: globalCustomer.id,
           businessId: user.businessId,
+          firstName: identity.data.firstName,
+          lastName: identity.data.lastName || null,
+          phone: normalizedPhone,
+          normalizedPhone,
+          email: identity.data.email || null,
+          birthday: parseBirthday(identity.data.birthday),
           createdBranchId: membership.data.createdBranchId ?? null,
           createdByUserId: user.id,
           marketingConsent: membership.data.marketingConsent,

@@ -737,48 +737,39 @@ export async function updateCustomerAction(formData: FormData) {
 
   const existing = await prisma.businessCustomerMembership.findFirst({
     where: { uuid: membershipUuid, businessId: user.businessId },
-    select: { id: true, globalCustomerId: true },
+    select: { id: true },
   });
   if (!existing) fail("/dashboard/customers", "Customer not found.");
 
-  const phoneOwner = await prisma.globalCustomer.findUnique({
-    where: { normalizedPhone },
+  const duplicateCustomer = await prisma.businessCustomerMembership.findFirst({
+    where: {
+      businessId: user.businessId,
+      id: { not: existing.id },
+      OR: [
+        { normalizedPhone },
+        ...(identity.data.email ? [{ email: { equals: identity.data.email, mode: "insensitive" as const } }] : []),
+      ],
+    },
     select: { id: true },
   });
-  if (phoneOwner && phoneOwner.id !== existing.globalCustomerId) {
-    const existingBusinessMembership = await prisma.businessCustomerMembership.findUnique({
-      where: {
-        businessId_globalCustomerId: {
-          businessId: user.businessId,
-          globalCustomerId: phoneOwner.id,
-        },
-      },
-      select: { id: true },
-    });
-    fail(path, existingBusinessMembership ? "This phone number is already enrolled in your business." : "This phone number is already used by another customer.");
+  if (duplicateCustomer) {
+    fail(path, "This phone or email is already enrolled in your business.");
   }
 
-  await prisma.$transaction([
-    prisma.globalCustomer.update({
-      where: { id: existing.globalCustomerId },
-      data: {
-        firstName: identity.data.firstName,
-        lastName: identity.data.lastName || null,
-        phone: normalizedPhone,
-        normalizedPhone,
-        email: identity.data.email || null,
-        birthday: parseBirthday(identity.data.birthday),
-      },
-    }),
-    prisma.businessCustomerMembership.update({
-      where: { id: existing.id },
-      data: {
-        marketingConsent: membership.data.marketingConsent,
-        status: membership.data.status,
-        notes: membership.data.notes || null,
-      },
-    }),
-  ]);
+  await prisma.businessCustomerMembership.update({
+    where: { id: existing.id },
+    data: {
+      firstName: identity.data.firstName,
+      lastName: identity.data.lastName || null,
+      phone: normalizedPhone,
+      normalizedPhone,
+      email: identity.data.email || null,
+      birthday: parseBirthday(identity.data.birthday),
+      marketingConsent: membership.data.marketingConsent,
+      status: membership.data.status,
+      notes: membership.data.notes || null,
+    },
+  });
   await logAuditEvent({
     actorUserId: user.id,
     businessId: user.businessId,
@@ -896,7 +887,6 @@ export async function manualStampCorrectionAction(formData: FormData) {
       loyaltyProgram: true,
       businessCustomerMembership: {
         include: {
-          globalCustomer: true,
           createdBranch: true,
         },
       },
@@ -918,7 +908,7 @@ export async function manualStampCorrectionAction(formData: FormData) {
       },
       include: {
         loyaltyProgram: true,
-        businessCustomerMembership: { include: { globalCustomer: true } },
+        businessCustomerMembership: true,
       },
     });
     if (!lockedMembership) fail(`/dashboard/customers/${data.membershipUuid}`, "Program membership not found.");
@@ -946,7 +936,7 @@ export async function manualStampCorrectionAction(formData: FormData) {
         previousEarnedStamps: lockedMembership.earnedStamps,
         newEarnedStamps: lockedNextEarnedStamps,
         reason: data.reason,
-        customerName: `${lockedMembership.businessCustomerMembership.globalCustomer.firstName} ${lockedMembership.businessCustomerMembership.globalCustomer.lastName ?? ""}`.trim(),
+        customerName: `${lockedMembership.businessCustomerMembership.firstName} ${lockedMembership.businessCustomerMembership.lastName ?? ""}`.trim(),
         programName: lockedMembership.loyaltyProgram.name,
       },
     });

@@ -65,7 +65,7 @@ export default async function BranchDashboard() {
           include: {
             loyaltyProgram: { select: { name: true } },
             businessCustomerMembership: {
-              include: { globalCustomer: { select: { firstName: true, lastName: true } } },
+              select: { firstName: true, lastName: true },
             },
           },
         },
@@ -75,7 +75,7 @@ export default async function BranchDashboard() {
       where: { businessId, createdBranchId: branchId },
       orderBy: { joinedAt: "desc" },
       take: 4,
-      include: { globalCustomer: { select: { firstName: true, lastName: true } } },
+      select: { id: true, joinedAt: true, firstName: true, lastName: true },
     }),
     prisma.stampTransaction.findMany({
       where: { branchId },
@@ -86,7 +86,7 @@ export default async function BranchDashboard() {
         customerProgramMembership: {
           include: {
             loyaltyProgram: { select: { name: true } },
-            businessCustomerMembership: { include: { globalCustomer: { select: { firstName: true, lastName: true } } } },
+            businessCustomerMembership: true,
           },
         },
       },
@@ -99,7 +99,7 @@ export default async function BranchDashboard() {
         redeemedByUser: { select: { name: true } },
         loyaltyProgram: { select: { name: true } },
         customerProgramMembership: {
-          include: { businessCustomerMembership: { include: { globalCustomer: { select: { firstName: true, lastName: true } } } } },
+          include: { businessCustomerMembership: true },
         },
       },
     }),
@@ -109,14 +109,14 @@ export default async function BranchDashboard() {
       take: 4,
       include: {
         loyaltyProgram: { select: { name: true } },
-        businessCustomerMembership: { include: { globalCustomer: { select: { firstName: true, lastName: true } } } },
+        businessCustomerMembership: true,
       },
     }),
     prisma.customerProgramMembership.findMany({
       where: { status: "ACTIVE", businessCustomerMembership: { businessId, createdBranchId: branchId, status: "ACTIVE" } },
       include: {
         loyaltyProgram: { select: { name: true, requiredStamps: true, rewardName: true } },
-        businessCustomerMembership: { include: { globalCustomer: { select: { firstName: true, lastName: true } } } },
+        businessCustomerMembership: true,
       },
       orderBy: { enrolledAt: "desc" },
       take: 30,
@@ -155,28 +155,28 @@ export default async function BranchDashboard() {
     ...recentCustomers.map((membership) => ({
       key: `customer-${membership.id}`,
       title: "Customer joined",
-      description: customerName(membership.globalCustomer),
+      description: customerName(membership),
       meta: "New branch customer",
       time: membership.joinedAt,
     })),
     ...recentStamps.map((stamp) => ({
       key: `stamp-${stamp.id}`,
       title: "Stamp added",
-      description: `${customerName(stamp.customerProgramMembership.businessCustomerMembership.globalCustomer)} - ${stamp.customerProgramMembership.loyaltyProgram.name}`,
+      description: `${customerName(stamp.customerProgramMembership.businessCustomerMembership)} - ${stamp.customerProgramMembership.loyaltyProgram.name}`,
       meta: `${stamp.quantity} stamp${stamp.quantity === 1 ? "" : "s"} by ${stamp.issuedByUser.name}`,
       time: stamp.createdAt,
     })),
     ...recentRewards.map((redemption) => ({
       key: `reward-${redemption.id}`,
       title: "Reward redeemed",
-      description: `${customerName(redemption.customerProgramMembership.businessCustomerMembership.globalCustomer)} - ${redemption.rewardName}`,
+      description: `${customerName(redemption.customerProgramMembership.businessCustomerMembership)} - ${redemption.rewardName}`,
       meta: `${redemption.loyaltyProgram.name} by ${redemption.redeemedByUser.name}`,
       time: redemption.redeemedAt,
     })),
     ...recentProgramEnrollments.map((membership) => ({
       key: `enrollment-${membership.id}`,
       title: "Customer enrolled in program",
-      description: `${customerName(membership.businessCustomerMembership.globalCustomer)} - ${membership.loyaltyProgram.name}`,
+      description: `${customerName(membership.businessCustomerMembership)} - ${membership.loyaltyProgram.name}`,
       meta: "Program enrollment",
       time: membership.enrolledAt,
     })),
@@ -274,7 +274,7 @@ export default async function BranchDashboard() {
               <div key={membership.id} className="rounded-md border border-[#E5E7EB] p-3 text-sm">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="break-words font-semibold text-[#111827]">{customerName(membership.businessCustomerMembership.globalCustomer)}</p>
+                    <p className="break-words font-semibold text-[#111827]">{customerName(membership.businessCustomerMembership)}</p>
                     <p className="mt-1 text-[#6B7280]">{membership.loyaltyProgram.name}</p>
                   </div>
                   <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">{remaining} left</span>
@@ -331,14 +331,15 @@ type RecentScan = {
   customerProgramMembership: {
     loyaltyProgram: { name: string };
     businessCustomerMembership: {
-      globalCustomer: { firstName: string; lastName: string | null };
+      firstName: string;
+      lastName: string | null;
     };
   } | null;
 };
 
 function ActivityRow({ scan }: { scan: RecentScan }) {
   const programMembership = scan.customerProgramMembership;
-  const customer = programMembership?.businessCustomerMembership.globalCustomer;
+  const customer = programMembership?.businessCustomerMembership;
   const customerName = customer ? `${customer.firstName} ${customer.lastName ?? ""}`.trim() : "Customer unavailable";
   const actionLabel = scan.result === "VALID" ? "QR Validated" : scan.result.replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
 

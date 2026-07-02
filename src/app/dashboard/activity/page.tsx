@@ -29,7 +29,8 @@ export default async function BusinessActivityPage() {
         uuid: true,
         createdAt: true,
         createdBranch: { select: { name: true } },
-        globalCustomer: { select: { firstName: true, lastName: true } },
+        firstName: true,
+        lastName: true,
       },
     }),
     prisma.stampTransaction.findMany({
@@ -47,7 +48,8 @@ export default async function BusinessActivityPage() {
             businessCustomerMembership: {
               select: {
                 uuid: true,
-                globalCustomer: { select: { firstName: true, lastName: true } },
+                firstName: true,
+                lastName: true,
               },
             },
           },
@@ -69,7 +71,8 @@ export default async function BusinessActivityPage() {
             businessCustomerMembership: {
               select: {
                 uuid: true,
-                globalCustomer: { select: { firstName: true, lastName: true } },
+                firstName: true,
+                lastName: true,
               },
             },
           },
@@ -88,7 +91,8 @@ export default async function BusinessActivityPage() {
         referrerMembership: {
           select: {
             uuid: true,
-            globalCustomer: { select: { firstName: true, lastName: true } },
+            firstName: true,
+            lastName: true,
           },
         },
       },
@@ -98,7 +102,7 @@ export default async function BusinessActivityPage() {
   const timeline: ActivityItem[] = [
     ...customerEnrollments.map((membership) => ({
       type: "Customer enrollment",
-      title: getCustomerName(membership.globalCustomer),
+      title: getCustomerName(membership),
       meta: membership.createdBranch?.name ?? "No branch",
       createdAt: membership.createdAt,
       icon: Users,
@@ -106,7 +110,7 @@ export default async function BusinessActivityPage() {
     })),
     ...stampIssuance.map((stamp) => ({
       type: `${stamp.quantity} stamp${stamp.quantity === 1 ? "" : "s"} issued`,
-      title: getCustomerName(stamp.customerProgramMembership.businessCustomerMembership.globalCustomer),
+      title: getCustomerName(stamp.customerProgramMembership.businessCustomerMembership),
       meta: `${stamp.customerProgramMembership.loyaltyProgram.name} - ${stamp.branch?.name ?? "No branch"}`,
       createdAt: stamp.createdAt,
       icon: TicketCheck,
@@ -114,7 +118,7 @@ export default async function BusinessActivityPage() {
     })),
     ...rewardRedemptions.map((redemption) => ({
       type: "Reward redemption",
-      title: getCustomerName(redemption.customerProgramMembership.businessCustomerMembership.globalCustomer),
+      title: getCustomerName(redemption.customerProgramMembership.businessCustomerMembership),
       meta: `${redemption.rewardName} - ${redemption.branch?.name ?? "No branch"}`,
       createdAt: redemption.redeemedAt,
       icon: Gift,
@@ -122,7 +126,7 @@ export default async function BusinessActivityPage() {
     })),
     ...referralActivity.map((referral) => ({
       type: "Referral activity",
-      title: getCustomerName(referral.referrerMembership.globalCustomer),
+      title: getCustomerName(referral.referrerMembership),
       meta: `${referral.referralCode} - ${friendlyLabel(referral.status)}`,
       createdAt: referral.createdAt,
       icon: Share2,

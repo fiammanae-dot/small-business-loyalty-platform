@@ -71,7 +71,8 @@ export default async function BusinessDashboard({
         uuid: true,
         createdAt: true,
         status: true,
-        globalCustomer: { select: { firstName: true, lastName: true } },
+        firstName: true,
+        lastName: true,
         createdBranch: { select: { name: true } },
       },
     }),
@@ -277,8 +278,8 @@ function ActionRequiredSection({ rewardReadyCustomers, pendingReferrals, custome
 function QuickActions() {
   return <section><h2 className="mb-3 text-xl font-semibold text-[#0F172A]">Quick Actions</h2><div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 min-[1180px]:grid-cols-4"><PrimaryAction href="/dashboard/scanner" icon={ScanLine} label="Open Scanner" featured /><PrimaryAction href="/dashboard/customers/new" icon={UserPlus} label="Add Customer" /><PrimaryAction href="/dashboard/customers" icon={Search} label="Find Customer" /><PrimaryAction href="/dashboard/programs" icon={TicketCheck} label="Programs" /></div></section>;
 }
-function DashboardActivityTimeline({ customers, programs }: { customers: Array<{ uuid: string; createdAt: Date; globalCustomer: { firstName: string; lastName: string | null } }>; programs: Array<{ uuid: string; name: string; createdAt: Date }> }) {
-  const items = [...customers.slice(0, 4).map((customer) => ({ title: "Customer Joined", description: getCustomerName(customer.globalCustomer), time: customer.createdAt, href: `/dashboard/customers/${customer.uuid}` })), ...programs.slice(0, 3).map((program) => ({ title: "Program Created", description: program.name, time: program.createdAt, href: `/dashboard/programs/${program.uuid}` }))].sort((a, b) => b.time.getTime() - a.time.getTime()).slice(0, 6);
+function DashboardActivityTimeline({ customers, programs }: { customers: Array<{ uuid: string; createdAt: Date; firstName: string; lastName: string | null }>; programs: Array<{ uuid: string; name: string; createdAt: Date }> }) {
+  const items = [...customers.slice(0, 4).map((customer) => ({ title: "Customer Joined", description: getCustomerName(customer), time: customer.createdAt, href: `/dashboard/customers/${customer.uuid}` })), ...programs.slice(0, 3).map((program) => ({ title: "Program Created", description: program.name, time: program.createdAt, href: `/dashboard/programs/${program.uuid}` }))].sort((a, b) => b.time.getTime() - a.time.getTime()).slice(0, 6);
   return <UiSectionCard title="Recent Activity" description="Newest customer, stamp, reward, referral, program, and staff movement.">{items.length ? <Timeline>{items.map((item) => <TimelineItem key={item.title + item.description + item.time.toISOString()} title={<Link href={item.href} className="business-hover">{item.title}</Link>} time={formatDateTime(item.time)} description={item.description} />)}</Timeline> : <p className="text-sm text-[#64748B]">No activity yet.</p>}</UiSectionCard>;
 }
 function SubscriptionSummaryCard({ planName, branchesUsed, branchLimit, programsUsed, programLimit, renewalDate }: { planName: string; branchesUsed: number; branchLimit: number | null; programsUsed: number; programLimit: number | null; renewalDate: Date | null }) {

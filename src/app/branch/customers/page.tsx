@@ -39,18 +39,17 @@ export default async function BranchCustomersPage({
       ...(query
         ? {
             OR: [
-              { globalCustomer: { firstName: { contains: query, mode: "insensitive" } } },
-              { globalCustomer: { lastName: { contains: query, mode: "insensitive" } } },
-              { globalCustomer: { phone: { contains: query, mode: "insensitive" } } },
-              { globalCustomer: { normalizedPhone: { contains: query, mode: "insensitive" } } },
-              ...(normalizedQueryPhone ? [{ globalCustomer: { normalizedPhone: normalizedQueryPhone } }] : []),
-              { globalCustomer: { email: { contains: query, mode: "insensitive" } } },
+              { firstName: { contains: query, mode: "insensitive" } },
+              { lastName: { contains: query, mode: "insensitive" } },
+              { phone: { contains: query, mode: "insensitive" } },
+              { normalizedPhone: { contains: query, mode: "insensitive" } },
+              ...(normalizedQueryPhone ? [{ normalizedPhone: normalizedQueryPhone }] : []),
+              { email: { contains: query, mode: "insensitive" } },
             ],
           }
         : {}),
     },
     include: {
-      globalCustomer: true,
       createdBranch: true,
       business: true,
       programMemberships: {
@@ -87,7 +86,7 @@ export default async function BranchCustomersPage({
       return {
         ...membership,
         cardUrl: await getCardUrl(membership.cardToken),
-        customerName: `${membership.globalCustomer.firstName} ${membership.globalCustomer.lastName ?? ""}`.trim(),
+        customerName: `${membership.firstName} ${membership.lastName ?? ""}`.trim(),
         primaryProgram,
         primaryProgress,
         rewardReady,
@@ -125,7 +124,7 @@ export default async function BranchCustomersPage({
             <tbody>
               {customerRows.map((membership) => (
                 <tr key={membership.id}>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 font-semibold">{membership.globalCustomer.firstName} {membership.globalCustomer.lastName ?? ""}</td>
+                  <td className="border-b border-[#E5E7EB] px-3 py-4 font-semibold">{membership.customerName}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{membership.currentTier}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">
                     {membership.primaryProgram ? (
@@ -150,7 +149,7 @@ export default async function BranchCustomersPage({
                         cardUrl={membership.cardUrl}
                         businessName={membership.business.name}
                         customerName={membership.customerName}
-                        recipientPhone={membership.globalCustomer.normalizedPhone}
+                        recipientPhone={membership.normalizedPhone}
                         auditMembershipUuid={membership.uuid}
                         messageType="resend"
                         showCopy={false}
@@ -170,8 +169,8 @@ export default async function BranchCustomersPage({
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h3 className="break-words font-semibold text-[#111827]">{membership.customerName}</h3>
-                    <p className="mt-1 text-sm text-[#6B7280]">{formatUaePhoneDisplay(membership.globalCustomer.normalizedPhone)}</p>
-                    {membership.globalCustomer.email ? <p className="mt-1 break-words text-sm text-[#6B7280]">{membership.globalCustomer.email}</p> : null}
+                    <p className="mt-1 text-sm text-[#6B7280]">{formatUaePhoneDisplay(membership.normalizedPhone)}</p>
+                    {membership.email ? <p className="mt-1 break-words text-sm text-[#6B7280]">{membership.email}</p> : null}
                   </div>
                   <StatusBadge status={membership.status} />
                 </div>
@@ -191,7 +190,7 @@ export default async function BranchCustomersPage({
                     cardUrl={membership.cardUrl}
                     businessName={membership.business.name}
                     customerName={membership.customerName}
-                    recipientPhone={membership.globalCustomer.normalizedPhone}
+                    recipientPhone={membership.normalizedPhone}
                     auditMembershipUuid={membership.uuid}
                     messageType="resend"
                     showCopy={false}

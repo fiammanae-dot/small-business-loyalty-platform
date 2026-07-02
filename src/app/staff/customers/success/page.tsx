@@ -20,7 +20,7 @@ export default async function StaffCustomerSuccessPage({
             cardToken: token,
             businessId: user.businessId,
           },
-          include: { business: true, globalCustomer: true },
+          include: { business: true },
         })
       : null;
   const cardUrl = membership ? await getCardUrl(membership.cardToken) : null;
@@ -37,8 +37,8 @@ export default async function StaffCustomerSuccessPage({
               <CardShareActions
                 cardUrl={cardUrl}
                 businessName={membership.business.name}
-                customerName={`${membership.globalCustomer.firstName} ${membership.globalCustomer.lastName ?? ""}`.trim()}
-                recipientPhone={membership.globalCustomer.normalizedPhone}
+                customerName={`${membership.firstName} ${membership.lastName ?? ""}`.trim()}
+                recipientPhone={membership.normalizedPhone}
                 auditMembershipUuid={membership.uuid}
                 showWallet={false}
               />

@@ -42,7 +42,6 @@ export async function prepareMessageAction(formData: FormData) {
     include: {
       customer: {
         include: {
-          globalCustomer: true,
           business: true,
         },
       },
@@ -54,7 +53,7 @@ export async function prepareMessageAction(formData: FormData) {
     fail(path, "Customer has not consented to receive marketing messages.");
   }
 
-  const customer = event.customer.globalCustomer;
+  const customer = event.customer;
   if (channel === "EMAIL" && !customer.email) fail(path, "Customer email is not available.");
 
   const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim();

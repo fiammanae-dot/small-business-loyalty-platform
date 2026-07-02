@@ -85,17 +85,13 @@ export default async function NotificationsPage({
                   loyaltyProgram: { is: { name: { contains: search, mode: "insensitive" } } },
                   businessCustomerMembership: {
                     is: {
-                      globalCustomer: {
-                        is: {
-                          OR: [
-                            { firstName: { contains: search, mode: "insensitive" } },
-                            { lastName: { contains: search, mode: "insensitive" } },
-                            { phone: { contains: search, mode: "insensitive" } },
-                            { normalizedPhone: { contains: search, mode: "insensitive" } },
-                            { email: { contains: search, mode: "insensitive" } },
-                          ],
-                        },
-                      },
+                      OR: [
+                        { firstName: { contains: search, mode: "insensitive" } },
+                        { lastName: { contains: search, mode: "insensitive" } },
+                        { phone: { contains: search, mode: "insensitive" } },
+                        { normalizedPhone: { contains: search, mode: "insensitive" } },
+                        { email: { contains: search, mode: "insensitive" } },
+                      ],
                     },
                   },
                 },
@@ -119,9 +115,7 @@ export default async function NotificationsPage({
         customerProgramMembership: {
           include: {
             loyaltyProgram: true,
-            businessCustomerMembership: {
-              include: { globalCustomer: true },
-            },
+            businessCustomerMembership: true,
           },
         },
       },
@@ -332,7 +326,7 @@ function AlertCard({
   assignableUsers: Array<{ id: number; name: string; role: string }>;
 }) {
   const { alert, customerHref, staffHref, activityHref } = row;
-  const customer = alert.customerProgramMembership?.businessCustomerMembership.globalCustomer;
+  const customer = alert.customerProgramMembership?.businessCustomerMembership;
   const customerName = customer ? `${customer.firstName} ${customer.lastName ?? ""}`.trim() : "-";
   const programName = alert.customerProgramMembership?.loyaltyProgram.name ?? "-";
   const canManage = !["RESOLVED", "DISMISSED", "REVIEWED"].includes(alert.status);
@@ -680,7 +674,7 @@ type AlertRow = {
       customerProgramMembership: {
         include: {
           loyaltyProgram: true;
-          businessCustomerMembership: { include: { globalCustomer: true } };
+          businessCustomerMembership: true;
         };
       };
     };

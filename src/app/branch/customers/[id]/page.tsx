@@ -34,8 +34,8 @@ export default async function BranchCustomerProfilePage({
   }
 
   const membership = await getBusinessCustomerOrRedirect(id, user.businessId, user.branchId);
-  const customer = membership.globalCustomer;
   const cardUrl = await getCardUrl(membership.cardToken);
+  const customerName = `${membership.firstName} ${membership.lastName ?? ""}`.trim();
   const cardShareMessageType = qs.success?.includes("Customer created") ? "welcome" : "resend";
   const programCards = await Promise.all(
     membership.programMemberships.map(async (programMembership) => ({
@@ -78,8 +78,8 @@ export default async function BranchCustomerProfilePage({
         {qs.success ? <p className="mb-5 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{qs.success}</p> : null}
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <h2 className="text-2xl font-semibold text-[#111827]">{customer.firstName} {customer.lastName ?? ""}</h2>
-            <p className="mt-2 text-sm text-[#6B7280]">{formatUaePhoneDisplay(customer.normalizedPhone)}</p>
+            <h2 className="text-2xl font-semibold text-[#111827]">{customerName}</h2>
+            <p className="mt-2 text-sm text-[#6B7280]">{formatUaePhoneDisplay(membership.normalizedPhone)}</p>
             {rewardReady ? (
               <p className="mt-3 inline-flex rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">Reward Ready</p>
             ) : null}
@@ -87,8 +87,8 @@ export default async function BranchCustomerProfilePage({
           <Link href="/branch/customers" className="rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827]">Back</Link>
         </div>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
-          <Info label="Email" value={customer.email ?? "-"} />
-          <Info label="Birthday" value={customer.birthday ? formatDate(customer.birthday) : "-"} />
+          <Info label="Email" value={membership.email ?? "-"} />
+          <Info label="Birthday" value={membership.birthday ? formatDate(membership.birthday) : "-"} />
           <Info label="Marketing consent" value={membership.marketingConsent ? "Yes" : "No"} />
           <Info label="Current tier" value={membership.currentTier} />
           <Info label="Current progress" value={primaryProgram ? `${primaryProgress} / ${primaryProgram.loyaltyProgram.requiredStamps}` : "-"} />
@@ -125,8 +125,8 @@ export default async function BranchCustomerProfilePage({
           <CardShareActions
             cardUrl={cardUrl}
             businessName={membership.business.name}
-            customerName={`${customer.firstName} ${customer.lastName ?? ""}`.trim()}
-            recipientPhone={customer.normalizedPhone}
+            customerName={customerName}
+            recipientPhone={membership.normalizedPhone}
             auditMembershipUuid={membership.uuid}
             messageType={cardShareMessageType}
             showWallet={false}

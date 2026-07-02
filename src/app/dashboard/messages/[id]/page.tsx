@@ -25,7 +25,7 @@ export default async function MessageDetailPage({
     where: { uuid: id, businessId: user.businessId },
     include: {
       engagementEvent: true,
-      businessCustomerMembership: { include: { globalCustomer: true } },
+      businessCustomerMembership: true,
       preparedByUser: true,
       sentByUser: true,
     },
@@ -33,7 +33,7 @@ export default async function MessageDetailPage({
 
   if (!message) notFound();
 
-  const customer = message.businessCustomerMembership.globalCustomer;
+  const customer = message.businessCustomerMembership;
   const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim();
   const whatsAppLink = message.channel === "WHATSAPP" ? getWhatsAppManualLink(customer.phone, message.messageBody) : null;
   const canChange = ["DRAFT", "READY"].includes(message.status);

@@ -91,7 +91,7 @@ test("business owner customer search is ready for customer volume and direct nav
 
   for (const expected of [
     "Search by name, phone number, referral code or card number...",
-    "globalCustomer: { email",
+    "email: { contains: query",
     "programMemberships: {",
     "loyaltyProgram: { name",
     "createdBranch",

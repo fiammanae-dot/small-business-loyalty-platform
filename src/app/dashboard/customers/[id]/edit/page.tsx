@@ -17,7 +17,6 @@ export default async function EditCustomerPage({
   const { id } = await params;
   const qs = await searchParams;
   const membership = await getBusinessCustomerOrRedirect(id, user.businessId);
-  const customer = membership.globalCustomer;
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Edit customer">
@@ -27,15 +26,15 @@ export default async function EditCustomerPage({
           <CsrfInput scope="dashboard:customers" />
           <input type="hidden" name="membershipUuid" value={membership.uuid} />
           <div className="grid gap-4 md:grid-cols-2">
-            <Input name="firstName" label="First name" defaultValue={customer.firstName} required />
-            <Input name="lastName" label="Last name" defaultValue={customer.lastName ?? ""} />
-            <Input name="phone" label="Phone" defaultValue={formatUaePhoneDisplay(customer.normalizedPhone)} required />
-            <Input name="email" label="Email" type="email" defaultValue={customer.email ?? ""} />
+            <Input name="firstName" label="First name" defaultValue={membership.firstName} required />
+            <Input name="lastName" label="Last name" defaultValue={membership.lastName ?? ""} />
+            <Input name="phone" label="Phone" defaultValue={formatUaePhoneDisplay(membership.normalizedPhone)} required />
+            <Input name="email" label="Email" type="email" defaultValue={membership.email ?? ""} />
             <Input
               name="birthday"
               label="Birthday"
               type="date"
-              defaultValue={customer.birthday ? customer.birthday.toISOString().slice(0, 10) : ""}
+              defaultValue={membership.birthday ? membership.birthday.toISOString().slice(0, 10) : ""}
             />
             <label className="space-y-2">
               <span className="text-sm font-medium text-[#111827]">Status</span>

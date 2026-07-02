@@ -36,7 +36,7 @@ export default async function ProgramCustomersPage({
     include: {
       memberships: {
         include: {
-          businessCustomerMembership: { include: { globalCustomer: true, createdBranch: true } },
+          businessCustomerMembership: { include: { createdBranch: true } },
           stampTransactions: { select: { createdAt: true }, orderBy: { createdAt: "desc" }, take: 1 },
         },
         orderBy: { enrolledAt: "desc" },
@@ -59,7 +59,7 @@ export default async function ProgramCustomersPage({
       status: "ACTIVE",
       programMemberships: { none: { loyaltyProgramId: program.id } },
     },
-    include: { globalCustomer: true, createdBranch: true },
+    include: { createdBranch: true },
     orderBy: { joinedAt: "desc" },
   });
 
@@ -91,8 +91,8 @@ export default async function ProgramCustomersPage({
               required
               options={availableCustomers.map((customer) => ({
                 value: customer.uuid,
-                label: (customer.globalCustomer.firstName + " " + (customer.globalCustomer.lastName ?? "")).trim(),
-                description: customer.globalCustomer.phone + (customer.globalCustomer.email ? " - " + customer.globalCustomer.email : ""),
+                label: (customer.firstName + " " + (customer.lastName ?? "")).trim(),
+                description: customer.phone + (customer.email ? " - " + customer.email : ""),
                 badge: customer.createdBranch?.name ?? "Business customer",
               }))}
             />
@@ -120,7 +120,8 @@ type ProgramWithMembers = {
     stampTransactions: Array<{ createdAt: Date }>;
     businessCustomerMembership: {
       uuid: string;
-      globalCustomer: { firstName: string; lastName: string | null };
+      firstName: string;
+      lastName: string | null;
       createdBranch: { name: string } | null;
     };
   }>;
@@ -153,7 +154,7 @@ function ProgramMembersTable({ program }: { program: ProgramWithMembers }) {
                   return (
                     <tr key={membership.id}>
                       <DataTableCell className="font-semibold text-[#0F172A]">
-                        <div>{membership.businessCustomerMembership.globalCustomer.firstName} {membership.businessCustomerMembership.globalCustomer.lastName ?? ""}</div>
+                        <div>{membership.businessCustomerMembership.firstName} {membership.businessCustomerMembership.lastName ?? ""}</div>
                         <div className="mt-1 text-xs font-normal text-[#64748B]">{membership.businessCustomerMembership.createdBranch?.name ?? "Business customer"}</div>
                       </DataTableCell>
                       <DataTableCell className="min-w-48">
@@ -190,7 +191,7 @@ function ProgramMemberCard({ membership, program }: { membership: ProgramWithMem
     <article className="rounded-md border border-[#E2E8F0] bg-white p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="font-semibold text-[#0F172A]">{membership.businessCustomerMembership.globalCustomer.firstName} {membership.businessCustomerMembership.globalCustomer.lastName ?? ""}</h3>
+          <h3 className="font-semibold text-[#0F172A]">{membership.businessCustomerMembership.firstName} {membership.businessCustomerMembership.lastName ?? ""}</h3>
           <p className="mt-1 text-sm text-[#64748B]">{membership.businessCustomerMembership.createdBranch?.name ?? "Business customer"}</p>
         </div>
         {rewardReady ? <StatusBadge tone="warning">Reward Ready</StatusBadge> : <StatusBadge tone="success">Active</StatusBadge>}

@@ -38,7 +38,7 @@ export default async function ReferralLandingPage({
       light: "#FFFFFF",
     },
   });
-  const referrerName = `${referrer.globalCustomer.firstName} ${referrer.globalCustomer.lastName ?? ""}`.trim();
+  const referrerName = `${referrer.firstName} ${referrer.lastName ?? ""}`.trim();
   const referrerDisplayName = referrerName || "your referrer";
   const rewardMessage = referrerName
     ? `Join the loyalty program and complete your first visit. Both you and ${referrerName} will receive referral rewards.`

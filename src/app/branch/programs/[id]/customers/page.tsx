@@ -32,7 +32,7 @@ export default async function BranchProgramCustomersPage({
     include: {
       memberships: {
         where: { businessCustomerMembership: { createdBranchId: user.branchId } },
-        include: { businessCustomerMembership: { include: { globalCustomer: true, createdBranch: true } } },
+        include: { businessCustomerMembership: { include: { createdBranch: true } } },
         orderBy: { enrolledAt: "desc" },
       },
     },
@@ -52,7 +52,7 @@ export default async function BranchProgramCustomersPage({
       status: "ACTIVE",
       programMemberships: { none: { loyaltyProgramId: program.id } },
     },
-    include: { globalCustomer: true, createdBranch: true },
+    include: { createdBranch: true },
     orderBy: { joinedAt: "desc" },
   });
 
@@ -78,8 +78,8 @@ export default async function BranchProgramCustomersPage({
             required
             options={availableCustomers.map((customer) => ({
               value: customer.uuid,
-              label: `${customer.globalCustomer.firstName} ${customer.globalCustomer.lastName ?? ""}`.trim(),
-              description: `${customer.globalCustomer.phone}${customer.globalCustomer.email ? ` · ${customer.globalCustomer.email}` : ""}`,
+              label: `${customer.firstName} ${customer.lastName ?? ""}`.trim(),
+              description: `${customer.phone}${customer.email ? ` · ${customer.email}` : ""}`,
               badge: customer.createdBranch?.name ?? "Business customer",
             }))}
           />
@@ -104,7 +104,7 @@ export default async function BranchProgramCustomersPage({
               {program.memberships.map((membership) => (
                 <tr key={membership.id}>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 font-semibold text-[#111827]">
-                    {membership.businessCustomerMembership.globalCustomer.firstName} {membership.businessCustomerMembership.globalCustomer.lastName ?? ""}
+                    {membership.businessCustomerMembership.firstName} {membership.businessCustomerMembership.lastName ?? ""}
                   </td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{progressValue(membership.earnedStamps, membership.bonusStamps)} / {program.requiredStamps}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">
@@ -124,7 +124,7 @@ export default async function BranchProgramCustomersPage({
         </div>
         <div className="mt-6 grid gap-3 md:hidden">
           {program.memberships.map((membership) => {
-            const customer = membership.businessCustomerMembership.globalCustomer;
+            const customer = membership.businessCustomerMembership;
             const progress = progressValue(membership.earnedStamps, membership.bonusStamps);
             const status = programCustomerStatusLabel({
               status: membership.status,

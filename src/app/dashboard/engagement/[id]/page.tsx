@@ -25,7 +25,6 @@ export default async function EngagementEventDetailPage({
     include: {
       customer: {
         include: {
-          globalCustomer: true,
           createdBranch: true,
         },
       },
@@ -34,8 +33,7 @@ export default async function EngagementEventDetailPage({
 
   if (!event) notFound();
 
-  const customer = event.customer.globalCustomer;
-  const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim();
+  const customerName = `${event.customer.firstName} ${event.customer.lastName ?? ""}`.trim();
   const template = await getMessageTemplate(user.businessId, event.eventType);
   const message = renderEngagementMessage(template.message, event.metadata, customerName, business.name);
   const whatsappMessage = `${message}\n\n${business.name}`;

@@ -25,15 +25,15 @@ async function buildExport(type: string, businessId: number) {
   if (type === "customers") {
     const rows = await prisma.businessCustomerMembership.findMany({
       where: { businessId },
-      include: { globalCustomer: true, createdBranch: true },
+      include: { createdBranch: true },
       orderBy: { joinedAt: "desc" },
     });
     return {
       filename: "customers.csv",
       csv: toCsv(rows.map((row) => ({
-        customer_name: `${row.globalCustomer.firstName} ${row.globalCustomer.lastName ?? ""}`.trim(),
-        phone: row.globalCustomer.phone,
-        email: row.globalCustomer.email,
+        customer_name: `${row.firstName} ${row.lastName ?? ""}`.trim(),
+        phone: row.phone,
+        email: row.email,
         marketing_consent: row.marketingConsent,
         status: row.status,
         card_status: row.cardStatus,
@@ -72,7 +72,7 @@ async function buildExport(type: string, businessId: number) {
         branch: true,
         redeemedByUser: true,
         customerProgramMembership: {
-          include: { businessCustomerMembership: { include: { globalCustomer: true } } },
+          include: { businessCustomerMembership: true },
         },
       },
       orderBy: { redeemedAt: "desc" },
@@ -81,7 +81,7 @@ async function buildExport(type: string, businessId: number) {
       filename: "redemptions.csv",
       csv: toCsv(rows.map((row) => ({
         reward: row.rewardName,
-        customer_name: `${row.customerProgramMembership.businessCustomerMembership.globalCustomer.firstName} ${row.customerProgramMembership.businessCustomerMembership.globalCustomer.lastName ?? ""}`.trim(),
+        customer_name: `${row.customerProgramMembership.businessCustomerMembership.firstName} ${row.customerProgramMembership.businessCustomerMembership.lastName ?? ""}`.trim(),
         branch: row.branch?.name,
         redeemed_by: row.redeemedByUser.name,
         redeemed_at: formatDateTime(row.redeemedAt),

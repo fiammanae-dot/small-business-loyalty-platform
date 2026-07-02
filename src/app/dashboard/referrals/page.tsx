@@ -37,10 +37,10 @@ export default async function ReferralsPage({
               referrerMembership: {
                 is: {
                   OR: [
-                    { globalCustomer: { is: { firstName: { contains: search, mode: "insensitive" } } } },
-                    { globalCustomer: { is: { lastName: { contains: search, mode: "insensitive" } } } },
-                    { globalCustomer: { is: { phone: { contains: search, mode: "insensitive" } } } },
-                    { globalCustomer: { is: { normalizedPhone: { contains: search, mode: "insensitive" } } } },
+                    { firstName: { contains: search, mode: "insensitive" } },
+                    { lastName: { contains: search, mode: "insensitive" } },
+                    { phone: { contains: search, mode: "insensitive" } },
+                    { normalizedPhone: { contains: search, mode: "insensitive" } },
                   ],
                 },
               },
@@ -49,10 +49,10 @@ export default async function ReferralsPage({
               referredMembership: {
                 is: {
                   OR: [
-                    { globalCustomer: { is: { firstName: { contains: search, mode: "insensitive" } } } },
-                    { globalCustomer: { is: { lastName: { contains: search, mode: "insensitive" } } } },
-                    { globalCustomer: { is: { phone: { contains: search, mode: "insensitive" } } } },
-                    { globalCustomer: { is: { normalizedPhone: { contains: search, mode: "insensitive" } } } },
+                    { firstName: { contains: search, mode: "insensitive" } },
+                    { lastName: { contains: search, mode: "insensitive" } },
+                    { phone: { contains: search, mode: "insensitive" } },
+                    { normalizedPhone: { contains: search, mode: "insensitive" } },
                   ],
                 },
               },
@@ -68,8 +68,8 @@ export default async function ReferralsPage({
       orderBy: { createdAt: "desc" },
       take: 100,
       include: {
-        referrerMembership: { include: { globalCustomer: true } },
-        referredMembership: { include: { globalCustomer: true } },
+        referrerMembership: true,
+        referredMembership: true,
         referredGlobalCustomer: true,
         referredFirstStampBranch: true,
         rewards: { include: { loyaltyProgram: true }, orderBy: { createdAt: "desc" } },
@@ -102,7 +102,6 @@ export default async function ReferralsPage({
   const referrerDetails = referrerIds.length
     ? await prisma.businessCustomerMembership.findMany({
         where: { businessId: user.businessId, id: { in: referrerIds } },
-        include: { globalCustomer: true },
       })
     : [];
   const referrerById = new Map(referrerDetails.map((membership) => [membership.id, membership]));
@@ -200,7 +199,7 @@ export default async function ReferralsPage({
         <div className="mt-4 grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
           {topReferrers.map((row, index) => {
             const membership = referrerById.get(row.referrerMembershipId);
-            const name = membership ? customerName(membership.globalCustomer) : `Customer #${row.referrerMembershipId}`;
+            const name = membership ? customerName(membership) : `Customer #${row.referrerMembershipId}`;
             return (
               <Link key={row.referrerMembershipId} href={membership ? `/dashboard/customers/${membership.uuid}` : "/dashboard/referrals"} className="min-w-0 rounded-md border border-[#E5E7EB] p-4 transition business-hover">
                 <div className="flex min-w-0 items-start justify-between gap-3">
@@ -227,7 +226,7 @@ export default async function ReferralsPage({
 
 function ReferralCard({ referral }: { referral: ReferralRow }) {
   const latestReward = referral.rewards[0] ?? null;
-  const referred = referral.referredMembership?.globalCustomer ?? referral.referredGlobalCustomer;
+  const referred = referral.referredMembership ?? referral.referredGlobalCustomer;
 
   return (
     <article className="min-w-0 rounded-md border border-[#E5E7EB] p-5 transition business-hover">
@@ -238,7 +237,7 @@ function ReferralCard({ referral }: { referral: ReferralRow }) {
             <span className="rounded-md bg-orange-50 business-bg-soft px-2 py-1 text-xs font-semibold business-primary-strong">{referral.referralCode}</span>
           </div>
           <h3 className="mt-4 break-words text-lg font-semibold leading-7 text-[#111827]">
-            {customerName(referral.referrerMembership.globalCustomer)} referred {referred ? customerName(referred) : "a customer"}
+            {customerName(referral.referrerMembership)} referred {referred ? customerName(referred) : "a customer"}
           </h3>
           <dl className="mt-5 grid min-w-0 gap-3 text-sm text-[#6B7280] lg:grid-cols-2">
             <ReferralMeta label="Created" value={formatDateTime(referral.createdAt)} />
@@ -246,7 +245,7 @@ function ReferralCard({ referral }: { referral: ReferralRow }) {
             <ReferralMeta label="Reward" value={latestReward ? `${latestReward.bonusStamps} stamp${latestReward.bonusStamps === 1 ? "" : "s"} - ${friendlyStatus(latestReward.status)}` : "-"} />
             <ReferralMeta label="First Visit" value={referral.qualifiedAt ? "Completed" : "Pending"} />
             <ReferralMeta label="Branch" value={referral.referredFirstStampBranch?.name ?? "-"} />
-            <ReferralMeta label="Referrer" value={customerName(referral.referrerMembership.globalCustomer)} />
+            <ReferralMeta label="Referrer" value={customerName(referral.referrerMembership)} />
             <ReferralMeta label="Referred" value={referred ? customerName(referred) : "Pending"} className="lg:col-span-2" />
           </dl>
           {referral.rejectionReason ? <p className="mt-2 text-sm font-semibold text-red-700">{referral.rejectionReason}</p> : null}
@@ -313,8 +312,8 @@ function buildStatusCounts(referrals: Array<{ status: ReferralStatus; rewards: A
 
 type ReferralRow = Prisma.ReferralGetPayload<{
   include: {
-    referrerMembership: { include: { globalCustomer: true } };
-    referredMembership: { include: { globalCustomer: true } };
+    referrerMembership: true;
+    referredMembership: true;
     referredGlobalCustomer: true;
     referredFirstStampBranch: true;
     rewards: { include: { loyaltyProgram: true } };

@@ -36,9 +36,9 @@ test("customer creation stores normalized phone and uses it for duplicate detect
   assert.match(customers, /where: \{ normalizedPhone \}/);
   assert.match(customers, /email: \{ equals: trimmedEmail, mode: "insensitive" \}/);
   assert.match(customers, /phone: normalizedPhone/);
-  assert.match(customers, /businessId_globalCustomerId/);
+  assert.match(customers, /@@unique\(\[businessId, normalizedPhone\]\)|OR:\s*\[\s*\{\s*normalizedPhone\s*\}/s);
   assert.match(actions, /const normalizedPhone = normalizePhone\(identity\.data\.phone\)/);
-  assert.match(actions, /This phone number is already enrolled in your business/);
+  assert.match(customers, /This customer is already enrolled in your business/);
   assert.match(actions, /phone: normalizedPhone/);
   assert.match(editPage, /name="phone"/);
   assert.doesNotMatch(editPage, /name="phone"[^>]+disabled/);

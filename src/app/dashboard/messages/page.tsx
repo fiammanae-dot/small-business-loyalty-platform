@@ -31,11 +31,11 @@ export default async function MessageOutboxPage({
     orderBy: { createdAt: "desc" },
     include: {
       engagementEvent: true,
-      businessCustomerMembership: { include: { globalCustomer: true } },
+      businessCustomerMembership: true,
     },
   });
   const messages = allMessages.filter((message) => {
-    const customer = message.businessCustomerMembership.globalCustomer;
+    const customer = message.businessCustomerMembership;
     const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim().toLowerCase();
     const matchesSearch =
       !query ||
@@ -105,7 +105,7 @@ export default async function MessageOutboxPage({
 
         <div className="mt-5 grid gap-3 lg:hidden">
           {messages.map((message) => {
-            const customer = message.businessCustomerMembership.globalCustomer;
+            const customer = message.businessCustomerMembership;
             const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim();
             return (
               <article key={message.id} className="rounded-md border border-[#E5E7EB] p-4">
@@ -136,7 +136,7 @@ export default async function MessageOutboxPage({
             </thead>
             <tbody>
               {messages.map((message) => {
-                const customer = message.businessCustomerMembership.globalCustomer;
+                const customer = message.businessCustomerMembership;
                 const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim();
                 return (
                   <tr key={message.id}>

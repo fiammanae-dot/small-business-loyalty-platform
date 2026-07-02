@@ -53,8 +53,7 @@ export default async function PublicCustomerCardPage({
   });
 
   const branding = resolveBranding(membership.business.branding);
-  const customer = membership.globalCustomer;
-  const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim();
+  const customerName = `${membership.firstName} ${membership.lastName ?? ""}`.trim();
   const cardUrl = await getCardUrl(token);
   const cardQrCode = await getCardQrDataUrl(token);
   const referralUrl = membership.referralCode && membership.referralEnabled ? await getReferralUrl(membership.referralCode) : null;
@@ -133,7 +132,7 @@ export default async function PublicCustomerCardPage({
       memberSince: formatDate(membership.createdAt),
       tierLabel: tier.badgeLabel,
       tierIcon: tier.badgeIcon,
-      phone: customer.normalizedPhone,
+      phone: membership.normalizedPhone,
     },
     program: primaryProgram
       ? {
@@ -233,7 +232,7 @@ export default async function PublicCustomerCardPage({
               cardUrl={cardUrl}
               businessName={membership.business.name}
               customerName={customerName}
-              recipientPhone={customer.normalizedPhone}
+              recipientPhone={membership.normalizedPhone}
               whatsappLabel="Share via WhatsApp"
               showWallet={false}
               buttonColor={branding.buttonColor}

@@ -40,7 +40,7 @@ export default async function ProgramDetailPage({
     include: {
       memberships: {
         include: {
-          businessCustomerMembership: { include: { globalCustomer: true } },
+          businessCustomerMembership: true,
           stampTransactions: { select: { quantity: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 1 },
         },
       },
@@ -53,7 +53,7 @@ export default async function ProgramDetailPage({
       include: {
         memberships: {
           include: {
-            businessCustomerMembership: { include: { globalCustomer: true } },
+            businessCustomerMembership: true,
             stampTransactions: { select: { quantity: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 1 },
           },
         },
@@ -238,7 +238,7 @@ export default async function ProgramDetailPage({
                   return (
                     <tr key={membership.id}>
                       <DataTableCell className="font-semibold text-[#0F172A]">
-                        {membership.businessCustomerMembership.globalCustomer.firstName} {membership.businessCustomerMembership.globalCustomer.lastName ?? ""}
+                        {membership.businessCustomerMembership.firstName} {membership.businessCustomerMembership.lastName ?? ""}
                       </DataTableCell>
                       <DataTableCell className="min-w-48">
                         <ProgressBar value={progress} max={safeRequiredStamps} label={progress + " / " + safeRequiredStamps} barClassName="business-button" />

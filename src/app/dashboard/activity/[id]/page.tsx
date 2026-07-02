@@ -29,9 +29,7 @@ export default async function ActivityDetailPage({
       customerProgramMembership: {
         include: {
           loyaltyProgram: true,
-          businessCustomerMembership: {
-            include: { globalCustomer: true },
-          },
+          businessCustomerMembership: true,
         },
       },
     },
@@ -40,7 +38,6 @@ export default async function ActivityDetailPage({
   if (!transaction) notFound();
 
   const customerMembership = transaction.customerProgramMembership.businessCustomerMembership;
-  const customer = customerMembership.globalCustomer;
   const program = transaction.customerProgramMembership.loyaltyProgram;
   const progress = progressValue(
     transaction.customerProgramMembership.earnedStamps,
@@ -65,7 +62,7 @@ export default async function ActivityDetailPage({
           <Info label="Transaction ID" value={`#${transaction.id}`} />
           <Info label="Quantity issued" value={transaction.quantity.toString()} />
           <Info label="Source" value={transaction.source.replaceAll("_", " ")} />
-          <Info label="Customer" value={`${customer.firstName} ${customer.lastName ?? ""}`.trim()} />
+          <Info label="Customer" value={`${customerMembership.firstName} ${customerMembership.lastName ?? ""}`.trim()} />
           <Info label="Program" value={program.name} />
           <Info label="Progress after activity" value={`${progress} / ${program.requiredStamps}`} />
           <Info label="Issued by" value={transaction.issuedByUser.name} />
