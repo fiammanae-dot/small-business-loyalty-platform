@@ -36,4 +36,8 @@ test("platform businesses page exposes filtering, sorting, badges, and mobile ca
   assert.match(page, /business\._count\.branches <= maxBranches/);
   assert.match(page, /sort === "plan"/);
   assert.match(page, /sort === "branches"/);
+  assert.doesNotMatch(page, /"Created date", "Actions"/);
+  assert.doesNotMatch(page, /BusinessActions/);
+  assert.match(page, /href=\{`\/platform\/businesses\/\$\{business\.uuid\}`\}/);
+  assert.match(page, /Open \$\{business\.name\} business details/);
 });

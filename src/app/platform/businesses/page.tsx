@@ -1,9 +1,7 @@
 import type { BusinessType, Prisma, RecordStatus } from "@prisma/client";
-import { Eye, MoreHorizontal, Pencil, Plus, Power, Search, SlidersHorizontal, X } from "lucide-react";
+import { ChevronRight, Plus, Search, SlidersHorizontal, X } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
-import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
@@ -13,7 +11,6 @@ import { formatDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { businessTypeLabels } from "@/lib/roles";
 import { requireRole } from "@/lib/session";
-import { toggleBusinessStatusAction } from "@/app/platform/businesses/actions";
 
 type BusinessesSearchParams = {
   q?: string;
@@ -424,10 +421,10 @@ export default async function BusinessesPage({
         </div>
 
         <div className="mt-4 hidden overflow-x-auto lg:block">
-          <table className="w-full min-w-[980px] border-separate border-spacing-0 text-left text-sm">
+          <table className="w-full min-w-[860px] border-separate border-spacing-0 text-left text-sm">
             <thead>
               <tr className="text-[#6B7280]">
-                {["Business name", "Business type", "Status", "Branch count", "Plan", "Created date", "Actions"].map((heading) => (
+                {["Business name", "Business type", "Status", "Branch count", "Plan", "Created date"].map((heading) => (
                   <th key={heading} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">
                     {heading}
                   </th>
@@ -536,14 +533,19 @@ type BusinessWithListData = Prisma.BusinessGetPayload<{
 }>;
 
 function BusinessRow({ business }: { business: BusinessWithListData }) {
-  const nextStatus = business.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
   const planName = business.subscriptions[0]?.subscriptionPlan.name ?? "Unassigned";
 
   return (
-    <tr className="align-top">
+    <tr className="group align-top transition hover:bg-[#FFF7ED]">
       <td className="border-b border-[#E5E7EB] px-3 py-3">
         <div className="flex flex-col gap-2">
-          <span className="font-semibold text-[#111827]">{business.name}</span>
+          <Link
+            href={`/platform/businesses/${business.uuid}`}
+            className="inline-flex w-fit items-center gap-1 font-semibold text-[#111827] transition hover:text-[#F97316] hover:underline focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F97316] group-hover:text-[#F97316]"
+          >
+            {business.name}
+            <ChevronRight className="h-4 w-4 opacity-0 transition group-hover:opacity-100" aria-hidden="true" />
+          </Link>
           {isSuspiciousBusinessName(business.name) ? <SuspiciousBadge /> : null}
         </div>
       </td>
@@ -554,22 +556,25 @@ function BusinessRow({ business }: { business: BusinessWithListData }) {
       <td className="border-b border-[#E5E7EB] px-3 py-3 text-center font-semibold text-[#111827]">{business._count.branches}</td>
       <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{planName}</td>
       <td className="whitespace-nowrap border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{formatDate(business.createdAt)}</td>
-      <td className="border-b border-[#E5E7EB] px-3 py-3">
-        <BusinessActions business={business} nextStatus={nextStatus} variant="table" />
-      </td>
     </tr>
   );
 }
 
 function BusinessMobileCard({ business }: { business: BusinessWithListData }) {
-  const nextStatus = business.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
   const planName = business.subscriptions[0]?.subscriptionPlan.name ?? "Unassigned";
 
   return (
-    <article className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
+    <Link
+      href={`/platform/businesses/${business.uuid}`}
+      className="group block rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:border-[#F97316] hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F97316]"
+      aria-label={`Open ${business.name} business details`}
+    >
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="font-semibold text-[#111827]">{business.name}</h3>
+        <div className="min-w-0">
+          <h3 className="flex min-w-0 items-center gap-1 break-words font-semibold text-[#111827] transition group-hover:text-[#F97316] group-hover:underline">
+            {business.name}
+            <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+          </h3>
           <p className="mt-1 text-sm text-[#6B7280]">{businessTypeLabels[business.businessType]}</p>
         </div>
         <StatusBadge status={business.status} />
@@ -585,100 +590,7 @@ function BusinessMobileCard({ business }: { business: BusinessWithListData }) {
         <Detail label="Created" value={formatDate(business.createdAt)} />
         <Detail label="Status" value={business.status === "ACTIVE" ? "Active" : "Inactive"} />
       </dl>
-      <div className="mt-4">
-        <BusinessActions business={business} nextStatus={nextStatus} variant="mobile" />
-      </div>
-    </article>
-  );
-}
-
-function BusinessActions({
-  business,
-  nextStatus,
-  variant = "mobile",
-}: {
-  business: BusinessWithListData;
-  nextStatus: RecordStatus;
-  variant?: "table" | "mobile";
-}) {
-  const toggleLabel = nextStatus === "ACTIVE" ? "Enable" : "Disable";
-  const toggleMessage =
-    nextStatus === "ACTIVE"
-      ? "Enable this business and restore access?"
-      : "Disable this business? Owners, staff, scanners, and customer activity may be blocked.";
-
-  if (variant === "table") {
-    return (
-      <div className="flex items-center gap-2">
-        <Link
-          className="inline-flex h-9 items-center justify-center gap-1 rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]"
-          href={`/platform/businesses/${business.uuid}`}
-        >
-          <Eye className="h-4 w-4" />
-          View
-        </Link>
-        <details className="relative">
-          <summary className="inline-flex h-9 cursor-pointer list-none items-center justify-center gap-1 rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]">
-            <MoreHorizontal className="h-4 w-4" />
-            More
-          </summary>
-          <div className="absolute right-0 z-20 mt-2 w-44 rounded-md border border-[#E5E7EB] bg-white p-2 shadow-lg">
-            <Link
-              className="flex min-h-10 items-center gap-2 rounded-md px-3 text-sm font-semibold text-[#111827] transition hover:bg-orange-50 hover:text-[#F97316]"
-              href={`/platform/businesses/${business.uuid}/edit`}
-            >
-              <Pencil className="h-4 w-4" />
-              Edit
-            </Link>
-            <form action={toggleBusinessStatusAction} className="mt-1">
-              <CsrfInput scope="platform:businesses" />
-              <input type="hidden" name="businessId" value={business.id} />
-              <input type="hidden" name="businessUuid" value={business.uuid} />
-              <input type="hidden" name="nextStatus" value={nextStatus} />
-              <ConfirmSubmitButton
-                message={toggleMessage}
-                className="flex min-h-10 w-full items-center gap-2 rounded-md px-3 text-left text-sm font-semibold text-[#111827] transition hover:bg-orange-50 hover:text-[#F97316]"
-              >
-                <Power className="h-4 w-4" />
-                {toggleLabel}
-              </ConfirmSubmitButton>
-            </form>
-          </div>
-        </details>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-wrap gap-2">
-      <Link
-        className="inline-flex h-9 items-center justify-center gap-1 rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]"
-        href={`/platform/businesses/${business.uuid}`}
-      >
-        <Eye className="h-4 w-4" />
-        View
-      </Link>
-      <Link
-        className="inline-flex h-9 items-center justify-center gap-1 rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]"
-        href={`/platform/businesses/${business.uuid}/edit`}
-      >
-        <Pencil className="h-4 w-4" />
-        Edit
-      </Link>
-      <form action={toggleBusinessStatusAction}>
-        <CsrfInput scope="platform:businesses" />
-        <input type="hidden" name="businessId" value={business.id} />
-        <input type="hidden" name="businessUuid" value={business.uuid} />
-        <input type="hidden" name="nextStatus" value={nextStatus} />
-        <ConfirmSubmitButton
-          message={toggleMessage}
-          className="inline-flex h-9 items-center justify-center gap-1 rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]"
-        >
-          <Power className="h-4 w-4" />
-          {toggleLabel}
-        </ConfirmSubmitButton>
-      </form>
-    </div>
+    </Link>
   );
 }
 

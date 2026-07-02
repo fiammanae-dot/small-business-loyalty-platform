@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ChevronRight, Pencil, Power } from "lucide-react";
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
@@ -57,31 +58,51 @@ export default async function BusinessDetailPage({ params, searchParams }: { par
   const now = new Date();
   const activeSupportSession = business.supportSessions.find((session) => session.status === "ACTIVE" && !session.endedAt && session.expiresAt > now);
   const lastSupportSession = business.supportSessions[0] ?? null;
+  const planName = currentSubscription?.subscriptionPlan.name ?? "Unassigned Plan";
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title={business.name}>
       {qs.error || qs.success ? <p className={`rounded-md border px-3 py-2 text-sm ${qs.error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>{qs.error ?? qs.success}</p> : null}
 
-      <div className="grid max-w-full min-w-0 gap-2 sm:flex sm:flex-wrap sm:gap-3">
-        <Link href="/platform/businesses" className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] hover:border-[#F97316] hover:text-[#F97316]">
-          Back to businesses
-        </Link>
-        <Link href={`/platform/businesses/${business.uuid}/edit`} className="inline-flex min-h-11 items-center justify-center rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white hover:bg-orange-600">
-          Edit business
-        </Link>
-        <form action={toggleBusinessStatusAction} className="min-w-0">
-          <CsrfInput scope="platform:businesses" />
-          <input type="hidden" name="businessId" value={business.id} />
-          <input type="hidden" name="businessUuid" value={business.uuid} />
-          <input type="hidden" name="nextStatus" value={nextStatus} />
-          <ConfirmSubmitButton
-            message={nextStatus === "ACTIVE" ? "Enable this business and restore access?" : "Disable this business? Owners, staff, scanners, and customer activity may be blocked."}
-            className="inline-flex min-h-11 w-full items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] hover:border-[#F97316] hover:text-[#F97316] sm:w-auto"
-          >
-            {nextStatus === "ACTIVE" ? "Enable business" : "Disable business"}
-          </ConfirmSubmitButton>
-        </form>
-      </div>
+      <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm md:p-5">
+        <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-sm font-semibold text-[#6B7280]">
+          <Link href="/platform/businesses" className="transition hover:text-[#F97316] hover:underline">
+            Businesses
+          </Link>
+          <ChevronRight className="h-4 w-4" aria-hidden="true" />
+          <span className="text-[#111827]">{business.name}</span>
+        </nav>
+
+        <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="break-words text-2xl font-black tracking-tight text-[#111827] md:text-3xl">{business.name}</h1>
+              <StatusBadge status={business.status} />
+            </div>
+            <p className="mt-2 text-sm font-semibold text-[#6B7280]">{planName}</p>
+          </div>
+
+          <div className="grid gap-2 sm:flex sm:flex-wrap sm:justify-end">
+            <Link href={`/platform/businesses/${business.uuid}/edit`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white transition hover:bg-orange-600">
+              <Pencil className="h-4 w-4" />
+              Edit
+            </Link>
+            <form action={toggleBusinessStatusAction} className="min-w-0">
+              <CsrfInput scope="platform:businesses" />
+              <input type="hidden" name="businessId" value={business.id} />
+              <input type="hidden" name="businessUuid" value={business.uuid} />
+              <input type="hidden" name="nextStatus" value={nextStatus} />
+              <ConfirmSubmitButton
+                message={nextStatus === "ACTIVE" ? "Enable this business and restore access?" : "Disable this business? Owners, staff, scanners, and customer activity may be blocked."}
+                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316] sm:w-auto"
+              >
+                <Power className="h-4 w-4" />
+                {nextStatus === "ACTIVE" ? "Enable" : "Disable"}
+              </ConfirmSubmitButton>
+            </form>
+          </div>
+        </div>
+      </section>
 
       <section className="grid gap-4 lg:grid-cols-3">
         <InfoCard title="Business profile">
