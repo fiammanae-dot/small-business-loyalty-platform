@@ -217,6 +217,9 @@ test("business owners can view support history without internal audit details", 
   assert.match(page, /Support Summary/);
   assert.match(page, /Started at/);
   assert.match(page, /Ended at/);
+  assert.match(page, /https:\/\/wa\.me\/971505009707/);
+  assert.match(page, /Contact LoyaltyBase support on WhatsApp/);
+  assert.match(page, /Hello LoyaltyBase Support, I need help with my account\./);
   assert.doesNotMatch(page, /activities/);
   assert.doesNotMatch(page, /adminUser/);
   assert.doesNotMatch(page, /Session ID/);

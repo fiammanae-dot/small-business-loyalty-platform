@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MessageCircle } from "lucide-react";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { EmptyState, PageIntro, SectionCard, StatusBadge } from "@/components/ui";
@@ -17,6 +18,7 @@ export default async function BusinessSupportHistoryPage() {
     prisma.supportRequest.findMany({ where: { businessId: user.businessId }, orderBy: { createdAt: "desc" }, take: 50, select: { id: true, reason: true, durationMinutes: true, readOnly: true, emergency: true, status: true, expiresAt: true, createdAt: true, reviewedAt: true, responseNote: true, requestedByUser: { select: { name: true, email: true } } } }),
   ]);
   const pendingRequests = requests.filter((request) => request.status === "PENDING");
+  const whatsappSupportUrl = `https://wa.me/971505009707?text=${encodeURIComponent("Hello LoyaltyBase Support, I need help with my account.")}`;
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Support History" hideWelcomeMessage>
@@ -35,6 +37,17 @@ export default async function BusinessSupportHistoryPage() {
           {sessions.length ? <><div className="hidden overflow-x-auto md:block"><table className="min-w-full divide-y divide-[#E2E8F0] text-sm"><thead className="bg-[#F8FAFC] text-left text-xs font-semibold uppercase tracking-wide text-[#64748B]"><tr><th className="px-4 py-3">Date</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Duration</th><th className="px-4 py-3">Reason</th><th className="px-4 py-3">Support Summary</th><th className="px-4 py-3">Started at</th><th className="px-4 py-3">Ended at</th></tr></thead><tbody className="divide-y divide-[#E2E8F0]">{sessions.map((session) => <tr key={`${session.startedAt.toISOString()}-${session.reason}`} className="align-top"><td className="px-4 py-3 font-semibold text-[#0F172A]">{formatShortDate(session.startedAt)}</td><td className="px-4 py-3"><StatusBadge tone={getSessionTone(session.status)}>{session.status}</StatusBadge></td><td className="px-4 py-3 text-[#334155]">{formatSupportDuration(session.startedAt, session.endedAt ?? session.expiresAt)}</td><td className="max-w-xs px-4 py-3 text-[#334155]"><span className="break-words">{session.reason}</span></td><td className="max-w-sm px-4 py-3 text-[#334155]"><span className="break-words">{session.supportSummary ?? "No summary recorded yet."}</span></td><td className="px-4 py-3 text-[#64748B]">{formatDateTime(session.startedAt)}</td><td className="px-4 py-3 text-[#64748B]">{session.endedAt ? formatDateTime(session.endedAt) : "Not ended"}</td></tr>)}</tbody></table></div><div className="grid gap-3 md:hidden">{sessions.map((session) => <article key={`${session.startedAt.toISOString()}-${session.reason}`} className="rounded-md border border-[#E2E8F0] bg-white p-4 shadow-sm"><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-bold text-[#0F172A]">{formatShortDate(session.startedAt)}</p><p className="mt-1 text-xs text-[#64748B]">{formatDateTime(session.startedAt)}</p></div><StatusBadge tone={getSessionTone(session.status)}>{session.status}</StatusBadge></div><dl className="mt-4 grid gap-3 text-sm"><Info label="Duration" value={formatSupportDuration(session.startedAt, session.endedAt ?? session.expiresAt)} /><Info label="Reason" value={session.reason} /><Info label="Support Summary" value={session.supportSummary ?? "No summary recorded yet."} /><Info label="Ended at" value={session.endedAt ? formatDateTime(session.endedAt) : "Not ended"} /></dl></article>)}</div></> : <EmptyState title="No support access recorded." description="LoyaltyBase support sessions for your business will appear here after they are completed." action={<Link href="/dashboard" className="inline-flex min-h-10 items-center rounded-md border border-[#CBD5E1] px-4 text-sm font-semibold text-[#0F172A] transition hover:border-[#F97316] hover:text-[#F97316]">Back to Dashboard</Link>} />}
         </SectionCard>
       </div>
+      <a
+        href={whatsappSupportUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Contact LoyaltyBase support on WhatsApp"
+        title="Contact LoyaltyBase support on WhatsApp"
+        className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-40 inline-flex min-h-14 min-w-14 items-center justify-center gap-2 rounded-full bg-[#25D366] px-4 text-sm font-bold text-white shadow-lg shadow-emerald-900/20 ring-1 ring-white/40 transition hover:-translate-y-0.5 hover:bg-[#1EBE5D] hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/30 md:bottom-6 md:right-6"
+      >
+        <MessageCircle aria-hidden="true" className="h-6 w-6" />
+        <span className="hidden whitespace-nowrap md:inline">WhatsApp Support</span>
+      </a>
     </DashboardShell>
   );
 }
