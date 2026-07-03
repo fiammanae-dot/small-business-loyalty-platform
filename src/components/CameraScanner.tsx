@@ -283,7 +283,7 @@ export function CameraScanner() {
     <SectionCard aria-label="Camera scanner" className="max-w-full overflow-x-hidden">
 
       {message ? (
-        <div className="rounded-md border border-orange-200 business-border-soft bg-orange-50 business-bg-soft px-3 py-2 text-sm font-semibold text-[#9A3412] business-text-strong">
+        <div className="rounded-md border business-border-soft business-bg-soft px-3 py-2 text-sm font-semibold business-text-strong">
           {message}
         </div>
       ) : null}
@@ -293,7 +293,7 @@ export function CameraScanner() {
       </div>
 
       <div className={`mt-4 grid gap-3 ${isCameraOpen || isScanning ? "sm:grid-cols-3" : "sm:grid-cols-1"}`}>
-        <button type="button" onClick={() => startCamera()} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md business-button px-4 text-sm font-semibold text-white">
+        <button type="button" onClick={() => startCamera()} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md business-button px-4 text-sm font-semibold">
           <Camera className="h-4 w-4" aria-hidden="true" />
           Start Camera
         </button>

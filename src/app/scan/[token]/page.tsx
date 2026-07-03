@@ -417,7 +417,7 @@ export default async function ScanResultPage({
       ) : null}
 
       {qs.undone ? (
-        <ScanStatusBanner tone="orange" title="Stamp undone" description="The last stamp was removed from customer progress and permanently recorded in audit history." />
+        <ScanStatusBanner tone="business" title="Stamp undone" description="The last stamp was removed from customer progress and permanently recorded in audit history." />
       ) : null}
 
       {redemption ? (
@@ -504,7 +504,7 @@ function ActionSummarySection({
   const remaining = Math.max(0, requiredStamps - progress);
 
   return (
-    <SectionCard className="border-[#FED7AA]">
+    <SectionCard className="business-border-soft">
       <ScannerResultCard
         customerName={customerName}
         tier={tier}
@@ -569,7 +569,7 @@ function QuickScanActions({ token, rewardReady, canRedeem }: { token: string; re
               message="This will add 1 visit to the customer's selected program."
               confirmLabel="Issue Stamp"
               cancelLabel="Cancel"
-              className="business-button min-h-12 w-full rounded-md bg-[#F97316] px-5 text-base font-semibold text-white shadow-sm transition"
+              className="business-button min-h-12 w-full rounded-md px-5 text-base font-semibold shadow-sm transition"
             >
               Issue Stamp
             </ConfirmSubmitButton>
@@ -612,7 +612,7 @@ function StampUndoPanel({
   sharePrompt?: React.ReactNode;
 }) {
   return (
-    <section className={`rounded-md border p-5 ${quantity >= 3 ? "border-orange-200 bg-orange-50 text-orange-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>
+    <section className={`rounded-md border p-5 ${quantity >= 3 ? "business-border-soft business-bg-soft business-text-strong" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h2 className="text-xl font-semibold">Stamp added successfully</h2>
@@ -639,7 +639,7 @@ function StampUndoPanel({
                 message="This will remove the last loyalty stamp issued to this customer and will be permanently recorded in the audit history."
                 confirmLabel="Undo Stamp"
                 cancelLabel="Cancel"
-                className="min-h-10 rounded-md border border-orange-300 bg-white px-4 text-sm font-bold text-orange-700 transition hover:bg-orange-100"
+                className="min-h-10 rounded-md border business-border-soft bg-white px-4 text-sm font-bold business-text-strong transition business-hover"
               >
                 Undo Stamp
               </ConfirmSubmitButton>
@@ -681,15 +681,15 @@ function AdvancedStampOptions({
   canOverrideCooldown: boolean;
 }) {
   return (
-    <details className="rounded-md border border-orange-100 bg-white shadow-sm">
+    <details className="rounded-md border business-border-soft bg-white shadow-sm">
       <summary className="cursor-pointer list-none px-4 py-4 text-sm font-semibold text-[#111827] marker:hidden">
         <span className="flex items-center justify-between gap-3">
           Advanced stamp options
           <span className="text-xs font-semibold text-[#6B7280]">Open</span>
         </span>
       </summary>
-      <div className="border-t border-orange-100 p-4">
-        <div className="mb-4 rounded-md border border-orange-200 bg-orange-50 p-3 text-sm text-orange-900">
+      <div className="border-t business-border-soft p-4">
+        <div className="mb-4 rounded-md border business-border-soft business-bg-soft p-3 text-sm business-text-strong">
           <p className="font-semibold">Suspicious Activity Alert</p>
           <p className="mt-1">
             Use these options when issuing multiple stamps or when repeated stamp activity needs a reason.
@@ -735,10 +735,10 @@ function ReferralInvitationScanScreen({
           <Info label="Tier" value={referrerTier ? `${referrerTier} member` : "Not assigned"} />
           <Info label="Referral ID" value={displayReferralId} />
         </div>
-        <div className="mt-5 rounded-md border border-orange-200 bg-orange-50 p-4 text-sm leading-6 text-orange-800 business-bg-soft business-border-soft business-text-strong">
+        <div className="mt-5 rounded-md border business-border-soft business-bg-soft p-4 text-sm leading-6 business-text-strong">
           Referral rewards are not issued now. They are activated after the referred customer completes their first valid loyalty stamp.
         </div>
-        <Link href={enrollmentHref} className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-md business-button px-5 text-sm font-semibold text-white sm:w-auto">
+        <Link href={enrollmentHref} className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-md business-button px-5 text-sm font-semibold sm:w-auto">
           Enroll New Customer With Referral
         </Link>
       </section>
@@ -849,7 +849,7 @@ function ProgramSelectionScreen({
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-sm font-semibold text-[#F97316] business-text">Customer validation</p>
+            <p className="text-sm font-semibold business-text">Customer validation</p>
             <h2 className="mt-2 text-2xl font-semibold text-[#111827]">{customerName}</h2>
             <p className="mt-1 text-sm text-[#6B7280]">{membership.business.name} � {membership.createdBranch?.name ?? "Unassigned"}</p>
           </div>
@@ -864,7 +864,7 @@ function ProgramSelectionScreen({
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm font-semibold text-[#F97316] business-text">Program selection required</p>
+            <p className="text-sm font-semibold business-text">Program selection required</p>
             <h2 className="mt-1 text-xl font-semibold text-[#111827]">Which program should receive this scan?</h2>
           </div>
           <p className="text-sm text-[#6B7280]">Only the selected program will be updated.</p>
@@ -898,7 +898,7 @@ function ProgramSelectionScreen({
                   <div className="mt-2 h-2 rounded-full business-bg-soft">
                     <div className="h-2 rounded-full business-button" style={{ width: `${progressPercent}%` }} />
                   </div>
-                  <p className="mt-3 text-sm font-semibold text-[#F97316] business-text">Select this program</p>
+                  <p className="mt-3 text-sm font-semibold business-text">Select this program</p>
                 </div>
               </Link>
             );
@@ -913,14 +913,14 @@ function ScanStatusBanner({
   title,
   description,
 }: {
-  tone: "green" | "blue" | "orange" | "red";
+  tone: "green" | "blue" | "business" | "red";
   title: string;
   description: string;
 }) {
   const classes = {
     green: "border-emerald-200 bg-emerald-50 text-emerald-800",
     blue: "border-blue-200 bg-blue-50 text-blue-800",
-    orange: "border-orange-200 bg-orange-50 text-orange-800",
+    business: "business-border-soft business-bg-soft business-text-strong",
     red: "border-red-200 bg-red-50 text-red-700",
   }[tone];
 
@@ -944,10 +944,10 @@ function StampIssuanceSection({
   canOverrideCooldown: boolean;
 }) {
   return (
-    <section className="rounded-md border-2 border-orange-200 bg-white p-5 shadow-sm">
+    <section className="rounded-md border-2 business-border-soft bg-white p-5 shadow-sm">
       <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
         <div>
-          <p className="text-sm font-semibold text-[#F97316]">Stamp issuance</p>
+          <p className="text-sm font-semibold business-text">Stamp issuance</p>
           <h2 className="mt-2 text-lg font-semibold text-[#111827]">Add earned stamps</h2>
           <p className="mt-2 text-sm leading-6 text-[#6B7280]">Only earned stamps are updated. Bonus stamps remain unchanged.</p>
         </div>
@@ -955,7 +955,7 @@ function StampIssuanceSection({
           Current progress: <span className="font-semibold text-[#111827]">{progress} / {requiredStamps}</span>
         </div>
       </div>
-      <form action={issueStampAction} className="mt-6 grid gap-4 rounded-md border-2 border-orange-200 bg-orange-50 p-4 md:grid-cols-[minmax(260px,0.8fr)_1fr_auto] md:items-end">
+      <form action={issueStampAction} className="mt-6 grid gap-4 rounded-md border-2 business-border-soft business-bg-soft p-4 md:grid-cols-[minmax(260px,0.8fr)_1fr_auto] md:items-end">
         <CsrfInput scope="scan:stamp" />
         <IdempotencyInput scope="stamp" />
         <input type="hidden" name="scanToken" value={token} />
@@ -965,7 +965,7 @@ function StampIssuanceSection({
             {[1, 2, 3, 4, 5].map((quantity) => (
               <label key={quantity} className="cursor-pointer">
                 <input className="peer sr-only" type="radio" name="quantity" value={quantity} defaultChecked={quantity === 1} />
-                <span className="flex min-h-12 items-center justify-center rounded-md border border-[#E5E7EB] bg-white text-sm font-semibold text-[#111827] transition peer-checked:border-[#F97316] peer-checked:bg-[#F97316] peer-checked:text-white">
+                <span className="flex min-h-12 items-center justify-center rounded-md border border-[#E5E7EB] bg-white text-sm font-semibold text-[#111827] transition peer-checked:border-[var(--business-primary,#F97316)] peer-checked:bg-[var(--business-button,#F97316)] peer-checked:text-[var(--business-button-foreground,#ffffff)]">
                   +{quantity}
                 </span>
               </label>
@@ -977,18 +977,18 @@ function StampIssuanceSection({
           <textarea
             name="reason"
             rows={3}
-            className="rounded-md border border-[#E5E7EB] px-3 py-2 text-sm font-normal outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+            className="rounded-md border border-[#E5E7EB] px-3 py-2 text-sm font-normal outline-none focus:border-[var(--business-primary,#F97316)] focus:ring-4 focus:ring-[var(--business-primary-soft,#ffedd5)]"
             placeholder="Required for multiple stamps or repeated stamps in a short time. Reason: customer purchased multiple items."
           />
         </label>
         <ConfirmSubmitButton
           message="Issue this stamp to this customer and selected program?"
-          className="h-12 rounded-md bg-[#F97316] px-6 text-base font-semibold text-white shadow-sm transition hover:bg-orange-600"
+          className="business-button h-12 rounded-md px-6 text-base font-semibold shadow-sm transition"
         >
           Add Stamp
         </ConfirmSubmitButton>
         {canOverrideCooldown ? (
-          <div className="rounded-md border border-orange-200 bg-white p-3 md:col-span-3">
+          <div className="rounded-md border business-border-soft bg-white p-3 md:col-span-3">
             <label className="flex items-center gap-2 text-sm font-semibold text-[#111827]">
               <input type="checkbox" name="overrideCooldown" className="h-4 w-4 rounded border-[#E5E7EB]" />
               Override cooldown rule
@@ -997,7 +997,7 @@ function StampIssuanceSection({
               Override reason
               <input
                 name="overrideReason"
-                className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm font-normal outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+                className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm font-normal outline-none focus:border-[var(--business-primary,#F97316)] focus:ring-4 focus:ring-[var(--business-primary-soft,#ffedd5)]"
                 placeholder="Required when overriding a cooldown violation"
               />
             </label>

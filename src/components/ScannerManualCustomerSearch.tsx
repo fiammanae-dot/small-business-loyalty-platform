@@ -81,7 +81,7 @@ export async function ScannerManualCustomerSearch({ businessId, branchId, query,
           placeholder="Name, phone, card link, scan token, or referral code"
           className="min-h-12 min-w-0 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm outline-none business-ring focus:ring-0"
         />
-        <button type="submit" className="inline-flex min-h-12 items-center justify-center rounded-md business-button px-5 text-sm font-semibold text-white">
+        <button type="submit" className="inline-flex min-h-12 items-center justify-center rounded-md business-button px-5 text-sm font-semibold">
           Search
         </button>
       </form>
@@ -96,7 +96,7 @@ export async function ScannerManualCustomerSearch({ businessId, branchId, query,
                 <p className="mt-1 text-emerald-800">Security note: this opens the existing server-side validation flow before any stamp, reward, or referral action.</p>
               </div>
             </div>
-            <Link href={scanFlowHref(secureScanToken)} className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md business-button px-4 text-sm font-semibold text-white">
+            <Link href={scanFlowHref(secureScanToken)} className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md business-button px-4 text-sm font-semibold">
               Open scan flow
             </Link>
           </div>
@@ -133,7 +133,7 @@ export async function ScannerManualCustomerSearch({ businessId, branchId, query,
                     </div>
                   </div>
                   {canOpenScanFlow ? (
-                    <Link href={scanFlowHref(scanToken)} className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md business-button px-4 text-sm font-semibold text-white">
+                    <Link href={scanFlowHref(scanToken)} className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-md business-button px-4 text-sm font-semibold">
                       Open scan flow
                     </Link>
                   ) : (

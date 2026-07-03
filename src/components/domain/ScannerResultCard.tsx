@@ -19,11 +19,11 @@ export function ScannerResultCard({
   actions?: ReactNode;
 }) {
   return (
-    <Card className="border-[#FED7AA]">
+    <Card className="business-border-soft">
       <CardContent>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#EA580C]">Action summary</p>
+            <p className="text-xs font-semibold uppercase tracking-wide business-text">Action summary</p>
             <h2 className="mt-1 truncate text-xl font-bold text-[#0F172A]">{customerName}</h2>
             <p className="mt-1 text-sm text-[#64748B]">{programName}</p>
           </div>
