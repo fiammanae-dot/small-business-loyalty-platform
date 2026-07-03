@@ -33,7 +33,7 @@ Destructive actions must keep confirmation behavior.
 - Red means danger/failure/denied.
 - Amber means warning/pending.
 - Gray means neutral/inactive/archived.
-- Orange means LoyaltyBase brand, not status.
+- Orange means Loyalty Card UAE brand, not status.
 
 ## Empty States
 

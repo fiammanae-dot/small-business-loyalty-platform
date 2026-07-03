@@ -1,10 +1,10 @@
 # Platform Architecture
 
-This document describes LoyaltyBase at a high level using text only.
+This document describes Loyalty Card UAE at a high level using text only.
 
 ## Frontend
 
-LoyaltyBase uses Next.js with TypeScript and Tailwind CSS.
+Loyalty Card UAE uses Next.js with TypeScript and Tailwind CSS.
 
 Primary user surfaces:
 

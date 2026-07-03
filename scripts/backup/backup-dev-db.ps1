@@ -6,7 +6,7 @@ $PgDump = "C:\Program Files\PostgreSQL\18\bin\pg_dump.exe"
 $DbHost = $env:PGHOST
 $DbPort = if ($env:PGPORT) { $env:PGPORT } else { "5432" }
 $Timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm"
-$BackupFile = Join-Path $BackupDir "loyaltybase_dev_$Timestamp.backup"
+$BackupFile = Join-Path $BackupDir "Loyalty Card UAE_dev_$Timestamp.backup"
 
 if (-not $DbHost) {
   Write-Error "PGHOST is required. Set it to the PostgreSQL host before running this backup."

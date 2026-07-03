@@ -1,6 +1,6 @@
 # Monitoring Strategy
 
-Phase 13C establishes operational monitoring readiness for LoyaltyBase without changing customer-facing logic, billing behavior, permissions, scanner behavior, loyalty behavior, reward behavior, referral behavior, or database schema.
+Phase 13C establishes operational monitoring readiness for Loyalty Card UAE without changing customer-facing logic, billing behavior, permissions, scanner behavior, loyalty behavior, reward behavior, referral behavior, or database schema.
 
 ## Monitoring Principles
 

@@ -1,6 +1,6 @@
 # Platform Health Review
 
-This review records the Phase 13C status of platform health visibility. The current workspace does not include the LoyaltyBase application source code, so existing implementation claims are limited to documentation created in this phase and should be re-verified against the application repository before launch.
+This review records the Phase 13C status of platform health visibility. The current workspace does not include the Loyalty Card UAE application source code, so existing implementation claims are limited to documentation created in this phase and should be re-verified against the application repository before launch.
 
 ## What Already Exists
 

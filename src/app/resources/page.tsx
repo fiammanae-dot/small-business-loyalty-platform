@@ -46,7 +46,7 @@ export default function ResourcesPage() {
             {resources.map((resource) => (
               <MarketingCard key={resource.title} {...resource}>
                 <Link href="/request-demo" className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-[#EA580C]">
-                  Discuss with LoyaltyBase <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  Discuss with Loyalty Card UAE <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
               </MarketingCard>
             ))}

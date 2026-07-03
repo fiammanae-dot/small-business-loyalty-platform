@@ -1,4 +1,4 @@
-# LoyaltyBase Component Reuse Map
+# Loyalty Card UAE Component Reuse Map
 
 Version: 1.0
 

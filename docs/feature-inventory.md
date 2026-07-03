@@ -1,4 +1,4 @@
-# LoyaltyBase Feature Inventory
+# Loyalty Card UAE Feature Inventory
 
 Version: 1.0
 

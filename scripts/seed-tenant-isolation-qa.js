@@ -258,7 +258,7 @@ async function ensurePlans() {
 async function resetQaData() {
   const qaBusinessNames = businessSeeds.map((seed) => seed.name);
   const qaEmails = [
-    "admin@loyaltybase.test",
+    "admin@Loyalty Card UAE.test",
     ...businessSeeds.flatMap((seed) => [userEmail(seed, "owner"), userEmail(seed, "manager"), userEmail(seed, "staff1"), userEmail(seed, "staff2")]),
   ];
   const businesses = await prisma.business.findMany({
@@ -641,7 +641,7 @@ async function createCustomerScenario({ seed, customer, index, business, branch,
 
 async function main() {
   const target = assertSafeTarget();
-  console.warn("WARNING: Tenant isolation QA reset will delete and recreate LoyaltyBase QA fixture data.");
+  console.warn("WARNING: Tenant isolation QA reset will delete and recreate Loyalty Card UAE QA fixture data.");
   console.warn("Target database:", target.maskedUrl);
   console.warn("Only known QA businesses/users created by this script are targeted.");
 
@@ -650,9 +650,9 @@ async function main() {
   const plans = await ensurePlans();
 
   const admin = await prisma.user.upsert({
-    where: { email: "admin@loyaltybase.test" },
+    where: { email: "admin@Loyalty Card UAE.test" },
     update: {
-      name: "LoyaltyBase QA System Administrator",
+      name: "Loyalty Card UAE QA System Administrator",
       passwordHash,
       role: "PLATFORM_OWNER",
       status: "ACTIVE",
@@ -662,8 +662,8 @@ async function main() {
       sessionVersion: { increment: 1 },
     },
     create: {
-      name: "LoyaltyBase QA System Administrator",
-      email: "admin@loyaltybase.test",
+      name: "Loyalty Card UAE QA System Administrator",
+      email: "admin@Loyalty Card UAE.test",
       passwordHash,
       role: "PLATFORM_OWNER",
       status: "ACTIVE",
@@ -677,7 +677,7 @@ async function main() {
   }
 
   const credentials = [
-    { business: "LoyaltyBase", role: "System Admin", email: "admin@loyaltybase.test", password: QA_PASSWORD },
+    { business: "Loyalty Card UAE", role: "System Admin", email: "admin@Loyalty Card UAE.test", password: QA_PASSWORD },
     ...created.flatMap((entry, index) => {
       const seed = businessSeeds[index];
       return [

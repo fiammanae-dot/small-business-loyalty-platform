@@ -76,7 +76,7 @@ export function DemoRequestForm() {
         Request Demo
       </button>
       <p className="text-xs leading-5 text-[#64748B]">
-        We use your details only to prepare a relevant LoyaltyBase demo.
+        We use your details only to prepare a relevant Loyalty Card UAE demo.
       </p>
     </form>
   );

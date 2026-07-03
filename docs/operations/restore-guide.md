@@ -1,6 +1,6 @@
 # Restore Guide
 
-This guide explains how to restore LoyaltyBase from backup.
+This guide explains how to restore Loyalty Card UAE from backup.
 
 ## Full Restore
 

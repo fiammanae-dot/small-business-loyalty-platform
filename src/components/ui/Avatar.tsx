@@ -18,7 +18,7 @@ export function Avatar({
 
   return (
     <span className={cn("inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border business-border-soft business-bg-soft text-sm font-bold business-primary", className)}>
-      {imageUrl ? <img src={imageUrl} alt="" className="h-full w-full object-cover" /> : initials || "LB"}
+      {imageUrl ? <img src={imageUrl} alt="" className="h-full w-full object-cover" /> : initials || "LC"}
     </span>
   );
 }

@@ -26,7 +26,7 @@ test("full QA seed preserves Prisma migration history during wipe", () => {
 test("full QA seed creates the requested QA tenants and shared-phone cases", () => {
   assert.match(script, /Emirates Coffee House/);
   assert.match(script, /QuickFix Auto Garage/);
-  assert.match(script, /admin@loyaltybase\.test/);
+  assert.match(script, /admin@Loyalty Card UAE\.test/);
   assert.match(script, /\+971501111111/);
   assert.match(script, /Ahmed Ali/);
   assert.match(script, /Mr Ahmed/);

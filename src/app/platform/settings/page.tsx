@@ -166,7 +166,7 @@ function GeneralTab({
   return (
     <>
       <section className="max-w-full overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm md:p-5">
-        <SectionHeader icon={Server} title="Environment Information" description="Read-only runtime details for the current LoyaltyBase instance." />
+        <SectionHeader icon={Server} title="Environment Information" description="Read-only runtime details for the current Loyalty Card UAE instance." />
         <div className="mt-4 grid min-w-0 gap-3 md:mt-5 md:grid-cols-2 xl:grid-cols-3">
           <InfoCard icon={GitBranch} label="Environment" value={environmentName} />
           <InfoCard icon={Database} label="Current Database" value={databaseName} />

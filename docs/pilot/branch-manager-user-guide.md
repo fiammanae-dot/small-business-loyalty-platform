@@ -1,6 +1,6 @@
 # Branch Manager User Guide
 
-This guide explains how Branch Managers use LoyaltyBase during the pilot.
+This guide explains how Branch Managers use Loyalty Card UAE during the pilot.
 
 ## Branch Dashboard
 

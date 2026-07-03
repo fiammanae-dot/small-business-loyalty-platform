@@ -1,4 +1,4 @@
-# LoyaltyBase Database Map
+# Loyalty Card UAE Database Map
 
 Version: 1.0  
 Source: `prisma/schema.prisma`

@@ -1,6 +1,6 @@
 # Pilot Database Setup
 
-This guide creates a clean pilot database for LoyaltyBase without touching the current development database.
+This guide creates a clean pilot database for Loyalty Card UAE without touching the current development database.
 
 Target database:
 

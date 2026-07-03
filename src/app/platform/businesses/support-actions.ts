@@ -200,7 +200,7 @@ export async function startSupportSessionAction(formData: FormData) {
       data: {
         businessId: business.id,
         title: data.emergency ? "Emergency Support Access Requested" : "Support Access Requested",
-        message: "LoyaltyBase Support requested access to your workspace.",
+        message: "Loyalty Card UAE Support requested access to your workspace.",
         metadata: {
           reason: data.reason,
           durationMinutes: data.durationMinutes,
@@ -231,7 +231,7 @@ export async function startSupportSessionAction(formData: FormData) {
       data: {
         businessId: business.id,
         title: "Emergency Support Access Started",
-        message: "LoyaltyBase Support started emergency access to your workspace.",
+        message: "Loyalty Card UAE Support started emergency access to your workspace.",
         metadata: {
           reason: data.reason,
           durationMinutes: data.durationMinutes,
@@ -348,7 +348,7 @@ export async function approveSupportRequestAction(formData: FormData) {
 
   revalidatePath("/dashboard/support-history");
   revalidatePath("/platform/operations-center");
-  redirect(`${redirectTo}?success=${encodeURIComponent("Support request approved. LoyaltyBase Support can now join the session.")}`);
+  redirect(`${redirectTo}?success=${encodeURIComponent("Support request approved. Loyalty Card UAE Support can now join the session.")}`);
 }
 
 export async function rejectSupportRequestAction(formData: FormData) {
@@ -474,7 +474,7 @@ export async function endSupportSessionAction(formData: FormData) {
       data: {
         businessId: session.businessId,
         title: "Support Access Completed",
-        message: "LoyaltyBase Support accessed your workspace.",
+        message: "Loyalty Card UAE Support accessed your workspace.",
         metadata: {
           date: endedAt.toISOString(),
           duration: formatSupportDuration(session.startedAt, endedAt),

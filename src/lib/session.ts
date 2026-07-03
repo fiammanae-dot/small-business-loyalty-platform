@@ -12,7 +12,7 @@ import { getSessionSecret } from "@/lib/secrets";
 const SESSION_COOKIE = "loyalty_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
 export const INACTIVE_BUSINESS_ACCESS_MESSAGE =
-  "Your business account is currently inactive. Please contact LoyaltyBase support.";
+  "Your business account is currently inactive. Please contact Loyalty Card UAE support.";
 
 type SessionPayload = {
   userId: number;

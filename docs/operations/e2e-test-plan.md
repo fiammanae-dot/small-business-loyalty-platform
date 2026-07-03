@@ -1,6 +1,6 @@
 # Browser E2E Test Plan
 
-This plan covers critical browser-based user journeys for LoyaltyBase.
+This plan covers critical browser-based user journeys for Loyalty Card UAE.
 
 ## System Administrator Journeys
 

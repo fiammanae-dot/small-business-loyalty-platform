@@ -1,6 +1,6 @@
 # PostgreSQL Backup Guide
 
-This guide provides Windows commands for backing up LoyaltyBase PostgreSQL databases.
+This guide provides Windows commands for backing up Loyalty Card UAE PostgreSQL databases.
 
 ## PostgreSQL Tool Path
 
@@ -17,13 +17,13 @@ If PostgreSQL is installed elsewhere, adjust the path.
 Use:
 
 ```text
-loyaltybase_ENV_YYYY-MM-DD_HH-MM.backup
+Loyalty Card UAE_ENV_YYYY-MM-DD_HH-MM.backup
 ```
 
 Example:
 
 ```text
-loyaltybase_dev_2026-06-13_18-30.backup
+Loyalty Card UAE_dev_2026-06-13_18-30.backup
 ```
 
 Recommended environment names:
@@ -49,7 +49,7 @@ loyalty_platform
 Command:
 
 ```powershell
-& "C:\Program Files\PostgreSQL\18\bin\pg_dump.exe" -U postgres -h DATABASE_HOST -p 5432 -d loyalty_platform -Fc -f "backups\loyaltybase_dev_YYYY-MM-DD_HH-MM.backup"
+& "C:\Program Files\PostgreSQL\18\bin\pg_dump.exe" -U postgres -h DATABASE_HOST -p 5432 -d loyalty_platform -Fc -f "backups\Loyalty Card UAE_dev_YYYY-MM-DD_HH-MM.backup"
 ```
 
 ## Backup Pilot Database - Custom Format
@@ -63,7 +63,7 @@ loyalty_platform_pilot
 Command:
 
 ```powershell
-& "C:\Program Files\PostgreSQL\18\bin\pg_dump.exe" -U postgres -h DATABASE_HOST -p 5432 -d loyalty_platform_pilot -Fc -f "backups\loyaltybase_pilot_YYYY-MM-DD_HH-MM.backup"
+& "C:\Program Files\PostgreSQL\18\bin\pg_dump.exe" -U postgres -h DATABASE_HOST -p 5432 -d loyalty_platform_pilot -Fc -f "backups\Loyalty Card UAE_pilot_YYYY-MM-DD_HH-MM.backup"
 ```
 
 ## Plain SQL Backup
@@ -71,13 +71,13 @@ Command:
 Development:
 
 ```powershell
-& "C:\Program Files\PostgreSQL\18\bin\pg_dump.exe" -U postgres -h DATABASE_HOST -p 5432 -d loyalty_platform -f "backups\loyaltybase_dev_YYYY-MM-DD_HH-MM.sql"
+& "C:\Program Files\PostgreSQL\18\bin\pg_dump.exe" -U postgres -h DATABASE_HOST -p 5432 -d loyalty_platform -f "backups\Loyalty Card UAE_dev_YYYY-MM-DD_HH-MM.sql"
 ```
 
 Pilot:
 
 ```powershell
-& "C:\Program Files\PostgreSQL\18\bin\pg_dump.exe" -U postgres -h DATABASE_HOST -p 5432 -d loyalty_platform_pilot -f "backups\loyaltybase_pilot_YYYY-MM-DD_HH-MM.sql"
+& "C:\Program Files\PostgreSQL\18\bin\pg_dump.exe" -U postgres -h DATABASE_HOST -p 5432 -d loyalty_platform_pilot -f "backups\Loyalty Card UAE_pilot_YYYY-MM-DD_HH-MM.sql"
 ```
 
 ## Backup Verification
@@ -85,7 +85,7 @@ Pilot:
 After backup:
 
 ```powershell
-Get-Item "backups\loyaltybase_dev_YYYY-MM-DD_HH-MM.backup"
+Get-Item "backups\Loyalty Card UAE_dev_YYYY-MM-DD_HH-MM.backup"
 ```
 
 Confirm:

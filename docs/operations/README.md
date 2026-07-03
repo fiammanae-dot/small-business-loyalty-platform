@@ -1,6 +1,6 @@
 # Operations Documentation Index
 
-This folder contains the operational readiness package for LoyaltyBase deployment, pilot onboarding, recovery, monitoring, and launch validation.
+This folder contains the operational readiness package for Loyalty Card UAE deployment, pilot onboarding, recovery, monitoring, and launch validation.
 
 ## Phase 13A Deployment And Environment Management
 

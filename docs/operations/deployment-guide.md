@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This guide describes how to deploy LoyaltyBase for a pilot or production-like environment.
+This guide describes how to deploy Loyalty Card UAE for a pilot or production-like environment.
 
 ## Environment Setup
 

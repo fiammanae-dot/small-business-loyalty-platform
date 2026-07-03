@@ -1,4 +1,4 @@
-# LoyaltyBase UI/UX File Map
+# Loyalty Card UAE UI/UX File Map
 
 Generated from the real project tree on 2026-07-02. This map documents verified files only. It does not include guessed routes, invented folders, or stale paths from older maps.
 

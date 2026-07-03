@@ -80,7 +80,7 @@ test("password reset requests use generic messaging, rate limiting, Resend email
   assert.match(resetLib, /userAgent: meta\.userAgent/);
   assert.match(resetLib, /getConfiguredAppUrl/);
 
-  assert.match(email, /Reset Your LoyaltyBase Password/);
+  assert.match(email, /Reset Your Loyalty Card UAE Password/);
   assert.match(email, /Reset Password/);
   assert.match(email, /expires in/);
   assert.match(email, /RESEND_API_KEY/);

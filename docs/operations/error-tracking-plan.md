@@ -1,6 +1,6 @@
 # Error Tracking Plan
 
-This plan defines how LoyaltyBase should classify, investigate, and recover from operational errors before commercial launch.
+This plan defines how Loyalty Card UAE should classify, investigate, and recover from operational errors before commercial launch.
 
 ## Error Categories
 

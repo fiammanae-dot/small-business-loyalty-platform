@@ -65,7 +65,7 @@ Monitor:
 Common issues:
 
 - Camera denied: use manual token entry.
-- QR invalid: confirm it is a LoyaltyBase card.
+- QR invalid: confirm it is a Loyalty Card UAE card.
 - Wrong business: ask customer for the correct business card.
 - Disabled QR: contact Business Owner.
 - Customer not found: enroll customer or check phone number.

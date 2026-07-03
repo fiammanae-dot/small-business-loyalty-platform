@@ -1,10 +1,10 @@
-# LoyaltyBase Documentation Index
+# Loyalty Card UAE Documentation Index
 
 Version: 1.0
 
 ## Executive Summary
 
-This documentation package maps the current LoyaltyBase architecture, routes, database, roles, features, APIs/actions, reusable components, design system, QA scenarios, and launch readiness. It is intended for product ownership, redesign planning, future developers, external AI tools, QA, pilot launch preparation, and future scaling.
+This documentation package maps the current Loyalty Card UAE architecture, routes, database, roles, features, APIs/actions, reusable components, design system, QA scenarios, and launch readiness. It is intended for product ownership, redesign planning, future developers, external AI tools, QA, pilot launch preparation, and future scaling.
 
 ## Generated Documents
 
@@ -23,7 +23,7 @@ This documentation package maps the current LoyaltyBase architecture, routes, da
 
 ## Platform Overview
 
-LoyaltyBase is a multi-tenant loyalty SaaS platform for small businesses. It supports customer enrollment, digital loyalty cards, QR scanning, stamp issuance, rewards, referrals, customer tiers, engagement/message preparation, business billing, platform administration, audit trails, alert governance, and operational readiness workflows.
+Loyalty Card UAE is a multi-tenant loyalty SaaS platform for small businesses. It supports customer enrollment, digital loyalty cards, QR scanning, stamp issuance, rewards, referrals, customer tiers, engagement/message preparation, business billing, platform administration, audit trails, alert governance, and operational readiness workflows.
 
 ## Architecture Summary
 

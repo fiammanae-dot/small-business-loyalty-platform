@@ -1,6 +1,6 @@
 # System Health Inventory
 
-This inventory defines the critical LoyaltyBase components that should be represented in monitoring, alerts, dashboards, and runbooks.
+This inventory defines the critical Loyalty Card UAE components that should be represented in monitoring, alerts, dashboards, and runbooks.
 
 | Component | Purpose | Dependencies | Failure impact | Monitoring recommendation |
 | --- | --- | --- | --- | --- |

@@ -39,7 +39,7 @@ const solutions = [
   },
   {
     title: "Local services",
-    description: "Use LoyaltyBase for gyms, laundries, clinics, workshops, and service teams that depend on repeat customers.",
+    description: "Use Loyalty Card UAE for gyms, laundries, clinics, workshops, and service teams that depend on repeat customers.",
     icon: Store,
   },
 ];
@@ -50,7 +50,7 @@ export default function SolutionsPage() {
       <PageHero
         eyebrow="Solutions"
         title="Built for the businesses your customers visit every week"
-        description="LoyaltyBase adapts to high-frequency local businesses where staff need speed and customers need simplicity."
+        description="Loyalty Card UAE adapts to high-frequency local businesses where staff need speed and customers need simplicity."
       />
 
       <section className="px-5 py-16 sm:px-8 lg:px-16">

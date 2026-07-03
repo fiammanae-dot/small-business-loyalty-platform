@@ -8,7 +8,7 @@ const faqs = [
   },
   {
     question: "How does the QR scanner work?",
-    answer: "Staff scan the customer's card QR code. LoyaltyBase opens the secure scanner workflow so the team can find the customer, add visits, or redeem rewards when allowed.",
+    answer: "Staff scan the customer's card QR code. Loyalty Card UAE opens the secure scanner workflow so the team can find the customer, add visits, or redeem rewards when allowed.",
   },
   {
     question: "Can one customer join multiple businesses?",
@@ -16,7 +16,7 @@ const faqs = [
   },
   {
     question: "Can businesses use referrals?",
-    answer: "Yes. LoyaltyBase supports referral links and referral tracking, with rewards qualifying after real customer activity.",
+    answer: "Yes. Loyalty Card UAE supports referral links and referral tracking, with rewards qualifying after real customer activity.",
   },
   {
     question: "How do rewards work?",
@@ -27,7 +27,7 @@ const faqs = [
     answer: "Yes. Staff can issue stamps within their role permissions. Reward redemption remains controlled by the configured role rules.",
   },
   {
-    question: "Does LoyaltyBase support branches?",
+    question: "Does Loyalty Card UAE support branches?",
     answer: "Yes. Plans include branch limits, and operational activity can be organized by branch where the plan supports it.",
   },
   {
@@ -43,7 +43,7 @@ const faqs = [
     answer: "The official plans are Starter, Growth, and Multi Branch. Pricing depends on branch and program limits.",
   },
   {
-    question: "How does LoyaltyBase handle security?",
+    question: "How does Loyalty Card UAE handle security?",
     answer: "The platform uses role-based access, business workspace isolation, protected scanner flows, and operational audit patterns for sensitive actions.",
   },
 ];

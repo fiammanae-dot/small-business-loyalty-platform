@@ -1,6 +1,6 @@
 # Deployment Runbook
 
-This runbook describes the standard deployment process for LoyaltyBase.
+This runbook describes the standard deployment process for Loyalty Card UAE.
 
 ## Pre-Deployment Checklist
 

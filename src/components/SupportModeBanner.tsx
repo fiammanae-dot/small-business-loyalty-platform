@@ -52,7 +52,7 @@ export function SupportModeBanner({
 
   useEffect(() => {
     const previousTitle = document.title;
-    document.title = `🔴 SUPPORT • ${businessName} • LoyaltyBase`;
+    document.title = `🔴 SUPPORT • ${businessName} • Loyalty Card UAE`;
 
     return () => {
       document.title = previousTitle;

@@ -1,6 +1,6 @@
-# LoyaltyBase Production Setup
+# Loyalty Card UAE Production Setup
 
-This guide prepares LoyaltyBase for the first production deployment using a clean production database. It does not require deleting or changing the current development database.
+This guide prepares Loyalty Card UAE for the first production deployment using a clean production database. It does not require deleting or changing the current development database.
 
 ## Environment Strategy
 
@@ -133,7 +133,7 @@ Before deployment:
 Recommended command pattern:
 
 ```powershell
-& "C:\Program Files\PostgreSQL\18\bin\pg_dump.exe" -Fc -d "<production-database-url>" -f "backups\loyaltybase_production_YYYY-MM-DD_HH-MM.backup"
+& "C:\Program Files\PostgreSQL\18\bin\pg_dump.exe" -Fc -d "<production-database-url>" -f "backups\Loyalty Card UAE_production_YYYY-MM-DD_HH-MM.backup"
 ```
 
 Use provider-native automated backups when available.

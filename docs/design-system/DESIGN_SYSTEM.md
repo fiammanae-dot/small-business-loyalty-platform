@@ -1,4 +1,4 @@
-# LoyaltyBase Design System
+# Loyalty Card UAE Design System
 
 This is the official UI foundation for Milestone 3 redesign work. It is based on the Sprint 0 Milestone 1 audit and intentionally avoids business logic, database access, permissions, scanner logic, billing logic, and referral logic.
 
@@ -7,7 +7,7 @@ This is the official UI foundation for Milestone 3 redesign work. It is based on
 - Operational first: daily actions should be obvious and close to the top of the page.
 - Mobile first: scanner, customer lookup, enrollment, and public card flows must work cleanly on phone screens.
 - Premium but quiet: white surfaces, restrained shadows, compact spacing, strong hierarchy.
-- Business branding where appropriate: Business Owner, Branch Manager, and Staff surfaces use business theme utilities; System Administrator remains LoyaltyBase orange.
+- Business branding where appropriate: Business Owner, Branch Manager, and Staff surfaces use business theme utilities; System Administrator remains Loyalty Card UAE orange.
 - Semantic color clarity: red means danger, green means success, amber means warning, gray means neutral.
 
 ## Token Source
@@ -33,7 +33,7 @@ Token groups:
 
 | Token | Value | Usage |
 |---|---|---|
-| Brand primary | `#F97316` | LoyaltyBase platform primary actions and highlights |
+| Brand primary | `#F97316` | Loyalty Card UAE platform primary actions and highlights |
 | Brand dark | `#EA580C` | Primary hover and stronger brand text |
 | Brand soft | `#FFF7ED` | Soft brand backgrounds |
 | Text | `#1E293B` | Main text |
@@ -89,7 +89,7 @@ Do not use orange as a warning color unless the meaning is truly warning and not
 ## Component Layers
 
 1. `src/components/ui`: generic reusable primitives.
-2. `src/components/domain`: LoyaltyBase-specific UI-only components.
+2. `src/components/domain`: Loyalty Card UAE-specific UI-only components.
 3. `src/components/layouts`: page structure wrappers for future redesigns.
 
 No component in these folders should fetch data directly.

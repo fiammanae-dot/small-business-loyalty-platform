@@ -139,7 +139,7 @@ For local UI preview only, `.env` enables `DEV_AUTH_FALLBACK=true`. This lets th
 
 ## Database Seeding Modes
 
-LoyaltyBase separates clean pilot seeding from local demo seeding.
+Loyalty Card UAE separates clean pilot seeding from local demo seeding.
 
 Clean pilot baseline only:
 

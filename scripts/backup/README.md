@@ -1,6 +1,6 @@
 # Backup Helper Scripts
 
-These scripts create local backups for LoyaltyBase.
+These scripts create local backups for Loyalty Card UAE.
 
 They are not run automatically.
 

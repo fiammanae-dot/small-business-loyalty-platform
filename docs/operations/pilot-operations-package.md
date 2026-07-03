@@ -1,6 +1,6 @@
 # Pilot Operations Package
 
-This guide supports controlled pilot onboarding for LoyaltyBase.
+This guide supports controlled pilot onboarding for Loyalty Card UAE.
 
 ## Pilot Onboarding Guide
 

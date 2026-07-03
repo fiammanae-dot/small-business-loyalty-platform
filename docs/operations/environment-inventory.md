@@ -1,6 +1,6 @@
 # Environment Inventory
 
-This document defines the expected LoyaltyBase environments and how each one should be used.
+This document defines the expected Loyalty Card UAE environments and how each one should be used.
 
 ## Development Environment
 
@@ -57,7 +57,7 @@ Pilot domain or local pilot URL configured by the deployment owner.
 Example:
 
 ```text
-https://pilot.loyaltybase.example
+https://pilot.loyaltycarduae.example
 ```
 
 Demo Mode Status:
@@ -104,7 +104,7 @@ Future production domain.
 Example:
 
 ```text
-https://app.loyaltybase.example
+https://app.loyaltycarduae.example
 ```
 
 Demo Mode Status:

@@ -1,6 +1,6 @@
 # Restore Drill Runbook
 
-This runbook explains how to practice restoring LoyaltyBase safely.
+This runbook explains how to practice restoring Loyalty Card UAE safely.
 
 ## Goal
 
@@ -24,13 +24,13 @@ createdb -U postgres -h DATABASE_HOST -p 5432 loyalty_platform_restore_drill
 Custom backup:
 
 ```powershell
-& "C:\Program Files\PostgreSQL\18\bin\pg_restore.exe" -U postgres -h DATABASE_HOST -p 5432 -d loyalty_platform_restore_drill "backups\loyaltybase_dev_YYYY-MM-DD_HH-MM.backup"
+& "C:\Program Files\PostgreSQL\18\bin\pg_restore.exe" -U postgres -h DATABASE_HOST -p 5432 -d loyalty_platform_restore_drill "backups\Loyalty Card UAE_dev_YYYY-MM-DD_HH-MM.backup"
 ```
 
 SQL backup:
 
 ```powershell
-& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -h DATABASE_HOST -p 5432 -d loyalty_platform_restore_drill -f "backups\loyaltybase_dev_YYYY-MM-DD_HH-MM.sql"
+& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -h DATABASE_HOST -p 5432 -d loyalty_platform_restore_drill -f "backups\Loyalty Card UAE_dev_YYYY-MM-DD_HH-MM.sql"
 ```
 
 ## Step 3 - Point Temporary DATABASE_URL

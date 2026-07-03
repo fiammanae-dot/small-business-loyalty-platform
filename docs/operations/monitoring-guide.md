@@ -1,6 +1,6 @@
 # Monitoring Guide
 
-This guide defines operational monitoring for LoyaltyBase.
+This guide defines operational monitoring for Loyalty Card UAE.
 
 ## Application Health
 

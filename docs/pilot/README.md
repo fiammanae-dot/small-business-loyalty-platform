@@ -1,6 +1,6 @@
 # Pilot Documentation Index
 
-This folder contains pilot onboarding, training, support, operations, and launch-readiness documentation for LoyaltyBase.
+This folder contains pilot onboarding, training, support, operations, and launch-readiness documentation for Loyalty Card UAE.
 
 ## Pilot Operations
 

@@ -1,6 +1,6 @@
 # Monitoring Dashboard Recommendations
 
-LoyaltyBase should provide role-focused dashboards that separate platform health, operational workload, support visibility, and commercial health.
+Loyalty Card UAE should provide role-focused dashboards that separate platform health, operational workload, support visibility, and commercial health.
 
 ## System Administrator Dashboard
 

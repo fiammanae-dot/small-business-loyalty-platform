@@ -15,8 +15,24 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Loyalty Platform",
-  description: "Modern loyalty SaaS platform for service businesses.",
+  metadataBase: new URL("https://loyaltycarduae.com"),
+  title: {
+    default: "Loyalty Card UAE | Digital Loyalty Platform",
+    template: "%s | Loyalty Card UAE",
+  },
+  description: "Digital loyalty cards for restaurants, cafes, retail stores and businesses across the UAE.",
+  openGraph: {
+    title: "Loyalty Card UAE | Digital Loyalty Platform",
+    description: "Digital loyalty cards for restaurants, cafes, retail stores and businesses across the UAE.",
+    url: "https://loyaltycarduae.com",
+    siteName: "Loyalty Card UAE",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Loyalty Card UAE | Digital Loyalty Platform",
+    description: "Digital loyalty cards for restaurants, cafes, retail stores and businesses across the UAE.",
+  },
 };
 
 export const viewport: Viewport = {

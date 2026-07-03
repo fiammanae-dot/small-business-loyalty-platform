@@ -1,4 +1,4 @@
-﻿import "server-only";
+import "server-only";
 
 export type PasswordResetEmail = {
   to: string;
@@ -7,14 +7,14 @@ export type PasswordResetEmail = {
 };
 
 export function buildPasswordResetEmail({ resetUrl, expiresInMinutes }: PasswordResetEmail) {
-  const subject = "Reset Your LoyaltyBase Password";
+  const subject = "Reset Your Loyalty Card UAE Password";
   const text = [
-    "LoyaltyBase",
-    "Customer Loyalty Platform",
+    "Loyalty Card UAE",
+    "Digital Loyalty Platform",
     "",
     "Reset Your Password",
     "",
-    "We received a request to reset the password for your LoyaltyBase account.",
+    "We received a request to reset the password for your Loyalty Card UAE account.",
     "Use the link below to create a new password and return to your workspace.",
     "",
     "Reset Password: " + resetUrl,
@@ -23,9 +23,9 @@ export function buildPasswordResetEmail({ resetUrl, expiresInMinutes }: Password
     "",
     "If you did not request this password reset, you can safely ignore this email.",
     "",
-    "LoyaltyBase",
-    "Customer Loyalty Platform",
-    "support@loyaltybase.app",
+    "Loyalty Card UAE",
+    "Digital Loyalty Platform",
+    "support@loyaltycarduae.com",
   ].join("\n");
 
   const html = `
@@ -37,13 +37,13 @@ export function buildPasswordResetEmail({ resetUrl, expiresInMinutes }: Password
               <tr>
                 <td style="padding:28px 28px 12px 28px; text-align:center;">
                   <div style="display:inline-block; width:48px; height:48px; border-radius:14px; background:#FFF7ED; color:#F97316; font-size:24px; font-weight:800; line-height:48px; text-align:center;">
-                    LB
+                    LC
                   </div>
                   <p style="margin:12px 0 0 0; color:#F97316; font-size:13px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase;">
-                    LoyaltyBase
+                    Loyalty Card UAE
                   </p>
                   <p style="margin:4px 0 0 0; color:#64748B; font-size:13px;">
-                    Customer Loyalty Platform
+                    Digital Loyalty Platform
                   </p>
                 </td>
               </tr>
@@ -53,7 +53,7 @@ export function buildPasswordResetEmail({ resetUrl, expiresInMinutes }: Password
                     Reset Your Password
                   </h1>
                   <p style="margin:16px 0 0 0; color:#475569; font-size:16px; line-height:1.6;">
-                    We received a request to reset the password for your LoyaltyBase account. Use the button below to create a new password and return to your workspace.
+                    We received a request to reset the password for your Loyalty Card UAE account. Use the button below to create a new password and return to your workspace.
                   </p>
                 </td>
               </tr>
@@ -82,10 +82,10 @@ export function buildPasswordResetEmail({ resetUrl, expiresInMinutes }: Password
               </tr>
               <tr>
                 <td style="background:#F8FAFC; padding:20px 28px; text-align:center; border-top:1px solid #E2E8F0;">
-                  <p style="margin:0; color:#1E293B; font-size:14px; font-weight:800;">LoyaltyBase</p>
-                  <p style="margin:4px 0 0 0; color:#64748B; font-size:13px;">Customer Loyalty Platform</p>
+                  <p style="margin:0; color:#1E293B; font-size:14px; font-weight:800;">Loyalty Card UAE</p>
+                  <p style="margin:4px 0 0 0; color:#64748B; font-size:13px;">Digital Loyalty Platform</p>
                   <p style="margin:8px 0 0 0; color:#64748B; font-size:13px;">
-                    <a href="mailto:support@loyaltybase.app" style="color:#EA580C; text-decoration:none;">support@loyaltybase.app</a>
+                    <a href="mailto:support@loyaltycarduae.com" style="color:#EA580C; text-decoration:none;">support@loyaltycarduae.com</a>
                   </p>
                 </td>
               </tr>

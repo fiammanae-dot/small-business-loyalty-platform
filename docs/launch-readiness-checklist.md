@@ -1,4 +1,4 @@
-# LoyaltyBase Launch Readiness Checklist
+# Loyalty Card UAE Launch Readiness Checklist
 
 Version: 1.0
 

@@ -1,6 +1,6 @@
 # Backup Strategy
 
-This document defines the LoyaltyBase backup strategy for development, pilot, and production operations.
+This document defines the Loyalty Card UAE backup strategy for development, pilot, and production operations.
 
 ## What Must Be Backed Up
 
@@ -26,7 +26,7 @@ Recommended:
 Minimum local archive:
 
 ```powershell
-Compress-Archive -Path . -DestinationPath backups\loyaltybase_source_YYYY-MM-DD_HH-MM.zip
+Compress-Archive -Path . -DestinationPath backups\Loyalty Card UAE_source_YYYY-MM-DD_HH-MM.zip
 ```
 
 Do not include `node_modules` or `.next` in long-term source archives unless required for troubleshooting.

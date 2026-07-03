@@ -1,4 +1,4 @@
-# LoyaltyBase UI Inventory
+# Loyalty Card UAE UI Inventory
 
 Source scan: `src/app`, `src/components`, `tests`. This inventory lists real user-facing routes found in the project. API/export routes are noted only where they affect visible UI.
 
@@ -7,7 +7,7 @@ Source scan: `src/app`, `src/components`, `tests`. This inventory lists real use
 | Page | Route | Purpose | User roles | Primary actions | Secondary actions | Components/layout | Mobile support | UX status | Priority |
 |---|---|---|---|---|---|---|---|---|---|
 | Marketing homepage | `/` | Public sales page for prospective businesses | Public | Request demo, view benefits | Pricing teaser, FAQ | Local homepage sections, `HomepageMotion`, `HomepageLoyaltyCardDemo` | Responsive marketing layout | Good foundation | Medium |
-| Benefits | `/benefits` | Explain LoyaltyBase value proposition | Public | Request demo | Return home | Local public layout | Responsive | Good | Low |
+| Benefits | `/benefits` | Explain Loyalty Card UAE value proposition | Public | Request demo | Return home | Local public layout | Responsive | Good | Low |
 | Request Demo | `/request-demo` | Demo request lead form | Public | Submit demo request placeholder | Navigate public pages | `DemoRequestForm` | Responsive | Good | Low |
 | Login | `/login` | Authenticate existing users | Public/auth users | Login | Forgot password, toggle password | `LoginForm` | Responsive | Stable | Low |
 | Forgot Password | `/forgot-password` | Request password reset email | Public/auth users | Send reset link | Return login | `ForgotPasswordForm` | Responsive | Stable | Low |

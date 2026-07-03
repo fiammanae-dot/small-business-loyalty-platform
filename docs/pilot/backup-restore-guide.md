@@ -1,6 +1,6 @@
 # Backup and Restore Guide
 
-This guide describes how to back up and restore LoyaltyBase during the pilot.
+This guide describes how to back up and restore Loyalty Card UAE during the pilot.
 
 ## Back Up Source Code
 

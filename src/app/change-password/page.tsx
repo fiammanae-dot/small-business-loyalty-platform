@@ -13,9 +13,9 @@ export default async function ChangePasswordPage() {
       <section className="w-full max-w-md rounded-md border border-[#E5E7EB] bg-white p-6 shadow-sm">
         <Link href="/" className="flex items-center gap-2">
           <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[#F97316] text-sm font-bold text-white">
-            LB
+            LC
           </span>
-          <span className="text-sm font-semibold">LoyaltyBase</span>
+          <span className="text-sm font-semibold">Loyalty Card UAE</span>
         </Link>
         <div className="mt-8">
           <p className="text-sm font-semibold uppercase tracking-wide text-[#F97316]">Account security</p>

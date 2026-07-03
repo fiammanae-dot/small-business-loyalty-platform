@@ -3,7 +3,7 @@ $ErrorActionPreference = "Stop"
 $ProjectRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 $BackupDir = Join-Path $ProjectRoot "backups"
 $Timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm"
-$BackupFile = Join-Path $BackupDir "loyaltybase_env_$Timestamp.zip"
+$BackupFile = Join-Path $BackupDir "Loyalty Card UAE_env_$Timestamp.zip"
 $EnvFiles = @(".env", ".env.pilot", ".env.example")
 
 if (-not (Test-Path $BackupDir)) {

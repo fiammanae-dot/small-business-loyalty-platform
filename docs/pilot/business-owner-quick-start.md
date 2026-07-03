@@ -1,6 +1,6 @@
 # Business Owner Quick Start
 
-This guide helps Business Owners start using LoyaltyBase during pilot.
+This guide helps Business Owners start using Loyalty Card UAE during pilot.
 
 ## Login
 

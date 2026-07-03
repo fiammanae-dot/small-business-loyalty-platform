@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import jsQR from "jsqr";
 import { Camera, RotateCcw, Square } from "lucide-react";
@@ -61,7 +61,7 @@ function extractToken(value: string) {
     const token = scanIndex >= 0 ? parts[scanIndex + 1] : cardIndex >= 0 ? parts[cardIndex + 1] : "";
     if (token && /^[A-Za-z0-9_-]+$/.test(token)) return { token, reason: "" };
     if (url.protocol === "http:" || url.protocol === "https:") {
-      return { token: "", reason: "This QR code is not a LoyaltyBase customer card." };
+      return { token: "", reason: "This QR code is not a Loyalty Card UAE customer card." };
     }
   } catch {
     // Continue to direct token fallback.
@@ -123,7 +123,7 @@ export function CameraScanner() {
   }
 
   function describeCameraError(error: unknown) {
-    console.warn("LoyaltyBase scanner camera error", error);
+    console.warn("Loyalty Card UAE scanner camera error", error);
     if (error instanceof DOMException) {
       if (error.name === "NotAllowedError" || error.name === "SecurityError") {
         return {
@@ -211,7 +211,7 @@ export function CameraScanner() {
       setIsScanning(true);
       scanLoop();
     } catch (error) {
-      console.warn("LoyaltyBase scanner detector error", error);
+      console.warn("Loyalty Card UAE scanner detector error", error);
       detectorRef.current = null;
       canvasRef.current = document.createElement("canvas");
       setIsScanning(true);
@@ -243,7 +243,7 @@ export function CameraScanner() {
         return;
       }
     } catch (error) {
-      console.warn("LoyaltyBase scanner detection error", error);
+      console.warn("Loyalty Card UAE scanner detection error", error);
       setScannerState("scan-failed");
       setMessage("Invalid loyalty QR code.");
       void playScannerSound("invalid");

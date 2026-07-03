@@ -41,7 +41,7 @@ const solutions = [
 
 const faqs = [
   ["Do customers need an app?", "No. Customers use a mobile-friendly digital card that opens in the browser."],
-  ["How does scanning work?", "Your team scans the card QR code, then LoyaltyBase opens the secure customer action flow."],
+  ["How does scanning work?", "Your team scans the card QR code, then Loyalty Card UAE opens the secure customer action flow."],
   ["Can branches use it?", "Yes. Plans include branch limits and staff workflows designed for local operations."],
 ];
 
@@ -124,7 +124,7 @@ function HeroSection() {
 
 function ProductPreview() {
   return (
-    <div className="relative mx-auto min-h-[640px] w-full max-w-[820px] lg:min-h-[760px]" aria-label="LoyaltyBase product interface">
+    <div className="relative mx-auto min-h-[640px] w-full max-w-[820px] lg:min-h-[760px]" aria-label="Loyalty Card UAE product interface">
       <div className="absolute right-6 top-24 hidden h-56 w-72 opacity-40 lg:block" aria-hidden="true">
         <div className="grid grid-cols-9 gap-3">
           {Array.from({ length: 72 }).map((_, index) => (
@@ -294,7 +294,7 @@ function IndustrySolutions() {
   return (
     <section className="border-y border-[#EEF2F6] bg-[#FAFBFC] px-5 py-16 sm:px-8 lg:px-16">
       <div className="mx-auto max-w-[1180px]">
-        <SectionHeading eyebrow="Solutions" title="Built for the businesses your customers visit every week" description="LoyaltyBase fits the rhythm of local service, retail, and hospitality teams." />
+        <SectionHeading eyebrow="Solutions" title="Built for the businesses your customers visit every week" description="Loyalty Card UAE fits the rhythm of local service, retail, and hospitality teams." />
         <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {solutions.map((solution) => (
             <Link key={solution} href="/solutions" className="rounded-[24px] border border-[#E5E7EB] bg-white p-5 font-bold text-[#111827] shadow-sm transition hover:-translate-y-0.5 hover:border-orange-200 hover:text-[#EA580C]">

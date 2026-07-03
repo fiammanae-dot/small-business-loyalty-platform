@@ -1,6 +1,6 @@
 # Hosting Monitoring Readiness
 
-This document prepares LoyaltyBase for future production hosting without assuming a specific hosting provider.
+This document prepares Loyalty Card UAE for future production hosting without assuming a specific hosting provider.
 
 ## Server Monitoring
 

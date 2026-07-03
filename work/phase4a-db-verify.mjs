@@ -67,7 +67,7 @@ async function main() {
        values ($1, 'Ahmed', 'Phase4A', '050 123-4567', $2, $3, null, now(), now())
        on conflict (normalized_phone) do update set updated_at = now()
        returning id, uuid, normalized_phone`,
-      [randomUUID(), normalizedPhone, `phase4a.customer.${suffix}@loyaltybase.example`],
+      [randomUUID(), normalizedPhone, `phase4a.customer.${suffix}@loyaltycarduae.example`],
     );
 
     const membershipA = await client.query(

@@ -96,12 +96,12 @@ export function PublicHeader() {
 
 export function LogoLink() {
   return (
-    <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3" aria-label="LoyaltyBase home">
+    <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3" aria-label="Loyalty Card UAE home">
       <span className="relative flex h-9 w-9 shrink-0 items-center justify-center sm:h-11 sm:w-11" aria-hidden="true">
         <span className="absolute h-7 w-7 rotate-45 rounded-[8px] border-[4px] border-[#FF5A0A] sm:h-8 sm:w-8 sm:rounded-[9px] sm:border-[5px]" />
         <span className="absolute top-[8px] h-3.5 w-3.5 rotate-45 rounded-[4px] bg-white sm:top-[9px] sm:h-4 sm:w-4" />
       </span>
-      <span className="truncate text-[19px] font-extrabold tracking-[-0.04em] text-[#0B1220] sm:text-[26px]">LoyaltyBase</span>
+      <span className="truncate text-[19px] font-extrabold tracking-[-0.04em] text-[#0B1220] sm:text-[26px]">Loyalty Card UAE</span>
     </Link>
   );
 }

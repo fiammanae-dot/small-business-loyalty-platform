@@ -28,7 +28,7 @@ export async function unlockScannerAudio() {
     audioUnlocked = true;
     return true;
   } catch (error) {
-    console.warn("LoyaltyBase scanner sound error", error);
+    console.warn("Loyalty Card UAE scanner sound error", error);
     return false;
   }
 }
@@ -81,7 +81,7 @@ export async function playScannerSound(event: ScannerSoundEvent, enabled = true)
     window.setTimeout(stopScannerSound, 900);
     return true;
   } catch (error) {
-    console.warn("LoyaltyBase scanner sound error", error);
+    console.warn("Loyalty Card UAE scanner sound error", error);
     stopScannerSound();
     return false;
   }

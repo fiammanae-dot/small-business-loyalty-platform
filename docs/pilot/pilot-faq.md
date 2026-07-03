@@ -64,7 +64,7 @@ Open your card and use the referral section.
 
 ### What if QR is invalid?
 
-Confirm the customer is showing a LoyaltyBase card for the correct business.
+Confirm the customer is showing a Loyalty Card UAE card for the correct business.
 
 ### What if QR says wrong business?
 

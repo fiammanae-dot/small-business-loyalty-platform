@@ -141,9 +141,9 @@ Required environment variables:
 ```bash
 DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/loyalty_platform?schema=public"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
-MANUAL_AUDIT_SEED_CONFIRM="LOYALTYBASE_MANUAL_AUDIT"
+MANUAL_AUDIT_SEED_CONFIRM="Loyalty Card UAE_MANUAL_AUDIT"
 MANUAL_AUDIT_SEED_PASSWORD="local-manual-audit-password"
-MANUAL_AUDIT_ADMIN_EMAIL="manual.admin@example.test" # optional, defaults to system.admin@manual-audit.loyaltybase.test
+MANUAL_AUDIT_ADMIN_EMAIL="manual.admin@example.test" # optional, defaults to system.admin@manual-audit.Loyalty Card UAE.test
 ```
 
 Command:
@@ -154,7 +154,7 @@ npm run prisma:seed-manual-audit
 
 Safety behavior:
 
-- The seed refuses to run unless `MANUAL_AUDIT_SEED_CONFIRM=LOYALTYBASE_MANUAL_AUDIT` is set.
+- The seed refuses to run unless `MANUAL_AUDIT_SEED_CONFIRM=Loyalty Card UAE_MANUAL_AUDIT` is set.
 - The seed refuses to run against `loyalty_platform_pilot`.
 - The seed refuses to run when `APP_ENV=production` or `VERCEL_ENV=production`.
 - The seed does not run migrations and does not reset data.

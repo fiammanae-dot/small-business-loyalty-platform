@@ -51,7 +51,7 @@ export default async function ReferralLandingPage({
     .slice(0, 2)
     .map((part) => part[0])
     .join("")
-    .toUpperCase() || "LB";
+    .toUpperCase() || "LC";
   const registeredReferral = await prisma.referral.findFirst({
     where: {
       businessId: referrer.businessId,
@@ -223,7 +223,7 @@ function ReferralUnavailable() {
     <main className="flex min-h-screen items-center justify-center bg-white px-4">
       <section className="w-full max-w-sm rounded-md border border-[#E5E7EB] bg-white p-6 text-center shadow-sm">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-md bg-orange-100 text-sm font-bold text-[#F97316]">
-          LB
+          LC
         </div>
         <h1 className="mt-5 text-2xl font-semibold text-[#111827]">Referral not available</h1>
         <p className="mt-3 text-sm leading-6 text-[#6B7280]">

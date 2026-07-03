@@ -1,4 +1,4 @@
-# LoyaltyBase API and Action Map
+# Loyalty Card UAE API and Action Map
 
 Version: 1.0
 

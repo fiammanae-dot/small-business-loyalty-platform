@@ -1,6 +1,6 @@
 # Rollback Guide
 
-This guide describes how to recover from a failed LoyaltyBase deployment.
+This guide describes how to recover from a failed Loyalty Card UAE deployment.
 
 ## Rollback Principles
 

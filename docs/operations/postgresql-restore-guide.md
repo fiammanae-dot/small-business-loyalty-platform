@@ -1,6 +1,6 @@
 # PostgreSQL Restore Guide
 
-This guide explains safe PostgreSQL restore procedures for LoyaltyBase.
+This guide explains safe PostgreSQL restore procedures for Loyalty Card UAE.
 
 ## Warnings
 
@@ -23,7 +23,7 @@ createdb -U postgres -h DATABASE_HOST -p 5432 loyalty_platform_restore
 Use a `.backup` file created with `pg_dump -Fc`.
 
 ```powershell
-& "C:\Program Files\PostgreSQL\18\bin\pg_restore.exe" -U postgres -h DATABASE_HOST -p 5432 -d loyalty_platform_restore "backups\loyaltybase_dev_YYYY-MM-DD_HH-MM.backup"
+& "C:\Program Files\PostgreSQL\18\bin\pg_restore.exe" -U postgres -h DATABASE_HOST -p 5432 -d loyalty_platform_restore "backups\Loyalty Card UAE_dev_YYYY-MM-DD_HH-MM.backup"
 ```
 
 ## Restore SQL Backup With psql
@@ -31,7 +31,7 @@ Use a `.backup` file created with `pg_dump -Fc`.
 Use a `.sql` file created with plain `pg_dump`.
 
 ```powershell
-& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -h DATABASE_HOST -p 5432 -d loyalty_platform_restore -f "backups\loyaltybase_dev_YYYY-MM-DD_HH-MM.sql"
+& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -h DATABASE_HOST -p 5432 -d loyalty_platform_restore -f "backups\Loyalty Card UAE_dev_YYYY-MM-DD_HH-MM.sql"
 ```
 
 ## Point Application To Restored Database

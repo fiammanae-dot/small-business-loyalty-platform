@@ -51,7 +51,7 @@ export function extractReferralCode(value?: string | null) {
   if (!trimmed) return null;
 
   try {
-    const url = trimmed.startsWith("http") ? new URL(trimmed) : new URL(trimmed, "https://app.loyaltybase.invalid");
+    const url = trimmed.startsWith("http") ? new URL(trimmed) : new URL(trimmed, "https://app.loyaltycarduae.invalid");
     const segments = url.pathname.split("/").filter(Boolean);
     const referralIndex = segments.findIndex((segment) => segment === "referral" || segment === "r");
     if (referralIndex >= 0 && segments[referralIndex + 1]) return cleanReferralCode(segments[referralIndex + 1]);

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { toPng } from "html-to-image";
@@ -1350,7 +1350,7 @@ function buildPreviewPdfHtml({
 <body>
   <main>
     <section class="sheet">
-      <p class="eyebrow">LoyaltyBase Design Preview</p>
+      <p class="eyebrow">Loyalty Card UAE Design Preview</p>
       <h1>${escapeHtml(businessName)}</h1>
       <p class="meta">${escapeHtml(programName)} Â· Generated ${escapeHtml(generatedAt)}</p>
       <img class="preview" src="${imageDataUrl}" alt="Loyalty card design preview" />

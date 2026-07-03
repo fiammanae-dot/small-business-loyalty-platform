@@ -513,9 +513,9 @@ async function main() {
   await prisma.platformSetting.create({ data: { key: "demo_mode", value: { enabled: false, source: "full-qa-seed" } } });
   logStep("main: platform setting creation completed");
   logStep("main: system admin creation starting");
-  const admin = await createUser({ name: "LoyaltyBase QA System Administrator", email: "admin@loyaltybase.test", role: "PLATFORM_OWNER", passwordHash });
+  const admin = await createUser({ name: "Loyalty Card UAE QA System Administrator", email: "admin@Loyalty Card UAE.test", role: "PLATFORM_OWNER", passwordHash });
   logStep("main: system admin creation completed", { id: admin.id, email: admin.email });
-  const credentialRows = [{ business: "LoyaltyBase", role: "System Admin", name: admin.name, email: admin.email, password: QA_PASSWORD, branch: "-", notes: "Can see all QA businesses." }];
+  const credentialRows = [{ business: "Loyalty Card UAE", role: "System Admin", name: admin.name, email: admin.email, password: QA_PASSWORD, branch: "-", notes: "Can see all QA businesses." }];
 
   const created = [];
   for (const [index, businessSeed] of businesses.entries()) {

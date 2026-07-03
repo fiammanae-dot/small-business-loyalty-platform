@@ -23,7 +23,7 @@ export default function PricingPage() {
           <SectionHeading
             eyebrow="Included"
             title="The essentials every pilot business needs"
-            description="These capabilities are part of the LoyaltyBase product direction and appear across the official plan structure."
+            description="These capabilities are part of the Loyalty Card UAE product direction and appear across the official plan structure."
           />
           <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {included.map((item) => (

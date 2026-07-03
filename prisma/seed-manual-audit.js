@@ -8,7 +8,7 @@ const { Pool } = require("pg");
 
 nextEnv.loadEnvConfig(process.cwd());
 
-const REQUIRED_CONFIRMATION = "LOYALTYBASE_MANUAL_AUDIT";
+const REQUIRED_CONFIRMATION = "Loyalty Card UAE_MANUAL_AUDIT";
 const FORBIDDEN_DATABASES = new Set(["loyalty_platform_pilot"]);
 
 const subscriptionPlans = [
@@ -66,7 +66,7 @@ function addDays(date, days) {
 }
 
 function qaEmail(localPart) {
-  return `${localPart}@manual-audit.loyaltybase.test`;
+  return `${localPart}@manual-audit.Loyalty Card UAE.test`;
 }
 
 async function ensurePlans() {

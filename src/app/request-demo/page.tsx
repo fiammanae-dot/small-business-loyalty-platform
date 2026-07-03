@@ -6,7 +6,7 @@ import { MarketingFrame } from "@/components/marketing/MarketingLayout";
 const notes = [
   { title: "Pilot-focused", description: "Share your business type, branch count, and loyalty goals.", icon: Building2 },
   { title: "Privacy-minded", description: "Share only the details needed to prepare a useful product conversation.", icon: ShieldCheck },
-  { title: "Fast follow-up", description: "Use the details to prepare a practical LoyaltyBase launch conversation.", icon: Clock3 },
+  { title: "Fast follow-up", description: "Use the details to prepare a practical Loyalty Card UAE launch conversation.", icon: Clock3 },
 ];
 
 export default function RequestDemoPage() {
@@ -17,7 +17,7 @@ export default function RequestDemoPage() {
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.14em] text-[#EA580C]">Request Demo</p>
             <h1 className="mt-4 text-4xl font-extrabold tracking-[-0.045em] text-[#08111F] sm:text-6xl lg:text-7xl">
-              See how LoyaltyBase fits your business.
+              See how Loyalty Card UAE fits your business.
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-[#607089] sm:text-xl">
               Walk through digital loyalty cards, QR scanner operations, referrals, customer tiers, and branch workflows with a product specialist.
@@ -44,7 +44,7 @@ export default function RequestDemoPage() {
             </span>
             <div>
               <h2 className="font-extrabold text-[#111827]">Prefer to review the product first?</h2>
-              <p className="mt-1 text-sm leading-6 text-[#607089]">Explore LoyaltyBase benefits before requesting a pilot conversation.</p>
+              <p className="mt-1 text-sm leading-6 text-[#607089]">Explore Loyalty Card UAE benefits before requesting a pilot conversation.</p>
             </div>
           </div>
           <Link href="/benefits" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-[#E5E7EB] px-5 py-3 text-sm font-bold text-[#111827] transition hover:border-[#F97316] hover:text-[#EA580C]">

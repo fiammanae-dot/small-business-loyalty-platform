@@ -1,4 +1,4 @@
-# LoyaltyBase Design System
+# Loyalty Card UAE Design System
 
 Version: 1.0
 

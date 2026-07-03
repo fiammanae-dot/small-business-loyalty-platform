@@ -37,7 +37,7 @@ export function ScannerSoundFeedback({ event, enabled = true }: ScannerSoundFeed
     }
 
     void playAfterAllowed().catch((error) => {
-      console.warn("LoyaltyBase scanner sound error", error);
+      console.warn("Loyalty Card UAE scanner sound error", error);
     });
 
     return () => {

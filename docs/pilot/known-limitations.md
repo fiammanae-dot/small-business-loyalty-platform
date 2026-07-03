@@ -53,7 +53,7 @@ These limitations apply during the controlled pilot.
 
 ## Recommended Pilot Scope
 
-Use LoyaltyBase with selected small businesses only.
+Use Loyalty Card UAE with selected small businesses only.
 
 Recommended pilot size:
 

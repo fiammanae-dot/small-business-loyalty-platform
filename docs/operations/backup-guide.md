@@ -1,6 +1,6 @@
 # Backup Guide
 
-This guide defines the backup process for LoyaltyBase pilot and production operations.
+This guide defines the backup process for Loyalty Card UAE pilot and production operations.
 
 ## Backup Scope
 

@@ -1,6 +1,6 @@
 # Application Startup Guide
 
-This guide explains how to start LoyaltyBase safely.
+This guide explains how to start Loyalty Card UAE safely.
 
 ## Install Dependencies
 

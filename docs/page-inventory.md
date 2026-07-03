@@ -1,4 +1,4 @@
-# LoyaltyBase Page Inventory
+# Loyalty Card UAE Page Inventory
 
 Version: 1.0
 

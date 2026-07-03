@@ -1,6 +1,6 @@
 # System Administrator Pilot Guide
 
-This guide helps the System Administrator prepare and support selected pilot businesses in LoyaltyBase.
+This guide helps the System Administrator prepare and support selected pilot businesses in Loyalty Card UAE.
 
 ## Create a Business
 

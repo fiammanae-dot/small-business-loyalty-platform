@@ -16,7 +16,7 @@ test("manual audit seed exists and is separate from pilot seed", () => {
 
 test("manual audit seed is protected from accidental pilot or production execution", () => {
   assert.match(manualAuditSeed, /MANUAL_AUDIT_SEED_CONFIRM/);
-  assert.match(manualAuditSeed, /LOYALTYBASE_MANUAL_AUDIT/);
+  assert.match(manualAuditSeed, /Loyalty Card UAE_MANUAL_AUDIT/);
   assert.match(manualAuditSeed, /FORBIDDEN_DATABASES = new Set\(\["loyalty_platform_pilot"\]\)/);
   assert.match(manualAuditSeed, /APP_ENV === "production"/);
   assert.match(manualAuditSeed, /VERCEL_ENV === "production"/);
@@ -48,7 +48,7 @@ test("manual audit seed covers realistic full-platform QA data", () => {
 test("manual audit seed documentation explains command and safety", () => {
   assert.match(seedingGuide, /Manual Audit Seed/);
   assert.match(seedingGuide, /npm run prisma:seed-manual-audit/);
-  assert.match(seedingGuide, /MANUAL_AUDIT_SEED_CONFIRM="LOYALTYBASE_MANUAL_AUDIT"/);
+  assert.match(seedingGuide, /MANUAL_AUDIT_SEED_CONFIRM="Loyalty Card UAE_MANUAL_AUDIT"/);
   assert.match(seedingGuide, /refuses to run against `loyalty_platform_pilot`/);
   assert.match(seedingGuide, /not be used for pilot production onboarding/);
 });

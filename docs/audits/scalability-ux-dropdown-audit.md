@@ -1,6 +1,6 @@
 # Scalability UX Dropdown Audit
 
-Phase 13G audit of dynamic selectors that can become unusable as LoyaltyBase scales.
+Phase 13G audit of dynamic selectors that can become unusable as Loyalty Card UAE scales.
 
 ## Summary
 

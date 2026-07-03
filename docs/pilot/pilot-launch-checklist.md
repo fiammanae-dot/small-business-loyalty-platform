@@ -1,8 +1,8 @@
-# LoyaltyBase Pilot Launch Checklist
+# Loyalty Card UAE Pilot Launch Checklist
 
 Audience: non-technical founder or pilot launch owner
 
-Purpose: use this checklist to launch LoyaltyBase with the first pilot business in a controlled, low-risk way.
+Purpose: use this checklist to launch Loyalty Card UAE with the first pilot business in a controlled, low-risk way.
 
 How to use this checklist:
 
@@ -19,14 +19,14 @@ Launch rule:
 
 ## 1. Production Server Setup
 
-Goal: confirm the production server is ready to run LoyaltyBase.
+Goal: confirm the production server is ready to run Loyalty Card UAE.
 
 Checklist:
 
 - [ ] Choose the hosting provider or server.
 - [ ] Confirm the server has Node.js installed.
 - [ ] Confirm the server has access to PostgreSQL.
-- [ ] Upload or deploy the latest LoyaltyBase code.
+- [ ] Upload or deploy the latest Loyalty Card UAE code.
 - [ ] Install dependencies using the documented production command.
 - [ ] Confirm the application can build successfully.
 - [ ] Confirm the server can start the application.
@@ -42,7 +42,7 @@ Exact verification steps:
 Expected outcome:
 
 - The production server is online.
-- The LoyaltyBase login page loads.
+- The Loyalty Card UAE login page loads.
 - No development server, test server, or pilot database is being used.
 
 Stop if:
@@ -104,7 +104,7 @@ Checklist:
 Exact verification steps:
 
 1. Open the production domain in a browser.
-2. Confirm it loads LoyaltyBase.
+2. Confirm it loads Loyalty Card UAE.
 3. Open `/login`.
 4. Confirm the login page loads.
 5. Open a customer card link after a test customer is created.
@@ -534,7 +534,7 @@ Stop if:
 
 ## 15. Pilot Completion Review
 
-Goal: decide whether LoyaltyBase is ready for more customers.
+Goal: decide whether Loyalty Card UAE is ready for more customers.
 
 Checklist:
 
@@ -550,7 +550,7 @@ Checklist:
 
 Review questions:
 
-1. Did the business use LoyaltyBase daily?
+1. Did the business use Loyalty Card UAE daily?
 2. Did customers understand digital stamp cards?
 3. Did staff find scanning easy?
 4. Did rewards work correctly?

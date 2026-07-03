@@ -1,6 +1,6 @@
 # Staff User Guide
 
-This guide explains how Staff use LoyaltyBase during the pilot.
+This guide explains how Staff use Loyalty Card UAE during the pilot.
 
 ## Staff Dashboard
 
@@ -68,4 +68,4 @@ If QR is invalid:
 2. Confirm they are showing the correct business card.
 3. Call a Branch Manager if the issue continues.
 
-Do not manually add stamps outside LoyaltyBase.
+Do not manually add stamps outside Loyalty Card UAE.

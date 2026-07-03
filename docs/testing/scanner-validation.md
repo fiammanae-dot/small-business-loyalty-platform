@@ -53,7 +53,7 @@ Notes:
 | Expired QR | Shows unavailable QR if expired behavior exists |  |  |
 | Disabled QR | Shows unavailable QR |  |  |
 | Wrong business QR | Shows wrong-business message |  |  |
-| Non-LoyaltyBase QR | Shows not a LoyaltyBase customer card |  |  |
+| Non-Loyalty Card UAE QR | Shows not a Loyalty Card UAE customer card |  |  |
 
 ## Stamp Flow Validation
 

@@ -1,4 +1,4 @@
-# LoyaltyBase QA Test Scenarios
+# Loyalty Card UAE QA Test Scenarios
 
 Version: 1.0
 

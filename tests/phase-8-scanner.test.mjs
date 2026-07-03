@@ -24,10 +24,10 @@ test("camera scanner keeps camera controls while universal lookup handles text e
     "BarcodeDetector",
     "jsQR",
     "Invalid loyalty QR code.",
-    "This QR code is not a LoyaltyBase customer card.",
+    "This QR code is not a Loyalty Card UAE customer card.",
     "Camera access is required to scan customer cards.",
     "Camera active. Using browser-compatible QR scanning for this device.",
-    "LoyaltyBase scanner camera error",
+    "Loyalty Card UAE scanner camera error",
     "router.push(scanFlowHref(result.token))",
     "/scan/referral/",
     "referral:${referralCode}",
@@ -174,7 +174,7 @@ test("scanner sound effects are configurable and outcome driven", () => {
   assert.match(soundHelper, /AudioContext/);
   assert.match(soundHelper, /webkitAudioContext/);
   assert.match(soundHelper, /stopScannerSound/);
-  assert.match(soundHelper, /LoyaltyBase scanner sound error/);
+  assert.match(soundHelper, /Loyalty Card UAE scanner sound error/);
 });
 
 

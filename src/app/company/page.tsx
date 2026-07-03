@@ -4,7 +4,7 @@ import { CTASection, MarketingCard, MarketingFrame, PageHero, SectionHeading } f
 const principles = [
   {
     title: "Built for local business growth",
-    description: "LoyaltyBase focuses on the businesses customers visit every week: cafes, salons, restaurants, car care, retail, and services.",
+    description: "Loyalty Card UAE focuses on the businesses customers visit every week: cafes, salons, restaurants, car care, retail, and services.",
     icon: Target,
   },
   {
@@ -39,7 +39,7 @@ export default function CompanyPage() {
     <MarketingFrame>
       <PageHero
         eyebrow="Company"
-        title="LoyaltyBase is built for local business growth"
+        title="Loyalty Card UAE is built for local business growth"
         description="We help local businesses replace fragile paper cards and app-heavy loyalty ideas with secure digital cards, QR scanning, and clear repeat-customer operations."
       />
 

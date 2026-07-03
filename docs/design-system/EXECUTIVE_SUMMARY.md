@@ -54,7 +54,7 @@
 
 ## Architecture Position
 
-LoyaltyBase has a coherent route model and a strong authenticated shell. The main UI architecture gap is not missing infrastructure; it is uneven component extraction. The safest next step is not a global redesign. It is a sequence of page-focused redesigns that extract proven reusable pieces as they become stable.
+Loyalty Card UAE has a coherent route model and a strong authenticated shell. The main UI architecture gap is not missing infrastructure; it is uneven component extraction. The safest next step is not a global redesign. It is a sequence of page-focused redesigns that extract proven reusable pieces as they become stable.
 
 ## Pilot Guidance
 

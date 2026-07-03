@@ -37,7 +37,7 @@ Recommendation:
 
 Findings:
 - Lucide icons are used widely.
-- System Administrator remains LoyaltyBase orange.
+- System Administrator remains Loyalty Card UAE orange.
 - Operational roles mostly use business theme utilities, but icon color drift is likely in older pages.
 - Decorative public page icons should consistently use `aria-hidden`.
 
@@ -47,7 +47,7 @@ Recommendation:
 ## Colors
 
 Findings:
-- Platform uses LoyaltyBase orange (`#F97316`, `#EA580C`) heavily.
+- Platform uses Loyalty Card UAE orange (`#F97316`, `#EA580C`) heavily.
 - Operational UI uses CSS business variables and classes (`business-text`, `business-bg`, etc.) in many places.
 - Semantic amber/orange sometimes overlaps with brand orange, making audits harder.
 

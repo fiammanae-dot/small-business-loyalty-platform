@@ -1,6 +1,6 @@
 # Recovery Priority Matrix
 
-This matrix defines response priority for LoyaltyBase incidents.
+This matrix defines response priority for Loyalty Card UAE incidents.
 
 ## P1 - Production Down
 

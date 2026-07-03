@@ -1,6 +1,6 @@
 # End-to-End User Journey Testing
 
-This folder contains Phase 13D validation documents for LoyaltyBase.
+This folder contains Phase 13D validation documents for Loyalty Card UAE.
 
 The goal is to validate complete workflows from the perspective of real users before pilot onboarding.
 

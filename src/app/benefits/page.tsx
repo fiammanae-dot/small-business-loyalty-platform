@@ -55,7 +55,7 @@ export default function BenefitsPage() {
       <PageHero
         eyebrow="Product"
         title="Everything local businesses need to grow repeat customers"
-        description="LoyaltyBase brings digital cards, QR scanning, referrals, tiers, rewards, and operational reporting into one clean platform."
+        description="Loyalty Card UAE brings digital cards, QR scanning, referrals, tiers, rewards, and operational reporting into one clean platform."
       />
 
       <section className="px-5 py-16 sm:px-8 lg:px-16">

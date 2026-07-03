@@ -1,6 +1,6 @@
 # Monitoring Gap Analysis
 
-This gap analysis classifies Phase 13C monitoring readiness. Because the current workspace does not include the full LoyaltyBase application source, implementation status is classified conservatively.
+This gap analysis classifies Phase 13C monitoring readiness. Because the current workspace does not include the full Loyalty Card UAE application source, implementation status is classified conservatively.
 
 ## Summary
 

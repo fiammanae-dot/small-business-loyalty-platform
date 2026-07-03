@@ -1,10 +1,10 @@
 # Pilot Onboarding Guide
 
-This guide explains how to run a controlled LoyaltyBase pilot with selected businesses.
+This guide explains how to run a controlled Loyalty Card UAE pilot with selected businesses.
 
 ## Purpose Of Pilot
 
-The pilot validates that LoyaltyBase works in real business operations before commercial launch.
+The pilot validates that Loyalty Card UAE works in real business operations before commercial launch.
 
 Pilot goals:
 

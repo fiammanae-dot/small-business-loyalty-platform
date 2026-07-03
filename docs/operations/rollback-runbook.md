@@ -1,6 +1,6 @@
 # Rollback Runbook
 
-This runbook describes how to roll back LoyaltyBase safely.
+This runbook describes how to roll back Loyalty Card UAE safely.
 
 ## When Rollback Is Required
 

@@ -1,6 +1,6 @@
 # Staff Operations Guide
 
-This guide helps Staff use LoyaltyBase during daily operations.
+This guide helps Staff use Loyalty Card UAE during daily operations.
 
 ## Login
 

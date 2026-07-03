@@ -1,6 +1,6 @@
 # Business Owner User Guide
 
-This guide explains how Business Owners use LoyaltyBase during the pilot.
+This guide explains how Business Owners use Loyalty Card UAE during the pilot.
 
 ## Dashboard Overview
 
@@ -24,7 +24,7 @@ Open:
 
 Business -> Customers -> Enroll customer
 
-Enter customer details and marketing consent if applicable. LoyaltyBase uses phone normalization to avoid duplicate global customer records.
+Enter customer details and marketing consent if applicable. Loyalty Card UAE uses phone normalization to avoid duplicate global customer records.
 
 ## Create Loyalty Programs
 
@@ -104,7 +104,7 @@ Use:
 - Prepare SMS Message
 - Prepare Email Message
 
-Messages are prepared only. LoyaltyBase does not send messages automatically during the pilot.
+Messages are prepared only. Loyalty Card UAE does not send messages automatically during the pilot.
 
 Open:
 

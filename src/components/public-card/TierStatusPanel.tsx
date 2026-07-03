@@ -49,7 +49,7 @@ export function TierStatusPanel({ badgeLabel, badgeIcon, isVip, nextTier, visits
       ) : (
         <div className="mt-5 rounded-3xl bg-[#1E293B] p-4 text-white">
           <p className="text-sm font-bold">Top tier member</p>
-          <p className="mt-1 text-sm text-white/75">You are already at the highest LoyaltyBase tier.</p>
+          <p className="mt-1 text-sm text-white/75">You are already at the highest Loyalty Card UAE tier.</p>
         </div>
       )}
     </section>

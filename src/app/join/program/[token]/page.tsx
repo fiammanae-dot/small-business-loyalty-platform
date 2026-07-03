@@ -138,7 +138,7 @@ function JoinUnavailable() {
     <main className="flex min-h-screen items-center justify-center bg-white px-4">
       <section className="w-full max-w-sm rounded-2xl border border-[#E5E7EB] bg-white p-6 text-center shadow-sm">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[#F8FAFC] text-sm font-bold text-[#111827]">
-          LB
+          LC
         </div>
         <h1 className="mt-5 text-2xl font-semibold text-[#111827]">Program not available</h1>
         <p className="mt-3 text-sm leading-6 text-[#6B7280]">

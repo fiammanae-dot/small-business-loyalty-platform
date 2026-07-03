@@ -1,4 +1,4 @@
-# LoyaltyBase Role and Permission Matrix
+# Loyalty Card UAE Role and Permission Matrix
 
 Version: 1.0
 
