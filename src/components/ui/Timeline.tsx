@@ -24,10 +24,10 @@ export function TimelineItem({
         {marker}
       </span>
       <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-        <h3 className="text-sm font-semibold text-[#1E293B]">{title}</h3>
-        {time ? <p className="text-xs text-[#64748B]">{time}</p> : null}
+        <h3 className="text-sm font-semibold text-[#171A21]">{title}</h3>
+        {time ? <p className="text-xs tabular-nums text-[#7A8091]">{time}</p> : null}
       </div>
-      {description ? <p className="mt-1 text-sm leading-6 text-[#64748B]">{description}</p> : null}
+      {description ? <p className="mt-1 text-sm leading-6 text-[#7A8091]">{description}</p> : null}
     </li>
   );
 }

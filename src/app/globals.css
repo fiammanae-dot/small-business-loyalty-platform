@@ -2,12 +2,18 @@
 
 :root {
   --background: #FFFFFF;
-  --foreground: #1E293B;
-  --primary-orange: #F97316;
-  --dark-orange: #EA580C;
-  --light-orange: #FED7AA;
-  --light-gray: #F8FAFC;
-  --medium-gray: #E2E8F0;
+  --foreground: #171A21;
+  --primary-orange: #E86A33;
+  --dark-orange: #C24E1E;
+  --light-orange: #F4C7AE;
+  --light-gray: #F3F4F7;
+  --medium-gray: #E7E9EE;
+
+  /* Calm Professional app tokens */
+  --app-canvas: #F6F7F9;
+  --accent: #E86A33;
+  --accent-deep: #C24E1E;
+  --accent-soft: #FBEFE8;
   
   /* ألوان الحالات والتحذيرات */
   --success: #22C55E;
@@ -834,34 +840,34 @@ input {
   --business-primary-strong: color-mix(in srgb, var(--business-primary) 86%, #111827);
 }
 
-.business-text { color: var(--business-text, #f97316); }
-.business-primary { color: var(--business-primary, #f97316); }
-.business-primary-strong { color: var(--business-primary-strong, #9a3412); }
-.business-text-strong { color: var(--business-primary-strong, #9a3412); }
+.business-text { color: var(--business-text, #E86A33); }
+.business-primary { color: var(--business-primary, #E86A33); }
+.business-primary-strong { color: var(--business-primary-strong, #C24E1E); }
+.business-text-strong { color: var(--business-primary-strong, #C24E1E); }
 .business-bg {
-  background-color: var(--business-primary, #f97316);
+  background-color: var(--business-primary, #E86A33);
   color: var(--business-bg-foreground, #ffffff);
 }
 .business-button {
-  background-color: var(--business-button, #f97316);
+  background-color: var(--business-button, #E86A33);
   color: var(--business-button-foreground, #ffffff);
 }
-.business-bg-soft { background-color: var(--business-primary-soft, #fff7ed); }
-.business-secondary-bg-soft { background-color: var(--business-secondary-soft, #fff7ed); }
-.business-border { border-color: var(--business-primary, #f97316); }
-.business-border-soft { border-color: var(--business-primary-border, #fed7aa); }
+.business-bg-soft { background-color: var(--business-primary-soft, #FBEFE8); }
+.business-secondary-bg-soft { background-color: var(--business-secondary-soft, #FBEFE8); }
+.business-border { border-color: var(--business-primary, #E86A33); }
+.business-border-soft { border-color: var(--business-primary-border, #F4C7AE); }
 .business-ring:focus {
-  border-color: var(--business-primary, #f97316);
-  box-shadow: 0 0 0 4px var(--business-primary-soft, #ffedd5);
+  border-color: var(--business-primary, #E86A33);
+  box-shadow: 0 0 0 4px var(--business-primary-soft, #FBEFE8);
 }
 .business-hover:hover {
-  border-color: var(--business-primary-border, #fed7aa);
-  background-color: var(--business-primary-soft, #fff7ed);
-  color: var(--business-primary-strong, #9a3412);
+  border-color: var(--business-primary-border, #F4C7AE);
+  background-color: var(--business-primary-soft, #FBEFE8);
+  color: var(--business-primary-strong, #C24E1E);
 }
-.business-theme .business-progress { background-color: var(--business-primary, #f97316); }
+.business-theme .business-progress { background-color: var(--business-primary, #E86A33); }
 .business-theme .business-action-primary {
-  background-color: var(--business-button, #f97316);
+  background-color: var(--business-button, #E86A33);
   color: var(--business-button-foreground, #ffffff);
 }
 .business-theme .business-action-primary:hover {

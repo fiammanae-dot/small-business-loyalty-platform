@@ -47,42 +47,32 @@ type NavigationItem = {
 
 const businessOwnerNavigationGroups: Array<{ label: string; items: NavigationItem[] }> = [
   {
-    label: "Main",
+    label: "Operate",
     items: [
-      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, description: "Daily overview" },
-      { href: "/dashboard/customers", label: "Customers", icon: Users, description: "Search and manage" },
-      { href: "/dashboard/scanner", label: "Scanner", icon: QrCode, description: "Scan customer QR", accent: true },
-      { href: "/dashboard/activity", label: "Activity", icon: History, description: "Customer timeline" },
+      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/dashboard/customers", label: "Customers", icon: Users },
+      { href: "/dashboard/scanner", label: "Scanner", icon: QrCode, accent: true },
+      { href: "/dashboard/activity", label: "Activity", icon: History },
+      { href: "/dashboard/notifications", label: "Alerts", icon: Bell },
     ],
   },
   {
-    label: "Management",
+    label: "Grow",
     items: [
-      { href: "/dashboard/programs", label: "Programs", icon: Sparkles, description: "Loyalty setup" },
-      { href: "/dashboard/referrals", label: "Referrals", icon: Share2, description: "Referral growth" },
-      { href: "/dashboard/staff", label: "Staff", icon: UserPlus, description: "Team access" },
-      { href: "/dashboard/branches", label: "Branches", icon: Building2, description: "Locations" },
+      { href: "/dashboard/programs", label: "Programs", icon: Sparkles },
+      { href: "/dashboard/referrals", label: "Referrals", icon: Share2 },
+      { href: "/dashboard/messages", label: "Messages", icon: MessageSquare },
     ],
   },
   {
-    label: "Business",
+    label: "Manage",
     items: [
-      { href: "/dashboard/billing", label: "Billing", icon: CreditCard, description: "Subscription" },
-      { href: "/dashboard/support-history", label: "Support History", icon: ShieldCheck, description: "Support transparency" },
-      { href: "/dashboard/settings", label: "Settings", icon: Settings, description: "Business settings" },
-    ],
-  },
-  {
-    label: "Support",
-    items: [
-      { href: "/dashboard/notifications", label: "Alerts", icon: Bell, description: "Risk and alerts" },
-      { href: "/dashboard/messages", label: "Messages", icon: MessageSquare, description: "Prepared messages" },
-    ],
-  },
-  {
-    label: "Account",
-    items: [
-      { href: "/dashboard/profile", label: "Profile", icon: Store, description: "Account profile" },
+      { href: "/dashboard/staff", label: "Staff", icon: UserPlus },
+      { href: "/dashboard/branches", label: "Branches", icon: Building2 },
+      { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
+      { href: "/dashboard/support-history", label: "Support History", icon: ShieldCheck },
+      { href: "/dashboard/profile", label: "Profile", icon: Store },
+      { href: "/dashboard/settings", label: "Settings", icon: Settings },
     ],
   },
 ];
@@ -147,25 +137,25 @@ export function RoleNavigation({ role }: RoleNavigationProps) {
 
   return (
     <aside className="hidden lg:sticky lg:top-6 lg:block lg:self-start" aria-label="Business Owner navigation">
-      <div className="rounded-xl border border-[#E5E7EB] bg-white p-3 shadow-sm">
-        <div className="flex items-center gap-3 border-b border-[#F1F5F9] px-2 pb-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 business-bg-soft business-primary">
+      <div className="rounded-xl border border-[#E7E9EE] bg-white p-3 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
+        <div className="flex items-center gap-3 border-b border-[#EDEFF3] px-2 pb-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FBEFE8] business-bg-soft business-primary">
             <Store className="h-5 w-5" aria-hidden="true" />
           </span>
           <div>
-            <p className="text-sm font-bold text-[#111827]">Business Workspace</p>
-            <p className="text-xs font-medium text-[#64748B]">Daily operations</p>
+            <p className="text-sm font-bold text-[#171A21]">Business Workspace</p>
+            <p className="text-xs font-medium text-[#7A8091]">Daily operations</p>
           </div>
         </div>
 
-        <nav className="mt-4 grid gap-5" aria-label="Business navigation">
+        <nav className="mt-4 grid gap-4" aria-label="Business navigation">
           {businessOwnerNavigationGroups.map((group) => (
             <div key={group.label}>
-              <p className="px-2 pb-2 text-xs font-bold uppercase tracking-wide text-[#94A3B8]">{group.label}</p>
+              <p className="px-2 pb-1.5 text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#9AA0AD]">{group.label}</p>
               <div className="grid gap-1">
                 {group.items.map((item) => (
                   item.accent ? (
-                    <div key={item.href} className="my-2 border-y border-orange-100 business-border-soft py-2">
+                    <div key={item.href} className="my-1.5 border-y border-[#F4C7AE]/50 business-border-soft py-1.5">
                       <NavigationLink item={item} pathname={pathname} />
                     </div>
                   ) : (
@@ -202,13 +192,13 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
             className="fixed inset-0 z-30 bg-[#0F172A]/35 backdrop-blur-[1px]"
             onClick={() => setMoreOpen(false)}
           />
-          <div className="fixed inset-x-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-40 max-h-[72vh] overflow-hidden rounded-3xl border border-[#E5E7EB] bg-white shadow-2xl">
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E5E7EB] bg-white px-4 py-3">
-              <p className="text-base font-bold text-[#111827]">More{activeMoreItem ? ` - ${activeMoreItem.label}` : ""}</p>
+          <div className="fixed inset-x-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-40 max-h-[72vh] overflow-hidden rounded-3xl border border-[#E7E9EE] bg-white shadow-2xl">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E7E9EE] bg-white px-4 py-3">
+              <p className="text-base font-bold text-[#171A21]">More{activeMoreItem ? ` - ${activeMoreItem.label}` : ""}</p>
               <button
                 type="button"
                 onClick={() => setMoreOpen(false)}
-                className="rounded-full px-3 py-1.5 text-sm font-bold text-[#64748B] transition duration-150 active:scale-[0.98] business-hover"
+                className="rounded-full px-3 py-1.5 text-sm font-bold text-[#7A8091] transition duration-150 active:scale-[0.98] business-hover"
               >
                 Close
               </button>
@@ -225,8 +215,8 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
                     aria-current={active ? "page" : undefined}
                     className={`flex min-h-12 items-center gap-3 rounded-xl border px-3 py-3 text-sm font-bold transition duration-150 active:scale-[0.98] ${
                       active
-                        ? "border-[#F97316] business-border bg-orange-50 business-bg-soft business-primary-strong shadow-sm ring-1 ring-orange-200 business-ring"
-                        : "border-[#E5E7EB] bg-white text-[#475569] business-hover"
+                        ? "border-[#F4C7AE] business-border-soft bg-[#FBEFE8] business-bg-soft business-primary-strong shadow-sm ring-1 ring-[#F4C7AE] business-ring"
+                        : "border-[#E7E9EE] bg-white text-[#5A6070] business-hover"
                     }`}
                   >
                     <item.icon className={`h-5 w-5 transition-colors ${active ? "business-primary-strong" : "business-primary"}`} aria-hidden="true" />
@@ -241,14 +231,14 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
 
       {moreActive && !moreOpen ? (
         <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 flex justify-center px-4">
-          <span className="max-w-[min(22rem,calc(100vw-2rem))] truncate rounded-full border border-orange-200 business-border-soft bg-white px-3 py-1.5 text-xs font-bold business-primary-strong shadow-lg">
+          <span className="max-w-[min(22rem,calc(100vw-2rem))] truncate rounded-full border border-[#F4C7AE] business-border-soft bg-white px-3 py-1.5 text-xs font-bold business-primary-strong shadow-lg">
             More - {activeMoreItem?.label}
           </span>
         </div>
       ) : null}
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E5E7EB] bg-white/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E7E9EE] bg-white/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur"
         aria-label="Mobile business navigation"
       >
         <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
@@ -263,10 +253,10 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
                 aria-current={active ? "page" : undefined}
                 className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition ${
                   active
-                    ? "bg-[#F97316] business-button text-white shadow-sm"
+                    ? "bg-[#E86A33] business-button text-white shadow-sm"
                     : item.accent
-                      ? "border border-[#F97316] business-border bg-orange-50 business-bg-soft business-primary-strong shadow-sm"
-                      : "text-[#64748B] business-hover"
+                      ? "border border-[#F4C7AE] business-border-soft bg-[#FBEFE8] business-bg-soft business-primary-strong shadow-sm"
+                      : "text-[#7A8091] business-hover"
                 }`}
               >
                 <item.icon className={item.accent && !active ? "h-6 w-6" : "h-5 w-5"} aria-hidden="true" />
@@ -279,7 +269,7 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
             onClick={() => setMoreOpen((current) => !current)}
             aria-expanded={moreOpen}
             className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition ${
-              moreOpen || moreActive ? "bg-orange-50 business-bg-soft business-primary-strong" : "text-[#64748B] business-hover"
+              moreOpen || moreActive ? "bg-[#FBEFE8] business-bg-soft business-primary-strong" : "text-[#7A8091] business-hover"
             }`}
           >
             <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
@@ -311,13 +301,13 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
             className="fixed inset-0 z-30 bg-[#0F172A]/35 backdrop-blur-[1px]"
             onClick={() => setMoreOpen(false)}
           />
-          <div className="fixed inset-x-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-40 max-h-[72vh] overflow-hidden rounded-3xl border border-[#E5E7EB] bg-white shadow-2xl">
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E5E7EB] bg-white px-4 py-3">
-              <p className="text-base font-bold text-[#111827]">More{activeMoreItem ? ` - ${activeMoreItem.label}` : ""}</p>
+          <div className="fixed inset-x-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-40 max-h-[72vh] overflow-hidden rounded-3xl border border-[#E7E9EE] bg-white shadow-2xl">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E7E9EE] bg-white px-4 py-3">
+              <p className="text-base font-bold text-[#171A21]">More{activeMoreItem ? ` - ${activeMoreItem.label}` : ""}</p>
               <button
                 type="button"
                 onClick={() => setMoreOpen(false)}
-                className="rounded-full px-3 py-1.5 text-sm font-bold text-[#64748B] hover:bg-orange-50 hover:text-[#F97316]"
+                className="rounded-full px-3 py-1.5 text-sm font-bold text-[#7A8091] hover:bg-[#FBEFE8] hover:text-[#C24E1E]"
               >
                 Close
               </button>
@@ -334,11 +324,11 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
                     aria-current={active ? "page" : undefined}
                     className={`flex min-h-12 items-center gap-3 rounded-xl border px-3 py-3 text-sm font-bold transition duration-150 active:scale-[0.98] ${
                       active
-                        ? "border-[#F97316] bg-orange-50 text-[#EA580C] shadow-sm ring-1 ring-orange-200"
-                        : "border-[#E5E7EB] bg-white text-[#475569] hover:border-orange-200 hover:bg-orange-50 hover:text-[#EA580C]"
+                        ? "border-[#F4C7AE] bg-[#FBEFE8] text-[#C24E1E] shadow-sm ring-1 ring-[#F4C7AE]"
+                        : "border-[#E7E9EE] bg-white text-[#5A6070] hover:border-[#F4C7AE] hover:bg-[#FBEFE8] hover:text-[#C24E1E]"
                     }`}
                   >
-                    <item.icon className={`h-5 w-5 transition-colors ${active ? "text-[#EA580C]" : "text-[#F97316]"}`} aria-hidden="true" />
+                    <item.icon className={`h-5 w-5 transition-colors ${active ? "text-[#C24E1E]" : "text-[#E86A33]"}`} aria-hidden="true" />
                     <span className="min-w-0 truncate">{item.label}</span>
                   </Link>
                 );
@@ -350,14 +340,14 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
 
       {moreActive && !moreOpen ? (
         <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 flex justify-center px-4">
-          <span className="max-w-[min(22rem,calc(100vw-2rem))] truncate rounded-full border border-orange-200 bg-white px-3 py-1.5 text-xs font-bold text-[#EA580C] shadow-lg">
+          <span className="max-w-[min(22rem,calc(100vw-2rem))] truncate rounded-full border border-[#F4C7AE] bg-white px-3 py-1.5 text-xs font-bold text-[#C24E1E] shadow-lg">
             More - {activeMoreItem?.label}
           </span>
         </div>
       ) : null}
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E5E7EB] bg-white/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E7E9EE] bg-white/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur"
         aria-label="Mobile system administrator navigation"
       >
         <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
@@ -371,7 +361,7 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
                 onClick={() => setMoreOpen(false)}
                 aria-current={active ? "page" : undefined}
                 className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition ${
-                  active ? "bg-[#F97316] text-white shadow-sm" : "text-[#64748B] hover:bg-orange-50 hover:text-[#F97316]"
+                  active ? "bg-[#E86A33] text-white shadow-sm" : "text-[#7A8091] hover:bg-[#FBEFE8] hover:text-[#C24E1E]"
                 }`}
               >
                 <item.icon className="h-5 w-5" aria-hidden="true" />
@@ -384,7 +374,7 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
             onClick={() => setMoreOpen((current) => !current)}
             aria-expanded={moreOpen}
             className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition ${
-              moreOpen || moreActive ? "bg-orange-50 text-[#EA580C]" : "text-[#64748B] hover:bg-orange-50 hover:text-[#F97316]"
+              moreOpen || moreActive ? "bg-[#FBEFE8] text-[#C24E1E]" : "text-[#7A8091] hover:bg-[#FBEFE8] hover:text-[#C24E1E]"
             }`}
           >
             <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
@@ -405,7 +395,7 @@ export function MobileBranchNavigation({ role }: RoleNavigationProps) {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E5E7EB] bg-white/95 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E7E9EE] bg-white/95 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur lg:hidden"
       aria-label="Mobile branch manager navigation"
     >
       <div className="mx-auto grid max-w-sm grid-cols-3 gap-2">
@@ -418,10 +408,10 @@ export function MobileBranchNavigation({ role }: RoleNavigationProps) {
               aria-current={active ? "page" : undefined}
               className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition ${
                 active
-                  ? "bg-[#F97316] business-button text-white shadow-sm"
+                  ? "bg-[#E86A33] business-button text-white shadow-sm"
                   : item.accent
-                    ? "border border-[#F97316] business-border bg-orange-50 business-bg-soft business-primary-strong shadow-sm"
-                    : "text-[#64748B] business-hover"
+                    ? "border border-[#F4C7AE] business-border-soft bg-[#FBEFE8] business-bg-soft business-primary-strong shadow-sm"
+                    : "text-[#7A8091] business-hover"
               }`}
             >
               <item.icon className={item.accent ? "h-6 w-6" : "h-5 w-5"} aria-hidden="true" />
@@ -442,7 +432,7 @@ export function MobileStaffNavigation({ role }: RoleNavigationProps) {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E5E7EB] bg-white/95 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E7E9EE] bg-white/95 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur lg:hidden"
       aria-label="Mobile staff navigation"
     >
       <div className="mx-auto grid max-w-sm grid-cols-3 gap-2">
@@ -455,10 +445,10 @@ export function MobileStaffNavigation({ role }: RoleNavigationProps) {
               aria-current={active ? "page" : undefined}
               className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition ${
                 active
-                  ? "bg-[#F97316] business-button text-white shadow-sm"
+                  ? "bg-[#E86A33] business-button text-white shadow-sm"
                   : item.accent
-                    ? "border border-[#F97316] business-border bg-orange-50 business-bg-soft business-primary-strong shadow-sm"
-                    : "text-[#64748B] business-hover"
+                    ? "border border-[#F4C7AE] business-border-soft bg-[#FBEFE8] business-bg-soft business-primary-strong shadow-sm"
+                    : "text-[#7A8091] business-hover"
               }`}
             >
               <item.icon className={item.accent ? "h-6 w-6" : "h-5 w-5"} aria-hidden="true" />
@@ -486,26 +476,26 @@ function NavigationLink({
       href={item.href}
       aria-current={active ? "page" : undefined}
       className={`group flex items-center gap-3 rounded-lg border px-3 transition ${
-        item.accent ? "py-3" : compact ? "py-2" : "py-2.5"
+        item.accent ? "py-2.5" : compact ? "py-2" : "py-2"
       } ${
         active
-          ? "border-orange-200 business-border-soft bg-orange-50 business-bg-soft business-primary-strong"
+          ? "border-transparent bg-[#FBEFE8] business-bg-soft business-primary-strong"
           : item.accent
-            ? "border-[#F97316] business-border bg-[#FFF7ED] business-primary-strong shadow-sm business-hover business-bg-soft"
-            : "border-transparent text-[#64748B] border-transparent text-[#64748B] business-hover"
+            ? "border-[#F4C7AE] business-border-soft bg-[#FBEFE8] business-bg-soft business-primary-strong shadow-sm business-hover"
+            : "border-transparent text-[#5A6070] business-hover"
       }`}
     >
       <span
         className={`flex shrink-0 items-center justify-center rounded-lg ${
-          item.accent ? "h-11 w-11" : "h-9 w-9"
+          item.accent ? "h-9 w-9" : "h-8 w-8"
         } ${
-          active || item.accent ? "bg-white business-primary shadow-sm" : "bg-[#F8FAFC] text-[#94A3B8] business-primary"
+          active || item.accent ? "bg-white business-primary shadow-sm" : "bg-[#F3F4F7] text-[#9AA0AD] business-primary"
         }`}
       >
-        <item.icon className={item.accent ? "h-5 w-5" : "h-4 w-4"} aria-hidden="true" />
+        <item.icon className="h-4 w-4" aria-hidden="true" />
       </span>
       <span className="min-w-0">
-        <span className={`block truncate font-bold ${item.accent ? "text-base" : "text-sm"}`}>{item.label}</span>
+        <span className={`block truncate ${item.accent ? "text-sm font-bold" : "text-[13.5px] font-semibold"}`}>{item.label}</span>
         {!compact && item.description ? <span className="block truncate text-xs font-medium opacity-75">{item.description}</span> : null}
       </span>
     </Link>

@@ -4,17 +4,17 @@ import { subscriptionStatusLabels } from "@/lib/subscriptions";
 export function StatusBadge({ status }: { status: RecordStatus | SubscriptionStatus | CustomerMembershipStatus }) {
   const tone =
     status === "ACTIVE"
-      ? "bg-emerald-50 text-emerald-700"
+      ? "bg-[#E9F6EE] text-[#1D7A46]"
       : status === "TRIAL"
-        ? "bg-orange-50 text-[#F97316]"
+        ? "bg-[#FBEFE8] text-[#C24E1E]"
         : status === "SUSPENDED" || status === "EXPIRED" || status === "CANCELLED"
           ? "bg-red-50 text-red-700"
-          : "bg-zinc-100 text-zinc-700";
+          : "bg-[#F3F4F7] text-[#5A6070]";
   const label = status in subscriptionStatusLabels ? subscriptionStatusLabels[status as SubscriptionStatus] : status.replaceAll("_", " ").toLowerCase();
 
   return (
     <span
-      className={`inline-flex rounded-md px-2 py-1 text-xs font-semibold ${tone}`}
+      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${tone}`}
     >
       {label}
     </span>

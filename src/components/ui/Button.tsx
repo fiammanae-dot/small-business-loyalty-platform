@@ -7,10 +7,10 @@ export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "dan
 export type ButtonSize = "sm" | "md" | "lg";
 
 const variants: Record<ButtonVariant, string> = {
-  primary: "bg-[#F97316] text-white hover:bg-[#EA580C] border-transparent",
-  secondary: "bg-[#F8FAFC] text-[#1E293B] hover:bg-[#E2E8F0] border-[#E2E8F0]",
-  outline: "bg-white text-[#1E293B] hover:bg-[#F8FAFC] border-[#CBD5E1]",
-  ghost: "bg-transparent text-[#475569] hover:bg-[#F8FAFC] border-transparent",
+  primary: "bg-[#E86A33] text-white hover:bg-[#C24E1E] border-transparent shadow-[0_2px_8px_rgba(232,106,51,0.25)]",
+  secondary: "bg-[#F3F4F7] text-[#3D4352] hover:bg-[#E7E9EE] border-[#E7E9EE]",
+  outline: "bg-white text-[#3D4352] hover:bg-[#F3F4F7] border-[#D8DBE2]",
+  ghost: "bg-transparent text-[#5A6070] hover:bg-[#F3F4F7] border-transparent",
   danger: "bg-[#FEF2F2] text-[#B91C1C] hover:bg-[#FEE2E2] border-[#FECACA]",
   success: "bg-[#ECFDF5] text-[#047857] hover:bg-[#D1FAE5] border-[#A7F3D0]",
   business: "business-button border-transparent",
@@ -32,7 +32,7 @@ export function buttonClassName({
   className?: string;
 }) {
   return cn(
-    "inline-flex min-w-0 items-center justify-center gap-2 rounded-lg border font-semibold shadow-sm",
+    "inline-flex min-w-0 items-center justify-center gap-2 rounded-lg border font-semibold",
     interactiveMotion,
     interactiveFocusRing,
     disabledState,
