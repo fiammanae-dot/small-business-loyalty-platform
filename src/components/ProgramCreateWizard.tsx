@@ -25,8 +25,10 @@ import {
   designStudioTypographyOptions,
   type DesignStudioProfessionalPreset,
 } from "@/lib/design-studio";
+import { resolveCardThemeColors } from "@/lib/card-themes";
 import { Button, SectionCard } from "@/components/ui";
 import { StampIconGraphic } from "@/components/design-studio/StampIconGraphic";
+import { WalletCardShell, type WalletTheme } from "@/components/public-card/WalletCardShell";
 
 type ProgramPreviewBranding = {
   primaryColor: string;
@@ -233,7 +235,7 @@ export function ProgramCreateWizard({
         </SectionCard>
       </div>
 
-      <div className={step === 2 ? "grid gap-6" : "hidden"}>
+      <div className={step === 2 ? "grid gap-6 pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-0" : "hidden"}>
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
           <div className="grid gap-5">
             <SectionCard title="Professional Templates" description="Start with a professionally designed loyalty card for your business type.">
@@ -333,7 +335,6 @@ export function ProgramCreateWizard({
                 businessName={businessName}
                 branding={branding}
                 cardDesign={cardDesign}
-                layoutStyle={layoutStyle}
                 stampJourneyStyle={stampJourneyStyle}
                 stampIcon={stampIcon}
                 rewardStyle={rewardStyle}
@@ -456,7 +457,6 @@ function CreateCardPreview({
   businessName,
   branding,
   cardDesign,
-  layoutStyle,
   stampJourneyStyle,
   stampIcon,
   rewardStyle,
@@ -465,83 +465,162 @@ function CreateCardPreview({
   businessName: string;
   branding: ProgramPreviewBranding;
   cardDesign: ReturnType<typeof resolveCardDesign>;
-  layoutStyle: CardDesignLayoutStyle;
   stampJourneyStyle: CardDesignStampJourneyStyle;
   stampIcon: CardDesignStampIcon;
   rewardStyle: CardDesignRewardStyle;
   visibleSections: CardSectionVisibility;
 }) {
-  const dark = layoutStyle === "PREMIUM";
-  const cardBackground = dark ? "#111827" : cardDesign.backgroundStyle === "GRADIENT" ? `linear-gradient(135deg, ${branding.primaryColor}, ${branding.secondaryColor})` : "#FFFFFF";
-  const textColor = dark ? "#FFFFFF" : "#111827";
-  const mutedColor = dark ? "rgba(255,255,255,.72)" : "#64748B";
-  const rewardClass =
-    rewardStyle === "OUTLINE"
-      ? "border border-current bg-transparent"
-      : rewardStyle === "TICKET"
-        ? "border border-dashed bg-white/90"
-        : rewardStyle === "GLASS"
-          ? "border border-white/50 bg-white/40"
-          : "bg-white/90";
+  const theme = resolveCardThemeColors({ branding, cardDesign });
+  const typography = createPreviewTypographyStyles[cardDesign.typographyPreset] ?? createPreviewTypographyStyles.MODERN;
+  const reward = createPreviewRewardStyles[rewardStyle] ?? createPreviewRewardStyles.FILLED;
 
   return (
-    <div className="mx-auto max-w-[340px] rounded-[2rem] border border-[#E2E8F0] bg-[#F8FAFC] p-4 shadow-xl">
-      <div className="rounded-[1.5rem] p-5 shadow-sm" style={{ background: cardBackground, color: textColor }}>
+    <div className="mx-auto w-full max-w-[340px] overflow-hidden rounded-[2rem] border border-[#E2E8F0] bg-[#F8FAFC] p-2 shadow-xl sm:p-3">
+      <WalletCardShell theme={theme} cardDesign={cardDesign} className="max-w-full" exportMode>
+        <div className="px-4 py-4 sm:px-5 sm:py-5" style={{ color: theme.cardText }}>
         {(visibleSections.logo || visibleSections.businessName || visibleSections.programName) ? (
           <div className="flex items-center gap-3">
             {visibleSections.logo ? (
-              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white font-black text-[#111827]">
-                {businessName.slice(0, 1).toUpperCase()}
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-sm font-black" style={{ background: theme.logoBackground, color: theme.logoText }}>
+                {branding.logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={branding.logoUrl} alt="" className="h-full w-full rounded-full object-cover" />
+                ) : (
+                  businessName.slice(0, 1).toUpperCase()
+                )}
               </div>
             ) : null}
             <div className="min-w-0">
-              {visibleSections.businessName ? <p className="line-clamp-2 text-sm font-black">{businessName}</p> : null}
-              {visibleSections.programName ? <p className="text-xs" style={{ color: mutedColor }}>Loyalty Program</p> : null}
+              {visibleSections.businessName ? <p className="line-clamp-2 text-[13px] font-black leading-tight">{businessName}</p> : null}
+              {visibleSections.programName ? <p className="mt-0.5 truncate text-[11px] font-semibold" style={{ color: theme.mutedText }}>Loyalty Program</p> : null}
             </div>
           </div>
         ) : null}
-        {visibleSections.customerName ? <h3 className="mt-6 text-2xl font-black">Customer Name</h3> : null}
-        {visibleSections.tierBadge ? <p className="mt-3 inline-flex rounded-full bg-white/20 px-3 py-1 text-xs font-black">Silver Member</p> : null}
+        {visibleSections.customerName ? (
+          <div className="mt-4">
+            <p className={typography.label} style={{ color: theme.mutedText }}>Customer</p>
+            <h3 className={typography.customer}>Customer Name</h3>
+            <p className={typography.supporting} style={{ color: theme.mutedText }}>Member since today</p>
+          </div>
+        ) : null}
+        {visibleSections.tierBadge ? (
+          <p className="mt-3 inline-flex rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em]" style={{ background: theme.badgeBackground, color: theme.badgeText, borderColor: theme.badgeBorder }}>
+            Silver Member
+          </p>
+        ) : null}
         {visibleSections.progress ? (
-          <div className="mt-6">
-            <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: mutedColor }}>Progress</p>
-            <p className="mt-2 text-lg font-black">7 / 10 Visits</p>
-            <ProgressPreview style={stampJourneyStyle} icon={stampIcon} />
-            {visibleSections.visits ? <p className="mt-2 text-xs" style={{ color: mutedColor }}>3 visits until reward</p> : null}
+          <div className="mt-4 rounded-2xl border border-white/15 bg-white/10 p-3">
+            <p className={typography.label} style={{ color: theme.mutedText }}>Progress</p>
+            <ProgressPreview style={stampJourneyStyle} icon={stampIcon} theme={theme} />
+            {visibleSections.visits ? <p className="mt-2 text-xs font-semibold" style={{ color: theme.mutedText }}>3 visits until reward</p> : null}
           </div>
         ) : null}
         {visibleSections.rewardBox ? (
-          <div className={`mt-6 rounded-2xl p-4 text-[#111827] ${rewardClass}`}>
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-[#64748B]">Next Reward</p>
-            <p className="mt-2 text-base font-black">Free Reward</p>
+          <div className={`relative mt-4 overflow-hidden rounded-2xl border p-4 ${reward.className}`} style={{ ...reward.style, color: reward.textColor }}>
+            {rewardStyle === "TICKET" ? (
+              <>
+                <span className="absolute -left-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full" style={{ background: theme.cardBackground }} />
+                <span className="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full" style={{ background: theme.cardBackground }} />
+              </>
+            ) : null}
+            <p className={typography.label} style={{ color: reward.mutedColor }}>Next Reward</p>
+            <p className={typography.reward}>Free Reward</p>
+            <p className="mt-1.5 inline-flex rounded-full px-2.5 py-1 text-[11px] font-black" style={{ background: reward.badgeBackground, color: reward.badgeColor }}>3 Visits Remaining</p>
           </div>
         ) : null}
-        {visibleSections.qr ? <div className="mt-6 grid h-20 place-items-center rounded-2xl bg-white text-xs font-black text-[#111827]">QR</div> : null}
-        {visibleSections.footer ? <p className="mt-5 text-center text-xs font-bold" style={{ color: mutedColor }}>Scan at Checkout</p> : null}
-      </div>
+        {visibleSections.qr ? <QrPreview /> : null}
+        {visibleSections.referral ? <div className="mt-3 rounded-2xl border border-white/20 bg-white/10 px-3 py-2.5 text-xs font-semibold">Refer a friend and share this loyalty card.</div> : null}
+        {visibleSections.footer ? <p className="mt-4 rounded-full px-4 py-2.5 text-center text-xs font-black" style={{ background: theme.ctaBackground, color: theme.ctaForeground }}>Scan at Checkout</p> : null}
+        </div>
+      </WalletCardShell>
     </div>
   );
 }
 
-function ProgressPreview({ style, icon }: { style: CardDesignStampJourneyStyle; icon: CardDesignStampIcon }) {
+function ProgressPreview({ style, icon, theme }: { style: CardDesignStampJourneyStyle; icon: CardDesignStampIcon; theme: WalletTheme }) {
+  const completed = 7;
+  const total = 10;
+
   if (style === "PROGRESS_BAR") {
     return (
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/30">
-        <div className="h-full w-[70%] rounded-full business-bg" />
+      <div className="mt-2 grid gap-2">
+        <p className="text-lg font-black">7 / 10 Visits</p>
+        <div className="h-2 overflow-hidden rounded-full" style={{ background: theme.progressTrack }}>
+          <div className="h-full w-[70%] rounded-full" style={{ background: theme.progressFill }} />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="mt-3 flex items-center gap-1.5">
-      {Array.from({ length: 5 }).map((_, index) => (
-        <span key={index} className={`grid h-7 w-7 place-items-center rounded-full text-[10px] font-black ${index < 3 ? "business-bg" : "bg-white/30"}`}>
-          <StampIconGraphic stampIcon={icon} mode="customer" className="h-4 w-4" />
-        </span>
-      ))}
+    <div className="mt-2 grid gap-2">
+      <p className="text-lg font-black">7 / 10 Visits</p>
+      <div className={style === "CONNECTED_DOTS" ? "relative grid grid-cols-5 gap-2 py-1" : "grid grid-cols-5 gap-2"}>
+        {style === "CONNECTED_DOTS" ? <span className="absolute left-3 right-3 top-1/2 h-1 -translate-y-1/2 rounded-full" style={{ background: theme.progressTrack }} /> : null}
+        {style === "CONNECTED_DOTS" ? <span className="absolute left-3 top-1/2 h-1 w-[68%] -translate-y-1/2 rounded-full" style={{ background: theme.progressFill }} /> : null}
+        {Array.from({ length: total }).map((_, index) => {
+          const filled = index < completed;
+          return (
+            <span
+              key={index}
+              className="relative z-10 grid aspect-square min-h-7 place-items-center rounded-full border text-[10px] font-black"
+              style={{ background: filled ? theme.progressFill : theme.progressTrack, borderColor: filled ? "transparent" : theme.border, color: filled ? theme.ctaForeground : theme.mutedText }}
+            >
+              {filled ? <StampIconGraphic stampIcon={icon} mode="customer" className="h-4 w-4" /> : null}
+            </span>
+          );
+        })}
+      </div>
     </div>
   );
 }
+
+function QrPreview() {
+  return (
+    <div className="mt-4 rounded-2xl bg-white p-3 text-[#111827] ring-1 ring-black/10">
+      <div className="grid gap-2 text-center">
+        <span className="text-sm font-black">Scan at Checkout</span>
+        <span className="mx-auto grid h-24 w-24 grid-cols-7 grid-rows-7 gap-0.5 rounded-xl bg-white p-2 shadow-inner ring-1 ring-black/10">
+          {Array.from({ length: 49 }).map((_, index) => (
+            <span key={index} className={qrPreviewCells.has(index) ? "rounded-[1px] bg-[#111827]" : "rounded-[1px] bg-[#F8FAFC]"} />
+          ))}
+        </span>
+        <span className="text-xs font-semibold text-[#64748B]">Present this QR to staff</span>
+      </div>
+    </div>
+  );
+}
+
+const qrPreviewCells = new Set([0, 1, 2, 4, 5, 6, 7, 9, 11, 13, 14, 15, 16, 18, 19, 20, 22, 24, 25, 28, 29, 31, 33, 34, 36, 38, 39, 41, 42, 43, 44, 46, 48]);
+
+const createPreviewTypographyStyles: Record<CardDesignTypographyPreset, {
+  label: string;
+  customer: string;
+  reward: string;
+  supporting: string;
+}> = {
+  MODERN: { label: "text-[10px] font-semibold uppercase tracking-[0.24em]", customer: "mt-1.5 text-[1.55rem] font-black leading-[1.05]", reward: "mt-1.5 text-lg font-black leading-tight", supporting: "mt-1 text-xs" },
+  CLASSIC: { label: "text-[10px] font-semibold uppercase tracking-[0.18em]", customer: "mt-1.5 text-[1.5rem] font-bold leading-[1.12]", reward: "mt-1.5 text-lg font-bold leading-tight", supporting: "mt-1 text-xs" },
+  PREMIUM: { label: "text-[10px] font-black uppercase tracking-[0.26em]", customer: "mt-1.5 text-[1.6rem] font-black leading-none tracking-tight", reward: "mt-1.5 text-lg font-black leading-tight tracking-tight", supporting: "mt-1 text-xs font-semibold" },
+  LUXURY: { label: "text-[10px] font-semibold uppercase tracking-[0.32em]", customer: "mt-1.5 text-[1.45rem] font-semibold leading-[1.15] tracking-wide", reward: "mt-1.5 text-lg font-semibold leading-tight tracking-wide", supporting: "mt-1 text-xs" },
+  PLAYFUL: { label: "text-[10px] font-black uppercase tracking-[0.16em]", customer: "mt-1.5 text-[1.55rem] font-black leading-[1.08]", reward: "mt-1.5 text-lg font-black leading-tight", supporting: "mt-1 text-xs font-semibold" },
+  MINIMAL: { label: "text-[10px] font-medium uppercase tracking-[0.24em]", customer: "mt-1.5 text-[1.45rem] font-light leading-[1.15] tracking-wide", reward: "mt-1.5 text-lg font-light leading-tight tracking-wide", supporting: "mt-1 text-xs" },
+};
+
+const createPreviewRewardStyles: Record<CardDesignRewardStyle, {
+  className: string;
+  style: { background?: string; backgroundColor?: string; borderColor: string; boxShadow?: string };
+  textColor: string;
+  mutedColor: string;
+  badgeBackground: string;
+  badgeColor: string;
+}> = {
+  FILLED: { className: "", style: { background: "var(--business-primary)", borderColor: "var(--business-primary)", boxShadow: "0 18px 38px rgba(15, 23, 42, 0.14)" }, textColor: "var(--business-primary-foreground)", mutedColor: "var(--business-primary-foreground)", badgeBackground: "rgba(255,255,255,0.22)", badgeColor: "var(--business-primary-foreground)" },
+  OUTLINE: { className: "bg-white", style: { borderColor: "var(--business-primary)" }, textColor: "#111827", mutedColor: "var(--business-primary)", badgeBackground: "var(--business-primary-soft)", badgeColor: "var(--business-primary)" },
+  GLASS: { className: "bg-white/70", style: { borderColor: "rgba(255,255,255,0.72)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.72), 0 18px 38px rgba(15, 23, 42, 0.10)" }, textColor: "#111827", mutedColor: "#64748B", badgeBackground: "rgba(255,255,255,0.78)", badgeColor: "#111827" },
+  PREMIUM: { className: "", style: { background: "linear-gradient(135deg, #111827 0%, #312E81 100%)", borderColor: "rgba(249,115,22,0.48)", boxShadow: "0 20px 42px rgba(17, 24, 39, 0.22)" }, textColor: "#FFFFFF", mutedColor: "#FDBA74", badgeBackground: "rgba(249,115,22,0.22)", badgeColor: "#FDBA74" },
+  TICKET: { className: "bg-white", style: { borderColor: "var(--business-primary)", boxShadow: "0 14px 30px rgba(15, 23, 42, 0.10)" }, textColor: "#111827", mutedColor: "var(--business-primary)", badgeBackground: "var(--business-primary)", badgeColor: "var(--business-primary-foreground)" },
+};
 
 function getDefaultPresetCategory(businessType: BusinessType): DesignStudioProfessionalPreset["category"] {
   if (businessType === "RESTAURANT") return "Restaurant";
