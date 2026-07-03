@@ -19,7 +19,6 @@ import { resolveCardThemeColors } from "@/lib/card-themes";
 import {
   designStudioBackgroundPatternOptions,
   designStudioBackgroundStyleOptions,
-  designStudioCardFinishOptions,
   designStudioCardContentOptions,
   designStudioProfessionalPresetGroups,
   designStudioProfessionalPresets,
@@ -190,7 +189,6 @@ export function ProgramDesignStudioForm({
   const selectedStampIconLabel = stampIconOptions.find((option) => option.value === stampIcon)?.label ?? labelizeLocal(stampIcon);
   const selectedBackgroundLabel = designStudioBackgroundStyleOptions.find((option) => option.value === backgroundStyle)?.label ?? backgroundStyle;
   const selectedPatternLabel = designStudioBackgroundPatternOptions.find((option) => option.value === backgroundPattern)?.label ?? labelizeLocal(backgroundPattern);
-  const selectedFinishLabel = designStudioCardFinishOptions.find((option) => option.value === decorationStyle)?.label ?? decorationStyle;
   const visibleSectionCount = designStudioCardContentOptions.filter((option) => visibleSections[option.value]).length;
   const activeProfessionalPreset =
     designStudioProfessionalPresets.find(
@@ -375,7 +373,6 @@ export function ProgramDesignStudioForm({
           ["Reward Progress", selectedJourneyLabel],
           ["Stamp Design", selectedStampIconLabel],
           ["Background", `${selectedBackgroundLabel}${backgroundStyle === "PATTERN" ? ` Â· ${selectedPatternLabel}` : ""}`],
-          ["Finish", selectedFinishLabel],
           ["Visibility", `${visibleSectionCount}/${designStudioCardContentOptions.length} sections`],
         ],
       }));
@@ -604,7 +601,6 @@ export function ProgramDesignStudioForm({
                 <PreviewChip label={`Stamp Design: ${selectedStampIconLabel}`} />
                 <PreviewChip label={`Background: ${selectedBackgroundLabel}`} />
                 {backgroundStyle === "PATTERN" ? <PreviewChip label={`Pattern: ${selectedPatternLabel}`} /> : null}
-                <PreviewChip label={`Finish: ${selectedFinishLabel}`} />
                 <PreviewChip label={`Visibility: ${visibleSectionCount}/${designStudioCardContentOptions.length}`} />
               </div>
             </div>
@@ -1045,35 +1041,6 @@ export function ProgramDesignStudioForm({
             })}
           </div>
             </SectionCard>
-
-            <SectionCard title="Card Finish" description="Choose the visual finish that best matches your brand.">
-          <div className="grid gap-3 md:grid-cols-2">
-            {designStudioCardFinishOptions.map((option) => {
-              const active = decorationStyle === option.value;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => commitDesignChange({ ...currentDesignSnapshot, decorationStyle: option.value })}
-                  className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
-                  data-active={active}
-                  aria-pressed={active}
-                >
-                  <CardFinishThumbnail decorationStyle={option.value} />
-                  <span className="flex items-start justify-between gap-3">
-                    <span className="min-w-0">
-                      <span className="block text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
-                      <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
-                    </span>
-                    <span className="rounded-full border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
-                      Selected
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-            </SectionCard>
             </ManualBuilderGroup>
 
             <ManualBuilderGroup title="Loyalty Experience" description="Customize how customers experience collecting rewards.">
@@ -1404,8 +1371,7 @@ function sourceProgramToThumbnailPreset(sourceProgram: SourceProgramDesignOption
 function designSummary(design: DesignStudioPresetDesign) {
   const style = designStudioTemplateOptions.find((option) => option.value === design.layoutStyle)?.label ?? design.layoutStyle;
   const journey = designStudioStampJourneyOptions.find((option) => option.value === design.stampJourneyStyle)?.label ?? design.stampJourneyStyle;
-  const finish = designStudioCardFinishOptions.find((option) => option.value === design.decorationStyle)?.label ?? design.decorationStyle;
-  return `${style} style, ${journey} progress, ${finish} finish`;
+  return `${style} style, ${journey} progress`;
 }
 
 function formatPresetDate(value: string) {
@@ -1414,12 +1380,11 @@ function formatPresetDate(value: string) {
 
 function PresetThumbnail({ preset }: { preset: DesignStudioProfessionalPreset }) {
   const templateStyle = templateThumbnailStyles[preset.layoutStyle] ?? templateThumbnailStyles.CLASSIC;
-  const finishStyle = cardFinishStyles[preset.decorationStyle] ?? cardFinishStyles.FLAT;
   const rewardStyle = rewardBoxStyles[preset.rewardStyle] ?? rewardBoxStyles.FILLED;
   return (
     <span className="block rounded-2xl bg-[#F8FAFC] p-3">
-      <span className="block rounded-[1.15rem] border p-3" style={finishStyle.frameStyle}>
-        <span className="block overflow-hidden rounded-xl p-3" style={{ ...finishStyle.innerStyle, background: templateStyle.card }}>
+      <span className="block rounded-[1.15rem] border border-[#E2E8F0] bg-white p-3">
+        <span className="block overflow-hidden rounded-xl p-3 shadow-sm ring-1 ring-black/5" style={{ background: templateStyle.card }}>
           <span className="flex items-start justify-between gap-3">
             <span className="flex items-center gap-2">
               <span className="grid h-8 w-8 place-items-center rounded-full" style={{ background: templateStyle.logo, color: templateStyle.card === "#FFFFFF" ? "#111827" : "#FFFFFF" }}>
@@ -1757,28 +1722,6 @@ function PreviewProgress({ stampJourneyStyle, stampIcon, theme, typography, show
         <div className="h-full w-[70%] rounded-full" style={{ background: theme.progressFill }} />
       </div>
     </div>
-  );
-}
-
-function CardFinishThumbnail({ decorationStyle }: { decorationStyle: CardDesignDecorationStyle }) {
-  const finish = cardFinishStyles[decorationStyle] ?? cardFinishStyles.FLAT;
-  return (
-    <span className="block rounded-2xl bg-[#F8FAFC] p-3">
-      <span className="block rounded-[1.15rem] border p-3" style={finish.frameStyle}>
-        <span className="block rounded-xl p-3" style={finish.innerStyle}>
-          <span className="flex items-center justify-between gap-3">
-            <span className="h-7 w-7 rounded-full business-bg" />
-            <span className="h-5 w-16 rounded-full bg-[#E2E8F0]" />
-          </span>
-          <span className="mt-4 block h-3 rounded-full bg-[#CBD5E1]" />
-          <span className="mt-3 grid grid-cols-3 gap-2">
-            <span className="h-8 rounded-xl bg-white/80" />
-            <span className="h-8 rounded-xl bg-white/80" />
-            <span className="h-8 rounded-xl bg-white/80" />
-          </span>
-        </span>
-      </span>
-    </span>
   );
 }
 

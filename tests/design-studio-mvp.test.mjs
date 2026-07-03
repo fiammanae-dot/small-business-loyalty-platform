@@ -110,7 +110,6 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(helper, /designStudioBackgroundPatternOptions/);
   assert.match(helper, /designStudioRewardStyleOptions/);
   assert.match(helper, /designStudioTypographyOptions/);
-  assert.match(helper, /designStudioCardFinishOptions/);
   assert.match(helper, /designStudioCardContentOptions/);
   for (const label of ["Solid", "Gradient", "Pattern", "Subtle Dots", "Diagonal Lines", "Waves", "Coffee Beans", "Scissors", "Water Bubbles", "Food Pattern", "Beauty Pattern"]) {
     assert.match(helper, new RegExp(label));
@@ -119,9 +118,6 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
     assert.match(helper, new RegExp(label));
   }
   for (const label of ["Modern", "Classic", "Premium", "Luxury", "Playful", "Minimal"]) {
-    assert.match(helper, new RegExp(label));
-  }
-  for (const label of ["Flat", "Soft", "Glass", "Premium", "Luxury"]) {
     assert.match(helper, new RegExp(label));
   }
   for (const label of ["Business Logo", "Business Name", "Program Name", "Customer Name", "Tier Badge", "Reward Box", "Reward Progress", "Visits Remaining", "QR Code", "Footer Message", "Referral Section"]) {
@@ -197,11 +193,10 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /typographyPreset: option\.value/);
   assert.match(form, /name="typographyPreset"/);
   assert.match(form, /typographyPreviewStyles/);
-  assert.match(form, /Card Finish/);
-  assert.match(form, /Choose the visual finish that best matches your brand\./);
-  assert.match(form, /CardFinishPreviewFrame/);
-  assert.match(form, /CardFinishThumbnail/);
-  assert.match(form, /decorationStyle: option\.value/);
+  assert.doesNotMatch(form, /Card Finish/);
+  assert.doesNotMatch(form, /Choose the visual finish that best matches your brand\./);
+  assert.doesNotMatch(form, /CardFinishThumbnail/);
+  assert.doesNotMatch(form, /decorationStyle: option\.value/);
   assert.match(form, /name="decorationStyle"/);
   assert.match(form, /cardFinishStyles/);
   assert.match(form, /Card Content/);
@@ -272,7 +267,7 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /Reward Progress: \$\{selectedJourneyLabel\}/);
   assert.match(form, /Stamp Design: \$\{selectedStampIconLabel\}/);
   assert.match(form, /Background: \$\{selectedBackgroundLabel\}/);
-  assert.match(form, /Finish: \$\{selectedFinishLabel\}/);
+  assert.doesNotMatch(form, /Finish: \$\{selectedFinishLabel\}/);
   assert.match(form, /Visibility: \$\{visibleSectionCount\}/);
   assert.match(form, /7 \/ 10 Visits/);
   assert.match(form, /3 visits until reward/);
