@@ -15,13 +15,13 @@ export function PlatformCards({ cards }: { cards: PlatformCard[] }) {
         <Link
           key={card.href}
           href={card.href}
-          className="rounded-md border border-[#E5E7EB] bg-white p-5 transition hover:border-[#F97316] hover:shadow-sm"
+          className="rounded-xl border border-[#E7E9EE] bg-white p-5 shadow-[0_1px_2px_rgba(15,18,25,0.04)] transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[#F4C7AE] hover:shadow-[0_6px_18px_rgba(15,18,25,0.08)] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-md bg-orange-50 text-[#F97316]">
-            {card.icon ? <card.icon className="h-6 w-6" aria-hidden="true" /> : null}
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FBEFE8] text-[#C24E1E]">
+            {card.icon ? <card.icon className="h-5 w-5" aria-hidden="true" /> : null}
           </div>
-          <h2 className="mt-4 text-base font-semibold text-[#111827]">{card.title}</h2>
-          <p className="mt-2 text-sm leading-6 text-[#6B7280]">{card.description}</p>
+          <h2 className="mt-4 text-base font-bold tracking-tight text-[#171A21]">{card.title}</h2>
+          <p className="mt-1.5 text-sm leading-6 text-[#7A8091]">{card.description}</p>
         </Link>
       ))}
     </section>

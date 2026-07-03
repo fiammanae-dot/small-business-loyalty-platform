@@ -6,12 +6,14 @@ import {
   ClipboardList,
   CreditCard,
   CircleDollarSign,
+  Database,
   FileText,
   Home,
   LayoutDashboard,
   Layers3,
   Package,
   Receipt,
+  Rocket,
   Settings,
   ShieldAlert,
   Store,
@@ -81,6 +83,8 @@ const platformNavItems: Array<{ href: string; label: string; icon: LucideIcon }>
   { href: "/platform/operations-center", label: "Operations Center", icon: ShieldAlert },
   { href: "/platform/billing-center", label: "Billing Center", icon: CircleDollarSign },
   { href: "/platform/tenant-center", label: "Tenant Center", icon: Layers3 },
+  { href: "/platform/database", label: "Database", icon: Database },
+  { href: "/platform/launch-readiness", label: "Launch Readiness", icon: Rocket },
   { href: "/platform/settings", label: "Settings", icon: Settings },
 ];
 
