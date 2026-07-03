@@ -29,7 +29,7 @@ test("loyalty programs store a selected card theme with business default support
   }
 });
 
-test("program edit exposes wallet visual style previews while create keeps a hidden default", () => {
+test("program edit exposes wallet visual style previews while create uses the create wizard default", () => {
   const themes = read("src/lib/card-themes.ts");
   const form = read("src/components/ProgramForm.tsx");
   const preview = read("src/components/CardThemePreviewSelector.tsx");
@@ -68,11 +68,13 @@ test("program edit exposes wallet visual style previews while create keeps a hid
   assert.match(actions, /cardTheme: getString\(formData, "cardTheme"\) \|\| defaultCardTheme/);
   assert.match(actions, /getIndustryDefaultCardTheme\(businessType\)/);
   assert.match(actions, /cardTheme: parsed\.data\.cardTheme/);
+  assert.match(actions, /cardTheme: getCardThemeForDesignStudioTemplate\(parsedDesign\.data\.layoutStyle\)/);
   assert.match(editPage, /cardTheme: program\.cardTheme/);
   assert.match(editPage, /businessName=\{business.name\}/);
+  assert.match(newPage, /ProgramCreateWizard/);
   assert.match(newPage, /businessName=\{business.name\}/);
   assert.match(newPage, /resolveBranding\(business.branding\)/);
-  assert.match(newPage, /showCardThemeSelector=\{false\}/);
+  assert.match(newPage, /defaultCardTheme/);
 });
 
 test("program forms use the business-level business type without a per-program selector", () => {
@@ -92,7 +94,11 @@ test("program forms use the business-level business type without a per-program s
   assert.doesNotMatch(actions, /getString\(formData, "businessType"\)/);
 
   assert.match(newPage, /getIndustryDefaultCardTheme\(business\.businessType\)/);
-  assert.match(newPage, /defaults=\{\{ businessType: business\.businessType, active: true, cardTheme: defaultCardTheme \}\}/);
+  assert.match(newPage, /ProgramCreateWizard/);
+  assert.match(newPage, /businessType: business\.businessType/);
+  assert.match(newPage, /active: true/);
+  assert.match(newPage, /cardTheme: defaultCardTheme/);
+  assert.match(newPage, /template\?\.name \?\? ""/);
   assert.match(editPage, /businessType: business\.businessType/);
   assert.doesNotMatch(editPage, /businessType: program\.businessType/);
 });

@@ -70,6 +70,9 @@ export async function createProgramAction(formData: FormData) {
   const businessType = await getBusinessTypeForProgramAction(user.businessId, path);
   const parsed = programData(formData, businessType, getIndustryDefaultCardTheme(businessType));
   if (!parsed.success) fail(path, parsed.error.issues[0]?.message ?? "Validation failed.");
+  const parsedDesign = parseDesignStudioForm(formData, businessType);
+  if (!parsedDesign.success) fail(path, parsedDesign.error.issues[0]?.message ?? "Design selection is invalid.");
+  const cardDesign = buildProgramCardDesign(parsedDesign.data);
 
   const subscription = await prisma.businessSubscription.findFirst({
     where: { businessId: user.businessId, status: { in: commerciallyUsableStatuses } },
@@ -93,12 +96,13 @@ export async function createProgramAction(formData: FormData) {
       startingBonusStamps: parsed.data.startingBonusStamps,
       startingStampPolicy: parsed.data.startingStampPolicy,
       referralRewardBonusStamps: parsed.data.referralRewardBonusStamps,
-      cardTheme: parsed.data.cardTheme,
       rewardName: parsed.data.rewardName,
       rewardDescription: parsed.data.rewardDescription,
       active: parsed.data.active,
       startDate: parseProgramDate(parsed.data.startDate),
       endDate: parseProgramDate(parsed.data.endDate),
+      cardDesign: cardDesign as unknown as Prisma.InputJsonValue,
+      cardTheme: getCardThemeForDesignStudioTemplate(parsedDesign.data.layoutStyle),
     },
     select: { uuid: true },
   });
@@ -113,7 +117,7 @@ export async function createProgramAction(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/programs");
-  redirect(`/dashboard/programs/${program.uuid}/design-studio?success=Program created. Customize this card in Design Studio.`);
+  redirect(`/dashboard/programs/${program.uuid}?success=Program created with card design.`);
 }
 
 export async function updateProgramAction(formData: FormData) {

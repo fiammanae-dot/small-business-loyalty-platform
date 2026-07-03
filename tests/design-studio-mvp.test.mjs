@@ -30,12 +30,25 @@ test("program-level Design Studio stores card design safely", () => {
   assert.match(actions, /PROGRAM_DESIGN_UPDATED/);
 });
 
-test("new program creation guides Business Owners to Design Studio", () => {
+test("new program creation includes the create-time Design Studio wizard", () => {
   const actions = read("src/app/dashboard/programs/actions.ts");
   const newPage = read("src/app/dashboard/programs/new/page.tsx");
+  const wizard = read("src/components/ProgramCreateWizard.tsx");
 
-  assert.match(newPage, /showCardThemeSelector=\{false\}/);
-  assert.match(actions, /redirect\(`\/dashboard\/programs\/\$\{program\.uuid\}\/design-studio\?success=Program created\. Customize this card in Design Studio\.`\)/);
+  assert.match(newPage, /ProgramCreateWizard/);
+  assert.match(wizard, /WizardProgress/);
+  assert.match(wizard, /Program Setup/);
+  assert.match(wizard, /Design Studio/);
+  assert.match(wizard, /Professional Templates/);
+  assert.match(wizard, /Live Preview/);
+  assert.match(wizard, /name="layoutStyle"/);
+  assert.match(wizard, /name="stampJourneyStyle"/);
+  assert.match(wizard, /name="stampIcon"/);
+  assert.match(wizard, /name="rewardStyle"/);
+  assert.match(wizard, /name=\{`visibleSections\.\$\{option\.value\}`\}/);
+  assert.match(actions, /parseDesignStudioForm\(formData, businessType\)/);
+  assert.match(actions, /cardDesign: cardDesign as unknown as Prisma\.InputJsonValue/);
+  assert.match(actions, /redirect\(`\/dashboard\/programs\/\$\{program\.uuid\}\?success=Program created with card design\.`\)/);
 });
 
 test("Business Owner program detail links to the Design Studio route", () => {
