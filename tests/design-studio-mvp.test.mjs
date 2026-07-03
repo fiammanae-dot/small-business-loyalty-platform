@@ -79,6 +79,8 @@ test("Design Studio navigation stays Business Owner-only", () => {
 test("Design Studio MVP exposes only approved controls and live preview", () => {
   const helper = read("src/lib/design-studio.ts");
   const form = read("src/components/ProgramDesignStudioForm.tsx");
+  const createWizard = read("src/components/ProgramCreateWizard.tsx");
+  const stampIconGraphic = read("src/components/design-studio/StampIconGraphic.tsx");
   const page = read("src/app/dashboard/programs/[id]/design-studio/page.tsx");
 
   assert.match(helper, /designStudioTemplateOptions/);
@@ -277,10 +279,12 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /Card Status/);
   assert.match(form, /PreviewChip/);
   assert.doesNotMatch(form, /Typography Preview/);
-  assert.match(form, /stampIconComponents/);
+  assert.match(stampIconGraphic, /stampIconComponents/);
   for (const icon of ["Scissors", "Coffee", "Car", "Droplets", "Utensils", "Brush", "Gift"]) {
-    assert.match(form, new RegExp(icon));
+    assert.match(stampIconGraphic, new RegExp(icon));
   }
+  assert.match(createWizard, /StampIconGraphic stampIcon=\{option\.value\}/);
+  assert.match(createWizard, /StampIconGraphic stampIcon=\{icon\}/);
   assert.doesNotMatch(form, /getStampIconMark|stampIconMarks/);
   assert.match(form, /lg:grid-cols-\[minmax\(0,70fr\)_minmax\(300px,30fr\)\]/);
   assert.match(form, /order-first[\s\S]*lg:order-last/);

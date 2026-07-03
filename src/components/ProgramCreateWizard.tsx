@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { BusinessType, CardTheme, StartingStampPolicy } from "@prisma/client";
 import type {
   CardDesignBackgroundPattern,
@@ -26,6 +26,7 @@ import {
   type DesignStudioProfessionalPreset,
 } from "@/lib/design-studio";
 import { Button, SectionCard } from "@/components/ui";
+import { StampIconGraphic } from "@/components/design-studio/StampIconGraphic";
 
 type ProgramPreviewBranding = {
   primaryColor: string;
@@ -86,6 +87,8 @@ export function ProgramCreateWizard({
   };
   stampIconOptions: Array<{ value: CardDesignStampIcon; label: string; recommended: boolean }>;
 }) {
+  const wizardRef = useRef<HTMLFormElement>(null);
+  const stepHeadingRef = useRef<HTMLHeadingElement>(null);
   const [step, setStep] = useState<1 | 2>(1);
   const [layoutStyle, setLayoutStyle] = useState(initialDesign.layoutStyle);
   const [stampJourneyStyle, setStampJourneyStyle] = useState(initialDesign.stampJourneyStyle);
@@ -137,8 +140,16 @@ export function ProgramCreateWizard({
     setSelectedPresetId(preset.id);
   }
 
+  function goToStep(nextStep: 1 | 2) {
+    setStep(nextStep);
+    window.requestAnimationFrame(() => {
+      wizardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      stepHeadingRef.current?.focus({ preventScroll: true });
+    });
+  }
+
   return (
-    <form action={action} className="grid gap-6">
+    <form ref={wizardRef} action={action} className="grid gap-6">
       <input type="hidden" name={csrfName} value={csrfToken} />
       <input type="hidden" name="cardTheme" value={defaults.cardTheme ?? "BUSINESS_DEFAULT"} />
       <input type="hidden" name="layoutStyle" value={layoutStyle} />
@@ -154,6 +165,12 @@ export function ProgramCreateWizard({
       ))}
 
       <WizardProgress step={step} />
+      <div className="scroll-mt-24 outline-none" tabIndex={-1}>
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">Step {step} of 2</p>
+        <h2 ref={stepHeadingRef} tabIndex={-1} className="mt-1 text-2xl font-black text-[#111827] outline-none">
+          {step === 1 ? "Program Setup" : "Design Studio"}
+        </h2>
+      </div>
 
       <div className={step === 1 ? "grid gap-5" : "hidden"}>
         <SectionCard title="Program Setup" description="Create the loyalty program rules before choosing how the customer card looks.">
@@ -210,7 +227,7 @@ export function ProgramCreateWizard({
         </SectionCard>
 
         <SectionCard title="Continue to Design Studio" description="The program will not be created until you review the card design and click Create Program.">
-          <Button type="button" variant="business" onClick={() => setStep(2)}>
+          <Button type="button" variant="business" onClick={() => goToStep(2)}>
             Continue to Design Studio
           </Button>
         </SectionCard>
@@ -264,10 +281,15 @@ export function ProgramCreateWizard({
                     type="button"
                     onClick={() => setStampIcon(option.value)}
                     data-active={stampIcon === option.value}
-                    className="rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:border-[var(--business-primary)] data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)]"
+                    className="flex min-h-20 items-center gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)]"
                   >
-                    <span className="text-sm font-black text-[#111827]">{option.label}</span>
-                    {option.recommended ? <span className="ml-2 rounded-full business-bg px-2 py-0.5 text-[10px] font-black">Recommended</span> : null}
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[#E2E8F0] bg-white text-[#111827]">
+                      <StampIconGraphic stampIcon={option.value} className="h-5 w-5" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-black text-[#111827]">{option.label}</span>
+                      {option.recommended ? <span className="mt-1 inline-flex rounded-full business-bg px-2 py-0.5 text-[10px] font-black">Recommended</span> : null}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -320,7 +342,7 @@ export function ProgramCreateWizard({
             </SectionCard>
             <SectionCard title="Create Program" description="Create the program and save this card design at the same time.">
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Button type="button" variant="outline" onClick={() => setStep(1)}>
+                <Button type="button" variant="outline" onClick={() => goToStep(1)}>
                   Back to Program Setup
                 </Button>
                 <Button type="submit" variant="business">
@@ -514,7 +536,7 @@ function ProgressPreview({ style, icon }: { style: CardDesignStampJourneyStyle; 
     <div className="mt-3 flex items-center gap-1.5">
       {Array.from({ length: 5 }).map((_, index) => (
         <span key={index} className={`grid h-7 w-7 place-items-center rounded-full text-[10px] font-black ${index < 3 ? "business-bg" : "bg-white/30"}`}>
-          {style === "CONNECTED_DOTS" && index < 4 ? <span className="sr-only">Connected dot</span> : icon.slice(0, 1)}
+          <StampIconGraphic stampIcon={icon} className="h-3.5 w-3.5" />
         </span>
       ))}
     </div>

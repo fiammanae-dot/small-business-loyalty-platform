@@ -2,33 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { toPng } from "html-to-image";
-import {
-  Bean,
-  Beaker,
-  Brush,
-  Car,
-  Check,
-  ChefHat,
-  Circle,
-  CircleDot,
-  CircleDotDashed,
-  Coffee,
-  Diamond,
-  Droplets,
-  Gift,
-  GlassWater,
-  Hamburger,
-  Heart,
-  Paintbrush,
-  Pizza,
-  Scissors,
-  Sparkles,
-  Star,
-  Utensils,
-  UtilityPole,
-  Waves,
-  type LucideIcon,
-} from "lucide-react";
 import type {
   CardDesignBackgroundPattern,
   CardDesignBackgroundStyle,
@@ -57,6 +30,7 @@ import {
   type DesignStudioProfessionalPreset,
 } from "@/lib/design-studio";
 import { Button, SectionCard } from "@/components/ui";
+import { StampIconGraphic } from "@/components/design-studio/StampIconGraphic";
 
 type PreviewBranding = {
   primaryColor: string;
@@ -2313,42 +2287,5 @@ const designStartOptions: Array<{ value: DesignStartMode; label: string; descrip
   { value: "manual", label: "Build From Scratch", description: "Open the full editor" },
   { value: "duplicate", label: "Duplicate Existing Design", description: "Copy another program" },
 ];
-
-const stampIconComponents: Record<CardDesignStampIcon, LucideIcon> = {
-  STAR: Star,
-  HEART: Heart,
-  CHECK: Check,
-  CIRCLE: Circle,
-  DIAMOND: Diamond,
-  GIFT: Gift,
-  SCISSORS: Scissors,
-  RAZOR: Beaker,
-  COMB: Waves,
-  BARBER_POLE: UtilityPole,
-  COFFEE_CUP: Coffee,
-  COFFEE_BEAN: Bean,
-  ESPRESSO: Coffee,
-  PLATE: Utensils,
-  BURGER: Hamburger,
-  PIZZA: Pizza,
-  CHEF_HAT: ChefHat,
-  CAR: Car,
-  WATER_DROP: Droplets,
-  BUBBLES: Sparkles,
-  WHEEL: CircleDot,
-  LIPSTICK: Brush,
-  MIRROR: CircleDotDashed,
-  MAKEUP_BRUSH: Paintbrush,
-  NAIL_POLISH: GlassWater,
-};
-
-function StampIconGraphic({ stampIcon, className = "h-4 w-4" }: { stampIcon: CardDesignStampIcon; className?: string }) {
-  const Icon = stampIconComponents[stampIcon] ?? Star;
-  return <Icon className={className} aria-hidden="true" strokeWidth={2.4} />;
-}
-
-
-
-
 
 
