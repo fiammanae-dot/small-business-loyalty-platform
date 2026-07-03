@@ -536,7 +536,7 @@ function ProgressPreview({ style, icon }: { style: CardDesignStampJourneyStyle; 
     <div className="mt-3 flex items-center gap-1.5">
       {Array.from({ length: 5 }).map((_, index) => (
         <span key={index} className={`grid h-7 w-7 place-items-center rounded-full text-[10px] font-black ${index < 3 ? "business-bg" : "bg-white/30"}`}>
-          <StampIconGraphic stampIcon={icon} className="h-3.5 w-3.5" />
+          <StampIconGraphic stampIcon={icon} mode="customer" className="h-4 w-4" />
         </span>
       ))}
     </div>

@@ -1707,7 +1707,7 @@ function PreviewProgress({ stampJourneyStyle, stampIcon, theme, typography, show
                   color: filled ? theme.ctaForeground : theme.mutedText,
                 }}
               >
-                {filled ? <StampIconGraphic stampIcon={stampIcon} className="h-3.5 w-3.5" /> : null}
+                {filled ? <StampIconGraphic stampIcon={stampIcon} mode="customer" className="h-4 w-4" /> : null}
               </span>
             );
           })}
@@ -1738,7 +1738,7 @@ function PreviewProgress({ stampJourneyStyle, stampIcon, theme, typography, show
                   color: filled ? theme.ctaForeground : theme.mutedText,
                 }}
               >
-                {filled ? <StampIconGraphic stampIcon={stampIcon} className="h-3 w-3" /> : null}
+                {filled ? <StampIconGraphic stampIcon={stampIcon} mode="customer" className="h-3.5 w-3.5" /> : null}
               </span>
             );
           })}

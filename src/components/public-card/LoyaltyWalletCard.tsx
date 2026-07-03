@@ -2,24 +2,7 @@
 
 import Image from "next/image";
 import { useState, type CSSProperties } from "react";
-import {
-  Car,
-  Check,
-  ChefHat,
-  Circle,
-  CircleDot,
-  Coffee,
-  Diamond,
-  Droplets,
-  Gift,
-  Heart,
-  Pizza,
-  Scissors,
-  Sparkles,
-  Star,
-  Utensils,
-  type LucideIcon,
-} from "lucide-react";
+import { StampIconGraphic } from "@/components/design-studio/StampIconGraphic";
 import { WalletCardShell, type WalletTheme } from "@/components/public-card/WalletCardShell";
 import { resolveCardDesign, type CardDesign, type CardDesignInput } from "@/lib/card-design";
 
@@ -445,7 +428,6 @@ function ProgressSection({
   statusText: string;
   theme: WalletTheme;
 }) {
-  const StampIcon = stampIconComponent(design.stampIcon);
   const nodes = Array.from({ length: Math.min(required, 10) }, (_, index) => index < current);
   const visitsVisible = design.visibleSections.visits;
   if (design.stampJourneyStyle === "PROGRESS_BAR") {
@@ -481,7 +463,7 @@ function ProgressSection({
         {nodes.map((filled, index) => (
           <span key={index} className="relative grid h-9 place-items-center rounded-full border" style={{ background: filled ? theme.progressFill : theme.progressTrack, borderColor: filled ? "transparent" : theme.border, color: filled ? theme.ctaForeground : theme.mutedText }}>
             {design.stampJourneyStyle === "CONNECTED_DOTS" && index > 0 ? <span className="absolute right-full top-1/2 h-0.5 w-2 -translate-y-1/2" style={{ background: filled ? theme.progressFill : theme.progressTrack }} /> : null}
-            <StampIcon className="h-4 w-4" aria-hidden="true" />
+            <StampIconGraphic stampIcon={design.stampIcon} mode="customer" className="h-[18px] w-[18px]" />
           </span>
         ))}
       </div>
@@ -623,35 +605,4 @@ function rewardPanelStyle(design: CardDesign, theme: WalletTheme, rewardReady: b
       borderColor: theme.rewardPanelBorder,
     },
   };
-}
-
-function stampIconComponent(value: CardDesign["stampIcon"]): LucideIcon {
-  const icons: Partial<Record<CardDesign["stampIcon"], LucideIcon>> = {
-    STAR: Star,
-    HEART: Heart,
-    CHECK: Check,
-    CIRCLE: Circle,
-    DIAMOND: Diamond,
-    GIFT: Gift,
-    SCISSORS: Scissors,
-    RAZOR: Sparkles,
-    COMB: Sparkles,
-    BARBER_POLE: CircleDot,
-    COFFEE_CUP: Coffee,
-    COFFEE_BEAN: CircleDot,
-    ESPRESSO: Coffee,
-    PLATE: Utensils,
-    BURGER: Utensils,
-    PIZZA: Pizza,
-    CHEF_HAT: ChefHat,
-    CAR: Car,
-    WATER_DROP: Droplets,
-    BUBBLES: Sparkles,
-    WHEEL: CircleDot,
-    LIPSTICK: Sparkles,
-    MIRROR: Circle,
-    MAKEUP_BRUSH: Sparkles,
-    NAIL_POLISH: Sparkles,
-  };
-  return icons[value] ?? Star;
 }

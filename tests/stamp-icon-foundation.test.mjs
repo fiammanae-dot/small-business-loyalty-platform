@@ -71,14 +71,17 @@ test("saved stamp icons are applied to live customer card progress markers", () 
   const wallet = read("src/components/public-card/LoyaltyWalletCard.tsx");
   const frontExport = read("src/components/public-card/LoyaltyCardFrontExport.tsx");
   const backExport = read("src/components/public-card/LoyaltyCardBackExport.tsx");
+  const stampIconGraphic = read("src/components/design-studio/StampIconGraphic.tsx");
   const preview = read("src/components/CardThemePreviewSelector.tsx");
   const publicCard = read("src/app/card/[token]/page.tsx");
 
   assert.match(publicCard, /cardDesign: primaryCardModel\.design/);
-  assert.match(wallet, /stampIconComponent\(design\.stampIcon\)/);
-  assert.match(wallet, /COFFEE_CUP/);
-  assert.match(wallet, /SCISSORS/);
-  assert.match(wallet, /WATER_DROP/);
+  assert.match(wallet, /StampIconGraphic stampIcon=\{design\.stampIcon\} mode="customer"/);
+  assert.match(stampIconGraphic, /mode\?: "selector" \| "customer"/);
+  assert.match(stampIconGraphic, /premiumStampMarks/);
+  assert.match(stampIconGraphic, /COFFEE_CUP/);
+  assert.match(stampIconGraphic, /SCISSORS/);
+  assert.match(stampIconGraphic, /WATER_DROP/);
   assert.match(frontExport, /resolveCardDesign\(wallet\.cardDesign\)/);
   assert.match(backExport, /resolveCardDesign\(wallet\.cardDesign\)/);
   assert.doesNotMatch(preview, /resolveStampIcon/);
