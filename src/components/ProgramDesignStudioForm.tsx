@@ -19,6 +19,7 @@ import { resolveCardThemeColors } from "@/lib/card-themes";
 import {
   designStudioBackgroundGalleryOptions,
   designStudioCardContentOptions,
+  designStudioCardLayoutOptions,
   designStudioProfessionalPresetGroups,
   designStudioProfessionalPresets,
   designStudioRewardStyleOptions,
@@ -26,11 +27,13 @@ import {
   designStudioTemplateOptions,
   designStudioTypographyOptions,
   resolveDesignStudioBackgroundGalleryOption,
+  resolveDesignStudioCardLayoutOption,
   resolveDesignStudioTypographyOption,
   type DesignStudioProfessionalPreset,
 } from "@/lib/design-studio";
 import { Button, SectionCard } from "@/components/ui";
 import { BackgroundGalleryThumbnail } from "@/components/design-studio/BackgroundGalleryThumbnail";
+import { CardLayoutThumbnail } from "@/components/design-studio/CardLayoutThumbnail";
 import { StampIconGraphic } from "@/components/design-studio/StampIconGraphic";
 
 type PreviewBranding = {
@@ -192,6 +195,7 @@ export function ProgramDesignStudioForm({
   const selectedStampIconLabel = stampIconOptions.find((option) => option.value === stampIcon)?.label ?? labelizeLocal(stampIcon);
   const selectedBackgroundOption = resolveDesignStudioBackgroundGalleryOption(backgroundStyle, backgroundPattern);
   const selectedBackgroundLabel = selectedBackgroundOption.label;
+  const selectedCardLayoutOption = resolveDesignStudioCardLayoutOption(visibleSections);
   const visibleSectionCount = designStudioCardContentOptions.filter((option) => visibleSections[option.value]).length;
   const activeProfessionalPreset =
     designStudioProfessionalPresets.find(
@@ -1101,38 +1105,70 @@ export function ProgramDesignStudioForm({
             </SectionCard>
             </ManualBuilderGroup>
 
-            <ManualBuilderGroup title="Card Content" description="Choose which information appears on the loyalty card.">
-              <SectionCard title="Card Content" description="Choose what your customers see on their loyalty card.">
-          <div className="grid gap-3 md:grid-cols-2">
-            {designStudioCardContentOptions.map((option) => {
-              const active = visibleSections[option.value];
+            <ManualBuilderGroup title="Card Layout" description="Choose how much information appears on the loyalty card.">
+              <SectionCard title="Card Layout" description="Choose how much information appears on the loyalty card.">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {designStudioCardLayoutOptions.map((option) => {
+              const active = selectedCardLayoutOption.id === option.id;
               return (
-                <label
-                  key={option.value}
-                  className="group flex min-h-24 cursor-pointer items-start gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--business-primary)] has-[:focus-visible]:ring-offset-2"
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => commitDesignChange({ ...currentDesignSnapshot, visibleSections: { ...option.visibleSections } })}
+                  className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
+                  data-active={active}
+                  aria-pressed={active}
                 >
-                  <input
-                    type="checkbox"
-                    checked={active}
-                    onChange={() =>
-                      commitDesignChange({
-                        ...currentDesignSnapshot,
-                        visibleSections: {
-                          ...currentDesignSnapshot.visibleSections,
-                          [option.value]: !currentDesignSnapshot.visibleSections[option.value],
-                        },
-                      })
-                    }
-                    className="mt-1 h-5 w-5 rounded border-[#CBD5E1] text-[var(--business-primary)] focus:ring-[var(--business-primary)]"
-                  />
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold text-[#111827] group-has-[:checked]:business-text">{option.label}</span>
-                    <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                  <CardLayoutThumbnail visibleSections={option.visibleSections} />
+                  <span className="flex items-start justify-between gap-3">
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
+                      <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                    </span>
+                    <span className="rounded-full border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
+                      Selected
+                    </span>
                   </span>
-                </label>
+                </button>
               );
             })}
           </div>
+
+          <details className="mt-4 rounded-2xl border border-[#E5E7EB] bg-white p-4">
+            <summary className="cursor-pointer text-sm font-semibold text-[#111827] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)]">
+              Advanced section visibility
+            </summary>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {designStudioCardContentOptions.map((option) => {
+                const active = visibleSections[option.value];
+                return (
+                  <label
+                    key={option.value}
+                    className="group flex min-h-24 cursor-pointer items-start gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--business-primary)] has-[:focus-visible]:ring-offset-2"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={active}
+                      onChange={() =>
+                        commitDesignChange({
+                          ...currentDesignSnapshot,
+                          visibleSections: {
+                            ...currentDesignSnapshot.visibleSections,
+                            [option.value]: !currentDesignSnapshot.visibleSections[option.value],
+                          },
+                        })
+                      }
+                      className="mt-1 h-5 w-5 rounded border-[#CBD5E1] text-[var(--business-primary)] focus:ring-[var(--business-primary)]"
+                    />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-[#111827] group-has-[:checked]:business-text">{option.label}</span>
+                      <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </details>
             </SectionCard>
             </ManualBuilderGroup>
 

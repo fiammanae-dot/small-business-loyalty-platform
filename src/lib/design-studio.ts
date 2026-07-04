@@ -167,6 +167,72 @@ export const designStudioCardContentOptions = [
   description: string;
 }>;
 
+const content = (overrides: Partial<CardSectionVisibility> = {}): CardSectionVisibility => ({
+  ...defaultVisibleCardSections,
+  ...overrides,
+});
+
+function sectionVisibilityMatches(expected: CardSectionVisibility, actual: CardSectionVisibility) {
+  return designStudioCardContentOptions.every((option) => expected[option.value] === actual[option.value]);
+}
+
+export type DesignStudioCardLayoutOption = {
+  id: "compact" | "standard" | "detailed" | "premium";
+  label: string;
+  description: string;
+  visibleSections: CardSectionVisibility;
+};
+
+export const designStudioCardLayoutOptions = [
+  {
+    id: "compact",
+    label: "Compact",
+    description: "Clean card with only essential loyalty details.",
+    visibleSections: content({
+      programName: false,
+      tierBadge: false,
+      rewardBox: false,
+      footer: false,
+      referral: false,
+    }),
+  },
+  {
+    id: "standard",
+    label: "Standard",
+    description: "Balanced layout for most businesses.",
+    visibleSections: content({
+      footer: false,
+      referral: false,
+    }),
+  },
+  {
+    id: "detailed",
+    label: "Detailed",
+    description: "Shows extra customer and reward information.",
+    visibleSections: content({
+      referral: false,
+    }),
+  },
+  {
+    id: "premium",
+    label: "Premium",
+    description: "Full-featured layout with every available card section.",
+    visibleSections: content(),
+  },
+] satisfies DesignStudioCardLayoutOption[];
+
+export function resolveDesignStudioCardLayoutOption(visibleSections: CardSectionVisibility) {
+  const exact = designStudioCardLayoutOptions.find((option) => sectionVisibilityMatches(option.visibleSections, visibleSections));
+  if (exact) return exact;
+
+  return designStudioCardLayoutOptions
+    .map((option) => ({
+      option,
+      score: designStudioCardContentOptions.filter((section) => option.visibleSections[section.value] === visibleSections[section.value]).length,
+    }))
+    .sort((a, b) => b.score - a.score)[0]?.option ?? designStudioCardLayoutOptions[1];
+}
+
 export type DesignStudioProfessionalPreset = {
   id: string;
   category: string;
@@ -182,11 +248,6 @@ export type DesignStudioProfessionalPreset = {
   decorationStyle: CardDesignDecorationStyle;
   visibleSections: CardSectionVisibility;
 };
-
-const content = (overrides: Partial<CardSectionVisibility> = {}): CardSectionVisibility => ({
-  ...defaultVisibleCardSections,
-  ...overrides,
-});
 
 export const designStudioProfessionalPresetGroups = [
   {

@@ -113,6 +113,8 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(helper, /designStudioRewardStyleOptions/);
   assert.match(helper, /designStudioTypographyOptions/);
   assert.match(helper, /designStudioCardContentOptions/);
+  assert.match(helper, /designStudioCardLayoutOptions/);
+  assert.match(helper, /resolveDesignStudioCardLayoutOption/);
   for (const label of ["Solid", "Gradient", "Pattern", "Subtle Dots", "Diagonal Lines", "Waves", "Coffee Beans", "Scissors", "Water Bubbles", "Food Pattern", "Beauty Pattern"]) {
     assert.match(helper, new RegExp(label));
   }
@@ -128,6 +130,9 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   }
   assert.match(helper, /typographyPreset === "CLASSIC" \|\| typographyPreset === "PREMIUM" \|\| typographyPreset === "LUXURY"/);
   for (const label of ["Business Logo", "Business Name", "Program Name", "Customer Name", "Tier Badge", "Reward Box", "Reward Progress", "Visits Remaining", "QR Code", "Footer Message", "Referral Section"]) {
+    assert.match(helper, new RegExp(label));
+  }
+  for (const label of ["Compact", "Standard", "Detailed", "Premium"]) {
     assert.match(helper, new RegExp(label));
   }
   assert.match(helper, /getAllowedStampIconsForBusinessType/);
@@ -214,8 +219,16 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.doesNotMatch(form, /decorationStyle: option\.value/);
   assert.match(form, /name="decorationStyle"/);
   assert.match(form, /cardFinishStyles/);
-  assert.match(form, /Card Content/);
-  assert.match(form, /Choose what your customers see on their loyalty card\./);
+  assert.match(form, /Card Layout/);
+  assert.match(form, /Choose how much information appears on the loyalty card\./);
+  assert.match(form, /designStudioCardLayoutOptions\.map/);
+  assert.match(form, /CardLayoutThumbnail visibleSections=\{option\.visibleSections\}/);
+  assert.match(form, /Advanced section visibility/);
+  assert.match(form, /<details className="mt-4/);
+  assert.doesNotMatch(form, /<details[^>]*open/);
+  assert.match(createWizard, /designStudioCardLayoutOptions\.map/);
+  assert.match(createWizard, /CardLayoutThumbnail visibleSections=\{option\.visibleSections\}/);
+  assert.match(createWizard, /Advanced section visibility/);
   assert.match(form, /VisibleCardPreview/);
   assert.match(form, /stampJourneyStyle=\{stampJourneyStyle\}/);
   assert.match(form, /stampIcon=\{stampIcon\}/);

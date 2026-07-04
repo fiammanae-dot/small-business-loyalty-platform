@@ -16,18 +16,21 @@ import { getCardStyleForLayoutStyle, resolveCardDesign } from "@/lib/card-design
 import {
   designStudioBackgroundGalleryOptions,
   designStudioCardContentOptions,
+  designStudioCardLayoutOptions,
   designStudioProfessionalPresetGroups,
   designStudioRewardStyleOptions,
   designStudioStampJourneyOptions,
   designStudioTemplateOptions,
   designStudioTypographyOptions,
   resolveDesignStudioBackgroundGalleryOption,
+  resolveDesignStudioCardLayoutOption,
   resolveDesignStudioTypographyOption,
   type DesignStudioProfessionalPreset,
 } from "@/lib/design-studio";
 import { resolveCardThemeColors } from "@/lib/card-themes";
 import { Button, SectionCard } from "@/components/ui";
 import { BackgroundGalleryThumbnail } from "@/components/design-studio/BackgroundGalleryThumbnail";
+import { CardLayoutThumbnail } from "@/components/design-studio/CardLayoutThumbnail";
 import { StampIconGraphic } from "@/components/design-studio/StampIconGraphic";
 import { WalletCardShell, type WalletTheme } from "@/components/public-card/WalletCardShell";
 
@@ -131,6 +134,7 @@ export function ProgramCreateWizard({
   );
   const selectedBackgroundOption = resolveDesignStudioBackgroundGalleryOption(backgroundStyle, backgroundPattern);
   const selectedTypographyOption = resolveDesignStudioTypographyOption(typographyPreset);
+  const selectedCardLayoutOption = resolveDesignStudioCardLayoutOption(visibleSections);
 
   function applyPreset(preset: DesignStudioProfessionalPreset) {
     setLayoutStyle(preset.layoutStyle);
@@ -330,23 +334,55 @@ export function ProgramCreateWizard({
               <OptionGrid options={designStudioTypographyOptions} value={selectedTypographyOption.value} onChange={(value) => setTypographyPreset(value as CardDesignTypographyPreset)} />
             </SectionCard>
 
-            <SectionCard title="Card Content" description="Choose what your customers see on their loyalty card.">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {designStudioCardContentOptions.map((option) => (
-                  <label key={option.value} className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4">
-                    <span>
-                      <span className="block text-sm font-black text-[#111827]">{option.label}</span>
-                      <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
-                    </span>
-                    <input
-                      type="checkbox"
-                      checked={visibleSections[option.value]}
-                      onChange={() => setVisibleSections((current) => ({ ...current, [option.value]: !current[option.value] }))}
-                      className="h-5 w-5 accent-[var(--business-primary)]"
-                    />
-                  </label>
-                ))}
+            <SectionCard title="Card Layout" description="Choose how much information appears on the loyalty card.">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {designStudioCardLayoutOptions.map((option) => {
+                  const active = selectedCardLayoutOption.id === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => setVisibleSections({ ...option.visibleSections })}
+                      data-active={active}
+                      aria-pressed={active}
+                      className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)]"
+                    >
+                      <CardLayoutThumbnail visibleSections={option.visibleSections} />
+                      <span className="flex items-start justify-between gap-3">
+                        <span className="min-w-0">
+                          <span className="block text-sm font-black text-[#111827]">{option.label}</span>
+                          <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                        </span>
+                        <span className="rounded-full border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
+                          Selected
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
+
+              <details className="mt-4 rounded-2xl border border-[#E5E7EB] bg-white p-4">
+                <summary className="cursor-pointer text-sm font-semibold text-[#111827] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)]">
+                  Advanced section visibility
+                </summary>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {designStudioCardContentOptions.map((option) => (
+                    <label key={option.value} className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4">
+                      <span>
+                        <span className="block text-sm font-black text-[#111827]">{option.label}</span>
+                        <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={visibleSections[option.value]}
+                        onChange={() => setVisibleSections((current) => ({ ...current, [option.value]: !current[option.value] }))}
+                        className="h-5 w-5 accent-[var(--business-primary)]"
+                      />
+                    </label>
+                  ))}
+                </div>
+              </details>
             </SectionCard>
           </div>
 
