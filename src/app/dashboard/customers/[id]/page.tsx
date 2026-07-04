@@ -19,7 +19,7 @@ import { CardShareActions } from "@/components/CardShareActions";
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CopyButton } from "@/components/CopyButton";
 import { CsrfInput } from "@/components/CsrfInput";
-import { ActionMenu, ActionMenuItem, ButtonLink, PageActions, SectionCard } from "@/components/ui";
+import { ActionMenu, ActionMenuItem, Avatar, ButtonLink, PageActions, SectionCard, StatusBadge, Tabs } from "@/components/ui";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { activityHref, staffProfileHref } from "@/lib/alert-investigation";
 import { alertTypeLabel } from "@/lib/alert-labels";
@@ -29,7 +29,7 @@ import { customerSourceLabels, getBusinessCustomerOrRedirect } from "@/lib/custo
 import { formatDate, formatDateTime } from "@/lib/format";
 import { formatUaePhoneDisplay } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
-import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
+import { progressValue } from "@/lib/programs";
 import { getScanQrDataUrl, getScanUrl, scanStatusLabel } from "@/lib/scan";
 import { manualStampCorrectionAction, toggleCustomerCardAction, toggleProgramScanTokenAction } from "@/app/dashboard/actions";
 
@@ -239,18 +239,19 @@ return (
 
       <SectionCard className="bg-white shadow-sm">
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="break-words text-2xl font-semibold text-[#111827]">{customerName}</h2>
-              <StatusPill status={membership.status} />
-              <span className="rounded-md business-bg-soft px-2 py-1 text-xs font-semibold business-text">{customerTier.badgeIcon} {customerTier.badgeLabel}</span>
-              {primaryRewardReady ? <span className="rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">Reward Ready</span> : null}
-            </div>
-            <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <CommandInfo label="Phone" value={formatUaePhoneDisplay(membership.normalizedPhone)} />
-              <CommandInfo label="Active program" value={primaryProgram ? primaryProgram.loyaltyProgram.name : "No active program"} />
-              <CommandInfo label="Progress" value={primaryProgram ? `${primaryProgress} / ${primaryRequired}` : "-"} />
-              <CommandInfo label="Reward status" value={primaryRewardReady ? "Ready to redeem" : rewardsReady > 0 ? `${rewardsReady} available` : "No rewards ready"} />
+          <div className="flex min-w-0 items-start gap-4">
+            <Avatar name={customerName} className="h-14 w-14 text-lg" />
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="break-words text-2xl font-semibold text-[#111827]">{customerName}</h2>
+                <StatusBadge tone={membership.status === "ACTIVE" ? "success" : "neutral"}>{membership.status.toLowerCase()}</StatusBadge>
+                <StatusBadge tone="business">{customerTier.badgeIcon} {customerTier.badgeLabel}</StatusBadge>
+                {primaryRewardReady ? <StatusBadge tone="success">Reward Ready</StatusBadge> : null}
+              </div>
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-[#6B7280]">
+                <span>{formatUaePhoneDisplay(membership.normalizedPhone)}</span>
+                <span>Member since {formatDate(membership.joinedAt)}</span>
+              </div>
             </div>
           </div>
           <PageActions className="xl:justify-end">
@@ -268,6 +269,26 @@ return (
             </ButtonLink>
             <ActionMenu label="More actions">
               <ActionMenuItem>
+                <Link href={"/dashboard/programs?customer=" + membership.uuid} className="block rounded-md px-2 py-2 font-semibold hover:bg-[#F8FAFC]">
+                  Enroll Program
+                </Link>
+              </ActionMenuItem>
+              <ActionMenuItem>
+                <Link href={"/dashboard/customers/" + membership.uuid + "/edit"} className="block rounded-md px-2 py-2 font-semibold hover:bg-[#F8FAFC]">
+                  Edit Customer
+                </Link>
+              </ActionMenuItem>
+              <ActionMenuItem>
+                <Link href={"/dashboard/referrals?search=" + encodeURIComponent(membership.referralCode ?? getShortCardToken(membership.cardToken))} className="block rounded-md px-2 py-2 font-semibold hover:bg-[#F8FAFC]">
+                  Open Referral Center
+                </Link>
+              </ActionMenuItem>
+              <ActionMenuItem>
+                <Link href="/dashboard/scanner" className="block rounded-md px-2 py-2 font-semibold hover:bg-[#F8FAFC]">
+                  Open Scanner
+                </Link>
+              </ActionMenuItem>
+              <ActionMenuItem>
                 <CopyButton value={cardUrl} label="Copy Card Link" copiedLabel="Card link copied." />
               </ActionMenuItem>
               <ActionMenuItem>
@@ -284,59 +305,78 @@ return (
                   compact
                 />
               </ActionMenuItem>
-              <ActionMenuItem>
-                <Link href={"/dashboard/programs?customer=" + membership.uuid} className="block rounded-md px-2 py-2 font-semibold hover:bg-[#F8FAFC]">
-                  Enroll Program
-                </Link>
-              </ActionMenuItem>
-              <ActionMenuItem>
-                <Link href={"/dashboard/customers/" + membership.uuid + "/edit"} className="block rounded-md px-2 py-2 font-semibold hover:bg-[#F8FAFC]">
-                  Edit Customer
-                </Link>
-              </ActionMenuItem>
-              <ActionMenuItem>
-                <Link href={"/dashboard/referrals?search=" + encodeURIComponent(membership.referralCode ?? getShortCardToken(membership.cardToken))} className="block rounded-md px-2 py-2 font-semibold hover:bg-[#F8FAFC]">
-                  Open Referral Center
-                </Link>
-              </ActionMenuItem>
             </ActionMenu>
           </PageActions>
         </div>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <CommandInfo label="Active program" value={primaryProgram ? primaryProgram.loyaltyProgram.name : "No active program"} />
+          <CommandInfo label="Progress" value={primaryProgram ? `${primaryProgress} / ${primaryRequired}` : "-"} />
+          <CommandInfo label="Current tier" value={`${customerTier.badgeIcon} ${customerTier.badgeLabel}`} />
+          <CommandInfo label="Reward status" value={primaryRewardReady ? "Ready to redeem" : rewardsReady > 0 ? `${rewardsReady} available` : "No rewards ready"} />
+        </div>
       </SectionCard>
 
-      <section className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
-        <div className="grid min-w-0 gap-5">
-          <LoyaltyOverviewPanel programCards={programCards} />
-          <LatestActivityPreview items={timeline.slice(0, 6)} customerUuid={membership.uuid} />
-          <RewardsPanel programCards={programCards} rewardRedemptions={rewardRedemptions} />
-          <ReferralSummaryPanel memberReference={membership.referralCode ?? getShortCardToken(membership.cardToken)} referralCode={membership.referralCode} compact />
-        </div>
-        <aside className="grid min-w-0 content-start gap-5">
-          <ProfileSummaryCard membership={membership} />
-          <CustomerCardPanel
-            cardUrl={cardUrl}
-            businessName={membership.business.name}
-            customerName={customerName}
-            customerPhone={membership.normalizedPhone}
-            cardToken={membership.cardToken}
-            cardStatus={membership.cardStatus}
-            cardCreatedAt={membership.cardCreatedAt}
-            cardLastViewedAt={membership.cardLastViewedAt}
-            membershipUuid={membership.uuid}
-            nextCardStatus={nextCardStatus}
-            messageType={cardShareMessageType}
-            compact
-          />
-          <TierDetailsPanel customerTier={customerTier} rewardRedemptionsCount={rewardRedemptions.length} totalBonusStamps={totalBonusStamps} activePrograms={activePrograms} joinedAt={membership.joinedAt} compact />
-          <SectionCard title="Quick Actions" description="Common customer tasks in one place.">
-            <div className="grid gap-2">
-              <ButtonLink href="/dashboard/scanner" variant="business" className="w-full">Open Scanner</ButtonLink>
-              <ButtonLink href={`/dashboard/customers/${membership.uuid}/edit`} variant="outline" className="w-full">Edit Customer</ButtonLink>
-              <ButtonLink href="/dashboard/referrals" variant="outline" className="w-full">Open Referral Center</ButtonLink>
-            </div>
-          </SectionCard>
-        </aside>
-      </section>
+      <Tabs
+        label="Customer sections"
+        defaultValue={resolveCustomerTab(qs.tab)}
+        items={[
+          {
+            id: "overview",
+            label: "Overview",
+            content: (
+              <div className="grid min-w-0 gap-5">
+                <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(300px,1fr)]">
+                  <LoyaltyOverviewPanel programCards={programCards} />
+                  <div className="grid min-w-0 content-start gap-5">
+                    <ProfileSummaryCard membership={membership} />
+                    <TierDetailsPanel customerTier={customerTier} rewardRedemptionsCount={rewardRedemptions.length} totalBonusStamps={totalBonusStamps} activePrograms={activePrograms} joinedAt={membership.joinedAt} />
+                  </div>
+                </div>
+                <LatestActivityPreview items={timeline.slice(0, 6)} />
+              </div>
+            ),
+          },
+          {
+            id: "activity",
+            label: "Activity",
+            content: <ActivityTabContent items={timeline} />,
+          },
+          {
+            id: "rewards",
+            label: "Rewards",
+            content: <RewardsPanel programCards={programCards} rewardRedemptions={rewardRedemptions} />,
+          },
+          {
+            id: "referrals",
+            label: "Referrals",
+            content: (
+              <ReferralSummaryPanel memberReference={membership.referralCode ?? getShortCardToken(membership.cardToken)} referralCode={membership.referralCode} />
+            ),
+          },
+          {
+            id: "card",
+            label: "Card & QR",
+            content: (
+              <div className="grid min-w-0 gap-5 xl:grid-cols-2">
+                <CustomerCardPanel
+                  cardUrl={cardUrl}
+                  businessName={membership.business.name}
+                  customerName={customerName}
+                  customerPhone={membership.normalizedPhone}
+                  cardToken={membership.cardToken}
+                  cardStatus={membership.cardStatus}
+                  cardCreatedAt={membership.cardCreatedAt}
+                  cardLastViewedAt={membership.cardLastViewedAt}
+                  membershipUuid={membership.uuid}
+                  nextCardStatus={nextCardStatus}
+                  messageType={cardShareMessageType}
+                />
+                <ProgramQrPanel programCards={programCards} />
+              </div>
+            ),
+          },
+        ]}
+      />
     </DashboardShell>
   );
 }
@@ -472,21 +512,39 @@ function ManualStampCorrectionForm({
   );
 }
 
-function LatestActivityPreview({ items }: { items: TimelineItem[]; customerUuid: string }) {
+function LatestActivityPreview({ items }: { items: TimelineItem[] }) {
   return (
-    <section id="recent-activity" className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold business-text">Recent Activity</p>
-          <h2 className="mt-1 text-xl font-semibold text-[#111827]">Latest important events</h2>
-        </div>
-        <a href="#recent-activity" className="text-sm font-semibold business-text">View all</a>
-      </div>
+    <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
+      <p className="text-sm font-semibold business-text">Recent Activity</p>
+      <h2 className="mt-1 text-xl font-semibold text-[#111827]">Latest important events</h2>
       <div className="mt-5 grid gap-3">
         {items.map((item) => (
           <TimelineRow key={item.id} item={item} compact />
         ))}
         {items.length === 0 ? <p className="text-sm text-[#6B7280]">No activity yet.</p> : null}
+      </div>
+    </section>
+  );
+}
+
+function ActivityTabContent({ items }: { items: TimelineItem[] }) {
+  const groups = groupTimeline(items);
+  return (
+    <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
+      <p className="text-sm font-semibold business-text">Full history</p>
+      <h2 className="mt-1 text-xl font-semibold text-[#111827]">All activity</h2>
+      <div className="mt-5 grid gap-6">
+        {groups.map((group) => (
+          <div key={group.label}>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#64748B]">{group.label}</p>
+            <div className="grid gap-3">
+              {group.items.map((item) => (
+                <TimelineRow key={item.id} item={item} />
+              ))}
+            </div>
+          </div>
+        ))}
+        {groups.length === 0 ? <p className="text-sm text-[#6B7280]">No activity yet.</p> : null}
       </div>
     </section>
   );
@@ -729,7 +787,7 @@ function CustomerCardPanel({
   );
 }
 
-function LoyaltyProgramsPanel({
+function ProgramQrPanel({
   programCards,
 }: {
   programCards: Array<{
@@ -744,91 +802,20 @@ function LoyaltyProgramsPanel({
     <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold business-text">Loyalty programs</p>
-          <h2 className="mt-1 text-xl font-semibold text-[#111827]">Program progress</h2>
+          <p className="text-sm font-semibold business-text">Scan QR</p>
+          <h2 className="mt-1 text-xl font-semibold text-[#111827]">Program scan tokens</h2>
         </div>
         <Gift className="h-5 w-5 business-text" aria-hidden="true" />
       </div>
       <div className="mt-5 grid gap-4">
-        {programCards.map(({ programMembership, scanUrl, qrCode, nextScanStatus, membershipUuid }) => {
-          const progress = progressValue(programMembership.earnedStamps, programMembership.bonusStamps);
-          const required = programMembership.loyaltyProgram.requiredStamps;
-          const progressPercent = Math.min(100, Math.round((progress / required) * 100));
-          const remaining = Math.max(0, required - progress);
-          const isRewardReady = progress >= required && programMembership.status !== "COMPLETED";
-          return (
-            <article key={programMembership.id} className="rounded-md border border-[#E5E7EB] p-4">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="font-semibold text-[#111827]">{programMembership.loyaltyProgram.name}</h3>
-                    {isRewardReady ? <span className="rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">Reward Ready</span> : null}
-                  </div>
-                  <p className="mt-2 text-sm text-[#6B7280]">Reward: {programMembership.loyaltyProgram.rewardName}</p>
-                  <div className="mt-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-semibold text-[#111827]">{progress} / {required}</span>
-                      <span className="text-[#6B7280]">{progressPercent}%</span>
-                    </div>
-                    <div className="mt-2 h-2 rounded-full business-secondary-bg-soft">
-                      <div className="h-2 rounded-full business-button" style={{ width: `${progressPercent}%` }} />
-                    </div>
-                  <p className="mt-2 text-sm text-[#6B7280]">
-                    {isRewardReady ? "Reward Ready" : `${remaining} stamp${remaining === 1 ? "" : "s"} remaining until reward`}
-                  </p>
-                  </div>
-                  <p className="mt-3 text-sm text-[#6B7280]">
-                    Status: {programCustomerStatusLabel({
-                      status: programMembership.status,
-                      earnedStamps: programMembership.earnedStamps,
-                      bonusStamps: programMembership.bonusStamps,
-                      requiredStamps: required,
-                    })}
-                  </p>
-                  <form action={manualStampCorrectionAction} className="mt-4 rounded-md border border-orange-200 bg-orange-50 p-3">
-                    <CsrfInput scope="dashboard:stamp-correction" />
-                    <input type="hidden" name="membershipUuid" value={membershipUuid} />
-                    <input type="hidden" name="programMembershipUuid" value={programMembership.uuid} />
-                    <p className="text-sm font-semibold text-orange-900">Manual correction</p>
-                    <p className="mt-1 text-xs leading-5 text-orange-800">Business Owner only. This adjusts progress and records the reason in audit history.</p>
-                    <div className="mt-3 grid gap-2 md:grid-cols-[120px_minmax(0,1fr)_auto] md:items-end">
-                      <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-orange-900">
-                        Stamps
-                        <select name="adjustment" required className="min-h-10 rounded-md border border-orange-200 bg-white px-3 text-sm font-semibold text-[#111827]">
-                          <option value="">Select</option>
-                          <option value="-1">-1</option>
-                          <option value="-2">-2</option>
-                          <option value="-3">-3</option>
-                          <option value="1">+1</option>
-                          <option value="2">+2</option>
-                          <option value="3">+3</option>
-                        </select>
-                      </label>
-                      <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-orange-900">
-                        Reason
-                        <input name="correctionReason" required minLength={5} maxLength={500} placeholder="Required correction reason" className="min-h-10 rounded-md border border-orange-200 bg-white px-3 text-sm font-semibold text-[#111827]" />
-                      </label>
-                      <ConfirmSubmitButton
-                        title="Record manual correction?"
-                        message="This will adjust customer stamp progress and permanently record the correction in audit history."
-                        confirmLabel="Record Correction"
-                        cancelLabel="Cancel"
-                        className="min-h-10 rounded-md border border-orange-300 bg-white px-4 text-sm font-bold text-orange-700 transition hover:bg-orange-100"
-                      >
-                        Record
-                      </ConfirmSubmitButton>
-                    </div>
-                  </form>
-                </div>
-                <div className="flex shrink-0 flex-col items-center rounded-md border border-[#E5E7EB] bg-white p-3">
-                  <Image src={qrCode} alt={`${programMembership.loyaltyProgram.name} scan QR`} width={112} height={112} unoptimized />
-                  <p className="mt-2 text-center text-xs font-medium text-[#6B7280]">Scan QR</p>
-                </div>
-              </div>
-              <div className="mt-4 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3">
-                <p className="text-sm font-semibold text-[#111827]">Scan token status: {scanStatusLabel(programMembership.scanStatus)}</p>
-                <p className="mt-2 break-all text-xs text-[#6B7280]">{scanUrl}</p>
-                <div className="mt-4 flex flex-wrap items-start gap-3">
+        {programCards.map(({ programMembership, scanUrl, qrCode, nextScanStatus, membershipUuid }) => (
+          <article key={programMembership.id} className="rounded-md border border-[#E5E7EB] p-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-[#111827]">{programMembership.loyaltyProgram.name}</h3>
+                <p className="mt-1 text-sm text-[#6B7280]">Scan token status: {scanStatusLabel(programMembership.scanStatus)}</p>
+                <p className="mt-3 break-all rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-2 text-xs text-[#6B7280]">{scanUrl}</p>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
                   <CopyButton value={scanUrl} label="Copy scan URL" copiedLabel="Scan URL copied." />
                   <a href={scanUrl} target="_blank" rel="noreferrer" className="rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
                     Open scan URL
@@ -844,9 +831,13 @@ function LoyaltyProgramsPanel({
                   </form>
                 </div>
               </div>
-            </article>
-          );
-        })}
+              <div className="flex shrink-0 flex-col items-center rounded-md border border-[#E5E7EB] bg-white p-3">
+                <Image src={qrCode} alt={`${programMembership.loyaltyProgram.name} scan QR`} width={96} height={96} unoptimized />
+                <p className="mt-2 text-center text-xs font-medium text-[#6B7280]">Scan QR</p>
+              </div>
+            </div>
+          </article>
+        ))}
         {programCards.length === 0 ? <p className="text-sm text-[#6B7280]">No program enrollments yet.</p> : null}
       </div>
     </section>
@@ -881,16 +872,6 @@ function TimelineRow({ item, compact = false }: { item: TimelineItem; compact?: 
   );
 }
 
-function RiskMetric({ label, value, tone }: { label: string; value: number; tone: "high" | "medium" | "low" }) {
-  const toneClass = tone === "high" ? "text-red-700 bg-red-50" : tone === "medium" ? "text-orange-700 bg-orange-50" : "text-emerald-700 bg-emerald-50";
-  return (
-    <div className="rounded-md border border-[#E5E7EB] p-4">
-      <p className="text-sm text-[#6B7280]">{label}</p>
-      <p className={`mt-2 inline-flex rounded-md px-2 py-1 text-xl font-semibold ${toneClass}`}>{value}</p>
-    </div>
-  );
-}
-
 function InsightMetric({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
     <div className="rounded-md border border-[#E5E7EB] p-4">
@@ -898,28 +879,6 @@ function InsightMetric({ icon: Icon, label, value }: { icon: LucideIcon; label: 
       <p className="mt-3 text-sm text-[#6B7280]">{label}</p>
       <p className="mt-1 text-lg font-semibold text-[#111827]">{value}</p>
     </div>
-  );
-}
-
-function SeverityBadge({ severity }: { severity: string }) {
-  const classes =
-    severity === "HIGH"
-      ? "bg-red-50 text-red-700"
-      : severity === "MEDIUM"
-        ? "bg-orange-50 text-orange-700"
-        : "bg-emerald-50 text-emerald-700";
-  return <span className={`rounded-md px-2 py-1 text-xs font-semibold ${classes}`}>{friendlySeverity(severity)}</span>;
-}
-
-function StatusPill({ status }: { status: string }) {
-  return <span className="rounded-md bg-zinc-100 px-2 py-1 text-xs font-semibold text-zinc-700">{status.toLowerCase()}</span>;
-}
-
-function AuditCell({ children, highlighted }: { children: React.ReactNode; highlighted: boolean }) {
-  return (
-    <td className={`border-b px-3 py-4 text-[#6B7280] ${highlighted ? "business-border" : "border-[#E5E7EB]"}`}>
-      {children}
-    </td>
   );
 }
 
