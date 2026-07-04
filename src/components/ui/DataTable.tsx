@@ -3,7 +3,7 @@ import { cn } from "./utils";
 
 export function DataTable({ className, ...props }: TableHTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="w-full overflow-x-auto rounded-xl border border-[#E7E9EE] bg-white shadow-[0_1px_2px_rgba(15,18,25,0.04)] [scrollbar-gutter:stable]">
+    <div className="w-full overflow-x-auto rounded-xl border border-[#E7E9EE] bg-white shadow-sm shadow-[0_1px_2px_rgba(15,18,25,0.04)] [scrollbar-gutter:stable]">
       <table className={cn("min-w-full border-collapse text-left text-sm", className)} {...props} />
     </div>
   );

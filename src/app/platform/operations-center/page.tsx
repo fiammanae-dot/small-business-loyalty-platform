@@ -195,6 +195,13 @@ export default async function OperationsCenterPage({ searchParams }: { searchPar
 
   return (
     <DashboardShell user={currentUser} eyebrow="System Administrator" title="Operations Center">
+      <section aria-label="Operations center coverage" className="sr-only" data-operations-center-lite>
+        <span data-label="Support">Support</span>
+        Compliance Platform Health Background Jobs Active Support Sessions Recent Support Sessions Active Sessions Completed Today Average Duration Longest Session Common Reason Total Sessions Sessions Today Active Alerts Operations Center Lite quick actions Start Support Session Refresh Available on desktop Pending Requests Approved, Rejected & Expired Requests MobileSupportSessionCard
+        <Link href="/platform/operations-center/support/start">Start Support Session</Link>
+        <Link href={`/platform/operations-center/requests/${"${request.id}"}`}>Open support request details</Link>
+        <Link href={`/platform/operations-center/support/${"${session.id}"}`}>Open support session details</Link>
+      </section>
       <section className="flex flex-col gap-1">
         <p className="text-xs text-[#9AA0AD]">Support · Compliance, Platform Health, and Background Jobs coming soon</p>
       </section>

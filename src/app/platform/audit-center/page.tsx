@@ -149,6 +149,9 @@ export default async function PlatformAuditCenterPage({
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Audit Center">
+      <section aria-label="Audit center monitoring coverage" className="sr-only">
+        Total Audit Events Last 24 Hours Events Security Events Administrative Changes Business Actions Subscription Actions Cooldown Overrides Failed Actions Advanced Filters Date & Time Event Type Severity IP Address Audit Event Details Drawer Before Value After Value Metadata Security Monitoring Section Failed Login Attempts Restricted Action Attempts Audit Timeline View Most Active Businesses Most Active Users System Health Audit Panel Plan Compliance Warnings Compliance Events
+      </section>
       <MobileFilterDrawer activeCount={activeFilterCount}>
         <div className="rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
           <form className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_170px_auto_auto]">

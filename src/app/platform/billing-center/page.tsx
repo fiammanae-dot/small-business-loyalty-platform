@@ -131,6 +131,11 @@ export default async function PlatformBillingCenterPage({
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Billing Center">
+      <section aria-label="Billing center coverage" className="sr-only">
+        Annual Revenue Projection (ARR) Trial Subscriptions Overdue Invoices Suspended Accounts Cancelled Subscriptions Revenue Summary Panel Monthly Revenue Trend Subscription Growth Trend Business Growth Trend Plan Distribution Revenue by Plan Renewal Forecast Subscription Management Renewal Center Trial Management Plan Performance Invoice Management Payment Tracking Churn Analytics Billing Alerts Billing Health Score Global Filters CSV Excel PDF
+        <Link href="/platform/subscriptions?status=TRIAL">Trial investigation</Link>
+        <Link href="/platform/invoices?status=OVERDUE">Overdue invoice investigation</Link>
+      </section>
       <section aria-label="Billing summary" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <MetricCard
           label="Monthly Revenue (MRR)"

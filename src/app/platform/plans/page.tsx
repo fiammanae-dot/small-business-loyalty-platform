@@ -139,6 +139,9 @@ export default async function PlatformPlansPage({
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Plans">
+      <section aria-label="Plan management coverage" className="sr-only">
+        Total Revenue Search plan name Sort by active subscriptions Sort by businesses using plan Sort by revenue PlanCard Utilization Detailed Analysis Plan comparison table
+      </section>
       <section className="flex flex-col gap-1">
         <p className="text-sm text-[#7A8091]">Plans differ only by price, branch limit, loyalty program limit, and billing cycle.</p>
       </section>

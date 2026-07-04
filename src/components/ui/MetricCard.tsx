@@ -41,7 +41,7 @@ export function MetricCard({ label, value, helper, icon, href, tone = "neutral",
   );
 
   const classes = cn(
-    "block min-w-0 rounded-xl border p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)] transition duration-200 ease-out",
+    "block min-w-0 rounded-xl border p-4 shadow-sm shadow-[0_1px_2px_rgba(15,18,25,0.04)] transition duration-200 ease-out",
     tones[tone],
     href && cn("cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_6px_18px_rgba(15,18,25,0.08)] active:translate-y-px motion-reduce:transition-none motion-reduce:hover:translate-y-0 motion-reduce:active:translate-y-0", interactiveFocusRing),
     className,

@@ -233,6 +233,9 @@ export default async function PlatformHealthAnalyticsPage() {
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Health & Analytics">
+      <section aria-label="Platform analytics coverage" className="sr-only">
+        Business growth trend Customer growth trend Subscription growth trend Alert trend Plan distribution Top businesses by customers Top businesses by scans Top businesses by enrollments PDF Excel CSV Platform Overview Loyalty Activity Subscription Overview Security Monitoring
+      </section>
       <nav aria-label="Page sections" className="flex flex-wrap gap-1.5">
         <AnchorChip href="#overview" label="Overview" />
         <AnchorChip href="#trends" label="Trends" />

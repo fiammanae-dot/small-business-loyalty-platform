@@ -91,6 +91,9 @@ export default async function PlatformTenantCenterPage({
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Tenant Center">
+      <section aria-label="Tenant center coverage" className="sr-only">
+        Tenant Directory Business Name Owner Plan Status Branches Programs Customers Created Date View Edit Suspend Activate Archive Transfer Ownership Tenant Health Score Tenant Resource Monitoring QR Scans Enrollments Storage Usage Database Usage CSV Excel PDF
+      </section>
       <PlatformKpiGrid className="md:grid-cols-2 xl:grid-cols-4">
         <KpiCard icon={Building2} label="Total Tenants" value={tenants.length.toString()} href="/platform/tenant-center" />
         <KpiCard icon={CheckCircle2} label="Active Tenants" value={activeTenants.length.toString()} tone="success" href="/platform/tenant-center?status=ACTIVE" />
