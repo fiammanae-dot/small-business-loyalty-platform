@@ -26,6 +26,7 @@ import {
   designStudioTemplateOptions,
   designStudioTypographyOptions,
   resolveDesignStudioBackgroundGalleryOption,
+  resolveDesignStudioTypographyOption,
   type DesignStudioProfessionalPreset,
 } from "@/lib/design-studio";
 import { Button, SectionCard } from "@/components/ui";
@@ -185,7 +186,8 @@ export function ProgramDesignStudioForm({
   );
   const selectedJourneyLabel = designStudioStampJourneyOptions.find((option) => option.value === stampJourneyStyle)?.label ?? stampJourneyStyle;
   const selectedStyleLabel = designStudioTemplateOptions.find((option) => option.value === layoutStyle)?.label ?? layoutStyle;
-  const selectedTypographyLabel = designStudioTypographyOptions.find((option) => option.value === typographyPreset)?.label ?? typographyPreset;
+  const selectedTypographyOption = resolveDesignStudioTypographyOption(typographyPreset);
+  const selectedTypographyLabel = selectedTypographyOption.label;
   const selectedPreviewContextLabel = previewContextOptions.find((option) => option.value === previewContext)?.label ?? "Phone";
   const selectedStampIconLabel = stampIconOptions.find((option) => option.value === stampIcon)?.label ?? labelizeLocal(stampIcon);
   const selectedBackgroundOption = resolveDesignStudioBackgroundGalleryOption(backgroundStyle, backgroundPattern);
@@ -993,7 +995,7 @@ export function ProgramDesignStudioForm({
               <SectionCard title="Typography" description="Choose the personality of your loyalty card.">
           <div className="grid gap-3 md:grid-cols-2">
             {designStudioTypographyOptions.map((option) => {
-              const active = typographyPreset === option.value;
+              const active = selectedTypographyOption.value === option.value;
               return (
                 <button
                   key={option.value}

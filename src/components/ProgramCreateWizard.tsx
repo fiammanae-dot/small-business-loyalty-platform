@@ -22,6 +22,7 @@ import {
   designStudioTemplateOptions,
   designStudioTypographyOptions,
   resolveDesignStudioBackgroundGalleryOption,
+  resolveDesignStudioTypographyOption,
   type DesignStudioProfessionalPreset,
 } from "@/lib/design-studio";
 import { resolveCardThemeColors } from "@/lib/card-themes";
@@ -129,6 +130,7 @@ export function ProgramCreateWizard({
     [backgroundPattern, backgroundStyle, decorationStyle, layoutStyle, rewardStyle, stampJourneyStyle, stampIcon, typographyPreset, visibleSections],
   );
   const selectedBackgroundOption = resolveDesignStudioBackgroundGalleryOption(backgroundStyle, backgroundPattern);
+  const selectedTypographyOption = resolveDesignStudioTypographyOption(typographyPreset);
 
   function applyPreset(preset: DesignStudioProfessionalPreset) {
     setLayoutStyle(preset.layoutStyle);
@@ -325,7 +327,7 @@ export function ProgramCreateWizard({
             </SectionCard>
 
             <SectionCard title="Typography" description="Choose the personality of your loyalty card.">
-              <OptionGrid options={designStudioTypographyOptions} value={typographyPreset} onChange={(value) => setTypographyPreset(value as CardDesignTypographyPreset)} />
+              <OptionGrid options={designStudioTypographyOptions} value={selectedTypographyOption.value} onChange={(value) => setTypographyPreset(value as CardDesignTypographyPreset)} />
             </SectionCard>
 
             <SectionCard title="Card Content" description="Choose what your customers see on their loyalty card.">

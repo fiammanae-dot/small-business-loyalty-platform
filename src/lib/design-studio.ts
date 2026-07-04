@@ -112,16 +112,30 @@ export const designStudioRewardStyleOptions = [
 
 export const designStudioTypographyOptions = [
   { value: "MODERN", label: "Modern", description: "Clean and contemporary." },
-  { value: "CLASSIC", label: "Classic", description: "Balanced and timeless." },
-  { value: "PREMIUM", label: "Premium", description: "Bold and professional." },
-  { value: "LUXURY", label: "Luxury", description: "Elegant and refined." },
-  { value: "PLAYFUL", label: "Playful", description: "Friendly and welcoming." },
+  { value: "LUXURY", label: "Elegant", description: "Refined and polished." },
+  { value: "PLAYFUL", label: "Friendly", description: "Warm and approachable." },
   { value: "MINIMAL", label: "Minimal", description: "Simple and distraction-free." },
 ] satisfies Array<{
   value: CardDesignTypographyPreset;
   label: string;
   description: string;
 }>;
+
+export function resolveDesignStudioTypographyOption(typographyPreset: CardDesignTypographyPreset) {
+  if (typographyPreset === "CLASSIC" || typographyPreset === "PREMIUM" || typographyPreset === "LUXURY") {
+    return designStudioTypographyOptions.find((option) => option.value === "LUXURY") ?? designStudioTypographyOptions[1];
+  }
+
+  if (typographyPreset === "PLAYFUL") {
+    return designStudioTypographyOptions.find((option) => option.value === "PLAYFUL") ?? designStudioTypographyOptions[2];
+  }
+
+  if (typographyPreset === "MINIMAL") {
+    return designStudioTypographyOptions.find((option) => option.value === "MINIMAL") ?? designStudioTypographyOptions[3];
+  }
+
+  return designStudioTypographyOptions[0];
+}
 
 export const designStudioCardFinishOptions = [
   { value: "FLAT", label: "Flat", description: "Clean and distraction-free." },

@@ -122,9 +122,11 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   for (const label of ["Filled", "Outline", "Glass", "Premium", "Ticket"]) {
     assert.match(helper, new RegExp(label));
   }
-  for (const label of ["Modern", "Classic", "Premium", "Luxury", "Playful", "Minimal"]) {
+  assert.match(helper, /resolveDesignStudioTypographyOption/);
+  for (const label of ["Modern", "Elegant", "Friendly", "Minimal"]) {
     assert.match(helper, new RegExp(label));
   }
+  assert.match(helper, /typographyPreset === "CLASSIC" \|\| typographyPreset === "PREMIUM" \|\| typographyPreset === "LUXURY"/);
   for (const label of ["Business Logo", "Business Name", "Program Name", "Customer Name", "Tier Badge", "Reward Box", "Reward Progress", "Visits Remaining", "QR Code", "Footer Message", "Referral Section"]) {
     assert.match(helper, new RegExp(label));
   }
@@ -202,8 +204,10 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /Choose the personality of your loyalty card\./);
   assert.match(form, /TypographyThumbnail/);
   assert.match(form, /typographyPreset: option\.value/);
+  assert.match(form, /selectedTypographyOption/);
   assert.match(form, /name="typographyPreset"/);
   assert.match(form, /typographyPreviewStyles/);
+  assert.match(createWizard, /selectedTypographyOption/);
   assert.doesNotMatch(form, /Card Finish/);
   assert.doesNotMatch(form, /Choose the visual finish that best matches your brand\./);
   assert.doesNotMatch(form, /CardFinishThumbnail/);
