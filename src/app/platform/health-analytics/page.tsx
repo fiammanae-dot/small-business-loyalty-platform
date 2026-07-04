@@ -1,9 +1,9 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { BarChart3, Download, FileSpreadsheet, FileText, TrendingUp } from "lucide-react";
+import { Download, FileSpreadsheet, FileText, Gift, QrCode, Stamp, UserPlus } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
-import { MobileAccordionSection } from "@/components/MobileAccordionSection";
-import { PlatformKpiGrid } from "@/components/PlatformKpiGrid";
+import { LeaderboardTabs } from "@/components/LeaderboardTabs";
+import { ProgressBar } from "@/components/ui";
 import { checkDatabaseHealth } from "@/lib/database-health";
 import { formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -20,11 +20,7 @@ type ChartPoint = {
   value: number;
 };
 
-type TopBusinessRow = {
-  businessId: number;
-  businessName: string;
-  value: number;
-};
+const planMixColors = ["#F0997B", "#E86A33", "#993C1D", "#C24E1E", "#F4C7AE", "#712B13"];
 
 export default async function PlatformHealthAnalyticsPage() {
   const user = await requireRole("PLATFORM_OWNER");
@@ -230,166 +226,337 @@ export default async function PlatformHealthAnalyticsPage() {
     value: row._count.id,
   }));
 
+  const allConnected = health.databaseConnected && health.prismaConnected;
+  const stampsIssued = totalEarnedStamps._sum.quantity ?? 0;
+  const bonusStamps = totalBonusStamps._sum.bonusStamps ?? 0;
+  const planMixTotal = planDistribution.reduce((sum, point) => sum + point.value, 0);
+
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Health & Analytics">
-      <MobileAccordionSection title="Analytics Exports">
-        <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-[#F97316]">Analytics exports</p>
-            <h2 className="mt-1 text-lg font-semibold text-[#111827]">Platform reporting workspace</h2>
-            <p className="mt-1 text-sm text-[#6B7280]">Export options prepare the current aggregated platform view without customer PII.</p>
+      <nav aria-label="Page sections" className="flex flex-wrap gap-1.5">
+        <AnchorChip href="#overview" label="Overview" />
+        <AnchorChip href="#trends" label="Trends" />
+        <AnchorChip href="#rankings" label="Rankings" />
+        <AnchorChip href="#loyalty" label="Loyalty" />
+        <AnchorChip href="#security" label="Security" />
+        <AnchorChip href="#activity" label="Activity" />
+      </nav>
+
+      <section
+        id="overview"
+        aria-label="System health and exports"
+        className="flex scroll-mt-6 flex-col gap-3 rounded-xl border border-[var(--medium-gray)] bg-white p-3 shadow-[0_1px_2px_rgba(15,18,25,0.04)] lg:flex-row lg:items-center lg:justify-between"
+      >
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-[#3D4352]">
+            <span className={`h-2 w-2 shrink-0 rounded-full ${allConnected ? "bg-[#1D9E75]" : "bg-[#E24B4A]"}`} aria-hidden="true" />
+            <span className="font-semibold">
+              {allConnected
+                ? "All systems connected"
+                : `${health.databaseConnected ? "" : "PostgreSQL disconnected. "}${health.prismaConnected ? "" : "Prisma disconnected."}`.trim()}
+            </span>
+            <span className="text-[#9AA0AD]">·</span>
+            <span>DB {databaseStats.databaseSize}</span>
+            <span className="text-[#9AA0AD]">·</span>
+            <span>{databaseStats.tableCount} tables</span>
+            <span className="text-[#9AA0AD]">·</span>
+            <span>{databaseStats.totalRecords.toLocaleString("en-US")} records</span>
           </div>
-          <div className="grid gap-2 sm:grid-cols-3">
-            <ExportButton href="/platform/health-analytics/export?format=pdf" icon={<FileText className="h-4 w-4" />} label="PDF" />
-            <ExportButton href="/platform/health-analytics/export?format=excel" icon={<FileSpreadsheet className="h-4 w-4" />} label="Excel" />
-            <ExportButton href="/platform/health-analytics/export?format=csv" icon={<Download className="h-4 w-4" />} label="CSV" />
-          </div>
+          <p className="mt-1 text-xs text-[#7A8091]">
+            QR asset storage 0 MB (codes generated dynamically) · Branding image storage 0 MB (logo URLs stored externally)
+          </p>
         </div>
-        </section>
-      </MobileAccordionSection>
-
-      <MobileAccordionSection title="Platform Overview" defaultOpen>
-        <Section title="Platform Overview">
-        <MetricGrid>
-          <Metric label="Total Businesses" value={totalBusinesses} />
-          <Metric label="Active Businesses" value={activeBusinesses} />
-          <Metric label="Inactive Businesses" value={inactiveBusinesses} />
-          <Metric label="Total Branches" value={totalBranches} />
-          <Metric label="Total Users" value={totalUsers} />
-          <Metric label="Total Customers" value={totalCustomers} />
-          <Metric label="Total Loyalty Programs" value={totalLoyaltyPrograms} />
-        </MetricGrid>
-        </Section>
-      </MobileAccordionSection>
-
-      <MobileAccordionSection title="Analytics Trends">
-        <Section title="Analytics Trends">
-        <div className="grid gap-4 xl:grid-cols-2">
-          <ChartCard title="Business growth trend" points={businessGrowthTrend} />
-          <ChartCard title="Customer growth trend" points={customerGrowthTrend} />
-          <ChartCard title="Subscription growth trend" points={subscriptionGrowthTrend} />
-          <ChartCard title="Alert trend" points={alertTrend} tone="alert" />
-          <DistributionCard title="Plan distribution" points={planDistribution} />
+        <div className="flex shrink-0 gap-2">
+          <ExportButton href="/platform/health-analytics/export?format=pdf" icon={<FileText className="h-4 w-4" aria-hidden="true" />} label="PDF" />
+          <ExportButton href="/platform/health-analytics/export?format=excel" icon={<FileSpreadsheet className="h-4 w-4" aria-hidden="true" />} label="Excel" />
+          <ExportButton href="/platform/health-analytics/export?format=csv" icon={<Download className="h-4 w-4" aria-hidden="true" />} label="CSV" />
         </div>
-        </Section>
-      </MobileAccordionSection>
+      </section>
 
-      <MobileAccordionSection title="Top 10 Business Rankings">
-        <Section title="Top 10 Business Rankings">
-        <div className="grid gap-4 xl:grid-cols-3">
-          <TopBusinessTable title="Top businesses by customers" rows={topBusinessesByCustomers} valueLabel="Customers" />
-          <TopBusinessTable title="Top businesses by scans" rows={topBusinessesByScans} valueLabel="Scans" />
-          <TopBusinessTable title="Top businesses by enrollments" rows={topBusinessesByEnrollments} valueLabel="Enrollments" />
+      <section aria-label="Platform overview" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <HeroMetric
+          label="Businesses"
+          value={totalBusinesses}
+          delta={newBusinessesThisMonth}
+          helper={`${activeBusinesses} active · ${inactiveBusinesses} inactive`}
+          trend={businessGrowthTrend}
+        />
+        <HeroMetric label="Customers" value={totalCustomers} delta={newCustomersThisMonth} trend={customerGrowthTrend} />
+        <HeroMetric
+          label="Active subscriptions"
+          value={totalActiveSubscriptions}
+          helper={`${totalInactiveSubscriptions} inactive`}
+          trend={subscriptionGrowthTrend}
+        />
+        <HeroMetric
+          label="Loyalty programs"
+          value={totalLoyaltyPrograms}
+          delta={newLoyaltyProgramsThisMonth}
+          helper={`${totalBranches} branches · ${totalUsers} users`}
+        />
+      </section>
+
+      <section
+        id="trends"
+        aria-label="Six-month trends"
+        className="scroll-mt-6 rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)] md:p-5"
+      >
+        <h2 className="text-base font-bold tracking-tight text-[#171A21]">Six-month trends</h2>
+        <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-5 xl:grid-cols-4">
+          <TrendSpark title="Businesses" points={businessGrowthTrend} />
+          <TrendSpark title="Customers" points={customerGrowthTrend} />
+          <TrendSpark title="Subscriptions" points={subscriptionGrowthTrend} />
+          <TrendSpark title="Alerts" points={alertTrend} tone="alert" />
         </div>
-        </Section>
-      </MobileAccordionSection>
-
-      <MobileAccordionSection title="Loyalty Activity">
-        <Section title="Loyalty Activity">
-        <MetricGrid>
-          <Metric label="Total Customer Enrollments" value={totalCustomerEnrollments} />
-          <Metric label="Total Stamps Issued" value={totalEarnedStamps._sum.quantity ?? 0} />
-          <Metric label="Total Bonus Stamps Issued" value={totalBonusStamps._sum.bonusStamps ?? 0} />
-          <Metric label="Total Rewards Redeemed" value={totalRewardsRedeemed} />
-          <Metric label="Total QR Scans" value={totalQrScans} />
-          <Metric label="Average Customer Progress" value={`${averageProgress.toFixed(1)}%`} />
-        </MetricGrid>
-        </Section>
-      </MobileAccordionSection>
-
-      <MobileAccordionSection title="Subscription Overview">
-        <Section title="Subscription Overview">
-        <MetricGrid>
-          {planRows.map((plan) => (
-            <Metric key={plan.id} label={plan.name} value={subscriptionCounts.get(plan.id) ?? 0} />
-          ))}
-          <Metric label="Total Active Subscriptions" value={totalActiveSubscriptions} />
-          <Metric label="Total Inactive Subscriptions" value={totalInactiveSubscriptions} />
-        </MetricGrid>
-        </Section>
-      </MobileAccordionSection>
-
-      <MobileAccordionSection title="Security Monitoring">
-        <Section title="Security Monitoring">
-        <MetricGrid>
-          <Metric label="Failed Login Attempts (Last 24 Hours)" value={failedLoginAttempts} />
-          <Metric label="Invalid QR Scan Attempts" value={invalidQrScans} />
-          <Metric label="Disabled QR Scan Attempts" value={disabledQrScans} />
-          <Metric label="Suspicious Multi-Stamp Transactions" value={suspiciousMultiStampTransactions} />
-          <Metric label="Suspicious Activity Alerts" value={suspiciousActivityAlerts} />
-        </MetricGrid>
-        </Section>
-      </MobileAccordionSection>
-
-      <MobileAccordionSection title="Business Growth">
-        <Section title="Business Growth">
-        <MetricGrid>
-          <Metric label="New Businesses This Month" value={newBusinessesThisMonth} />
-          <Metric label="New Customers This Month" value={newCustomersThisMonth} />
-          <Metric label="New Loyalty Programs This Month" value={newLoyaltyProgramsThisMonth} />
-          <Metric label="New Enrollments This Month" value={newEnrollmentsThisMonth} />
-        </MetricGrid>
-        </Section>
-      </MobileAccordionSection>
-
-      <MobileAccordionSection title="Database & Storage Health">
-        <Section title="Database & Storage Health">
-        <MetricGrid>
-          <HealthMetric label="PostgreSQL Database Status" connected={health.databaseConnected} />
-          <HealthMetric label="Prisma Connected" connected={health.prismaConnected} />
-          <Metric label="Database Size" value={databaseStats.databaseSize} />
-          <Metric label="Number of Tables" value={databaseStats.tableCount} />
-          <Metric label="Total Records" value={databaseStats.totalRecords} />
-          <Metric label="QR Asset Storage Usage" value="0 MB" helper="QR codes are generated dynamically." />
-          <Metric label="Branding Image Storage Usage" value="0 MB" helper="Logo URLs are stored externally." />
-        </MetricGrid>
-        </Section>
-      </MobileAccordionSection>
-
-      <MobileAccordionSection title="Recent Platform Activity">
-        <Section title="Recent Platform Activity">
-        <div className="grid gap-3 md:hidden">
-          {recentActivity.map((item, index) => (
-            <RecentActivityCard key={`${item.label}-${item.createdAt.toISOString()}-${index}`} item={item} />
-          ))}
-          {recentActivity.length === 0 ? <p className="rounded-md border border-dashed border-[#E5E7EB] p-4 text-sm text-[#6B7280]">No platform activity yet.</p> : null}
-        </div>
-        <div className="hidden overflow-x-auto md:block">
-          <table className="w-full min-w-[720px] border-separate border-spacing-0 text-left text-sm">
-            <thead>
-              <tr className="text-[#6B7280]">
-                {["Activity", "Subject", "Created At"].map((heading) => (
-                  <th key={heading} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">{heading}</th>
+        <div className="mt-5 border-t border-[var(--medium-gray)] pt-4">
+          <p className="text-xs text-[#7A8091]">Plan mix — {planMixTotal} active subscriptions</p>
+          {planMixTotal > 0 ? (
+            <>
+              <div className="mt-2 flex h-3.5 overflow-hidden rounded-full" role="img" aria-label={planDistribution.map((point) => `${point.label}: ${point.value}`).join(", ")}>
+                {planDistribution
+                  .filter((point) => point.value > 0)
+                  .map((point, index) => (
+                    <span
+                      key={point.label}
+                      style={{ width: `${(point.value / planMixTotal) * 100}%`, backgroundColor: planMixColors[index % planMixColors.length] }}
+                    />
+                  ))}
+              </div>
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#3D4352]">
+                {planDistribution.map((point, index) => (
+                  <span key={point.label} className="inline-flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: planMixColors[index % planMixColors.length] }} aria-hidden="true" />
+                    {point.label} {point.value}
+                    <span className="text-[#9AA0AD]">({planMixTotal > 0 ? Math.round((point.value / planMixTotal) * 100) : 0}%)</span>
+                  </span>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {recentActivity.map((item, index) => (
-                <tr key={`${item.label}-${item.createdAt.toISOString()}-${index}`}>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 font-semibold text-[#111827]">{item.label}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{item.subject}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDateTime(item.createdAt)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {recentActivity.length === 0 ? <p className="py-8 text-center text-sm text-[#6B7280]">No platform activity yet.</p> : null}
+              </div>
+            </>
+          ) : (
+            <p className="mt-2 rounded-lg border border-dashed border-[#D8DBE2] bg-[var(--app-canvas)] p-3 text-sm text-[#7A8091]">No active subscriptions yet.</p>
+          )}
         </div>
-        </Section>
-      </MobileAccordionSection>
+      </section>
+
+      <div className="grid gap-3 xl:grid-cols-[1.2fr_minmax(0,1fr)]">
+        <section
+          id="rankings"
+          aria-label="Business rankings"
+          className="scroll-mt-6 rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)] md:p-5"
+        >
+          <LeaderboardTabs
+            datasets={[
+              { key: "customers", label: "Customers", valueLabel: "customers", rows: topBusinessesByCustomers },
+              { key: "scans", label: "Scans", valueLabel: "scans", rows: topBusinessesByScans },
+              { key: "enrollments", label: "Enrollments", valueLabel: "enrollments", rows: topBusinessesByEnrollments },
+            ]}
+          />
+        </section>
+
+        <div className="grid content-start gap-3">
+          <section
+            id="loyalty"
+            aria-label="Loyalty activity"
+            className="scroll-mt-6 rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)] md:p-5"
+          >
+            <h2 className="text-base font-bold tracking-tight text-[#171A21]">Loyalty pipeline</h2>
+            <div className="mt-3 grid gap-2.5 text-sm">
+              <PipelineRow
+                icon={<UserPlus className="h-4 w-4" aria-hidden="true" />}
+                label="Customer enrollments"
+                badge={newEnrollmentsThisMonth > 0 ? `+${newEnrollmentsThisMonth} this month` : undefined}
+                value={totalCustomerEnrollments}
+              />
+              <PipelineRow icon={<QrCode className="h-4 w-4" aria-hidden="true" />} label="Valid QR scans" value={totalQrScans} />
+              <PipelineRow
+                icon={<Stamp className="h-4 w-4" aria-hidden="true" />}
+                label={`Stamps issued (+ ${bonusStamps.toLocaleString("en-US")} bonus)`}
+                value={stampsIssued}
+              />
+              <PipelineRow icon={<Gift className="h-4 w-4" aria-hidden="true" />} label="Rewards redeemed" value={totalRewardsRedeemed} />
+              <div className="border-t border-[var(--medium-gray)] pt-3">
+                <div className="flex items-center justify-between gap-3 text-xs">
+                  <span className="text-[#7A8091]">Average customer card progress</span>
+                  <span className="font-semibold tabular-nums text-[#171A21]">{averageProgress.toFixed(1)}%</span>
+                </div>
+                <ProgressBar value={averageProgress} className="mt-2" />
+              </div>
+            </div>
+          </section>
+
+          <section
+            id="security"
+            aria-label="Security monitoring"
+            className="scroll-mt-6 rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)] md:p-5"
+          >
+            <h2 className="text-base font-bold tracking-tight text-[#171A21]">
+              Security monitor <span className="text-xs font-medium text-[#7A8091]">· logins over last 24h</span>
+            </h2>
+            <div className="mt-3 grid gap-2 text-sm">
+              <SecurityRow label="Failed login attempts" value={failedLoginAttempts} severity={failedLoginAttempts > 0 ? "danger" : "ok"} />
+              <SecurityRow label="Invalid QR scan attempts" value={invalidQrScans} severity={invalidQrScans > 0 ? "warning" : "ok"} />
+              <SecurityRow label="Disabled QR scan attempts" value={disabledQrScans} severity={disabledQrScans > 0 ? "warning" : "ok"} />
+              <SecurityRow label="Suspicious multi-stamp transactions" value={suspiciousMultiStampTransactions} severity={suspiciousMultiStampTransactions > 0 ? "warning" : "ok"} />
+              <SecurityRow label="Suspicious activity alerts" value={suspiciousActivityAlerts} severity="neutral" />
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <section
+        id="activity"
+        aria-label="Recent platform activity"
+        className="scroll-mt-6 rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)] md:p-5"
+      >
+        <h2 className="text-base font-bold tracking-tight text-[#171A21]">Recent platform activity</h2>
+        <div className="mt-3">
+          {recentActivity.map((item, index) => (
+            <div
+              key={`${item.label}-${item.createdAt.toISOString()}-${index}`}
+              className={`grid grid-cols-[14px_minmax(0,1fr)] items-start gap-x-3 gap-y-0.5 py-2 sm:grid-cols-[14px_minmax(0,1fr)_auto] ${
+                index < recentActivity.length - 1 ? "border-b border-[var(--light-gray)]" : ""
+              }`}
+            >
+              <span className={`mt-1.5 h-2 w-2 rounded-full ${activityDotColor(item.label)}`} aria-hidden="true" />
+              <p className="min-w-0 text-sm">
+                <span className="font-semibold text-[#171A21]">{item.label}</span>{" "}
+                <span className="break-words text-[#7A8091]">— {item.subject}</span>
+              </p>
+              <p className="col-start-2 whitespace-nowrap text-xs tabular-nums text-[#9AA0AD] sm:col-start-3">{formatDateTime(item.createdAt)}</p>
+            </div>
+          ))}
+          {recentActivity.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-[#D8DBE2] bg-[var(--app-canvas)] p-4 text-sm text-[#7A8091]">No platform activity yet.</p>
+          ) : null}
+        </div>
+      </section>
     </DashboardShell>
   );
 }
 
-function RecentActivityCard({ item }: { item: ActivityItem }) {
+function AnchorChip({ href, label }: { href: string; label: string }) {
   return (
-    <article className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
-      <p className="text-sm font-semibold text-[#111827]">{item.label}</p>
-      <p className="mt-2 text-sm text-[#6B7280]">{item.subject}</p>
-      <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-[#F97316]">{formatDateTime(item.createdAt)}</p>
-    </article>
+    <a
+      href={href}
+      className="inline-flex min-h-8 items-center rounded-full border border-[var(--medium-gray)] bg-white px-3 text-xs font-semibold text-[#7A8091] transition hover:border-[var(--light-orange)] hover:text-[var(--accent-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+    >
+      {label}
+    </a>
   );
+}
+
+function HeroMetric({
+  label,
+  value,
+  delta,
+  helper,
+  trend,
+}: {
+  label: string;
+  value: number;
+  delta?: number;
+  helper?: string;
+  trend?: ChartPoint[];
+}) {
+  return (
+    <div className="rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
+      <p className="text-xs font-semibold text-[#7A8091]">{label}</p>
+      <div className="flex items-end justify-between gap-2">
+        <p className="mt-1.5 text-2xl font-bold tracking-tight tabular-nums text-[#171A21]">{value.toLocaleString("en-US")}</p>
+        {trend ? <SparkBars points={trend} /> : null}
+      </div>
+      <p className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-[#7A8091]">
+        {delta !== undefined && delta > 0 ? (
+          <span className="rounded-full bg-[#E9F6EE] px-2 py-0.5 font-semibold text-[#0F6E56]">+{delta.toLocaleString("en-US")} this month</span>
+        ) : null}
+        {helper ? <span>{helper}</span> : null}
+        {delta !== undefined && delta === 0 && !helper ? <span>No change this month</span> : null}
+      </p>
+    </div>
+  );
+}
+
+function SparkBars({ points }: { points: ChartPoint[] }) {
+  const max = Math.max(1, ...points.map((point) => point.value));
+  const last = points.length - 1;
+
+  return (
+    <div className="flex h-7 items-end gap-0.5" role="img" aria-label={points.map((point) => `${point.label}: ${point.value}`).join(", ")}>
+      {points.map((point, index) => (
+        <span
+          key={point.label}
+          title={`${point.label}: ${point.value}`}
+          className={`w-1.5 rounded-sm ${index >= last - 1 ? "bg-[var(--accent)]" : "bg-[var(--light-orange)]"}`}
+          style={{ height: `${Math.max(12, (point.value / max) * 100)}%` }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function TrendSpark({ title, points, tone = "default" }: { title: string; points: ChartPoint[]; tone?: "default" | "alert" }) {
+  const max = Math.max(1, ...points.map((point) => point.value));
+  const barColor = tone === "alert" ? "bg-[#E24B4A]" : "bg-[var(--accent)]";
+
+  return (
+    <div>
+      <p className="text-xs font-medium text-[#7A8091]">{title}</p>
+      <div className="mt-2 flex h-16 items-end gap-1 border-b border-[var(--medium-gray)]">
+        {points.map((point) => (
+          <span
+            key={point.label}
+            title={`${point.label}: ${point.value}`}
+            className={`min-w-0 flex-1 rounded-t ${barColor}`}
+            style={{ height: `${Math.max(5, (point.value / max) * 100)}%` }}
+          />
+        ))}
+      </div>
+      <div className="mt-1 flex justify-between text-[11px] text-[#9AA0AD]">
+        <span>{points[0]?.label}</span>
+        <span>{points[points.length - 1]?.label}</span>
+      </div>
+      <p className="sr-only">{points.map((point) => `${point.label}: ${point.value}`).join(", ")}</p>
+    </div>
+  );
+}
+
+function PipelineRow({ icon, label, value, badge }: { icon: ReactNode; label: string; value: number; badge?: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="flex min-w-0 items-center gap-2 text-[#3D4352]">
+        <span className="text-[var(--accent-deep)]">{icon}</span>
+        <span className="min-w-0">
+          {label}
+          {badge ? <span className="ml-1.5 rounded-full bg-[#E9F6EE] px-2 py-0.5 text-[11px] font-semibold text-[#0F6E56]">{badge}</span> : null}
+        </span>
+      </span>
+      <span className="font-semibold tabular-nums text-[#171A21]">{value.toLocaleString("en-US")}</span>
+    </div>
+  );
+}
+
+function SecurityRow({ label, value, severity }: { label: string; value: number; severity: "danger" | "warning" | "neutral" | "ok" }) {
+  const dot =
+    severity === "danger" ? "bg-[#E24B4A]" : severity === "warning" ? "bg-[#EF9F27]" : severity === "neutral" ? "bg-[#888780]" : "bg-[#1D9E75]";
+  const valueClass = severity === "danger" ? "text-[#A32D2D]" : "text-[#171A21]";
+
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="flex items-center gap-2 text-[#3D4352]">
+        <span className={`h-1.5 w-1.5 rounded-full ${dot}`} aria-hidden="true" />
+        {label}
+      </span>
+      <span className={`font-semibold tabular-nums ${valueClass}`}>{value.toLocaleString("en-US")}</span>
+    </div>
+  );
+}
+
+function activityDotColor(label: string) {
+  if (label === "Business Created") return "bg-[var(--accent)]";
+  if (label === "Branch Created") return "bg-[#378ADD]";
+  if (label === "Loyalty Program Created") return "bg-[#7F77DD]";
+  if (label === "Subscription Activated") return "bg-[#1D9E75]";
+  return "bg-[#888780]";
 }
 
 function progressValue(earnedStamps: number, bonusStamps: number) {
@@ -453,120 +620,14 @@ async function getDatabaseStats() {
   }
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
-      <h2 className="text-lg font-semibold text-[#111827]">{title}</h2>
-      <div className="mt-5">{children}</div>
-    </section>
-  );
-}
-
-function MetricGrid({ children }: { children: ReactNode }) {
-  return <PlatformKpiGrid className="gap-4 md:grid-cols-2 xl:grid-cols-4">{children}</PlatformKpiGrid>;
-}
-
-function Metric({ label, value, helper }: { label: string; value: string | number; helper?: string }) {
-  return (
-    <div className="rounded-md border border-[#E5E7EB] bg-white p-3 md:p-4">
-      <p className="text-sm text-[#6B7280]">{label}</p>
-      <p className="mt-2 text-2xl font-semibold text-[#111827]">{value}</p>
-      {helper ? <p className="mt-2 text-xs leading-5 text-[#6B7280]">{helper}</p> : null}
-    </div>
-  );
-}
-
-function HealthMetric({ label, connected }: { label: string; connected: boolean }) {
-  return (
-    <div className="rounded-md border border-[#E5E7EB] bg-white p-3 md:p-4">
-      <p className="text-sm text-[#6B7280]">{label}</p>
-      <div className="mt-3 flex items-center gap-3">
-        <span className={`h-3 w-3 rounded-full ${connected ? "bg-emerald-500" : "bg-red-500"}`} />
-        <p className="text-sm font-semibold text-[#111827]">{connected ? "Connected" : "Not Connected"}</p>
-      </div>
-    </div>
-  );
-}
-
-function ChartCard({ title, points, tone = "default" }: { title: string; points: ChartPoint[]; tone?: "default" | "alert" }) {
-  const max = Math.max(1, ...points.map((point) => point.value));
-  const color = tone === "alert" ? "bg-red-500" : "bg-[#F97316]";
-
-  return (
-    <div className="rounded-md border border-[#E5E7EB] p-4">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h3 className="font-semibold text-[#111827]">{title}</h3>
-        <TrendingUp className="h-4 w-4 text-[#F97316]" aria-hidden="true" />
-      </div>
-      <div className="flex h-44 items-end gap-3">
-        {points.map((point) => (
-          <div key={point.label} className="flex flex-1 flex-col items-center gap-2">
-            <div className="flex h-32 w-full items-end rounded-md bg-[#FAFAFA] px-1">
-              <div className={`w-full rounded-t-md ${color}`} style={{ height: `${Math.max(6, (point.value / max) * 100)}%` }} title={`${point.label}: ${point.value}`} />
-            </div>
-            <p className="text-xs font-semibold text-[#111827]">{point.value}</p>
-            <p className="text-xs text-[#6B7280]">{point.label}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function DistributionCard({ title, points }: { title: string; points: ChartPoint[] }) {
-  const total = points.reduce((sum, point) => sum + point.value, 0);
-
-  return (
-    <div className="rounded-md border border-[#E5E7EB] p-4 xl:col-span-2">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h3 className="font-semibold text-[#111827]">{title}</h3>
-        <BarChart3 className="h-4 w-4 text-[#F97316]" aria-hidden="true" />
-      </div>
-      <div className="grid gap-3 md:grid-cols-2">
-        {points.map((point) => {
-          const percent = total > 0 ? Math.round((point.value / total) * 100) : 0;
-          return (
-            <div key={point.label} className="rounded-md border border-[#E5E7EB] p-3">
-              <div className="flex items-center justify-between gap-3">
-                <p className="font-semibold text-[#111827]">{point.label}</p>
-                <p className="text-sm font-semibold text-[#F97316]">{point.value}</p>
-              </div>
-              <div className="mt-3 h-2 rounded-full bg-[#F3F4F6]">
-                <div className="h-2 rounded-full bg-[#F97316]" style={{ width: `${percent}%` }} />
-              </div>
-              <p className="mt-1 text-xs text-[#6B7280]">{percent}% of active subscriptions</p>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function TopBusinessTable({ title, rows, valueLabel }: { title: string; rows: TopBusinessRow[]; valueLabel: string }) {
-  return (
-    <div className="rounded-md border border-[#E5E7EB] p-4">
-      <h3 className="font-semibold text-[#111827]">{title}</h3>
-      <div className="mt-4 grid gap-2">
-        {rows.map((row, index) => (
-          <div key={`${row.businessId}-${index}`} className="grid grid-cols-[32px_1fr_auto] items-center gap-3 rounded-md bg-[#FAFAFA] px-3 py-2 text-sm">
-            <span className="font-semibold text-[#F97316]">#{index + 1}</span>
-            <span className="min-w-0 truncate font-semibold text-[#111827]">{row.businessName}</span>
-            <span className="rounded-md bg-white px-2 py-1 text-xs font-semibold text-[#6B7280]">{row.value} {valueLabel}</span>
-          </div>
-        ))}
-        {rows.length === 0 ? <p className="rounded-md border border-dashed border-[#E5E7EB] p-4 text-sm text-[#6B7280]">No data available yet.</p> : null}
-      </div>
-    </div>
-  );
-}
-
 function ExportButton({ href, icon, label }: { href: string; icon: ReactNode; label: string }) {
   return (
-    <Link href={href} className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]">
+    <Link
+      href={href}
+      className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[var(--medium-gray)] bg-white px-4 text-sm font-semibold text-[#171A21] transition hover:border-[var(--light-orange)] hover:text-[var(--accent-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+    >
       {icon}
       {label}
     </Link>
   );
 }
-

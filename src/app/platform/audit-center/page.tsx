@@ -1,32 +1,12 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
 import type { Prisma } from "@prisma/client";
-import {
-  Activity,
-  AlertTriangle,
-  Ban,
-  Building2,
-  CalendarClock,
-  CheckCircle2,
-  ClipboardList,
-  Download,
-  FileSpreadsheet,
-  FileText,
-  Filter,
-  KeyRound,
-  Search,
-  ShieldAlert,
-  UserCog,
-  XCircle,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { ChevronDown, Download, FileSpreadsheet, FileText, Search, X } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
 import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
-import { PlatformKpiGrid } from "@/components/PlatformKpiGrid";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { MetricCard } from "@/components/ui/MetricCard";
-import { SectionCard } from "@/components/ui/SectionCard";
+import { SeverityBadge } from "@/components/ui/SeverityBadge";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatDateTime } from "@/lib/format";
 import { roleLabels } from "@/lib/roles";
 import { prisma } from "@/lib/prisma";
@@ -162,188 +142,266 @@ export default async function PlatformAuditCenterPage({
   const mostActiveUsers = summarizeUsers(decoratedEvents);
   const eventsToday = decoratedMetricEvents.filter((event) => isSameUtcDay(event.createdAt, now));
   const activeFilterCount = Object.entries(params).filter(([key, value]) => !["event", "export", "view"].includes(key) && Boolean(value)).length;
+  const hasMoreFilters = Boolean(
+    params.eventType || params.severity || params.status || params.role || params.business || params.branch || params.from || params.to,
+  );
+  const eventGroups = groupEventsByDay(decoratedEvents, now);
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Audit Center">
-      <PlatformKpiGrid className="md:grid-cols-2 xl:grid-cols-4">
-        <KpiLink icon={ClipboardList} label="Total Audit Events" value={kpis.total} href="/platform/audit-center" />
-        <KpiLink icon={CalendarClock} label="Last 24 Hours Events" value={kpis.last24Hours} href="/platform/audit-center?date=today" />
-        <KpiLink icon={ShieldAlert} label="Security Events" value={kpis.security} href="/platform/audit-center?eventType=Security+Events" tone="alert" />
-        <KpiLink icon={UserCog} label="Administrative Changes" value={kpis.administrative} href="/platform/audit-center?eventType=Platform+Settings+Events" />
-        <KpiLink icon={Building2} label="Business Actions" value={kpis.business} href="/platform/audit-center?eventType=Business+Actions" />
-        <KpiLink icon={FileText} label="Subscription Actions" value={kpis.subscription} href="/platform/audit-center?eventType=Subscription+Actions" />
-        <KpiLink icon={Activity} label="Cooldown Overrides" value={kpis.cooldownOverrides} href="/platform/audit-center?eventType=Cooldown+Actions" />
-        <KpiLink icon={XCircle} label="Failed Actions" value={kpis.failed} href="/platform/audit-center?status=Failed" tone="alert" />
-        <KpiLink icon={ShieldAlert} label="Plan Compliance Warnings" value={kpis.compliance} href="/platform/audit-center?eventType=Compliance+Events" tone={kpis.compliance > 0 ? "alert" : "default"} />
-      </PlatformKpiGrid>
+      <MobileFilterDrawer activeCount={activeFilterCount}>
+        <div className="rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
+          <form className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_170px_auto_auto]">
+            <label className="relative">
+              <span className="sr-only">Search audit events</span>
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7A8091]" aria-hidden="true" />
+              <input
+                name="search"
+                defaultValue={params.search ?? ""}
+                placeholder="Search user, business, email, event ID, entity ID"
+                className="h-11 w-full rounded-lg border border-[var(--medium-gray)] bg-white pl-9 pr-3 text-sm outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] sm:h-10"
+              />
+            </label>
+            <label>
+              <span className="sr-only">Date range</span>
+              <select
+                name="date"
+                defaultValue={params.date ?? "30d"}
+                className="h-11 w-full rounded-lg border border-[var(--medium-gray)] bg-white px-3 text-sm text-[#171A21] outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] sm:h-10"
+              >
+                <option value="today">Today</option>
+                <option value="7d">Last 7 Days</option>
+                <option value="30d">Last 30 Days</option>
+                <option value="custom">Custom Range</option>
+              </select>
+            </label>
+            <button
+              type="submit"
+              className="inline-flex h-11 items-center justify-center rounded-lg bg-[#171A21] px-4 text-sm font-semibold text-white transition hover:bg-[#3D4352] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 sm:h-10"
+            >
+              Apply
+            </button>
+            <Link
+              href="/platform/audit-center"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-[var(--medium-gray)] bg-white px-4 text-sm font-semibold text-[#171A21] transition hover:border-[var(--light-orange)] hover:text-[var(--accent-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 sm:h-10"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+              Clear
+            </Link>
 
-        <MobileFilterDrawer activeCount={activeFilterCount}>
-      <section className="sticky top-0 z-10 rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
-        <div className="mb-3 flex items-center gap-2">
-          <Filter className="h-4 w-4 text-[#F97316]" aria-hidden="true" />
-          <h2 className="font-semibold text-[#111827]">Advanced Filters</h2>
-        </div>
-        <form className="grid gap-3 lg:grid-cols-4 xl:grid-cols-6">
-          <label className="relative lg:col-span-2">
-            <span className="sr-only">Search audit events</span>
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" aria-hidden="true" />
-            <input name="search" defaultValue={params.search ?? ""} placeholder="Search user, business, email, event ID, entity ID" className="h-10 w-full rounded-md border border-[#E5E7EB] pl-9 pr-3 text-sm" />
-          </label>
-          <Select name="eventType" value={params.eventType} label="All event types" options={eventTypeOptions} />
-          <Select name="severity" value={params.severity} label="All severities" options={severityOptions} />
-          <Select name="role" value={params.role} label="All roles" options={Object.keys(roleLabels)} />
-          <SearchableCombobox
-            label="Business"
-            name="business"
-            defaultValue={params.business ?? ""}
-            placeholder="All businesses"
-            emptyLabel="No businesses found."
-            options={[
-              { value: "", label: "All businesses", description: "Show audit events from every business" },
-              ...businesses.map((business) => ({ value: business.id.toString(), label: business.name, description: "Business" })),
-            ]}
-          />
-          <SearchableCombobox
-            label="Branch"
-            name="branch"
-            defaultValue={params.branch ?? ""}
-            placeholder="All branches"
-            emptyLabel="No branches found."
-            options={[
-              { value: "", label: "All branches", description: "Show audit events from every branch" },
-              ...branches.map((branch) => ({ value: branch.id.toString(), label: branch.name, description: branch.business.name, badge: "Branch" })),
-            ]}
-          />
-          <select name="date" defaultValue={params.date ?? "30d"} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm">
-            <option value="today">Today</option>
-            <option value="7d">Last 7 Days</option>
-            <option value="30d">Last 30 Days</option>
-            <option value="custom">Custom Range</option>
-          </select>
-          <input type="date" name="from" defaultValue={params.from ?? ""} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm" />
-          <input type="date" name="to" defaultValue={params.to ?? ""} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm" />
-          <Select name="status" value={params.status} label="All statuses" options={statusOptions} />
-          <button type="submit" className="h-10 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">Apply</button>
-          <Link href="/platform/audit-center" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">Clear</Link>
-        </form>
-      </section>
+            <details className="lg:col-span-full" open={hasMoreFilters}>
+              <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 rounded-lg border border-[var(--medium-gray)] px-4 py-2 text-sm font-semibold text-[#171A21] transition hover:bg-[var(--light-gray)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]">
+                <span>
+                  More filters
+                  {hasMoreFilters ? (
+                    <span className="ml-2 rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-xs font-semibold text-[var(--accent-deep)]">active</span>
+                  ) : null}
+                </span>
+                <span className="flex items-center gap-1 text-xs font-medium text-[#7A8091]">
+                  Event type, severity, status, role, business, branch, custom dates
+                  <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+                </span>
+              </summary>
+              <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                <FilterSelect name="eventType" value={params.eventType} label="All event types" options={eventTypeOptions} />
+                <FilterSelect name="severity" value={params.severity} label="All severities" options={severityOptions} />
+                <FilterSelect name="status" value={params.status} label="All statuses" options={statusOptions} />
+                <FilterSelect name="role" value={params.role} label="All roles" options={Object.keys(roleLabels)} />
+                <SearchableCombobox
+                  label="Business"
+                  name="business"
+                  defaultValue={params.business ?? ""}
+                  placeholder="All businesses"
+                  emptyLabel="No businesses found."
+                  options={[
+                    { value: "", label: "All businesses", description: "Show audit events from every business" },
+                    ...businesses.map((business) => ({ value: business.id.toString(), label: business.name, description: "Business" })),
+                  ]}
+                />
+                <SearchableCombobox
+                  label="Branch"
+                  name="branch"
+                  defaultValue={params.branch ?? ""}
+                  placeholder="All branches"
+                  emptyLabel="No branches found."
+                  options={[
+                    { value: "", label: "All branches", description: "Show audit events from every branch" },
+                    ...branches.map((branch) => ({ value: branch.id.toString(), label: branch.name, description: branch.business.name, badge: "Branch" })),
+                  ]}
+                />
+                <label>
+                  <span className="sr-only">Custom range start date</span>
+                  <input type="date" name="from" defaultValue={params.from ?? ""} className="h-11 w-full rounded-lg border border-[var(--medium-gray)] bg-white px-3 text-sm outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] sm:h-10" />
+                </label>
+                <label>
+                  <span className="sr-only">Custom range end date</span>
+                  <input type="date" name="to" defaultValue={params.to ?? ""} className="h-11 w-full rounded-lg border border-[var(--medium-gray)] bg-white px-3 text-sm outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] sm:h-10" />
+                </label>
+              </div>
+            </details>
+          </form>
 
-        </MobileFilterDrawer>
-
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-[#F97316]">Compliance Reporting</p>
-            <h2 className="mt-1 text-lg font-semibold text-[#111827]">Filtered audit exports</h2>
+          <div className="mt-3 flex justify-end border-t border-[var(--light-gray)] pt-3">
+            <details className="relative">
+              <summary
+                className="inline-flex h-10 cursor-pointer list-none items-center justify-center gap-2 rounded-lg border border-[var(--medium-gray)] bg-white px-4 text-sm font-semibold text-[#171A21] transition hover:border-[var(--light-orange)] hover:text-[var(--accent-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+              >
+                <Download className="h-4 w-4" aria-hidden="true" />
+                Export filtered
+                <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+              </summary>
+              <div className="absolute right-0 z-20 mt-2 grid min-w-44 gap-1 rounded-lg border border-[var(--medium-gray)] bg-white p-1.5 shadow-xl">
+                <ExportItem href={`/platform/audit-center/export?${activeQuery}&format=csv`} icon={<Download className="h-4 w-4" aria-hidden="true" />} label="Export CSV" />
+                <ExportItem href={`/platform/audit-center/export?${activeQuery}&format=excel`} icon={<FileSpreadsheet className="h-4 w-4" aria-hidden="true" />} label="Export Excel" />
+                <ExportItem href={`/platform/audit-center/export?${activeQuery}&format=pdf`} icon={<FileText className="h-4 w-4" aria-hidden="true" />} label="Export PDF" />
+              </div>
+            </details>
           </div>
-          <div className="grid gap-2 sm:grid-cols-3">
-            <ExportButton href={`/platform/audit-center/export?${activeQuery}&format=csv`} icon={<Download className="h-4 w-4" />} label="Export CSV" />
-            <ExportButton href={`/platform/audit-center/export?${activeQuery}&format=excel`} icon={<FileSpreadsheet className="h-4 w-4" />} label="Export Excel" />
-            <ExportButton href={`/platform/audit-center/export?${activeQuery}&format=pdf`} icon={<FileText className="h-4 w-4" />} label="Export PDF" />
-          </div>
         </div>
-      </section>
+      </MobileFilterDrawer>
 
-      <section className="grid gap-4 xl:grid-cols-[1fr_360px]">
-        <div className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
-          <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-[#111827]">Audit Event Table</h2>
-              <p className="text-sm text-[#6B7280]">Showing {decoratedEvents.length} events</p>
+      <nav aria-label="Audit summary" className="flex flex-wrap items-center gap-1.5">
+        <StatPill href="/platform/audit-center" value={kpis.total} label="total" />
+        <StatPill href="/platform/audit-center?date=today" value={kpis.last24Hours} label="last 24h" />
+        <StatPill href="/platform/audit-center?eventType=Security+Events" value={kpis.security} label="security" tone="danger" />
+        <StatPill href="/platform/audit-center?eventType=Platform+Settings+Events" value={kpis.administrative} label="administrative" />
+        <StatPill href="/platform/audit-center?eventType=Business+Actions" value={kpis.business} label="business" />
+        <StatPill href="/platform/audit-center?eventType=Subscription+Actions" value={kpis.subscription} label="subscription" />
+        <StatPill href="/platform/audit-center?eventType=Cooldown+Actions" value={kpis.cooldownOverrides} label="cooldown overrides" />
+        <StatPill href="/platform/audit-center?status=Failed" value={kpis.failed} label="failed" tone="danger" />
+        <StatPill href="/platform/audit-center?eventType=Compliance+Events" value={kpis.compliance} label="compliance" tone={kpis.compliance > 0 ? "warning" : "default"} />
+      </nav>
+
+      <section aria-label="Audit events" className={`grid gap-3 ${selectedDecoratedEvent ? "xl:grid-cols-[minmax(0,1fr)_340px]" : ""}`}>
+        <div className="overflow-hidden rounded-xl border border-[var(--medium-gray)] bg-white shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
+          <div className="flex items-center justify-between gap-3 border-b border-[var(--medium-gray)] px-4 py-3">
+            <h2 className="text-sm font-bold tracking-tight text-[#171A21]">
+              Event stream <span className="font-medium text-[#7A8091]">· {decoratedEvents.length} events</span>
+            </h2>
+            <p className="hidden text-xs text-[#7A8091] sm:block">Select an event to inspect metadata</p>
+          </div>
+          {eventGroups.map((group) => (
+            <div key={group.label}>
+              <p className="bg-[var(--app-canvas)] px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.04em] text-[#7A8091]">{group.label}</p>
+              {group.events.map((event) => {
+                const selected = event.uuid === params.event;
+                return (
+                  <Link
+                    key={event.uuid}
+                    href={`/platform/audit-center?${activeQuery}${activeQuery ? "&" : ""}event=${event.uuid}`}
+                    aria-current={selected ? "true" : undefined}
+                    className={`block border-b border-[var(--light-gray)] px-4 py-2.5 transition last:border-b-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent)] ${
+                      selected ? "bg-[var(--accent-soft)]" : "hover:bg-[var(--app-canvas)]"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <span className="w-10 shrink-0 text-xs tabular-nums text-[#7A8091]">
+                        {event.createdAt.toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit", hour12: false })}
+                      </span>
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${severityDot(event.severity)}`} title={event.severity} aria-hidden="true" />
+                      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[#171A21]">{formatAction(event.action)}</span>
+                      <AuditStatusBadge status={event.status} />
+                    </span>
+                    <span className="mt-1 block truncate pl-[50px] text-xs text-[#7A8091]">
+                      {event.actorUser ? `${event.actorUser.name} (${roleLabels[event.actorUser.role]})` : "System"}
+                      {event.business ? ` · ${event.business.name}` : ""}
+                      {event.branch ? ` → ${event.branch.name}` : ""}
+                      {" · "}
+                      {event.entityType}
+                      {event.entityId ? ` #${event.entityId}` : ""}
+                      {" · "}
+                      {event.ipAddress}
+                    </span>
+                    <span className="sr-only">Severity {event.severity}. Event type {event.eventType}. View details.</span>
+                  </Link>
+                );
+              })}
             </div>
-            <Link href={`/platform/audit-center?${activeQuery}&view=timeline`} className="rounded-md border border-[#E5E7EB] px-3 py-2 text-sm font-semibold text-[#111827]">Timeline View</Link>
-          </div>
-          <div className="grid gap-3 md:hidden">
-            {decoratedEvents.map((event) => (
-              <AuditEventMobileCard key={event.id} event={event} activeQuery={activeQuery} />
-            ))}
-            {decoratedEvents.length === 0 ? (
-              <div className="rounded-md border border-dashed border-[#E5E7EB] bg-[#FAFAFA] p-5 text-center">
-                <p className="text-sm font-semibold text-[#111827]">No audit events found</p>
-                <p className="mt-1 text-sm text-[#6B7280]">Try adjusting filters or clearing the current search.</p>
-              </div>
-            ) : null}
-          </div>
-          <div className="hidden overflow-x-auto md:block">
-            <table className="w-full min-w-[1180px] border-separate border-spacing-0 text-left text-sm">
-              <thead>
-                <tr className="text-[#6B7280]">
-                  {["Date & Time", "Event Type", "Severity", "User", "Role", "Business", "Branch", "Entity", "Action", "Status", "IP Address", "Details"].map((heading) => (
-                    <th key={heading} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">{heading}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {decoratedEvents.map((event) => (
-                  <tr key={event.id} className="align-top">
-                    <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDateTime(event.createdAt)}</td>
-                    <td className="border-b border-[#E5E7EB] px-3 py-4 font-semibold text-[#111827]">{event.eventType}</td>
-                    <td className="border-b border-[#E5E7EB] px-3 py-4"><SeverityBadge severity={event.severity} /></td>
-                    <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{event.actorUser?.name ?? "System"}</td>
-                    <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{event.actorUser ? roleLabels[event.actorUser.role] : "-"}</td>
-                    <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{event.business?.name ?? "-"}</td>
-                    <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{event.branch?.name ?? "-"}</td>
-                    <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{event.entityType}{event.entityId ? ` #${event.entityId}` : ""}</td>
-                    <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatAction(event.action)}</td>
-                    <td className="border-b border-[#E5E7EB] px-3 py-4"><StatusBadge status={event.status} /></td>
-                    <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{event.ipAddress}</td>
-                    <td className="border-b border-[#E5E7EB] px-3 py-4">
-                      <Link href={`/platform/audit-center?${activeQuery}&event=${event.uuid}`} className="font-semibold text-[#F97316]">View</Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {decoratedEvents.length === 0 ? <p className="py-8 text-center text-sm text-[#6B7280]">No audit events match these filters.</p> : null}
+          ))}
+          {decoratedEvents.length === 0 ? (
+            <div className="p-4">
+              <EmptyState
+                title="No audit events found"
+                description="Try adjusting filters or clearing the current search."
+                action={
+                  <Link
+                    href="/platform/audit-center"
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[var(--medium-gray)] bg-white px-4 text-sm font-semibold text-[#171A21] transition hover:border-[var(--light-orange)] hover:text-[var(--accent-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+                  >
+                    <X className="h-4 w-4" aria-hidden="true" />
+                    Clear filters
+                  </Link>
+                }
+              />
+            </div>
+          ) : null}
+        </div>
+
+        {selectedDecoratedEvent ? <AuditDetailsPanel event={selectedDecoratedEvent} activeQuery={activeQuery} /> : null}
+      </section>
+
+      <section aria-label="Security and activity summaries" className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)] md:col-span-2 xl:col-span-1">
+          <h2 className="text-sm font-bold tracking-tight text-[#171A21]">Security &amp; health</h2>
+          <div className="mt-3 grid gap-2 text-sm">
+            <MonitorRow label="Failed login attempts" value={securityCounts.failedLoginAttempts} tone={securityCounts.failedLoginAttempts > 0 ? "danger" : "ok"} />
+            <MonitorRow label="Disabled account attempts" value={securityCounts.disabledAccountAttempts} tone={securityCounts.disabledAccountAttempts > 0 ? "warning" : "ok"} />
+            <MonitorRow label="Blocked actions" value={securityCounts.blockedActions} tone={securityCounts.blockedActions > 0 ? "warning" : "ok"} />
+            <MonitorRow label="Cooldown violations" value={securityCounts.cooldownViolations} tone={securityCounts.cooldownViolations > 0 ? "warning" : "ok"} />
+            <MonitorRow label="Cooldown overrides" value={securityCounts.cooldownOverrides} tone="neutral" />
+            <MonitorRow label="Restricted action attempts" value={securityCounts.demoModeViolations} tone={securityCounts.demoModeViolations > 0 ? "warning" : "ok"} />
+            <MonitorRow label="Permission violations" value={securityCounts.permissionViolations} tone={securityCounts.permissionViolations > 0 ? "danger" : "ok"} />
+            <div className="border-t border-[var(--medium-gray)] pt-2.5 text-xs text-[#7A8091]">
+              <p>
+                Today:{" "}
+                <span className="font-semibold text-[#171A21]">
+                  {eventsToday.length} events · {eventsToday.filter((event) => event.status === "Failed").length} failed ·{" "}
+                  {eventsToday.filter((event) => event.eventType === "Security Events" || event.eventType === "Authentication Events").length} security ·{" "}
+                  {eventsToday.filter((event) => event.severity === "CRITICAL").length} critical
+                </span>
+              </p>
+              <p className="mt-1">
+                Last audit event:{" "}
+                <span className="font-semibold text-[#171A21]">{decoratedEvents[0] ? formatDateTime(decoratedEvents[0].createdAt) : "Not available"}</span>
+              </p>
+            </div>
           </div>
         </div>
 
-        <AuditDetailsDrawer event={selectedDecoratedEvent} />
-      </section>
-
-      {params.view === "timeline" ? (
-        <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
-          <h2 className="text-lg font-semibold text-[#111827]">Audit Timeline View</h2>
-          <div className="mt-5 grid gap-3">
-            {decoratedEvents.map((event) => (
-              <div key={event.uuid} className="grid gap-3 rounded-md border border-[#E5E7EB] p-3 sm:grid-cols-[90px_1fr]">
-                <p className="text-sm font-semibold text-[#F97316]">{event.createdAt.toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" })}</p>
-                <div>
-                  <p className="font-semibold text-[#111827]">{formatAction(event.action)}</p>
-                  <p className="mt-1 text-sm text-[#6B7280]">{event.eventType} - {event.business?.name ?? "Platform"}</p>
+        <div className="rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
+          <h2 className="text-sm font-bold tracking-tight text-[#171A21]">Most active businesses</h2>
+          <div className="mt-3 grid gap-2.5">
+            {mostActiveBusinesses.map((row, index) => (
+              <div key={`${row.name}-${index}`} className="grid grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-2 text-xs">
+                <span className={`text-sm font-bold tabular-nums ${index < 3 ? "text-[var(--accent-deep)]" : "text-[#9AA0AD]"}`}>{index + 1}</span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-[#171A21]">{row.name}</p>
+                  <p className="truncate text-[#7A8091]">
+                    {row.users} {row.users === "1" ? "user" : "users"} · {row.alerts} {row.alerts === "1" ? "alert" : "alerts"} · {row.last}
+                  </p>
                 </div>
+                <span className="font-semibold tabular-nums text-[#3D4352]">{row.events}</span>
               </div>
             ))}
+            {mostActiveBusinesses.length === 0 ? <p className="rounded-lg border border-dashed border-[#D8DBE2] bg-[var(--app-canvas)] p-3 text-sm text-[#7A8091]">No activity summary available yet.</p> : null}
           </div>
-        </section>
-      ) : null}
-
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
-        <h2 className="text-lg font-semibold text-[#111827]">Security Monitoring Section</h2>
-        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <SecurityMetric icon={KeyRound} label="Failed Login Attempts" value={securityCounts.failedLoginAttempts} />
-          <SecurityMetric icon={Ban} label="Disabled Account Attempts" value={securityCounts.disabledAccountAttempts} />
-          <SecurityMetric icon={XCircle} label="Blocked Actions" value={securityCounts.blockedActions} />
-          <SecurityMetric icon={AlertTriangle} label="Cooldown Violations" value={securityCounts.cooldownViolations} />
-          <SecurityMetric icon={CheckCircle2} label="Cooldown Overrides" value={securityCounts.cooldownOverrides} />
-          <SecurityMetric icon={ShieldAlert} label="Restricted Action Attempts" value={securityCounts.demoModeViolations} />
-          <SecurityMetric icon={ShieldAlert} label="Permission Violations" value={securityCounts.permissionViolations} />
         </div>
-      </section>
 
-      <section className="grid gap-4 xl:grid-cols-2">
-        <SummaryTable title="Most Active Businesses" columns={["Business", "Events", "Users", "Alerts", "Last Activity"]} rows={mostActiveBusinesses} />
-        <SummaryTable title="Most Active Users" columns={["User", "Role", "Events", "Last Activity"]} rows={mostActiveUsers} />
-      </section>
-
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
-        <h2 className="text-lg font-semibold text-[#111827]">System Health Audit Panel</h2>
-        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-          <HealthMetric label="Last Audit Event" value={decoratedEvents[0] ? formatDateTime(decoratedEvents[0].createdAt) : "Not Available"} />
-          <HealthMetric label="Events Today" value={eventsToday.length.toString()} />
-          <HealthMetric label="Failed Events Today" value={eventsToday.filter((event) => event.status === "Failed").length.toString()} />
-          <HealthMetric label="Security Events Today" value={eventsToday.filter((event) => event.eventType === "Security Events" || event.eventType === "Authentication Events").length.toString()} />
-          <HealthMetric label="Critical Events Today" value={eventsToday.filter((event) => event.severity === "CRITICAL").length.toString()} />
+        <div className="rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
+          <h2 className="text-sm font-bold tracking-tight text-[#171A21]">Most active users</h2>
+          <div className="mt-3 grid gap-2.5">
+            {mostActiveUsers.map((row, index) => (
+              <div key={`${row.name}-${index}`} className="grid grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-2 text-xs">
+                <span className={`text-sm font-bold tabular-nums ${index < 3 ? "text-[var(--accent-deep)]" : "text-[#9AA0AD]"}`}>{index + 1}</span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-[#171A21]">{row.name}</p>
+                  <p className="truncate text-[#7A8091]">{row.role} · {row.last}</p>
+                </div>
+                <span className="font-semibold tabular-nums text-[#3D4352]">{row.events}</span>
+              </div>
+            ))}
+            {mostActiveUsers.length === 0 ? <p className="rounded-lg border border-dashed border-[#D8DBE2] bg-[var(--app-canvas)] p-3 text-sm text-[#7A8091]">No activity summary available yet.</p> : null}
+          </div>
         </div>
       </section>
     </DashboardShell>
@@ -468,6 +526,27 @@ function isSameUtcDay(a: Date, b: Date) {
   return a.getUTCFullYear() === b.getUTCFullYear() && a.getUTCMonth() === b.getUTCMonth() && a.getUTCDate() === b.getUTCDate();
 }
 
+function groupEventsByDay(events: DecoratedAuditEvent[], now: Date) {
+  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const groups: Array<{ label: string; events: DecoratedAuditEvent[] }> = [];
+
+  for (const event of events) {
+    const label = isSameUtcDay(event.createdAt, now)
+      ? `Today · ${event.createdAt.toLocaleDateString("en", { month: "short", day: "numeric" })}`
+      : isSameUtcDay(event.createdAt, yesterday)
+        ? `Yesterday · ${event.createdAt.toLocaleDateString("en", { month: "short", day: "numeric" })}`
+        : event.createdAt.toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" });
+    const current = groups[groups.length - 1];
+    if (current && current.label === label) {
+      current.events.push(event);
+    } else {
+      groups.push({ label, events: [event] });
+    }
+  }
+
+  return groups;
+}
+
 function summarizeBusinesses(events: Array<{ businessId: number | null; business?: { id: number; name: string } | null; eventType?: string; createdAt: Date; actorUserId?: number | null }>, businesses: Array<{ id: number; name: string }>) {
   const names = new Map(businesses.map((business) => [business.id, business.name]));
   const groups = new Map<number, { events: number; users: Set<number>; alerts: number; last: Date }>();
@@ -483,7 +562,13 @@ function summarizeBusinesses(events: Array<{ businessId: number | null; business
   return [...groups.entries()]
     .sort((a, b) => b[1].events - a[1].events)
     .slice(0, 10)
-    .map(([businessId, group]) => [names.get(businessId) ?? `Business #${businessId}`, group.events.toString(), group.users.size.toString(), group.alerts.toString(), formatDateTime(group.last)]);
+    .map(([businessId, group]) => ({
+      name: names.get(businessId) ?? `Business #${businessId}`,
+      events: group.events.toString(),
+      users: group.users.size.toString(),
+      alerts: group.alerts.toString(),
+      last: formatDateTime(group.last),
+    }));
 }
 
 function summarizeUsers(events: DecoratedAuditEvent[]) {
@@ -499,128 +584,113 @@ function summarizeUsers(events: DecoratedAuditEvent[]) {
   return [...groups.values()]
     .sort((a, b) => b.events - a.events)
     .slice(0, 10)
-    .map((group) => [group.name, group.role, group.events.toString(), formatDateTime(group.last)]);
+    .map((group) => ({ name: group.name, role: group.role, events: group.events.toString(), last: formatDateTime(group.last) }));
 }
 
-function KpiLink({ icon: Icon, label, value, href, tone = "default" }: { icon: LucideIcon; label: string; value: number; href: string; tone?: "default" | "alert" }) {
+function severityDot(severity: AuditSeverity) {
+  if (severity === "CRITICAL" || severity === "HIGH") return "bg-[#E24B4A]";
+  if (severity === "MEDIUM") return "bg-[#EF9F27]";
+  if (severity === "LOW") return "bg-[#1D9E75]";
+  return "bg-[#888780]";
+}
+
+function StatPill({ href, value, label, tone = "default" }: { href: string; value: number; label: string; tone?: "default" | "danger" | "warning" }) {
+  const toneClasses =
+    tone === "danger"
+      ? "border-[#F7C1C1] bg-[#FCEBEB] text-[#A32D2D] hover:border-[#F09595]"
+      : tone === "warning"
+        ? "border-[#F3D9A4] bg-[#FFFBF2] text-[#854F0B] hover:border-[#FAC775]"
+        : "border-[var(--medium-gray)] bg-white text-[#3D4352] hover:border-[var(--light-orange)] hover:text-[var(--accent-deep)]";
+
   return (
-    <MetricCard
+    <Link
       href={href}
-      label={label}
-      value={value}
-      tone={tone === "alert" ? "danger" : "neutral"}
-      icon={<Icon className={tone === "alert" ? "h-5 w-5 text-red-600" : "h-5 w-5 text-[#F97316]"} />}
-      className="h-full"
-    />
-  );
-}
-function Select({ name, value, label, options }: { name: string; value?: string; label: string; options: readonly string[] }) {
-  return (
-    <select name={name} defaultValue={value ?? ""} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm">
-      <option value="">{label}</option>
-      {options.map((option) => <option key={option} value={option}>{option.replaceAll("_", " ")}</option>)}
-    </select>
+      className={`inline-flex min-h-9 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 ${toneClasses}`}
+    >
+      <span className="font-bold tabular-nums">{value.toLocaleString("en-US")}</span>
+      {label}
+    </Link>
   );
 }
 
-function SeverityBadge({ severity }: { severity: AuditSeverity }) {
-  const classes = {
-    INFO: "bg-zinc-100 text-zinc-700",
-    LOW: "bg-emerald-50 text-emerald-700",
-    MEDIUM: "bg-orange-50 text-orange-700",
-    HIGH: "bg-red-50 text-red-700",
-    CRITICAL: "bg-red-100 text-red-800",
-  }[severity];
-  return <span className={`inline-flex rounded-md px-2 py-1 text-xs font-semibold ${classes}`}>{severity}</span>;
-}
-
-function StatusBadge({ status }: { status: AuditStatus }) {
-  const classes = status === "Blocked" ? "bg-red-50 text-red-700" : status === "Failed" ? "bg-orange-50 text-orange-700" : "bg-emerald-50 text-emerald-700";
-  return <span className={`inline-flex rounded-md px-2 py-1 text-xs font-semibold ${classes}`}>{status}</span>;
-}
-
-function AuditEventMobileCard({ event, activeQuery }: { event: DecoratedAuditEvent; activeQuery: string }) {
-  const entity = `${event.entityType}${event.entityId ? ` #${event.entityId}` : ""}`;
+function FilterSelect({ name, value, label, options }: { name: string; value?: string; label: string; options: readonly string[] }) {
   return (
-    <article className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-[#111827]">{event.eventType}</p>
-          <p className="mt-1 text-xs text-[#6B7280]">{formatDateTime(event.createdAt)}</p>
-        </div>
-        <div className="flex shrink-0 flex-col items-end gap-1">
-          <SeverityBadge severity={event.severity} />
-          <StatusBadge status={event.status} />
-        </div>
-      </div>
-
-      <div className="mt-4 grid gap-2 text-sm">
-        <MobileAuditDetail label="User" value={event.actorUser?.name ?? "System"} />
-        <MobileAuditDetail label="Role" value={event.actorUser ? roleLabels[event.actorUser.role] : "-"} />
-        <MobileAuditDetail label="Business" value={event.business?.name ?? "-"} />
-        <MobileAuditDetail label="Branch" value={event.branch?.name ?? "-"} />
-        <MobileAuditDetail label="Action" value={formatAction(event.action)} />
-        <MobileAuditDetail label="Entity" value={entity} />
-        <MobileAuditDetail label="IP Address" value={event.ipAddress} />
-      </div>
-
-      <Link
-        href={`/platform/audit-center?${activeQuery}&event=${event.uuid}`}
-        className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white transition hover:bg-[#EA580C]"
+    <label>
+      <span className="sr-only">{label}</span>
+      <select
+        name={name}
+        defaultValue={value ?? ""}
+        className="h-11 w-full rounded-lg border border-[var(--medium-gray)] bg-white px-3 text-sm text-[#171A21] outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] sm:h-10"
       >
-        View Details
-      </Link>
-    </article>
+        <option value="">{label}</option>
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option.replaceAll("_", " ")}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
 
-function MobileAuditDetail({ label, value }: { label: string; value: string }) {
+function AuditStatusBadge({ status }: { status: AuditStatus }) {
+  const tone = status === "Blocked" ? "danger" : status === "Failed" ? "warning" : "success";
   return (
-    <div className="grid grid-cols-[92px_1fr] gap-2 rounded-md bg-[#FAFAFA] px-3 py-2">
-      <span className="text-xs font-semibold uppercase text-[#6B7280]">{label}</span>
-      <span className="min-w-0 break-words text-right font-medium text-[#111827]">{value}</span>
-    </div>
+    <StatusBadge tone={tone} className="shrink-0 whitespace-nowrap px-2 py-0.5 text-[11px]">
+      {status}
+    </StatusBadge>
   );
 }
 
-function AuditDetailsDrawer({ event }: { event: DecoratedAuditEvent | null }) {
-  if (!event) {
-    return (
-      <aside className="rounded-md border border-dashed border-[#E5E7EB] bg-white p-5 shadow-sm">
-        <h2 className="text-lg font-semibold text-[#111827]">Audit Event Details Drawer</h2>
-        <p className="mt-2 text-sm leading-6 text-[#6B7280]">Select an event from the table to inspect metadata, before values, after values, and compliance context.</p>
-      </aside>
-    );
-  }
+function AuditDetailsPanel({ event, activeQuery }: { event: DecoratedAuditEvent; activeQuery: string }) {
   const beforeValue = getMetadataValue(event.metadata, "before") ?? getMetadataValue(event.metadata, "previousValue");
   const afterValue = getMetadataValue(event.metadata, "after") ?? getMetadataValue(event.metadata, "newValue");
+
   return (
-    <aside className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm xl:sticky xl:top-24 xl:self-start">
-      <h2 className="text-lg font-semibold text-[#111827]">Audit Event Details Drawer</h2>
-      <div className="mt-4 grid gap-2 text-sm">
-        <Detail label="Event ID" value={event.uuid} />
-        <Detail label="Timestamp" value={formatDateTime(event.createdAt)} />
-        <Detail label="User" value={event.actorUser?.name ?? "System"} />
-        <Detail label="Role" value={event.actorUser ? roleLabels[event.actorUser.role] : "-"} />
-        <Detail label="Business" value={event.business?.name ?? "-"} />
-        <Detail label="Branch" value={event.branch?.name ?? "-"} />
-        <Detail label="Entity" value={`${event.entityType}${event.entityId ? ` #${event.entityId}` : ""}`} />
-        <Detail label="Action" value={formatAction(event.action)} />
-        <Detail label="Severity" value={event.severity} />
-        <Detail label="Result" value={event.status} />
+    <aside className="rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)] xl:sticky xl:top-6 xl:self-start">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-sm font-bold tracking-tight text-[#171A21]">Event details</h2>
+        <Link
+          href={`/platform/audit-center${activeQuery ? `?${activeQuery}` : ""}`}
+          className="inline-flex h-8 items-center gap-1 rounded-lg border border-[var(--medium-gray)] px-2.5 text-xs font-semibold text-[#7A8091] transition hover:bg-[var(--light-gray)] hover:text-[#171A21] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+          aria-label="Close event details"
+        >
+          Close
+          <X className="h-3.5 w-3.5" aria-hidden="true" />
+        </Link>
       </div>
-      <MetadataBlock title="Before Value" value={beforeValue} />
-      <MetadataBlock title="After Value" value={afterValue} />
+      <dl className="mt-3 grid gap-1.5 text-xs">
+        <PanelRow label="Action" value={formatAction(event.action)} />
+        <PanelRow label="Event type" value={event.eventType} />
+        <div className="flex items-center justify-between gap-2">
+          <dt className="text-[#7A8091]">Severity</dt>
+          <dd><SeverityBadge severity={event.severity} className="px-2 py-0.5 text-[11px]" /></dd>
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <dt className="text-[#7A8091]">Result</dt>
+          <dd><AuditStatusBadge status={event.status} /></dd>
+        </div>
+        <PanelRow label="Timestamp" value={formatDateTime(event.createdAt)} />
+        <PanelRow label="User" value={event.actorUser?.name ?? "System"} />
+        <PanelRow label="Role" value={event.actorUser ? roleLabels[event.actorUser.role] : "—"} />
+        <PanelRow label="Business" value={event.business?.name ?? "—"} />
+        <PanelRow label="Branch" value={event.branch?.name ?? "—"} />
+        <PanelRow label="Entity" value={`${event.entityType}${event.entityId ? ` #${event.entityId}` : ""}`} />
+        <PanelRow label="IP address" value={event.ipAddress} />
+        <PanelRow label="Event ID" value={event.uuid} />
+      </dl>
+      <MetadataBlock title="Before value" value={beforeValue} />
+      <MetadataBlock title="After value" value={afterValue} />
       <MetadataBlock title="Metadata" value={event.metadata} />
     </aside>
   );
 }
 
-function Detail({ label, value }: { label: string; value: string }) {
+function PanelRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between gap-3 rounded-md bg-[#FAFAFA] px-3 py-2">
-      <span className="text-xs font-semibold uppercase text-[#6B7280]">{label}</span>
-      <span className="break-all text-right font-semibold text-[#111827]">{value}</span>
+    <div className="flex items-start justify-between gap-3">
+      <dt className="shrink-0 text-[#7A8091]">{label}</dt>
+      <dd className="min-w-0 break-all text-right font-semibold text-[#171A21]">{value}</dd>
     </div>
   );
 }
@@ -629,79 +699,35 @@ function MetadataBlock({ title, value }: { title: string; value: unknown }) {
   if (value === null || value === undefined) return null;
   return (
     <div className="mt-4">
-      <p className="text-sm font-semibold text-[#111827]">{title}</p>
-      <pre className="mt-2 max-h-56 overflow-auto rounded-md bg-[#111827] p-3 text-xs leading-5 text-white">{JSON.stringify(value, null, 2)}</pre>
+      <p className="text-xs font-semibold text-[#171A21]">{title}</p>
+      <pre className="mt-1.5 max-h-56 overflow-auto rounded-lg bg-[#171A21] p-3 text-xs leading-5 text-[#E7E9EE]">{JSON.stringify(value, null, 2)}</pre>
     </div>
   );
 }
 
-function ExportButton({ href, icon, label }: { href: string; icon: ReactNode; label: string }) {
+function MonitorRow({ label, value, tone }: { label: string; value: number; tone: "danger" | "warning" | "neutral" | "ok" }) {
+  const dot = tone === "danger" ? "bg-[#E24B4A]" : tone === "warning" ? "bg-[#EF9F27]" : tone === "neutral" ? "bg-[#888780]" : "bg-[#1D9E75]";
+  const valueClass = tone === "danger" ? "text-[#A32D2D]" : "text-[#171A21]";
+
   return (
-    <Link href={href} className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]">
+    <div className="flex items-center justify-between gap-3">
+      <span className="flex items-center gap-2 text-[#3D4352]">
+        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dot}`} aria-hidden="true" />
+        {label}
+      </span>
+      <span className={`font-semibold tabular-nums ${valueClass}`}>{value.toLocaleString("en-US")}</span>
+    </div>
+  );
+}
+
+function ExportItem({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm font-semibold text-[#3D4352] transition hover:bg-[var(--light-gray)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+    >
       {icon}
       {label}
     </Link>
   );
 }
-
-function SecurityMetric({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: number }) {
-  return (
-    <MetricCard
-      label={label}
-      value={value}
-      helper="Trend data uses current audit history."
-      icon={<Icon className="h-4 w-4 text-[#F97316]" />}
-      className="h-full"
-    />
-  );
-}
-function SummaryTable({ title, columns, rows }: { title: string; columns: string[]; rows: string[][] }) {
-  return (
-    <SectionCard title={title}>
-      <div className="mt-4 grid gap-3 md:hidden">
-        {rows.map((row, index) => (
-          <SummaryMobileCard key={`${title}-mobile-${index}`} columns={columns} row={row} />
-        ))}
-        {rows.length === 0 ? <EmptyState title="No activity summary available yet." className="p-4 md:p-4" /> : null}
-      </div>
-      <div className="mt-4 hidden overflow-x-auto md:block">
-        <table className="w-full min-w-[520px] border-separate border-spacing-0 text-left text-sm">
-          <thead>
-            <tr className="text-[#6B7280]">
-              {columns.map((column) => <th key={column} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">{column}</th>)}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, index) => (
-              <tr key={`${title}-${index}`}>
-                {row.map((cell, cellIndex) => <td key={`${cell}-${cellIndex}`} className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{cell}</td>)}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {rows.length === 0 ? <EmptyState title="No activity summary available yet." className="my-4" /> : null}
-      </div>
-    </SectionCard>
-  );
-}
-function SummaryMobileCard({ columns, row }: { columns: string[]; row: string[] }) {
-  return (
-    <article className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
-      {row.map((cell, index) => (
-        <div key={`${columns[index]}-${cell}`} className="flex items-center justify-between gap-3 border-b border-[#E5E7EB] py-2 last:border-b-0">
-          <span className="text-xs font-semibold uppercase text-[#6B7280]">{columns[index]}</span>
-          <span className="text-right text-sm font-semibold text-[#111827]">{cell}</span>
-        </div>
-      ))}
-    </article>
-  );
-}
-
-function HealthMetric({ label, value }: { label: string; value: string }) {
-  return <MetricCard label={label} value={value} className="h-full" />;
-}
-
-
-
-
-

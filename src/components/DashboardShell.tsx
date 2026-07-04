@@ -1,29 +1,17 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import {
-  BarChart3,
   Building2,
-  ClipboardList,
-  CreditCard,
-  CircleDollarSign,
-  Database,
   FileText,
-  Home,
   LayoutDashboard,
-  Layers3,
-  Package,
-  Receipt,
-  Rocket,
-  Settings,
   ShieldAlert,
   Store,
   Users,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { BusinessBrandingProvider } from "@/components/BusinessBrandingProvider";
 import { CsrfInput } from "@/components/CsrfInput";
 import { IdleSessionTimeout } from "@/components/IdleSessionTimeout";
-import { MobileBranchNavigation, MobileBusinessNavigation, MobilePlatformNavigation, MobileStaffNavigation, RoleNavigation } from "@/components/RoleNavigation";
+import { MobileBranchNavigation, MobileBusinessNavigation, MobilePlatformNavigation, MobileStaffNavigation, PlatformSidebarNav, RoleNavigation } from "@/components/RoleNavigation";
 import { SupportActivityTracker } from "@/components/SupportActivityTracker";
 import { SupportEndSessionButton } from "@/components/SupportEndSessionButton";
 import { SupportModeBanner } from "@/components/SupportModeBanner";
@@ -70,23 +58,6 @@ const navItems = [
   { href: "/branch", label: "Branch", role: "BRANCH_MANAGER", icon: Building2 },
   { href: "/staff", label: "Staff", role: "STAFF", icon: Users },
 ] as const;
-
-const platformNavItems: Array<{ href: string; label: string; icon: LucideIcon }> = [
-  { href: "/platform", label: "Dashboard", icon: Home },
-  { href: "/platform/businesses", label: "Businesses", icon: Building2 },
-  { href: "/platform/plans", label: "Plans", icon: Package },
-  { href: "/platform/subscriptions", label: "Subscriptions", icon: CreditCard },
-  { href: "/platform/invoices", label: "Invoices", icon: Receipt },
-  { href: "/platform/users", label: "Users", icon: Users },
-  { href: "/platform/health-analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/platform/audit-center", label: "Audit Center", icon: ClipboardList },
-  { href: "/platform/operations-center", label: "Operations Center", icon: ShieldAlert },
-  { href: "/platform/billing-center", label: "Billing Center", icon: CircleDollarSign },
-  { href: "/platform/tenant-center", label: "Tenant Center", icon: Layers3 },
-  { href: "/platform/database", label: "Database", icon: Database },
-  { href: "/platform/launch-readiness", label: "Launch Readiness", icon: Rocket },
-  { href: "/platform/settings", label: "Settings", icon: Settings },
-];
 
 export async function DashboardShell({ user, title, eyebrow, children, headerAside, hideWelcomeMessage = false, supportSession }: DashboardShellProps) {
   await isDemoModeEnabled();
@@ -204,23 +175,7 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
         {user.role === "PLATFORM_OWNER" ? (
           <aside className="hidden rounded-xl border border-[#E7E9EE] bg-white p-3 shadow-[0_1px_2px_rgba(15,18,25,0.04)] lg:sticky lg:top-6 lg:block lg:self-start">
             <p className="px-2 pb-2 text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#9AA0AD]">Platform</p>
-            <nav className="grid gap-1" aria-label="Platform navigation">
-              {platformNavItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                    title.toLowerCase().includes(item.label.toLowerCase()) ||
-                    (item.href === "/platform" && (title.toLowerCase().includes("platform admin") || title.toLowerCase().includes("platform operations")))
-                      ? "bg-[#FBEFE8] text-[#C24E1E]"
-                      : "text-[#5A6070] hover:bg-[#F3F4F7] hover:text-[#171A21]"
-                  }`}
-                >
-                  <item.icon className="h-4 w-4" aria-hidden="true" />
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+            <PlatformSidebarNav />
           </aside>
         ) : null}
 

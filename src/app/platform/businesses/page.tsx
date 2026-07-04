@@ -6,7 +6,7 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { StatusBadge } from "@/components/StatusBadge";
-import { EmptyState, MetricCard } from "@/components/ui";
+import { DataTable, DataTableBody, DataTableCell, DataTableHeadCell, DataTableHeader, EmptyState, MetricCard, SortableHeadCell } from "@/components/ui";
 import { formatDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { businessTypeLabels } from "@/lib/roles";
@@ -70,6 +70,23 @@ function buildQuickFilterHref(overrides: BusinessesSearchParams) {
   }
 
   return `/platform/businesses${params.toString() ? `?${params.toString()}` : ""}`;
+}
+
+function buildSortHref(params: BusinessesSearchParams, field: keyof typeof sortableFields, currentSort: string, currentDirection: string) {
+  const query = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(params)) {
+    if (typeof value === "string" && value) {
+      query.set(key, value);
+    }
+  }
+
+  const nextDirection =
+    currentSort === field ? (currentDirection === "asc" ? "desc" : "asc") : field === "createdAt" || field === "branches" ? "desc" : "asc";
+  query.set("sort", field);
+  query.set("direction", nextDirection);
+
+  return `/platform/businesses?${query.toString()}`;
 }
 
 function isSuspiciousBusinessName(name: string) {
@@ -165,6 +182,14 @@ export default async function BusinessesPage({
 
   const growthPlan = plans.find((plan) => plan.name.toLowerCase() === "growth");
   const starterPlan = plans.find((plan) => plan.name.toLowerCase() === "starter");
+  const hasAdvancedFilters = Boolean(
+    selectedType ||
+      getParam(params, "createdFrom") ||
+      getParam(params, "createdTo") ||
+      getParam(params, "minBranches") ||
+      getParam(params, "maxBranches") ||
+      suspectOnly,
+  );
   const activeFilterCount = [
     query,
     selectedType,
@@ -183,144 +208,58 @@ export default async function BusinessesPage({
     flagged: businesses.filter((business) => isSuspiciousBusinessName(business.name)).length,
   };
 
+  const quickChips = (
+    <div className="flex flex-wrap gap-2">
+      <QuickChip href="/platform/businesses" label="All" active={!selectedStatus && !selectedPlanId && !suspectOnly} />
+      <QuickChip href={buildQuickFilterHref({ status: "ACTIVE" })} label="Active" active={selectedStatus === "ACTIVE"} />
+      <QuickChip href={buildQuickFilterHref({ status: "INACTIVE" })} label="Inactive" active={selectedStatus === "INACTIVE"} />
+      {growthPlan ? (
+        <QuickChip href={buildQuickFilterHref({ plan: growthPlan.id.toString() })} label="Growth Plan" active={selectedPlanId === growthPlan.id} />
+      ) : null}
+      {starterPlan ? (
+        <QuickChip href={buildQuickFilterHref({ plan: starterPlan.id.toString() })} label="Starter Plan" active={selectedPlanId === starterPlan.id} />
+      ) : null}
+      <QuickChip href={buildQuickFilterHref({ suspect: "1" })} label="Review flagged" active={suspectOnly} />
+    </div>
+  );
+
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Businesses">
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-[#111827]">Tenant overview</h2>
-            <p className="mt-1 text-sm text-[#6B7280]">Search, filter, and manage business tenants.</p>
-          </div>
-          <Link
-            href="/platform/businesses/new"
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white transition hover:bg-orange-600"
-          >
-            <Plus className="h-4 w-4" />
-            Create Business
-          </Link>
-        </div>
+      <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-[#7A8091]">Search, filter, and manage business tenants.</p>
+        <Link
+          href="/platform/businesses/new"
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(232,106,51,0.25)] transition hover:bg-[var(--accent-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 sm:h-10"
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          Create Business
+        </Link>
+      </section>
 
-        <div className="mt-5 hidden grid-cols-4 gap-3 lg:grid">
-          <MetricCard label="Total businesses" value={businessSummary.total} href="/platform/businesses" />
-          <MetricCard label="Active" value={businessSummary.active} href="/platform/businesses?status=ACTIVE" tone="success" />
-          <MetricCard label="Inactive" value={businessSummary.inactive} href="/platform/businesses?status=INACTIVE" tone={businessSummary.inactive > 0 ? "warning" : "neutral"} />
-          <MetricCard label="Review flagged" value={businessSummary.flagged} href="/platform/businesses?suspect=1" tone={businessSummary.flagged > 0 ? "warning" : "neutral"} />
-        </div>
+      <section aria-label="Business summary" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <MetricCard label="Total businesses" value={businessSummary.total} href="/platform/businesses" />
+        <MetricCard label="Active" value={businessSummary.active} href="/platform/businesses?status=ACTIVE" tone="success" />
+        <MetricCard label="Inactive" value={businessSummary.inactive} href="/platform/businesses?status=INACTIVE" tone={businessSummary.inactive > 0 ? "warning" : "neutral"} />
+        <MetricCard label="Review flagged" value={businessSummary.flagged} href="/platform/businesses?suspect=1" tone={businessSummary.flagged > 0 ? "warning" : "neutral"} />
+      </section>
 
-        <MobileFilterDrawer activeCount={activeFilterCount}>
-        <form className="mt-6 rounded-md border border-[#E5E7EB] bg-[#F9FAFB] p-4 md:hidden">
-          <div className="flex items-center gap-2 text-sm font-semibold text-[#111827]">
-            <SlidersHorizontal className="h-4 w-4 text-[#F97316]" />
+      <MobileFilterDrawer activeCount={activeFilterCount}>
+        <form className="rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
+          <div className="flex items-center gap-2 text-sm font-semibold text-[#171A21]">
+            <SlidersHorizontal className="h-4 w-4 text-[var(--accent-deep)]" aria-hidden="true" />
             Filters
           </div>
-          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <label className="text-sm font-medium text-[#111827]">
+
+          <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-[minmax(240px,1.6fr)_minmax(150px,1fr)_minmax(200px,1fr)_auto_auto] lg:items-end">
+            <label className="text-sm font-medium text-[#171A21]">
               Search
-              <div className="mt-1 flex items-center gap-2 rounded-md border border-[#E5E7EB] bg-white px-3">
-                <Search className="h-4 w-4 text-[#6B7280]" />
+              <div className="mt-1 flex items-center gap-2 rounded-lg border border-[var(--medium-gray)] bg-white px-3 transition focus-within:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent-soft)]">
+                <Search className="h-4 w-4 text-[#7A8091]" aria-hidden="true" />
                 <input
                   name="q"
                   defaultValue={query}
                   placeholder="Business name"
-                  className="h-10 w-full bg-transparent text-sm outline-none"
-                />
-              </div>
-            </label>
-
-            <SelectField label="Business type" name="type" defaultValue={selectedType}>
-              <option value="">All types</option>
-              {validBusinessTypes.map((type) => (
-                <option key={type} value={type}>
-                  {businessTypeLabels[type]}
-                </option>
-              ))}
-            </SelectField>
-
-            <SelectField label="Status" name="status" defaultValue={selectedStatus}>
-              <option value="">All statuses</option>
-              <option value="ACTIVE">Active</option>
-              <option value="INACTIVE">Inactive</option>
-            </SelectField>
-
-            <SearchableCombobox
-              label="Plan"
-              name="plan"
-              defaultValue={selectedPlanId?.toString() ?? ""}
-              placeholder="All plans"
-              emptyLabel="No plans found."
-              options={[
-                { value: "", label: "All plans", description: "Show every subscription plan" },
-                ...plans.map((plan) => ({ value: plan.id.toString(), label: plan.name, description: "Subscription plan" })),
-              ]}
-            />
-
-            <InputField label="Created from" name="createdFrom" type="date" defaultValue={getParam(params, "createdFrom")} />
-            <InputField label="Created to" name="createdTo" type="date" defaultValue={getParam(params, "createdTo")} />
-            <InputField label="Min branches" name="minBranches" type="number" min="0" defaultValue={getParam(params, "minBranches")} />
-            <InputField label="Max branches" name="maxBranches" type="number" min="0" defaultValue={getParam(params, "maxBranches")} />
-
-            <SelectField label="Sort by" name="sort" defaultValue={sort}>
-              {Object.entries(sortableFields).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </SelectField>
-
-            <SelectField label="Direction" name="direction" defaultValue={direction}>
-              <option value="desc">Descending</option>
-              <option value="asc">Ascending</option>
-            </SelectField>
-          </div>
-
-          {suspectOnly ? <input type="hidden" name="suspect" value="1" /> : null}
-
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap gap-2">
-              <QuickChip href="/platform/businesses" label="All" active={!selectedStatus && !selectedPlanId && !suspectOnly} />
-              <QuickChip href={buildQuickFilterHref({ status: "ACTIVE" })} label="Active" active={selectedStatus === "ACTIVE"} />
-              <QuickChip href={buildQuickFilterHref({ status: "INACTIVE" })} label="Inactive" active={selectedStatus === "INACTIVE"} />
-              {growthPlan ? (
-                <QuickChip href={buildQuickFilterHref({ plan: growthPlan.id.toString() })} label="Growth Plan" active={selectedPlanId === growthPlan.id} />
-              ) : null}
-              {starterPlan ? (
-                <QuickChip href={buildQuickFilterHref({ plan: starterPlan.id.toString() })} label="Starter Plan" active={selectedPlanId === starterPlan.id} />
-              ) : null}
-              <QuickChip href={buildQuickFilterHref({ suspect: "1" })} label="Review flagged" active={suspectOnly} />
-            </div>
-
-            <div className="flex gap-2">
-              <Link
-                href="/platform/businesses"
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[#E5E7EB] bg-white px-4 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]"
-              >
-                <X className="h-4 w-4" />
-                Clear filters
-              </Link>
-              <button
-                type="submit"
-                className="inline-flex h-10 items-center justify-center rounded-md bg-[#111827] px-4 text-sm font-semibold text-white transition hover:bg-[#374151]"
-              >
-                Apply filters
-              </button>
-            </div>
-          </div>
-        </form>
-        <form className="mt-6 hidden rounded-md border border-[#E5E7EB] bg-[#F9FAFB] p-4 md:block">
-          <div className="flex items-center gap-2 text-sm font-semibold text-[#111827]">
-            <SlidersHorizontal className="h-4 w-4 text-[#F97316]" />
-            Filters
-          </div>
-          <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-[minmax(260px,1fr)_180px_minmax(220px,260px)_auto_auto] lg:items-end">
-            <label className="text-sm font-medium text-[#111827]">
-              Search
-              <div className="mt-1 flex items-center gap-2 rounded-md border border-[#E5E7EB] bg-white px-3">
-                <Search className="h-4 w-4 text-[#6B7280]" />
-                <input
-                  name="q"
-                  defaultValue={query}
-                  placeholder="Business name"
-                  className="h-10 w-full bg-transparent text-sm outline-none"
+                  className="h-11 w-full bg-transparent text-sm outline-none sm:h-10"
                 />
               </div>
             </label>
@@ -345,25 +284,25 @@ export default async function BusinessesPage({
 
             <button
               type="submit"
-              className="inline-flex h-10 items-center justify-center rounded-md bg-[#111827] px-4 text-sm font-semibold text-white transition hover:bg-[#374151]"
+              className="inline-flex h-11 items-center justify-center rounded-lg bg-[#171A21] px-4 text-sm font-semibold text-white transition hover:bg-[#3D4352] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 sm:h-10"
             >
               Apply
             </button>
             <Link
               href="/platform/businesses"
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[#E5E7EB] bg-white px-4 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-[var(--medium-gray)] bg-white px-4 text-sm font-semibold text-[#171A21] transition hover:border-[var(--light-orange)] hover:text-[var(--accent-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 sm:h-10"
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4" aria-hidden="true" />
               Clear
             </Link>
           </div>
 
-          <details className="mt-4 rounded-md border border-[#E5E7EB] bg-white">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-[#111827]">
+          <details className="mt-4 rounded-lg border border-[var(--medium-gray)] bg-white" open={hasAdvancedFilters}>
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg px-4 py-3 text-sm font-semibold text-[#171A21] transition hover:bg-[var(--light-gray)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]">
               <span>Advanced filters</span>
-              <span className="text-xs font-medium text-[#6B7280]">Type, dates, branches, sorting, review flags</span>
+              <span className="text-xs font-medium text-[#7A8091]">Type, dates, branches, sorting, review flags</span>
             </summary>
-            <div className="border-t border-[#E5E7EB] p-4">
+            <div className="border-t border-[var(--medium-gray)] p-4">
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                 <SelectField label="Business type" name="type" defaultValue={selectedType}>
                   <option value="">All types</option>
@@ -392,54 +331,51 @@ export default async function BusinessesPage({
                   <option value="asc">Ascending</option>
                 </SelectField>
 
-                <label className="flex h-full min-h-10 items-end gap-2 rounded-md border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-sm font-semibold text-[#111827]">
-                  <input type="checkbox" name="suspect" value="1" defaultChecked={suspectOnly} className="h-4 w-4 rounded border-[#D1D5DB]" />
+                <label className="flex min-h-11 items-center gap-2 rounded-lg border border-[var(--medium-gray)] bg-[var(--light-gray)] px-3 py-2 text-sm font-semibold text-[#171A21]">
+                  <input
+                    type="checkbox"
+                    name="suspect"
+                    value="1"
+                    defaultChecked={suspectOnly}
+                    className="h-4 w-4 rounded border-[#D8DBE2] accent-[var(--accent)]"
+                  />
                   Review flag filter
                 </label>
               </div>
             </div>
           </details>
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            <QuickChip href="/platform/businesses" label="All" active={!selectedStatus && !selectedPlanId && !suspectOnly} />
-            <QuickChip href={buildQuickFilterHref({ status: "ACTIVE" })} label="Active" active={selectedStatus === "ACTIVE"} />
-            <QuickChip href={buildQuickFilterHref({ status: "INACTIVE" })} label="Inactive" active={selectedStatus === "INACTIVE"} />
-            {growthPlan ? (
-              <QuickChip href={buildQuickFilterHref({ plan: growthPlan.id.toString() })} label="Growth Plan" active={selectedPlanId === growthPlan.id} />
-            ) : null}
-            {starterPlan ? (
-              <QuickChip href={buildQuickFilterHref({ plan: starterPlan.id.toString() })} label="Starter Plan" active={selectedPlanId === starterPlan.id} />
-            ) : null}
-            <QuickChip href={buildQuickFilterHref({ suspect: "1" })} label="Review flagged" active={suspectOnly} />
-          </div>
+          <div className="mt-4">{quickChips}</div>
         </form>
-        </MobileFilterDrawer>
+      </MobileFilterDrawer>
 
-        <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm font-semibold text-[#111827]">Showing {businesses.length} businesses</p>
-          <p className="text-xs text-[#6B7280]">Review flags are visual only. No records are hidden or changed.</p>
+      <section aria-label="Business results" className="grid gap-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm font-semibold text-[#171A21]">Showing {businesses.length} businesses</p>
+          <p className="text-xs text-[#7A8091]">Review flags are visual only. No records are hidden or changed.</p>
         </div>
 
-        <div className="mt-4 hidden overflow-x-auto lg:block">
-          <table className="w-full min-w-[860px] border-separate border-spacing-0 text-left text-sm">
-            <thead>
-              <tr className="text-[#6B7280]">
-                {["Business name", "Business type", "Status", "Branch count", "Plan", "Created date"].map((heading) => (
-                  <th key={heading} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">
-                    {heading}
-                  </th>
-                ))}
+        <div className="hidden lg:block">
+          <DataTable className="min-w-[860px]">
+            <DataTableHeader>
+              <tr>
+                <SortableHeadCell href={buildSortHref(params, "name", sort, direction)} active={sort === "name"} direction={direction} className="pl-4">Business name</SortableHeadCell>
+                <DataTableHeadCell>Business type</DataTableHeadCell>
+                <SortableHeadCell href={buildSortHref(params, "status", sort, direction)} active={sort === "status"} direction={direction}>Status</SortableHeadCell>
+                <SortableHeadCell href={buildSortHref(params, "branches", sort, direction)} active={sort === "branches"} direction={direction} align="right">Branches</SortableHeadCell>
+                <SortableHeadCell href={buildSortHref(params, "plan", sort, direction)} active={sort === "plan"} direction={direction}>Plan</SortableHeadCell>
+                <SortableHeadCell href={buildSortHref(params, "createdAt", sort, direction)} active={sort === "createdAt"} direction={direction} className="pr-4">Created</SortableHeadCell>
               </tr>
-            </thead>
-            <tbody>
+            </DataTableHeader>
+            <DataTableBody>
               {businesses.map((business) => (
                 <BusinessRow key={business.id} business={business} />
               ))}
-            </tbody>
-          </table>
+            </DataTableBody>
+          </DataTable>
         </div>
 
-        <div className="mt-4 grid gap-3 lg:hidden">
+        <div className="grid gap-3 lg:hidden">
           {businesses.map((business) => (
             <BusinessMobileCard key={business.id} business={business} />
           ))}
@@ -449,6 +385,15 @@ export default async function BusinessesPage({
           <EmptyState
             title="No businesses match the current filters."
             description="Clear filters or adjust the tenant search criteria to review more businesses."
+            action={
+              <Link
+                href="/platform/businesses"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[var(--medium-gray)] bg-white px-4 text-sm font-semibold text-[#171A21] transition hover:border-[var(--light-orange)] hover:text-[var(--accent-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+              >
+                <X className="h-4 w-4" aria-hidden="true" />
+                Clear filters
+              </Link>
+            }
           />
         ) : null}
       </section>
@@ -468,12 +413,12 @@ function SelectField({
   children: ReactNode;
 }) {
   return (
-    <label className="text-sm font-medium text-[#111827]">
+    <label className="text-sm font-medium text-[#171A21]">
       {label}
       <select
         name={name}
         defaultValue={defaultValue}
-        className="mt-1 h-10 w-full rounded-md border border-[#E5E7EB] bg-white px-3 text-sm text-[#111827] outline-none focus:border-[#F97316]"
+        className="mt-1 h-11 w-full rounded-lg border border-[var(--medium-gray)] bg-white px-3 text-sm text-[#171A21] outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] sm:h-10"
       >
         {children}
       </select>
@@ -495,14 +440,14 @@ function InputField({
   min?: string;
 }) {
   return (
-    <label className="text-sm font-medium text-[#111827]">
+    <label className="text-sm font-medium text-[#171A21]">
       {label}
       <input
         name={name}
         type={type}
         defaultValue={defaultValue}
         min={min}
-        className="mt-1 h-10 w-full rounded-md border border-[#E5E7EB] bg-white px-3 text-sm text-[#111827] outline-none focus:border-[#F97316]"
+        className="mt-1 h-11 w-full rounded-lg border border-[var(--medium-gray)] bg-white px-3 text-sm text-[#171A21] outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] sm:h-10"
       />
     </label>
   );
@@ -512,10 +457,11 @@ function QuickChip({ href, label, active }: { href: string; label: string; activ
   return (
     <Link
       href={href}
-      className={`inline-flex h-8 items-center rounded-full border px-3 text-xs font-semibold transition ${
+      aria-current={active ? "true" : undefined}
+      className={`inline-flex min-h-9 items-center rounded-full border px-3.5 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 ${
         active
-          ? "border-[#F97316] bg-orange-50 text-[#F97316]"
-          : "border-[#E5E7EB] bg-white text-[#6B7280] hover:border-[#F97316] hover:text-[#F97316]"
+          ? "border-[var(--light-orange)] bg-[var(--accent-soft)] text-[var(--accent-deep)]"
+          : "border-[var(--medium-gray)] bg-white text-[#7A8091] hover:border-[var(--light-orange)] hover:text-[var(--accent-deep)]"
       }`}
     >
       {label}
@@ -536,12 +482,12 @@ function BusinessRow({ business }: { business: BusinessWithListData }) {
   const planName = business.subscriptions[0]?.subscriptionPlan.name ?? "Unassigned";
 
   return (
-    <tr className="group align-top transition hover:bg-[#FFF7ED]">
-      <td className="border-b border-[#E5E7EB] px-3 py-3">
-        <div className="flex flex-col gap-2">
+    <tr className="group align-middle">
+      <td className="min-w-0 py-3 pl-4 pr-3 align-middle">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/platform/businesses/${business.uuid}`}
-            className="inline-flex w-fit items-center gap-1 font-semibold text-[#111827] transition hover:text-[#F97316] hover:underline focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F97316] group-hover:text-[#F97316]"
+            className="inline-flex w-fit items-center gap-1 font-semibold text-[#171A21] transition hover:text-[var(--accent-deep)] hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 group-hover:text-[var(--accent-deep)]"
           >
             {business.name}
             <ChevronRight className="h-4 w-4 opacity-0 transition group-hover:opacity-100" aria-hidden="true" />
@@ -549,65 +495,50 @@ function BusinessRow({ business }: { business: BusinessWithListData }) {
           {isSuspiciousBusinessName(business.name) ? <SuspiciousBadge /> : null}
         </div>
       </td>
-      <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{businessTypeLabels[business.businessType]}</td>
-      <td className="border-b border-[#E5E7EB] px-3 py-3">
+      <DataTableCell className="text-[#7A8091]">{businessTypeLabels[business.businessType]}</DataTableCell>
+      <DataTableCell>
         <StatusBadge status={business.status} />
-      </td>
-      <td className="border-b border-[#E5E7EB] px-3 py-3 text-center font-semibold text-[#111827]">{business._count.branches}</td>
-      <td className="border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{planName}</td>
-      <td className="whitespace-nowrap border-b border-[#E5E7EB] px-3 py-3 text-[#6B7280]">{formatDate(business.createdAt)}</td>
+      </DataTableCell>
+      <DataTableCell className="text-right font-semibold tabular-nums text-[#171A21]">{business._count.branches}</DataTableCell>
+      <DataTableCell>{planName}</DataTableCell>
+      <DataTableCell className="whitespace-nowrap pr-4 text-[#7A8091]">{formatDate(business.createdAt)}</DataTableCell>
     </tr>
   );
 }
 
 function BusinessMobileCard({ business }: { business: BusinessWithListData }) {
   const planName = business.subscriptions[0]?.subscriptionPlan.name ?? "Unassigned";
+  const branchLabel = `${business._count.branches} ${business._count.branches === 1 ? "branch" : "branches"}`;
 
   return (
     <Link
       href={`/platform/businesses/${business.uuid}`}
-      className="group block rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:border-[#F97316] hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F97316]"
+      className="group block rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)] transition hover:border-[var(--light-orange)] hover:shadow-[0_6px_18px_rgba(15,18,25,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
       aria-label={`Open ${business.name} business details`}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="flex min-w-0 items-center gap-1 break-words font-semibold text-[#111827] transition group-hover:text-[#F97316] group-hover:underline">
-            {business.name}
-            <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
-          </h3>
-          <p className="mt-1 text-sm text-[#6B7280]">{businessTypeLabels[business.businessType]}</p>
-        </div>
+        <h3 className="flex min-w-0 items-center gap-1 break-words font-semibold text-[#171A21] transition group-hover:text-[var(--accent-deep)]">
+          {business.name}
+          <ChevronRight className="h-4 w-4 shrink-0 text-[#7A8091] transition group-hover:text-[var(--accent-deep)]" aria-hidden="true" />
+        </h3>
         <StatusBadge status={business.status} />
       </div>
+      <p className="mt-1.5 text-sm text-[#7A8091]">
+        {businessTypeLabels[business.businessType]} · {branchLabel} · {planName} · {formatDate(business.createdAt)}
+      </p>
       {isSuspiciousBusinessName(business.name) ? (
-        <div className="mt-3">
+        <div className="mt-2.5">
           <SuspiciousBadge />
         </div>
       ) : null}
-      <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
-        <Detail label="Branches" value={business._count.branches.toString()} />
-        <Detail label="Plan" value={planName} />
-        <Detail label="Created" value={formatDate(business.createdAt)} />
-        <Detail label="Status" value={business.status === "ACTIVE" ? "Active" : "Inactive"} />
-      </dl>
     </Link>
-  );
-}
-
-function Detail({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md border border-[#E5E7EB] bg-[#F9FAFB] p-3">
-      <dt className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">{label}</dt>
-      <dd className="mt-1 font-semibold text-[#111827]">{value}</dd>
-    </div>
   );
 }
 
 function SuspiciousBadge() {
   return (
-    <span className="inline-flex w-fit items-center rounded-full border border-orange-200 bg-orange-50 px-2 py-1 text-xs font-semibold text-[#C2410C]">
+    <span className="inline-flex w-fit items-center rounded-full border border-[#F3D9A4] bg-[#FCF0DC] px-2.5 py-1 text-xs font-semibold text-[#B25E09]">
       Review flagged
     </span>
   );
 }
-

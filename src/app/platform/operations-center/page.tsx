@@ -1,10 +1,12 @@
 import type { Prisma, SupportRequestStatus, SupportSessionStatus } from "@prisma/client";
-import { Activity, AlertTriangle, ChevronRight, Clock, FileText, LifeBuoy, RefreshCw, Search, Timer, Users } from "lucide-react";
+import { ChevronRight, Clock, LifeBuoy, Search, X } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { DashboardShell } from "@/components/DashboardShell";
+import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
 import { SupportCountdown } from "@/components/SupportCountdown";
-import { EmptyState, MetricCard, SectionCard, StatusBadge } from "@/components/ui";
+import { SupportTimeBar } from "@/components/SupportTimeBar";
+import { EmptyState, StatusBadge } from "@/components/ui";
 import { formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { expireStaleSupportRequests, expireStaleSupportSessions } from "@/lib/support-sessions";
@@ -28,6 +30,10 @@ type SupportRequestListItem = Prisma.SupportRequestGetPayload<{
     supportSession: { select: { id: true; status: true } };
   };
 }>;
+
+type LedgerItem =
+  | { kind: "session"; date: Date; session: SupportSessionListItem }
+  | { kind: "request"; date: Date; request: SupportRequestListItem };
 
 const validStatuses: SupportSessionStatus[] = ["ACTIVE", "ENDED", "EXPIRED"];
 const validRequestStatuses: SupportRequestStatus[] = ["PENDING", "APPROVED", "REJECTED", "EXPIRED"];
@@ -60,6 +66,26 @@ function commonReason(sessions: SupportSessionListItem[]) {
   const counts = new Map<string, number>();
   for (const session of sessions) counts.set(session.reason, (counts.get(session.reason) ?? 0) + 1);
   return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "No sessions yet";
+}
+
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "?";
+}
+
+function isSameUtcDay(a: Date, b: Date) {
+  return a.getUTCFullYear() === b.getUTCFullYear() && a.getUTCMonth() === b.getUTCMonth() && a.getUTCDate() === b.getUTCDate();
+}
+
+function dayLabel(date: Date, now: Date) {
+  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  if (isSameUtcDay(date, now)) return `Today · ${date.toLocaleDateString("en", { month: "short", day: "numeric" })}`;
+  if (isSameUtcDay(date, yesterday)) return `Yesterday · ${date.toLocaleDateString("en", { month: "short", day: "numeric" })}`;
+  return date.toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" });
 }
 
 export default async function OperationsCenterPage({ searchParams }: { searchParams: Promise<OperationsSearchParams> }) {
@@ -141,279 +167,396 @@ export default async function OperationsCenterPage({ searchParams }: { searchPar
   const activeSessions = sessions.filter((session) => session.status === "ACTIVE" && !session.endedAt && session.expiresAt > now);
   const recentSessions = sessions.filter((session) => session.status !== "ACTIVE" || session.endedAt || session.expiresAt <= now);
   const pendingRequests = requests.filter((request) => request.status === "PENDING");
+  const decidedRequests = requests.filter((request) => request.status !== "PENDING");
   const completedToday = allSessions.filter((session) => session.endedAt && session.endedAt >= todayStart).length;
   const sessionsToday = allSessions.filter((session) => session.startedAt >= todayStart).length;
   const completedDurations = allSessions.filter((session) => session.endedAt || session.status === "EXPIRED").map(getDurationMs);
   const averageDuration = completedDurations.length ? completedDurations.reduce((total, duration) => total + duration, 0) / completedDurations.length : 0;
   const longestDuration = completedDurations.length ? Math.max(...completedDurations) : 0;
 
+  const situation: "live" | "pending" | "clear" = activeSessions.length > 0 ? "live" : pendingRequests.length > 0 ? "pending" : "clear";
+
+  const ledgerItems: LedgerItem[] = [
+    ...recentSessions.map((session): LedgerItem => ({ kind: "session", date: session.startedAt, session })),
+    ...decidedRequests.map((request): LedgerItem => ({ kind: "request", date: request.createdAt, request })),
+  ].sort((a, b) => b.date.getTime() - a.date.getTime());
+  const ledgerGroups: Array<{ label: string; items: LedgerItem[] }> = [];
+  for (const item of ledgerItems) {
+    const label = dayLabel(item.date, now);
+    const current = ledgerGroups[ledgerGroups.length - 1];
+    if (current && current.label === label) current.items.push(item);
+    else ledgerGroups.push({ label, items: [item] });
+  }
+
+  const supportLoad = new Map<string, number>();
+  for (const session of allSessions) supportLoad.set(session.business.name, (supportLoad.get(session.business.name) ?? 0) + 1);
+  const mostSupported = [...supportLoad.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const mostSupportedMax = Math.max(1, ...mostSupported.map(([, count]) => count));
+
   return (
-    <DashboardShell
-      user={currentUser}
-      eyebrow="System Administrator"
-      title="Operations Center"
-      headerAside={
+    <DashboardShell user={currentUser} eyebrow="System Administrator" title="Operations Center">
+      <section className="flex flex-col gap-1">
+        <p className="text-xs text-[#9AA0AD]">Support · Compliance, Platform Health, and Background Jobs coming soon</p>
+      </section>
+
+      <section
+        aria-live="polite"
+        className={`flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between ${
+          situation === "live"
+            ? "border-[#F7C1C1] bg-[#FCEBEB]"
+            : situation === "pending"
+              ? "border-[#F3D9A4] bg-[#FFFBF2]"
+              : "border-[#CBEAD6] bg-[#E9F6EE]"
+        }`}
+      >
+        <div className="flex items-start gap-2.5">
+          <span
+            className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${
+              situation === "live" ? "bg-[#E24B4A]" : situation === "pending" ? "bg-[#EF9F27]" : "bg-[#1D9E75]"
+            }`}
+            aria-hidden="true"
+          />
+          <div>
+            <p className={`text-sm font-bold ${situation === "live" ? "text-[#791F1F]" : situation === "pending" ? "text-[#633806]" : "text-[#085041]"}`}>
+              {situation === "live"
+                ? `${activeSessions.length} ${activeSessions.length === 1 ? "administrator is" : "administrators are"} inside tenant accounts right now`
+                : situation === "pending"
+                  ? `${pendingRequests.length} support ${pendingRequests.length === 1 ? "request" : "requests"} awaiting approval`
+                  : "All clear — no active support access"}
+            </p>
+            <p className={`mt-0.5 text-xs ${situation === "live" ? "text-[#A32D2D]" : situation === "pending" ? "text-[#854F0B]" : "text-[#0F6E56]"}`}>
+              {pendingRequests.length} pending {pendingRequests.length === 1 ? "approval" : "approvals"} · {activeAlerts} open{" "}
+              {activeAlerts === 1 ? "alert" : "alerts"} · {completedToday} {completedToday === 1 ? "session" : "sessions"} completed today
+            </p>
+          </div>
+        </div>
         <Link
           href="/platform/operations-center/support/start"
-          className="hidden min-h-11 items-center justify-center rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600 lg:inline-flex"
+          className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(232,106,51,0.25)] transition hover:bg-[var(--accent-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
         >
+          <LifeBuoy className="h-4 w-4" aria-hidden="true" />
           Start Support Session
         </Link>
-      }
-    >
-      <div className="grid gap-6">
-        <div data-operations-center-lite className="grid gap-4 pb-24 lg:hidden">
-          <section className="grid gap-3 sm:grid-cols-2" aria-label="Operations Center Lite KPIs">
-            <MetricCard label="Active Support Sessions" value={activeSessions.length} helper="Live support access" icon={<LifeBuoy className="h-5 w-5" />} tone="danger" />
-            <MetricCard label="Sessions Today" value={sessionsToday} helper={`${completedToday} completed today`} icon={<Activity className="h-5 w-5" />} tone="success" />
-            <MetricCard label="Average Duration" value={formatDuration(averageDuration)} helper="Completed sessions" icon={<Clock className="h-5 w-5" />} />
-            <MetricCard label="Active Alerts" value={activeAlerts} helper="Open platform alerts" icon={<AlertTriangle className="h-5 w-5" />} tone={activeAlerts ? "warning" : "neutral"} />
-          </section>
+      </section>
 
-          <SectionCard id="active-support-sessions" title="Active Support Sessions" description="Urgent support sessions available from mobile.">
-            {activeSessions.length ? (
-              <div className="grid gap-3">
-                {activeSessions.map((session) => (
-                  <MobileSupportSessionCard key={session.id} session={session} />
-                ))}
+      <section aria-label="Live sessions and approval queue" className="grid gap-4 pt-2 md:grid-cols-2 xl:grid-cols-3">
+        {activeSessions.map((session) => (
+          <SessionPass key={session.id} session={session} />
+        ))}
+        {pendingRequests.map((request) => (
+          <RequestPass key={request.id} request={request} />
+        ))}
+        {activeSessions.length === 0 && pendingRequests.length === 0 ? (
+          <div className="md:col-span-2 xl:col-span-3">
+            <EmptyState
+              title="No live sessions or pending requests"
+              description="Access passes appear here the moment an administrator enters a tenant account or a support request awaits approval."
+            />
+          </div>
+        ) : null}
+      </section>
+
+      <MobileFilterDrawer activeCount={[query, status, requestStatus, mode, getParam(params, "from"), getParam(params, "to")].filter(Boolean).length}>
+        <form className="rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
+          <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_auto_auto] lg:items-end">
+            <label className="relative">
+              <span className="sr-only">Search sessions and requests</span>
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7A8091]" aria-hidden="true" />
+              <input
+                name="q"
+                defaultValue={query}
+                placeholder="Business, administrator, reason"
+                className="h-11 w-full rounded-lg border border-[var(--medium-gray)] bg-white pl-9 pr-3 text-sm outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] sm:h-10"
+              />
+            </label>
+            <FilterSelect name="status" label="All sessions" defaultValue={status}>
+              <option value="ACTIVE">Active</option>
+              <option value="ENDED">Ended</option>
+              <option value="EXPIRED">Expired</option>
+            </FilterSelect>
+            <FilterSelect name="requestStatus" label="All requests" defaultValue={requestStatus}>
+              <option value="PENDING">Pending</option>
+              <option value="APPROVED">Approved</option>
+              <option value="REJECTED">Rejected</option>
+              <option value="EXPIRED">Expired</option>
+            </FilterSelect>
+            <FilterSelect name="mode" label="All modes" defaultValue={mode}>
+              <option value="read-only">Read Only</option>
+              <option value="edit">Edit</option>
+            </FilterSelect>
+            <label>
+              <span className="sr-only">From date</span>
+              <input type="date" name="from" defaultValue={getParam(params, "from")} className="h-11 w-full rounded-lg border border-[var(--medium-gray)] bg-white px-3 text-sm outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] sm:h-10" />
+            </label>
+            <label>
+              <span className="sr-only">To date</span>
+              <input type="date" name="to" defaultValue={getParam(params, "to")} className="h-11 w-full rounded-lg border border-[var(--medium-gray)] bg-white px-3 text-sm outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] sm:h-10" />
+            </label>
+            <button
+              type="submit"
+              className="inline-flex h-11 items-center justify-center rounded-lg bg-[#171A21] px-4 text-sm font-semibold text-white transition hover:bg-[#3D4352] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 sm:h-10"
+            >
+              Apply
+            </button>
+            <Link
+              href="/platform/operations-center"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-[var(--medium-gray)] bg-white px-4 text-sm font-semibold text-[#171A21] transition hover:border-[var(--light-orange)] hover:text-[var(--accent-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 sm:h-10"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+              Clear
+            </Link>
+          </div>
+        </form>
+      </MobileFilterDrawer>
+
+      <section aria-label="Support history and insights" className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_270px]">
+        <div className="overflow-hidden rounded-xl border border-[var(--medium-gray)] bg-white shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
+          <div className="border-b border-[var(--medium-gray)] px-4 py-3">
+            <h2 className="text-sm font-bold tracking-tight text-[#171A21]">
+              Support ledger <span className="font-medium text-[#7A8091]">· sessions and request decisions</span>
+            </h2>
+          </div>
+          {ledgerGroups.map((group) => (
+            <div key={group.label}>
+              <p className="bg-[var(--app-canvas)] px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.04em] text-[#7A8091]">{group.label}</p>
+              {group.items.map((item) =>
+                item.kind === "session" ? <SessionLedgerRow key={`s-${item.session.id}`} session={item.session} /> : <RequestLedgerRow key={`r-${item.request.id}`} request={item.request} />,
+              )}
+            </div>
+          ))}
+          {ledgerItems.length === 0 ? (
+            <div className="p-4">
+              <EmptyState title="No support history yet" description="Ended sessions and request decisions matching the current filters will appear here." />
+            </div>
+          ) : null}
+        </div>
+
+        <div className="grid content-start gap-3">
+          <div className="rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
+            <h2 className="text-sm font-bold tracking-tight text-[#171A21]">Support load</h2>
+            <dl className="mt-3 grid gap-1.5 text-xs">
+              <LoadRow label="Sessions today" value={sessionsToday.toString()} />
+              <LoadRow label="Completed today" value={completedToday.toString()} />
+              <LoadRow label="Average duration" value={formatDuration(averageDuration)} />
+              <LoadRow label="Longest session" value={formatDuration(longestDuration)} />
+              <LoadRow label="Total sessions" value={allSessions.length.toString()} />
+              <div className="border-t border-[var(--medium-gray)] pt-2">
+                <dt className="text-[#7A8091]">Top reason</dt>
+                <dd className="mt-0.5 break-words font-semibold text-[#171A21]">{commonReason(allSessions)}</dd>
               </div>
-            ) : (
-              <EmptyState title="No active support sessions." description="Start or join a support session when urgent access is needed." />
-            )}
-          </SectionCard>
+            </dl>
+          </div>
 
-          <SectionCard title="Desktop Tools" description="Support reports, audit timelines, exports, advanced filters, Compliance, Platform Health, and Background Jobs are available on desktop.">
-            <p className="rounded-md border border-[#E2E8F0] bg-[#F8FAFC] p-3 text-sm font-semibold text-[#475569]">Available on desktop.</p>
-          </SectionCard>
-
-          <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-[#E2E8F0] bg-white/95 p-3 shadow-[0_-12px_30px_rgba(15,23,42,0.12)] backdrop-blur lg:hidden" aria-label="Operations Center Lite quick actions">
-            <div className="mx-auto grid max-w-xl grid-cols-3 gap-2">
-              <Link href="/platform/operations-center/support/start" className="inline-flex min-h-11 items-center justify-center rounded-md bg-[#F97316] px-3 text-center text-xs font-bold text-white transition hover:bg-orange-600">
-                Start Support Session
-              </Link>
-              <Link href="#active-support-sessions" className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#CBD5E1] bg-white px-3 text-center text-xs font-bold text-[#0F172A] transition hover:border-[#F97316] hover:text-[#F97316]">
-                Active Sessions
-              </Link>
-              <Link href="/platform/operations-center" className="inline-flex min-h-11 items-center justify-center gap-1 rounded-md border border-[#CBD5E1] bg-white px-3 text-center text-xs font-bold text-[#0F172A] transition hover:border-[#F97316] hover:text-[#F97316]">
-                <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
-                Refresh
-              </Link>
-            </div>
-          </nav>
-        </div>
-
-        <div className="hidden gap-6 lg:grid">
-          <section className="rounded-lg border border-[#E2E8F0] bg-white p-2 shadow-sm">
-            <div className="grid gap-2 md:grid-cols-4">
-              <TabItem label="Support" active />
-              <TabItem label="Compliance" comingSoon />
-              <TabItem label="Platform Health" comingSoon />
-              <TabItem label="Background Jobs" comingSoon />
-            </div>
-          </section>
-
-          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-7">
-            <MetricCard label="Active Sessions" value={activeSessions.length} helper="Live support access" icon={<LifeBuoy className="h-5 w-5" />} tone="danger" />
-            <MetricCard label="Pending Requests" value={pendingRequests.length} helper="Awaiting owner approval" icon={<FileText className="h-5 w-5" />} tone="warning" />
-            <MetricCard label="Completed Today" value={completedToday} helper="Ended sessions" icon={<Activity className="h-5 w-5" />} tone="success" />
-            <MetricCard label="Average Duration" value={formatDuration(averageDuration)} helper="Completed sessions" icon={<Clock className="h-5 w-5" />} />
-            <MetricCard label="Longest Session" value={formatDuration(longestDuration)} helper="Historical maximum" icon={<Timer className="h-5 w-5" />} tone="warning" />
-            <MetricCard label="Common Reason" value={commonReason(allSessions)} helper="Most frequent reason" icon={<FileText className="h-5 w-5" />} tone="neutral" />
-            <MetricCard label="Total Sessions" value={allSessions.length} helper="All support access" icon={<Users className="h-5 w-5" />} tone="info" />
-          </section>
-
-          <SectionCard title="Search & Filters" description="Find support sessions and approval requests by business, administrator, reason, status, mode, or date range.">
-            <form className="grid gap-3 lg:grid-cols-[minmax(240px,1fr)_150px_150px_150px_150px_150px_auto_auto] lg:items-end">
-              <label className="text-sm font-semibold text-[#111827]">
-                Search
-                <div className="mt-1 flex min-w-0 items-center gap-2 rounded-md border border-[#E5E7EB] bg-white px-3">
-                  <Search className="h-4 w-4 text-[#64748B]" aria-hidden="true" />
-                  <input name="q" defaultValue={query} placeholder="Business, administrator, reason" className="h-10 min-w-0 flex-1 bg-transparent text-sm outline-none" />
+          <div className="rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
+            <h2 className="text-sm font-bold tracking-tight text-[#171A21]">Most supported businesses</h2>
+            <div className="mt-3 grid gap-2.5">
+              {mostSupported.map(([name, count]) => (
+                <div key={name}>
+                  <div className="flex items-center justify-between gap-2 text-xs">
+                    <span className="min-w-0 truncate text-sm font-semibold text-[#171A21]">{name}</span>
+                    <span className="font-semibold tabular-nums text-[#3D4352]">{count}</span>
+                  </div>
+                  <div className="mt-1 h-1 rounded-full bg-[var(--light-gray)]">
+                    <div className="h-1 rounded-full bg-[var(--accent)]" style={{ width: `${Math.max(4, Math.round((count / mostSupportedMax) * 100))}%` }} />
+                  </div>
                 </div>
-              </label>
-              <SelectField label="Session" name="status" defaultValue={status}>
-                <option value="">All sessions</option>
-                <option value="ACTIVE">Active</option>
-                <option value="ENDED">Ended</option>
-                <option value="EXPIRED">Expired</option>
-              </SelectField>
-              <SelectField label="Request" name="requestStatus" defaultValue={requestStatus}>
-                <option value="">All requests</option>
-                <option value="PENDING">Pending</option>
-                <option value="APPROVED">Approved</option>
-                <option value="REJECTED">Rejected</option>
-                <option value="EXPIRED">Expired</option>
-              </SelectField>
-              <SelectField label="Mode" name="mode" defaultValue={mode}>
-                <option value="">All modes</option>
-                <option value="read-only">Read Only</option>
-                <option value="edit">Edit</option>
-              </SelectField>
-              <InputField label="From" name="from" defaultValue={getParam(params, "from")} />
-              <InputField label="To" name="to" defaultValue={getParam(params, "to")} />
-              <button type="submit" className="min-h-10 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white transition hover:bg-orange-600">
-                Apply
-              </button>
-              <Link href="/platform/operations-center" className="inline-flex min-h-10 items-center justify-center rounded-md border border-[#E2E8F0] px-4 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]">
-                Clear
-              </Link>
-            </form>
-          </SectionCard>
-
-          <SectionCard title="Pending Requests" description="Support requests waiting for Business Owner approval.">
-            {pendingRequests.length ? <div className="grid gap-3">{pendingRequests.map((request) => <SupportRequestCard key={request.id} request={request} />)}</div> : <EmptyState title="No pending support requests." description="Approval-required support access requests will appear here." />}
-          </SectionCard>
-
-          <SectionCard title="Approved, Rejected & Expired Requests" description="Completed support approval decisions and expired requests.">
-            {requests.filter((request) => request.status !== "PENDING").length ? (
-              <div className="grid gap-3">{requests.filter((request) => request.status !== "PENDING").map((request) => <SupportRequestCard key={request.id} request={request} />)}</div>
-            ) : (
-              <EmptyState title="No completed support requests." description="Approved, rejected, and expired requests matching the current filters will appear here." />
-            )}
-          </SectionCard>
-
-          <SectionCard title="Active Support Sessions" description="Live support sessions with emergency controls.">
-            {activeSessions.length ? <div className="grid gap-3">{activeSessions.map((session) => <SupportSessionCard key={session.id} session={session} active />)}</div> : <EmptyState title="No active support sessions." description="Active support sessions will appear here as soon as a Platform Administrator starts or joins one." />}
-          </SectionCard>
-
-          <SectionCard title="Recent Support Sessions" description="Completed and expired support sessions with activity counts and reports.">
-            {recentSessions.length ? <div className="grid gap-3">{recentSessions.map((session) => <SupportSessionCard key={session.id} session={session} />)}</div> : <EmptyState title="No recent support sessions." description="Ended and expired support sessions matching the current filters will appear here." />}
-          </SectionCard>
+              ))}
+              {mostSupported.length === 0 ? <p className="rounded-lg border border-dashed border-[#D8DBE2] bg-[var(--app-canvas)] p-3 text-sm text-[#7A8091]">No sessions yet.</p> : null}
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
     </DashboardShell>
   );
 }
 
-function TabItem({ label, active, comingSoon }: { label: string; active?: boolean; comingSoon?: boolean }) {
-  return (
-    <div className={`rounded-md px-4 py-3 text-sm font-semibold ${active ? "bg-[#F97316] text-white" : "bg-[#F8FAFC] text-[#64748B]"}`}>
-      <span>{label}</span>
-      {comingSoon ? <span className="ml-2 rounded-full bg-white px-2 py-0.5 text-xs text-[#64748B]">Not enabled</span> : null}
-    </div>
-  );
-}
-
-function SupportRequestCard({ request }: { request: SupportRequestListItem }) {
-  const requester = request.requestedByUser.name ?? request.requestedByUser.email;
-  const detailsHref = `/platform/operations-center/requests/${request.id}`;
-  return (
-    <article className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] transition hover:border-[#F97316] hover:bg-[#FFF7ED]">
-      <Link href={detailsHref} className="group block p-4 focus-visible:rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F97316]" aria-label={`Open support request details for ${request.business.name}`}>
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1.2fr)_24px] xl:items-start">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">Business</p>
-          <span className="mt-1 inline-flex min-w-0 items-center gap-1 break-words text-base font-bold text-[#0F172A] transition group-hover:text-[#F97316]">
-            {request.business.name}
-          </span>
-          <p className="mt-2 text-sm text-[#64748B]">
-            Requested by: <span className="font-semibold text-[#334155]">{requester}</span>
-          </p>
-        </div>
-        <dl className="grid gap-2 text-sm sm:grid-cols-2">
-          <Info label="Status" value={<StatusBadge tone={request.status === "PENDING" ? "warning" : request.status === "APPROVED" ? "success" : request.status === "REJECTED" ? "danger" : "neutral"}>{request.status}</StatusBadge>} />
-          <Info label="Time Remaining" value={request.status === "PENDING" ? <SupportCountdown expiresAt={request.expiresAt.toISOString()} /> : formatDateTime(request.expiresAt)} />
-          <Info label="Mode" value={request.readOnly ? "Read Only" : "Edit"} />
-          <Info label="Emergency" value={request.emergency ? <span className="rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-xs font-bold text-red-700">Emergency</span> : "No"} />
-        </dl>
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">Request</p>
-          <p className="mt-1 text-sm font-medium text-[#334155]">Requested {formatDateTime(request.createdAt)}</p>
-          <p className="mt-2 text-xs font-semibold text-[#64748B]">Duration: {request.durationMinutes} minutes</p>
-        </div>
-        <span className="flex h-10 w-6 items-center justify-end text-[#94A3B8] transition">
-          <ChevronRight className="h-5 w-5" aria-hidden="true" />
-        </span>
-        </div>
-      </Link>
-    </article>
-  );
-}
-
-function SupportSessionCard({ session, active = false }: { session: SupportSessionListItem; active?: boolean }) {
+function SessionPass({ session }: { session: SupportSessionListItem }) {
   const adminName = session.adminUser.name ?? session.adminUser.email;
-  const detailsHref = `/platform/operations-center/support/${session.id}`;
-  return (
-    <article className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] transition hover:border-[#F97316] hover:bg-[#FFF7ED]">
-      <Link href={detailsHref} className="group block p-4 focus-visible:rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F97316]" aria-label={`Open support session details for ${session.business.name}`}>
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1.2fr)_24px] xl:items-start">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">Business</p>
-          <span className="mt-1 inline-flex min-w-0 items-center gap-1 break-words text-base font-bold text-[#0F172A] transition group-hover:text-[#F97316]">
-            {session.business.name}
-          </span>
-          <p className="mt-2 text-sm text-[#64748B]">
-            Administrator: <span className="font-semibold text-[#334155]">{adminName}</span>
-          </p>
-        </div>
-        <dl className="grid gap-2 text-sm sm:grid-cols-2">
-          <Info label="Started" value={formatDateTime(session.startedAt)} />
-          <Info label={active ? "Remaining" : "Duration"} value={active ? <SupportCountdown expiresAt={session.expiresAt.toISOString()} /> : formatDuration(getDurationMs(session))} />
-          <Info label="Mode" value={session.readOnly ? "Read Only" : "Edit"} />
-          <Info label="Status" value={<StatusBadge tone={session.status === "ACTIVE" ? "success" : session.status === "EXPIRED" ? "warning" : "neutral"}>{session.status}</StatusBadge>} />
-        </dl>
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">Reason</p>
-          <p className="mt-1 break-words text-sm font-medium text-[#334155]">{session.reason}</p>
-          <p className="mt-2 text-xs font-semibold text-[#64748B]">{session._count.activities} activities</p>
-        </div>
-        <span className="flex h-10 w-6 items-center justify-end text-[#94A3B8] transition">
-          <ChevronRight className="h-5 w-5" aria-hidden="true" />
-        </span>
-        </div>
-      </Link>
-    </article>
-  );
-}
 
-function MobileSupportSessionCard({ session }: { session: SupportSessionListItem }) {
-  const adminName = session.adminUser.name ?? session.adminUser.email;
   return (
-    <Link href={`/platform/operations-center/support/${session.id}`} className="block rounded-lg border border-red-100 bg-red-50/60 p-4 shadow-sm transition hover:border-[#F97316] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F97316]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-xs font-bold uppercase tracking-wide text-red-700">Business</p>
-          <h3 className="mt-1 flex items-center gap-1 break-words text-lg font-bold text-[#0F172A]">
-            {session.business.name}
-            <ChevronRight className="h-4 w-4" aria-hidden="true" />
-          </h3>
+    <article className="relative rounded-xl border border-[#F7C1C1] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
+      <span className="absolute -top-2.5 left-3 inline-flex items-center gap-1 rounded-full border border-[#F7C1C1] bg-[#FCEBEB] px-2 text-[11px] font-bold uppercase tracking-wide text-[#A32D2D]">
+        <span className="h-1.5 w-1.5 rounded-full bg-[#E24B4A]" aria-hidden="true" />
+        Live
+      </span>
+      <div className="mt-1 flex items-center gap-2.5">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--accent-soft)] text-xs font-bold text-[var(--accent-deep)]" aria-hidden="true">
+          {initials(adminName)}
+        </span>
+        <div className="min-w-0 flex-1">
+          <Link
+            href={`/platform/operations-center/support/${session.id}`}
+            className="flex items-center gap-1 truncate text-sm font-bold text-[#171A21] transition hover:text-[var(--accent-deep)] hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+            aria-label={`Open support session details for ${session.business.name}`}
+          >
+            <span className="truncate">{session.business.name}</span>
+            <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+          </Link>
+          <p className="truncate text-xs text-[#7A8091]">{adminName}</p>
         </div>
-        <StatusBadge tone="success">{session.status}</StatusBadge>
+        <ModeBadge readOnly={session.readOnly} />
       </div>
-      <dl className="mt-4 grid gap-2 text-sm">
-        <Info label="Administrator" value={adminName} />
-        <Info label="Remaining Time" value={<SupportCountdown expiresAt={session.expiresAt.toISOString()} />} />
-        <Info label="Reason" value={session.reason} />
-      </dl>
+      <p className="mt-2.5 break-words text-xs text-[#3D4352]">{session.reason}</p>
+      <div className="mt-2.5">
+        <div className="flex items-center justify-between gap-2 text-xs">
+          <span className="text-[#7A8091]">
+            Started {formatDateTime(session.startedAt)} · {session._count.activities} {session._count.activities === 1 ? "activity" : "activities"}
+          </span>
+          <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-[#FCEBEB] px-2 py-0.5 font-semibold text-[#A32D2D]">
+            <Clock className="h-3 w-3" aria-hidden="true" />
+            <SupportCountdown expiresAt={session.expiresAt.toISOString()} />
+          </span>
+        </div>
+        <div className="mt-1.5">
+          <SupportTimeBar startedAt={session.startedAt.toISOString()} expiresAt={session.expiresAt.toISOString()} />
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function RequestPass({ request }: { request: SupportRequestListItem }) {
+  const requester = request.requestedByUser.name ?? request.requestedByUser.email;
+
+  return (
+    <article className="relative rounded-xl border border-[#F3D9A4] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
+      <span className="absolute -top-2.5 left-3 inline-flex items-center rounded-full border border-[#F3D9A4] bg-[#FFFBF2] px-2 text-[11px] font-bold uppercase tracking-wide text-[#854F0B]">
+        Awaiting approval
+      </span>
+      <div className="mt-1 flex items-center gap-2.5">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FCF0DC] text-xs font-bold text-[#854F0B]" aria-hidden="true">
+          {initials(requester)}
+        </span>
+        <div className="min-w-0 flex-1">
+          <Link
+            href={`/platform/operations-center/requests/${request.id}`}
+            className="flex items-center gap-1 truncate text-sm font-bold text-[#171A21] transition hover:text-[var(--accent-deep)] hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+            aria-label={`Open support request details for ${request.business.name}`}
+          >
+            <span className="truncate">{request.business.name}</span>
+            <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+          </Link>
+          <p className="truncate text-xs text-[#7A8091]">
+            {requester} · {request.durationMinutes} min requested
+          </p>
+        </div>
+        {request.emergency ? (
+          <StatusBadge tone="danger" className="shrink-0 whitespace-nowrap px-2 py-0.5 text-[11px]">
+            Emergency
+          </StatusBadge>
+        ) : null}
+      </div>
+      <p className="mt-2.5 break-words text-xs text-[#3D4352]">{request.reason}</p>
+      <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
+        <span className="flex items-center gap-1.5">
+          <ModeBadge readOnly={request.readOnly} />
+          <span className="text-[#7A8091]">Requested {formatDateTime(request.createdAt)}</span>
+        </span>
+        <span className="whitespace-nowrap font-semibold text-[#A32D2D]">
+          expires: <SupportCountdown expiresAt={request.expiresAt.toISOString()} />
+        </span>
+      </div>
+    </article>
+  );
+}
+
+function ModeBadge({ readOnly }: { readOnly: boolean }) {
+  return (
+    <StatusBadge tone={readOnly ? "neutral" : "warning"} className="shrink-0 whitespace-nowrap px-2 py-0.5 text-[11px]">
+      {readOnly ? "Read only" : "Edit mode"}
+    </StatusBadge>
+  );
+}
+
+function SessionLedgerRow({ session }: { session: SupportSessionListItem }) {
+  const adminName = session.adminUser.name ?? session.adminUser.email;
+
+  return (
+    <Link
+      href={`/platform/operations-center/support/${session.id}`}
+      className="block border-b border-[var(--light-gray)] px-4 py-2.5 transition last:border-b-0 hover:bg-[var(--app-canvas)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent)]"
+      aria-label={`Open support session details for ${session.business.name}`}
+    >
+      <span className="flex items-center gap-2.5">
+        <span className="w-10 shrink-0 text-xs tabular-nums text-[#7A8091]">
+          {session.startedAt.toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit", hour12: false })}
+        </span>
+        <StatusBadge tone="neutral" className="shrink-0 whitespace-nowrap px-2 py-0.5 text-[11px]">
+          Session
+        </StatusBadge>
+        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[#171A21]">{session.business.name}</span>
+        <StatusBadge tone={session.status === "ACTIVE" ? "success" : session.status === "EXPIRED" ? "warning" : "neutral"} className="shrink-0 whitespace-nowrap px-2 py-0.5 text-[11px]">
+          {session.status === "ACTIVE" ? "Active" : session.status === "EXPIRED" ? "Expired" : "Ended"}
+        </StatusBadge>
+      </span>
+      <span className="mt-1 block truncate pl-[50px] text-xs text-[#7A8091]">
+        {adminName} · {session.readOnly ? "Read only" : "Edit"} · {formatDuration(getDurationMs(session))} · {session._count.activities}{" "}
+        {session._count.activities === 1 ? "activity" : "activities"} · {session.reason}
+      </span>
     </Link>
   );
 }
 
-function Info({ label, value }: { label: string; value: ReactNode }) {
+function RequestLedgerRow({ request }: { request: SupportRequestListItem }) {
+  const requester = request.requestedByUser.name ?? request.requestedByUser.email;
+  const reviewer = request.reviewedByUser ? request.reviewedByUser.name ?? request.reviewedByUser.email : null;
+  const decision = request.status === "APPROVED" ? "approved" : request.status === "REJECTED" ? "rejected" : "expired";
+
   return (
-    <div className="min-w-0 rounded-md bg-white p-3">
-      <dt className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">{label}</dt>
-      <dd className="mt-1 break-words font-semibold text-[#0F172A]">{value}</dd>
+    <Link
+      href={`/platform/operations-center/requests/${request.id}`}
+      className="block border-b border-[var(--light-gray)] px-4 py-2.5 transition last:border-b-0 hover:bg-[var(--app-canvas)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent)]"
+      aria-label={`Open support request details for ${request.business.name}`}
+    >
+      <span className="flex items-center gap-2.5">
+        <span className="w-10 shrink-0 text-xs tabular-nums text-[#7A8091]">
+          {request.createdAt.toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit", hour12: false })}
+        </span>
+        <StatusBadge tone="neutral" className="shrink-0 whitespace-nowrap px-2 py-0.5 text-[11px]">
+          Request
+        </StatusBadge>
+        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[#171A21]">{request.business.name}</span>
+        {request.emergency ? (
+          <StatusBadge tone="danger" className="shrink-0 whitespace-nowrap px-2 py-0.5 text-[11px]">
+            Emergency
+          </StatusBadge>
+        ) : null}
+        <StatusBadge
+          tone={request.status === "APPROVED" ? "success" : request.status === "REJECTED" ? "danger" : "neutral"}
+          className="shrink-0 whitespace-nowrap px-2 py-0.5 text-[11px] capitalize"
+        >
+          {request.status.toLowerCase()}
+        </StatusBadge>
+      </span>
+      <span className="mt-1 block truncate pl-[50px] text-xs text-[#7A8091]">
+        {request.durationMinutes} min · {request.readOnly ? "Read only" : "Edit"} · requested by {requester}
+        {reviewer ? ` · ${decision} by ${reviewer}` : ""} · {request.reason}
+      </span>
+    </Link>
+  );
+}
+
+function LoadRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <dt className="text-[#7A8091]">{label}</dt>
+      <dd className="text-right font-semibold tabular-nums text-[#171A21]">{value}</dd>
     </div>
   );
 }
 
-function SelectField({ label, name, defaultValue, children }: { label: string; name: string; defaultValue?: string; children: ReactNode }) {
+function FilterSelect({ name, label, defaultValue, children }: { name: string; label: string; defaultValue?: string; children: ReactNode }) {
   return (
-    <label className="text-sm font-semibold text-[#111827]">
-      {label}
-      <select name={name} defaultValue={defaultValue} className="mt-1 h-10 w-full rounded-md border border-[#E5E7EB] bg-white px-3 text-sm outline-none focus:border-[#F97316]">
+    <label>
+      <span className="sr-only">{label}</span>
+      <select
+        name={name}
+        defaultValue={defaultValue}
+        className="h-11 w-full rounded-lg border border-[var(--medium-gray)] bg-white px-3 text-sm text-[#171A21] outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] sm:h-10"
+      >
+        <option value="">{label}</option>
         {children}
       </select>
-    </label>
-  );
-}
-
-function InputField({ label, name, defaultValue }: { label: string; name: string; defaultValue?: string }) {
-  return (
-    <label className="text-sm font-semibold text-[#111827]">
-      {label}
-      <input name={name} type="date" defaultValue={defaultValue} className="mt-1 h-10 w-full rounded-md border border-[#E5E7EB] bg-white px-3 text-sm outline-none focus:border-[#F97316]" />
     </label>
   );
 }

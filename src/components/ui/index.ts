@@ -15,6 +15,8 @@ export * from "./PageIntro";
 export * from "./ProgressBar";
 export * from "./SearchBar";
 export * from "./SectionCard";
+export * from "./SeverityBadge";
+export * from "./SortableHeadCell";
 export * from "./StatusBadge";
 export * from "./Tabs";
 export * from "./Timeline";

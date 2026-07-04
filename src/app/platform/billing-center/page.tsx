@@ -1,28 +1,23 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { Prisma } from "@prisma/client";
-import {
-  AlertTriangle,
-  CalendarClock,
-  CircleDollarSign,
-  CreditCard,
-  Download,
-  FileSpreadsheet,
-  FileText,
-  Filter,
-  Receipt,
-  TrendingDown,
-  TrendingUp,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { Download, FileSpreadsheet, FileText, SlidersHorizontal } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
 import { MobileAccordionSection } from "@/components/MobileAccordionSection";
 import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
-import { PlatformKpiGrid } from "@/components/PlatformKpiGrid";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { MetricCard } from "@/components/ui/MetricCard";
-import { SectionCard } from "@/components/ui/SectionCard";
+import {
+  ButtonLink,
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableHeadCell,
+  DataTableHeader,
+  EmptyState,
+  MetricCard,
+  SectionCard,
+  StatusBadge,
+} from "@/components/ui";
 import { formatDate } from "@/lib/format";
 import { formatMoney, getInvoiceDisplayStatus } from "@/lib/billing";
 import { prisma } from "@/lib/prisma";
@@ -131,46 +126,97 @@ export default async function PlatformBillingCenterPage({
   const recentMonths = getRecentMonths(now, 6);
   const activeTab = getBillingTab(params.tab);
   const activeFilterCount = Object.entries(params).filter(([key, value]) => !["export", "tab"].includes(key) && Boolean(value)).length;
+  const hasAdvancedFilters = Boolean(params.date || params.from || params.to || params.revenueMin || params.revenueMax || params.trial || params.renewal);
+  const needsAttention = overdueInvoices.length + suspendedAccounts.length;
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Billing Center">
-      <PlatformKpiGrid className="md:grid-cols-2 xl:grid-cols-4">
-        <KpiCard icon={CircleDollarSign} label="Monthly Revenue (MRR)" value={formatMoney(monthlyRevenue)} href="/platform/billing-center" />
-        <KpiCard icon={TrendingUp} label="Annual Revenue Projection (ARR)" value={formatMoney(monthlyRevenue * 12)} />
-        <KpiCard icon={CreditCard} label="Active Subscriptions" value={activeSubscriptions.length.toString()} href="/platform/subscriptions?status=ACTIVE" />
-        <KpiCard icon={CalendarClock} label="Trial Subscriptions" value={trialSubscriptions.length.toString()} href="/platform/subscriptions?status=TRIAL" />
-        <KpiCard icon={AlertTriangle} label="Expiring Within 30 Days" value={expiringWithin30.length.toString()} tone={expiringWithin30.length > 0 ? "warn" : "default"} href="/platform/subscriptions?expiry=next30" />
-        <KpiCard icon={Receipt} label="Overdue Invoices" value={overdueInvoices.length.toString()} tone={overdueInvoices.length > 0 ? "danger" : "default"} href="/platform/invoices?status=OVERDUE" />
-        <KpiCard icon={AlertTriangle} label="Suspended Accounts" value={suspendedAccounts.length.toString()} tone={suspendedAccounts.length > 0 ? "danger" : "default"} href="/platform/subscriptions?status=SUSPENDED" />
-        <KpiCard icon={TrendingDown} label="Cancelled Subscriptions" value={cancelledSubscriptions.length.toString()} href="/platform/subscriptions?status=CANCELLED" />
-      </PlatformKpiGrid>
+      <section aria-label="Billing summary" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <MetricCard
+          label="Monthly Revenue (MRR)"
+          value={formatMoney(monthlyRevenue)}
+          helper={`ARR projection ${formatMoney(monthlyRevenue * 12)}`}
+          href="/platform/billing-center"
+        />
+        <MetricCard
+          label="Active Subscriptions"
+          value={activeSubscriptions.length.toString()}
+          helper={`${trialSubscriptions.length} on trial`}
+          href="/platform/subscriptions?status=ACTIVE"
+        />
+        <MetricCard
+          label="Expiring Within 30 Days"
+          value={expiringWithin30.length.toString()}
+          tone={expiringWithin30.length > 0 ? "warning" : "neutral"}
+          href="/platform/subscriptions?expiry=next30"
+        />
+        <div className={`rounded-xl border p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)] ${needsAttention > 0 ? "border-[#FECACA] bg-[#FEF2F2]" : "border-[var(--medium-gray)] bg-white"}`}>
+          <p className="text-xs font-semibold text-[#7A8091]">Needs Attention</p>
+          <p className="mt-2.5 text-[22px] font-bold leading-none tracking-tight tabular-nums text-[#171A21]">
+            <AttentionLink href="/platform/invoices?status=OVERDUE" count={overdueInvoices.length} label="overdue" danger />
+            {" · "}
+            <AttentionLink href="/platform/subscriptions?status=SUSPENDED" count={suspendedAccounts.length} label="suspended" danger />
+          </p>
+          <p className="mt-2 text-xs font-medium text-[#7A8091]">
+            <AttentionLink href="/platform/subscriptions?status=CANCELLED" count={cancelledSubscriptions.length} label="cancelled subscriptions" />
+          </p>
+        </div>
+      </section>
+
+      <div className="flex flex-wrap items-end justify-between gap-2 border-b border-[var(--medium-gray)]">
+        <nav aria-label="Billing Center sections" className="flex gap-1 overflow-x-auto">
+          {billingTabs.map((tab) => {
+            const active = activeTab === tab.key;
+            return (
+              <Link
+                key={tab.key}
+                href={buildBillingTabHref(params, tab.key)}
+                aria-current={active ? "page" : undefined}
+                className={`inline-flex min-h-10 items-center whitespace-nowrap border-b-2 px-3.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
+                  active
+                    ? "border-[var(--accent)] text-[var(--accent-deep)]"
+                    : "border-transparent text-[#7A8091] hover:border-[var(--light-orange)] hover:text-[var(--accent-deep)]"
+                }`}
+              >
+                {tab.label}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
 
       <MobileFilterDrawer activeCount={activeFilterCount}>
-        <section className="sticky top-0 z-10 rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
-          <div className="mb-3 flex items-center gap-2">
-            <Filter className="h-4 w-4 text-[#F97316]" aria-hidden="true" />
-            <h2 className="font-semibold text-[#111827]">Global Filters</h2>
+        <form className="rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
+          <div className="flex items-center gap-2 text-sm font-semibold text-[#171A21]">
+            <SlidersHorizontal className="h-4 w-4 text-[var(--accent-deep)]" aria-hidden="true" />
+            Filters
           </div>
-          <form className="grid gap-3 lg:grid-cols-[minmax(260px,1fr)_180px_minmax(220px,260px)_auto_auto] lg:items-end">
-            <input type="hidden" name="tab" value={activeTab} />
-            <div>
-              <SearchableCombobox
-                label="Business"
-                name="business"
-                defaultValue={params.business ?? ""}
-                placeholder="All businesses"
-                emptyLabel="No businesses found."
-                options={[
-                  { value: "", label: "All businesses", description: "Show billing for every business" },
-                  ...businesses.map((business) => ({ value: business.name, label: business.name, description: "Business" })),
-                ]}
-              />
-            </div>
-            <label className="text-sm font-medium text-[#111827]">
+          <input type="hidden" name="tab" value={activeTab} />
+          <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-[minmax(200px,1.3fr)_minmax(160px,1fr)_minmax(200px,1.2fr)_auto_auto] lg:items-end">
+            <SearchableCombobox
+              label="Business"
+              name="business"
+              defaultValue={params.business ?? ""}
+              placeholder="All businesses"
+              emptyLabel="No businesses found."
+              options={[
+                { value: "", label: "All businesses", description: "Show billing for every business" },
+                ...businesses.map((business) => ({ value: business.name, label: business.name, description: "Business" })),
+              ]}
+            />
+            <label className="text-sm font-medium text-[#171A21]">
               Status
-              <select name="status" defaultValue={params.status ?? ""} className="mt-1 h-10 w-full rounded-md border border-[#E5E7EB] px-3 text-sm">
+              <select
+                name="status"
+                defaultValue={params.status ?? ""}
+                className="mt-1 h-11 w-full rounded-lg border border-[var(--medium-gray)] bg-white px-3 text-sm text-[#171A21] outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] sm:h-10"
+              >
                 <option value="">All statuses</option>
-                {statusOptions.map((status) => <option key={status} value={status}>{status.replaceAll("_", " ")}</option>)}
+                {statusOptions.map((status) => (
+                  <option key={status} value={status}>
+                    {status.replaceAll("_", " ")}
+                  </option>
+                ))}
               </select>
             </label>
             <SearchableCombobox
@@ -184,80 +230,113 @@ export default async function PlatformBillingCenterPage({
                 ...plans.map((plan) => ({ value: plan.id.toString(), label: plan.name, description: "Subscription plan" })),
               ]}
             />
-            <button type="submit" className="h-10 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">Apply</button>
-            <Link href={buildBillingTabHref(params, activeTab, true)} className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">Clear</Link>
+            <button
+              type="submit"
+              className="inline-flex h-11 items-center justify-center rounded-lg bg-[#171A21] px-4 text-sm font-semibold text-white transition hover:bg-[#3D4352] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 sm:h-10"
+            >
+              Apply
+            </button>
+            <Link
+              href={buildBillingTabHref(params, activeTab, true)}
+              className="inline-flex h-11 items-center justify-center rounded-lg border border-[var(--medium-gray)] bg-white px-4 text-sm font-semibold text-[#171A21] transition hover:border-[var(--light-orange)] hover:text-[var(--accent-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 sm:h-10"
+            >
+              Clear
+            </Link>
+          </div>
 
-            <details className="lg:col-span-5 rounded-md border border-[#E5E7EB] bg-[#FAFAFA]">
-              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 text-sm font-semibold text-[#111827]">
-                <span>Advanced filters</span>
-                <span className="text-xs font-medium text-[#6B7280]">Date, revenue, trial, renewal</span>
-              </summary>
-              <div className="grid gap-3 border-t border-[#E5E7EB] p-4 md:grid-cols-2 xl:grid-cols-4">
-                <label className="text-sm font-medium text-[#111827]">
-                  Date range
-                  <select name="date" defaultValue={params.date ?? "30d"} className="mt-1 h-10 w-full rounded-md border border-[#E5E7EB] px-3 text-sm">
-                    <option value="30d">Last 30 Days</option>
-                    <option value="7d">Last 7 Days</option>
-                    <option value="month">This Month</option>
-                    <option value="custom">Custom Range</option>
-                  </select>
-                </label>
-                <input type="date" name="from" defaultValue={params.from ?? ""} className="h-10 self-end rounded-md border border-[#E5E7EB] px-3 text-sm" aria-label="From date" />
-                <input type="date" name="to" defaultValue={params.to ?? ""} className="h-10 self-end rounded-md border border-[#E5E7EB] px-3 text-sm" aria-label="To date" />
-                <input type="number" name="revenueMin" defaultValue={params.revenueMin ?? ""} placeholder="Revenue min" className="h-10 self-end rounded-md border border-[#E5E7EB] px-3 text-sm" />
-                <input type="number" name="revenueMax" defaultValue={params.revenueMax ?? ""} placeholder="Revenue max" className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm" />
-                <select name="trial" defaultValue={params.trial ?? ""} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm" aria-label="Trial filter">
+          <details className="mt-3 rounded-lg border border-[var(--medium-gray)] bg-white" open={hasAdvancedFilters}>
+            <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-lg px-4 text-sm font-semibold text-[#171A21] transition hover:bg-[var(--light-gray)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]">
+              <span>Advanced filters</span>
+              <span className="text-xs font-medium text-[#7A8091]">Date, revenue, trial, renewal</span>
+            </summary>
+            <div className="grid gap-3 border-t border-[var(--medium-gray)] p-4 md:grid-cols-2 xl:grid-cols-4">
+              <label className="text-sm font-medium text-[#171A21]">
+                Date range
+                <select name="date" defaultValue={params.date ?? "30d"} className="mt-1 h-11 w-full rounded-lg border border-[var(--medium-gray)] bg-white px-3 text-sm outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] sm:h-10">
+                  <option value="30d">Last 30 Days</option>
+                  <option value="7d">Last 7 Days</option>
+                  <option value="month">This Month</option>
+                  <option value="custom">Custom Range</option>
+                </select>
+              </label>
+              <label className="text-sm font-medium text-[#171A21]">
+                From
+                <input type="date" name="from" defaultValue={params.from ?? ""} className="mt-1 h-11 w-full rounded-lg border border-[var(--medium-gray)] bg-white px-3 text-sm outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] sm:h-10" />
+              </label>
+              <label className="text-sm font-medium text-[#171A21]">
+                To
+                <input type="date" name="to" defaultValue={params.to ?? ""} className="mt-1 h-11 w-full rounded-lg border border-[var(--medium-gray)] bg-white px-3 text-sm outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] sm:h-10" />
+              </label>
+              <label className="text-sm font-medium text-[#171A21]">
+                Revenue min
+                <input type="number" name="revenueMin" defaultValue={params.revenueMin ?? ""} placeholder="0" className="mt-1 h-11 w-full rounded-lg border border-[var(--medium-gray)] bg-white px-3 text-sm outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] sm:h-10" />
+              </label>
+              <label className="text-sm font-medium text-[#171A21]">
+                Revenue max
+                <input type="number" name="revenueMax" defaultValue={params.revenueMax ?? ""} placeholder="10000" className="mt-1 h-11 w-full rounded-lg border border-[var(--medium-gray)] bg-white px-3 text-sm outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] sm:h-10" />
+              </label>
+              <label className="text-sm font-medium text-[#171A21]">
+                Trial
+                <select name="trial" defaultValue={params.trial ?? ""} className="mt-1 h-11 w-full rounded-lg border border-[var(--medium-gray)] bg-white px-3 text-sm outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] sm:h-10">
                   <option value="">All trials</option>
                   <option value="trial">Trial only</option>
                   <option value="paid">Paid only</option>
                 </select>
-                <select name="renewal" defaultValue={params.renewal ?? ""} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm" aria-label="Renewal filter">
+              </label>
+              <label className="text-sm font-medium text-[#171A21]">
+                Renewal
+                <select name="renewal" defaultValue={params.renewal ?? ""} className="mt-1 h-11 w-full rounded-lg border border-[var(--medium-gray)] bg-white px-3 text-sm outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] sm:h-10">
                   <option value="">All renewals</option>
                   <option value="today">Renewing today</option>
                   <option value="week">Renewing this week</option>
                   <option value="month">Renewing this month</option>
                   <option value="overdue">Overdue renewals</option>
                 </select>
-              </div>
-            </details>
-          </form>
-        </section>
+              </label>
+            </div>
+          </details>
+        </form>
       </MobileFilterDrawer>
 
-      <BillingCenterTabs activeTab={activeTab} params={params} />
-
       {activeTab === "overview" ? (
-        <div className="grid gap-4">
-          <MobileAccordionSection title="Billing Alerts" defaultOpen>
-            <BillingAlerts subscriptions={subscriptions} invoices={invoices} payments={payments} now={now} />
-          </MobileAccordionSection>
-          <MobileAccordionSection title="Revenue Charts">
-            <Panel title="Revenue Charts">
-              <div className="grid gap-4 xl:grid-cols-2">
-                <Chart title="Monthly Revenue Trend" points={buildRevenueTrend(payments, recentMonths)} money />
-                <Chart title="Subscription Growth Trend" points={buildDateTrend(subscriptions, recentMonths, "createdAt")} />
-                <Chart title="Business Growth Trend" points={buildBusinessGrowth(invoices, recentMonths)} />
-                <Distribution title="Plan Distribution" points={plans.map((plan) => ({ label: plan.name, value: subscriptions.filter((subscription) => subscription.subscriptionPlanId === plan.id).length }))} />
-                <Distribution title="Revenue by Plan" points={revenueByPlan.map((plan) => ({ label: plan.name, value: plan.revenue }))} money />
-                <Chart title="Renewal Forecast" points={buildRenewalForecast(subscriptions, now)} />
-              </div>
-            </Panel>
-          </MobileAccordionSection>
-          <MobileAccordionSection title="Billing Health Score">
-            <Panel title="Billing Health Score">
-              <div className="flex flex-col gap-4">
-                <div className={`rounded-md border p-4 ${billingHealth.tone}`}>
-                  <p className="text-xs font-semibold uppercase tracking-wide">Billing health</p>
-                  <p className="mt-2 text-3xl font-semibold">{billingHealth.label}</p>
-                  <p className="mt-2 text-sm">{billingHealth.description}</p>
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
+          <div className="grid content-start gap-3">
+            <MobileAccordionSection title="Billing Health Score" defaultOpen>
+              <div className="rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
+                <h2 className="text-sm font-bold tracking-tight text-[#171A21]">Billing health</h2>
+                <div className="mt-2.5 flex items-center gap-2">
+                  <span className={`h-2.5 w-2.5 rounded-full ${billingHealth.dot}`} aria-hidden="true" />
+                  <p className={`text-xl font-bold ${billingHealth.text}`}>{billingHealth.label}</p>
                 </div>
-                <div className="grid gap-2 text-sm">
-                  <HealthLine label="Outstanding invoices" value={overdueInvoices.length} />
-                  <HealthLine label="Suspensions" value={suspendedAccounts.length} />
+                <p className="mt-1.5 text-xs text-[#7A8091]">{billingHealth.description}</p>
+                <div className="mt-3 grid gap-1.5 border-t border-[var(--medium-gray)] pt-3 text-xs">
+                  <HealthLine label="Outstanding invoices" value={overdueInvoices.length} danger={overdueInvoices.length > 0} />
+                  <HealthLine label="Suspensions" value={suspendedAccounts.length} danger={suspendedAccounts.length > 0} />
                   <HealthLine label="Renewals in 30 days" value={expiringWithin30.length} />
                 </div>
               </div>
-            </Panel>
+            </MobileAccordionSection>
+            <MobileAccordionSection title="Billing Alerts" defaultOpen>
+              <BillingAlerts subscriptions={subscriptions} invoices={invoices} payments={payments} now={now} />
+            </MobileAccordionSection>
+          </div>
+          <MobileAccordionSection title="Revenue Charts">
+            <div className="rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)] md:p-5">
+              <h2 className="text-sm font-bold tracking-tight text-[#171A21]">Revenue &amp; growth</h2>
+              <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-5">
+                <TrendSpark title="Monthly revenue" points={buildRevenueTrend(payments, recentMonths)} money />
+                <TrendSpark title="Subscription growth" points={buildDateTrend(subscriptions, recentMonths, "createdAt")} />
+                <TrendSpark title="Business growth" points={buildBusinessGrowth(invoices, recentMonths)} />
+                <TrendSpark title="Renewal forecast" points={buildRenewalForecast(subscriptions, now)} tone="info" allLabels />
+              </div>
+              <div className="mt-5 grid gap-4 border-t border-[var(--medium-gray)] pt-4 md:grid-cols-2">
+                <DistributionRows
+                  title="Plan distribution"
+                  points={plans.map((plan) => ({ label: plan.name, value: subscriptions.filter((subscription) => subscription.subscriptionPlanId === plan.id).length }))}
+                />
+                <DistributionRows title="Revenue by plan" points={revenueByPlan.map((plan) => ({ label: plan.name, value: plan.revenue }))} money />
+              </div>
+            </div>
           </MobileAccordionSection>
         </div>
       ) : null}
@@ -265,9 +344,9 @@ export default async function PlatformBillingCenterPage({
       {activeTab === "subscriptions" ? (
         <div className="grid gap-4">
           <MobileAccordionSection title="Subscription Management" defaultOpen>
-            <Panel title="Subscription Management">
+            <SectionCard title="Subscription Management">
               <AdvancedSubscriptionTable subscriptions={filteredSubscriptions} />
-            </Panel>
+            </SectionCard>
           </MobileAccordionSection>
           <MobileAccordionSection title="Renewal Center">
             <RenewalCenter subscriptions={subscriptions} now={now} />
@@ -301,30 +380,28 @@ export default async function PlatformBillingCenterPage({
             <ChurnAnalytics subscriptions={subscriptions} />
           </MobileAccordionSection>
           <MobileAccordionSection title="Revenue Summary">
-            <Panel title="Revenue Summary Panel">
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                <MiniMetric label="Today Revenue" value={formatMoney(todayRevenue)} />
-                <MiniMetric label="This Month Revenue" value={formatMoney(monthlyRevenue)} />
-                <MiniMetric label="Last Month Revenue" value={formatMoney(lastMonthRevenue)} />
-                <MiniMetric label="Year To Date Revenue" value={formatMoney(ytdRevenue)} />
-                <MiniMetric label="Average Revenue Per Business" value={formatMoney(averageRevenuePerBusiness)} />
-                <MiniMetric label="Highest Revenue Plan" value={highestRevenuePlan} />
-                <MiniMetric label="Lowest Revenue Plan" value={lowestRevenuePlan} />
+            <SectionCard title="Revenue Summary Panel">
+              <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+                <MetricCard label="Today Revenue" value={formatMoney(todayRevenue)} className="h-full" />
+                <MetricCard label="This Month Revenue" value={formatMoney(monthlyRevenue)} className="h-full" />
+                <MetricCard label="Last Month Revenue" value={formatMoney(lastMonthRevenue)} className="h-full" />
+                <MetricCard label="Year To Date Revenue" value={formatMoney(ytdRevenue)} className="h-full" />
+                <MetricCard label="Average Revenue Per Business" value={formatMoney(averageRevenuePerBusiness)} className="h-full" />
+                <MetricCard label="Highest Revenue Plan" value={highestRevenuePlan} className="h-full" />
+                <MetricCard label="Lowest Revenue Plan" value={lowestRevenuePlan} className="h-full" />
               </div>
-            </Panel>
+            </SectionCard>
           </MobileAccordionSection>
           <MobileAccordionSection title="Financial Exports">
-            <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-[#F97316]">Financial Exports</p>
-                  <h2 className="mt-1 text-lg font-semibold text-[#111827]">Filter-aware billing reports</h2>
-                </div>
-                <div className="grid gap-2 sm:grid-cols-3">
-                  <ExportButton href={`/platform/billing-center/export?${buildQuery(params)}&format=csv`} icon={<Download className="h-4 w-4" />} label="CSV" />
-                  <ExportButton href={`/platform/billing-center/export?${buildQuery(params)}&format=excel`} icon={<FileSpreadsheet className="h-4 w-4" />} label="Excel" />
-                  <ExportButton href={`/platform/billing-center/export?${buildQuery(params)}&format=pdf`} icon={<FileText className="h-4 w-4" />} label="PDF" />
-                </div>
+            <section className="flex flex-col gap-3 rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)] lg:flex-row lg:items-center lg:justify-between lg:p-5">
+              <div>
+                <h2 className="text-sm font-bold tracking-tight text-[#171A21]">Financial exports</h2>
+                <p className="mt-0.5 text-xs text-[#7A8091]">Filter-aware billing reports in your preferred format.</p>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-3">
+                <ExportButton href={`/platform/billing-center/export?${buildQuery(params)}&format=csv`} icon={<Download className="h-4 w-4" aria-hidden="true" />} label="CSV" />
+                <ExportButton href={`/platform/billing-center/export?${buildQuery(params)}&format=excel`} icon={<FileSpreadsheet className="h-4 w-4" aria-hidden="true" />} label="Excel" />
+                <ExportButton href={`/platform/billing-center/export?${buildQuery(params)}&format=pdf`} icon={<FileText className="h-4 w-4" aria-hidden="true" />} label="PDF" />
               </div>
             </section>
           </MobileAccordionSection>
@@ -360,27 +437,16 @@ function buildBillingTabHref(params: BillingParams, tab: BillingTabKey, clearFil
   return "/platform/billing-center?" + query.toString();
 }
 
-function BillingCenterTabs({ activeTab, params }: { activeTab: BillingTabKey; params: BillingParams }) {
+function AttentionLink({ href, count, label, danger = false }: { href: string; count: number; label: string; danger?: boolean }) {
   return (
-    <nav className="rounded-md border border-[#E5E7EB] bg-white p-2 shadow-sm" aria-label="Billing Center sections">
-      <div className="grid gap-2 sm:grid-cols-4">
-        {billingTabs.map((tab) => {
-          const active = activeTab === tab.key;
-          return (
-            <Link
-              key={tab.key}
-              href={buildBillingTabHref(params, tab.key)}
-              className={`inline-flex min-h-11 items-center justify-center rounded-md px-4 text-sm font-semibold transition ${
-                active ? "bg-[#F97316] text-white" : "text-[#6B7280] hover:bg-orange-50 hover:text-[#F97316]"
-              }`}
-              aria-current={active ? "page" : undefined}
-            >
-              {tab.label}
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
+    <Link
+      href={href}
+      className={`rounded-md transition hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 ${
+        danger && count > 0 ? "text-[#B91C1C]" : ""
+      }`}
+    >
+      <span className="tabular-nums">{count}</span> <span className="text-sm font-medium">{label}</span>
+    </Link>
   );
 }
 
@@ -393,51 +459,68 @@ function AdvancedSubscriptionTable({ subscriptions }: { subscriptions: Subscript
         ))}
         {subscriptions.length === 0 ? <EmptyState title="No subscriptions match these filters." className="py-8" /> : null}
       </div>
-      <div className="hidden overflow-x-auto md:block">
-      <table className="w-full min-w-[1320px] border-separate border-spacing-0 text-left text-sm">
-        <thead>
-          <tr className="text-[#6B7280]">
-            {["Business", "Plan", "Billing", "Status", "Start Date", "Expiry Date", "Renewal Date", "Days Remaining", "Monthly Value", "Annual Value", "Trial Status", "Created By", "Actions"].map((heading) => (
-              <th key={heading} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">{heading}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {subscriptions.map((subscription) => {
-            const annual = getAnnualSubscriptionValue(subscription);
-            const monthly = annual / 12;
-            const remaining = getSubscriptionRemainingDays(subscription);
-            return (
-              <tr key={subscription.id} className="align-top">
-                <td className="border-b border-[#E5E7EB] px-3 py-4 font-semibold text-[#111827]">{subscription.business.name}</td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{subscription.subscriptionPlan.name}</td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatBillingCycle(subscription.billingCycle)}</td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4"><LifecycleBadge status={deriveLifecycleStatus(subscription)} /></td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(subscription.startDate)}</td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{subscription.expiryDate ? formatDate(subscription.expiryDate) : "-"}</td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{subscription.renewalDate ? formatDate(subscription.renewalDate) : "-"}</td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{remaining === null ? "-" : remaining}</td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatMoney(monthly)}</td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatMoney(annual)}</td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{getTrialRemainingDays(subscription) === null ? "Not trial" : `${getTrialRemainingDays(subscription)} days left`}</td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{subscription.auditLogs[0]?.user?.name ?? "System"}</td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4">
-                  <div className="flex flex-wrap gap-2">
-                    <ActionLink href={`/platform/businesses/${subscription.business.uuid}`} label="View" />
-                    <ActionLink href={`/platform/businesses/${subscription.business.uuid}/edit`} label="Edit" />
-                    <ActionLink href="/platform/subscriptions" label="Suspend" />
-                    <ActionLink href="/platform/subscriptions" label="Activate" />
-                    <ActionLink href="/platform/subscriptions" label="Cancel" />
-                    <ActionLink href={`/platform/businesses/${subscription.business.uuid}/edit`} label="Upgrade" />
-                    <ActionLink href={`/platform/businesses/${subscription.business.uuid}/edit`} label="Downgrade" />
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      {subscriptions.length === 0 ? <EmptyState title="No subscriptions match these filters." className="my-4 py-8" /> : null}
+      <div className="hidden md:block">
+        <DataTable className="min-w-[960px] table-fixed">
+          <DataTableHeader>
+            <tr>
+              <DataTableHeadCell className="w-[19%] pl-4">Business</DataTableHeadCell>
+              <DataTableHeadCell className="w-[17%]">Plan</DataTableHeadCell>
+              <DataTableHeadCell className="w-[15%]">Status</DataTableHeadCell>
+              <DataTableHeadCell className="w-[12%]">Expiry</DataTableHeadCell>
+              <DataTableHeadCell className="w-[12%]">Remaining</DataTableHeadCell>
+              <DataTableHeadCell className="w-[12%] text-right">Value</DataTableHeadCell>
+              <DataTableHeadCell className="pr-4">Actions</DataTableHeadCell>
+            </tr>
+          </DataTableHeader>
+          <DataTableBody>
+            {subscriptions.map((subscription) => {
+              const annual = getAnnualSubscriptionValue(subscription);
+              const monthly = annual / 12;
+              const remaining = getSubscriptionRemainingDays(subscription);
+              const trialDays = getTrialRemainingDays(subscription);
+              return (
+                <tr key={subscription.id} className="align-middle">
+                  <td className="min-w-0 py-3 pl-4 pr-3 align-middle">
+                    <p className="truncate font-semibold text-[#171A21]">{subscription.business.name}</p>
+                    <p className="truncate text-xs text-[#7A8091]">by {subscription.auditLogs[0]?.user?.name ?? "System"}</p>
+                  </td>
+                  <DataTableCell>
+                    <p className="truncate font-medium text-[#3D4352]">{subscription.subscriptionPlan.name}</p>
+                    <p className="truncate text-xs text-[#7A8091]">
+                      {formatBillingCycle(subscription.billingCycle)} · since {formatDate(subscription.startDate)}
+                    </p>
+                  </DataTableCell>
+                  <DataTableCell>
+                    <LifecycleBadge status={deriveLifecycleStatus(subscription)} />
+                  </DataTableCell>
+                  <DataTableCell className="whitespace-nowrap">
+                    <p>{subscription.expiryDate ? formatDate(subscription.expiryDate) : "—"}</p>
+                    {subscription.renewalDate ? <p className="text-xs text-[#7A8091]">renews {formatDate(subscription.renewalDate)}</p> : null}
+                  </DataTableCell>
+                  <DataTableCell className="whitespace-nowrap">
+                    <RemainingDays days={remaining} />
+                    {trialDays !== null ? <p className="text-xs text-[#7A8091]">Trial: {trialDays} left</p> : null}
+                  </DataTableCell>
+                  <DataTableCell className="whitespace-nowrap text-right">
+                    <p className="font-semibold tabular-nums text-[#171A21]">{formatMoney(monthly)}/mo</p>
+                    <p className="text-xs tabular-nums text-[#7A8091]">{formatMoney(annual)}/yr</p>
+                  </DataTableCell>
+                  <DataTableCell className="whitespace-nowrap pr-4">
+                    <div className="flex items-center gap-1.5">
+                      <ButtonLink href={`/platform/businesses/${subscription.business.uuid}`} variant="primary" size="sm">
+                        View
+                      </ButtonLink>
+                      <ButtonLink href="/platform/subscriptions" variant="outline" size="sm">
+                        Manage
+                      </ButtonLink>
+                    </div>
+                  </DataTableCell>
+                </tr>
+              );
+            })}
+          </DataTableBody>
+        </DataTable>
+        {subscriptions.length === 0 ? <EmptyState title="No subscriptions match these filters." className="my-4 py-8" /> : null}
       </div>
     </>
   );
@@ -447,35 +530,54 @@ function SubscriptionMobileCard({ subscription }: { subscription: SubscriptionRo
   const annual = getAnnualSubscriptionValue(subscription);
   const monthly = annual / 12;
   const remaining = getSubscriptionRemainingDays(subscription);
+  const trialDays = getTrialRemainingDays(subscription);
   return (
-    <article className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
+    <article className="rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#F97316]">Subscription</p>
-          <h3 className="mt-1 text-base font-semibold text-[#111827]">{subscription.business.name}</h3>
-          <p className="mt-1 text-sm text-[#6B7280]">{subscription.subscriptionPlan.name} - {formatBillingCycle(subscription.billingCycle)}</p>
+        <div className="min-w-0">
+          <h3 className="break-words font-semibold text-[#171A21]">{subscription.business.name}</h3>
+          <p className="mt-1 truncate text-xs text-[#7A8091]">
+            {subscription.subscriptionPlan.name} · {formatBillingCycle(subscription.billingCycle)} · by {subscription.auditLogs[0]?.user?.name ?? "System"}
+          </p>
         </div>
         <LifecycleBadge status={deriveLifecycleStatus(subscription)} />
       </div>
-      <div className="mt-4 grid gap-2 text-sm">
-        <BillingMobileLine label="Expiry" value={subscription.expiryDate ? formatDate(subscription.expiryDate) : "-"} />
-        <BillingMobileLine label="Renewal" value={subscription.renewalDate ? formatDate(subscription.renewalDate) : "-"} />
-        <BillingMobileLine label="Remaining" value={remaining === null ? "-" : `${remaining} day(s)`} />
-        <BillingMobileLine label="Monthly Value" value={formatMoney(monthly)} />
-        <BillingMobileLine label="Annual Value" value={formatMoney(annual)} />
-        <BillingMobileLine label="Trial" value={getTrialRemainingDays(subscription) === null ? "Not trial" : `${getTrialRemainingDays(subscription)} days left`} />
-        <BillingMobileLine label="Created By" value={subscription.auditLogs[0]?.user?.name ?? "System"} />
-      </div>
-      <div className="mt-4 flex flex-wrap gap-2">
-        <ActionLink href={`/platform/businesses/${subscription.business.uuid}`} label="View" />
-        <ActionLink href={`/platform/businesses/${subscription.business.uuid}/edit`} label="Edit" />
-        <ActionLink href="/platform/subscriptions" label="Suspend" />
-        <ActionLink href="/platform/subscriptions" label="Activate" />
-        <ActionLink href="/platform/subscriptions" label="Cancel" />
-        <ActionLink href={`/platform/businesses/${subscription.business.uuid}/edit`} label="Upgrade" />
-        <ActionLink href={`/platform/businesses/${subscription.business.uuid}/edit`} label="Downgrade" />
+      <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+        <MobileLine label="Expiry" value={subscription.expiryDate ? formatDate(subscription.expiryDate) : "—"} />
+        <MobileLine label="Remaining" value={remaining === null ? "—" : `${remaining} days`} warn={remaining !== null && remaining <= 30} />
+        <MobileLine label="Renewal" value={subscription.renewalDate ? formatDate(subscription.renewalDate) : "—"} />
+        <MobileLine label="Trial" value={trialDays === null ? "Not trial" : `${trialDays} days left`} />
+        <MobileLine label="Monthly" value={formatMoney(monthly)} />
+        <MobileLine label="Annual" value={formatMoney(annual)} />
+      </dl>
+      <div className="mt-3 flex items-center gap-2">
+        <ButtonLink href={`/platform/businesses/${subscription.business.uuid}`} variant="primary" size="sm" className="flex-1">
+          View
+        </ButtonLink>
+        <ButtonLink href="/platform/subscriptions" variant="outline" size="sm" className="flex-1">
+          Manage
+        </ButtonLink>
       </div>
     </article>
+  );
+}
+
+function MobileLine({ label, value, warn = false }: { label: string; value: string; warn?: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <dt className="text-[#7A8091]">{label}</dt>
+      <dd className={`text-right font-semibold ${warn ? "text-[#B25E09]" : "text-[#171A21]"}`}>{value}</dd>
+    </div>
+  );
+}
+
+function RemainingDays({ days }: { days: number | null }) {
+  if (days === null) return <span className="text-[#7A8091]">—</span>;
+  const className = days <= 7 ? "font-semibold text-[#B91C1C]" : days <= 30 ? "font-semibold text-[#B25E09]" : "text-[#3D4352]";
+  return (
+    <span className={`tabular-nums ${className}`}>
+      {days} {days === 1 ? "day" : "days"}
+    </span>
   );
 }
 
@@ -494,46 +596,70 @@ function RenewalCenter({ subscriptions, now }: { subscriptions: SubscriptionRow[
     return days !== null && days < 0 && !["CANCELLED", "SUSPENDED"].includes(subscription.status);
   });
   return (
-    <Panel title="Renewal Center">
-      <div className="grid gap-3 sm:grid-cols-2">
-        <MiniMetric label="Renewing Today" value={today.length.toString()} />
-        <MiniMetric label="Renewing This Week" value={week.length.toString()} />
-        <MiniMetric label="Renewing This Month" value={month.length.toString()} />
-        <MiniMetric label="Overdue Renewals" value={overdue.length.toString()} />
+    <SectionCard title="Renewal Center">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <MetricCard label="Renewing Today" value={today.length.toString()} className="h-full" />
+        <MetricCard label="Renewing This Week" value={week.length.toString()} className="h-full" />
+        <MetricCard label="Renewing This Month" value={month.length.toString()} className="h-full" />
+        <MetricCard label="Overdue Renewals" value={overdue.length.toString()} tone={overdue.length > 0 ? "danger" : "neutral"} className="h-full" />
       </div>
       <div className="mt-4 grid gap-2">
         {month.slice(0, 6).map((subscription) => (
-          <BillingActionRow key={subscription.id} title={subscription.business.name} meta={`${subscription.subscriptionPlan.name} - ${subscription.renewalDate ? formatDate(subscription.renewalDate) : "No renewal date"}`} actions={["Send Reminder", "Mark Renewed", "Extend Subscription", "Suspend Account"]} />
+          <BillingActionRow
+            key={subscription.id}
+            title={subscription.business.name}
+            meta={`${subscription.subscriptionPlan.name} · ${subscription.renewalDate ? formatDate(subscription.renewalDate) : "No renewal date"}`}
+            viewHref={`/platform/businesses/${subscription.business.uuid}`}
+          />
         ))}
-        {month.length === 0 ? <EmptyText text="No upcoming renewals in this window." /> : null}
+        {month.length === 0 ? <EmptyState title="No upcoming renewals in this window." className="p-4 md:p-4" /> : null}
       </div>
-    </Panel>
+    </SectionCard>
   );
 }
 
 function TrialManagement({ subscriptions }: { subscriptions: SubscriptionRow[] }) {
   return (
-    <Panel title="Trial Management">
-      <div className="grid gap-3">
+    <SectionCard title="Trial Management">
+      <div className="grid gap-2">
         {subscriptions.map((subscription) => (
           <BillingActionRow
             key={subscription.id}
             title={subscription.business.name}
-            meta={`Trial: ${subscription.trialStartDate ? formatDate(subscription.trialStartDate) : "-"} to ${subscription.trialEndDate ? formatDate(subscription.trialEndDate) : "-"} - ${getTrialRemainingDays(subscription) ?? 0} days remaining`}
-            actions={["Convert To Paid", "Extend Trial", "Cancel Trial"]}
+            meta={`Trial: ${subscription.trialStartDate ? formatDate(subscription.trialStartDate) : "—"} to ${subscription.trialEndDate ? formatDate(subscription.trialEndDate) : "—"} · ${getTrialRemainingDays(subscription) ?? 0} days remaining`}
+            viewHref={`/platform/businesses/${subscription.business.uuid}`}
           />
         ))}
-        {subscriptions.length === 0 ? <EmptyText text="No trial subscriptions are currently active." /> : null}
+        {subscriptions.length === 0 ? <EmptyState title="No trial subscriptions are currently active." className="p-4 md:p-4" /> : null}
       </div>
-    </Panel>
+    </SectionCard>
+  );
+}
+
+function BillingActionRow({ title, meta, viewHref }: { title: string; meta: string; viewHref: string }) {
+  return (
+    <div className="flex flex-col gap-2 rounded-lg border border-[var(--medium-gray)] p-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0">
+        <p className="truncate font-semibold text-[#171A21]">{title}</p>
+        <p className="mt-0.5 truncate text-xs text-[#7A8091]">{meta}</p>
+      </div>
+      <div className="flex shrink-0 items-center gap-1.5">
+        <ButtonLink href={viewHref} variant="outline" size="sm">
+          View
+        </ButtonLink>
+        <ButtonLink href="/platform/subscriptions" variant="outline" size="sm">
+          Manage
+        </ButtonLink>
+      </div>
+    </div>
   );
 }
 
 function PlanPerformance({ plans, subscriptions, payments }: { plans: Awaited<ReturnType<typeof prisma.subscriptionPlan.findMany>>; subscriptions: SubscriptionRow[]; payments: Array<{ amount: Prisma.Decimal; paidAt: Date; invoice: { subscription: { subscriptionPlanId: number; subscriptionPlan: { name: string } } } }> }) {
   const revenueByPlan = calculateRevenueByPlan(payments, plans);
   return (
-    <Panel title="Plan Performance">
-      <div className="grid gap-4 xl:grid-cols-4">
+    <SectionCard title="Plan Performance">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {plans.map((plan) => {
           const planSubscriptions = subscriptions.filter((subscription) => subscription.subscriptionPlanId === plan.id);
           const revenue = revenueByPlan.find((item) => item.id === plan.id)?.revenue ?? 0;
@@ -542,21 +668,21 @@ function PlanPerformance({ plans, subscriptions, payments }: { plans: Awaited<Re
           const churnRate = planSubscriptions.length ? Math.round((cancellations / planSubscriptions.length) * 100) : 0;
           const avgDuration = averageDurationDays(planSubscriptions);
           return (
-            <article key={plan.id} className="rounded-md border border-[#E5E7EB] p-4">
-              <h3 className="font-semibold text-[#111827]">{plan.name}</h3>
-              <div className="mt-4 grid gap-2 text-sm">
-                <MetricLine label="Businesses" value={new Set(planSubscriptions.map((subscription) => subscription.businessId)).size.toString()} />
-                <MetricLine label="Revenue" value={formatMoney(revenue)} />
-                <MetricLine label="Renewals" value={renewals.toString()} />
-                <MetricLine label="Cancellations" value={cancellations.toString()} />
-                <MetricLine label="Churn Rate" value={`${churnRate}%`} />
-                <MetricLine label="Average Duration" value={`${avgDuration} days`} />
-              </div>
+            <article key={plan.id} className="rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
+              <h3 className="font-bold tracking-tight text-[#171A21]">{plan.name}</h3>
+              <dl className="mt-3 grid gap-1.5 text-xs">
+                <MobileLine label="Businesses" value={new Set(planSubscriptions.map((subscription) => subscription.businessId)).size.toString()} />
+                <MobileLine label="Revenue" value={formatMoney(revenue)} />
+                <MobileLine label="Renewals" value={renewals.toString()} />
+                <MobileLine label="Cancellations" value={cancellations.toString()} warn={cancellations > 0} />
+                <MobileLine label="Churn Rate" value={`${churnRate}%`} warn={churnRate > 0} />
+                <MobileLine label="Average Duration" value={`${avgDuration} days`} />
+              </dl>
             </article>
           );
         })}
       </div>
-    </Panel>
+    </SectionCard>
   );
 }
 
@@ -564,100 +690,126 @@ function InvoiceStatusDashboard({ invoices }: { invoices: InvoiceRow[] }) {
   const statuses = ["DRAFT", "ISSUED", "PAID", "OVERDUE", "CANCELLED"];
   const partiallyPaid = invoices.filter((invoice) => invoice.payments.length > 0 && invoice.payments.reduce((sum, payment) => sum + Number(payment.amount), 0) < Number(invoice.amount)).length;
   return (
-    <Panel title="Invoice Management">
-      <div className="grid gap-3 sm:grid-cols-2">
-        {statuses.map((status) => <MiniMetric key={status} label={status === "OVERDUE" ? "Overdue" : titleCase(status)} value={invoices.filter((invoice) => getInvoiceDisplayStatus(invoice) === status).length.toString()} />)}
-        <MiniMetric label="Partially Paid" value={partiallyPaid.toString()} />
+    <SectionCard title="Invoice Management">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
+        {statuses.map((status) => {
+          const count = invoices.filter((invoice) => getInvoiceDisplayStatus(invoice) === status).length;
+          return (
+            <MetricCard
+              key={status}
+              label={status === "OVERDUE" ? "Overdue" : titleCase(status)}
+              value={count.toString()}
+              tone={status === "OVERDUE" && count > 0 ? "danger" : status === "PAID" ? "success" : "neutral"}
+              className="h-full"
+            />
+          );
+        })}
+        <MetricCard label="Partially Paid" value={partiallyPaid.toString()} tone={partiallyPaid > 0 ? "warning" : "neutral"} className="h-full" />
       </div>
-    </Panel>
+    </SectionCard>
   );
 }
 
 function InvoiceTable({ invoices }: { invoices: InvoiceRow[] }) {
   return (
-    <Panel title="Invoice Table">
+    <SectionCard title="Invoice Table">
       <div className="grid gap-3 md:hidden">
         {invoices.slice(0, 20).map((invoice) => (
           <InvoiceMobileCard key={invoice.id} invoice={invoice} />
         ))}
         {invoices.length === 0 ? <EmptyState title="No invoices match these filters." className="py-8" /> : null}
       </div>
-      <div className="hidden overflow-x-auto md:block">
-        <table className="w-full min-w-[920px] border-separate border-spacing-0 text-left text-sm">
-          <thead>
-            <tr className="text-[#6B7280]">
-              {["Invoice Number", "Business", "Plan", "Issue Date", "Due Date", "Amount", "Status", "Payment Date", "Actions"].map((heading) => (
-                <th key={heading} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">{heading}</th>
-              ))}
+      <div className="hidden md:block">
+        <DataTable className="min-w-[820px] table-fixed">
+          <DataTableHeader>
+            <tr>
+              <DataTableHeadCell className="w-[20%] pl-4">Invoice</DataTableHeadCell>
+              <DataTableHeadCell className="w-[26%]">Business</DataTableHeadCell>
+              <DataTableHeadCell className="w-[15%] text-right">Amount</DataTableHeadCell>
+              <DataTableHeadCell className="w-[13%]">Status</DataTableHeadCell>
+              <DataTableHeadCell className="w-[16%]">Due</DataTableHeadCell>
+              <DataTableHeadCell className="pr-4">Actions</DataTableHeadCell>
             </tr>
-          </thead>
-          <tbody>
-            {invoices.slice(0, 20).map((invoice) => (
-              <tr key={invoice.id}>
-                <td className="border-b border-[#E5E7EB] px-3 py-4 font-semibold text-[#111827]">{invoice.invoiceNumber}</td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{invoice.business.name}</td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{invoice.subscription.subscriptionPlan.name}</td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(invoice.invoiceDate)}</td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(invoice.dueDate)}</td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatMoney(invoice.amount, invoice.currency)}</td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4"><LifecycleBadge status={getInvoiceDisplayStatus(invoice)} /></td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{invoice.payments[0] ? formatDate(invoice.payments[0].paidAt) : "-"}</td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4"><ActionLink href={`/platform/invoices/${invoice.uuid}`} label="View" /></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+          </DataTableHeader>
+          <DataTableBody>
+            {invoices.slice(0, 20).map((invoice) => {
+              const displayStatus = getInvoiceDisplayStatus(invoice);
+              return (
+                <tr key={invoice.id} className="align-middle">
+                  <td className="min-w-0 py-3 pl-4 pr-3 align-middle">
+                    <p className="truncate font-semibold text-[#171A21]">{invoice.invoiceNumber}</p>
+                    <p className="truncate text-xs text-[#7A8091]">Issued {formatDate(invoice.invoiceDate)}</p>
+                  </td>
+                  <DataTableCell>
+                    <p className="truncate font-medium text-[#3D4352]">{invoice.business.name}</p>
+                    <p className="truncate text-xs text-[#7A8091]">{invoice.subscription.subscriptionPlan.name}</p>
+                  </DataTableCell>
+                  <DataTableCell className="whitespace-nowrap text-right font-semibold tabular-nums text-[#171A21]">
+                    {formatMoney(invoice.amount, invoice.currency)}
+                  </DataTableCell>
+                  <DataTableCell>
+                    <LifecycleBadge status={displayStatus} />
+                  </DataTableCell>
+                  <DataTableCell className={`whitespace-nowrap ${displayStatus === "OVERDUE" ? "font-semibold text-[#B91C1C]" : ""}`}>
+                    <p>{formatDate(invoice.dueDate)}</p>
+                    {invoice.payments[0] ? <p className="text-xs font-normal text-[#7A8091]">paid {formatDate(invoice.payments[0].paidAt)}</p> : null}
+                  </DataTableCell>
+                  <DataTableCell className="whitespace-nowrap pr-4">
+                    <ButtonLink href={`/platform/invoices/${invoice.uuid}`} variant="primary" size="sm">
+                      View
+                    </ButtonLink>
+                  </DataTableCell>
+                </tr>
+              );
+            })}
+          </DataTableBody>
+        </DataTable>
+        {invoices.length === 0 ? <EmptyState title="No invoices match these filters." className="my-4 py-8" /> : null}
       </div>
-    </Panel>
+    </SectionCard>
   );
 }
 
 function InvoiceMobileCard({ invoice }: { invoice: InvoiceRow }) {
+  const displayStatus = getInvoiceDisplayStatus(invoice);
   return (
-    <article className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
+    <article className="rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#F97316]">Invoice</p>
-          <h3 className="mt-1 text-base font-semibold text-[#111827]">{invoice.invoiceNumber}</h3>
-          <p className="mt-1 text-sm text-[#6B7280]">{invoice.business.name}</p>
+        <div className="min-w-0">
+          <h3 className="break-words font-semibold text-[#171A21]">{invoice.invoiceNumber}</h3>
+          <p className="mt-1 truncate text-xs text-[#7A8091]">
+            {invoice.business.name} · {invoice.subscription.subscriptionPlan.name}
+          </p>
         </div>
-        <LifecycleBadge status={getInvoiceDisplayStatus(invoice)} />
+        <LifecycleBadge status={displayStatus} />
       </div>
-      <div className="mt-4 grid gap-2 text-sm">
-        <BillingMobileLine label="Plan" value={invoice.subscription.subscriptionPlan.name} />
-        <BillingMobileLine label="Issue Date" value={formatDate(invoice.invoiceDate)} />
-        <BillingMobileLine label="Due Date" value={formatDate(invoice.dueDate)} />
-        <BillingMobileLine label="Amount" value={formatMoney(invoice.amount, invoice.currency)} />
-        <BillingMobileLine label="Payment Date" value={invoice.payments[0] ? formatDate(invoice.payments[0].paidAt) : "-"} />
-      </div>
-      <div className="mt-4">
-        <ActionLink href={`/platform/invoices/${invoice.uuid}`} label="View" />
+      <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+        <MobileLine label="Amount" value={formatMoney(invoice.amount, invoice.currency)} />
+        <MobileLine label="Due" value={formatDate(invoice.dueDate)} warn={displayStatus === "OVERDUE"} />
+        <MobileLine label="Issued" value={formatDate(invoice.invoiceDate)} />
+        <MobileLine label="Payment" value={invoice.payments[0] ? formatDate(invoice.payments[0].paidAt) : "—"} />
+      </dl>
+      <div className="mt-3">
+        <ButtonLink href={`/platform/invoices/${invoice.uuid}`} variant="primary" size="sm" className="w-full">
+          View
+        </ButtonLink>
       </div>
     </article>
   );
 }
 
-function BillingMobileLine({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-start justify-between gap-3 rounded-md bg-white px-3 py-2">
-      <span className="shrink-0 text-[#6B7280]">{label}</span>
-      <span className="break-words text-right font-semibold text-[#111827]">{value}</span>
-    </div>
-  );
-}
-
 function PaymentTracking({ payments, now, monthStart, yearStart, outstandingRevenue, overdueRevenue }: { payments: Array<{ amount: Prisma.Decimal; paidAt: Date }>; now: Date; monthStart: Date; yearStart: Date; outstandingRevenue: number; overdueRevenue: number }) {
   return (
-    <Panel title="Payment Tracking">
-      <div className="grid gap-3 sm:grid-cols-2">
-        <MiniMetric label="Payments Received Today" value={formatMoney(sumPayments(payments.filter((payment) => isSameUtcDay(payment.paidAt, now))))} />
-        <MiniMetric label="This Month" value={formatMoney(sumPayments(payments.filter((payment) => payment.paidAt >= monthStart)))} />
-        <MiniMetric label="This Year" value={formatMoney(sumPayments(payments.filter((payment) => payment.paidAt >= yearStart)))} />
-        <MiniMetric label="Outstanding Revenue" value={formatMoney(outstandingRevenue)} />
-        <MiniMetric label="Overdue Revenue" value={formatMoney(overdueRevenue)} />
-        <MiniMetric label="Collected Revenue" value={formatMoney(sumPayments(payments))} />
+    <SectionCard title="Payment Tracking">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
+        <MetricCard label="Payments Received Today" value={formatMoney(sumPayments(payments.filter((payment) => isSameUtcDay(payment.paidAt, now))))} className="h-full" />
+        <MetricCard label="This Month" value={formatMoney(sumPayments(payments.filter((payment) => payment.paidAt >= monthStart)))} className="h-full" />
+        <MetricCard label="This Year" value={formatMoney(sumPayments(payments.filter((payment) => payment.paidAt >= yearStart)))} className="h-full" />
+        <MetricCard label="Outstanding Revenue" value={formatMoney(outstandingRevenue)} tone={outstandingRevenue > 0 ? "warning" : "neutral"} className="h-full" />
+        <MetricCard label="Overdue Revenue" value={formatMoney(overdueRevenue)} tone={overdueRevenue > 0 ? "danger" : "neutral"} className="h-full" />
+        <MetricCard label="Collected Revenue" value={formatMoney(sumPayments(payments))} tone="success" className="h-full" />
       </div>
-    </Panel>
+    </SectionCard>
   );
 }
 
@@ -669,39 +821,146 @@ function ChurnAnalytics({ subscriptions }: { subscriptions: SubscriptionRow[] })
     return days !== null && days < 0 && subscription.status !== "ACTIVE";
   });
   return (
-    <Panel title="Churn Analytics">
-      <div className="grid gap-3 sm:grid-cols-2">
-        <MiniMetric label="Cancelled Accounts" value={cancelled.length.toString()} />
-        <MiniMetric label="Suspended Accounts" value={suspended.length.toString()} />
-        <MiniMetric label="Failed Renewals" value={failedRenewals.length.toString()} />
-        <MiniMetric label="Average Subscription Lifetime" value={`${averageDurationDays(subscriptions)} days`} />
-        <MiniMetric label="Most Common Plan Downgrades" value="Not tracked yet" />
-        <MiniMetric label="Most Common Cancellation Reasons" value="Not tracked yet" />
+    <SectionCard title="Churn Analytics">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
+        <MetricCard label="Cancelled Accounts" value={cancelled.length.toString()} tone={cancelled.length > 0 ? "warning" : "neutral"} className="h-full" />
+        <MetricCard label="Suspended Accounts" value={suspended.length.toString()} tone={suspended.length > 0 ? "danger" : "neutral"} className="h-full" />
+        <MetricCard label="Failed Renewals" value={failedRenewals.length.toString()} tone={failedRenewals.length > 0 ? "warning" : "neutral"} className="h-full" />
+        <MetricCard label="Average Subscription Lifetime" value={`${averageDurationDays(subscriptions)} days`} className="h-full" />
+        <MetricCard label="Most Common Plan Downgrades" value="—" helper="Not tracked yet" className="h-full" />
+        <MetricCard label="Most Common Cancellation Reasons" value="—" helper="Not tracked yet" className="h-full" />
       </div>
-    </Panel>
+    </SectionCard>
   );
 }
 
+type BillingAlert = { severity: "danger" | "warning" | "success"; text: string };
+
 function BillingAlerts({ subscriptions, invoices, payments, now }: { subscriptions: SubscriptionRow[]; invoices: InvoiceRow[]; payments: Array<{ paidAt: Date; invoice: { business: { name: string }; subscription: { subscriptionPlan: { name: string } } } }>; now: Date }) {
-  const alerts = [
-    ...subscriptions.filter((subscription) => daysUntil(subscription.expiryDate, now) === 30).map((subscription) => `Subscription expires in 30 days: ${subscription.business.name}`),
-    ...subscriptions.filter((subscription) => daysUntil(subscription.expiryDate, now) === 7).map((subscription) => `Subscription expires in 7 days: ${subscription.business.name}`),
-    ...invoices.filter((invoice) => getInvoiceDisplayStatus(invoice) === "OVERDUE").map((invoice) => `Invoice overdue: ${invoice.invoiceNumber}`),
-    ...subscriptions.filter((subscription) => subscription.status === "TRIAL" && (getTrialRemainingDays(subscription) ?? 99) <= 7).map((subscription) => `Trial ending soon: ${subscription.business.name}`),
-    ...payments.slice(0, 3).map((payment) => `Payment recorded: ${payment.invoice.business.name}`),
+  const alerts: BillingAlert[] = [
+    ...invoices.filter((invoice) => getInvoiceDisplayStatus(invoice) === "OVERDUE").map((invoice): BillingAlert => ({ severity: "danger", text: `Invoice overdue: ${invoice.invoiceNumber}` })),
+    ...subscriptions.filter((subscription) => daysUntil(subscription.expiryDate, now) === 7).map((subscription): BillingAlert => ({ severity: "warning", text: `Subscription expires in 7 days: ${subscription.business.name}` })),
+    ...subscriptions.filter((subscription) => daysUntil(subscription.expiryDate, now) === 30).map((subscription): BillingAlert => ({ severity: "warning", text: `Subscription expires in 30 days: ${subscription.business.name}` })),
+    ...subscriptions.filter((subscription) => subscription.status === "TRIAL" && (getTrialRemainingDays(subscription) ?? 99) <= 7).map((subscription): BillingAlert => ({ severity: "warning", text: `Trial ending soon: ${subscription.business.name}` })),
+    ...payments.slice(0, 3).map((payment): BillingAlert => ({ severity: "success", text: `Payment recorded: ${payment.invoice.business.name}` })),
   ];
   return (
-    <Panel title="Billing Alerts">
-      <div className="grid gap-2">
+    <div className="rounded-xl border border-[var(--medium-gray)] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
+      <h2 className="text-sm font-bold tracking-tight text-[#171A21]">Billing alerts</h2>
+      <div className="mt-3 grid gap-2 text-sm">
         {alerts.slice(0, 12).map((alert) => (
-          <div key={alert} className="rounded-md border border-orange-200 bg-orange-50 px-3 py-2 text-sm font-semibold text-[#C2410C]">{alert}</div>
+          <p key={alert.text} className="flex items-start gap-2 text-[#3D4352]">
+            <span
+              className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${
+                alert.severity === "danger" ? "bg-[#E24B4A]" : alert.severity === "warning" ? "bg-[#EF9F27]" : "bg-[#1D9E75]"
+              }`}
+              aria-hidden="true"
+            />
+            <span className="min-w-0 break-words">{alert.text}</span>
+          </p>
         ))}
-        {alerts.length === 0 ? <EmptyText text="No billing alerts require attention." /> : null}
-        <div className="rounded-md border border-dashed border-[#E5E7EB] p-3 text-sm text-[#6B7280]">
+        {alerts.length === 0 ? <p className="rounded-lg border border-dashed border-[#D8DBE2] bg-[var(--app-canvas)] p-3 text-sm text-[#7A8091]">No billing alerts require attention.</p> : null}
+        <p className="mt-1 border-t border-[var(--light-gray)] pt-2.5 text-xs text-[#7A8091]">
           Billing reminders and renewal notices can be managed manually from Subscription Management.
-        </div>
+        </p>
       </div>
-    </Panel>
+    </div>
+  );
+}
+
+function TrendSpark({ title, points, money = false, tone = "default", allLabels = false }: { title: string; points: ChartPoint[]; money?: boolean; tone?: "default" | "info"; allLabels?: boolean }) {
+  const max = Math.max(1, ...points.map((point) => point.value));
+  const barColor = tone === "info" ? "bg-[#378ADD]" : "bg-[var(--accent)]";
+
+  return (
+    <div>
+      <p className="text-xs font-medium text-[#7A8091]">{title}</p>
+      <div className="mt-2 flex h-16 items-end gap-1 border-b border-[var(--medium-gray)]">
+        {points.map((point) => (
+          <span
+            key={point.label}
+            title={`${point.label}: ${money ? formatMoney(point.value) : point.value}`}
+            className={`min-w-0 flex-1 rounded-t ${barColor}`}
+            style={{ height: `${Math.max(5, (point.value / max) * 100)}%` }}
+          />
+        ))}
+      </div>
+      <div className="mt-1 flex justify-between text-[11px] text-[#9AA0AD]">
+        {allLabels ? (
+          points.map((point) => <span key={point.label}>{point.label}</span>)
+        ) : (
+          <>
+            <span>{points[0]?.label}</span>
+            <span>{points[points.length - 1]?.label}</span>
+          </>
+        )}
+      </div>
+      <p className="sr-only">{points.map((point) => `${point.label}: ${money ? formatMoney(point.value) : point.value}`).join(", ")}</p>
+    </div>
+  );
+}
+
+function DistributionRows({ title, points, money = false }: { title: string; points: ChartPoint[]; money?: boolean }) {
+  const total = points.reduce((sum, point) => sum + point.value, 0);
+  return (
+    <div>
+      <p className="text-xs font-medium text-[#7A8091]">{title}</p>
+      <div className="mt-2 grid gap-2">
+        {points.map((point) => {
+          const percent = total > 0 ? Math.round((point.value / total) * 100) : 0;
+          return (
+            <div key={point.label}>
+              <div className="flex items-center justify-between gap-2 text-xs">
+                <span className="min-w-0 truncate font-semibold text-[#171A21]">{point.label}</span>
+                <span className="whitespace-nowrap font-semibold tabular-nums text-[#3D4352]">
+                  {money ? formatMoney(point.value) : point.value} <span className="font-medium text-[#9AA0AD]">({percent}%)</span>
+                </span>
+              </div>
+              <div className="mt-1 h-1.5 rounded-full bg-[var(--light-gray)]">
+                <div className="h-1.5 rounded-full bg-[var(--accent)]" style={{ width: `${percent}%` }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function HealthLine({ label, value, danger = false }: { label: string; value: number; danger?: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-[#3D4352]">{label}</span>
+      <strong className={`tabular-nums ${danger ? "text-[#B91C1C]" : "text-[#171A21]"}`}>{value}</strong>
+    </div>
+  );
+}
+
+function LifecycleBadge({ status }: { status: string }) {
+  const tone =
+    status === "ACTIVE" || status === "PAID"
+      ? "success"
+      : status === "TRIAL" || status === "PENDING_RENEWAL" || status === "ISSUED"
+        ? "brand"
+        : status === "EXPIRED" || status === "SUSPENDED" || status === "OVERDUE"
+          ? "danger"
+          : "neutral";
+  return (
+    <StatusBadge tone={tone} className="whitespace-nowrap">
+      {titleCase(status)}
+    </StatusBadge>
+  );
+}
+
+function ExportButton({ href, icon, label }: { href: string; icon: ReactNode; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[var(--medium-gray)] bg-white px-4 text-sm font-semibold text-[#171A21] transition hover:border-[var(--light-orange)] hover:text-[var(--accent-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+    >
+      {icon}
+      {label}
+    </Link>
   );
 }
 
@@ -832,9 +1091,11 @@ function averageDurationDays(subscriptions: SubscriptionRow[]) {
 }
 
 function getBillingHealth({ overdueInvoices, suspendedAccounts, expiringWithin30 }: { overdueInvoices: number; suspendedAccounts: number; expiringWithin30: number }) {
-  if (overdueInvoices > 0 || suspendedAccounts > 0) return { label: "At Risk", description: "Overdue invoices or suspended accounts require immediate attention.", tone: "border-red-200 bg-red-50 text-red-700" };
-  if (expiringWithin30 > 0) return { label: "Attention Needed", description: "Upcoming renewals should be reviewed.", tone: "border-orange-200 bg-orange-50 text-[#C2410C]" };
-  return { label: "Healthy", description: "No urgent billing issues detected.", tone: "border-emerald-200 bg-emerald-50 text-emerald-700" };
+  if (overdueInvoices > 0 || suspendedAccounts > 0)
+    return { label: "At Risk", description: "Overdue invoices or suspended accounts require immediate attention.", dot: "bg-[#E24B4A]", text: "text-[#B91C1C]" };
+  if (expiringWithin30 > 0)
+    return { label: "Attention Needed", description: "Upcoming renewals should be reviewed.", dot: "bg-[#EF9F27]", text: "text-[#B25E09]" };
+  return { label: "Healthy", description: "No urgent billing issues detected.", dot: "bg-[#1D9E75]", text: "text-[#1D7A46]" };
 }
 
 function buildQuery(params: BillingParams) {
@@ -850,94 +1111,3 @@ function isSameUtcDay(a: Date, b: Date) {
 function titleCase(value: string) {
   return value.replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
-
-function KpiCard({ icon: Icon, label, value, tone = "default", href }: { icon: LucideIcon; label: string; value: string; tone?: "default" | "warn" | "danger"; href?: string }) {
-  const metricTone = tone === "danger" ? "danger" : tone === "warn" ? "warning" : "neutral";
-  const iconClass = tone === "danger" ? "h-5 w-5 text-red-600" : tone === "warn" ? "h-5 w-5 text-[#C2410C]" : "h-5 w-5 text-[#F97316]";
-  return <MetricCard href={href} label={label} value={value} tone={metricTone} icon={<Icon className={iconClass} />} className="h-full" />;
-}
-function Panel({ title, children }: { title: string; children: ReactNode }) {
-  return <SectionCard title={title}>{children}</SectionCard>;
-}
-function MiniMetric({ label, value }: { label: string; value: string }) {
-  return <MetricCard label={label} value={value} className="h-full" />;
-}
-function HealthLine({ label, value }: { label: string; value: number }) {
-  return <div className="flex items-center justify-between rounded-md border border-[#E5E7EB] px-3 py-2"><span>{label}</span><strong>{value}</strong></div>;
-}
-
-function Chart({ title, points, money = false }: { title: string; points: ChartPoint[]; money?: boolean }) {
-  const max = Math.max(1, ...points.map((point) => point.value));
-  return (
-    <div className="rounded-md border border-[#E5E7EB] p-4">
-      <h3 className="font-semibold text-[#111827]">{title}</h3>
-      <div className="mt-4 flex h-40 items-end gap-3">
-        {points.map((point) => (
-          <div key={point.label} className="flex flex-1 flex-col items-center gap-2">
-            <div className="flex h-28 w-full items-end rounded-md bg-[#FAFAFA] px-1">
-              <div className="w-full rounded-t-md bg-[#F97316]" style={{ height: `${Math.max(6, (point.value / max) * 100)}%` }} />
-            </div>
-            <p className="text-xs font-semibold text-[#111827]">{money ? formatMoney(point.value) : point.value}</p>
-            <p className="text-xs text-[#6B7280]">{point.label}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function Distribution({ title, points, money = false }: { title: string; points: ChartPoint[]; money?: boolean }) {
-  const total = points.reduce((sum, point) => sum + point.value, 0);
-  return (
-    <div className="rounded-md border border-[#E5E7EB] p-4">
-      <h3 className="font-semibold text-[#111827]">{title}</h3>
-      <div className="mt-4 grid gap-3">
-        {points.map((point) => {
-          const percent = total > 0 ? Math.round((point.value / total) * 100) : 0;
-          return (
-            <div key={point.label}>
-              <div className="flex justify-between text-sm"><span>{point.label}</span><strong>{money ? formatMoney(point.value) : point.value}</strong></div>
-              <div className="mt-2 h-2 rounded-full bg-[#F3F4F6]"><div className="h-2 rounded-full bg-[#F97316]" style={{ width: `${percent}%` }} /></div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function LifecycleBadge({ status }: { status: string }) {
-  const classes = status === "ACTIVE" || status === "PAID" ? "bg-emerald-50 text-emerald-700" : status === "TRIAL" || status === "PENDING_RENEWAL" || status === "ISSUED" ? "bg-orange-50 text-orange-700" : status === "EXPIRED" || status === "SUSPENDED" || status === "OVERDUE" ? "bg-red-50 text-red-700" : "bg-zinc-100 text-zinc-700";
-  return <span className={`inline-flex rounded-md px-2 py-1 text-xs font-semibold ${classes}`}>{titleCase(status)}</span>;
-}
-
-function ActionLink({ href, label }: { href: string; label: string }) {
-  return <Link href={href} className="rounded-md border border-[#E5E7EB] px-2 py-1 text-xs font-semibold text-[#111827] hover:border-[#F97316] hover:text-[#F97316]">{label}</Link>;
-}
-
-function BillingActionRow({ title, meta, actions }: { title: string; meta: string; actions: string[] }) {
-  return (
-    <div className="rounded-md border border-[#E5E7EB] p-3">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div><p className="font-semibold text-[#111827]">{title}</p><p className="mt-1 text-sm text-[#6B7280]">{meta}</p></div>
-        <div className="flex flex-wrap gap-2">{actions.map((action) => <ActionLink key={action} href="/platform/subscriptions" label={action} />)}</div>
-      </div>
-    </div>
-  );
-}
-
-function MetricLine({ label, value }: { label: string; value: string }) {
-  return <div className="flex justify-between gap-3"><span className="text-[#6B7280]">{label}</span><strong className="text-[#111827]">{value}</strong></div>;
-}
-
-function EmptyText({ text }: { text: string }) {
-  return <EmptyState title={text} className="p-4 md:p-4" />;
-}
-function ExportButton({ href, icon, label }: { href: string; icon: ReactNode; label: string }) {
-  return <Link href={href} className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] hover:border-[#F97316] hover:text-[#F97316]">{icon}{label}</Link>;
-}
-
-
-
-
-

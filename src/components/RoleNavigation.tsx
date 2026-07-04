@@ -117,6 +117,51 @@ const platformMobileMoreItems: NavigationItem[] = [
   { href: "/platform/launch-readiness", label: "Launch Readiness", icon: Rocket },
 ];
 
+const platformSidebarItems: NavigationItem[] = [
+  { href: "/platform", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/platform/businesses", label: "Businesses", icon: Building2 },
+  { href: "/platform/plans", label: "Plans", icon: Package },
+  { href: "/platform/subscriptions", label: "Subscriptions", icon: CreditCard },
+  { href: "/platform/invoices", label: "Invoices", icon: Receipt },
+  { href: "/platform/users", label: "Users", icon: Users },
+  { href: "/platform/health-analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/platform/audit-center", label: "Audit Center", icon: ClipboardList },
+  { href: "/platform/operations-center", label: "Operations Center", icon: ShieldAlert },
+  { href: "/platform/billing-center", label: "Billing Center", icon: CircleDollarSign },
+  { href: "/platform/tenant-center", label: "Tenant Center", icon: Layers3 },
+  { href: "/platform/database", label: "Database", icon: Database },
+  { href: "/platform/launch-readiness", label: "Launch Readiness", icon: Rocket },
+  { href: "/platform/settings", label: "Settings", icon: Settings },
+];
+
+export function PlatformSidebarNav() {
+  const pathname = usePathname();
+
+  return (
+    <nav className="grid gap-1" aria-label="Platform navigation">
+      {platformSidebarItems.map((item) => {
+        const active = isActivePath(pathname, item.href);
+
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            aria-current={active ? "page" : undefined}
+            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 ${
+              active
+                ? "bg-[var(--accent-soft)] text-[var(--accent-deep)]"
+                : "text-[#5A6070] hover:bg-[var(--light-gray)] hover:text-[#171A21]"
+            }`}
+          >
+            <item.icon className="h-4 w-4" aria-hidden="true" />
+            {item.label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
 const branchMobileItems: NavigationItem[] = [
   { href: "/branch/customers/new", label: "Enroll", icon: UserPlus },
   { href: "/branch/scanner", label: "Scanner", icon: QrCode, accent: true },

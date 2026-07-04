@@ -17,6 +17,7 @@ import {
   designStudioBackgroundPatternOptions,
   designStudioBackgroundStyleOptions,
   designStudioCardContentOptions,
+  designStudioCardFinishOptions,
   designStudioProfessionalPresetGroups,
   designStudioRewardStyleOptions,
   designStudioStampJourneyOptions,
@@ -302,6 +303,10 @@ export function ProgramCreateWizard({
 
             <SectionCard title="Typography" description="Choose the personality of your loyalty card.">
               <OptionGrid options={designStudioTypographyOptions} value={typographyPreset} onChange={(value) => setTypographyPreset(value as CardDesignTypographyPreset)} />
+            </SectionCard>
+
+            <SectionCard title="Card Finish" description="Choose the visual finish that best matches your brand.">
+              <OptionGrid options={designStudioCardFinishOptions} value={decorationStyle} onChange={(value) => setDecorationStyle(value as CardDesignDecorationStyle)} />
             </SectionCard>
 
             <SectionCard title="Card Content" description="Choose what your customers see on their loyalty card.">
