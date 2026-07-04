@@ -938,7 +938,7 @@ export function ProgramDesignStudioForm({
 
         {manualEditorVisible ? (
           <div className="grid gap-6 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200">
-            <ManualBuilderGroup title="Appearance" description="Customize the overall visual style of your loyalty card." defaultOpen>
+            <ManualBuilderGroup title="Theme" description="Choose the overall look and brand feel of the card." defaultOpen>
               <SectionCard title="Card Style" description="Choose the overall personality of your loyalty card.">
           <div className="grid gap-4 md:grid-cols-2">
             {designStudioTemplateOptions.map((option) => (
@@ -995,38 +995,9 @@ export function ProgramDesignStudioForm({
             })}
           </div>
             </SectionCard>
-
-              <SectionCard title="Typography" description="Choose the personality of your loyalty card.">
-          <div className="grid gap-3 md:grid-cols-2">
-            {designStudioTypographyOptions.map((option) => {
-              const active = selectedTypographyOption.value === option.value;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => commitDesignChange({ ...currentDesignSnapshot, typographyPreset: option.value })}
-                  className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
-                  data-active={active}
-                  aria-pressed={active}
-                >
-                  <TypographyThumbnail typographyPreset={option.value} />
-                  <span className="flex items-start justify-between gap-3">
-                    <span className="min-w-0">
-                      <span className="block text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
-                      <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
-                    </span>
-                    <span className="rounded-full border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
-                      Selected
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-            </SectionCard>
             </ManualBuilderGroup>
 
-            <ManualBuilderGroup title="Loyalty Experience" description="Customize how customers experience collecting rewards.">
+            <ManualBuilderGroup title="Rewards" description="Customize how customers collect visits and understand their reward.">
               <SectionCard title="Reward Progress" description="Choose the progress pattern that best matches how customers earn their next reward.">
           <div className="grid gap-3 md:grid-cols-3">
             {designStudioStampJourneyOptions.map((option) => (
@@ -1105,7 +1076,7 @@ export function ProgramDesignStudioForm({
             </SectionCard>
             </ManualBuilderGroup>
 
-            <ManualBuilderGroup title="Card Layout" description="Choose how much information appears on the loyalty card.">
+            <ManualBuilderGroup title="Layout" description="Control the card structure and information shown to customers.">
               <SectionCard title="Card Layout" description="Choose how much information appears on the loyalty card.">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             {designStudioCardLayoutOptions.map((option) => {
@@ -1169,6 +1140,35 @@ export function ProgramDesignStudioForm({
               })}
             </div>
           </details>
+            </SectionCard>
+
+              <SectionCard title="Typography" description="Choose the personality of your loyalty card.">
+          <div className="grid gap-3 md:grid-cols-2">
+            {designStudioTypographyOptions.map((option) => {
+              const active = selectedTypographyOption.value === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => commitDesignChange({ ...currentDesignSnapshot, typographyPreset: option.value })}
+                  className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
+                  data-active={active}
+                  aria-pressed={active}
+                >
+                  <TypographyThumbnail typographyPreset={option.value} />
+                  <span className="flex items-start justify-between gap-3">
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
+                      <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                    </span>
+                    <span className="rounded-full border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
+                      Selected
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
             </SectionCard>
             </ManualBuilderGroup>
 

@@ -219,6 +219,15 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.doesNotMatch(form, /decorationStyle: option\.value/);
   assert.match(form, /name="decorationStyle"/);
   assert.match(form, /cardFinishStyles/);
+  assert.match(form, /ManualBuilderGroup title="Theme"/);
+  assert.match(form, /Choose the overall look and brand feel of the card\./);
+  assert.match(form, /ManualBuilderGroup title="Rewards"/);
+  assert.match(form, /Customize how customers collect visits and understand their reward\./);
+  assert.match(form, /ManualBuilderGroup title="Layout"/);
+  assert.match(form, /Control the card structure and information shown to customers\./);
+  assert.match(createWizard, /DesignWizardGroup title="Theme"/);
+  assert.match(createWizard, /DesignWizardGroup title="Rewards"/);
+  assert.match(createWizard, /DesignWizardGroup title="Layout"/);
   assert.match(form, /Card Layout/);
   assert.match(form, /Choose how much information appears on the loyalty card\./);
   assert.match(form, /designStudioCardLayoutOptions\.map/);
