@@ -324,15 +324,15 @@ return (
             id: "overview",
             label: "Overview",
             content: (
-              <div className="grid min-w-0 gap-5">
-                <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(300px,1fr)]">
+              <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(300px,1fr)]">
+                <div className="grid min-w-0 gap-5">
                   <LoyaltyOverviewPanel programCards={programCards} />
-                  <div className="grid min-w-0 content-start gap-5">
-                    <ProfileSummaryCard membership={membership} />
-                    <TierDetailsPanel customerTier={customerTier} rewardRedemptionsCount={rewardRedemptions.length} totalBonusStamps={totalBonusStamps} activePrograms={activePrograms} joinedAt={membership.joinedAt} />
-                  </div>
+                  <LatestActivityPreview items={timeline.slice(0, 6)} />
                 </div>
-                <LatestActivityPreview items={timeline.slice(0, 6)} />
+                <div className="grid min-w-0 gap-5">
+                  <ProfileSummaryCard membership={membership} />
+                  <TierDetailsPanel customerTier={customerTier} rewardRedemptionsCount={rewardRedemptions.length} totalBonusStamps={totalBonusStamps} activePrograms={activePrograms} joinedAt={membership.joinedAt} />
+                </div>
               </div>
             ),
           },
@@ -435,28 +435,32 @@ function LoyaltyOverviewPanel({
         </div>
         <Link href="/dashboard/programs" className="text-sm font-semibold business-text">View programs</Link>
       </div>
-      <div className="mt-5 grid gap-3">
+      <div className="mt-5 grid gap-4">
         {visiblePrograms.map(({ programMembership, membershipUuid }) => {
           const progress = progressValue(programMembership.earnedStamps, programMembership.bonusStamps);
           const required = programMembership.loyaltyProgram.requiredStamps;
           const progressPercent = Math.min(100, Math.round((progress / required) * 100));
+          const remaining = Math.max(0, required - progress);
           const isRewardReady = progress >= required && programMembership.status !== "COMPLETED";
           return (
-            <article key={programMembership.id} className="rounded-md border border-[#E5E7EB] p-4">
+            <article key={programMembership.id} className="rounded-md border border-[#E5E7EB] p-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="font-semibold text-[#111827]">{programMembership.loyaltyProgram.name}</p>
+                  <p className="text-lg font-semibold text-[#111827]">{programMembership.loyaltyProgram.name}</p>
                   <p className="mt-1 text-sm text-[#6B7280]">Reward: {programMembership.loyaltyProgram.rewardName}</p>
                 </div>
-                {isRewardReady ? <span className="rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">Reward Ready</span> : null}
+                {isRewardReady ? <span className="shrink-0 rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">Reward Ready</span> : null}
               </div>
-              <div className="mt-4 flex items-center justify-between text-sm">
-                <span className="font-semibold text-[#111827]">{progress} / {required}</span>
-                <span className="text-[#6B7280]">{progressPercent}%</span>
+              <div className="mt-5 flex items-baseline justify-between">
+                <span className="text-2xl font-bold text-[#111827]">{progress} <span className="text-base font-medium text-[#6B7280]">/ {required} stamps</span></span>
+                <span className="text-sm font-semibold business-text">{progressPercent}%</span>
               </div>
-              <div className="mt-2 h-2 overflow-hidden rounded-full business-secondary-bg-soft">
-                <div className="h-full rounded-full business-button" style={{ width: `${progressPercent}%` }} />
+              <div className="mt-3 h-3 overflow-hidden rounded-full business-secondary-bg-soft">
+                <div className="h-full rounded-full business-button transition-all" style={{ width: `${progressPercent}%` }} />
               </div>
+              <p className="mt-2 text-sm text-[#6B7280]">
+                {isRewardReady ? "Ready to redeem" : `${remaining} stamp${remaining === 1 ? "" : "s"} remaining until reward`}
+              </p>
               <ManualStampCorrectionForm membershipUuid={membershipUuid} programMembershipUuid={programMembership.uuid} />
             </article>
           );
@@ -475,40 +479,44 @@ function ManualStampCorrectionForm({
   programMembershipUuid: string;
 }) {
   return (
-    <form action={manualStampCorrectionAction} className="mt-4 rounded-md border border-orange-200 bg-orange-50 p-3">
-      <CsrfInput scope="dashboard:stamp-correction" />
-      <input type="hidden" name="membershipUuid" value={membershipUuid} />
-      <input type="hidden" name="programMembershipUuid" value={programMembershipUuid} />
-      <p className="text-sm font-semibold text-orange-900">Manual correction</p>
-      <p className="mt-1 text-xs leading-5 text-orange-800">Business Owner only. This adjusts progress and records the reason in audit history.</p>
-      <div className="mt-3 grid gap-2 md:grid-cols-[120px_minmax(0,1fr)_auto] md:items-end">
-        <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-orange-900">
-          Stamps
-          <select name="adjustment" required className="min-h-10 rounded-md border border-orange-200 bg-white px-3 text-sm font-semibold text-[#111827]">
-            <option value="">Select</option>
-            <option value="-1">-1</option>
-            <option value="-2">-2</option>
-            <option value="-3">-3</option>
-            <option value="1">+1</option>
-            <option value="2">+2</option>
-            <option value="3">+3</option>
-          </select>
-        </label>
-        <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-orange-900">
-          Reason
-          <input name="correctionReason" required minLength={5} maxLength={500} placeholder="Required correction reason" className="min-h-10 rounded-md border border-orange-200 bg-white px-3 text-sm font-semibold text-[#111827]" />
-        </label>
-        <ConfirmSubmitButton
-          title="Record manual correction?"
-          message="This will adjust customer stamp progress and permanently record the correction in audit history."
-          confirmLabel="Record Correction"
-          cancelLabel="Cancel"
-          className="min-h-10 rounded-md border border-orange-300 bg-white px-4 text-sm font-bold text-orange-700 transition hover:bg-orange-100"
-        >
-          Record
-        </ConfirmSubmitButton>
-      </div>
-    </form>
+    <details className="mt-4 rounded-md border border-[#E5E7EB] [&_summary::-webkit-details-marker]:hidden">
+      <summary className="cursor-pointer list-none px-3 py-2 text-sm font-semibold text-[#6B7280] hover:text-[#111827]">
+        Manual correction
+      </summary>
+      <form action={manualStampCorrectionAction} className="border-t border-orange-200 bg-orange-50 p-3">
+        <CsrfInput scope="dashboard:stamp-correction" />
+        <input type="hidden" name="membershipUuid" value={membershipUuid} />
+        <input type="hidden" name="programMembershipUuid" value={programMembershipUuid} />
+        <p className="text-xs leading-5 text-orange-800">Business Owner only. This adjusts progress and records the reason in audit history.</p>
+        <div className="mt-3 grid gap-2 md:grid-cols-[120px_minmax(0,1fr)_auto] md:items-end">
+          <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-orange-900">
+            Stamps
+            <select name="adjustment" required className="min-h-10 rounded-md border border-orange-200 bg-white px-3 text-sm font-semibold text-[#111827]">
+              <option value="">Select</option>
+              <option value="-1">-1</option>
+              <option value="-2">-2</option>
+              <option value="-3">-3</option>
+              <option value="1">+1</option>
+              <option value="2">+2</option>
+              <option value="3">+3</option>
+            </select>
+          </label>
+          <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-orange-900">
+            Reason
+            <input name="correctionReason" required minLength={5} maxLength={500} placeholder="Required correction reason" className="min-h-10 rounded-md border border-orange-200 bg-white px-3 text-sm font-semibold text-[#111827]" />
+          </label>
+          <ConfirmSubmitButton
+            title="Record manual correction?"
+            message="This will adjust customer stamp progress and permanently record the correction in audit history."
+            confirmLabel="Record Correction"
+            cancelLabel="Cancel"
+            className="min-h-10 rounded-md border border-orange-300 bg-white px-4 text-sm font-bold text-orange-700 transition hover:bg-orange-100"
+          >
+            Record
+          </ConfirmSubmitButton>
+        </div>
+      </form>
+    </details>
   );
 }
 
