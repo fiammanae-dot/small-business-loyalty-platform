@@ -326,8 +326,9 @@ function CardHeader({
   tierIcon: string;
   tierLabel: string;
 }) {
+  const showSecondRow = design.visibleSections.programName || design.visibleSections.tierBadge;
   return (
-    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3">
+    <div className="flex items-start gap-3">
       {design.visibleSections.logo && businessLogoUrl ? (
         <div
           aria-label={`${businessName} logo`}
@@ -343,36 +344,42 @@ function CardHeader({
           {theme.style === "premium-dark" ? tierIcon : businessName.slice(0, 1).toUpperCase()}
         </div>
       ) : null}
-      <div className="min-w-0 pr-1">
+      <div className="min-w-0 flex-1">
         {design.visibleSections.businessName ? <h1
-          className="text-[18px] font-extrabold leading-[1.08] tracking-[-0.02em]"
+          className="text-[18px] font-extrabold leading-[1.15] tracking-[-0.02em]"
           style={businessNameClampStyle}
           title={businessName}
         >
           {businessName}
         </h1> : null}
-        {design.visibleSections.programName ? <p
-          className="pt-1 text-[13px] font-medium leading-tight"
-          style={{ ...programNameClampStyle, color: theme.mutedText }}
-          title={displayProgram}
-        >
-          {displayProgram}
-        </p> : null}
+        {showSecondRow ? (
+          <div className="mt-1.5 flex items-center justify-between gap-2">
+            {design.visibleSections.programName ? (
+              <p
+                className="min-w-0 flex-1 text-[13px] font-medium leading-tight"
+                style={{ ...programNameClampStyle, color: theme.mutedText }}
+                title={displayProgram}
+              >
+                {displayProgram}
+              </p>
+            ) : <span />}
+            {design.visibleSections.tierBadge ? (
+              <span
+                className="inline-flex max-w-[42%] shrink-0 justify-center rounded-full px-2.5 py-1 text-center text-[11px] font-semibold leading-tight ring-1"
+                style={{
+                  backgroundColor: theme.badgeBackground,
+                  color: theme.badgeText,
+                  borderColor: theme.badgeBorder,
+                  boxShadow: theme.style === "modern-clean" ? "0 0 0 1px rgba(249,115,22,0.10), 0 0 18px rgba(249,115,22,0.10)" : undefined,
+                }}
+                title={tierLabel}
+              >
+                {tierLabel}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
       </div>
-      {design.visibleSections.tierBadge ? <div className="w-[104px] shrink-0 text-right">
-        <p className="text-[11px] uppercase tracking-[0.18em]" style={{ color: theme.mutedText }}>Tier</p>
-        <span
-          className="mt-2 inline-flex max-w-full justify-center rounded-full px-3 py-1 text-center text-[12px] font-semibold leading-tight ring-1"
-          style={{
-            backgroundColor: theme.badgeBackground,
-            color: theme.badgeText,
-            borderColor: theme.badgeBorder,
-            boxShadow: theme.style === "modern-clean" ? "0 0 0 1px rgba(249,115,22,0.10), 0 0 18px rgba(249,115,22,0.10)" : undefined,
-          }}
-        >
-          {tierLabel}
-        </span>
-      </div> : null}
     </div>
   );
 }

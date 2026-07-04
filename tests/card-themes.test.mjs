@@ -222,12 +222,18 @@ test("wallet card header keeps business names readable beside the tier badge", (
   const walletCard = read("src/components/public-card/LoyaltyWalletCard.tsx");
   const frontExport = read("src/components/public-card/LoyaltyCardFrontExport.tsx");
 
-  assert.match(walletCard, /grid-cols-\[auto_minmax\(0,1fr\)_auto\]/);
+  // The business name now gets the full row (logo + flex-1 name column) instead of
+  // sharing a row with a fixed-width tier badge column, which used to squeeze the
+  // name down to ~110px and truncate short names like "Manual Auto Wash" mid-word.
+  // The tier badge moved to the secondary row alongside the (smaller) program name.
+  assert.match(walletCard, /className="flex items-start gap-3"/);
+  assert.match(walletCard, /className="min-w-0 flex-1"/);
   assert.match(walletCard, /WebkitLineClamp: 2/);
   assert.match(walletCard, /title=\{[^}]*businessName[^}]*\}/);
-  assert.match(walletCard, /w-\[104px\] shrink-0 text-right/);
   assert.match(frontExport, /LoyaltyWalletCard/);
 
+  assert.doesNotMatch(walletCard, /grid-cols-\[auto_minmax\(0,1fr\)_auto\]/);
+  assert.doesNotMatch(walletCard, /w-\[104px\] shrink-0 text-right/);
   assert.doesNotMatch(walletCard, /<h1 className="truncate[^"]*">\{businessName\}<\/h1>/);
   assert.doesNotMatch(frontExport, /<h1 className="truncate[^"]*">\{wallet\.businessName\}<\/h1>/);
 });
