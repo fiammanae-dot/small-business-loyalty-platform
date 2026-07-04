@@ -108,10 +108,15 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(helper, /PROGRESS_BAR/);
   assert.match(helper, /designStudioBackgroundStyleOptions/);
   assert.match(helper, /designStudioBackgroundPatternOptions/);
+  assert.match(helper, /designStudioBackgroundGalleryOptions/);
+  assert.match(helper, /resolveDesignStudioBackgroundGalleryOption/);
   assert.match(helper, /designStudioRewardStyleOptions/);
   assert.match(helper, /designStudioTypographyOptions/);
   assert.match(helper, /designStudioCardContentOptions/);
   for (const label of ["Solid", "Gradient", "Pattern", "Subtle Dots", "Diagonal Lines", "Waves", "Coffee Beans", "Scissors", "Water Bubbles", "Food Pattern", "Beauty Pattern"]) {
+    assert.match(helper, new RegExp(label));
+  }
+  for (const label of ["Minimal White", "Soft Gradient", "Dark Premium", "Luxury Gold", "Glass", "Coffee Pattern", "Salon Marble", "Restaurant Texture", "Modern Mesh", "Car Wash Bubbles"]) {
     assert.match(helper, new RegExp(label));
   }
   for (const label of ["Filled", "Outline", "Glass", "Premium", "Ticket"]) {
@@ -177,11 +182,17 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /Reward Progress/);
   assert.match(form, /Stamp Design/);
   assert.match(form, /Background/);
-  assert.match(form, /Choose the background feeling for this loyalty card\./);
-  assert.match(form, /backgroundStyle: option\.value/);
-  assert.match(form, /backgroundPattern: option\.value/);
+  assert.match(form, /Choose the visual background for this loyalty card\./);
+  assert.match(form, /designStudioBackgroundGalleryOptions\.map/);
+  assert.match(form, /BackgroundGalleryThumbnail option=\{option\}/);
+  assert.match(form, /backgroundStyle: option\.backgroundStyle/);
+  assert.match(form, /backgroundPattern: option\.backgroundPattern/);
+  assert.doesNotMatch(form, /designStudioBackgroundStyleOptions\.map/);
+  assert.doesNotMatch(form, /designStudioBackgroundPatternOptions\.map/);
   assert.match(form, /name="backgroundStyle"/);
   assert.match(form, /name="backgroundPattern"/);
+  assert.match(createWizard, /designStudioBackgroundGalleryOptions\.map/);
+  assert.match(createWizard, /BackgroundGalleryThumbnail option=\{option\}/);
   assert.match(form, /Reward Box/);
   assert.match(form, /Choose how rewards are presented to your customers\./);
   assert.match(form, /RewardStyleThumbnail/);

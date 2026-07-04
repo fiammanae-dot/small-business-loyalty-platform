@@ -14,18 +14,19 @@ import type {
 } from "@/lib/card-design";
 import { getCardStyleForLayoutStyle, resolveCardDesign } from "@/lib/card-design";
 import {
-  designStudioBackgroundPatternOptions,
-  designStudioBackgroundStyleOptions,
+  designStudioBackgroundGalleryOptions,
   designStudioCardContentOptions,
   designStudioProfessionalPresetGroups,
   designStudioRewardStyleOptions,
   designStudioStampJourneyOptions,
   designStudioTemplateOptions,
   designStudioTypographyOptions,
+  resolveDesignStudioBackgroundGalleryOption,
   type DesignStudioProfessionalPreset,
 } from "@/lib/design-studio";
 import { resolveCardThemeColors } from "@/lib/card-themes";
 import { Button, SectionCard } from "@/components/ui";
+import { BackgroundGalleryThumbnail } from "@/components/design-studio/BackgroundGalleryThumbnail";
 import { StampIconGraphic } from "@/components/design-studio/StampIconGraphic";
 import { WalletCardShell, type WalletTheme } from "@/components/public-card/WalletCardShell";
 
@@ -127,6 +128,7 @@ export function ProgramCreateWizard({
       }),
     [backgroundPattern, backgroundStyle, decorationStyle, layoutStyle, rewardStyle, stampJourneyStyle, stampIcon, typographyPreset, visibleSections],
   );
+  const selectedBackgroundOption = resolveDesignStudioBackgroundGalleryOption(backgroundStyle, backgroundPattern);
 
   function applyPreset(preset: DesignStudioProfessionalPreset) {
     setLayoutStyle(preset.layoutStyle);
@@ -260,13 +262,35 @@ export function ProgramCreateWizard({
               <OptionGrid options={designStudioTemplateOptions} value={layoutStyle} onChange={(value) => setLayoutStyle(value as CardDesignLayoutStyle)} />
             </SectionCard>
 
-            <SectionCard title="Background" description="Choose the background feeling for this loyalty card.">
-              <OptionGrid options={designStudioBackgroundStyleOptions} value={backgroundStyle} onChange={(value) => setBackgroundStyle(value as BackgroundStyle)} />
-              <div className="mt-4">
-                <OptionGrid options={designStudioBackgroundPatternOptions} value={backgroundPattern} onChange={(value) => {
-                  setBackgroundPattern(value as CardDesignBackgroundPattern);
-                  if (value !== "NONE") setBackgroundStyle("PATTERN");
-                }} />
+            <SectionCard title="Background" description="Choose the visual background for this loyalty card.">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {designStudioBackgroundGalleryOptions.map((option) => {
+                  const active = selectedBackgroundOption.id === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => {
+                        setBackgroundStyle(option.backgroundStyle);
+                        setBackgroundPattern(option.backgroundPattern);
+                      }}
+                      data-active={active}
+                      aria-pressed={active}
+                      className="group grid min-h-40 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)]"
+                    >
+                      <BackgroundGalleryThumbnail option={option} />
+                      <span className="flex items-start justify-between gap-3 px-1 pb-1">
+                        <span className="min-w-0">
+                          <span className="block text-sm font-black text-[#111827]">{option.label}</span>
+                          <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                        </span>
+                        <span className="rounded-full border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
+                          Selected
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </SectionCard>
 

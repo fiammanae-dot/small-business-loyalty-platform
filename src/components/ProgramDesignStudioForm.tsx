@@ -17,8 +17,7 @@ import type {
 import { getCardThemeForLayoutStyle, getCardStyleForLayoutStyle, resolveCardDesign } from "@/lib/card-design";
 import { resolveCardThemeColors } from "@/lib/card-themes";
 import {
-  designStudioBackgroundPatternOptions,
-  designStudioBackgroundStyleOptions,
+  designStudioBackgroundGalleryOptions,
   designStudioCardContentOptions,
   designStudioProfessionalPresetGroups,
   designStudioProfessionalPresets,
@@ -26,9 +25,11 @@ import {
   designStudioStampJourneyOptions,
   designStudioTemplateOptions,
   designStudioTypographyOptions,
+  resolveDesignStudioBackgroundGalleryOption,
   type DesignStudioProfessionalPreset,
 } from "@/lib/design-studio";
 import { Button, SectionCard } from "@/components/ui";
+import { BackgroundGalleryThumbnail } from "@/components/design-studio/BackgroundGalleryThumbnail";
 import { StampIconGraphic } from "@/components/design-studio/StampIconGraphic";
 
 type PreviewBranding = {
@@ -187,8 +188,8 @@ export function ProgramDesignStudioForm({
   const selectedTypographyLabel = designStudioTypographyOptions.find((option) => option.value === typographyPreset)?.label ?? typographyPreset;
   const selectedPreviewContextLabel = previewContextOptions.find((option) => option.value === previewContext)?.label ?? "Phone";
   const selectedStampIconLabel = stampIconOptions.find((option) => option.value === stampIcon)?.label ?? labelizeLocal(stampIcon);
-  const selectedBackgroundLabel = designStudioBackgroundStyleOptions.find((option) => option.value === backgroundStyle)?.label ?? backgroundStyle;
-  const selectedPatternLabel = designStudioBackgroundPatternOptions.find((option) => option.value === backgroundPattern)?.label ?? labelizeLocal(backgroundPattern);
+  const selectedBackgroundOption = resolveDesignStudioBackgroundGalleryOption(backgroundStyle, backgroundPattern);
+  const selectedBackgroundLabel = selectedBackgroundOption.label;
   const visibleSectionCount = designStudioCardContentOptions.filter((option) => visibleSections[option.value]).length;
   const activeProfessionalPreset =
     designStudioProfessionalPresets.find(
@@ -372,7 +373,7 @@ export function ProgramDesignStudioForm({
           ["Typography", selectedTypographyLabel],
           ["Reward Progress", selectedJourneyLabel],
           ["Stamp Design", selectedStampIconLabel],
-          ["Background", `${selectedBackgroundLabel}${backgroundStyle === "PATTERN" ? ` Â· ${selectedPatternLabel}` : ""}`],
+          ["Background", selectedBackgroundLabel],
           ["Visibility", `${visibleSectionCount}/${designStudioCardContentOptions.length} sections`],
         ],
       }));
@@ -600,7 +601,6 @@ export function ProgramDesignStudioForm({
                 <PreviewChip label={`Reward Progress: ${selectedJourneyLabel}`} />
                 <PreviewChip label={`Stamp Design: ${selectedStampIconLabel}`} />
                 <PreviewChip label={`Background: ${selectedBackgroundLabel}`} />
-                {backgroundStyle === "PATTERN" ? <PreviewChip label={`Pattern: ${selectedPatternLabel}`} /> : null}
                 <PreviewChip label={`Visibility: ${visibleSectionCount}/${designStudioCardContentOptions.length}`} />
               </div>
             </div>
@@ -961,51 +961,28 @@ export function ProgramDesignStudioForm({
             ))}
           </div>
             </SectionCard>
-            <SectionCard title="Background" description="Choose the background feeling for this loyalty card.">
-          <div className="grid gap-3 md:grid-cols-3">
-            {designStudioBackgroundStyleOptions.map((option) => {
-              const active = backgroundStyle === option.value;
+            <SectionCard title="Background" description="Choose the visual background for this loyalty card.">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {designStudioBackgroundGalleryOptions.map((option) => {
+              const active = selectedBackgroundOption.id === option.id;
               return (
                 <button
-                  key={option.value}
+                  key={option.id}
                   type="button"
-                  onClick={() => commitDesignChange({ ...currentDesignSnapshot, backgroundStyle: option.value })}
-                  className="group grid min-h-28 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
+                  onClick={() => commitDesignChange({ ...currentDesignSnapshot, backgroundStyle: option.backgroundStyle, backgroundPattern: option.backgroundPattern })}
+                  className="group grid min-h-40 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
                   data-active={active}
                   aria-pressed={active}
                 >
-                  <span className="flex items-center justify-between gap-3">
-                    <span className="text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
-                    <span className="h-8 w-12 rounded-full border border-[#E2E8F0]" style={{ background: backgroundStylePreview[option.value] }} />
-                  </span>
-                  <span className="text-xs leading-5 text-[#64748B]">{option.description}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {designStudioBackgroundPatternOptions.map((option) => {
-              const active = backgroundPattern === option.value;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => {
-                    commitDesignChange({
-                      ...currentDesignSnapshot,
-                      backgroundPattern: option.value,
-                      backgroundStyle: option.value !== "NONE" ? "PATTERN" : currentDesignSnapshot.backgroundStyle,
-                    });
-                  }}
-                  className="group flex min-h-20 items-center gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
-                  data-active={active}
-                  aria-pressed={active}
-                >
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] text-xs font-bold text-[#64748B]">{patternPreviewLabels[option.value]}</span>
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
-                    <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                  <BackgroundGalleryThumbnail option={option} />
+                  <span className="flex items-start justify-between gap-3 px-1 pb-1">
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
+                      <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                    </span>
+                    <span className="rounded-full border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
+                      Selected
+                    </span>
                   </span>
                 </button>
               );
@@ -2128,12 +2105,6 @@ const liveTypographyStyles: Record<CardDesignTypographyPreset, LiveTypographySty
   },
 };
 
-const backgroundStylePreview: Record<"SOLID" | "GRADIENT" | "PATTERN", string> = {
-  SOLID: "#F8FAFC",
-  GRADIENT: "linear-gradient(135deg, #FFFFFF 0%, #FDBA74 100%)",
-  PATTERN: "radial-gradient(circle at 4px 4px, #CBD5E1 1.5px, transparent 1.5px), #F8FAFC",
-};
-
 const liveBackgroundPatterns: Record<CardDesignBackgroundPattern, string> = {
   NONE: "none",
   SUBTLE_DOTS: "radial-gradient(circle at 8px 8px, rgba(255,255,255,0.28) 1.5px, transparent 1.5px)",
@@ -2158,18 +2129,6 @@ function getLivePreviewBackground(baseBackground: string, backgroundStyle: "SOLI
 
   return baseBackground;
 }
-
-const patternPreviewLabels: Record<CardDesignBackgroundPattern, string> = {
-  NONE: "-",
-  SUBTLE_DOTS: "DOT",
-  DIAGONAL_LINES: "///",
-  WAVES: "~~~",
-  COFFEE_BEANS: "CAF",
-  SCISSORS: "CUT",
-  WATER_BUBBLES: "H2O",
-  FOOD_PATTERN: "DINE",
-  BEAUTY_PATTERN: "SPA",
-};
 
 const previewContextOptions: Array<{ value: PreviewContext; label: string }> = [
   { value: "phone", label: "Phone" },
