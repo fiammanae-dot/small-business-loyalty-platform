@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ActivityAlertSeverity, ActivityAlertStatus, Prisma } from "@prisma/client";
 import type { ReactNode } from "react";
-import { BarChart3, Bell, ChevronDown, Clock, Search, ShieldAlert, UserCheck } from "lucide-react";
+import { ArrowLeft, Bell, ChevronDown, Clock, Search, ShieldAlert, SlidersHorizontal, UserCheck } from "lucide-react";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -141,6 +141,9 @@ export default async function NotificationsPage({
   const counts = buildCounts(allAlerts);
   const branchRisks = buildBranchRisks(branches, allAlerts);
   const alertAnalytics = buildAlertAnalytics(allAlerts);
+  const hasAdvancedFilters = Boolean(
+    params.priority || params.assigned || params.assignedUser || params.branch || params.ruleType || params.date || params.from || params.to || params.riskMin || params.riskMax,
+  );
   const alertRows = await Promise.all(
     alerts.map(async (alert) => {
       const relatedTransaction = await findRelatedStampTransaction(alert);
@@ -163,157 +166,161 @@ export default async function NotificationsPage({
         </p>
       ) : null}
 
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <p className="text-sm font-semibold business-text">Fraud and risk investigation</p>
-            <p className="mt-1 text-sm text-[#6B7280]">Investigate suspicious activity without leaving the alert workspace.</p>
-          </div>
-          <Link href="/dashboard" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">
-            Back to dashboard
-          </Link>
-        </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-3 xl:grid-cols-6">
-          <FilterSummary href={filterHref(params, { status: "OPEN", severity: "", branch: "" })} icon={<ShieldAlert className="h-5 w-5" />} label="Open Alerts" value={counts.OPEN} />
-          <FilterSummary href={filterHref(params, { status: "OPEN", severity: "HIGH" })} label="High Risk" value={counts.HIGH} tone="red" />
-          <FilterSummary href={filterHref(params, { status: "OPEN", severity: "MEDIUM" })} label="Medium Risk" value={counts.MEDIUM} tone="orange" />
-          <FilterSummary href={filterHref(params, { status: "OPEN", severity: "LOW" })} label="Low Risk" value={counts.LOW} tone="green" />
-          <FilterSummary href={filterHref(params, { status: "ASSIGNED", severity: "" })} icon={<UserCheck className="h-5 w-5" />} label="Assigned" value={counts.ASSIGNED} />
-          <FilterSummary href={filterHref(params, { status: "ESCALATED", severity: "" })} icon={<Bell className="h-5 w-5" />} label="Escalated" value={counts.ESCALATED} tone="red" />
-        </div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-[13px] text-[#7A8091]">Investigate suspicious activity and manage fraud risk without leaving the alert workspace.</p>
+        <Link href="/dashboard" className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827] transition business-hover">
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to dashboard
+        </Link>
+      </div>
+
+      <section aria-label="Alert overview" className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+        <FilterSummary href={filterHref(params, { status: "OPEN", severity: "", branch: "" })} icon={<ShieldAlert className="h-5 w-5" />} label="Open Alerts" value={counts.OPEN} />
+        <FilterSummary href={filterHref(params, { status: "OPEN", severity: "HIGH" })} label="High Risk" value={counts.HIGH} tone="red" />
+        <FilterSummary href={filterHref(params, { status: "OPEN", severity: "MEDIUM" })} label="Medium Risk" value={counts.MEDIUM} tone="orange" />
+        <FilterSummary href={filterHref(params, { status: "OPEN", severity: "LOW" })} label="Low Risk" value={counts.LOW} tone="green" />
+        <FilterSummary href={filterHref(params, { status: "ASSIGNED", severity: "" })} icon={<UserCheck className="h-5 w-5" />} label="Assigned" value={counts.ASSIGNED} />
+        <FilterSummary href={filterHref(params, { status: "ESCALATED", severity: "" })} icon={<Bell className="h-5 w-5" />} label="Escalated" value={counts.ESCALATED} tone="red" />
       </section>
 
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-semibold business-text">Branch Risk Overview</p>
-            <h2 className="mt-1 text-lg font-semibold text-[#111827]">Branch exposure</h2>
-          </div>
-        </div>
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          {branchRisks.map((branch) => (
-            <Link key={branch.id} href={filterHref(params, { branch: branch.id.toString(), status: selectedStatus })} className="rounded-md border border-[#E5E7EB] p-3 transition business-hover">
-              <div className="flex items-center justify-between gap-3">
-                <p className="font-semibold text-[#111827]">{branch.name}</p>
-                <SeverityBadge severity={branch.highestSeverity} />
-              </div>
-              <p className="mt-2 text-sm text-[#6B7280]">{branch.count} alert{branch.count === 1 ? "" : "s"}</p>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
-        <form className="grid gap-3 lg:grid-cols-4 xl:grid-cols-6">
-          <label className="relative lg:col-span-2">
+      <form method="get" action="/dashboard/notifications" className="grid gap-3">
+        <input type="hidden" name="severity" value={params.severity ?? ""} />
+        <input type="hidden" name="status" value={selectedStatus} />
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="relative min-w-0 flex-1 basis-64">
             <span className="sr-only">Search alerts</span>
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" aria-hidden="true" />
-            <input name="search" defaultValue={params.search ?? ""} placeholder="Search customer, phone, staff, branch, alert ID, program" className="h-10 w-full rounded-md border border-[#E5E7EB] bg-white pl-9 pr-3 text-sm" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" aria-hidden="true" />
+            <input name="search" defaultValue={params.search ?? ""} placeholder="Search customer, phone, staff, branch, alert ID" className="h-10 w-full rounded-md border border-[#E5E7EB] bg-white pl-9 pr-3 text-sm" />
           </label>
-          <select name="severity" defaultValue={params.severity ?? ""} className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm">
-            <option value="">All severities</option>
-            {severityValues.map((severity) => <option key={severity} value={severity}>{severity}</option>)}
-          </select>
-          <select name="priority" defaultValue={params.priority ?? ""} className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm">
-            <option value="">All priorities</option>
-            {severityValues.map((priority) => <option key={priority} value={priority}>{priority}</option>)}
-          </select>
-          <select name="assigned" defaultValue={params.assigned ?? ""} className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm">
-            <option value="">All owners</option>
-            <option value="assigned">Assigned</option>
-            <option value="unassigned">Unassigned</option>
-          </select>
-          <SearchableCombobox
-            label="Assigned user"
-            name="assignedUser"
-            defaultValue={params.assignedUser ?? ""}
-            placeholder="Assigned user"
-            emptyLabel="No assignable users found."
-            options={[
-              { value: "", label: "Assigned user", description: "All alert owners" },
-              ...assignableUsers.map((assignableUser) => ({
-                value: assignableUser.id.toString(),
-                label: assignableUser.name,
-                description: assignableUser.role.replaceAll("_", " ").toLowerCase(),
-                badge: "Owner",
-              })),
-            ]}
-          />
-          <SearchableCombobox
-            label="Branch"
-            name="branch"
-            defaultValue={params.branch ?? ""}
-            placeholder="All branches"
-            emptyLabel="No branches found."
-            options={[
-              { value: "", label: "All branches", description: "Show alerts from every branch" },
-              ...branches.map((branch) => ({ value: branch.id.toString(), label: branch.name, description: "Branch" })),
-            ]}
-          />
-          <select name="ruleType" defaultValue={params.ruleType ?? ""} className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm">
-            <option value="">All rule types</option>
-            {defaultAbusePolicies.map((policy) => <option key={policy.ruleType} value={policy.ruleType}>{policy.policyName}</option>)}
-          </select>
-          <select name="date" defaultValue={params.date ?? ""} className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm">
-            <option value="">All dates</option>
-            <option value="today">Today</option>
-            <option value="7d">Last 7 Days</option>
-            <option value="30d">Last 30 Days</option>
-            <option value="custom">Custom Range</option>
-          </select>
-          <input type="date" name="from" defaultValue={params.from ?? ""} className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm" />
-          <input type="date" name="to" defaultValue={params.to ?? ""} className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm" />
-          <input type="number" min="0" max="100" name="riskMin" defaultValue={params.riskMin ?? ""} placeholder="Risk min" className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm" />
-          <input type="number" min="0" max="100" name="riskMax" defaultValue={params.riskMax ?? ""} placeholder="Risk max" className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm" />
           <button type="submit" className="h-10 rounded-md business-button px-4 text-sm font-semibold text-white">Apply</button>
-          <Link href="/dashboard/notifications" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] bg-white px-4 text-sm font-semibold text-[#111827]">
-            Clear Filters
-          </Link>
-        </form>
-      </section>
+          <Link href="/dashboard/notifications" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] bg-white px-4 text-sm font-semibold text-[#111827]">Clear</Link>
+        </div>
 
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
-        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap gap-2">
-            {workflowTabs.map((tab) => (
-              <Link key={tab} href={filterHref(params, { status: tab })} className={`rounded-md px-3 py-2 text-sm font-semibold ${selectedStatus === tab ? "business-button text-white" : "bg-[#F3F4F6] text-[#374151] business-hover"}`}>
-                {tab.replaceAll("_", " ")}
+        <div className="flex flex-wrap items-center gap-2">
+          {[
+            { value: "", label: "All" },
+            { value: "CRITICAL", label: "Critical" },
+            { value: "HIGH", label: "High" },
+            { value: "MEDIUM", label: "Medium" },
+            { value: "LOW", label: "Low" },
+          ].map((option) => {
+            const active = (params.severity ?? "") === option.value;
+            return (
+              <Link key={option.value || "all"} href={filterHref(params, { severity: option.value })} className={`inline-flex h-9 items-center rounded-full px-3.5 text-xs font-semibold transition ${active ? "business-button text-white" : "border border-[#E5E7EB] bg-white text-[#6B7280] business-hover"}`}>
+                {option.label}
               </Link>
-            ))}
-          </div>
-          <p className="text-sm font-semibold text-[#6B7280]">Showing {alerts.length} alerts</p>
+            );
+          })}
         </div>
 
-        <div className="mb-4 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-3">
-          <div className="mb-3 flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 business-text" aria-hidden="true" />
-            <div>
-              <h3 className="font-semibold text-[#111827]">Alert analytics</h3>
-              <p className="text-sm text-[#6B7280]">Alerts by Day, Alerts by Severity, Alerts by Category, and Top Alert Sources.</p>
-            </div>
+        <details open={hasAdvancedFilters} className="group rounded-lg border border-[#E5E7EB] [&::-webkit-details-marker]:hidden">
+          <summary className="flex cursor-pointer list-none items-center gap-2 p-3 text-sm font-semibold text-[#475569]">
+            <SlidersHorizontal className="h-4 w-4" aria-hidden="true" /> More filters
+            <ChevronDown className="ml-auto h-4 w-4 transition group-open:rotate-180" aria-hidden="true" />
+          </summary>
+          <div className="grid gap-3 border-t border-[#E5E7EB] p-3 md:grid-cols-2 xl:grid-cols-4">
+            <select name="priority" defaultValue={params.priority ?? ""} className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm">
+              <option value="">All priorities</option>
+              {severityValues.map((priority) => <option key={priority} value={priority}>{priority}</option>)}
+            </select>
+            <select name="assigned" defaultValue={params.assigned ?? ""} className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm">
+              <option value="">All owners</option>
+              <option value="assigned">Assigned</option>
+              <option value="unassigned">Unassigned</option>
+            </select>
+            <SearchableCombobox
+              label="Assigned user"
+              name="assignedUser"
+              defaultValue={params.assignedUser ?? ""}
+              placeholder="Assigned user"
+              emptyLabel="No assignable users found."
+              options={[
+                { value: "", label: "Assigned user", description: "All alert owners" },
+                ...assignableUsers.map((assignableUser) => ({
+                  value: assignableUser.id.toString(),
+                  label: assignableUser.name,
+                  description: assignableUser.role.replaceAll("_", " ").toLowerCase(),
+                  badge: "Owner",
+                })),
+              ]}
+            />
+            <SearchableCombobox
+              label="Branch"
+              name="branch"
+              defaultValue={params.branch ?? ""}
+              placeholder="All branches"
+              emptyLabel="No branches found."
+              options={[
+                { value: "", label: "All branches", description: "Show alerts from every branch" },
+                ...branches.map((branch) => ({ value: branch.id.toString(), label: branch.name, description: "Branch" })),
+              ]}
+            />
+            <select name="ruleType" defaultValue={params.ruleType ?? ""} className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm">
+              <option value="">All rule types</option>
+              {defaultAbusePolicies.map((policy) => <option key={policy.ruleType} value={policy.ruleType}>{policy.policyName}</option>)}
+            </select>
+            <select name="date" defaultValue={params.date ?? ""} className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm">
+              <option value="">All dates</option>
+              <option value="today">Today</option>
+              <option value="7d">Last 7 Days</option>
+              <option value="30d">Last 30 Days</option>
+              <option value="custom">Custom Range</option>
+            </select>
+            <input type="date" name="from" defaultValue={params.from ?? ""} className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm" />
+            <input type="date" name="to" defaultValue={params.to ?? ""} className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm" />
+            <input type="number" min="0" max="100" name="riskMin" defaultValue={params.riskMin ?? ""} placeholder="Risk min" className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm" />
+            <input type="number" min="0" max="100" name="riskMax" defaultValue={params.riskMax ?? ""} placeholder="Risk max" className="h-10 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm" />
           </div>
-          <div className="grid gap-3 xl:grid-cols-4">
-            <MiniChart title="Alerts by Day" rows={alertAnalytics.byDay} />
-            <MiniChart title="Alerts by Severity" rows={alertAnalytics.bySeverity} />
-            <MiniChart title="Alerts by Category" rows={alertAnalytics.byCategory} />
-            <MiniChart title="Top Alert Sources" rows={alertAnalytics.topSources} />
-          </div>
-        </div>
+        </details>
+      </form>
 
-        <div className="grid gap-3 xl:grid-cols-2">
+      <nav className="flex gap-1 overflow-x-auto border-b border-[#E5E7EB] [scrollbar-gutter:stable]" aria-label="Alert workflow">
+        {workflowTabs.map((tab) => (
+          <Link key={tab} href={filterHref(params, { status: tab })} aria-current={selectedStatus === tab ? "page" : undefined} className={`min-h-11 whitespace-nowrap border-b-2 px-3 text-sm font-semibold capitalize transition ${selectedStatus === tab ? "business-border business-text" : "border-transparent text-[#64748B] hover:text-[#1E293B]"}`}>
+            {tab.replaceAll("_", " ").toLowerCase()}
+          </Link>
+        ))}
+      </nav>
+
+      <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(300px,1fr)]">
+        <div className="grid min-w-0 gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-base font-bold tracking-tight text-[#171A21]">Alerts</h2>
+            <span className="text-sm font-semibold text-[#9CA3AF]">{alerts.length} {alerts.length === 1 ? "alert" : "alerts"}</span>
+          </div>
           {alertRows.map((row) => (
             <AlertCard key={row.alert.id} row={row} assignableUsers={assignableUsers} />
           ))}
+          {alerts.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-[#E5E7EB] py-8 text-center">
+              <p className="text-sm font-semibold text-[#111827]">No alerts match these filters.</p>
+              <p className="mt-2 text-sm text-[#6B7280]">Clear filters or select another workflow tab.</p>
+              <Link href="/dashboard/notifications" className="mt-4 inline-flex rounded-md business-button px-4 py-2 text-sm font-semibold text-white">Clear filters</Link>
+            </div>
+          ) : null}
         </div>
 
-        {alerts.length === 0 ? (
-          <div className="py-8 text-center">
-            <p className="text-sm font-semibold text-[#111827]">No alerts match these filters.</p>
-            <p className="mt-2 text-sm text-[#6B7280]">Clear filters or select another workflow tab.</p>
-            <Link href="/dashboard/notifications" className="mt-4 inline-flex rounded-md business-button px-4 py-2 text-sm font-semibold text-white">Clear Filters</Link>
-          </div>
-        ) : null}
-      </section>
+        <aside className="grid min-w-0 gap-4">
+          <section className="min-w-0 rounded-xl border border-[#E7E9EE] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
+            <h3 className="text-sm font-bold tracking-tight text-[#171A21]">Branch risk</h3>
+            <div className="mt-3 grid gap-2">
+              {branchRisks.map((branch) => (
+                <Link key={branch.id} href={filterHref(params, { branch: branch.id.toString(), status: selectedStatus })} className="flex items-center justify-between gap-3 rounded-lg border border-[#F1F3F5] p-2.5 transition business-hover">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-[#111827]">{branch.name}</p>
+                    <p className="text-xs text-[#9CA3AF]">{branch.count} alert{branch.count === 1 ? "" : "s"}</p>
+                  </div>
+                  <SeverityBadge severity={branch.highestSeverity} />
+                </Link>
+              ))}
+              {branchRisks.length === 0 ? <p className="text-sm text-[#6B7280]">No branches yet.</p> : null}
+            </div>
+          </section>
+          <MiniChart title="Alerts by severity" rows={alertAnalytics.bySeverity} />
+          <MiniChart title="Alerts by day" rows={alertAnalytics.byDay} />
+          <MiniChart title="Alerts by category" rows={alertAnalytics.byCategory} />
+          <MiniChart title="Top alert sources" rows={alertAnalytics.topSources} />
+        </aside>
+      </div>
     </DashboardShell>
   );
 }
@@ -332,29 +339,34 @@ function AlertCard({
   const canManage = !["RESOLVED", "DISMISSED", "REVIEWED"].includes(alert.status);
 
   return (
-    <details className="group min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm open:ring-1 open:ring-[var(--business-primary-border)]">
+    <details className={`group min-w-0 overflow-hidden rounded-xl border border-[#E7E9EE] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)] ${severityBorderClass(alert.severity)}`}>
       <summary className="flex cursor-pointer list-none flex-col gap-3">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <SeverityBadge severity={alert.severity} />
-              <span className="rounded-md bg-[#F3F4F6] px-2 py-1 text-xs font-semibold text-[#374151]">{alert.status.replaceAll("_", " ")}</span>
+              <span className="rounded-md bg-[#F3F4F6] px-2 py-0.5 text-xs font-semibold text-[#374151]">{alert.status.replaceAll("_", " ")}</span>
+              <span className="text-xs text-[#9CA3AF]">#{alert.id}</span>
             </div>
             <h3 className="mt-2 truncate text-base font-semibold text-[#111827]">{alertTypeLabel(alert.alertType)}</h3>
+            <p className="mt-0.5 truncate text-xs text-[#9CA3AF]">{customerName} · {alert.branch?.name ?? "No branch"} · {formatDateTime(alert.createdAt)}</p>
           </div>
-          <ChevronDown className="h-5 w-5 shrink-0 text-[#6B7280] transition group-open:rotate-180" aria-hidden="true" />
+          <div className="flex shrink-0 items-start gap-3">
+            <div className="text-right">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Risk</p>
+              <p className={`text-lg font-semibold ${riskTextClass(alert.riskScore)}`}>{alert.riskScore}</p>
+            </div>
+            <ChevronDown className="mt-1 h-5 w-5 text-[#9CA3AF] transition group-open:rotate-180" aria-hidden="true" />
+          </div>
         </div>
-        <div className="grid gap-2 text-sm text-[#6B7280] sm:grid-cols-2">
-          <CompactInfo label="Customer" value={customerName} />
-          <CompactInfo label="Branch" value={alert.branch?.name ?? "-"} />
-          <RiskMeter score={alert.riskScore} />
-          <CompactInfo label="Alert date" value={formatDateTime(alert.createdAt)} />
+        <div className="h-1.5 overflow-hidden rounded-full bg-[#F1F3F5]">
+          <div className={`h-full rounded-full ${riskBarClass(alert.riskScore)}`} style={{ width: `${Math.min(100, Math.max(0, alert.riskScore))}%` }} />
         </div>
         <div className="flex flex-wrap gap-2">
-          <span className="rounded-md border border-[#E5E7EB] px-3 py-2 text-xs font-semibold text-[#111827]">Investigate Alert</span>
+          <span className="inline-flex items-center rounded-md border border-[#E5E7EB] px-3 py-1.5 text-xs font-semibold text-[#111827] group-open:business-border group-open:business-text">Investigate</span>
           {canManage ? <ActionForm alert={alert} assignableUsers={assignableUsers} compactAction="ASSIGNED" label="Assign" /> : null}
           {canManage ? <ActionForm alert={alert} assignableUsers={assignableUsers} compactAction="RESOLVED" label="Resolve" /> : null}
-          {canManage ? <AlertActionsDropdown alert={alert} assignableUsers={assignableUsers} /> : <span className="rounded-md bg-[#F3F4F6] px-3 py-2 text-xs font-semibold text-[#6B7280]">Closed</span>}
+          {canManage ? <AlertActionsDropdown alert={alert} assignableUsers={assignableUsers} /> : <span className="rounded-md bg-[#F3F4F6] px-3 py-1.5 text-xs font-semibold text-[#6B7280]">Closed</span>}
         </div>
       </summary>
 
@@ -496,28 +508,18 @@ function ActionForm({
   );
 }
 
-function CompactInfo({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="min-w-0">
-      <p className="text-xs font-semibold uppercase text-[#9CA3AF]">{label}</p>
-      <p className="mt-1 truncate font-medium text-[#111827]" title={value}>{value}</p>
-    </div>
-  );
+function severityBorderClass(severity: string) {
+  if (severity === "CRITICAL" || severity === "HIGH") return "border-l-[3px] border-l-red-500";
+  if (severity === "MEDIUM") return "border-l-[3px] border-l-orange-500";
+  return "border-l-[3px] border-l-emerald-500";
 }
 
-function RiskMeter({ score }: { score: number }) {
-  const color = score >= 70 ? "bg-red-500" : score >= 40 ? "bg-orange-500" : "bg-emerald-500";
-  return (
-    <div className="min-w-0">
-      <div className="flex min-w-0 items-center justify-between gap-3">
-        <p className="text-xs font-semibold uppercase text-[#9CA3AF]">Risk score</p>
-        <p className="text-sm font-semibold text-[#111827]">{score}/100</p>
-      </div>
-      <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#F3F4F6]">
-        <div className={`h-2 rounded-full ${color}`} style={{ width: `${Math.min(100, Math.max(0, score))}%` }} />
-      </div>
-    </div>
-  );
+function riskTextClass(score: number) {
+  return score >= 70 ? "text-red-600" : score >= 40 ? "text-orange-600" : "text-emerald-600";
+}
+
+function riskBarClass(score: number) {
+  return score >= 70 ? "bg-red-500" : score >= 40 ? "bg-orange-500" : "bg-emerald-500";
 }
 
 function InvestigationPanel({ title, children }: { title: string; children: ReactNode }) {
