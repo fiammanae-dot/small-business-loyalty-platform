@@ -63,41 +63,6 @@ export const designStudioBackgroundPatternOptions = [
   description: string;
 }>;
 
-export type DesignStudioBackgroundGalleryOption = {
-  id: string;
-  label: string;
-  description: string;
-  backgroundStyle: Extract<CardDesignBackgroundStyle, "SOLID" | "GRADIENT" | "PATTERN">;
-  backgroundPattern: CardDesignBackgroundPattern;
-};
-
-export const designStudioBackgroundGalleryOptions = [
-  { id: "minimal-white", label: "Minimal White", description: "Clean, bright, and simple.", backgroundStyle: "SOLID", backgroundPattern: "NONE" },
-  { id: "soft-gradient", label: "Soft Gradient", description: "Warm depth with a gentle blend.", backgroundStyle: "GRADIENT", backgroundPattern: "NONE" },
-  { id: "dark-premium", label: "Dark Premium", description: "Bold contrast for a premium feel.", backgroundStyle: "GRADIENT", backgroundPattern: "NONE" },
-  { id: "luxury-gold", label: "Luxury Gold", description: "Refined gold accents and movement.", backgroundStyle: "PATTERN", backgroundPattern: "DIAGONAL_LINES" },
-  { id: "glass", label: "Glass", description: "Light translucent feel.", backgroundStyle: "GRADIENT", backgroundPattern: "NONE" },
-  { id: "coffee-pattern", label: "Coffee Pattern", description: "Cafe-inspired loyalty texture.", backgroundStyle: "PATTERN", backgroundPattern: "COFFEE_BEANS" },
-  { id: "salon-marble", label: "Salon Marble", description: "Soft beauty-inspired texture.", backgroundStyle: "PATTERN", backgroundPattern: "BEAUTY_PATTERN" },
-  { id: "restaurant-texture", label: "Restaurant Texture", description: "Dining-inspired background detail.", backgroundStyle: "PATTERN", backgroundPattern: "FOOD_PATTERN" },
-  { id: "modern-mesh", label: "Modern Mesh", description: "Contemporary flowing linework.", backgroundStyle: "PATTERN", backgroundPattern: "WAVES" },
-  { id: "car-wash-bubbles", label: "Car Wash Bubbles", description: "Fresh bubbles for car care brands.", backgroundStyle: "PATTERN", backgroundPattern: "WATER_BUBBLES" },
-] satisfies DesignStudioBackgroundGalleryOption[];
-
-export function resolveDesignStudioBackgroundGalleryOption(
-  backgroundStyle: CardDesignBackgroundStyle,
-  backgroundPattern: CardDesignBackgroundPattern,
-) {
-  const normalizedStyle: Extract<CardDesignBackgroundStyle, "SOLID" | "GRADIENT" | "PATTERN"> =
-    backgroundStyle === "GRADIENT" ? "GRADIENT" : backgroundStyle === "SOLID" ? "SOLID" : "PATTERN";
-  return (
-    designStudioBackgroundGalleryOptions.find((option) => option.backgroundStyle === normalizedStyle && option.backgroundPattern === backgroundPattern) ??
-    (backgroundPattern !== "NONE" ? designStudioBackgroundGalleryOptions.find((option) => option.backgroundPattern === backgroundPattern) : undefined) ??
-    designStudioBackgroundGalleryOptions.find((option) => option.backgroundStyle === normalizedStyle && option.backgroundPattern === "NONE") ??
-    designStudioBackgroundGalleryOptions[0]
-  );
-}
-
 export const designStudioRewardStyleOptions = [
   { value: "FILLED", label: "Filled", description: "Bold and easy to notice." },
   { value: "OUTLINE", label: "Outline", description: "Clean and lightweight." },
@@ -112,30 +77,16 @@ export const designStudioRewardStyleOptions = [
 
 export const designStudioTypographyOptions = [
   { value: "MODERN", label: "Modern", description: "Clean and contemporary." },
-  { value: "LUXURY", label: "Elegant", description: "Refined and polished." },
-  { value: "PLAYFUL", label: "Friendly", description: "Warm and approachable." },
+  { value: "CLASSIC", label: "Classic", description: "Balanced and timeless." },
+  { value: "PREMIUM", label: "Premium", description: "Bold and professional." },
+  { value: "LUXURY", label: "Luxury", description: "Elegant and refined." },
+  { value: "PLAYFUL", label: "Playful", description: "Friendly and welcoming." },
   { value: "MINIMAL", label: "Minimal", description: "Simple and distraction-free." },
 ] satisfies Array<{
   value: CardDesignTypographyPreset;
   label: string;
   description: string;
 }>;
-
-export function resolveDesignStudioTypographyOption(typographyPreset: CardDesignTypographyPreset) {
-  if (typographyPreset === "CLASSIC" || typographyPreset === "PREMIUM" || typographyPreset === "LUXURY") {
-    return designStudioTypographyOptions.find((option) => option.value === "LUXURY") ?? designStudioTypographyOptions[1];
-  }
-
-  if (typographyPreset === "PLAYFUL") {
-    return designStudioTypographyOptions.find((option) => option.value === "PLAYFUL") ?? designStudioTypographyOptions[2];
-  }
-
-  if (typographyPreset === "MINIMAL") {
-    return designStudioTypographyOptions.find((option) => option.value === "MINIMAL") ?? designStudioTypographyOptions[3];
-  }
-
-  return designStudioTypographyOptions[0];
-}
 
 export const designStudioCardFinishOptions = [
   { value: "FLAT", label: "Flat", description: "Clean and distraction-free." },
@@ -167,72 +118,6 @@ export const designStudioCardContentOptions = [
   description: string;
 }>;
 
-const content = (overrides: Partial<CardSectionVisibility> = {}): CardSectionVisibility => ({
-  ...defaultVisibleCardSections,
-  ...overrides,
-});
-
-function sectionVisibilityMatches(expected: CardSectionVisibility, actual: CardSectionVisibility) {
-  return designStudioCardContentOptions.every((option) => expected[option.value] === actual[option.value]);
-}
-
-export type DesignStudioCardLayoutOption = {
-  id: "compact" | "standard" | "detailed" | "premium";
-  label: string;
-  description: string;
-  visibleSections: CardSectionVisibility;
-};
-
-export const designStudioCardLayoutOptions = [
-  {
-    id: "compact",
-    label: "Compact",
-    description: "Clean card with only essential loyalty details.",
-    visibleSections: content({
-      programName: false,
-      tierBadge: false,
-      rewardBox: false,
-      footer: false,
-      referral: false,
-    }),
-  },
-  {
-    id: "standard",
-    label: "Standard",
-    description: "Balanced layout for most businesses.",
-    visibleSections: content({
-      footer: false,
-      referral: false,
-    }),
-  },
-  {
-    id: "detailed",
-    label: "Detailed",
-    description: "Shows extra customer and reward information.",
-    visibleSections: content({
-      referral: false,
-    }),
-  },
-  {
-    id: "premium",
-    label: "Premium",
-    description: "Full-featured layout with every available card section.",
-    visibleSections: content(),
-  },
-] satisfies DesignStudioCardLayoutOption[];
-
-export function resolveDesignStudioCardLayoutOption(visibleSections: CardSectionVisibility) {
-  const exact = designStudioCardLayoutOptions.find((option) => sectionVisibilityMatches(option.visibleSections, visibleSections));
-  if (exact) return exact;
-
-  return designStudioCardLayoutOptions
-    .map((option) => ({
-      option,
-      score: designStudioCardContentOptions.filter((section) => option.visibleSections[section.value] === visibleSections[section.value]).length,
-    }))
-    .sort((a, b) => b.score - a.score)[0]?.option ?? designStudioCardLayoutOptions[1];
-}
-
 export type DesignStudioProfessionalPreset = {
   id: string;
   category: string;
@@ -248,6 +133,11 @@ export type DesignStudioProfessionalPreset = {
   decorationStyle: CardDesignDecorationStyle;
   visibleSections: CardSectionVisibility;
 };
+
+const content = (overrides: Partial<CardSectionVisibility> = {}): CardSectionVisibility => ({
+  ...defaultVisibleCardSections,
+  ...overrides,
+});
 
 export const designStudioProfessionalPresetGroups = [
   {

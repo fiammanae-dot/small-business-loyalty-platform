@@ -88,9 +88,6 @@ export default async function PlatformSubscriptionsPage({
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Subscription management">
-      <section aria-label="Subscription directory coverage" className="sr-only">
-        Business subscriptions Active Subscriptions Trial Subscriptions Expiring Within 30 Days Suspended Subscriptions Apply filters Clear filters Showing {subscriptions.length} subscriptions Review flagged SubscriptionCard CompactBadge
-      </section>
       <section className="flex flex-col gap-3">
         <Message error={params.error} success={params.success} />
         <p className="text-sm text-[#7A8091]">View lifecycle status, expiry, renewal, and audit activity.</p>

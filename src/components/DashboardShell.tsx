@@ -2,10 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import {
   Building2,
-  CircleDollarSign,
-  ClipboardList,
   FileText,
-  Layers3,
   LayoutDashboard,
   ShieldAlert,
   Store,
@@ -57,12 +54,6 @@ type DashboardShellProps = {
 
 const navItems = [
   { href: "/platform", label: "Platform", role: "PLATFORM_OWNER", icon: LayoutDashboard },
-  { href: "/platform/businesses", label: "Businesses", role: "PLATFORM_OWNER", icon: Building2 },
-  { href: "/platform/health-analytics", label: "Analytics", role: "PLATFORM_OWNER", icon: LayoutDashboard },
-  { href: "/platform/operations-center", label: "Operations Center", role: "PLATFORM_OWNER", icon: ShieldAlert },
-  { href: "/platform/audit-center", label: "Audit Center", role: "PLATFORM_OWNER", icon: ClipboardList },
-  { href: "/platform/billing-center", label: "Billing Center", role: "PLATFORM_OWNER", icon: CircleDollarSign },
-  { href: "/platform/tenant-center", label: "Tenant Center", role: "PLATFORM_OWNER", icon: Layers3 },
   { href: "/dashboard", label: "Business", role: "BUSINESS_OWNER", icon: Store },
   { href: "/branch", label: "Branch", role: "BRANCH_MANAGER", icon: Building2 },
   { href: "/staff", label: "Staff", role: "STAFF", icon: Users },

@@ -1,26 +1,25 @@
 import Link from "next/link";
-import type React from "react";
-import {
-  CheckCircle2,
-  Search,
-  ShieldCheck,
-  ScanLine,
-  TicketCheck,
-  UserPlus,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
-import { CsrfInput } from "@/components/CsrfInput";
+import { CheckCircle2, Gift, ScanLine, Search, ShieldCheck, UserPlus, Users } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
 import { DashboardPageLayout } from "@/components/layouts";
-import { ButtonLink, MetricCard, PageActions, PageHeader, ProgressBar, SectionCard as UiSectionCard, StatusBadge as UiStatusBadge, Timeline, TimelineItem } from "@/components/ui";
+import { ButtonLink, MetricCard, ProgressBar, SectionCard as UiSectionCard, StatusBadge as UiStatusBadge, Timeline, TimelineItem } from "@/components/ui";
 import { getBusinessDisplayName, getBusinessTypeDisplayName } from "@/lib/business-display";
-import { endSupportSessionAction } from "@/app/platform/businesses/support-actions";
 import { getBusinessOwnerContext, getCurrentPlan } from "@/lib/business-owner";
-import { formatDateTime } from "@/lib/format";
+import { formatDate, formatDateTime } from "@/lib/format";
 import { getPlanComplianceSummary, type PlanComplianceSummary } from "@/lib/plan-compliance";
 import { requireSupportBusinessContext } from "@/lib/support-sessions";
 import { prisma } from "@/lib/prisma";
 import { businessTypeLabels } from "@/lib/roles";
+
+type ServeQueueItem = {
+  kind: "ready" | "almost";
+  customerUuid: string;
+  customerName: string;
+  programName: string;
+  rewardName: string;
+  progress: number;
+  required: number;
+};
 
 export default async function BusinessDashboard({
   searchParams,
@@ -94,6 +93,7 @@ export default async function BusinessDashboard({
             status: true,
             stampTransactions: { select: { quantity: true } },
             rewardRedemptions: { select: { id: true } },
+            businessCustomerMembership: { select: { uuid: true, firstName: true, lastName: true } },
           },
         },
       },
@@ -163,8 +163,29 @@ export default async function BusinessDashboard({
     }).length,
     0,
   );
+  const serveQueue: ServeQueueItem[] = [];
+  for (const program of programRows) {
+    for (const membership of program.memberships) {
+      if (membership.status === "COMPLETED") continue;
+      const progress = membership.earnedStamps + membership.bonusStamps;
+      const item = {
+        customerUuid: membership.businessCustomerMembership.uuid,
+        customerName: getCustomerName(membership.businessCustomerMembership),
+        programName: program.name,
+        rewardName: program.rewardName,
+        progress,
+        required: program.requiredStamps,
+      };
+      if (progress >= program.requiredStamps) {
+        serveQueue.push({ kind: "ready", ...item });
+      } else if (progress >= Math.max(0, program.requiredStamps - 2)) {
+        serveQueue.push({ kind: "almost", ...item });
+      }
+    }
+  }
+  serveQueue.sort((a, b) => (a.kind === b.kind ? b.progress - a.progress : a.kind === "ready" ? -1 : 1));
+  const visibleQueue = serveQueue.slice(0, 6);
   const stampsIssuedToday = stampsToday._sum.quantity ?? 0;
-  const totalActivitiesToday = newCustomersToday + stampEventsToday + redemptionsToday;
   const onboardingItems = [
     { label: "Create first branch", complete: branchCount > 0, href: "/dashboard/branches" },
     { label: "Create first staff member", complete: staffCount > 0, href: "/dashboard/staff" },
@@ -174,6 +195,8 @@ export default async function BusinessDashboard({
     { label: "Redeem first reward", complete: redemptionCount > 0, href: "/dashboard/customers" },
   ];
   const onboardingPercent = Math.round((onboardingItems.filter((item) => item.complete).length / onboardingItems.length) * 100);
+  const greeting = new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening";
+  const currentDate = new Intl.DateTimeFormat("en-AE", { weekday: "long", month: "short", day: "numeric" }).format(new Date());
 
   return (
     <DashboardShell
@@ -185,61 +208,168 @@ export default async function BusinessDashboard({
     >
       <DashboardPageLayout
         summary={
-          <DashboardCommandCenter
-            businessName={businessDisplayName}
-            businessType={businessTypeDisplayName}
-            ownerName={user.name}
-            planName={plan?.name ?? "Unassigned"}
-            status={business.status}
-            currentDate={new Intl.DateTimeFormat("en-AE", { weekday: "long", month: "short", day: "numeric" }).format(new Date())}
-            customersToday={newCustomersToday}
-            logoUrl={business.branding?.logoUrl}
-          />
+          <UiSectionCard className="business-border-soft business-bg-soft">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex min-w-0 items-center gap-3.5">
+                <div
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border business-border-soft bg-white bg-cover bg-center text-sm font-bold business-text"
+                  style={business.branding?.logoUrl ? { backgroundImage: `url(${business.branding.logoUrl})` } : undefined}
+                  aria-label="Business logo"
+                >
+                  {!business.branding?.logoUrl ? getInitials(businessDisplayName) : null}
+                </div>
+                <div className="min-w-0">
+                  <h2 className="truncate text-lg font-bold tracking-tight text-[#171A21]">
+                    Good {greeting}, {user.name} — {businessDisplayName}
+                  </h2>
+                  <p className="mt-0.5 hidden text-xs text-[#5A6070] md:block">
+                    {currentDate} · {businessTypeDisplayName} · {plan?.name ?? "Unassigned"} Plan ·{" "}
+                    <span className={business.status === "ACTIVE" ? "font-semibold text-[#1D7A46]" : "font-semibold text-[#B91C1C]"}>{business.status}</span> · All branches
+                  </p>
+                  <p className="mt-0.5 text-xs text-[#5A6070] md:hidden">
+                    <span className="font-semibold business-primary-strong">{newCustomersToday} new</span> · {stampsIssuedToday} visits · {redemptionsToday} rewards ·{" "}
+                    {referralConversionsToday} referrals today
+                  </p>
+                </div>
+              </div>
+              <div className="hidden shrink-0 items-center gap-2 md:flex">
+                <CustomerSearchForm className="w-56" />
+                <ButtonLink href="/dashboard/customers/new" variant="outline" leftIcon={<UserPlus className="h-4 w-4" aria-hidden="true" />}>
+                  Add Customer
+                </ButtonLink>
+                <ButtonLink href="/dashboard/scanner" variant="business" size="lg" leftIcon={<ScanLine className="h-5 w-5" aria-hidden="true" />}>
+                  Open Scanner
+                </ButtonLink>
+              </div>
+            </div>
+          </UiSectionCard>
         }
-        actions={<CompactCustomerSearch />}
       >
         {!supportSession && activeBusinessSupportSession ? <ActiveSupportNotice session={activeBusinessSupportSession} /> : null}
 
-        <TodaysOperations
-          newCustomersToday={newCustomersToday}
-          stampsIssuedToday={stampsIssuedToday}
-          rewardsRedeemedToday={redemptionsToday}
-          rewardReadyCustomers={rewardsReadyTotal}
-          referralConversionsToday={referralConversionsToday}
-        />
-
-        <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="min-w-0 space-y-5">
-            <QuickActions />
-            <ActionRequiredSection rewardReadyCustomers={rewardsReadyTotal} pendingReferrals={pendingReferrals} customersCloseToReward={customersCloseToReward} recentScannerActivity={totalActivitiesToday} alertCount={totalOpenAlerts} subscriptionStatus={business.subscriptions[0]?.status ?? "UNASSIGNED"} onboardingPercent={onboardingPercent} onboardingItems={onboardingItems} />
-            <DashboardActivityTimeline customers={recentCustomers} programs={programPerformance} />
+        <div className="grid gap-2 md:hidden">
+          <ButtonLink href="/dashboard/scanner" variant="business" size="lg" className="w-full" leftIcon={<ScanLine className="h-5 w-5" aria-hidden="true" />}>
+            Open Scanner
+          </ButtonLink>
+          <div className="grid grid-cols-2 gap-2">
+            <ButtonLink href="/dashboard/customers/new" variant="outline" className="w-full" leftIcon={<UserPlus className="h-4 w-4" aria-hidden="true" />}>
+              Add Customer
+            </ButtonLink>
+            <ButtonLink href="/dashboard/customers" variant="outline" className="w-full" leftIcon={<Users className="h-4 w-4" aria-hidden="true" />}>
+              Customers
+            </ButtonLink>
           </div>
-          <div className="min-w-0 space-y-5">
-            <BusinessHealthPanel customerGrowth={newCustomersToday > 0 ? "Growing today" : "Needs activity"} activePrograms={loyaltyPrograms} activeStaff={staffCount} branchCount={branchCount} subscriptionStatus={business.subscriptions[0]?.status ?? "UNASSIGNED"} branchesUsed={branchCount} branchLimit={plan?.maxBranches ?? null} programsUsed={loyaltyPrograms} programLimit={plan?.maxLoyaltyPrograms ?? null} planCompliance={planCompliance} />
-            <SubscriptionSummaryCard planName={plan?.name ?? "Unassigned"} branchesUsed={branchCount} branchLimit={plan?.maxBranches ?? null} programsUsed={loyaltyPrograms} programLimit={plan?.maxLoyaltyPrograms ?? null} renewalDate={business.subscriptions[0]?.renewalDate ?? business.subscriptions[0]?.expiryDate ?? null} />
-            <SupportAccessCard session={latestSupportSession} />
+          <CustomerSearchForm />
+        </div>
+
+        <section aria-label="Key numbers" className="hidden gap-3 md:grid md:grid-cols-3 xl:grid-cols-6">
+          <MetricCard href="/dashboard/customers" label="New Customers Today" value={newCustomersToday} tone="business" />
+          <MetricCard href="/dashboard/activity" label="Visits Issued Today" value={stampsIssuedToday} />
+          <MetricCard href="/dashboard/activity" label="Rewards Redeemed Today" value={redemptionsToday} />
+          <MetricCard href="/dashboard/customers?reward=ready" label="Reward Ready" value={rewardsReadyTotal} tone={rewardsReadyTotal > 0 ? "warning" : "neutral"} />
+          <MetricCard href="/dashboard/customers" label="Total Customers" value={customerCount} helper="All branches" />
+          <MetricCard href="/dashboard/referrals" label="Referral Conversions" value={referralConversionsToday} helper="Today" />
+        </section>
+
+        <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+          <ServeNextQueue items={visibleQueue} readyTotal={rewardsReadyTotal} almostTotal={customersCloseToReward} />
+
+          <div className="grid min-w-0 content-start gap-4">
+            {totalOpenAlerts > 0 ? (
+              <Link
+                href="/dashboard/notifications"
+                className="flex items-center justify-between gap-3 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 transition hover:bg-[#FEE2E2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary,#16A34A)] focus-visible:ring-offset-2"
+              >
+                <span className="text-sm font-bold text-[#991B1B]">
+                  {totalOpenAlerts} open {totalOpenAlerts === 1 ? "alert needs" : "alerts need"} review
+                </span>
+                <span className="text-xs font-semibold text-[#B91C1C]">Review →</span>
+              </Link>
+            ) : null}
+
+            {pendingReferrals > 0 ? (
+              <Link
+                href="/dashboard/referrals?status=PENDING"
+                className="flex items-center justify-between gap-3 rounded-xl border border-[#F3D9A4] bg-[#FFFBF2] px-4 py-3 transition hover:bg-[#FCF0DC] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary,#16A34A)] focus-visible:ring-offset-2"
+              >
+                <span className="text-sm font-bold text-[#854F0B]">
+                  {pendingReferrals} pending {pendingReferrals === 1 ? "referral" : "referrals"}
+                </span>
+                <span className="text-xs font-semibold text-[#B25E09]">Review →</span>
+              </Link>
+            ) : null}
+
+            <AccountCard
+              subscriptionStatus={business.subscriptions[0]?.status ?? "UNASSIGNED"}
+              planName={plan?.name ?? "Unassigned"}
+              renewalDate={business.subscriptions[0]?.renewalDate ?? business.subscriptions[0]?.expiryDate ?? null}
+              customerGrowth={newCustomersToday > 0 ? "Growing today" : "Needs activity"}
+              staffCount={staffCount}
+              branchCount={branchCount}
+              activePrograms={loyaltyPrograms}
+              branchLimit={plan?.maxBranches ?? null}
+              programLimit={plan?.maxLoyaltyPrograms ?? null}
+              planCompliance={planCompliance}
+              lastSupportSession={latestSupportSession}
+            />
           </div>
         </div>
+
+        {onboardingPercent < 100 ? <OnboardingStrip percent={onboardingPercent} items={onboardingItems} /> : null}
+
+        <section aria-label="Programs at work">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="text-lg font-bold tracking-tight text-[#171A21]">Programs at work</h2>
+            <Link
+              href="/dashboard/programs"
+              className="text-sm font-semibold business-primary-strong transition hover:underline focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary,#16A34A)] focus-visible:ring-offset-2"
+            >
+              Manage programs →
+            </Link>
+          </div>
+          {programPerformance.length > 0 ? (
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {programPerformance.map((program) => (
+                <ProgramCard key={program.id} program={program} />
+              ))}
+            </div>
+          ) : (
+            <UiSectionCard>
+              <div className="text-center">
+                <p className="text-sm font-semibold text-[#171A21]">No loyalty programs yet</p>
+                <p className="mt-1 text-sm text-[#7A8091]">Create your first program to start rewarding customers.</p>
+                <div className="mt-3 flex justify-center">
+                  <ButtonLink href="/dashboard/programs/new" variant="business">
+                    Create program
+                  </ButtonLink>
+                </div>
+              </div>
+            </UiSectionCard>
+          )}
+        </section>
+
+        <DashboardActivityTimeline customers={recentCustomers} programs={programPerformance} />
       </DashboardPageLayout>
     </DashboardShell>
   );
 }
 
-
-function DashboardCommandCenter({ businessName, businessType, ownerName, planName, status, currentDate, customersToday, logoUrl }: { businessName: string; businessType: string; ownerName: string; planName: string; status: string; currentDate: string; customersToday: number; logoUrl?: string | null }) {
+function CustomerSearchForm({ className = "" }: { className?: string }) {
   return (
-    <UiSectionCard className="business-border-soft business-bg-soft">
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
-        <div className="flex min-w-0 gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border business-border-soft bg-white bg-cover bg-center text-base font-bold business-text" style={logoUrl ? { backgroundImage: `url(${logoUrl})` } : undefined} aria-label="Business logo">{!logoUrl ? getInitials(businessName) : null}</div>
-          <div className="min-w-0">
-            <PageHeader eyebrow="Daily operations" title={businessName} description={`Good ${new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening"}, ${ownerName}. Your ${businessType.toLowerCase()} has welcomed ${customersToday} customer${customersToday === 1 ? "" : "s"} today.`} />
-            <div className="mt-4 flex flex-wrap gap-2"><UiStatusBadge tone="business">{planName} Plan</UiStatusBadge><UiStatusBadge tone={status === "ACTIVE" ? "success" : "danger"}>{status}</UiStatusBadge><UiStatusBadge tone="neutral">All branches</UiStatusBadge><UiStatusBadge tone="info">{currentDate}</UiStatusBadge></div>
-          </div>
-        </div>
-        <PageActions className="lg:justify-end"><ButtonLink href="/dashboard/scanner" variant="business" size="lg">Open Scanner</ButtonLink><div className="flex flex-wrap gap-2 pt-1 lg:justify-end"><SecondaryAction href="/dashboard/customers/new" label="Add Customer" /><SecondaryAction href="/dashboard/customers" label="Find Customer" /><SecondaryAction href="/dashboard/programs" label="Programs" /></div></PageActions>
+    <form action="/dashboard/customers" className={`min-w-0 ${className}`}>
+      <label htmlFor="dashboard-customer-search" className="sr-only">
+        Search customers
+      </label>
+      <div className="relative min-w-0">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9AA0AD]" aria-hidden="true" />
+        <input
+          id="dashboard-customer-search"
+          name="q"
+          placeholder="Find a customer: name, phone, card ID"
+          className="h-11 w-full rounded-lg border border-[#E7E9EE] bg-white pl-10 pr-3 text-base outline-none business-ring focus:ring-0 sm:text-sm md:h-10"
+        />
       </div>
-    </UiSectionCard>
+    </form>
   );
 }
 
@@ -252,7 +382,7 @@ function ActiveSupportNotice({ session }: { session: { reason: string; expiresAt
             <ShieldCheck className="h-5 w-5" aria-hidden="true" />
           </span>
           <div className="min-w-0">
-            <p className="text-sm font-bold text-red-800">Loyalty Card UAE Support is currently assisting with your workspace.</p>
+            <p className="text-sm font-bold text-red-800">LoyaltyBase Support is currently assisting with your workspace.</p>
             <p className="mt-1 text-sm text-red-700">Reason: {session.reason}</p>
           </div>
         </div>
@@ -262,174 +392,321 @@ function ActiveSupportNotice({ session }: { session: { reason: string; expiresAt
   );
 }
 
-function TodaysOperations({ newCustomersToday, stampsIssuedToday, rewardsRedeemedToday, rewardReadyCustomers, referralConversionsToday }: { newCustomersToday: number; stampsIssuedToday: number; rewardsRedeemedToday: number; rewardReadyCustomers: number; referralConversionsToday: number }) {
-  return <section><h2 className="mb-3 text-lg font-bold tracking-tight text-[#171A21]">Today's Operations</h2><div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5"><MetricCard href="/dashboard/customers" label="New Customers Today" value={newCustomersToday} tone="business" /><MetricCard href="/dashboard/activity" label="Visits Issued Today" value={stampsIssuedToday} /><MetricCard href="/dashboard/activity" label="Rewards Redeemed Today" value={rewardsRedeemedToday} /><MetricCard href="/dashboard/customers?reward=ready" label="Reward Ready Customers" value={rewardReadyCustomers} tone={rewardReadyCustomers > 0 ? "warning" : "neutral"} /><MetricCard href="/dashboard/referrals" label="Referral Conversions Today" value={referralConversionsToday} /></div></section>;
-}
+function ServeNextQueue({ items, readyTotal, almostTotal }: { items: ServeQueueItem[]; readyTotal: number; almostTotal: number }) {
+  const shownReady = items.filter((item) => item.kind === "ready").length;
+  const shownAlmost = items.filter((item) => item.kind === "almost").length;
+  const moreReady = Math.max(0, readyTotal - shownReady);
+  const moreAlmost = Math.max(0, almostTotal - shownAlmost);
 
-function BusinessHealthPanel({ customerGrowth, activePrograms, activeStaff, branchCount, subscriptionStatus, branchesUsed, branchLimit, programsUsed, programLimit, planCompliance }: { customerGrowth: string; activePrograms: number; activeStaff: number; branchCount: number; subscriptionStatus: string; branchesUsed: number; branchLimit: number | null; programsUsed: number; programLimit: number | null; planCompliance: PlanComplianceSummary }) {
-  return <UiSectionCard title="Business Health" description="Growth, team, branch, subscription, and plan usage health."><div className="grid gap-3"><HealthRow label="Customer Growth" value={customerGrowth} tone={customerGrowth === "Needs activity" ? "warning" : "success"} /><HealthRow label="Active Programs" value={activePrograms.toString()} tone={activePrograms > 0 ? "success" : "warning"} /><HealthRow label="Active Staff" value={activeStaff.toString()} tone={activeStaff > 0 ? "success" : "warning"} /><HealthRow label="Branch Status" value={branchCount + " active"} tone={branchCount > 0 ? "success" : "warning"} /><HealthRow label="Subscription Health" value={subscriptionStatus.replaceAll("_", " ")} tone={subscriptionStatus === "ACTIVE" || subscriptionStatus === "TRIAL" ? "success" : "warning"} /><PlanUsage label="Branches Used" used={branchesUsed} limit={branchLimit} /><PlanUsage label="Programs Used" used={programsUsed} limit={programLimit} /><PlanComplianceCard compliance={planCompliance} /></div></UiSectionCard>;
-}
-
-function ActionRequiredSection({ rewardReadyCustomers, pendingReferrals, customersCloseToReward, recentScannerActivity, alertCount, subscriptionStatus, onboardingPercent, onboardingItems }: { rewardReadyCustomers: number; pendingReferrals: number; customersCloseToReward: number; recentScannerActivity: number; alertCount: number; subscriptionStatus: string; onboardingPercent: number; onboardingItems: Array<{ label: string; complete: boolean; href: string }> }) {
-  const subscriptionNeedsAttention = subscriptionStatus !== "ACTIVE" && subscriptionStatus !== "TRIAL" && subscriptionStatus !== "UNASSIGNED";
-  const hasAction = rewardReadyCustomers + pendingReferrals + customersCloseToReward + recentScannerActivity + alertCount > 0 || subscriptionNeedsAttention || onboardingPercent < 100;
-  return <UiSectionCard title="Action Required" description="Operational queues that need owner attention.">{hasAction ? <div className="grid gap-4 lg:grid-cols-2"><QueueBox title="Reward Ready Customers" count={rewardReadyCustomers} href="/dashboard/customers?reward=ready" empty="No rewards waiting right now." /><QueueBox title="Pending Referrals" count={pendingReferrals} href="/dashboard/referrals?status=PENDING" empty="No pending referrals." /><QueueBox title="Customers Close To Reward" count={customersCloseToReward} href="/dashboard/customers" empty="No customers close to reward." /><QueueBox title="Recent Scanner Activity" count={recentScannerActivity} href="/dashboard/activity" empty="No scanner activity today." />{alertCount > 0 ? <AlertRow href="/dashboard/notifications" label="Open Alerts" value={alertCount} /> : null}{subscriptionNeedsAttention ? <Link href="/dashboard/billing" className="rounded-lg border border-[#FDE68A] bg-[#FFFBEB] p-3 text-sm font-semibold text-[#92400E] transition hover:bg-[#FEF3C7]">Subscription / plan warning</Link> : null}{onboardingPercent < 100 ? <div className="lg:col-span-2"><OnboardingSummary percent={onboardingPercent} items={onboardingItems} /></div> : null}</div> : <p className="text-sm text-[#7A8091]">No action required.</p>}</UiSectionCard>;
-}
-function QuickActions() {
-  return <section><h2 className="mb-3 text-lg font-bold tracking-tight text-[#171A21]">Quick Actions</h2><div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 min-[1180px]:grid-cols-4"><PrimaryAction href="/dashboard/scanner" icon={ScanLine} label="Open Scanner" featured /><PrimaryAction href="/dashboard/customers/new" icon={UserPlus} label="Add Customer" /><PrimaryAction href="/dashboard/customers" icon={Search} label="Find Customer" /><PrimaryAction href="/dashboard/programs" icon={TicketCheck} label="Programs" /></div></section>;
-}
-function DashboardActivityTimeline({ customers, programs }: { customers: Array<{ uuid: string; createdAt: Date; firstName: string; lastName: string | null }>; programs: Array<{ uuid: string; name: string; createdAt: Date }> }) {
-  const items = [...customers.slice(0, 4).map((customer) => ({ title: "Customer Joined", description: getCustomerName(customer), time: customer.createdAt, href: `/dashboard/customers/${customer.uuid}` })), ...programs.slice(0, 3).map((program) => ({ title: "Program Created", description: program.name, time: program.createdAt, href: `/dashboard/programs/${program.uuid}` }))].sort((a, b) => b.time.getTime() - a.time.getTime()).slice(0, 6);
-  return <UiSectionCard title="Recent Activity" description="Newest customer, stamp, reward, referral, program, and staff movement.">{items.length ? <Timeline>{items.map((item) => <TimelineItem key={item.title + item.description + item.time.toISOString()} title={<Link href={item.href} className="business-hover">{item.title}</Link>} time={formatDateTime(item.time)} description={item.description} />)}</Timeline> : <p className="text-sm text-[#7A8091]">No activity yet.</p>}</UiSectionCard>;
-}
-function SubscriptionSummaryCard({ planName, branchesUsed, branchLimit, programsUsed, programLimit, renewalDate }: { planName: string; branchesUsed: number; branchLimit: number | null; programsUsed: number; programLimit: number | null; renewalDate: Date | null }) {
-  return <UiSectionCard title="Subscription Summary" description="Compact plan and usage overview."><div className="grid gap-3"><InfoLine label="Current Plan" value={planName} /><InfoLine label="Branches Used" value={formatUsage(branchesUsed, branchLimit)} /><InfoLine label="Programs Used" value={formatUsage(programsUsed, programLimit)} /><InfoLine label="Renewal Date" value={renewalDate ? formatDateTime(renewalDate) : "Not scheduled"} /><ButtonLink href="/dashboard/billing" variant="outline" className="w-full">Upgrade</ButtonLink></div></UiSectionCard>;
-}
-
-function SupportAccessCard({ session }: { session: { startedAt: Date; endedAt: Date | null; expiresAt: Date; status: string; reason: string; supportSummary: string | null } | null }) {
   return (
-    <UiSectionCard title="Support Access" description="Transparent record of Loyalty Card UAE support access.">
-      {session ? (
-        <div className="grid gap-3">
-          <InfoLine label="Last Session" value={formatDateTime(session.startedAt)} />
-          <InfoLine label="Status" value={session.status.replaceAll("_", " ")} />
-          <InfoLine label="Reason" value={session.reason} />
-          <ButtonLink href="/dashboard/support-history" variant="outline" className="w-full">View Support History</ButtonLink>
-        </div>
+    <section
+      aria-label="Serve next"
+      className={`min-w-0 overflow-hidden rounded-xl border bg-white shadow-[0_1px_2px_rgba(15,18,25,0.04)] ${readyTotal > 0 ? "border-[#F3D9A4]" : "border-[#E7E9EE]"}`}
+    >
+      <div className={`flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3 ${readyTotal > 0 ? "border-[#F3D9A4] bg-[#FFFBF2]" : "border-[#E7E9EE]"}`}>
+        <h2 className={`text-sm font-bold tracking-tight ${readyTotal > 0 ? "text-[#633806]" : "text-[#171A21]"}`}>
+          Serve next{readyTotal > 0 ? ` · ${readyTotal} ${readyTotal === 1 ? "reward" : "rewards"} waiting` : ""}
+        </h2>
+        <p className={`text-xs ${readyTotal > 0 ? "text-[#854F0B]" : "text-[#7A8091]"}`}>Tap a customer to open their card</p>
+      </div>
+      {items.map((item) => (
+        <Link
+          key={`${item.customerUuid}-${item.programName}`}
+          href={`/dashboard/customers/${item.customerUuid}`}
+          className="flex items-center gap-3 border-b border-[#F3F4F7] px-4 py-2.5 transition last:border-b-0 hover:bg-[#F6F7F9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--business-primary,#16A34A)]"
+        >
+          <span
+            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
+              item.kind === "ready" ? "bg-[#FCF0DC] text-[#854F0B]" : "business-bg-soft business-primary-strong"
+            }`}
+            aria-hidden="true"
+          >
+            {getInitials(item.customerName)}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-semibold text-[#171A21]">{item.customerName}</span>
+            <span className="block truncate text-xs text-[#7A8091]">
+              {item.kind === "ready" ? (
+                <>
+                  {item.programName} complete · owes: <span className="font-semibold text-[#171A21]">{item.rewardName}</span>
+                </>
+              ) : (
+                <>
+                  {item.programName} · {item.progress} of {item.required} stamps — {item.required - item.progress} away
+                </>
+              )}
+            </span>
+          </span>
+          {item.kind === "ready" ? (
+            <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-[#FCF0DC] px-2.5 py-0.5 text-[11px] font-semibold text-[#854F0B]">
+              <Gift className="h-3 w-3" aria-hidden="true" />
+              Ready
+            </span>
+          ) : (
+            <span className="inline-flex shrink-0 whitespace-nowrap rounded-full border business-border-soft px-2.5 py-0.5 text-[11px] font-semibold business-primary-strong">
+              Almost
+            </span>
+          )}
+        </Link>
+      ))}
+      {items.length === 0 ? (
+        <p className="px-4 py-6 text-center text-sm text-[#7A8091]">No rewards waiting and nobody close — the queue is clear.</p>
+      ) : null}
+      <div className="flex flex-wrap items-center justify-between gap-2 bg-[#FAFAFB] px-4 py-2.5">
+        <p className="text-xs text-[#7A8091]">
+          {moreReady > 0 || moreAlmost > 0
+            ? `${moreReady > 0 ? `+${moreReady} more ready` : ""}${moreReady > 0 && moreAlmost > 0 ? " · " : ""}${moreAlmost > 0 ? `${moreAlmost} almost there` : ""}`
+            : `${readyTotal} ready · ${almostTotal} almost there`}
+        </p>
+        <Link
+          href="/dashboard/customers?reward=ready"
+          className="text-xs font-semibold business-primary-strong transition hover:underline focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary,#16A34A)] focus-visible:ring-offset-2"
+        >
+          View all →
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+function AccountCard({
+  subscriptionStatus,
+  planName,
+  renewalDate,
+  customerGrowth,
+  staffCount,
+  branchCount,
+  activePrograms,
+  branchLimit,
+  programLimit,
+  planCompliance,
+  lastSupportSession,
+}: {
+  subscriptionStatus: string;
+  planName: string;
+  renewalDate: Date | null;
+  customerGrowth: string;
+  staffCount: number;
+  branchCount: number;
+  activePrograms: number;
+  branchLimit: number | null;
+  programLimit: number | null;
+  planCompliance: PlanComplianceSummary;
+  lastSupportSession: { startedAt: Date; status: string; reason: string } | null;
+}) {
+  const subscriptionHealthy = subscriptionStatus === "ACTIVE" || subscriptionStatus === "TRIAL";
+  const complianceWarning = planCompliance.status === "POTENTIAL_MULTI_BRANCH";
+  const programsAtLimit = programLimit !== null && activePrograms >= programLimit;
+  const branchesAtLimit = branchLimit !== null && branchCount >= branchLimit;
+
+  return (
+    <UiSectionCard title="Account" description="Subscription, plan usage, compliance, and support access.">
+      <div className="grid gap-2 text-sm">
+        <DotLine
+          tone={subscriptionHealthy ? "ok" : "danger"}
+          text={
+            <>
+              Subscription {subscriptionStatus.replaceAll("_", " ").toLowerCase()} · {planName} Plan
+              {renewalDate ? ` · renews ${formatDate(renewalDate)}` : ""}
+            </>
+          }
+        />
+        <DotLine
+          tone={complianceWarning ? "warning" : "ok"}
+          text={
+            <>
+              {complianceWarning ? "Potential multi-branch activity" : "Compliant"} · score {planCompliance.score}/100
+              {planCompliance.lastDetectedIssue ? ` · ${planCompliance.lastDetectedIssue}` : ""}
+            </>
+          }
+        />
+        <DotLine
+          tone={customerGrowth === "Needs activity" ? "warning" : "ok"}
+          text={
+            <>
+              {customerGrowth} · {staffCount} staff · {branchCount} {branchCount === 1 ? "branch" : "branches"} · {activePrograms}{" "}
+              {activePrograms === 1 ? "program" : "programs"}
+            </>
+          }
+        />
+      </div>
+
+      <div className="mt-4 grid gap-3">
+        <UsageBar label="Branches" used={branchCount} limit={branchLimit} atLimit={branchesAtLimit} />
+        <UsageBar label="Programs" used={activePrograms} limit={programLimit} atLimit={programsAtLimit} />
+      </div>
+
+      {lastSupportSession ? (
+        <p className="mt-4 border-t border-[#E7E9EE] pt-3 text-xs text-[#7A8091]">
+          Support access: last session {formatDate(lastSupportSession.startedAt)} · {lastSupportSession.status.replaceAll("_", " ").toLowerCase()} ·{" "}
+          {lastSupportSession.reason}
+        </p>
       ) : (
-        <div className="grid gap-3">
-          <p className="rounded-lg bg-[#F3F4F7] p-3 text-sm text-[#7A8091]">No support access recorded.</p>
-          <ButtonLink href="/dashboard/support-history" variant="outline" className="w-full">View Support History</ButtonLink>
-        </div>
+        <p className="mt-4 border-t border-[#E7E9EE] pt-3 text-xs text-[#7A8091]">Support access: no support access recorded.</p>
       )}
+
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <ButtonLink href="/dashboard/billing" variant="outline" size="sm" className="w-full">
+          Upgrade plan
+        </ButtonLink>
+        <ButtonLink href="/dashboard/support-history" variant="outline" size="sm" className="w-full">
+          Support history
+        </ButtonLink>
+      </div>
     </UiSectionCard>
   );
 }
 
-function HealthRow({ label, value, tone }: { label: string; value: string; tone: "success" | "warning" | "danger" }) {
-  return <div className="flex items-center justify-between gap-3 rounded-lg border border-[#E7E9EE] p-3"><span className="text-sm text-[#7A8091]">{label}</span><UiStatusBadge tone={tone}>{value}</UiStatusBadge></div>;
-}
-
-function PlanUsage({ label, used, limit }: { label: string; used: number; limit: number | null }) {
-  const max = limit ?? Math.max(used, 1);
-  const tone = limit !== null && used >= limit ? "warning" : "business";
-  return <div className="rounded-lg border border-[#E7E9EE] p-3"><div className="flex items-center justify-between gap-3"><p className="text-sm text-[#7A8091]">{label}</p><UiStatusBadge tone={tone}>{formatUsage(used, limit)}</UiStatusBadge></div><ProgressBar value={used} max={max} className="mt-3" barClassName={tone === "warning" ? "bg-[#F59E0B]" : "business-button"} /></div>;
-}
-
-function QueueBox({ title, count, href, empty }: { title: string; count: number; href: string; empty: string }) {
-  return <Link href={href} className="rounded-lg border border-[#E7E9EE] p-3 transition hover:bg-[#F3F4F7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E86A33] focus-visible:ring-offset-2"><div className="flex items-center justify-between gap-3"><h3 className="text-sm font-semibold text-[#171A21]">{title}</h3><UiStatusBadge tone={count > 0 ? "warning" : "neutral"}>{count}</UiStatusBadge></div><p className="mt-2 text-sm text-[#7A8091]">{count > 0 ? "View" : empty}</p></Link>;
-}
-
-function InfoLine({ label, value }: { label: string; value: string }) {
-  return <div className="flex items-center justify-between gap-3 rounded-lg bg-[#F3F4F7] p-3"><span className="text-sm text-[#7A8091]">{label}</span><span className="break-words text-right text-sm font-semibold text-[#171A21]">{value}</span></div>;
-}
-
-function AlertRow({ href, label, value }: { href: string; label: string; value: number }) {
-  return <Link href={href} className="flex items-center justify-between rounded-lg border border-[#FDE68A] bg-[#FFFBEB] p-3 transition hover:bg-[#FEF3C7]"><span className="text-sm font-semibold text-[#92400E]">{label}</span><UiStatusBadge tone="warning">{value}</UiStatusBadge></Link>;
-}
-
-function SecondaryAction({ href, label }: { href: string; label: string }) {
-  return <Link href={href} className="rounded-full border border-[#E7E9EE] px-3 py-1.5 text-xs font-semibold text-[#5A6070] transition hover:bg-white hover:text-[#171A21] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E86A33] focus-visible:ring-offset-2">{label}</Link>;
-}
-
-function formatUsage(used: number, limit: number | null) {
-  return limit === null ? used.toString() : used + " / " + limit;
-}
-function PlanComplianceCard({ compliance }: { compliance: Awaited<ReturnType<typeof getPlanComplianceSummary>> }) {
-  const warning = compliance.status === "POTENTIAL_MULTI_BRANCH";
+function DotLine({ tone, text }: { tone: "ok" | "warning" | "danger"; text: React.ReactNode }) {
+  const dot = tone === "ok" ? "bg-[#1D9E75]" : tone === "warning" ? "bg-[#EF9F27]" : "bg-[#E24B4A]";
   return (
-    <div className={`mt-3 rounded-lg border px-3 py-2 text-xs ${warning ? "border-[#F3D9A4] bg-[#FFFBF2] text-[#B25E09]" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="font-semibold">Plan Compliance Status</p>
-        <p className="font-bold">{warning ? "Potential Multi-Branch Activity Detected" : "Compliant"}</p>
+    <p className="flex items-start gap-2 text-xs text-[#3D4352]">
+      <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${dot}`} aria-hidden="true" />
+      <span className="min-w-0 break-words">{text}</span>
+    </p>
+  );
+}
+
+function UsageBar({ label, used, limit, atLimit }: { label: string; used: number; limit: number | null; atLimit: boolean }) {
+  const max = limit ?? Math.max(used, 1);
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-3 text-xs">
+        <span className="text-[#7A8091]">{label}</span>
+        <span className={`font-semibold tabular-nums ${atLimit ? "text-[#B25E09]" : "text-[#171A21]"}`}>
+          {limit === null ? used : `${used} / ${limit}`}
+          {atLimit ? " — at limit" : ""}
+        </span>
       </div>
-      <p className="mt-1">
-        Compliance score: {compliance.score}/100 - Detection count: {compliance.detectionCount}
-      </p>
-      {compliance.lastDetectedIssue ? <p className="mt-1">Last detected issue: {compliance.lastDetectedIssue}</p> : null}
+      <ProgressBar value={used} max={max} className="mt-1.5" barClassName={atLimit ? "bg-[#F59E0B]" : "business-progress"} />
     </div>
   );
 }
-function CompactCustomerSearch() {
-  return (
-    <form action="/dashboard/customers" className="max-w-full min-w-0 overflow-hidden rounded-lg border border-[#E7E9EE] bg-white p-3 shadow-sm">
-      <label htmlFor="dashboard-customer-search" className="sr-only">
-        Search customers
-      </label>
-      <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
-        <div className="relative min-w-0 flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9AA0AD]" aria-hidden="true" />
-          <input
-            id="dashboard-customer-search"
-            name="q"
-            placeholder="Quick customer lookup: name, phone, card ID, referral code"
-            className="h-11 w-full rounded-lg border border-[#E7E9EE] pl-10 pr-3 text-base outline-none business-ring focus:ring-0 sm:text-sm"
-          />
-        </div>
-        <button type="submit" className="h-11 rounded-lg business-button px-4 text-sm font-semibold text-white">
-          Search
-        </button>
-      </div>
-    </form>
-  );
-}
 
-function OnboardingSummary({
-  percent,
-  items,
-}: {
-  percent: number;
-  items: Array<{ label: string; complete: boolean; href: string }>;
-}) {
-  if (percent > 80) {
-    return (
-      <div className="inline-flex w-full max-w-xs items-center justify-between gap-3 rounded-lg border border-[#F4C7AE]/60 business-border-soft bg-[#FBEFE8] business-bg-soft px-3 py-2 shadow-sm">
-        <p className="text-sm font-semibold business-primary-strong">{percent}% Complete</p>
-        <Link href="/dashboard/settings" className="shrink-0 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold business-primary shadow-sm">
-          Continue Setup
-        </Link>
-      </div>
-    );
-  }
-
+function OnboardingStrip({ percent, items }: { percent: number; items: Array<{ label: string; complete: boolean; href: string }> }) {
   return (
-    <div className="rounded-lg border border-[#E7E9EE] bg-white p-3">
-      <div className="flex items-center justify-between gap-3">
+    <UiSectionCard className="business-border-soft">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-[#171A21]">Onboarding checklist</p>
-          <p className="mt-1 text-xs text-[#7A8091]">{percent}% complete</p>
+          <h2 className="text-sm font-bold tracking-tight text-[#171A21]">Finish setting up</h2>
+          <p className="mt-0.5 text-xs text-[#7A8091]">{percent}% complete</p>
         </div>
-        <div className="h-2 w-24 rounded-full business-secondary-bg-soft">
+        <div className="h-2 w-32 rounded-full business-secondary-bg-soft">
           <div className="h-2 rounded-full business-progress" style={{ width: `${percent}%` }} />
         </div>
       </div>
-      <div className="mt-3 grid gap-2">
+      <div className="mt-3 flex flex-wrap gap-2">
         {items.map((item) => (
-          <Link key={item.label} href={item.href} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-[#171A21] transition business-hover">
-            <CheckCircle2 className={`h-4 w-4 ${item.complete ? "text-emerald-600" : "text-[#D8DBE2]"}`} aria-hidden="true" />
+          <Link
+            key={item.label}
+            href={item.href}
+            className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary,#16A34A)] focus-visible:ring-offset-2 ${
+              item.complete
+                ? "border-[#CBEAD6] bg-[#E9F6EE] text-[#1D7A46]"
+                : "border-[#E7E9EE] bg-white text-[#5A6070] hover:border-[var(--business-primary-border,#CBEAD6)] business-hover"
+            }`}
+          >
+            <CheckCircle2 className={`h-3.5 w-3.5 ${item.complete ? "text-emerald-600" : "text-[#D8DBE2]"}`} aria-hidden="true" />
             {item.label}
           </Link>
         ))}
       </div>
-    </div>
+    </UiSectionCard>
   );
 }
 
-function PrimaryAction({ href, icon: Icon, label, featured = false }: { href: string; icon: LucideIcon; label: string; featured?: boolean }) {
+function ProgramCard({
+  program,
+}: {
+  program: {
+    uuid: string;
+    name: string;
+    members: number;
+    progressPercent: number;
+    rewardReady: number;
+    rewardsEarned: number;
+    totalStampsIssued: number;
+    rewardName: string;
+  };
+}) {
   return (
     <Link
-      href={href}
-      className={`flex min-h-24 w-full min-w-0 items-center gap-3 rounded-lg border p-4 shadow-sm transition ${
-        featured
-          ? "business-border business-button text-white"
-          : "border-[#E7E9EE] bg-white text-[#171A21] business-hover"
-      }`}
+      href={`/dashboard/programs/${program.uuid}`}
+      className="block min-w-0 rounded-xl border border-[#E7E9EE] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_6px_18px_rgba(15,18,25,0.08)] business-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary,#16A34A)] focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
     >
-      <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg ${featured ? "bg-white/15" : "bg-[#FBEFE8] business-bg-soft business-primary"}`}>
-        <Icon className="h-6 w-6" aria-hidden="true" />
-      </span>
-      <span className="min-w-0 text-base font-semibold leading-tight sm:whitespace-nowrap lg:text-lg">{label}</span>
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="min-w-0 truncate text-sm font-bold tracking-tight text-[#171A21]">{program.name}</h3>
+        {program.rewardReady > 0 ? (
+          <span className="inline-flex shrink-0 whitespace-nowrap rounded-full bg-[#FCF0DC] px-2.5 py-0.5 text-[11px] font-semibold text-[#854F0B]">
+            {program.rewardReady} ready
+          </span>
+        ) : (
+          <span className="inline-flex shrink-0 whitespace-nowrap rounded-full border border-[#E7E9EE] px-2.5 py-0.5 text-[11px] font-semibold text-[#7A8091]">0 ready</span>
+        )}
+      </div>
+      <p className="mt-1 truncate text-xs text-[#7A8091]">
+        Reward: {program.rewardName} · {program.members} {program.members === 1 ? "member" : "members"}
+      </p>
+      <div className="mt-3">
+        <div className="flex items-center justify-between gap-3 text-xs">
+          <span className="text-[#7A8091]">Average card fill</span>
+          <span className="font-semibold tabular-nums text-[#171A21]">{program.progressPercent}%</span>
+        </div>
+        <ProgressBar value={program.progressPercent} className="mt-1.5" />
+      </div>
+      <p className="mt-3 text-xs text-[#7A8091]">
+        {program.totalStampsIssued.toLocaleString("en-US")} stamps issued ·{" "}
+        <span className="font-semibold text-[#171A21]">{program.rewardsEarned.toLocaleString("en-US")} rewards earned</span>
+      </p>
     </Link>
+  );
+}
+
+function DashboardActivityTimeline({
+  customers,
+  programs,
+}: {
+  customers: Array<{ uuid: string; createdAt: Date; firstName: string; lastName: string | null; createdBranch: { name: string } | null }>;
+  programs: Array<{ uuid: string; name: string; createdAt: Date }>;
+}) {
+  const items = [
+    ...customers.slice(0, 4).map((customer) => ({
+      title: "Customer Joined",
+      description: `${getCustomerName(customer)}${customer.createdBranch ? ` · ${customer.createdBranch.name}` : ""}`,
+      time: customer.createdAt,
+      href: `/dashboard/customers/${customer.uuid}`,
+    })),
+    ...programs.slice(0, 3).map((program) => ({
+      title: "Program Created",
+      description: program.name,
+      time: program.createdAt,
+      href: `/dashboard/programs/${program.uuid}`,
+    })),
+  ]
+    .sort((a, b) => b.time.getTime() - a.time.getTime())
+    .slice(0, 6);
+
+  return (
+    <UiSectionCard title="Recent Activity" description="Newest customer, stamp, reward, referral, program, and staff movement.">
+      {items.length ? (
+        <Timeline>
+          {items.map((item) => (
+            <TimelineItem
+              key={item.title + item.description + item.time.toISOString()}
+              title={
+                <Link href={item.href} className="business-hover">
+                  {item.title}
+                </Link>
+              }
+              time={formatDateTime(item.time)}
+              description={item.description}
+            />
+          ))}
+        </Timeline>
+      ) : (
+        <p className="text-sm text-[#7A8091]">No activity yet.</p>
+      )}
+    </UiSectionCard>
   );
 }
 
@@ -445,9 +722,3 @@ function getInitials(name: string) {
     .map((part) => part[0]?.toUpperCase())
     .join("");
 }
-
-
-
-
-
-

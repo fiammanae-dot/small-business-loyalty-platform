@@ -6,12 +6,12 @@ export type CardDesignLayoutStyle = (typeof cardLayoutStyles)[number];
 export type CardDesignCardStyle = "business-default" | "modern-clean" | "premium-dark" | "minimal-light" | "image-background";
 export const stampJourneyStyles = ["CIRCLES", "CONNECTED_DOTS", "PROGRESS_BAR", "ICON_GRID", "ROADMAP", "TICKET_PUNCH"] as const;
 export type CardDesignStampJourneyStyle = (typeof stampJourneyStyles)[number];
-export const generalStampIcons = ["STAR", "HEART", "CHECK", "CIRCLE", "DIAMOND", "GIFT"] as const;
+export const generalStampIcons = ["STAR", "HEART", "CHECK", "CIRCLE", "DIAMOND", "GIFT", "TROPHY", "CROWN", "THUMBS_UP", "FLAME"] as const;
 export const barbershopStampIcons = ["SCISSORS", "RAZOR", "COMB", "BARBER_POLE"] as const;
-export const cafeStampIcons = ["COFFEE_CUP", "COFFEE_BEAN", "ESPRESSO"] as const;
-export const restaurantStampIcons = ["PLATE", "BURGER", "PIZZA", "CHEF_HAT"] as const;
-export const carWashStampIcons = ["CAR", "WATER_DROP", "BUBBLES", "WHEEL"] as const;
-export const beautySalonStampIcons = ["LIPSTICK", "MIRROR", "MAKEUP_BRUSH", "NAIL_POLISH"] as const;
+export const cafeStampIcons = ["COFFEE_CUP", "COFFEE_BEAN", "ESPRESSO", "CROISSANT", "COOKIE"] as const;
+export const restaurantStampIcons = ["PLATE", "BURGER", "PIZZA", "CHEF_HAT", "SANDWICH", "CAKE"] as const;
+export const carWashStampIcons = ["CAR", "WATER_DROP", "BUBBLES", "WHEEL", "SPRAY"] as const;
+export const beautySalonStampIcons = ["LIPSTICK", "MIRROR", "MAKEUP_BRUSH", "NAIL_POLISH", "SPARKLE", "GEM"] as const;
 export const stampIcons = [
   ...generalStampIcons,
   ...barbershopStampIcons,

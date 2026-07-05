@@ -157,10 +157,6 @@ export default async function PlatformDashboard({
       eyebrow="System Administrator"
       title="Platform Operations Center"
     >
-      <section aria-label="Platform dashboard coverage" className="sr-only">
-        No trend data yet No revenue recorded yet Quick Actions All Activity Alerts Invoices Users Subscriptions 24 Hours 7 Days 30 Days
-        <Link href="/platform/subscriptions?status=TRIAL">Trial subscriptions</Link>
-      </section>
       <PlatformKpiGrid className="gap-3 md:grid-cols-3">
         <MetricCard
           icon={<Building2 />}

@@ -2,6 +2,7 @@ import {
   Bean,
   Beaker,
   Brush,
+  CakeSlice,
   Car,
   Check,
   ChefHat,
@@ -9,17 +10,27 @@ import {
   CircleDot,
   CircleDotDashed,
   Coffee,
+  Cookie,
+  Croissant,
+  Crown,
   Diamond,
   Droplets,
+  Flame,
+  Gem,
   Gift,
   GlassWater,
   Hamburger,
   Heart,
   Paintbrush,
   Pizza,
+  Sandwich,
   Scissors,
+  Sparkle,
   Sparkles,
+  SprayCan,
   Star,
+  ThumbsUp,
+  Trophy,
   Utensils,
   UtilityPole,
   Waves,
@@ -34,6 +45,10 @@ export const stampIconComponents: Record<CardDesignStampIcon, LucideIcon> = {
   CIRCLE: Circle,
   DIAMOND: Diamond,
   GIFT: Gift,
+  TROPHY: Trophy,
+  CROWN: Crown,
+  THUMBS_UP: ThumbsUp,
+  FLAME: Flame,
   SCISSORS: Scissors,
   RAZOR: Beaker,
   COMB: Waves,
@@ -41,18 +56,25 @@ export const stampIconComponents: Record<CardDesignStampIcon, LucideIcon> = {
   COFFEE_CUP: Coffee,
   COFFEE_BEAN: Bean,
   ESPRESSO: Coffee,
+  CROISSANT: Croissant,
+  COOKIE: Cookie,
   PLATE: Utensils,
   BURGER: Hamburger,
   PIZZA: Pizza,
   CHEF_HAT: ChefHat,
+  SANDWICH: Sandwich,
+  CAKE: CakeSlice,
   CAR: Car,
   WATER_DROP: Droplets,
   BUBBLES: Sparkles,
   WHEEL: CircleDot,
+  SPRAY: SprayCan,
   LIPSTICK: Brush,
   MIRROR: CircleDotDashed,
   MAKEUP_BRUSH: Paintbrush,
   NAIL_POLISH: GlassWater,
+  SPARKLE: Sparkle,
+  GEM: Gem,
 };
 
 export function StampIconGraphic({
@@ -73,50 +95,62 @@ export function StampIconGraphic({
 }
 
 const premiumStampMarks: Record<CardDesignStampIcon, string> = {
-  STAR: "★",
-  HEART: "♥",
-  CHECK: "✓",
-  CIRCLE: "●",
-  DIAMOND: "◆",
+  STAR: "⭐",
+  HEART: "❤️",
+  CHECK: "✅",
+  CIRCLE: "🔵",
+  DIAMOND: "💎",
   GIFT: "🎁",
-  SCISSORS: "✂",
-  RAZOR: "▰",
-  COMB: "≋",
-  BARBER_POLE: "▧",
+  TROPHY: "🏆",
+  CROWN: "👑",
+  THUMBS_UP: "👍",
+  FLAME: "🔥",
+  SCISSORS: "✂️",
+  RAZOR: "🪒",
+  COMB: "\u{1F487}",
+  BARBER_POLE: "💈",
   COFFEE_CUP: "☕",
-  COFFEE_BEAN: "◖",
+  COFFEE_BEAN: "☕",
   ESPRESSO: "☕",
-  PLATE: "◉",
-  BURGER: "☰",
-  PIZZA: "◢",
-  CHEF_HAT: "♨",
-  CAR: "▰",
+  CROISSANT: "🥐",
+  COOKIE: "🍪",
+  PLATE: "🍽️",
+  BURGER: "🍔",
+  PIZZA: "🍕",
+  CHEF_HAT: "🍳",
+  SANDWICH: "🥪",
+  CAKE: "🍰",
+  CAR: "🚗",
   WATER_DROP: "💧",
-  BUBBLES: "✦",
-  WHEEL: "◉",
-  LIPSTICK: "▮",
-  MIRROR: "◌",
-  MAKEUP_BRUSH: "╱",
-  NAIL_POLISH: "▴",
+  BUBBLES: "\u{1F9FC}",
+  WHEEL: "\u{1F527}",
+  SPRAY: "💦",
+  LIPSTICK: "💄",
+  MIRROR: "\u{1F486}",
+  MAKEUP_BRUSH: "🖌️",
+  NAIL_POLISH: "💅",
+  SPARKLE: "✨",
+  GEM: "\u{1F48E}",
 };
+
+function stampAriaLabel(stampIcon: CardDesignStampIcon) {
+  return `${stampIcon.toLowerCase().replace(/_/g, " ")} stamp`;
+}
 
 function CustomerStampMark({ stampIcon, className }: { stampIcon: CardDesignStampIcon; className: string }) {
   const mark = premiumStampMarks[stampIcon] ?? premiumStampMarks.STAR;
-  const isEmojiLike = stampIcon === "GIFT" || stampIcon === "WATER_DROP" || stampIcon === "COFFEE_CUP" || stampIcon === "ESPRESSO";
 
   return (
     <svg className={className} viewBox="0 0 32 32" aria-hidden="true" focusable="false" role="img">
-      <circle cx="16" cy="16" r="14" fill="currentColor" opacity="0.14" />
-      <circle cx="16" cy="16" r="11.5" fill="currentColor" opacity="0.08" />
+      <title>{stampAriaLabel(stampIcon)}</title>
+      <ellipse cx="12" cy="9.5" rx="7.5" ry="4.5" fill="#fff" opacity="0.22" transform="rotate(-16 12 9.5)" />
       <text
         x="16"
-        y={isEmojiLike ? "20.4" : "20.8"}
+        y="21.5"
         textAnchor="middle"
         dominantBaseline="middle"
-        fill="currentColor"
-        fontFamily="ui-rounded, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI Symbol', 'Apple Color Emoji', sans-serif"
-        fontSize={isEmojiLike ? "16" : "18"}
-        fontWeight="900"
+        fontFamily="'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Twemoji Mozilla', sans-serif"
+        fontSize="23"
       >
         {mark}
       </text>
