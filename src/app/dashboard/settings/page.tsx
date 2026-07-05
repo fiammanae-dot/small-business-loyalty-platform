@@ -1,7 +1,6 @@
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
-import { SettingsMobileSectionSelect } from "@/components/SettingsMobileSectionSelect";
 import { ButtonLink, EmptyState, MetricCard, PageIntro, SectionCard, StatusBadge } from "@/components/ui";
 import { saveAbusePolicyAction, saveCooldownRuleAction, saveCustomerTierSettingsAction, saveScannerSettingsAction } from "@/app/dashboard/actions";
 import { saveSupportAccessPolicyAction } from "@/app/platform/businesses/support-actions";
@@ -12,7 +11,7 @@ import { messageChannelLabels } from "@/lib/messages";
 import { prisma } from "@/lib/prisma";
 import { businessTypeLabels } from "@/lib/roles";
 import { getSubscriptionRemainingDays, getTrialRemainingDays, subscriptionDisplayDate, subscriptionStatusLabels } from "@/lib/subscriptions";
-import { Bell, Building2, LockKeyhole, Palette, Plug, Settings2, ShieldAlert, SlidersHorizontal, UserRound } from "lucide-react";
+import { Bell, Building2, CreditCard, LockKeyhole, Palette, Plug, Settings2, ShieldAlert, SlidersHorizontal, UserRound } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -29,23 +28,14 @@ export default async function BusinessSettingsPage({ searchParams }: { searchPar
   const tierConfig = normalizeTierConfig(business.tierSetting);
   const cooldownRule = await prisma.cooldownRule.findFirst({ where: { businessId: user.businessId, active: true }, orderBy: { updatedAt: "desc" } });
   const abusePolicies = await prisma.abusePolicy.findMany({ where: { businessId: user.businessId }, orderBy: { ruleType: "asc" } });
-  const activeTab = resolveSettingsTab(params.tab);
-  const settingsTabs = [
-    { tab: "profile", label: "Business Profile", mobileLabel: "Business Profile" },
-    { tab: "security", label: "Security", mobileLabel: "Security" },
-    { tab: "notifications", label: "Notifications", mobileLabel: "Notifications" },
-    { tab: "branding", label: "Branding", mobileLabel: "Branding" },
-    { tab: "preferences", label: "Preferences", mobileLabel: "Preferences" },
-    { tab: "integrations", label: "Integrations", mobileLabel: "Integrations" },
-    { tab: "advanced", label: "Advanced", mobileLabel: "Advanced" },
-    { tab: "support", label: "Support Access", mobileLabel: "Support Access" },
-    { tab: "tiers", label: "Customer Tiers", mobileLabel: "Customer Tiers" },
-    { tab: "scanner", label: "Scanner", mobileLabel: "Scanner" },
-    { tab: "alerts", label: "Alert Policies", mobileLabel: "Alert Policies" },
-    { tab: "cooldowns", label: "Cooldowns", mobileLabel: "Cooldowns" },
-    { tab: "subscription", label: "Subscription", mobileLabel: "Subscription" },
-    { tab: "communications", label: "Communications", mobileLabel: "Communications" },
-  ];
+  const activeCategory = resolveSettingsCategory(params.tab);
+  const settingsCategories = [
+    { key: "general", label: "General", icon: UserRound },
+    { key: "security", label: "Security & access", icon: ShieldAlert },
+    { key: "messaging", label: "Messaging", icon: Bell },
+    { key: "loyalty", label: "Loyalty rules", icon: SlidersHorizontal },
+    { key: "billing", label: "Billing", icon: CreditCard },
+  ] as const;
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Business Settings" hideWelcomeMessage>
@@ -60,25 +50,54 @@ export default async function BusinessSettingsPage({ searchParams }: { searchPar
           <MetricCard label="Platform Config" value={plan?.name ?? "Unassigned"} helper={`${business._count.branches} branches, ${business._count.loyaltyPrograms} programs`} icon={<Settings2 className="h-5 w-5" />} tone="neutral" />
         </section>
 
-        <SettingsMobileSectionSelect tabs={settingsTabs} activeTab={activeTab} />
-        <nav className="hidden max-w-full min-w-0 grid-cols-2 gap-3 md:grid xl:grid-cols-4" aria-label="Business settings sections">
-          {settingsTabs.map(({ tab, label }) => <SettingsNavCard key={tab} tab={tab} label={label} active={activeTab === tab} />)}
+        <nav className="flex max-w-full min-w-0 gap-1 overflow-x-auto border-b border-[#E5E7EB] [scrollbar-gutter:stable]" aria-label="Settings categories">
+          {settingsCategories.map(({ key, label, icon: Icon }) => (
+            <Link
+              key={key}
+              href={`/dashboard/settings?tab=${key}`}
+              aria-current={activeCategory === key ? "page" : undefined}
+              className={`inline-flex min-h-11 items-center gap-2 whitespace-nowrap border-b-2 px-3 text-sm font-semibold transition ${activeCategory === key ? "business-border business-text" : "border-transparent text-[#64748B] hover:text-[#1E293B]"}`}
+            >
+              <Icon className="h-4 w-4" aria-hidden="true" />
+              {label}
+            </Link>
+          ))}
         </nav>
 
-        {activeTab === "profile" ? <BusinessProfileSection business={business} user={user} /> : null}
-        {activeTab === "security" ? <SecuritySection user={user} /> : null}
-        {activeTab === "notifications" ? <NotificationsSection communicationSettings={communicationSettings} /> : null}
-        {activeTab === "branding" ? <BrandingSection branding={business.branding} businessName={business.name} /> : null}
-        {activeTab === "preferences" ? <PreferencesSection business={business} communicationSettings={communicationSettings} /> : null}
-        {activeTab === "integrations" ? <IntegrationsSection communicationSettings={communicationSettings} /> : null}
-        {activeTab === "advanced" ? <AdvancedSection /> : null}
-        {activeTab === "support" ? <SupportAccessPolicySection policy={business.supportAccessPolicy} /> : null}
-        {activeTab === "tiers" ? <CustomerTiersSection tierConfig={tierConfig} /> : null}
-        {activeTab === "scanner" ? <ScannerSection scannerSoundEffectsEnabled={scannerSoundEffectsEnabled} /> : null}
-        {activeTab === "alerts" ? <AlertPoliciesSection abusePolicies={abusePolicies} /> : null}
-        {activeTab === "cooldowns" ? <CooldownSection cooldownRule={cooldownRule} /> : null}
-        {activeTab === "subscription" ? <SubscriptionSection plan={plan} subscription={subscription} expiryDate={expiryDate} remainingDays={remainingDays} trialDays={trialDays} business={business} /> : null}
-        {activeTab === "communications" ? <CommunicationsSection communicationSettings={communicationSettings} /> : null}
+        {activeCategory === "general" ? (
+          <div className="grid gap-5">
+            <BusinessProfileSection business={business} user={user} />
+            <BrandingSection branding={business.branding} businessName={business.name} />
+            <PreferencesSection business={business} communicationSettings={communicationSettings} />
+          </div>
+        ) : null}
+        {activeCategory === "security" ? (
+          <div className="grid gap-5">
+            <SecuritySection user={user} />
+            <SupportAccessPolicySection policy={business.supportAccessPolicy} />
+            <AdvancedSection />
+          </div>
+        ) : null}
+        {activeCategory === "messaging" ? (
+          <div className="grid gap-5">
+            <NotificationsSection communicationSettings={communicationSettings} />
+            <CommunicationsSection communicationSettings={communicationSettings} />
+            <IntegrationsSection communicationSettings={communicationSettings} />
+          </div>
+        ) : null}
+        {activeCategory === "loyalty" ? (
+          <div className="grid gap-5">
+            <CustomerTiersSection tierConfig={tierConfig} />
+            <ScannerSection scannerSoundEffectsEnabled={scannerSoundEffectsEnabled} />
+            <AlertPoliciesSection abusePolicies={abusePolicies} />
+            <CooldownSection cooldownRule={cooldownRule} />
+          </div>
+        ) : null}
+        {activeCategory === "billing" ? (
+          <div className="grid gap-5">
+            <SubscriptionSection plan={plan} subscription={subscription} expiryDate={expiryDate} remainingDays={remainingDays} trialDays={trialDays} business={business} />
+          </div>
+        ) : null}
       </div>
     </DashboardShell>
   );
@@ -108,8 +127,18 @@ function CooldownSection({ cooldownRule }: { cooldownRule: { minimumMinutesBetwe
 function SubscriptionSection({ plan, subscription, expiryDate, remainingDays, trialDays, business }: { plan: ReturnType<typeof getCurrentPlan>; subscription: ReturnType<typeof getCurrentSubscription>; expiryDate: Date | null; remainingDays: number | null; trialDays: number | null; business: Awaited<ReturnType<typeof getBusinessOwnerContext>>["business"] }) { return <SectionCard title="Subscription" description="Plan and lifecycle details are managed by the System Administrator." actions={subscription ? <StatusBadge tone={subscription.status === "ACTIVE" ? "success" : subscription.status === "TRIAL" ? "warning" : "danger"}>{subscriptionStatusLabels[subscription.status]}</StatusBadge> : null}><div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4"><Item label="Current plan" value={plan?.name ?? "Unassigned"} /><Item label="Renewal date" value={subscription?.renewalDate ? formatDate(subscription.renewalDate) : "Not set"} /><Item label="Expiry date" value={expiryDate ? formatDate(expiryDate) : "Not set"} /><Item label="Remaining days" value={remainingDays === null ? "Not set" : remainingDays.toString()} /><Item label="Trial remaining days" value={trialDays === null ? "Not in trial" : trialDays.toString()} /><Item label="Branch usage" value={`${business._count.branches} / ${plan?.maxBranches ?? 1}`} /><Item label="Program usage" value={`${business._count.loyaltyPrograms} / ${plan?.maxLoyaltyPrograms ?? 1}`} /></div></SectionCard>; }
 function CommunicationsSection({ communicationSettings }: { communicationSettings: Awaited<ReturnType<typeof getBusinessOwnerContext>>["business"]["communicationSettings"] }) { return <SectionCard title="Communication Channels" description="Provider-level channel settings are managed by the System Administrator. Messages are prepared manually only."><div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3"><Item label="WhatsApp enabled" value={communicationSettings?.whatsappEnabled ? "Yes" : "No"} /><Item label="SMS enabled" value={communicationSettings?.smsEnabled ? "Yes" : "No"} /><Item label="Email enabled" value={communicationSettings?.emailEnabled ? "Yes" : "No"} /><Item label="Default channel" value={messageChannelLabels[communicationSettings?.preferredDefaultChannel ?? "NONE"]} /><Item label="WhatsApp business number" value={communicationSettings?.whatsappBusinessNumber ?? "Not set"} /><Item label="Sender email" value={communicationSettings?.senderEmail ?? "Not set"} /><Item label="Sender name" value={communicationSettings?.senderName ?? "Not set"} /></div></SectionCard>; }
 
-function resolveSettingsTab(tab?: string) { const aliases: Record<string, string> = { overview: "profile" }; const value = aliases[tab ?? ""] ?? tab ?? "profile"; const allowed = ["profile", "security", "notifications", "branding", "preferences", "integrations", "advanced", "support", "tiers", "scanner", "alerts", "cooldowns", "subscription", "communications"]; return allowed.includes(value) ? value : "profile"; }
-function SettingsNavCard({ tab, label, active }: { tab: string; label: string; active: boolean }) { return <Link href={`/dashboard/settings?tab=${tab}`} className={`min-w-0 rounded-md border p-4 transition ${active ? "business-border-soft business-bg-soft business-text" : "border-[#E2E8F0] bg-white text-[#0F172A] hover:bg-[#F8FAFC]"}`}><span className="text-sm font-semibold">{label}</span></Link>; }
+function resolveSettingsCategory(tab?: string) {
+  const categories = ["general", "security", "messaging", "loyalty", "billing"];
+  if (tab && categories.includes(tab)) return tab;
+  const sectionToCategory: Record<string, string> = {
+    overview: "general", profile: "general", branding: "general", preferences: "general",
+    security: "security", support: "security", advanced: "security",
+    notifications: "messaging", communications: "messaging", integrations: "messaging",
+    tiers: "loyalty", scanner: "loyalty", alerts: "loyalty", cooldowns: "loyalty",
+    subscription: "billing",
+  };
+  return (tab ? sectionToCategory[tab] : undefined) ?? "general";
+}
 function SelectInput({ label, name, defaultValue, options }: { label: string; name: string; defaultValue: string; options: Array<[string, string]> }) { return <label className="min-w-0 space-y-2"><span className="text-sm font-medium text-[#111827]">{label}</span><select name={name} defaultValue={defaultValue} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring business-border">{options.map(([value, labelText]) => <option key={value} value={value}>{labelText}</option>)}</select></label>; }
 function Input({ label, name, type = "text", defaultValue, min, max }: { label: string; name: string; type?: string; defaultValue?: string; min?: string; max?: string }) { return <label className="min-w-0 space-y-2"><span className="text-sm font-medium text-[#111827]">{label}</span><input name={name} type={type} min={min} max={max} defaultValue={defaultValue} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring business-border" /></label>; }
 function Item({ label, value }: { label: string; value: ReactNode }) { return <div className="min-w-0 overflow-hidden rounded-md border border-[#E2E8F0] bg-white p-4"><p className="break-words text-xs font-semibold uppercase tracking-wide text-[#64748B]">{label}</p><div className="mt-2 break-words text-sm font-semibold text-[#0F172A]">{value}</div></div>; }
