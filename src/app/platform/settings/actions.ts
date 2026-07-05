@@ -58,5 +58,5 @@ export async function toggleDemoModeAction(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/branch");
   revalidatePath("/staff");
-  redirect("/platform/settings?success=Pilot protection updated.");
+  redirect("/platform/settings?success=Action restrictions updated.");
 }
