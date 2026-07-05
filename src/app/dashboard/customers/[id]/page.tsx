@@ -2,11 +2,16 @@ import Link from "next/link";
 import Image from "next/image";
 import type React from "react";
 import {
+  Award,
   CalendarDays,
+  Check,
   CreditCard,
   Crown,
+  Footprints,
   Gift,
   History,
+  MapPin,
+  Phone,
   ShieldAlert,
   Sparkles,
   TicketCheck,
@@ -19,7 +24,7 @@ import { CardShareActions } from "@/components/CardShareActions";
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CopyButton } from "@/components/CopyButton";
 import { CsrfInput } from "@/components/CsrfInput";
-import { ActionMenu, ActionMenuItem, Avatar, ButtonLink, PageActions, SectionCard, StatusBadge, Tabs } from "@/components/ui";
+import { ActionMenu, ActionMenuItem, Avatar, ButtonLink, MetricCard, PageActions, ProgressBar, SectionCard, StatusBadge, Tabs } from "@/components/ui";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { activityHref, staffProfileHref } from "@/lib/alert-investigation";
 import { alertTypeLabel } from "@/lib/alert-labels";
@@ -129,6 +134,7 @@ export default async function CustomerProfilePage({
   ]);
 
   const totalBonusStamps = membership.programMemberships.reduce((sum, programMembership) => sum + programMembership.bonusStamps, 0);
+  const totalPrograms = membership.programMemberships.length;
   const activePrograms = membership.programMemberships.filter((programMembership) => programMembership.status === "ACTIVE").length;
   const rewardsReady = membership.programMemberships.filter(
     (programMembership) =>
@@ -237,20 +243,32 @@ return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Customer 360">
       {qs.success ? <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{qs.success}</p> : null}
 
-      <SectionCard className="bg-white shadow-sm">
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
+      <SectionCard className="overflow-hidden bg-white">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
           <div className="flex min-w-0 items-start gap-4">
-            <Avatar name={customerName} className="h-14 w-14 text-lg" />
+            <div className="relative shrink-0">
+              <div className={`rounded-full p-[3px] ${customerTier.isVip ? "bg-[#111827]" : "business-bg-soft"}`}>
+                <Avatar name={customerName} className="h-16 w-16 border-2 border-white text-xl" />
+              </div>
+              {customerTier.isVip ? (
+                <span className="absolute -bottom-1 -right-1 flex items-center gap-0.5 rounded-full border-2 border-white bg-[#111827] px-1.5 py-0.5 text-[10px] font-bold text-yellow-300">
+                  <Crown className="h-3 w-3" aria-hidden /> VIP
+                </span>
+              ) : null}
+            </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="break-words text-2xl font-semibold text-[#111827]">{customerName}</h2>
                 <StatusBadge tone={membership.status === "ACTIVE" ? "success" : "neutral"}>{membership.status.toLowerCase()}</StatusBadge>
                 <StatusBadge tone="business">{customerTier.badgeIcon} {customerTier.badgeLabel}</StatusBadge>
-                {primaryRewardReady ? <StatusBadge tone="success">Reward Ready</StatusBadge> : null}
+                {primaryRewardReady ? <StatusBadge tone="warning">Reward ready</StatusBadge> : null}
               </div>
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-[#6B7280]">
-                <span>{formatUaePhoneDisplay(membership.normalizedPhone)}</span>
-                <span>Member since {formatDate(membership.joinedAt)}</span>
+              <div className="mt-2.5 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-[#6B7280]">
+                <span className="inline-flex items-center gap-1.5"><Phone className="h-4 w-4 text-[#94A3B8]" aria-hidden />{formatUaePhoneDisplay(membership.normalizedPhone)}</span>
+                <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-4 w-4 text-[#94A3B8]" aria-hidden />Member since {formatDate(membership.joinedAt)}</span>
+                {membership.createdBranch?.name ? (
+                  <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4 text-[#94A3B8]" aria-hidden />{membership.createdBranch.name}</span>
+                ) : null}
               </div>
             </div>
           </div>
@@ -308,11 +326,32 @@ return (
             </ActionMenu>
           </PageActions>
         </div>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <CommandInfo label="Active program" value={primaryProgram ? primaryProgram.loyaltyProgram.name : "No active program"} />
-          <CommandInfo label="Progress" value={primaryProgram ? `${primaryProgress} / ${primaryRequired}` : "-"} />
-          <CommandInfo label="Current tier" value={`${customerTier.badgeIcon} ${customerTier.badgeLabel}`} />
-          <CommandInfo label="Reward status" value={primaryRewardReady ? "Ready to redeem" : rewardsReady > 0 ? `${rewardsReady} available` : "No rewards ready"} />
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <MetricCard
+            label="Lifetime visits"
+            value={customerTier.qualifyingVisits}
+            helper="Qualifying visits recorded"
+            icon={<Footprints aria-hidden />}
+          />
+          <MetricCard
+            label="Active programs"
+            value={activePrograms}
+            helper={`of ${totalPrograms} enrolled`}
+            icon={<CreditCard aria-hidden />}
+          />
+          <MetricCard
+            label="Rewards ready"
+            value={rewardsReady}
+            helper={rewardsReady > 0 ? "Ready to redeem now" : "None ready yet"}
+            icon={<Gift aria-hidden />}
+            tone={rewardsReady > 0 ? "warning" : "neutral"}
+          />
+          <MetricCard
+            label="Rewards redeemed"
+            value={rewardRedemptions.length}
+            helper="Lifetime total"
+            icon={<Award aria-hidden />}
+          />
         </div>
       </SectionCard>
 
@@ -381,11 +420,72 @@ return (
   );
 }
 
-function CommandInfo({ label, value }: { label: string; value: React.ReactNode }) {
+const STAMP_GRID_CAP = 24;
+
+function StampGrid({ progress, required }: { progress: number; required: number }) {
+  const filled = Math.min(Math.max(progress, 0), required);
   return (
-    <div className="min-w-0 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] px-3 py-2">
-      <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">{label}</p>
-      <div className="mt-1 break-words text-sm font-semibold text-[#111827]">{value}</div>
+    <div className="flex flex-wrap gap-1.5">
+      {Array.from({ length: required }).map((_, index) => {
+        if (index < filled) {
+          return (
+            <span key={index} className="flex h-7 w-7 items-center justify-center rounded-full business-button text-white">
+              <Check className="h-3.5 w-3.5" aria-hidden />
+            </span>
+          );
+        }
+        if (index === filled) {
+          return (
+            <span key={index} className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-dashed business-border text-[11px] font-bold business-text">
+              {index + 1}
+            </span>
+          );
+        }
+        return <span key={index} className="h-7 w-7 rounded-full border border-[#E5E7EB] bg-[#FAFAFA]" />;
+      })}
+    </div>
+  );
+}
+
+function ConnectedTimeline({ items }: { items: TimelineItem[] }) {
+  return (
+    <div className="grid">
+      {items.map((item, index) => (
+        <ConnectedTimelineRow key={item.id} item={item} isLast={index === items.length - 1} />
+      ))}
+    </div>
+  );
+}
+
+function ConnectedTimelineRow({ item, isLast }: { item: TimelineItem; isLast: boolean }) {
+  const Icon = item.icon;
+  const dotTone =
+    item.tone === "alert"
+      ? "bg-red-50 text-red-600"
+      : item.tone === "success"
+        ? "bg-emerald-50 text-emerald-700"
+        : "business-bg-soft business-text";
+  return (
+    <div className="flex gap-3">
+      <div className="relative flex w-6 shrink-0 justify-center">
+        <span className={`z-10 flex h-6 w-6 items-center justify-center rounded-full ${dotTone}`}>
+          <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+        </span>
+        {!isLast ? <span className="absolute left-1/2 top-6 -bottom-1 w-0.5 -translate-x-1/2 bg-[#EEF1F4]" /> : null}
+      </div>
+      <div className={`min-w-0 flex-1 ${isLast ? "" : "pb-5"}`}>
+        <div className={`rounded-md px-3 py-2 ${item.highlighted ? "business-border business-bg-soft border" : ""}`}>
+          {item.href ? (
+            <Link href={item.href} className="text-sm font-semibold text-[#111827] transition business-hover business-text">
+              {item.title}
+            </Link>
+          ) : (
+            <p className="text-sm font-semibold text-[#111827]">{item.title}</p>
+          )}
+          <p className="mt-0.5 text-xs text-[#6B7280]">{item.detail}</p>
+          <p className="mt-1 text-xs text-[#94A3B8]">{formatDateTime(item.createdAt)}</p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -395,21 +495,29 @@ function ProfileSummaryCard({
 }: {
   membership: Awaited<ReturnType<typeof getBusinessCustomerOrRedirect>>;
 }) {
+  const rows: Array<{ label: string; value: React.ReactNode }> = [
+    { label: "Email", value: membership.email ?? "-" },
+    { label: "Customer since", value: formatDate(membership.joinedAt) },
+    { label: "Card issued branch", value: membership.createdBranch?.name ?? "-" },
+    { label: "Card issued by", value: membership.createdByUser?.name ?? "-" },
+  ];
   return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
+    <section className="rounded-xl border border-[#E7E9EE] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)] md:p-5">
       <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold business-text">Profile summary</p>
-          <h2 className="mt-1 text-xl font-semibold text-[#111827]">Member details</h2>
-        </div>
+        <h2 className="text-base font-bold tracking-tight text-[#171A21]">Profile</h2>
         <UserRound className="h-5 w-5 business-text" aria-hidden="true" />
       </div>
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        <Info label="Email" value={membership.email ?? "-"} />
-        <Info label="Customer since" value={formatDate(membership.joinedAt)} />
-        <Info label="Card issued branch" value={membership.createdBranch?.name ?? "-"} />
-        <Info label="Card issued by" value={membership.createdByUser?.name ?? "-"} />
-      </div>
+      <dl className="mt-4 grid gap-0">
+        {rows.map((row, index) => (
+          <div
+            key={row.label}
+            className={`flex items-center justify-between gap-4 py-2.5 text-sm ${index === 0 ? "" : "border-t border-[#F1F3F5]"}`}
+          >
+            <dt className="text-[#6B7280]">{row.label}</dt>
+            <dd className="min-w-0 truncate text-right font-semibold text-[#111827]">{row.value}</dd>
+          </div>
+        ))}
+      </dl>
     </section>
   );
 }
@@ -425,42 +533,45 @@ function LoyaltyOverviewPanel({
     membershipUuid: string;
   }>;
 }) {
-  const visiblePrograms = programCards.slice(0, 3);
   return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
+    <section className="rounded-xl border border-[#E7E9EE] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)] md:p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold business-text">Loyalty Progress</p>
-          <h2 className="mt-1 text-xl font-semibold text-[#111827]">Active programs</h2>
+          <h2 className="text-base font-bold tracking-tight text-[#171A21]">Loyalty progress</h2>
+          <p className="mt-0.5 text-[13px] text-[#7A8091]">{programCards.length} program{programCards.length === 1 ? "" : "s"} enrolled</p>
         </div>
         <Link href="/dashboard/programs" className="text-sm font-semibold business-text">View programs</Link>
       </div>
       <div className="mt-5 grid gap-4">
-        {visiblePrograms.map(({ programMembership, membershipUuid }) => {
+        {programCards.map(({ programMembership, membershipUuid }) => {
           const progress = progressValue(programMembership.earnedStamps, programMembership.bonusStamps);
           const required = programMembership.loyaltyProgram.requiredStamps;
-          const progressPercent = Math.min(100, Math.round((progress / required) * 100));
+          const progressPercent = required <= 0 ? 0 : Math.min(100, Math.round((progress / required) * 100));
           const remaining = Math.max(0, required - progress);
           const isRewardReady = progress >= required && programMembership.status !== "COMPLETED";
+          const showGrid = required > 0 && required <= STAMP_GRID_CAP;
           return (
-            <article key={programMembership.id} className="rounded-md border border-[#E5E7EB] p-5">
+            <article key={programMembership.id} className={`rounded-xl border p-4 md:p-5 ${isRewardReady ? "border-[#F3D9A4] bg-[#FFFBF2]" : "border-[#E7E9EE] bg-white"}`}>
               <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-lg font-semibold text-[#111827]">{programMembership.loyaltyProgram.name}</p>
-                  <p className="mt-1 text-sm text-[#6B7280]">Reward: {programMembership.loyaltyProgram.rewardName}</p>
+                <div className="min-w-0">
+                  <p className="text-base font-semibold text-[#111827]">{programMembership.loyaltyProgram.name}</p>
+                  <p className="mt-0.5 flex items-center gap-1.5 text-sm text-[#6B7280]"><Gift className="h-3.5 w-3.5 text-[#94A3B8]" aria-hidden />{programMembership.loyaltyProgram.rewardName}</p>
                 </div>
-                {isRewardReady ? <span className="shrink-0 rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">Reward Ready</span> : null}
+                {isRewardReady ? <StatusBadge tone="warning">Reward ready</StatusBadge> : null}
               </div>
-              <div className="mt-5 flex items-baseline justify-between">
+              {showGrid ? (
+                <div className="mt-4">
+                  <StampGrid progress={progress} required={required} />
+                </div>
+              ) : null}
+              <div className="mt-4 flex items-baseline justify-between">
                 <span className="text-2xl font-bold text-[#111827]">{progress} <span className="text-base font-medium text-[#6B7280]">/ {required} stamps</span></span>
-                <span className="text-sm font-semibold business-text">{progressPercent}%</span>
+                <span className={`text-sm font-semibold ${isRewardReady ? "text-emerald-600" : "business-text"}`}>{isRewardReady ? "Ready to redeem" : `${progressPercent}%`}</span>
               </div>
-              <div className="mt-3 h-3 overflow-hidden rounded-full business-secondary-bg-soft">
-                <div className="h-full rounded-full business-button transition-all" style={{ width: `${progressPercent}%` }} />
-              </div>
-              <p className="mt-2 text-sm text-[#6B7280]">
-                {isRewardReady ? "Ready to redeem" : `${remaining} stamp${remaining === 1 ? "" : "s"} remaining until reward`}
-              </p>
+              <ProgressBar value={progress} max={required} className="mt-3" />
+              {!isRewardReady ? (
+                <p className="mt-2 text-sm text-[#6B7280]">{remaining} stamp{remaining === 1 ? "" : "s"} remaining until reward</p>
+              ) : null}
               <ManualStampCorrectionForm membershipUuid={membershipUuid} programMembershipUuid={programMembership.uuid} />
             </article>
           );
@@ -522,14 +633,13 @@ function ManualStampCorrectionForm({
 
 function LatestActivityPreview({ items }: { items: TimelineItem[] }) {
   return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
-      <p className="text-sm font-semibold business-text">Recent Activity</p>
-      <h2 className="mt-1 text-xl font-semibold text-[#111827]">Latest important events</h2>
-      <div className="mt-5 grid gap-3">
-        {items.map((item) => (
-          <TimelineRow key={item.id} item={item} compact />
-        ))}
-        {items.length === 0 ? <p className="text-sm text-[#6B7280]">No activity yet.</p> : null}
+    <section className="rounded-xl border border-[#E7E9EE] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)] md:p-5">
+      <div className="flex items-center justify-between gap-4">
+        <h2 className="text-base font-bold tracking-tight text-[#171A21]">Recent activity</h2>
+        <Link href="?tab=activity" className="text-sm font-semibold business-text">View all</Link>
+      </div>
+      <div className="mt-4">
+        {items.length > 0 ? <ConnectedTimeline items={items} /> : <p className="text-sm text-[#6B7280]">No activity yet.</p>}
       </div>
     </section>
   );
@@ -538,18 +648,13 @@ function LatestActivityPreview({ items }: { items: TimelineItem[] }) {
 function ActivityTabContent({ items }: { items: TimelineItem[] }) {
   const groups = groupTimeline(items);
   return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
-      <p className="text-sm font-semibold business-text">Full history</p>
-      <h2 className="mt-1 text-xl font-semibold text-[#111827]">All activity</h2>
+    <section className="rounded-xl border border-[#E7E9EE] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)] md:p-5">
+      <h2 className="text-base font-bold tracking-tight text-[#171A21]">All activity</h2>
       <div className="mt-5 grid gap-6">
         {groups.map((group) => (
           <div key={group.label}>
             <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#64748B]">{group.label}</p>
-            <div className="grid gap-3">
-              {group.items.map((item) => (
-                <TimelineRow key={item.id} item={item} />
-              ))}
-            </div>
+            <ConnectedTimeline items={group.items} />
           </div>
         ))}
         {groups.length === 0 ? <p className="text-sm text-[#6B7280]">No activity yet.</p> : null}
@@ -574,38 +679,34 @@ function TierDetailsPanel({
   compact?: boolean;
 }) {
   return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5 shadow-sm">
+    <section className="rounded-xl border border-[#E7E9EE] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)] md:p-5">
       <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold business-text">Tier Summary</p>
-          <h2 className="mt-1 text-xl font-semibold text-[#111827]">Customer grade</h2>
-        </div>
+        <h2 className="text-base font-bold tracking-tight text-[#171A21]">Tier status</h2>
         <Sparkles className="h-5 w-5 business-text" aria-hidden="true" />
       </div>
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        <InsightMetric icon={Crown} label="Current tier" value={`${customerTier.badgeIcon} ${customerTier.badgeLabel}`} />
+      <div className={`mt-4 rounded-xl border p-4 ${customerTier.isVip ? "border-yellow-300 bg-[#111827] text-white" : "border-[#E5E7EB] bg-[#FAFAFA] text-[#111827]"}`}>
+        <div className="flex items-center justify-between gap-3">
+          <p className={`flex items-center gap-1.5 text-base font-semibold ${customerTier.isVip ? "text-yellow-200" : "business-text"}`}>
+            <Crown className="h-4 w-4" aria-hidden />{customerTier.badgeLabel}
+          </p>
+          <p className="text-lg font-semibold">{customerTier.progressPercent}%</p>
+        </div>
+        <p className="mt-1.5 text-sm">
+          {customerTier.nextTier
+            ? `${customerTier.visitsRemaining} visit${customerTier.visitsRemaining === 1 ? "" : "s"} remaining to ${customerTier.nextTier}`
+            : "Top tier member with exclusive rewards available"}
+        </p>
+        <div className={`mt-3 h-2 overflow-hidden rounded-full ${customerTier.isVip ? "bg-white/15" : "business-secondary-bg-soft"}`}>
+          <div className={`h-full rounded-full ${customerTier.isVip ? "bg-yellow-300" : "business-button"}`} style={{ width: `${customerTier.progressPercent}%` }} />
+        </div>
+      </div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <InsightMetric icon={History} label="Visits completed" value={customerTier.qualifyingVisits.toString()} />
         <InsightMetric icon={Sparkles} label="Next tier" value={customerTier.nextTier ?? "Top tier"} />
         {!compact ? <InsightMetric icon={Gift} label="Rewards redeemed" value={rewardRedemptionsCount.toString()} /> : null}
         {!compact ? <InsightMetric icon={Gift} label="Bonus stamps" value={totalBonusStamps.toString()} /> : null}
         {!compact ? <InsightMetric icon={Users} label="Active programs" value={activePrograms.toString()} /> : null}
         {!compact ? <InsightMetric icon={CalendarDays} label="Customer since" value={formatDate(joinedAt)} /> : null}
-      </div>
-      <div className={`mt-4 rounded-md border p-4 ${customerTier.isVip ? "border-yellow-300 bg-[#111827] text-white" : "border-[#E5E7EB] bg-[#FAFAFA] text-[#111827]"}`}>
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className={`text-sm font-semibold ${customerTier.isVip ? "text-yellow-200" : "business-text"}`}>Tier progress</p>
-            <p className="mt-1 text-sm">
-              {customerTier.nextTier
-                ? `${customerTier.visitsRemaining} visit${customerTier.visitsRemaining === 1 ? "" : "s"} remaining to ${customerTier.nextTier}`
-                : "Top Tier Member with exclusive rewards available"}
-            </p>
-          </div>
-          <p className="text-lg font-semibold">{customerTier.progressPercent}%</p>
-        </div>
-        <div className={`mt-3 h-2 overflow-hidden rounded-full ${customerTier.isVip ? "bg-white/15" : "business-secondary-bg-soft"}`}>
-          <div className={`h-full rounded-full ${customerTier.isVip ? "bg-yellow-300" : "business-button"}`} style={{ width: `${customerTier.progressPercent}%` }} />
-        </div>
       </div>
     </section>
   );
@@ -849,34 +950,6 @@ function ProgramQrPanel({
         {programCards.length === 0 ? <p className="text-sm text-[#6B7280]">No program enrollments yet.</p> : null}
       </div>
     </section>
-  );
-}
-
-function TimelineRow({ item, compact = false }: { item: TimelineItem; compact?: boolean }) {
-  const Icon = item.icon;
-  return (
-    <div className={`rounded-md border ${compact ? "p-3" : "p-4"} ${item.highlighted ? "business-border business-bg-soft" : "border-[#E5E7EB] bg-white"}`}>
-      <div className="flex gap-3">
-        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md ${item.tone === "alert" ? "bg-red-50 text-red-600" : item.tone === "success" ? "bg-emerald-50 text-emerald-700" : "business-bg-soft business-text"}`}>
-          <Icon className="h-4 w-4" aria-hidden="true" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-col gap-1 md:flex-row md:items-start md:justify-between">
-            <div>
-              {item.href ? (
-                <Link href={item.href} className="font-semibold text-[#111827] transition business-hover business-text">
-                  {item.title}
-                </Link>
-              ) : (
-                <p className="font-semibold text-[#111827]">{item.title}</p>
-              )}
-              <p className="mt-1 text-sm text-[#6B7280]">{item.detail}</p>
-            </div>
-            <p className="shrink-0 text-sm text-[#6B7280]">{formatDateTime(item.createdAt)}</p>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }
 
