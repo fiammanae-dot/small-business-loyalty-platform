@@ -68,6 +68,13 @@ type SourceProgramDesignOption = {
 
 type DesignHistorySnapshot = DesignStudioPresetDesign;
 type DesignStartMode = "template" | "manual" | "duplicate";
+type DesignStudioTab = "start" | "style" | "stamps" | "content";
+const designStudioTabs: Array<{ value: DesignStudioTab; label: string }> = [
+  { value: "start", label: "Start" },
+  { value: "style", label: "Style" },
+  { value: "stamps", label: "Stamps & rewards" },
+  { value: "content", label: "Content" },
+];
 type PreviewContext = "phone" | "apple-wallet" | "google-wallet";
 type PreviewZoom = "fit" | "75" | "100" | "125";
 type ProfessionalPresetCategory = DesignStudioProfessionalPreset["category"];
@@ -143,6 +150,7 @@ export function ProgramDesignStudioForm({
   const [previewActionPending, setPreviewActionPending] = useState<"png" | "pdf" | "link" | null>(null);
   const [designHistoryPast, setDesignHistoryPast] = useState<DesignHistorySnapshot[]>([]);
   const [designHistoryFuture, setDesignHistoryFuture] = useState<DesignHistorySnapshot[]>([]);
+  const [activeTab, setActiveTab] = useState<DesignStudioTab>("start");
   const previewExportRef = useRef<HTMLDivElement | null>(null);
   const currentDesignSnapshot = useMemo<DesignHistorySnapshot>(
     () => ({
@@ -206,7 +214,6 @@ export function ProgramDesignStudioForm({
         sectionVisibilityMatches(option.visibleSections, visibleSections),
     ) ?? null;
   const activePresetId = activeProfessionalPreset?.id ?? null;
-  const manualEditorVisible = designStartMode === "manual" || presetApplied;
   const professionalTemplatesVisible = designStartMode === "template" && !presetApplied;
   const businessPresetsVisible = designStartMode === "template";
   const duplicateDesignVisible = designStartMode === "duplicate";
@@ -410,6 +417,9 @@ export function ProgramDesignStudioForm({
     <form action={action} className="grid gap-8 lg:grid-cols-[minmax(0,70fr)_minmax(300px,30fr)] lg:items-start xl:grid-cols-[minmax(0,70fr)_minmax(340px,30fr)] 2xl:gap-10">
       <input type="hidden" name={csrfName} value={csrfToken} />
       <input type="hidden" name="programUuid" value={programUuid} />
+      <input type="hidden" name="layoutStyle" value={layoutStyle} />
+      <input type="hidden" name="stampJourneyStyle" value={stampJourneyStyle} />
+      <input type="hidden" name="stampIcon" value={stampIcon} />
       <input type="hidden" name="backgroundStyle" value={backgroundStyle} />
       <input type="hidden" name="backgroundPattern" value={backgroundPattern} />
       <input type="hidden" name="rewardStyle" value={rewardStyle} />
@@ -426,6 +436,9 @@ export function ProgramDesignStudioForm({
           className="rounded-3xl border-[var(--business-primary-soft,#E2E8F0)] bg-gradient-to-b from-white to-[#F8FAFC] p-4 shadow-lg shadow-slate-200/60 md:p-5"
         >
           <div className="grid gap-4">
+            <Button type="submit" variant="business" size="lg" className="w-full">
+              Save Design
+            </Button>
             <div className="rounded-2xl border border-[#E2E8F0] bg-white/90 p-3 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -581,7 +594,7 @@ export function ProgramDesignStudioForm({
                     disabled={previewActionPending !== null}
                     className="rounded-xl border border-[#CBD5E1] bg-white px-3 py-2.5 text-sm font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
                   >
-                    {previewActionPending === "link" ? "Copying..." : "Copy Preview Link"}
+                    {previewActionPending === "link" ? "Copying..." : "Preview on phone"}
                   </button>
                 </div>
                 {previewActionMessage ? (
@@ -628,7 +641,28 @@ export function ProgramDesignStudioForm({
         </SectionCard>
       </aside>
 
-      <div className="order-last grid min-w-0 gap-8 lg:order-first lg:max-w-[1080px] [&>section]:rounded-2xl [&>section]:p-5 md:[&>section]:p-6">
+      <div className="order-last grid min-w-0 gap-6 lg:order-first lg:max-w-[1080px] [&>section]:rounded-2xl [&>section]:p-5 md:[&>section]:p-6">
+        <div role="tablist" aria-label="Design studio sections" className="flex gap-1 rounded-2xl border border-[#E2E8F0] bg-[#F1F5F9] p-1">
+          {designStudioTabs.map((tab) => {
+            const active = activeTab === tab.value;
+            return (
+              <button
+                key={tab.value}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setActiveTab(tab.value)}
+                className="flex-1 rounded-xl px-3 py-2 text-sm font-black text-[#64748B] transition hover:text-[#111827] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:bg-white data-[active=true]:text-[#111827] data-[active=true]:shadow-sm"
+                data-active={active}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {activeTab === "start" ? (
+        <>
         <SectionCard title="Choose how you'd like to start" description="Pick a professional template, build from scratch, or copy an existing design.">
           <div className="grid gap-3">
             <div className="grid gap-2 rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-2 md:grid-cols-3">
@@ -640,7 +674,10 @@ export function ProgramDesignStudioForm({
                     type="button"
                     onClick={() => {
                       setDesignStartMode(option.value);
-                      if (option.value === "manual") setPresetApplied(true);
+                      if (option.value === "manual") {
+                        setPresetApplied(true);
+                        setActiveTab("style");
+                      }
                     }}
                     className="flex items-center gap-3 rounded-xl border border-transparent bg-transparent px-4 py-3 text-left transition hover:bg-white hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-white data-[active=true]:shadow-sm"
                     data-active={active}
@@ -934,7 +971,10 @@ export function ProgramDesignStudioForm({
         </SectionCard>
         ) : null}
 
-        {manualEditorVisible ? (
+        </>
+        ) : null}
+
+        {activeTab === "style" ? (
           <div className="grid gap-6 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200">
             <ManualBuilderGroup title="Appearance" description="Customize the overall visual style of your loyalty card." defaultOpen>
               <SectionCard title="Card Style" description="Choose the overall personality of your loyalty card.">
@@ -943,7 +983,6 @@ export function ProgramDesignStudioForm({
               <label key={option.value} className="group cursor-pointer rounded-[1.35rem] border border-[#E2E8F0] bg-white p-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-lg has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-lg">
                 <input
                   type="radio"
-                  name="layoutStyle"
                   value={option.value}
                   checked={layoutStyle === option.value}
                   onChange={() => commitDesignChange({ ...currentDesignSnapshot, layoutStyle: option.value })}
@@ -1075,15 +1114,18 @@ export function ProgramDesignStudioForm({
           </div>
             </SectionCard>
             </ManualBuilderGroup>
+          </div>
+        ) : null}
 
-            <ManualBuilderGroup title="Loyalty Experience" description="Customize how customers experience collecting rewards.">
+        {activeTab === "stamps" ? (
+          <div className="grid gap-6 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200">
+            <ManualBuilderGroup title="Loyalty Experience" description="Customize how customers experience collecting rewards." defaultOpen>
               <SectionCard title="Reward Progress" description="Choose the progress pattern that best matches how customers earn their next reward.">
           <div className="grid gap-3 md:grid-cols-3">
             {designStudioStampJourneyOptions.map((option) => (
               <label key={option.value} className="group flex min-h-28 cursor-pointer gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-md">
                 <input
                   type="radio"
-                  name="stampJourneyStyle"
                   value={option.value}
                   checked={stampJourneyStyle === option.value}
                   onChange={() => commitDesignChange({ ...currentDesignSnapshot, stampJourneyStyle: option.value })}
@@ -1104,7 +1146,6 @@ export function ProgramDesignStudioForm({
               <label key={option.value} className="group flex min-h-20 cursor-pointer items-center gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-md">
                 <input
                   type="radio"
-                  name="stampIcon"
                   value={option.value}
                   checked={stampIcon === option.value}
                   onChange={() => commitDesignChange({ ...currentDesignSnapshot, stampIcon: option.value })}
@@ -1154,8 +1195,12 @@ export function ProgramDesignStudioForm({
           </div>
             </SectionCard>
             </ManualBuilderGroup>
+          </div>
+        ) : null}
 
-            <ManualBuilderGroup title="Card Content" description="Choose which information appears on the loyalty card.">
+        {activeTab === "content" ? (
+          <div className="grid gap-6 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200">
+            <ManualBuilderGroup title="Card Content" description="Choose which information appears on the loyalty card." defaultOpen>
               <SectionCard title="Card Content" description="Choose what your customers see on their loyalty card.">
           <div className="grid gap-3 md:grid-cols-2">
             {designStudioCardContentOptions.map((option) => {
@@ -1189,18 +1234,8 @@ export function ProgramDesignStudioForm({
           </div>
             </SectionCard>
             </ManualBuilderGroup>
-
-            <SectionCard title="Save Design" description="Apply this design to this loyalty program only. Other programs are unchanged." className="shadow-sm">
-          <Button type="submit" variant="business" size="lg" className="w-full sm:w-fit">
-            Save Design
-          </Button>
-            </SectionCard>
           </div>
-        ) : (
-          <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-white p-5 text-sm leading-6 text-[#64748B]">
-            Choose a business or professional preset to reveal the full editor, or select Build Manually to customize every section yourself.
-          </div>
-        )}
+        ) : null}
       </div>
     </form>
   );

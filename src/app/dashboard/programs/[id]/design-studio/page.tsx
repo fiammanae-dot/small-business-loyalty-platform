@@ -1,6 +1,6 @@
 import { ProgramDesignStudioForm } from "@/components/ProgramDesignStudioForm";
 import { DashboardShell } from "@/components/DashboardShell";
-import { Button, ButtonLink, EmptyState, PageActions, PageIntro, SectionCard } from "@/components/ui";
+import { ButtonLink, EmptyState, PageActions, PageIntro, SectionCard } from "@/components/ui";
 import {
   deleteBusinessDesignPresetAction,
   renameBusinessDesignPresetAction,
@@ -86,9 +86,6 @@ export default async function ProgramDesignStudioPage({
             <PageActions>
               <ButtonLink href={"/dashboard/programs/" + program.uuid} variant="outline">Back to Program</ButtonLink>
               <ButtonLink href={"/dashboard/programs/" + program.uuid + "/edit"} variant="outline">Edit Program</ButtonLink>
-              <Button type="button" variant="outline" disabled className="opacity-60">
-                Preview on Phone
-              </Button>
             </PageActions>
           }
         />
@@ -187,6 +184,3 @@ function toDesignStudioStampJourneyStyle(value: string): "CIRCLES" | "CONNECTED_
   if (value === "PROGRESS_BAR") return "PROGRESS_BAR";
   return "CIRCLES";
 }
-
-
-
