@@ -29,6 +29,7 @@ import { resolveCardThemeColors } from "@/lib/card-themes";
 import { Button, SectionCard } from "@/components/ui";
 import { StampIconGraphic } from "@/components/design-studio/StampIconGraphic";
 import { WalletCardShell, type WalletTheme } from "@/components/public-card/WalletCardShell";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 
 type ProgramPreviewBranding = {
   primaryColor: string;
@@ -228,14 +229,9 @@ export function ProgramCreateWizard({
           </div>
         </SectionCard>
 
-        <SectionCard title="Continue to Design Studio" description="The program will not be created until you review the card design and click Create Program.">
-          <Button type="button" variant="business" onClick={() => goToStep(2)}>
-            Continue to Design Studio
-          </Button>
-        </SectionCard>
       </div>
 
-      <div className={step === 2 ? "grid gap-6 pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-0" : "hidden"}>
+      <div className={step === 2 ? "grid gap-6" : "hidden"}>
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
           <div className="grid gap-5">
             <SectionCard title="Professional Templates" description="Start with a professionally designed loyalty card for your business type.">
@@ -341,35 +337,55 @@ export function ProgramCreateWizard({
                 visibleSections={visibleSections}
               />
             </SectionCard>
-            <SectionCard title="Create Program" description="Create the program and save this card design at the same time.">
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Button type="button" variant="outline" onClick={() => goToStep(1)}>
-                  Back to Program Setup
-                </Button>
-                <Button type="submit" variant="business">
-                  {submitLabel}
-                </Button>
-              </div>
-            </SectionCard>
           </aside>
         </div>
+      </div>
+
+      <div className="sticky bottom-0 z-10 -mx-5 flex items-center justify-between gap-3 border-t border-[#E5E7EB] bg-white/95 px-5 py-3 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+        {step === 1 ? (
+          <>
+            <span className="hidden text-xs text-[#9CA3AF] sm:block">Nothing is created until you finish card design.</span>
+            <Button type="button" variant="business" onClick={() => goToStep(2)} rightIcon={<ArrowRight className="h-4 w-4" aria-hidden />} className="ml-auto">
+              Continue to card design
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button type="button" variant="outline" onClick={() => goToStep(1)} leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden />}>
+              Back
+            </Button>
+            <Button type="submit" variant="business" leftIcon={<Check className="h-4 w-4" aria-hidden />}>
+              {submitLabel}
+            </Button>
+          </>
+        )}
       </div>
     </form>
   );
 }
 
 function WizardProgress({ step }: { step: 1 | 2 }) {
+  const steps: Array<{ n: 1 | 2; label: string; sub: string }> = [
+    { n: 1, label: "Program setup", sub: "Rules and reward" },
+    { n: 2, label: "Card design", sub: "Look and feel" },
+  ];
   return (
-    <div className="grid gap-3 rounded-2xl border border-[#E2E8F0] bg-white p-4 sm:grid-cols-2">
-      {[
-        ["1", "Program Setup"],
-        ["2", "Design Studio"],
-      ].map(([number, label]) => {
-        const active = step.toString() === number;
+    <div className="flex items-center gap-3 rounded-2xl border border-[#E7E9EE] bg-white p-4">
+      {steps.map((item, index) => {
+        const active = step === item.n;
+        const done = step > item.n;
         return (
-          <div key={number} className={`rounded-xl border p-3 ${active ? "business-border-soft business-bg-soft" : "border-[#E2E8F0] bg-[#F8FAFC]"}`}>
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-[#64748B]">Step {number}</p>
-            <p className="mt-1 text-sm font-black text-[#111827]">{label}</p>
+          <div key={item.n} className="flex flex-1 items-center gap-3">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${done ? "bg-emerald-100 text-emerald-700" : active ? "business-button text-white" : "bg-[#F1F3F5] text-[#9CA3AF]"}`}>
+                {done ? <Check className="h-4 w-4" aria-hidden="true" /> : item.n}
+              </span>
+              <div className="min-w-0">
+                <p className={`truncate text-sm font-semibold ${active || done ? "text-[#111827]" : "text-[#9CA3AF]"}`}>{item.label}</p>
+                <p className={`truncate text-xs ${done ? "text-emerald-600" : "text-[#9CA3AF]"}`}>{done ? "Complete" : item.sub}</p>
+              </div>
+            </div>
+            {index < steps.length - 1 ? <span className={`h-0.5 flex-1 rounded-full ${step > item.n ? "business-button" : "bg-[#EEF1F4]"}`} /> : null}
           </div>
         );
       })}
