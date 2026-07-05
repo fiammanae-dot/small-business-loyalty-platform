@@ -11,7 +11,6 @@ import {
   FileText,
   Filter,
   Search,
-  ShieldCheck,
   Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -19,7 +18,7 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
 import { PlatformKpiGrid } from "@/components/PlatformKpiGrid";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
-import { formatDate } from "@/lib/format";
+import { ActionMenu, ActionMenuItem } from "@/components/ui";
 import { prisma } from "@/lib/prisma";
 import { businessTypeLabels } from "@/lib/roles";
 import { requireRole } from "@/lib/session";
@@ -101,14 +100,12 @@ export default async function PlatformTenantCenterPage({
       </PlatformKpiGrid>
 
         <MobileFilterDrawer activeCount={activeFilterCount}>
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
-        <div className="mb-3 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-[#F97316]" aria-hidden="true" />
-              <h2 className="font-semibold text-[#111827]">Tenant Directory Filters</h2>
-            </div>
-            <p className="mt-1 text-sm text-[#6B7280]">Showing {filteredTenants.length} tenants</p>
+      <section className="max-w-full overflow-hidden rounded-xl border border-[#E7E9EE] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
+        <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-[#F97316]" aria-hidden="true" />
+            <h2 className="text-sm font-bold tracking-tight text-[#171A21]">Tenant filters</h2>
+            <span className="text-sm text-[#9CA3AF]">· {filteredTenants.length} shown</span>
           </div>
           <div className="flex flex-wrap gap-2">
             <ExportButton href={`/platform/tenant-center/export?${exportQuery}&format=csv`} icon={<Download className="h-4 w-4" />} label="CSV" />
@@ -116,20 +113,13 @@ export default async function PlatformTenantCenterPage({
             <ExportButton href={`/platform/tenant-center/export?${exportQuery}&format=pdf`} icon={<FileText className="h-4 w-4" />} label="PDF" />
           </div>
         </div>
-        <form className="grid gap-3 lg:grid-cols-4">
-          <label className="relative lg:col-span-2">
+        <form className="flex flex-wrap items-center gap-2">
+          <input type="hidden" name="status" value={params.status ?? ""} />
+          <label className="relative min-w-0 flex-1 basis-56">
             <span className="sr-only">Search tenants</span>
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" aria-hidden="true" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" aria-hidden="true" />
             <input name="q" defaultValue={params.q ?? ""} placeholder="Search business, owner, or plan" className="h-10 w-full rounded-md border border-[#E5E7EB] pl-9 pr-3 text-sm" />
           </label>
-          <select name="status" defaultValue={params.status ?? ""} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm">
-            <option value="">All statuses</option>
-            <option value="ACTIVE">Active</option>
-            <option value="INACTIVE">Inactive</option>
-            <option value="TRIAL">Trial</option>
-            <option value="SUSPENDED">Suspended</option>
-            <option value="EXPIRED">Expired</option>
-          </select>
           <SearchableCombobox
             label="Plan"
             name="plan"
@@ -148,53 +138,42 @@ export default async function PlatformTenantCenterPage({
             <option value="At Risk">At Risk</option>
           </select>
           <button type="submit" className="h-10 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">Apply</button>
-          <Link href="/platform/tenant-center" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">Clear Filters</Link>
+          <Link href="/platform/tenant-center" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">Clear</Link>
         </form>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {[
+            { value: "", label: "All" },
+            { value: "ACTIVE", label: "Active" },
+            { value: "TRIAL", label: "Trial" },
+            { value: "SUSPENDED", label: "Suspended" },
+            { value: "EXPIRED", label: "Expired" },
+          ].map((option) => {
+            const active = (params.status ?? "") === option.value;
+            return (
+              <Link key={option.value || "all"} href={buildTenantHref(params, { status: option.value })} className={`inline-flex h-8 items-center rounded-full px-3 text-xs font-semibold transition ${active ? "bg-[#F97316] text-white" : "border border-[#E5E7EB] bg-white text-[#6B7280] hover:border-[#F97316] hover:text-[#F97316]"}`}>
+                {option.label}
+              </Link>
+            );
+          })}
+        </div>
       </section>
-
         </MobileFilterDrawer>
 
-      <Panel title="Tenant Directory" icon={Building2}>
-        <TenantDirectory tenants={filteredTenants} />
-      </Panel>
-
-      <Panel title="Tenant Health Score" icon={ShieldCheck}>
-        <div className="grid gap-3">
-          {filteredTenants.slice(0, 8).map((tenant) => (
-            <div key={tenant.uuid} className="rounded-md border border-[#E5E7EB] p-3">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="font-semibold text-[#111827]">{tenant.name}</p>
-                  <p className="mt-1 text-sm text-[#6B7280]">{tenant.healthReasons.join(", ")}</p>
-                </div>
-                <HealthBadge health={tenant.tenantHealth} />
-              </div>
-            </div>
-          ))}
-          {filteredTenants.length === 0 ? <EmptyState text="No tenants match these filters." /> : null}
-        </div>
-      </Panel>
-
-      <section>
-        <Panel title="Tenant Resource Monitoring" icon={Activity}>
-          <div className="grid gap-3 md:grid-cols-2">
-            {filteredTenants.slice(0, 10).map((tenant) => (
-              <div key={tenant.uuid} className="rounded-md border border-[#E5E7EB] p-3">
-                <p className="font-semibold text-[#111827]">{tenant.name}</p>
-                <div className="mt-3 grid gap-2 text-sm">
-                  <MetricLine label="Customers" value={tenant.customerMemberships.length.toString()} />
-                  <MetricLine label="Programs" value={tenant.loyaltyPrograms.length.toString()} />
-                  <MetricLine label="Branches" value={tenant.branches.length.toString()} />
-                  <MetricLine label="Users" value={tenant.users.length.toString()} />
-                  <MetricLine label="QR Scans" value={tenant.scanEvents.length.toString()} />
-                  <MetricLine label="Enrollments" value={tenant.customerMemberships.length.toString()} />
-                  <MetricLine label="Storage Usage" value="0 MB tracked" />
-                  <MetricLine label="Database Usage" value="Shared database" />
-                </div>
-              </div>
-            ))}
+      <section className="max-w-full overflow-hidden rounded-xl border border-[#E7E9EE] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)] md:p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Building2 className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+            <h2 className="text-base font-bold tracking-tight text-[#171A21]">Tenants</h2>
           </div>
-        </Panel>
+          <span className="text-sm font-semibold text-[#9CA3AF]">{filteredTenants.length} shown</span>
+        </div>
+        {filteredTenants.length ? (
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {filteredTenants.map((tenant) => <TenantCard key={tenant.uuid} tenant={tenant} />)}
+          </div>
+        ) : (
+          <div className="mt-4"><EmptyState text="No tenants match these filters." /></div>
+        )}
       </section>
 
     </DashboardShell>
@@ -269,120 +248,98 @@ function buildTenantExportQuery(params: TenantParams) {
   return query.toString();
 }
 
-function TenantDirectory({ tenants }: { tenants: DecoratedTenant[] }) {
+function buildTenantHref(params: TenantParams, next: Partial<TenantParams>) {
+  const merged = { ...params, ...next };
+  const query = new URLSearchParams();
+  if (merged.q) query.set("q", merged.q);
+  if (merged.status) query.set("status", merged.status);
+  if (merged.plan) query.set("plan", merged.plan);
+  if (merged.health) query.set("health", merged.health);
+  const qs = query.toString();
+  return qs ? `/platform/tenant-center?${qs}` : "/platform/tenant-center";
+}
+
+function TenantCard({ tenant }: { tenant: DecoratedTenant }) {
+  const healthAccent =
+    tenant.tenantHealth === "At Risk"
+      ? "border-l-red-500"
+      : tenant.tenantHealth === "Attention Needed"
+        ? "border-l-orange-500"
+        : "border-l-emerald-500";
+  const isActive = tenant.status === "ACTIVE";
+  const subscriptionTone: "success" | "warn" | "neutral" =
+    tenant.subscriptionStatus === "ACTIVE" ? "success" : tenant.subscriptionStatus === "UNASSIGNED" ? "neutral" : "warn";
   return (
-    <>
-      <div className="hidden overflow-x-auto lg:block">
-        <table className="w-full min-w-[1120px] border-separate border-spacing-0 text-left text-sm">
-          <thead>
-            <tr className="text-[#6B7280]">
-              {["Business Name", "Owner", "Plan", "Status", "Branches", "Programs", "Customers", "Created Date", "Tenant Health Score", "Actions"].map((heading) => (
-                <th key={heading} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">{heading}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {tenants.map((tenant) => (
-              <tr key={tenant.uuid} className="align-top">
-                <td className="border-b border-[#E5E7EB] px-3 py-4">
-                  <p className="font-semibold text-[#111827]">{tenant.name}</p>
-                  <p className="mt-1 text-xs text-[#6B7280]">{businessTypeLabels[tenant.businessType]}</p>
-                </td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4">
-                  <p className="font-semibold text-[#111827]">{tenant.ownerName}</p>
-                  <p className="mt-1 text-xs text-[#6B7280]">{tenant.ownerEmail}</p>
-                </td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{tenant.planName}</td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4">
-                  <div className="flex flex-col gap-2">
-                    <StatusBadge status={tenant.status} />
-                    <SmallBadge label={titleCase(tenant.subscriptionStatus)} tone={tenant.subscriptionStatus === "ACTIVE" ? "success" : tenant.subscriptionStatus === "UNASSIGNED" ? "neutral" : "warn"} />
-                  </div>
-                </td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{tenant.branches.length}</td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{tenant.loyaltyPrograms.length}</td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{tenant.customerMemberships.length}</td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(tenant.createdAt)}</td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4"><HealthBadge health={tenant.tenantHealth} /></td>
-                <td className="border-b border-[#E5E7EB] px-3 py-4">
-                  <div className="flex flex-wrap gap-2">
-                    <ActionLink href={`/platform/businesses/${tenant.uuid}`} label="View" />
-                    <ActionLink href={`/platform/businesses/${tenant.uuid}/edit`} label="Edit" />
-                    <ActionLink href="/platform/subscriptions" label="Suspend" />
-                    <ActionLink href="/platform/subscriptions" label="Activate" />
-                    <ActionLink href="/platform/subscriptions" label="Archive" />
-                    <ActionLink href="/platform/users" label="Transfer Ownership" />
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {tenants.length === 0 ? <EmptyState text="No tenants match these filters." /> : null}
+    <article className={`min-w-0 rounded-xl border border-[#E7E9EE] border-l-[3px] ${healthAccent} bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)]`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${isActive ? "bg-[#FEF0E6] text-[#F97316]" : "bg-[#F1EFE8] text-[#5F5E5A]"}`}>
+            <Building2 className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <p className="truncate font-semibold text-[#111827]">{tenant.name}</p>
+            <p className="truncate text-xs text-[#9CA3AF]">{businessTypeLabels[tenant.businessType]} · {tenant.planName}</p>
+          </div>
+        </div>
+        <HealthBadge health={tenant.tenantHealth} />
       </div>
 
-      <div className="grid gap-3 lg:hidden">
-        {tenants.map((tenant) => (
-          <div key={tenant.uuid} className="rounded-md border border-[#E5E7EB] p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="font-semibold text-[#111827]">{tenant.name}</p>
-                <p className="mt-1 text-sm text-[#6B7280]">{businessTypeLabels[tenant.businessType]}</p>
-              </div>
-              <HealthBadge health={tenant.tenantHealth} />
-            </div>
-            <div className="mt-4 grid gap-2 text-sm">
-              <MetricLine label="Owner" value={tenant.ownerName} />
-              <MetricLine label="Plan" value={tenant.planName} />
-              <MetricLine label="Status" value={titleCase(tenant.status)} />
-              <MetricLine label="Branches" value={tenant.branches.length.toString()} />
-              <MetricLine label="Programs" value={tenant.loyaltyPrograms.length.toString()} />
-              <MetricLine label="Customers" value={tenant.customerMemberships.length.toString()} />
-              <MetricLine label="Created Date" value={formatDate(tenant.createdAt)} />
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <ActionLink href={`/platform/businesses/${tenant.uuid}`} label="View" />
-              <ActionLink href={`/platform/businesses/${tenant.uuid}/edit`} label="Edit" />
-              <ActionLink href="/platform/subscriptions" label="Suspend" />
-              <ActionLink href="/platform/subscriptions" label="Activate" />
-              <ActionLink href="/platform/subscriptions" label="Archive" />
-              <ActionLink href="/platform/users" label="Transfer Ownership" />
-            </div>
-          </div>
-        ))}
+      <div className="mt-3 flex flex-wrap items-center gap-1.5">
+        <StatusBadge status={tenant.status} />
+        <SmallBadge label={`Subscription ${titleCase(tenant.subscriptionStatus)}`} tone={subscriptionTone} />
       </div>
-    </>
+
+      <p className="mt-2.5 truncate text-xs text-[#6B7280]">
+        <span className="font-medium text-[#111827]">{tenant.ownerName}</span> · {tenant.ownerEmail}
+      </p>
+
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        <StatTile value={tenant.branches.length} label="Branches" />
+        <StatTile value={tenant.loyaltyPrograms.length} label="Programs" />
+        <StatTile value={tenant.customerMemberships.length} label="Customers" />
+      </div>
+
+      <div className="mt-3 flex items-center justify-between gap-3 border-t border-[#F1F3F5] pt-3">
+        <span className={`min-w-0 truncate text-xs ${tenant.tenantHealth === "Healthy" ? "text-[#9CA3AF]" : "text-[#B25E09]"}`}>{tenant.healthReasons[0]}</span>
+        <div className="flex shrink-0 items-center gap-3">
+          <ActionLink href={`/platform/businesses/${tenant.uuid}`} label="View" />
+          <ActionLink href={`/platform/businesses/${tenant.uuid}/edit`} label="Edit" />
+          <ActionMenu label="More tenant actions">
+            <ActionMenuItem><Link href="/platform/subscriptions" className="block rounded-md px-2 py-2 font-semibold hover:bg-[#F8FAFC]">Suspend</Link></ActionMenuItem>
+            <ActionMenuItem><Link href="/platform/subscriptions" className="block rounded-md px-2 py-2 font-semibold hover:bg-[#F8FAFC]">Activate</Link></ActionMenuItem>
+            <ActionMenuItem><Link href="/platform/subscriptions" className="block rounded-md px-2 py-2 font-semibold hover:bg-[#F8FAFC]">Archive</Link></ActionMenuItem>
+            <ActionMenuItem><Link href="/platform/users" className="block rounded-md px-2 py-2 font-semibold hover:bg-[#F8FAFC]">Transfer ownership</Link></ActionMenuItem>
+          </ActionMenu>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function StatTile({ value, label }: { value: number; label: string }) {
+  return (
+    <div className="rounded-lg bg-[#FAFBFC] px-2 py-2 text-center">
+      <p className="text-base font-semibold tabular-nums text-[#111827]">{value.toLocaleString()}</p>
+      <p className="text-[11px] text-[#9CA3AF]">{label}</p>
+    </div>
   );
 }
 
 function KpiCard({ icon: Icon, label, value, tone = "default", href }: { icon: LucideIcon; label: string; value: string; tone?: "default" | "success" | "danger"; href?: string }) {
-  const iconClass = tone === "danger" ? "bg-red-50 text-red-600" : tone === "success" ? "bg-emerald-50 text-emerald-700" : "bg-orange-50 text-[#F97316]";
+  const surfaceClass = tone === "danger" ? "bg-[#FCEBEB]" : tone === "success" ? "bg-[#EAF3DE]" : "bg-[#F8FAFC]";
+  const labelClass = tone === "danger" ? "text-[#A32D2D]" : tone === "success" ? "text-[#3B6D11]" : "text-[#64748B]";
+  const valueClass = tone === "danger" ? "text-[#A32D2D]" : tone === "success" ? "text-[#3B6D11]" : "text-[#111827]";
   const content = (
-    <div className="h-full rounded-md border border-[#E5E7EB] bg-white p-3 shadow-sm transition md:p-4 hover:border-[#F97316] hover:shadow-md">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-medium text-[#6B7280]">{label}</p>
-        <span className={`flex h-9 w-9 items-center justify-center rounded-md ${iconClass}`}>
-          <Icon className="h-5 w-5" aria-hidden="true" />
-        </span>
-      </div>
-      <p className="mt-3 text-2xl font-semibold text-[#111827]">{value}</p>
-      {href ? <p className="mt-2 text-xs font-semibold text-[#F97316]">View</p> : null}
+    <div className={`h-full rounded-lg p-3 transition ${surfaceClass} ${href ? "hover:brightness-[0.98]" : ""}`}>
+      <p className={`flex items-center gap-1.5 text-xs font-medium ${labelClass}`}>
+        <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        <span className="min-w-0 truncate">{label}</span>
+      </p>
+      <p className={`mt-1.5 text-2xl font-semibold ${valueClass}`}>{value}</p>
     </div>
   );
 
-  return href ? <Link href={href} className="block h-full cursor-pointer rounded-md focus:outline-none focus:ring-4 focus:ring-orange-100">{content}</Link> : content;
-}
-
-function Panel({ title, icon: Icon, children }: { title: string; icon: LucideIcon; children: ReactNode }) {
-  return (
-    <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
-      <div className="flex items-center gap-2">
-        <Icon className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
-        <h2 className="text-lg font-semibold text-[#111827]">{title}</h2>
-      </div>
-      <div className="mt-5">{children}</div>
-    </section>
-  );
+  return href ? <Link href={href} className="block h-full cursor-pointer rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-100">{content}</Link> : content;
 }
 
 function HealthBadge({ health }: { health: DecoratedTenant["tenantHealth"] }) {
@@ -408,10 +365,6 @@ function ExportButton({ href, icon, label }: { href: string; icon: ReactNode; la
   return <Link href={href} className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]">{icon}{label}</Link>;
 }
 
-
-function MetricLine({ label, value }: { label: string; value: string }) {
-  return <div className="flex justify-between gap-3"><span className="text-[#6B7280]">{label}</span><strong className="text-right text-[#111827]">{value}</strong></div>;
-}
 
 function EmptyState({ text }: { text: string }) {
   return <p className="rounded-md border border-dashed border-[#E5E7EB] p-4 text-center text-sm text-[#6B7280]">{text}</p>;
