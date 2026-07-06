@@ -15,9 +15,10 @@ test("public root stays a marketing homepage while login redirects authenticated
   assert.doesNotMatch(home, /redirectAuthenticatedUser/);
   assert.doesNotMatch(home, /DashboardShell/);
   assert.doesNotMatch(home, /getBusinessOwnerContext/);
-  assert.match(home, /PublicHeader/);
-  assert.match(home, /HeroSection/);
-  assert.match(home, /TrustedStrip/);
+  assert.match(home, /HeroShowcase/);
+  assert.match(home, /BUILT FOR SMALL BUSINESS/);
+  assert.match(home, /Designed for local service, hospitality, and retail teams/);
+  assert.match(home, /href="\/login"/);
   assert.match(login, /await redirectAuthenticatedUser\(\)/);
   assert.match(session, /redirect\(roleHomePath\[user\.role\]\)/);
 
