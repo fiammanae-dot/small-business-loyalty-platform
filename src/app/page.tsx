@@ -38,7 +38,7 @@ const sectors = [
 const plans = [
   { name: "Starter", price: "AED 100", per: "/mo", note: "or AED 1000/year", feats: ["1 branch", "1 program", "Single-location shops"], popular: false },
   { name: "Growth", price: "AED 200", per: "/mo", note: "or AED 2000/year", feats: ["3 branches", "5 programs", "Active teams and multiple rewards"], popular: true },
-  { name: "Multi Branch", price: "AED 1000", per: "/yr/branch", note: "Yearly only", feats: ["10 branches", "15 programs", "Branch-level operations"], popular: false },
+  { name: "Multi Branch", price: "AED 3000", per: "/yr", note: "Yearly only", feats: ["10 branches", "15 programs", "Branch-level operations"], popular: false },
 ];
 
 const navLinks = [

@@ -30,7 +30,7 @@ export const officialPlans = [
   },
   {
     name: "Multi Branch",
-    price: "AED 1000/year per branch",
+    price: "AED 3000/year",
     annual: "Yearly only",
     branches: "10 branches",
     programs: "15 programs",
