@@ -94,6 +94,29 @@ export function StampIconGraphic({
   return <Icon className={className} aria-hidden="true" focusable="false" strokeWidth={2.4} />;
 }
 
+export function StampSlot({
+  stampIcon,
+  filled,
+  className = "h-9 w-9",
+  iconClassName = "h-[18px] w-[18px]",
+}: {
+  stampIcon: CardDesignStampIcon;
+  filled: boolean;
+  className?: string;
+  iconClassName?: string;
+}) {
+  return (
+    <span
+      className={`grid shrink-0 place-items-center rounded-full border border-[#E5E7EB] bg-white shadow-[0_1px_4px_rgba(15,23,42,0.08)] ${className}`}
+      aria-hidden="true"
+    >
+      <span className={filled ? "opacity-100" : "opacity-30 grayscale-[25%]"}>
+        <StampIconGraphic stampIcon={stampIcon} mode="customer" className={iconClassName} />
+      </span>
+    </span>
+  );
+}
+
 const premiumStampMarks: Record<CardDesignStampIcon, string> = {
   STAR: "⭐",
   HEART: "❤️",

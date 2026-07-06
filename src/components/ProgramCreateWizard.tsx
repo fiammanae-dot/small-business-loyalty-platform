@@ -27,7 +27,7 @@ import {
 } from "@/lib/design-studio";
 import { resolveCardThemeColors } from "@/lib/card-themes";
 import { Button, SectionCard } from "@/components/ui";
-import { StampIconGraphic } from "@/components/design-studio/StampIconGraphic";
+import { StampIconGraphic, StampSlot } from "@/components/design-studio/StampIconGraphic";
 import { WalletCardShell, type WalletTheme } from "@/components/public-card/WalletCardShell";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 
@@ -577,13 +577,7 @@ function ProgressPreview({ style, icon, theme }: { style: CardDesignStampJourney
         {Array.from({ length: total }).map((_, index) => {
           const filled = index < completed;
           return (
-            <span
-              key={index}
-              className="relative z-10 grid aspect-square min-h-7 place-items-center rounded-full border text-[10px] font-black"
-              style={{ background: filled ? theme.progressFill : theme.progressTrack, borderColor: filled ? "transparent" : theme.border, color: filled ? theme.ctaForeground : theme.mutedText }}
-            >
-              {filled ? <StampIconGraphic stampIcon={icon} mode="customer" className="h-4 w-4" /> : null}
-            </span>
+            <StampSlot key={index} stampIcon={icon} filled={filled} className="relative z-10 aspect-square min-h-7 w-full" iconClassName="h-4 w-4" />
           );
         })}
       </div>

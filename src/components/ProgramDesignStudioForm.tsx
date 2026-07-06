@@ -30,7 +30,7 @@ import {
   type DesignStudioProfessionalPreset,
 } from "@/lib/design-studio";
 import { Button, SectionCard } from "@/components/ui";
-import { StampIconGraphic } from "@/components/design-studio/StampIconGraphic";
+import { StampIconGraphic, StampSlot } from "@/components/design-studio/StampIconGraphic";
 
 type PreviewBranding = {
   primaryColor: string;
@@ -1733,17 +1733,7 @@ function PreviewProgress({ stampJourneyStyle, stampIcon, theme, typography, show
           {steps.map((_, index) => {
             const filled = index < completed;
             return (
-              <span
-                key={index}
-                className="grid aspect-square place-items-center rounded-full border text-[9px] font-black"
-                style={{
-                  background: filled ? theme.progressFill : theme.progressTrack,
-                  borderColor: filled ? theme.progressFill : "rgba(255,255,255,0.3)",
-                  color: filled ? theme.ctaForeground : theme.mutedText,
-                }}
-              >
-                {filled ? <StampIconGraphic stampIcon={stampIcon} mode="customer" className="h-4 w-4" /> : null}
-              </span>
+              <StampSlot key={index} stampIcon={stampIcon} filled={filled} className="aspect-square h-auto w-full" iconClassName="h-4 w-4" />
             );
           })}
         </div>
@@ -1764,17 +1754,7 @@ function PreviewProgress({ stampJourneyStyle, stampIcon, theme, typography, show
           {steps.map((_, index) => {
             const filled = index < completed;
             return (
-              <span
-                key={index}
-                className="relative z-10 grid h-6 w-6 place-items-center rounded-full border text-[7px] font-black"
-                style={{
-                  background: filled ? theme.progressFill : theme.cardBackground,
-                  borderColor: filled ? theme.progressFill : theme.progressTrack,
-                  color: filled ? theme.ctaForeground : theme.mutedText,
-                }}
-              >
-                {filled ? <StampIconGraphic stampIcon={stampIcon} mode="customer" className="h-3.5 w-3.5" /> : null}
-              </span>
+              <StampSlot key={index} stampIcon={stampIcon} filled={filled} className="relative z-10 h-6 w-6" iconClassName="h-3.5 w-3.5" />
             );
           })}
         </div>
@@ -2322,5 +2302,4 @@ const designStartOptions: Array<{ value: DesignStartMode; label: string; descrip
   { value: "manual", label: "Build From Scratch", description: "Open the full editor" },
   { value: "duplicate", label: "Duplicate Existing Design", description: "Copy another program" },
 ];
-
 

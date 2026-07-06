@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState, type CSSProperties } from "react";
-import { StampIconGraphic } from "@/components/design-studio/StampIconGraphic";
+import { StampSlot } from "@/components/design-studio/StampIconGraphic";
 import { WalletCardShell, type WalletTheme } from "@/components/public-card/WalletCardShell";
 import { resolveCardDesign, type CardDesign, type CardDesignInput } from "@/lib/card-design";
 
@@ -461,9 +461,9 @@ function ProgressSection({
       </div>
       <div className={`mt-4 grid ${nodes.length > 5 ? "grid-cols-5" : "grid-cols-3"} gap-2`}>
         {nodes.map((filled, index) => (
-          <span key={index} className="relative grid h-9 place-items-center rounded-full border" style={{ background: filled ? theme.progressFill : theme.progressTrack, borderColor: filled ? "transparent" : theme.border, color: filled ? theme.ctaForeground : theme.mutedText }}>
+          <span key={index} className="relative grid place-items-center">
             {design.stampJourneyStyle === "CONNECTED_DOTS" && index > 0 ? <span className="absolute right-full top-1/2 h-0.5 w-2 -translate-y-1/2" style={{ background: filled ? theme.progressFill : theme.progressTrack }} /> : null}
-            <StampIconGraphic stampIcon={design.stampIcon} mode="customer" className="h-[18px] w-[18px]" />
+            <StampSlot stampIcon={design.stampIcon} filled={filled} className="relative z-10 h-9 w-9" iconClassName="h-[18px] w-[18px]" />
           </span>
         ))}
       </div>

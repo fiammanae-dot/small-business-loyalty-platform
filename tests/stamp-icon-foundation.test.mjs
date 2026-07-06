@@ -72,12 +72,19 @@ test("saved stamp icons are applied to live customer card progress markers", () 
   const frontExport = read("src/components/public-card/LoyaltyCardFrontExport.tsx");
   const backExport = read("src/components/public-card/LoyaltyCardBackExport.tsx");
   const stampIconGraphic = read("src/components/design-studio/StampIconGraphic.tsx");
+  const designStudioForm = read("src/components/ProgramDesignStudioForm.tsx");
+  const createWizard = read("src/components/ProgramCreateWizard.tsx");
   const preview = read("src/components/CardThemePreviewSelector.tsx");
   const publicCard = read("src/app/card/[token]/page.tsx");
 
   assert.match(publicCard, /cardDesign: primaryCardModel\.design/);
-  assert.match(wallet, /StampIconGraphic stampIcon=\{design\.stampIcon\} mode="customer"/);
+  assert.match(wallet, /StampSlot stampIcon=\{design\.stampIcon\} filled=\{filled\}/);
+  assert.match(designStudioForm, /StampSlot key=\{index\} stampIcon=\{stampIcon\} filled=\{filled\}/);
+  assert.match(createWizard, /StampSlot key=\{index\} stampIcon=\{icon\} filled=\{filled\}/);
   assert.match(stampIconGraphic, /mode\?: "selector" \| "customer"/);
+  assert.match(stampIconGraphic, /export function StampSlot/);
+  assert.match(stampIconGraphic, /rounded-full border border-\[#E5E7EB\] bg-white/);
+  assert.match(stampIconGraphic, /filled \? "opacity-100" : "opacity-30 grayscale-\[25%\]"/);
   assert.match(stampIconGraphic, /premiumStampMarks/);
   assert.match(stampIconGraphic, /COFFEE_CUP/);
   assert.match(stampIconGraphic, /SCISSORS/);
