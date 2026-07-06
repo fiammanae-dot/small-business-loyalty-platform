@@ -40,7 +40,9 @@ test("faq page is a searchable knowledge center with categories and accessible a
   assert.match(faq, /aria-controls=\{panelId\}/);
   assert.match(faq, /hidden=\{!open\}/);
   assert.match(faq, /href="\/request-demo"/);
-  assert.match(faq, /mailto:support@loyaltycarduae\.com/);
+  assert.match(faq, /https:\/\/wa\.me\/971505009707/);
+  assert.match(faq, /target="_blank"/);
+  assert.match(faq, /rel="noopener noreferrer"/);
 });
 
 test("homepage uses a compact faq teaser that links to the dedicated faq page", () => {

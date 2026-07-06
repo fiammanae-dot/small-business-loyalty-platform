@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, HelpCircle, Mail, Search } from "lucide-react";
+import { ChevronDown, HelpCircle, MessageCircle, Search } from "lucide-react";
 import Link from "next/link";
 import { type ReactNode, useMemo, useState } from "react";
 
@@ -31,6 +31,8 @@ const categories: FaqCategory[] = [
   "Billing",
   "Support",
 ];
+
+const supportWhatsAppUrl = "https://wa.me/971505009707";
 
 const faqs: FaqItem[] = [
   {
@@ -291,8 +293,8 @@ export function FaqKnowledgeCenter() {
             <Link href="/request-demo" className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#F97316] px-6 text-sm font-black text-white transition hover:bg-[#EA580C] focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#111827]">
               Book a Demo
             </Link>
-            <Link href="mailto:support@loyaltycarduae.com" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/20 px-6 text-sm font-black text-white transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#111827]">
-              <Mail className="h-4 w-4" aria-hidden="true" />
+            <Link href={supportWhatsAppUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/20 px-6 text-sm font-black text-white transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#111827]">
+              <MessageCircle className="h-4 w-4" aria-hidden="true" />
               Contact Us
             </Link>
           </div>
