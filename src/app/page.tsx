@@ -197,30 +197,26 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="px-6 py-[72px] md:px-[52px]">
-        <div className="mx-auto mb-11 max-w-xl text-center">
-          <div className="mb-3.5 text-[13px] font-extrabold uppercase tracking-[0.1em] text-orange-500">FAQ</div>
-          <h2 className="text-4xl font-black leading-tight tracking-tight">Clear answers before you launch</h2>
-        </div>
-        <div className="mx-auto flex max-w-[820px] flex-col gap-3.5">
-          <details open className="rounded-[14px] border border-slate-100 px-6 py-[22px]">
-            <summary className="flex cursor-pointer list-none items-center justify-between text-lg font-extrabold">
-              Do customers need an app?<span className="text-orange-500">−</span>
-            </summary>
-            <p className="mt-2 text-[15px] leading-relaxed text-slate-500">No. Customers use a mobile-friendly digital card that opens in the browser.</p>
-          </details>
-          <details className="rounded-[14px] border border-slate-100 px-6 py-[22px]">
-            <summary className="flex cursor-pointer list-none items-center justify-between text-lg font-extrabold">
-              How does scanning work?<span className="text-slate-400">+</span>
-            </summary>
-            <p className="mt-2 text-[15px] leading-relaxed text-slate-500">Your staff open the scanner, scan the customer QR code, and a visit is added instantly.</p>
-          </details>
-          <details className="rounded-[14px] border border-slate-100 px-6 py-[22px]">
-            <summary className="flex cursor-pointer list-none items-center justify-between text-lg font-extrabold">
-              Can multiple branches use it?<span className="text-slate-400">+</span>
-            </summary>
-            <p className="mt-2 text-[15px] leading-relaxed text-slate-500">Yes. The Growth and Multi Branch plans support several branches with branch-level operations.</p>
-          </details>
+      <section className="px-6 py-[56px] md:px-[52px]">
+        <div className="mx-auto grid max-w-[1080px] gap-8 rounded-[24px] border border-slate-100 bg-white p-7 shadow-[0_18px_60px_rgba(15,23,42,0.06)] md:grid-cols-[0.9fr_1.1fr] md:p-9">
+          <div>
+            <div className="mb-3 text-[13px] font-extrabold uppercase tracking-[0.1em] text-orange-500">Frequently Asked Questions</div>
+            <h2 className="text-3xl font-black leading-tight tracking-tight">Still have questions?</h2>
+            <p className="mt-3 text-[15px] leading-7 text-slate-500">
+              Here are some of the most common questions from business owners.
+            </p>
+          </div>
+          <div className="grid gap-4">
+            {["Do my customers need an app?", "How long does setup take?", "Can I manage multiple branches?"].map((question) => (
+              <div key={question} className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-bold text-slate-800">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-100 text-xs text-orange-600">?</span>
+                {question}
+              </div>
+            ))}
+            <Link href="/faq" className="inline-flex min-h-12 w-fit items-center justify-center rounded-xl bg-orange-500 px-6 text-sm font-black text-white transition hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
+              View all FAQs →
+            </Link>
+          </div>
         </div>
       </section>
 
