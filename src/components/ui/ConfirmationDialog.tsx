@@ -1,9 +1,17 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { useId, useState } from "react";
 import { Button } from "./Button";
 import { cn } from "./utils";
+
+export type ConfirmationDialogTheme = {
+  background: string;
+  foreground: string;
+  hoverBackground?: string;
+  focusRing?: string;
+  disabledBackground?: string;
+};
 
 export function ConfirmationDialog({
   trigger,
@@ -13,6 +21,7 @@ export function ConfirmationDialog({
   cancelLabel = "Cancel",
   onConfirm,
   danger = false,
+  theme,
 }: {
   trigger: ReactNode;
   title: string;
@@ -21,10 +30,21 @@ export function ConfirmationDialog({
   cancelLabel?: string;
   onConfirm: () => void;
   danger?: boolean;
+  theme?: ConfirmationDialogTheme;
 }) {
   const [open, setOpen] = useState(false);
   const titleId = useId();
   const descriptionId = useId();
+  const themedConfirm = theme && !danger;
+  const themeStyle = themedConfirm
+    ? ({
+        "--confirmation-background": theme.background,
+        "--confirmation-foreground": theme.foreground,
+        "--confirmation-hover-background": theme.hoverBackground ?? theme.background,
+        "--confirmation-focus-ring": theme.focusRing ?? theme.background,
+        "--confirmation-disabled-background": theme.disabledBackground ?? theme.background,
+      } as CSSProperties)
+    : undefined;
 
   return (
     <>
@@ -54,7 +74,12 @@ export function ConfirmationDialog({
                   onConfirm();
                   setOpen(false);
                 }}
-                className={cn(danger && "border-[#B91C1C]")}
+                style={themeStyle}
+                className={cn(
+                  danger && "border-[#B91C1C]",
+                  themedConfirm &&
+                    "border-transparent text-[var(--confirmation-foreground)] shadow-sm [background:var(--confirmation-background)] hover:[background:var(--confirmation-hover-background)] hover:brightness-95 focus-visible:ring-[var(--confirmation-focus-ring)] disabled:[background:var(--confirmation-disabled-background)]",
+                )}
               >
                 {confirmLabel}
               </Button>

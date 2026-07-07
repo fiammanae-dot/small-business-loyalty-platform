@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import type { ReactNode } from "react";
-import { ConfirmationDialog } from "@/components/ui";
+import { ConfirmationDialog, type ConfirmationDialogTheme } from "@/components/ui";
 
 type ConfirmSubmitButtonProps = {
   message: string;
@@ -12,6 +12,7 @@ type ConfirmSubmitButtonProps = {
   confirmLabel?: string;
   cancelLabel?: string;
   disabled?: boolean;
+  confirmationTheme?: ConfirmationDialogTheme;
 };
 
 export function ConfirmSubmitButton({
@@ -22,6 +23,7 @@ export function ConfirmSubmitButton({
   confirmLabel = "Confirm",
   cancelLabel = "Cancel",
   disabled = false,
+  confirmationTheme,
 }: ConfirmSubmitButtonProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   function confirmAction() {
@@ -39,6 +41,7 @@ export function ConfirmSubmitButton({
         cancelLabel={cancelLabel}
         onConfirm={confirmAction}
         danger={confirmLabel.toLowerCase().includes("disable") || confirmLabel.toLowerCase().includes("delete")}
+        theme={confirmationTheme}
         trigger={
           <button
             ref={buttonRef}

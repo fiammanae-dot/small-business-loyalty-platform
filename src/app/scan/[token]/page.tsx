@@ -22,6 +22,8 @@ import { isRewardReady } from "@/lib/rewards";
 import { roleHomePath } from "@/lib/roles";
 import { getCurrentUser, hasActiveBusinessAccess } from "@/lib/session";
 import { issueStampAction, redeemRewardAction, undoStampAction } from "@/app/scan/actions";
+import { resolveCardThemeColors, withAlpha } from "@/lib/card-themes";
+import type { ConfirmationDialogTheme } from "@/components/ui";
 
 const CROSS_BUSINESS_SCAN_TITLE = "Access Denied";
 const CROSS_BUSINESS_SCAN_DESCRIPTION = "This customer belongs to a different business workspace. For privacy and security reasons, customer information cannot be viewed or modified outside the assigned business.";
@@ -29,6 +31,13 @@ const CROSS_BUSINESS_SCAN_HELPER = "If you believe this is a mistake, contact yo
 const OUT_OF_BRANCH_SCAN_DESCRIPTION = "This customer is outside your assigned branch scope. Customer information cannot be viewed or modified from this scanner.";
 const STAMP_UNDO_WINDOW_MINUTES = 3;
 const stampUndoReasons = ["Wrong customer scanned", "Duplicate scan", "Customer cancelled purchase", "System error", "Other"];
+const defaultScannerBranding = {
+  primaryColor: "#F97316",
+  secondaryColor: "#FDBA74",
+  backgroundColor: "#FFFFFF",
+  textColor: "#111827",
+  buttonColor: "#F97316",
+};
 
 function isOutOfAssignedBranch(user: { role: string; branchId?: number | null }, membership: { createdBranchId?: number | null }) {
   return (user.role === "STAFF" || user.role === "BRANCH_MANAGER") && (!user.branchId || membership.createdBranchId !== user.branchId);
@@ -96,6 +105,25 @@ function decodeScanRouteToken(token: string) {
 function referralCodeFromScanRouteToken(token: string) {
   const decodedToken = decodeScanRouteToken(token);
   return decodedToken.startsWith("referral:") ? extractReferralCode(decodedToken.slice("referral:".length)) : null;
+}
+
+function buildScannerConfirmationTheme(theme: ReturnType<typeof resolveCardThemeColors>): ConfirmationDialogTheme {
+  const background = theme.ctaBackground || theme.accent || defaultScannerBranding.buttonColor;
+  const foreground = theme.ctaForeground || "#FFFFFF";
+  return {
+    background,
+    foreground,
+    hoverBackground: darkenHexColor(background, 12) ?? background,
+    focusRing: theme.accent || background,
+    disabledBackground: background.startsWith("#") ? withAlpha(background, 0.55) : background,
+  };
+}
+
+function darkenHexColor(color: string, amount: number) {
+  if (!/^#[0-9A-Fa-f]{6}$/.test(color)) return null;
+  const normalized = color.slice(1);
+  const channels = [0, 2, 4].map((start) => Math.max(0, Number.parseInt(normalized.slice(start, start + 2), 16) - amount));
+  return `#${channels.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
 }
 
 export default async function ScanResultPage({
@@ -167,7 +195,7 @@ export default async function ScanResultPage({
       loyaltyProgram: true,
       businessCustomerMembership: {
         include: {
-          business: true,
+          business: { include: { branding: true } },
           createdBranch: true,
         },
       },
@@ -353,6 +381,12 @@ export default async function ScanResultPage({
       })
     : { allowed: false, reason: "No stamp transaction selected." };
   const cardNumber = businessMembership.cardToken.length > 12 ? `${businessMembership.cardToken.slice(0, 8)}...${businessMembership.cardToken.slice(-4)}` : businessMembership.cardToken;
+  const programTheme = resolveCardThemeColors({
+    cardTheme: program.cardTheme,
+    cardDesign: program.cardDesign,
+    branding: businessMembership.business.branding ?? defaultScannerBranding,
+  });
+  const scannerConfirmationTheme = buildScannerConfirmationTheme(programTheme);
   const soundEvent = qs.error
     ? "invalid"
     : issuedTransaction
@@ -385,6 +419,7 @@ export default async function ScanResultPage({
           token={scanToken}
           rewardReady={rewardReady}
           canRedeem={["BUSINESS_OWNER", "BRANCH_MANAGER", "STAFF"].includes(authUser.role)}
+          confirmationTheme={scannerConfirmationTheme}
         />
       ) : null}
 
@@ -469,6 +504,7 @@ export default async function ScanResultPage({
           progress={progress}
           requiredStamps={program.requiredStamps}
           canOverrideCooldown={authUser.role !== "STAFF"}
+          confirmationTheme={scannerConfirmationTheme}
         />
       ) : null}
       </DetailPageLayout>
@@ -533,7 +569,17 @@ function ActionSummarySection({
   );
 }
 
-function QuickScanActions({ token, rewardReady, canRedeem }: { token: string; rewardReady: boolean; canRedeem: boolean }) {
+function QuickScanActions({
+  token,
+  rewardReady,
+  canRedeem,
+  confirmationTheme,
+}: {
+  token: string;
+  rewardReady: boolean;
+  canRedeem: boolean;
+  confirmationTheme: ConfirmationDialogTheme;
+}) {
   return (
     <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm">
       {rewardReady ? (
@@ -547,6 +593,7 @@ function QuickScanActions({ token, rewardReady, canRedeem }: { token: string; re
               message="This will redeem the customer's available reward and reset progress for this program."
               confirmLabel="Redeem Reward"
               cancelLabel="Cancel"
+              confirmationTheme={confirmationTheme}
               className="min-h-12 w-full rounded-md bg-emerald-600 px-5 text-base font-semibold text-white shadow-sm transition hover:bg-emerald-700"
             >
               Redeem Reward
@@ -569,6 +616,7 @@ function QuickScanActions({ token, rewardReady, canRedeem }: { token: string; re
               message="This will add 1 visit to the customer's selected program."
               confirmLabel="Issue Stamp"
               cancelLabel="Cancel"
+              confirmationTheme={confirmationTheme}
               className="business-button min-h-12 w-full rounded-md px-5 text-base font-semibold shadow-sm transition"
             >
               Issue Stamp
@@ -585,6 +633,7 @@ function QuickScanActions({ token, rewardReady, canRedeem }: { token: string; re
               message="This will add 1 visit, then prepare a WhatsApp message with the customer's updated loyalty card."
               confirmLabel="Issue Stamp & Share"
               cancelLabel="Cancel"
+              confirmationTheme={confirmationTheme}
               className="min-h-12 w-full rounded-md border border-[#E5E7EB] bg-white px-5 text-base font-semibold text-[#111827] shadow-sm transition business-hover"
             >
               Issue Stamp &amp; Share via WhatsApp
@@ -674,11 +723,13 @@ function AdvancedStampOptions({
   progress,
   requiredStamps,
   canOverrideCooldown,
+  confirmationTheme,
 }: {
   token: string;
   progress: number;
   requiredStamps: number;
   canOverrideCooldown: boolean;
+  confirmationTheme: ConfirmationDialogTheme;
 }) {
   return (
     <details className="rounded-md border business-border-soft bg-white shadow-sm">
@@ -700,6 +751,7 @@ function AdvancedStampOptions({
           progress={progress}
           requiredStamps={requiredStamps}
           canOverrideCooldown={canOverrideCooldown}
+          confirmationTheme={confirmationTheme}
         />
       </div>
     </details>
@@ -937,11 +989,13 @@ function StampIssuanceSection({
   progress,
   requiredStamps,
   canOverrideCooldown,
+  confirmationTheme,
 }: {
   token: string;
   progress: number;
   requiredStamps: number;
   canOverrideCooldown: boolean;
+  confirmationTheme: ConfirmationDialogTheme;
 }) {
   return (
     <section className="rounded-md border-2 business-border-soft bg-white p-5 shadow-sm">
@@ -983,6 +1037,7 @@ function StampIssuanceSection({
         </label>
         <ConfirmSubmitButton
           message="Issue this stamp to this customer and selected program?"
+          confirmationTheme={confirmationTheme}
           className="business-button h-12 rounded-md px-6 text-base font-semibold shadow-sm transition"
         >
           Add Stamp

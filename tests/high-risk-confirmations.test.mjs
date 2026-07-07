@@ -8,16 +8,26 @@ function read(path) {
 
 test("reusable confirmation submit button exists and submits the parent form after confirmation", () => {
   const component = read("src/components/ConfirmSubmitButton.tsx");
+  const dialog = read("src/components/ui/ConfirmationDialog.tsx");
   assert.match(component, /ConfirmSubmitButton/);
   assert.match(component, /Cancel/);
   assert.match(component, /Confirm/);
   assert.match(component, /requestSubmit/);
+  assert.match(component, /confirmationTheme/);
+  assert.match(dialog, /ConfirmationDialogTheme/);
+  assert.match(dialog, /--confirmation-background/);
+  assert.match(dialog, /--confirmation-hover-background/);
+  assert.match(dialog, /--confirmation-focus-ring/);
 });
 
 test("scanner stamp and reward actions require confirmation", () => {
   const page = read("src/app/scan/[token]/page.tsx");
   assert.match(page, /This will add 1 visit to the customer\'s selected program\./);
   assert.match(page, /This will redeem the customer\'s available reward and reset progress for this program\./);
+  assert.match(page, /resolveCardThemeColors/);
+  assert.match(page, /buildScannerConfirmationTheme/);
+  assert.match(page, /confirmationTheme=\{scannerConfirmationTheme\}/);
+  assert.match(page, /confirmationTheme=\{confirmationTheme\}/);
 });
 
 test("highest-risk business owner actions require confirmation", () => {
