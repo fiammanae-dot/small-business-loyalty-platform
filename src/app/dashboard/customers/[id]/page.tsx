@@ -32,6 +32,7 @@ import { getCardUrl, getShortCardToken } from "@/lib/customer-cards";
 import { calculateCustomerTier } from "@/lib/customer-tiers";
 import { customerSourceLabels, getBusinessCustomerOrRedirect } from "@/lib/customers";
 import { formatDate, formatDateTime } from "@/lib/format";
+import { getGoogleWalletStatus } from "@/lib/google-wallet/service";
 import { formatUaePhoneDisplay } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { progressValue } from "@/lib/programs";
@@ -73,6 +74,8 @@ export default async function CustomerProfilePage({
       scanUrl: await getScanUrl(programMembership.scanToken),
       qrCode: await getScanQrDataUrl(programMembership.scanToken),
       nextScanStatus: programMembership.scanStatus === "ACTIVE" ? "DISABLED" : "ACTIVE",
+      googleWalletUrl: `/api/wallet/google/save/${programMembership.scanToken}`,
+      googleWalletStatus: await getGoogleWalletStatus(programMembership.id),
       membershipUuid: membership.uuid,
     })),
   );
@@ -233,6 +236,7 @@ export default async function CustomerProfilePage({
   const primaryProgress = primaryProgram ? progressValue(primaryProgram.earnedStamps, primaryProgram.bonusStamps) : 0;
   const primaryRequired = primaryProgram?.loyaltyProgram.requiredStamps ?? 0;
   const primaryScanHref = primaryProgram ? `/scan/${primaryProgram.scanToken}` : "/dashboard/scanner";
+  const primaryGoogleWalletUrl = primaryProgram ? `/api/wallet/google/save/${primaryProgram.scanToken}` : null;
   const primaryRewardReady = Boolean(
     primaryProgram &&
       primaryProgram.status !== "COMPLETED" &&
@@ -409,6 +413,7 @@ return (
                   membershipUuid={membership.uuid}
                   nextCardStatus={nextCardStatus}
                   messageType={cardShareMessageType}
+                  googleWalletUrl={primaryGoogleWalletUrl}
                 />
                 <ProgramQrPanel programCards={programCards} />
               </div>
@@ -530,6 +535,8 @@ function LoyaltyOverviewPanel({
     scanUrl: string;
     qrCode: string;
     nextScanStatus: string;
+    googleWalletUrl: string;
+    googleWalletStatus: Awaited<ReturnType<typeof getGoogleWalletStatus>>;
     membershipUuid: string;
   }>;
 }) {
@@ -816,6 +823,7 @@ function CustomerCardPanel({
   membershipUuid,
   nextCardStatus,
   messageType,
+  googleWalletUrl,
   compact = false,
 }: {
   cardUrl: string;
@@ -829,6 +837,7 @@ function CustomerCardPanel({
   membershipUuid: string;
   nextCardStatus: string;
   messageType: "welcome" | "resend";
+  googleWalletUrl: string | null;
   compact?: boolean;
 }) {
   return (
@@ -889,7 +898,7 @@ function CustomerCardPanel({
           recipientPhone={customerPhone}
           auditMembershipUuid={membershipUuid}
           messageType={messageType}
-          showWallet={false}
+          googleWalletUrl={googleWalletUrl}
         />
       </div> : null}
     </section>
@@ -917,17 +926,28 @@ function ProgramQrPanel({
         <Gift className="h-5 w-5 business-text" aria-hidden="true" />
       </div>
       <div className="mt-5 grid gap-4">
-        {programCards.map(({ programMembership, scanUrl, qrCode, nextScanStatus, membershipUuid }) => (
+        {programCards.map(({ programMembership, scanUrl, qrCode, nextScanStatus, googleWalletUrl, googleWalletStatus, membershipUuid }) => (
           <article key={programMembership.id} className="rounded-md border border-[#E5E7EB] p-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0 flex-1">
                 <h3 className="font-semibold text-[#111827]">{programMembership.loyaltyProgram.name}</h3>
                 <p className="mt-1 text-sm text-[#6B7280]">Scan token status: {scanStatusLabel(programMembership.scanStatus)}</p>
+                <p className="mt-1 text-sm text-[#6B7280]">
+                  Google Wallet: {googleWalletStatus.configured ? googleWalletStatus.status.toString().toLowerCase().replace("_", " ") : "not configured"}
+                  {googleWalletStatus.lastSyncedAt ? ` · Synced ${formatDateTime(googleWalletStatus.lastSyncedAt)}` : ""}
+                </p>
+                {googleWalletStatus.lastError ? <p className="mt-1 text-xs text-red-700">Last Wallet error: {googleWalletStatus.lastError}</p> : null}
                 <p className="mt-3 break-all rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-2 text-xs text-[#6B7280]">{scanUrl}</p>
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   <CopyButton value={scanUrl} label="Copy scan URL" copiedLabel="Scan URL copied." />
                   <a href={scanUrl} target="_blank" rel="noreferrer" className="rounded-md business-button px-4 py-2 text-sm font-semibold text-white">
                     Open scan URL
+                  </a>
+                  <a href={googleWalletUrl} target="_blank" rel="noopener noreferrer" className="rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827] transition business-hover">
+                    Regenerate Google Wallet pass
+                  </a>
+                  <a href={googleWalletUrl} target="_blank" rel="noopener noreferrer" className="rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827] transition business-hover">
+                    Preview pass
                   </a>
                   <form action={toggleProgramScanTokenAction}>
                     <CsrfInput scope="dashboard:customers" />

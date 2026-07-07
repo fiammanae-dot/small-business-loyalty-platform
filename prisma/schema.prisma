@@ -218,6 +218,13 @@ enum MessageDeliveryStatus {
   FAILED
 }
 
+enum GoogleWalletSyncStatus {
+  PENDING
+  ACTIVE
+  FAILED
+  DISABLED
+}
+
 enum CustomerNotificationType {
   NEW_STAMP_EARNED
   TIER_UPGRADED
@@ -402,6 +409,8 @@ model Business {
   supportSessionActivities      SupportSessionActivity[]
   businessNotifications BusinessNotification[]
   designPresets                 BusinessDesignPreset[]
+  googleWalletClasses           GoogleWalletClass[]
+  googleWalletObjects           GoogleWalletObject[]
 
   @@map("businesses")
 }
@@ -727,6 +736,7 @@ model LoyaltyProgram {
   rewardRedemptions RewardRedemption[]
   referralRewards   ReferralReward[]
   cooldownEvents    CooldownEvent[]
+  googleWalletClass GoogleWalletClass?
 
   @@index([businessId])
   @@index([businessId, active])
@@ -758,12 +768,59 @@ model CustomerProgramMembership {
   activityAlerts             ActivityAlert[]
   referralRewards            ReferralReward[]
   cooldownEvents             CooldownEvent[]
+  googleWalletObject         GoogleWalletObject?
 
   @@unique([businessCustomerMembershipId, loyaltyProgramId])
   @@index([businessCustomerMembershipId])
   @@index([loyaltyProgramId])
   @@index([loyaltyProgramId, status])
   @@map("customer_program_memberships")
+}
+
+model GoogleWalletClass {
+  id               Int                    @id @default(autoincrement())
+  issuerId         String                 @map("issuer_id")
+  classId          String                 @unique @map("class_id")
+  businessId       Int                    @map("business_id")
+  loyaltyProgramId Int                    @unique @map("loyalty_program_id")
+  status           GoogleWalletSyncStatus @default(PENDING)
+  lastSyncedAt     DateTime?              @map("last_synced_at")
+  lastError        String?                @map("last_error")
+  createdAt        DateTime               @default(now()) @map("created_at")
+  updatedAt        DateTime               @updatedAt @map("updated_at")
+
+  business       Business             @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  loyaltyProgram LoyaltyProgram       @relation(fields: [loyaltyProgramId], references: [id], onDelete: Cascade)
+  objects        GoogleWalletObject[]
+
+  @@unique([issuerId, loyaltyProgramId])
+  @@index([businessId])
+  @@index([status])
+  @@map("google_wallet_classes")
+}
+
+model GoogleWalletObject {
+  id                          Int                    @id @default(autoincrement())
+  businessId                  Int                    @map("business_id")
+  googleWalletClassId         Int                    @map("google_wallet_class_id")
+  customerProgramMembershipId Int                    @unique @map("customer_program_membership_id")
+  objectId                    String                 @unique @map("object_id")
+  accountId                   String                 @map("account_id")
+  status                      GoogleWalletSyncStatus @default(PENDING)
+  saveUrlLastGeneratedAt      DateTime?              @map("save_url_last_generated_at")
+  lastSyncedAt                DateTime?              @map("last_synced_at")
+  lastError                   String?                @map("last_error")
+  createdAt                   DateTime               @default(now()) @map("created_at")
+  updatedAt                   DateTime               @updatedAt @map("updated_at")
+
+  business                  Business                  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  googleWalletClass         GoogleWalletClass         @relation(fields: [googleWalletClassId], references: [id], onDelete: Cascade)
+  customerProgramMembership CustomerProgramMembership @relation(fields: [customerProgramMembershipId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([googleWalletClassId])
+  @@index([status])
+  @@map("google_wallet_objects")
 }
 
 model StampTransaction {

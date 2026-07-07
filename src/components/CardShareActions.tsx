@@ -14,6 +14,7 @@ type CardShareActionsProps = {
   whatsappLabel?: string;
   showCopy?: boolean;
   showWallet?: boolean;
+  googleWalletUrl?: string | null;
   buttonColor?: string;
   compact?: boolean;
   messageType?: "welcome" | "resend";
@@ -28,6 +29,7 @@ export function CardShareActions({
   whatsappLabel = "Send via WhatsApp",
   showCopy = true,
   showWallet = true,
+  googleWalletUrl,
   buttonColor,
   compact = false,
   messageType = "welcome",
@@ -51,10 +53,6 @@ export function CardShareActions({
     } catch {
       setMessage("Copy is not available in this browser.");
     }
-  }
-
-  function walletSoon() {
-    setMessage("Wallet pass is not available yet.");
   }
 
   async function shareViaWhatsApp() {
@@ -120,18 +118,29 @@ export function CardShareActions({
         <div className="grid gap-3 sm:grid-cols-2">
           <button
             type="button"
-            onClick={walletSoon}
+            onClick={() => setMessage("Apple Wallet pass is not available yet.")}
             className="rounded-md bg-black px-4 py-3 text-sm font-semibold text-white"
           >
             Add to Apple Wallet
           </button>
-          <button
-            type="button"
-            onClick={walletSoon}
-            className="rounded-md border border-[#E5E7EB] bg-white px-4 py-3 text-sm font-semibold text-[#111827] transition business-hover"
-          >
-            Add to Google Wallet
-          </button>
+          {googleWalletUrl ? (
+            <a
+              href={googleWalletUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-md border border-[#E5E7EB] bg-white px-4 py-3 text-center text-sm font-semibold text-[#111827] transition business-hover"
+            >
+              Add to Google Wallet
+            </a>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setMessage("Google Wallet is not available for this card yet.")}
+              className="rounded-md border border-[#E5E7EB] bg-white px-4 py-3 text-sm font-semibold text-[#111827] transition business-hover"
+            >
+              Add to Google Wallet
+            </button>
+          )}
         </div>
       ) : null}
 

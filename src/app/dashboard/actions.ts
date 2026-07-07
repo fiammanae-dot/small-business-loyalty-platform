@@ -12,6 +12,7 @@ import { requireBusinessOwner } from "@/lib/business-owner";
 import { validateCsrfForm } from "@/lib/csrf";
 import { requireUsableSubscription } from "@/lib/commercial-access";
 import { createFormFailure, isFormActionError, type PreservedFormState } from "@/lib/form-state";
+import { syncGoogleWalletObjectAfterLoyaltyChange } from "@/lib/google-wallet/service";
 import { commerciallyUsableStatuses, limitReachedMessage } from "@/lib/subscriptions";
 import {
   customerIdentitySchema,
@@ -942,6 +943,7 @@ export async function manualStampCorrectionAction(formData: FormData) {
     });
   });
 
+  await syncGoogleWalletObjectAfterLoyaltyChange(programMembership.id);
   revalidatePath(`/dashboard/customers/${data.membershipUuid}`);
   redirect(`/dashboard/customers/${data.membershipUuid}?success=Manual stamp correction recorded.`);
 }

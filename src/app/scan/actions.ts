@@ -10,6 +10,7 @@ import { validateCsrfForm } from "@/lib/csrf";
 import { createCustomerNotification } from "@/lib/customer-notifications";
 import { calculateCustomerTier, isTierUpgrade } from "@/lib/customer-tiers";
 import { createEngagementEventIfAllowed, createProgramEngagementEvents } from "@/lib/engagement";
+import { syncGoogleWalletObjectAfterLoyaltyChange } from "@/lib/google-wallet/service";
 import { prisma } from "@/lib/prisma";
 import { getStartingBonusStampsForEvent, progressValue } from "@/lib/programs";
 import { qualifyReferralFromFirstStamp } from "@/lib/referrals";
@@ -441,6 +442,7 @@ export async function issueStampAction(formData: FormData) {
     throw error;
   }
 
+  await syncGoogleWalletObjectAfterLoyaltyChange(programMembership.id);
   success(data.scanToken, transactionId, shareAfterStamp);
 }
 
@@ -620,6 +622,7 @@ export async function redeemRewardAction(formData: FormData) {
     throw error;
   }
 
+  await syncGoogleWalletObjectAfterLoyaltyChange(programMembership.id);
   redemptionSuccess(scanToken, redemption.id);
 }
 
@@ -772,6 +775,7 @@ export async function undoStampAction(formData: FormData) {
     });
   }
 
+  await syncGoogleWalletObjectAfterLoyaltyChange(programMembership.id);
   undoSuccess(data.scanToken, stampTransaction.id);
 }
 

@@ -80,6 +80,7 @@ export default async function PublicCustomerCardPage({
     }),
   );
   const primaryProgram = programCards[0] ?? null;
+  const primaryGoogleWalletUrl = primaryProgram ? `/api/wallet/google/save/${primaryProgram.programMembership.scanToken}` : null;
   const cardDesign = primaryProgram?.programMembership.loyaltyProgram.cardDesign as CardDesignInput;
   const lastUpdatedAt = [
     membership.updatedAt,
@@ -235,7 +236,7 @@ export default async function PublicCustomerCardPage({
               customerName={customerName}
               recipientPhone={membership.normalizedPhone}
               whatsappLabel="Share via WhatsApp"
-              showWallet={false}
+              googleWalletUrl={primaryGoogleWalletUrl}
               buttonColor={branding.buttonColor}
             />
             <SaveCardImageButton
