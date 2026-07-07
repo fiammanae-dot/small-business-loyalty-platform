@@ -231,9 +231,10 @@ export function MarketingFooter() {
           <p className="mt-4 max-w-md text-sm leading-6 text-[#64748B]">Digital loyalty cards, QR scanning, referrals, tiers, and operations tools for UAE and GCC local businesses.</p>
           <p className="mt-4 text-xs text-[#94A3B8]">Existing users can access their workspace through the direct login page.</p>
         </div>
-        <div className="grid gap-6 sm:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <FooterColumn title="Website" links={marketingNavItems} />
-          <FooterColumn title="Start" links={[{ label: "Request Demo", href: "/request-demo" }, { label: "FAQ", href: "/faq" }, { label: "Log in", href: "/login" }]} />
+          <FooterColumn title="Start" links={[{ label: "Request Demo", href: "/request-demo" }, { label: "FAQ", href: "/faq" }, { label: "Support", href: "/support" }, { label: "Log in", href: "/login" }]} />
+          <FooterColumn title="Legal" links={[{ label: "Privacy Policy", href: "/privacy" }, { label: "Terms & Conditions", href: "/terms" }, { label: "Contact", href: "/contact" }]} />
           <div>
             <h3 className="text-sm font-bold text-[#111827]">Included</h3>
             <ul className="mt-4 grid gap-3 text-sm text-[#64748B]">

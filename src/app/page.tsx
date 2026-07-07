@@ -12,7 +12,7 @@ const features = [
   {
     shape: "rounded-[4px] border-[2.5px]",
     title: "Digital loyalty cards",
-    body: "Customers open a branded card instantly from a secure link. No app download, no plastic cards.",
+    body: "Customers open a branded digital loyalty card instantly from a secure link. No app download, no plastic cards.",
   },
   {
     shape: "border-[2.5px]",
@@ -21,8 +21,8 @@ const features = [
   },
   {
     shape: "rounded-full border-[2.5px]",
-    title: "Referrals and tiers",
-    body: "Reward customers who bring friends and recognize your most loyal regulars with clear tiers.",
+    title: "Stamps, points, and rewards",
+    body: "Run visit stamps, reward progress, referrals, tiers, and points-style loyalty experiences from one SaaS platform.",
   },
 ];
 
@@ -92,7 +92,7 @@ export default function HomePage() {
             Real, repeat <span className="text-orange-500">growth.</span>
           </h1>
           <p className="mb-8 max-w-md text-lg leading-relaxed text-slate-500 md:text-xl">
-            Launch a modern loyalty program in minutes. Reward more visits. Grow your business.
+            Loyalty Card UAE is a SaaS platform that helps UAE businesses create digital loyalty cards, stamps, points, and rewards in minutes.
           </p>
           <div className="mb-4 flex flex-wrap gap-3.5">
             <Link href="/request-demo" className="inline-flex items-center gap-2.5 rounded-xl bg-orange-500 px-7 py-4 text-base font-bold text-white transition-colors hover:bg-orange-600">
@@ -234,7 +234,7 @@ export default function HomePage() {
       </section>
 
       <footer className="bg-slate-900 px-6 pb-10 pt-14 text-slate-300 md:px-[52px]">
-        <div className="mb-10 grid gap-8 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
+        <div className="mb-10 grid gap-8 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
           <div>
             <div className="mb-4 flex items-center gap-2.5">
               <span className="h-[26px] w-[26px] rotate-45 rounded-[7px] bg-orange-500" />
@@ -243,7 +243,8 @@ export default function HomePage() {
             <p className="max-w-xs text-sm leading-relaxed text-slate-400">Digital loyalty cards, QR scanning, referrals, tiers, and operations tools for UAE and GCC local businesses.</p>
           </div>
           <FooterColumn title="Website" items={[["Product", "/benefits"], ["Solutions", "/solutions"], ["Pricing", "/pricing"], ["Resources", "/resources"], ["Company", "/company"]]} />
-          <FooterColumn title="Start" items={[["Request demo", "/request-demo"], ["FAQ", "/faq"], ["Log in", "/login"]]} />
+          <FooterColumn title="Start" items={[["Request demo", "/request-demo"], ["FAQ", "/faq"], ["Support", "/support"], ["Log in", "/login"]]} />
+          <FooterColumn title="Legal" items={[["Privacy Policy", "/privacy"], ["Terms & Conditions", "/terms"], ["Contact", "/contact"]]} />
           <FooterColumn title="Included" items={[["No customer app", "/benefits"], ["QR scanner workflow", "/benefits"], ["Business branding", "/benefits"], ["Secure workspaces", "/benefits"]]} />
         </div>
         <div className="flex flex-col justify-between gap-2 border-t border-slate-800 pt-[22px] text-[13px] text-slate-500 sm:flex-row">
