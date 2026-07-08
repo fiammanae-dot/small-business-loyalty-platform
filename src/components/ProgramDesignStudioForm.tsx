@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { toPng } from "html-to-image";
+import Link from "next/link";
 import type {
   CardDesignBackgroundPattern,
   CardDesignBackgroundStyle,
@@ -72,12 +73,13 @@ type SourceProgramDesignOption = {
 
 type DesignHistorySnapshot = DesignStudioPresetDesign;
 type DesignStartMode = "template" | "manual" | "duplicate";
-type DesignStudioTab = "start" | "style" | "stamps" | "content";
-const designStudioTabs: Array<{ value: DesignStudioTab; label: string }> = [
-  { value: "start", label: "Start" },
-  { value: "style", label: "Style" },
-  { value: "stamps", label: "Stamps & rewards" },
-  { value: "content", label: "Content" },
+type WizardStep = 1 | 2 | 3 | 4 | 5;
+const wizardSteps: Array<{ value: WizardStep; label: string }> = [
+  { value: 1, label: "Start" },
+  { value: 2, label: "Card Style" },
+  { value: 3, label: "Stamps & Rewards" },
+  { value: 4, label: "Content" },
+  { value: 5, label: "Review & Save" },
 ];
 type PreviewContext = "phone" | "apple-wallet" | "google-wallet";
 type PreviewZoom = "fit" | "75" | "100" | "125";
@@ -154,7 +156,7 @@ export function ProgramDesignStudioForm({
   const [previewActionPending, setPreviewActionPending] = useState<"png" | "pdf" | "link" | null>(null);
   const [designHistoryPast, setDesignHistoryPast] = useState<DesignHistorySnapshot[]>([]);
   const [designHistoryFuture, setDesignHistoryFuture] = useState<DesignHistorySnapshot[]>([]);
-  const [activeTab, setActiveTab] = useState<DesignStudioTab>("start");
+  const [wizardStep, setWizardStep] = useState<WizardStep>(1);
   const previewExportRef = useRef<HTMLDivElement | null>(null);
   const currentDesignSnapshot = useMemo<DesignHistorySnapshot>(
     () => ({
@@ -201,6 +203,7 @@ export function ProgramDesignStudioForm({
   const selectedTypographyLabel = selectedTypographyOption.label;
   const selectedPreviewContextLabel = previewContextOptions.find((option) => option.value === previewContext)?.label ?? "Phone";
   const selectedStampIconLabel = stampIconOptions.find((option) => option.value === stampIcon)?.label ?? labelizeLocal(stampIcon);
+  const selectedRewardStyleLabel = designStudioRewardStyleOptions.find((option) => option.value === rewardStyle)?.label ?? labelizeLocal(rewardStyle);
   const selectedBackgroundOption = resolveDesignStudioBackgroundGalleryOption(backgroundStyle, backgroundPattern);
   const selectedBackgroundLabel = selectedBackgroundOption.label;
   const selectedCardLayoutOption = resolveDesignStudioCardLayoutOption(visibleSections);
@@ -220,7 +223,6 @@ export function ProgramDesignStudioForm({
     ) ?? null;
   const activePresetId = activeProfessionalPreset?.id ?? null;
   const professionalTemplatesVisible = designStartMode === "template" && !presetApplied;
-  const businessPresetsVisible = designStartMode === "template";
   const duplicateDesignVisible = designStartMode === "duplicate";
   const normalizedPresetSearch = professionalPresetSearch.trim().toLowerCase();
   const filteredProfessionalPresets = useMemo(
@@ -385,7 +387,8 @@ export function ProgramDesignStudioForm({
           ["Card Style", selectedStyleLabel],
           ["Typography", selectedTypographyLabel],
           ["Reward Progress", selectedJourneyLabel],
-          ["Stamp Design", selectedStampIconLabel],
+          ["Stamp Style", selectedStampIconLabel],
+          ["Reward Style", selectedRewardStyleLabel],
           ["Background", selectedBackgroundLabel],
           ["Visibility", `${visibleSectionCount}/${designStudioCardContentOptions.length} sections`],
         ],
@@ -417,8 +420,45 @@ export function ProgramDesignStudioForm({
     }
   };
 
+  const goToStep = (step: WizardStep) => setWizardStep(step);
+  const goNext = () => setWizardStep((current) => (Math.min(5, current + 1) as WizardStep));
+  const goPrevious = () => setWizardStep((current) => (Math.max(1, current - 1) as WizardStep));
+
+  const livePreviewNode = (
+    <div ref={previewExportRef}>
+      <PreviewContextFrame context={previewContext}>
+        <div
+          key={`${layoutStyle}-${stampJourneyStyle}-${stampIcon}-${rewardStyle}-${typographyPreset}-${decorationStyle}-${previewZoom}-${previewContext}`}
+          className="w-full origin-top transition duration-200 ease-out motion-reduce:transition-none"
+          style={{ transform: `scale(${previewZoomScales[previewZoom]})` }}
+        >
+          <CardFinishPreviewFrame decorationStyle={decorationStyle}>
+            <VisibleCardPreview
+              businessName={businessName}
+              businessLogoUrl={branding.logoUrl}
+              customerName="Mina Hanna"
+              memberSince="Jun 2026"
+              tierLabel="Silver Member"
+              tierIcon="S"
+              theme={previewTheme}
+              programName={programName}
+              rewardName={rewardName}
+              visibleSections={visibleSections}
+              stampJourneyStyle={stampJourneyStyle}
+              stampIcon={stampIcon}
+              rewardStyle={rewardStyle}
+              typographyPreset={typographyPreset}
+              backgroundStyle={backgroundStyle}
+              backgroundPattern={backgroundPattern}
+            />
+          </CardFinishPreviewFrame>
+        </div>
+      </PreviewContextFrame>
+    </div>
+  );
+
   return (
-    <form action={action} className="grid gap-8 lg:grid-cols-[minmax(0,70fr)_minmax(300px,30fr)] lg:items-start xl:grid-cols-[minmax(0,70fr)_minmax(340px,30fr)] 2xl:gap-10">
+    <form action={action} className="grid gap-6 lg:grid-cols-[minmax(0,68fr)_minmax(220px,32fr)] lg:items-start xl:grid-cols-[minmax(0,72fr)_minmax(240px,28fr)] 2xl:gap-8">
       <input type="hidden" name={csrfName} value={csrfToken} />
       <input type="hidden" name="programUuid" value={programUuid} />
       <input type="hidden" name="layoutStyle" value={layoutStyle} />
@@ -433,31 +473,43 @@ export function ProgramDesignStudioForm({
         <input key={option.value} type="hidden" name={`visibleSections.${option.value}`} value={visibleSections[option.value] ? "true" : "false"} />
       ))}
 
-      <aside className="order-first grid h-fit min-w-0 gap-5 lg:sticky lg:top-6 lg:order-last lg:self-start">
-        <SectionCard
-          title="Customer Preview"
-          description="Live Preview"
-          className="rounded-3xl border-[var(--business-primary-soft,#E2E8F0)] bg-gradient-to-b from-white to-[#F8FAFC] p-4 shadow-lg shadow-slate-200/60 md:p-5"
-        >
-          <div className="grid gap-4">
-            <Button type="submit" variant="business" size="lg" className="w-full">
-              Save Design
-            </Button>
-            <div className="rounded-2xl border border-[#E2E8F0] bg-white/90 p-3 shadow-sm">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">Preview</p>
-                  <p className="mt-1 text-sm font-semibold text-[#111827]">Updated automatically</p>
-                </div>
-                <p className="text-xs font-bold text-[#94A3B8]">Last updated just now</p>
+      <aside className="order-first grid h-fit min-w-0 gap-3 lg:order-last lg:self-start">
+        <div className="sticky top-2 z-10 grid gap-3 lg:top-6">
+          <div className="rounded-2xl border border-[#E2E8F0] bg-white/95 p-3 shadow-md backdrop-blur">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-[#64748B]">Live Preview</p>
+              <div className="flex rounded-full border border-[#E2E8F0] bg-[#F8FAFC] p-0.5" aria-label="Preview context">
+                {previewContextOptions.map((option) => {
+                  const active = previewContext === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setPreviewContext(option.value)}
+                      className="rounded-full px-2 py-1 text-[10px] font-black text-[#64748B] transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:business-bg"
+                      data-active={active}
+                      aria-pressed={active}
+                      title={option.label}
+                    >
+                      {option.shortLabel}
+                    </button>
+                  );
+                })}
               </div>
+            </div>
+            <div className="mt-2 max-h-[38vh] overflow-y-auto lg:max-h-[52vh]">{livePreviewNode}</div>
+          </div>
+        </div>
 
-              <div className="mt-3 grid grid-cols-2 gap-2" aria-label="Design history controls">
+        <div className="grid gap-3 lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto lg:pr-1">
+          <div className="rounded-2xl border border-[#E2E8F0] bg-white/90 p-3 shadow-sm">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={undoDesignChange}
                   disabled={!canUndoDesign}
-                  className="rounded-xl border border-[#CBD5E1] bg-white px-3 py-2 text-xs font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-45 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                  className="rounded-xl border border-[#CBD5E1] bg-white px-3 py-1.5 text-xs font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-45 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
                   aria-label="Undo last design change"
                   title="Undo (Ctrl/Cmd+Z)"
                 >
@@ -467,755 +519,697 @@ export function ProgramDesignStudioForm({
                   type="button"
                   onClick={redoDesignChange}
                   disabled={!canRedoDesign}
-                  className="rounded-xl border border-[#CBD5E1] bg-white px-3 py-2 text-xs font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-45 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                  className="rounded-xl border border-[#CBD5E1] bg-white px-3 py-1.5 text-xs font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-45 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
                   aria-label="Redo design change"
                   title="Redo (Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y)"
                 >
                   Redo
                 </button>
               </div>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setPreviewZoom(previousPreviewZoom(previewZoom))}
+                  className="grid h-7 w-7 place-items-center rounded-lg text-xs font-black text-[#64748B] transition hover:bg-[#F8FAFC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)]"
+                  aria-label="Zoom out"
+                >
+                  -
+                </button>
+                <span className="w-10 text-center text-[11px] font-bold text-[#64748B]">{previewZoomOptions.find((option) => option.value === previewZoom)?.label ?? "Fit"}</span>
+                <button
+                  type="button"
+                  onClick={() => setPreviewZoom(nextPreviewZoom(previewZoom))}
+                  className="grid h-7 w-7 place-items-center rounded-lg text-xs font-black text-[#64748B] transition hover:bg-[#F8FAFC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)]"
+                  aria-label="Zoom in"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
 
-              <div className="mt-3 grid gap-2">
-                <div className="grid gap-1">
-                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#64748B]">Preview Context</p>
-                  <div className="grid grid-cols-3 rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-1" aria-label="Preview context">
-                  {previewContextOptions.map((option) => {
-                    const active = previewContext === option.value;
+          <div className="rounded-2xl border border-[#E2E8F0] bg-white/90 p-3 shadow-sm">
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={downloadPreviewPng}
+                disabled={previewActionPending !== null}
+                title="Download PNG"
+                className="rounded-xl business-bg px-2 py-2 text-xs font-black transition hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+              >
+                {previewActionPending === "png" ? "..." : "PNG"}
+              </button>
+              <button
+                type="button"
+                onClick={downloadPreviewPdf}
+                disabled={previewActionPending !== null}
+                title="Download PDF"
+                className="rounded-xl border border-[#CBD5E1] bg-white px-2 py-2 text-xs font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+              >
+                {previewActionPending === "pdf" ? "..." : "PDF"}
+              </button>
+              <button
+                type="button"
+                onClick={copyPreviewLink}
+                disabled={previewActionPending !== null}
+                title="Preview on phone"
+                className="rounded-xl border border-[#CBD5E1] bg-white px-2 py-2 text-xs font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+              >
+                {previewActionPending === "link" ? "..." : "Share"}
+              </button>
+            </div>
+            {previewActionMessage ? (
+              <p className="mt-2 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5 text-xs font-semibold text-[#475569]" aria-live="polite">
+                {previewActionMessage}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      </aside>
+
+      <div className="order-last grid min-w-0 gap-5 lg:order-first lg:max-w-[1080px] [&>section]:rounded-2xl [&>section]:p-5 md:[&>section]:p-6">
+        <WizardStepper current={wizardStep} onSelect={goToStep} />
+
+        {wizardStep === 1 ? (
+          <>
+            <SectionCard title="Choose how you'd like to start" description="Pick a professional template, build from scratch, or copy an existing design.">
+              <div className="grid gap-3">
+                <div className="grid gap-2 rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-2 md:grid-cols-3">
+                  {designStartOptions.map((option) => {
+                    const active = designStartMode === option.value;
                     return (
                       <button
                         key={option.value}
                         type="button"
-                        onClick={() => setPreviewContext(option.value)}
-                        className="rounded-xl px-2 py-2 text-xs font-black text-[#64748B] transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:business-bg"
+                        onClick={() => {
+                          setDesignStartMode(option.value);
+                          if (option.value === "manual") {
+                            setPresetApplied(true);
+                            setWizardStep(2);
+                          }
+                        }}
+                        className="flex items-center gap-3 rounded-xl border border-transparent bg-transparent px-4 py-3 text-left transition hover:bg-white hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-white data-[active=true]:shadow-sm"
                         data-active={active}
                         aria-pressed={active}
                       >
-                        {option.label}
+                        <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full border border-[#CBD5E1] bg-white text-[10px] font-black data-[active=true]:border-[var(--business-primary)] data-[active=true]:business-bg" data-active={active}>
+                          {active ? "*" : ""}
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block text-sm font-black text-[#111827]">{option.label}</span>
+                          <span className="mt-0.5 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                        </span>
                       </button>
                     );
                   })}
-                  </div>
-                </div>
-
-                <div className="grid gap-1">
-                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#64748B]">Zoom</p>
-                <div className="flex items-center justify-between gap-2 rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-1">
-                  <button
-                    type="button"
-                    onClick={() => setPreviewZoom(previousPreviewZoom(previewZoom))}
-                    className="grid h-9 w-9 place-items-center rounded-xl text-sm font-black text-[#64748B] transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)]"
-                    aria-label="Zoom out"
-                  >
-                    -
-                  </button>
-                  <div className="flex flex-1 justify-center gap-1">
-                    {previewZoomOptions.map((option) => {
-                      const active = previewZoom === option.value;
-                      return (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => setPreviewZoom(option.value)}
-                          className="rounded-xl px-2.5 py-2 text-xs font-black text-[#64748B] transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:bg-white data-[active=true]:text-[#111827] data-[active=true]:shadow-sm"
-                          data-active={active}
-                          aria-pressed={active}
-                        >
-                          {option.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setPreviewZoom(nextPreviewZoom(previewZoom))}
-                    className="grid h-9 w-9 place-items-center rounded-xl text-sm font-black text-[#64748B] transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)]"
-                    aria-label="Zoom in"
-                  >
-                    +
-                  </button>
-                </div>
                 </div>
               </div>
-            </div>
+            </SectionCard>
 
-            <div ref={previewExportRef}>
-              <PreviewContextFrame context={previewContext} label={selectedPreviewContextLabel}>
-                <div
-                  key={`${layoutStyle}-${stampJourneyStyle}-${stampIcon}-${rewardStyle}-${typographyPreset}-${decorationStyle}-${previewZoom}-${previewContext}`}
-                  className="w-full origin-top transition duration-200 ease-out motion-reduce:transition-none"
-                  style={{ transform: `scale(${previewZoomScales[previewZoom]})` }}
-                >
-                  <CardFinishPreviewFrame decorationStyle={decorationStyle}>
-                    <VisibleCardPreview
-                      businessName={businessName}
-                      businessLogoUrl={branding.logoUrl}
-                      customerName="Mina Hanna"
-                      memberSince="Jun 2026"
-                      tierLabel="Silver Member"
-                      tierIcon="S"
-                      theme={previewTheme}
-                      programName={programName}
-                    rewardName={rewardName}
-                    visibleSections={visibleSections}
-                    stampJourneyStyle={stampJourneyStyle}
-                    stampIcon={stampIcon}
-                    rewardStyle={rewardStyle}
-                    typographyPreset={typographyPreset}
-                    backgroundStyle={backgroundStyle}
-                    backgroundPattern={backgroundPattern}
-                  />
-                </CardFinishPreviewFrame>
-              </div>
-              </PreviewContextFrame>
-            </div>
-
-            <div className="rounded-2xl border border-[#E2E8F0] bg-white/90 p-4 shadow-sm">
-              <div className="mb-3">
-                <p className="text-sm font-black text-[#111827]">Preview Actions</p>
-                <p className="mt-1 text-xs leading-5 text-[#64748B]">Export or share this design preview before saving.</p>
-              </div>
-              <div className="grid gap-3">
-                <div className="grid gap-2 sm:grid-cols-3">
-                  <button
-                    type="button"
-                    onClick={downloadPreviewPng}
-                    disabled={previewActionPending !== null}
-                    className="rounded-xl business-bg px-3 py-2.5 text-sm font-black transition hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
-                  >
-                    {previewActionPending === "png" ? "Preparing..." : "Download PNG"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={downloadPreviewPdf}
-                    disabled={previewActionPending !== null}
-                    className="rounded-xl border border-[#CBD5E1] bg-white px-3 py-2.5 text-sm font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
-                  >
-                    {previewActionPending === "pdf" ? "Preparing..." : "Download PDF"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={copyPreviewLink}
-                    disabled={previewActionPending !== null}
-                    className="rounded-xl border border-[#CBD5E1] bg-white px-3 py-2.5 text-sm font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
-                  >
-                    {previewActionPending === "link" ? "Copying..." : "Preview on phone"}
-                  </button>
-                </div>
-                {previewActionMessage ? (
-                  <p className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm font-semibold text-[#475569]" aria-live="polite">
-                    {previewActionMessage}
-                  </p>
-                ) : null}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-[#E2E8F0] bg-white/90 p-4 shadow-sm">
-              <div className="mb-3">
-                <p className="text-sm font-black text-[#111827]">Design Summary</p>
-                <p className="mt-1 text-xs leading-5 text-[#64748B]">A read-only summary of the current preview configuration.</p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <PreviewChip label={`Card Style: ${selectedStyleLabel}`} />
-                <PreviewChip label={`Typography: ${selectedTypographyLabel}`} />
-                <PreviewChip label={`Reward Progress: ${selectedJourneyLabel}`} />
-                <PreviewChip label={`Stamp Design: ${selectedStampIconLabel}`} />
-                <PreviewChip label={`Background: ${selectedBackgroundLabel}`} />
-                <PreviewChip label={`Visibility: ${visibleSectionCount}/${designStudioCardContentOptions.length}`} />
-              </div>
-            </div>
-
-            <div className="grid gap-3">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">Card Status</p>
-              <div className="flex flex-wrap gap-2">
-                <PreviewChip label={activeProfessionalPreset?.category ?? "Custom"} />
-                <PreviewChip label={activeProfessionalPreset?.name ?? "Manual Design"} />
-                <PreviewChip label={selectedStyleLabel} />
-                <PreviewChip label={selectedTypographyLabel} />
-                <PreviewChip label={selectedJourneyLabel} />
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-[#E2E8F0] bg-white/90 p-3 text-sm text-[#64748B] shadow-sm">
-              <p className="font-semibold text-[#111827]">Preview updates live as you edit</p>
-              <p className="mt-1">{previewContextFooter[previewContext]}</p>
-            </div>
-          </div>
-        </SectionCard>
-      </aside>
-
-      <div className="order-last grid min-w-0 gap-6 lg:order-first lg:max-w-[1080px] [&>section]:rounded-2xl [&>section]:p-5 md:[&>section]:p-6">
-        <div role="tablist" aria-label="Design studio sections" className="flex gap-1 rounded-2xl border border-[#E2E8F0] bg-[#F1F5F9] p-1">
-          {designStudioTabs.map((tab) => {
-            const active = activeTab === tab.value;
-            return (
-              <button
-                key={tab.value}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => setActiveTab(tab.value)}
-                className="flex-1 rounded-xl px-3 py-2 text-sm font-black text-[#64748B] transition hover:text-[#111827] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:bg-white data-[active=true]:text-[#111827] data-[active=true]:shadow-sm"
-                data-active={active}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {activeTab === "start" ? (
-        <>
-        <SectionCard title="Choose how you'd like to start" description="Pick a professional template, build from scratch, or copy an existing design.">
-          <div className="grid gap-3">
-            <div className="grid gap-2 rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-2 md:grid-cols-3">
-              {designStartOptions.map((option) => {
-                const active = designStartMode === option.value;
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => {
-                      setDesignStartMode(option.value);
-                      if (option.value === "manual") {
-                        setPresetApplied(true);
-                        setActiveTab("style");
-                      }
-                    }}
-                    className="flex items-center gap-3 rounded-xl border border-transparent bg-transparent px-4 py-3 text-left transition hover:bg-white hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-white data-[active=true]:shadow-sm"
-                    data-active={active}
-                    aria-pressed={active}
-                  >
-                    <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full border border-[#CBD5E1] bg-white text-[10px] font-black data-[active=true]:border-[var(--business-primary)] data-[active=true]:business-bg" data-active={active}>
-                      {active ? "*" : ""}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-sm font-black text-[#111827]">{option.label}</span>
-                      <span className="mt-0.5 block text-xs leading-5 text-[#64748B]">{option.description}</span>
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </SectionCard>
-
-        {businessPresetsVisible ? (
-        <SectionCard title="My Business Presets" description="Save this design for reuse, or apply a saved business preset to this program.">
-          <div className="grid gap-4">
-            <div className="rounded-2xl border border-[#E5E7EB] bg-[#F8FAFC] p-4">
-              <label className="grid gap-2 text-sm font-semibold text-[#111827]">
-                Preset Name
-                <input
-                  type="text"
-                  name="presetName"
-                  placeholder="e.g. VIP coffee card"
-                  maxLength={80}
-                  className="h-11 rounded-xl border border-[#CBD5E1] bg-white px-3 text-sm font-medium text-[#111827] outline-none transition focus:border-[var(--business-primary)] focus:ring-2 focus:ring-[var(--business-primary)]/20"
-                />
-              </label>
-              <Button formAction={savePresetAction} type="submit" variant="business" className="mt-3 w-full sm:w-fit">
-                Save Current Design
-              </Button>
-            </div>
-
-            {businessPresets.length > 0 ? (
-              <div className="grid gap-3 md:grid-cols-2">
-                {businessPresets.map((preset) => (
-                  <div key={preset.uuid} className="grid gap-3 rounded-[1.35rem] border border-[#E2E8F0] bg-white p-4 shadow-sm">
-                    <PresetThumbnail preset={presetToThumbnailPreset(preset)} />
-                    <div className="min-w-0">
-                      <p className="truncate text-base font-semibold text-[#111827]">{preset.name}</p>
-                      <p className="mt-1 text-xs font-medium uppercase tracking-[0.16em] text-[#94A3B8]">Created {formatPresetDate(preset.createdAt)}</p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => applyBusinessPreset(preset)}
-                        className="rounded-xl border border-[var(--business-primary)] px-3 py-2 text-sm font-semibold business-text transition hover:bg-[var(--business-primary-soft)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
-                      >
-                        Apply Preset
-                      </button>
-                      <Button formAction={deletePresetAction} type="submit" name="presetUuid" value={preset.uuid} variant="outline" size="sm">
-                        Delete
-                      </Button>
-                    </div>
-                    <div className="grid gap-2 rounded-2xl border border-[#E5E7EB] bg-[#F8FAFC] p-3">
-                      <label className="text-xs font-bold uppercase tracking-[0.16em] text-[#64748B]" htmlFor={`rename-preset-${preset.uuid}`}>
-                        Rename preset
-                      </label>
-                      <div className="flex flex-col gap-2 sm:flex-row">
-                        <input
-                          id={`rename-preset-${preset.uuid}`}
-                          type="text"
-                          name={`renamePresetName:${preset.uuid}`}
-                          defaultValue={preset.name}
-                          maxLength={80}
-                          className="h-10 min-w-0 flex-1 rounded-xl border border-[#CBD5E1] bg-white px-3 text-sm font-medium text-[#111827] outline-none transition focus:border-[var(--business-primary)] focus:ring-2 focus:ring-[var(--business-primary)]/20"
-                        />
-                        <Button formAction={renamePresetAction} type="submit" name="presetUuid" value={preset.uuid} variant="outline" size="sm">
-                          Rename
-                        </Button>
+            {professionalTemplatesVisible ? (
+              <SectionCard title="Professional Templates" description="Choose a business type, then browse professional starting points.">
+                <div className="grid gap-8">
+                  <div className="grid gap-3">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                      <div>
+                        <p className="text-2xl font-black tracking-tight text-[#111827]">Professional Templates</p>
+                        <p className="mt-1 text-sm text-[#64748B]">
+                          {filteredProfessionalPresets.length} templates available across Restaurant, Cafe, Beauty, Car Wash, and more.
+                        </p>
                       </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-white p-5 text-sm text-[#64748B]">
-                No saved business presets yet. Save your current design to reuse it on another loyalty program.
-              </div>
-            )}
-          </div>
-        </SectionCard>
-        ) : null}
-
-        {professionalTemplatesVisible ? (
-        <SectionCard title="Professional Templates" description="Choose a business type, then browse professional starting points.">
-          <div className="grid gap-8">
-            <div className="grid gap-3">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-                <div>
-                  <p className="text-2xl font-black tracking-tight text-[#111827]">Professional Templates</p>
-                  <p className="mt-1 text-sm text-[#64748B]">
-                    {filteredProfessionalPresets.length} templates available across Restaurant, Cafe, Beauty, Car Wash, and more.
-                  </p>
-                </div>
-                <label className="relative w-full lg:max-w-sm">
-                  <span className="sr-only">Search Templates</span>
-                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" aria-hidden="true">
-                    âŒ•
-                  </span>
-                  <input
-                    type="search"
-                    value={professionalPresetSearch}
-                    onChange={(event) => setProfessionalPresetSearch(event.target.value)}
-                    placeholder="Search templates by name or business..."
-                    className="h-14 w-full rounded-2xl border border-[#CBD5E1] bg-white pl-11 pr-11 text-sm font-medium text-[#111827] shadow-sm outline-none transition focus:border-[var(--business-primary)] focus:ring-2 focus:ring-[var(--business-primary)]/20"
-                  />
-                  {professionalPresetSearch ? (
-                    <button
-                      type="button"
-                      onClick={() => setProfessionalPresetSearch("")}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full px-2 py-1 text-xs font-bold text-[#64748B] transition hover:bg-[#F1F5F9] hover:text-[#111827] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)]"
-                    >
-                      Clear
-                    </button>
-                  ) : null}
-                </label>
-              </div>
-            </div>
-
-            <label className="grid gap-2 text-sm font-semibold text-[#111827]" htmlFor="professional-template-category">
-              Business Category
-              <select
-                id="professional-template-category"
-                value={professionalPresetCategory}
-                onChange={(event) => setProfessionalPresetCategory(event.target.value as ProfessionalPresetCategory)}
-                className="h-12 rounded-2xl border border-[#CBD5E1] bg-white px-4 text-sm font-black text-[#111827] shadow-sm outline-none transition focus:border-[var(--business-primary)] focus:ring-2 focus:ring-[var(--business-primary)]/20"
-              >
-                {professionalPresetCategoryOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-xl font-black tracking-tight text-[#111827]">Showing {selectedProfessionalCategoryLabel} Templates</p>
-                <p className="mt-1 text-sm text-[#64748B]">
-                  {filteredProfessionalPresets.length} templates available for {selectedProfessionalCategoryLabel}.
-                </p>
-              </div>
-            </div>
-            {filteredProfessionalPresets.length > 0 ? (
-              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                {filteredProfessionalPresets.map((preset) => {
-                  const active = activePresetId === preset.id;
-                  return (
-                    <article
-                      key={preset.id}
-                      className="group grid overflow-hidden rounded-[1.65rem] border border-[#E2E8F0] bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:scale-[1.01] hover:border-[var(--business-primary)] hover:shadow-2xl data-[active=true]:border-blue-500 data-[active=true]:shadow-xl data-[active=true]:ring-2 data-[active=true]:ring-blue-100"
-                      data-active={active}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => applyProfessionalPreset(preset)}
-                        className="grid gap-5 p-5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-inset"
-                        aria-pressed={active}
-                      >
-                        <span className="relative [&>span]:min-h-[190px] [&>span]:p-5">
-                          <PresetThumbnail preset={preset} />
-                          {active ? (
-                            <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-blue-600 px-2.5 py-1 text-[11px] font-black text-white shadow-sm">
-                              <span aria-hidden="true">âœ“</span>
-                              Selected
-                            </span>
-                          ) : null}
+                      <label className="relative w-full lg:max-w-sm">
+                        <span className="sr-only">Search Templates</span>
+                        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" aria-hidden="true">
+                          âŒ•
                         </span>
-                        <span className="min-w-0 px-1 pb-1">
-                          <span className="block truncate text-lg font-black text-[#111827]">{preset.name}</span>
-                          <span className="mt-1 block text-xs font-black uppercase tracking-[0.16em] text-[#94A3B8]">{preset.category}</span>
-                          <span className="mt-3 line-clamp-1 block text-sm leading-6 text-[#64748B]">{preset.description}</span>
-                        </span>
-                      </button>
-                      <div className="flex items-center justify-between gap-2 border-t border-[#E2E8F0] bg-[#F8FAFC] p-4">
-                        <button
-                          type="button"
-                          onClick={() => applyProfessionalPreset(preset)}
-                          className="rounded-xl px-3 py-2 text-sm font-bold text-[#64748B] transition hover:bg-white hover:text-[#111827] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)]"
-                        >
-                          Preview
-                        </button>
-                        {active ? (
-                          <span className="inline-flex items-center gap-1 rounded-xl bg-blue-600 px-3 py-2 text-sm font-black text-white">
-                            <span aria-hidden="true">âœ“</span>
-                            Selected
-                          </span>
-                        ) : (
+                        <input
+                          type="search"
+                          value={professionalPresetSearch}
+                          onChange={(event) => setProfessionalPresetSearch(event.target.value)}
+                          placeholder="Search templates by name or business..."
+                          className="h-14 w-full rounded-2xl border border-[#CBD5E1] bg-white pl-11 pr-11 text-sm font-medium text-[#111827] shadow-sm outline-none transition focus:border-[var(--business-primary)] focus:ring-2 focus:ring-[var(--business-primary)]/20"
+                        />
+                        {professionalPresetSearch ? (
                           <button
                             type="button"
-                            onClick={() => applyProfessionalPreset(preset)}
-                            className="rounded-xl business-bg px-3 py-2 text-sm font-black transition hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                            onClick={() => setProfessionalPresetSearch("")}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full px-2 py-1 text-xs font-bold text-[#64748B] transition hover:bg-[#F1F5F9] hover:text-[#111827] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)]"
                           >
-                            Use Template
+                            Clear
                           </button>
-                        )}
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="grid place-items-center gap-4 rounded-[1.5rem] border border-dashed border-[#CBD5E1] bg-white p-10 text-center text-sm text-[#64748B]">
-                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#F8FAFC] text-2xl" aria-hidden="true">âŒ•</div>
-                <p className="text-lg font-black text-[#111827]">No templates found for this category.</p>
-                <p>Try another keyword or clear the current search.</p>
+                        ) : null}
+                      </label>
+                    </div>
+                  </div>
+
+                  <label className="grid gap-2 text-sm font-semibold text-[#111827]" htmlFor="professional-template-category">
+                    Business Category
+                    <select
+                      id="professional-template-category"
+                      value={professionalPresetCategory}
+                      onChange={(event) => setProfessionalPresetCategory(event.target.value as ProfessionalPresetCategory)}
+                      className="h-12 rounded-2xl border border-[#CBD5E1] bg-white px-4 text-sm font-black text-[#111827] shadow-sm outline-none transition focus:border-[var(--business-primary)] focus:ring-2 focus:ring-[var(--business-primary)]/20"
+                    >
+                      {professionalPresetCategoryOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <p className="text-xl font-black tracking-tight text-[#111827]">Showing {selectedProfessionalCategoryLabel} Templates</p>
+                      <p className="mt-1 text-sm text-[#64748B]">
+                        {filteredProfessionalPresets.length} templates available for {selectedProfessionalCategoryLabel}.
+                      </p>
+                    </div>
+                  </div>
+                  {filteredProfessionalPresets.length > 0 ? (
+                    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                      {filteredProfessionalPresets.map((preset) => {
+                        const active = activePresetId === preset.id;
+                        return (
+                          <article
+                            key={preset.id}
+                            className="group grid overflow-hidden rounded-[1.65rem] border border-[#E2E8F0] bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:scale-[1.01] hover:border-[var(--business-primary)] hover:shadow-2xl data-[active=true]:border-blue-500 data-[active=true]:shadow-xl data-[active=true]:ring-2 data-[active=true]:ring-blue-100"
+                            data-active={active}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => applyProfessionalPreset(preset)}
+                              className="grid gap-5 p-5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-inset"
+                              aria-pressed={active}
+                            >
+                              <span className="relative [&>span]:min-h-[190px] [&>span]:p-5">
+                                <PresetThumbnail preset={preset} />
+                                {active ? (
+                                  <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-blue-600 px-2.5 py-1 text-[11px] font-black text-white shadow-sm">
+                                    <span aria-hidden="true">âœ“</span>
+                                    Selected
+                                  </span>
+                                ) : null}
+                              </span>
+                              <span className="min-w-0 px-1 pb-1">
+                                <span className="block truncate text-lg font-black text-[#111827]">{preset.name}</span>
+                                <span className="mt-1 block text-xs font-black uppercase tracking-[0.16em] text-[#94A3B8]">{preset.category}</span>
+                                <span className="mt-3 line-clamp-1 block text-sm leading-6 text-[#64748B]">{preset.description}</span>
+                              </span>
+                            </button>
+                            <div className="flex items-center justify-between gap-2 border-t border-[#E2E8F0] bg-[#F8FAFC] p-4">
+                              <button
+                                type="button"
+                                onClick={() => applyProfessionalPreset(preset)}
+                                className="rounded-xl px-3 py-2 text-sm font-bold text-[#64748B] transition hover:bg-white hover:text-[#111827] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)]"
+                              >
+                                Preview
+                              </button>
+                              {active ? (
+                                <span className="inline-flex items-center gap-1 rounded-xl bg-blue-600 px-3 py-2 text-sm font-black text-white">
+                                  <span aria-hidden="true">âœ“</span>
+                                  Selected
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => applyProfessionalPreset(preset)}
+                                  className="rounded-xl business-bg px-3 py-2 text-sm font-black transition hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                                >
+                                  Use Template
+                                </button>
+                              )}
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="grid place-items-center gap-4 rounded-[1.5rem] border border-dashed border-[#CBD5E1] bg-white p-10 text-center text-sm text-[#64748B]">
+                      <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#F8FAFC] text-2xl" aria-hidden="true">âŒ•</div>
+                      <p className="text-lg font-black text-[#111827]">No templates found for this category.</p>
+                      <p>Try another keyword or clear the current search.</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProfessionalPresetSearch("");
+                        }}
+                        className="w-fit rounded-xl border border-[var(--business-primary)] px-3 py-2 text-sm font-semibold business-text transition hover:bg-[var(--business-primary-soft)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                      >
+                        Clear search
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </SectionCard>
+            ) : presetApplied && designStartMode === "template" ? (
+              <div className="rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-sm">
                 <button
                   type="button"
                   onClick={() => {
-                    setProfessionalPresetSearch("");
+                    setPresetApplied(false);
+                    setDesignStartMode("template");
                   }}
-                  className="w-fit rounded-xl border border-[var(--business-primary)] px-3 py-2 text-sm font-semibold business-text transition hover:bg-[var(--business-primary-soft)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                  className="rounded-xl border border-[var(--business-primary)] px-4 py-2 text-sm font-black business-text transition hover:bg-[var(--business-primary-soft)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
                 >
-                  Clear search
+                  Choose Another Template
                 </button>
               </div>
-            )}
-          </div>
-        </SectionCard>
-        ) : presetApplied && designStartMode === "template" ? (
-          <div className="rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-sm">
-            <button
-              type="button"
-              onClick={() => {
-                setPresetApplied(false);
-                setDesignStartMode("template");
-              }}
-              className="rounded-xl border border-[var(--business-primary)] px-4 py-2 text-sm font-black business-text transition hover:bg-[var(--business-primary-soft)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
-            >
-              Choose Another Template
-            </button>
-          </div>
+            ) : null}
+
+            {duplicateDesignVisible ? (
+              <SectionCard title="Duplicate From Another Program" description="Copy a design from one of your existing loyalty programs.">
+                {sourcePrograms.length > 0 ? (
+                  <div className="grid gap-4">
+                    {copiedSourceProgramUuid ? (
+                      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
+                        Design copied into the preview. Continue through the wizard, then Save on the last step to apply it to this program.
+                      </div>
+                    ) : null}
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {sourcePrograms.map((sourceProgram) => {
+                        const active = copiedSourceProgramUuid === sourceProgram.uuid;
+                        return (
+                          <article
+                            key={sourceProgram.uuid}
+                            className="grid gap-4 rounded-[1.5rem] border border-[#E2E8F0] bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-lg data-[active=true]:border-blue-500 data-[active=true]:shadow-xl data-[active=true]:ring-2 data-[active=true]:ring-blue-100"
+                            data-active={active}
+                          >
+                            <div className="relative">
+                              <PresetThumbnail preset={sourceProgramToThumbnailPreset(sourceProgram)} />
+                              {active ? (
+                                <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-blue-600 px-2.5 py-1 text-[11px] font-black text-white shadow-sm">
+                                  <span aria-hidden="true">âœ“</span>
+                                  Copied
+                                </span>
+                              ) : null}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="truncate text-base font-black text-[#111827]">{sourceProgram.name}</p>
+                              <p className="mt-1 text-sm leading-6 text-[#64748B]">{designSummary(sourceProgram.cardDesign)}</p>
+                              <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#94A3B8]">Design only</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => applySourceProgramDesign(sourceProgram)}
+                              className="w-full rounded-xl border border-[var(--business-primary)] px-3 py-2 text-sm font-semibold business-text transition hover:bg-[var(--business-primary-soft)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 sm:w-fit"
+                              aria-pressed={active}
+                            >
+                              {active ? "Applied to Preview" : "Apply Design"}
+                            </button>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-white p-5 text-sm text-[#64748B]">
+                    No other loyalty programs are available yet. Create another program to duplicate its card design here.
+                  </div>
+                )}
+              </SectionCard>
+            ) : null}
+
+            <SectionCard title="My Business Presets" description="Apply a saved business preset to this program.">
+              {businessPresets.length > 0 ? (
+                <div className="grid gap-3 md:grid-cols-2">
+                  {businessPresets.map((preset) => (
+                    <div key={preset.uuid} className="grid gap-3 rounded-[1.35rem] border border-[#E2E8F0] bg-white p-4 shadow-sm">
+                      <PresetThumbnail preset={presetToThumbnailPreset(preset)} />
+                      <div className="min-w-0">
+                        <p className="truncate text-base font-semibold text-[#111827]">{preset.name}</p>
+                        <p className="mt-1 text-xs font-medium uppercase tracking-[0.16em] text-[#94A3B8]">Created {formatPresetDate(preset.createdAt)}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => applyBusinessPreset(preset)}
+                          className="rounded-xl border border-[var(--business-primary)] px-3 py-2 text-sm font-semibold business-text transition hover:bg-[var(--business-primary-soft)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                        >
+                          Apply Preset
+                        </button>
+                        <Button formAction={deletePresetAction} type="submit" name="presetUuid" value={preset.uuid} variant="outline" size="sm">
+                          Delete
+                        </Button>
+                      </div>
+                      <div className="grid gap-2 rounded-2xl border border-[#E5E7EB] bg-[#F8FAFC] p-3">
+                        <label className="text-xs font-bold uppercase tracking-[0.16em] text-[#64748B]" htmlFor={`rename-preset-${preset.uuid}`}>
+                          Rename preset
+                        </label>
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <input
+                            id={`rename-preset-${preset.uuid}`}
+                            type="text"
+                            name={`renamePresetName:${preset.uuid}`}
+                            defaultValue={preset.name}
+                            maxLength={80}
+                            className="h-10 min-w-0 flex-1 rounded-xl border border-[#CBD5E1] bg-white px-3 text-sm font-medium text-[#111827] outline-none transition focus:border-[var(--business-primary)] focus:ring-2 focus:ring-[var(--business-primary)]/20"
+                          />
+                          <Button formAction={renamePresetAction} type="submit" name="presetUuid" value={preset.uuid} variant="outline" size="sm">
+                            Rename
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-white p-5 text-sm text-[#64748B]">
+                  No saved business presets yet. You can save your current design as a preset from the final Review &amp; Save step.
+                </div>
+              )}
+            </SectionCard>
+
+            <WizardStepNav onNext={goNext} nextLabel="Next: Card Style" />
+          </>
         ) : null}
 
-        {duplicateDesignVisible ? (
-        <SectionCard title="Duplicate From Another Program" description="Copy a design from one of your existing loyalty programs.">
-          {sourcePrograms.length > 0 ? (
-            <div className="grid gap-4">
-              {copiedSourceProgramUuid ? (
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
-                  Design copied into the preview. Review the manual builder below, then click Save Design to apply it to this program.
-                </div>
-              ) : null}
+        {wizardStep === 2 ? (
+          <div className="grid gap-5 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200">
+            <div className="flex flex-col gap-3 rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-[#111827]">Business Branding</p>
+                <p className="mt-1 text-sm text-[#64748B]">Your logo and brand colors are managed in your Business Branding settings and are automatically applied to this loyalty card.</p>
+              </div>
+              <Link
+                href="/dashboard/settings?tab=branding"
+                className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-[#CBD5E1] bg-white px-4 text-sm font-semibold text-[#111827] transition hover:border-[var(--business-primary)] hover:text-[var(--business-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+              >
+                Open Business Branding
+              </Link>
+            </div>
+
+            <SectionCard title="Card Style" description="Choose the overall personality of your loyalty card.">
               <div className="grid gap-4 md:grid-cols-2">
-                {sourcePrograms.map((sourceProgram) => {
-                  const active = copiedSourceProgramUuid === sourceProgram.uuid;
-                  return (
-                    <article
-                      key={sourceProgram.uuid}
-                      className="grid gap-4 rounded-[1.5rem] border border-[#E2E8F0] bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-lg data-[active=true]:border-blue-500 data-[active=true]:shadow-xl data-[active=true]:ring-2 data-[active=true]:ring-blue-100"
-                      data-active={active}
-                    >
-                      <div className="relative">
-                        <PresetThumbnail preset={sourceProgramToThumbnailPreset(sourceProgram)} />
-                        {active ? (
-                          <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-blue-600 px-2.5 py-1 text-[11px] font-black text-white shadow-sm">
-                            <span aria-hidden="true">âœ“</span>
-                            Copied
+                {designStudioTemplateOptions.map((option) => (
+                  <label key={option.value} className="group cursor-pointer rounded-[1.35rem] border border-[#E2E8F0] bg-white p-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-lg has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-lg">
+                    <input
+                      type="radio"
+                      value={option.value}
+                      checked={layoutStyle === option.value}
+                      onChange={() => commitDesignChange({ ...currentDesignSnapshot, layoutStyle: option.value })}
+                      className="sr-only"
+                    />
+                    <span className="grid gap-4 rounded-[1.1rem] p-1 focus-within:outline-none group-focus-within:ring-2 group-focus-within:ring-[var(--business-primary)] group-focus-within:ring-offset-2">
+                      <TemplateThumbnail value={option.value} />
+                      <span className="flex min-h-28 flex-col gap-2 px-1 pb-1">
+                        <span className="flex items-start justify-between gap-3">
+                          <span className="block text-base font-semibold text-[#111827] group-has-[:checked]:business-text">{option.label}</span>
+                          <span className="rounded-full border border-[#E2E8F0] bg-white px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-has-[:checked]:border-[var(--business-primary)] group-has-[:checked]:business-bg group-has-[:checked]:opacity-100">
+                            Selected
                           </span>
-                        ) : null}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="truncate text-base font-black text-[#111827]">{sourceProgram.name}</p>
-                        <p className="mt-1 text-sm leading-6 text-[#64748B]">{designSummary(sourceProgram.cardDesign)}</p>
-                        <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#94A3B8]">Design only</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => applySourceProgramDesign(sourceProgram)}
-                        className="w-full rounded-xl border border-[var(--business-primary)] px-3 py-2 text-sm font-semibold business-text transition hover:bg-[var(--business-primary-soft)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 sm:w-fit"
-                        aria-pressed={active}
-                      >
-                        {active ? "Applied to Preview" : "Apply Design"}
-                      </button>
-                    </article>
+                        </span>
+                        <span className="block text-sm leading-6 text-[#64748B]">{option.description}</span>
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </SectionCard>
+            <SectionCard title="Background" description="Choose the visual background for this loyalty card.">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {designStudioBackgroundGalleryOptions.map((option) => {
+                  const active = selectedBackgroundOption.id === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => commitDesignChange({ ...currentDesignSnapshot, backgroundStyle: option.backgroundStyle, backgroundPattern: option.backgroundPattern })}
+                      className="group grid min-h-40 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
+                      data-active={active}
+                      aria-pressed={active}
+                    >
+                      <BackgroundGalleryThumbnail option={option} />
+                      <span className="flex items-start justify-between gap-3 px-1 pb-1">
+                        <span className="min-w-0">
+                          <span className="block text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
+                          <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                        </span>
+                        <span className="rounded-full border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
+                          Selected
+                        </span>
+                      </span>
+                    </button>
                   );
                 })}
               </div>
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-white p-5 text-sm text-[#64748B]">
-              No other loyalty programs are available yet. Create another program to duplicate its card design here.
-            </div>
-          )}
-        </SectionCard>
-        ) : null}
+            </SectionCard>
 
-        </>
-        ) : null}
-
-        {activeTab === "style" ? (
-          <div className="grid gap-6 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200">
-            <ManualBuilderGroup title="Theme" description="Choose the overall look and brand feel of the card." defaultOpen>
-              <SectionCard title="Card Style" description="Choose the overall personality of your loyalty card.">
-          <div className="grid gap-4 md:grid-cols-2">
-            {designStudioTemplateOptions.map((option) => (
-              <label key={option.value} className="group cursor-pointer rounded-[1.35rem] border border-[#E2E8F0] bg-white p-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-lg has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-lg">
-                <input
-                  type="radio"
-                  value={option.value}
-                  checked={layoutStyle === option.value}
-                  onChange={() => commitDesignChange({ ...currentDesignSnapshot, layoutStyle: option.value })}
-                  className="sr-only"
-                />
-                <span className="grid gap-4 rounded-[1.1rem] p-1 focus-within:outline-none group-focus-within:ring-2 group-focus-within:ring-[var(--business-primary)] group-focus-within:ring-offset-2">
-                  <TemplateThumbnail value={option.value} />
-                  <span className="flex min-h-28 flex-col gap-2 px-1 pb-1">
-                    <span className="flex items-start justify-between gap-3">
-                      <span className="block text-base font-semibold text-[#111827] group-has-[:checked]:business-text">{option.label}</span>
-                      <span className="rounded-full border border-[#E2E8F0] bg-white px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-has-[:checked]:border-[var(--business-primary)] group-has-[:checked]:business-bg group-has-[:checked]:opacity-100">
-                        Selected
+            <SectionCard title="Typography" description="Choose the personality of your loyalty card.">
+              <div className="grid gap-3 md:grid-cols-2">
+                {designStudioTypographyOptions.map((option) => {
+                  const active = selectedTypographyOption.value === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => commitDesignChange({ ...currentDesignSnapshot, typographyPreset: option.value })}
+                      className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
+                      data-active={active}
+                      aria-pressed={active}
+                    >
+                      <TypographyThumbnail typographyPreset={option.value} />
+                      <span className="flex items-start justify-between gap-3">
+                        <span className="min-w-0">
+                          <span className="block text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
+                          <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                        </span>
+                        <span className="rounded-full border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
+                            Selected
+                          </span>
                       </span>
-                    </span>
-                    <span className="block text-sm leading-6 text-[#64748B]">{option.description}</span>
-                  </span>
-                </span>
-              </label>
-            ))}
-          </div>
-            </SectionCard>
-            <SectionCard title="Background" description="Choose the visual background for this loyalty card.">
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {designStudioBackgroundGalleryOptions.map((option) => {
-              const active = selectedBackgroundOption.id === option.id;
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => commitDesignChange({ ...currentDesignSnapshot, backgroundStyle: option.backgroundStyle, backgroundPattern: option.backgroundPattern })}
-                  className="group grid min-h-40 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
-                  data-active={active}
-                  aria-pressed={active}
-                >
-                  <BackgroundGalleryThumbnail option={option} />
-                  <span className="flex items-start justify-between gap-3 px-1 pb-1">
-                    <span className="min-w-0">
-                      <span className="block text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
-                      <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
-                    </span>
-                    <span className="rounded-full border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
-                      Selected
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+                    </button>
+                  );
+                })}
+              </div>
             </SectionCard>
 
-              <SectionCard title="Typography" description="Choose the personality of your loyalty card.">
-          <div className="grid gap-3 md:grid-cols-2">
-            {designStudioTypographyOptions.map((option) => {
-              const active = selectedTypographyOption.value === option.value;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => commitDesignChange({ ...currentDesignSnapshot, typographyPreset: option.value })}
-                  className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
-                  data-active={active}
-                  aria-pressed={active}
-                >
-                  <TypographyThumbnail typographyPreset={option.value} />
-                  <span className="flex items-start justify-between gap-3">
-                    <span className="min-w-0">
-                      <span className="block text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
-                      <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
-                    </span>
-                    <span className="rounded-full border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
-                      Selected
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-            </SectionCard>
-            </ManualBuilderGroup>
+            <WizardStepNav onPrevious={goPrevious} onNext={goNext} nextLabel="Next: Stamps & Rewards" />
           </div>
         ) : null}
 
-        {activeTab === "stamps" ? (
-          <div className="grid gap-6 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200">
-            <ManualBuilderGroup title="Rewards" description="Customize how customers collect visits and understand their reward." defaultOpen>
-              <SectionCard title="Reward Progress" description="Choose the progress pattern that best matches how customers earn their next reward.">
-          <div className="grid gap-3 md:grid-cols-3">
-            {designStudioStampJourneyOptions.map((option) => (
-              <label key={option.value} className="group flex min-h-28 cursor-pointer gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-md">
-                <input
-                  type="radio"
-                  value={option.value}
-                  checked={stampJourneyStyle === option.value}
-                  onChange={() => commitDesignChange({ ...currentDesignSnapshot, stampJourneyStyle: option.value })}
-                  className="mt-1 h-4 w-4 accent-[var(--business-primary)]"
-                />
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-[#111827] group-has-[:checked]:business-text">{option.label}</span>
-                  <span className="mt-1 block text-xs leading-5 text-[#6B7280]">{option.description}</span>
-                </span>
-              </label>
-            ))}
-          </div>
-            </SectionCard>
-
-            <SectionCard title="Stamp Design" description="Pick the stamp mark that will represent each customer visit. Recommended options appear first.">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {stampIconOptions.map((option) => (
-              <label key={option.value} className="group flex min-h-20 cursor-pointer items-center gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-md">
-                <input
-                  type="radio"
-                  value={option.value}
-                  checked={stampIcon === option.value}
-                  onChange={() => commitDesignChange({ ...currentDesignSnapshot, stampIcon: option.value })}
-                  className="h-4 w-4 accent-[var(--business-primary)]"
-                />
-                <span
-                  className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[#E2E8F0] bg-white text-[#111827] group-has-[:checked]:border-[var(--business-primary)] group-has-[:checked]:business-bg"
-                  aria-hidden="true"
-                >
-                  <StampIconGraphic stampIcon={option.value} className="h-5 w-5" />
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-[#111827] group-has-[:checked]:business-text">{option.label}</span>
-                  {option.recommended ? <span className="mt-1 block text-xs font-semibold business-text">Recommended</span> : null}
-                </span>
-              </label>
-            ))}
-          </div>
-            </SectionCard>
-
-            <SectionCard title="Reward Box" description="Choose how rewards are presented to your customers.">
-          <div className="grid gap-3 md:grid-cols-2">
-            {designStudioRewardStyleOptions.map((option) => {
-              const active = rewardStyle === option.value;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => commitDesignChange({ ...currentDesignSnapshot, rewardStyle: option.value })}
-                  className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
-                  data-active={active}
-                  aria-pressed={active}
-                >
-                  <RewardStyleThumbnail rewardStyle={option.value} />
-                  <span className="flex items-start justify-between gap-3">
-                    <span className="min-w-0">
-                      <span className="block text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
-                      <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
-                    </span>
-                    <span className="rounded-full border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
-                      Selected
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-            </SectionCard>
-            </ManualBuilderGroup>
-          </div>
-        ) : null}
-
-        {activeTab === "content" ? (
-          <div className="grid gap-6 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200">
-            <ManualBuilderGroup title="Layout" description="Control the card structure and information shown to customers." defaultOpen>
-              <SectionCard title="Card Layout" description="Choose how much information appears on the loyalty card.">
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            {designStudioCardLayoutOptions.map((option) => {
-              const active = selectedCardLayoutOption.id === option.id;
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => commitDesignChange({ ...currentDesignSnapshot, visibleSections: { ...option.visibleSections } })}
-                  className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
-                  data-active={active}
-                  aria-pressed={active}
-                >
-                  <CardLayoutThumbnail visibleSections={option.visibleSections} />
-                  <span className="flex items-start justify-between gap-3">
-                    <span className="min-w-0">
-                      <span className="block text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
-                      <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
-                    </span>
-                    <span className="rounded-full border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
-                      Selected
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          <details className="mt-4 rounded-2xl border border-[#E5E7EB] bg-white p-4">
-            <summary className="cursor-pointer text-sm font-semibold text-[#111827] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)]">
-              Advanced section visibility
-            </summary>
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              {designStudioCardContentOptions.map((option) => {
-                const active = visibleSections[option.value];
-                return (
-                  <label
-                    key={option.value}
-                    className="group flex min-h-24 cursor-pointer items-start gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--business-primary)] has-[:focus-visible]:ring-offset-2"
-                  >
+        {wizardStep === 3 ? (
+          <div className="grid gap-5 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200">
+            <SectionCard title="Reward Progress" description="Choose the progress pattern that best matches how customers earn their next reward.">
+              <div className="grid gap-3 md:grid-cols-3">
+                {designStudioStampJourneyOptions.map((option) => (
+                  <label key={option.value} className="group flex min-h-28 cursor-pointer gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-md">
                     <input
-                      type="checkbox"
-                      checked={active}
-                      onChange={() =>
-                        commitDesignChange({
-                          ...currentDesignSnapshot,
-                          visibleSections: {
-                            ...currentDesignSnapshot.visibleSections,
-                            [option.value]: !currentDesignSnapshot.visibleSections[option.value],
-                          },
-                        })
-                      }
-                      className="mt-1 h-5 w-5 rounded border-[#CBD5E1] text-[var(--business-primary)] focus:ring-[var(--business-primary)]"
+                      type="radio"
+                      value={option.value}
+                      checked={stampJourneyStyle === option.value}
+                      onChange={() => commitDesignChange({ ...currentDesignSnapshot, stampJourneyStyle: option.value })}
+                      className="mt-1 h-4 w-4 accent-[var(--business-primary)]"
                     />
                     <span className="min-w-0">
                       <span className="block text-sm font-semibold text-[#111827] group-has-[:checked]:business-text">{option.label}</span>
-                      <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                      <span className="mt-1 block text-xs leading-5 text-[#6B7280]">{option.description}</span>
                     </span>
                   </label>
-                );
-              })}
-            </div>
-          </details>
+                ))}
+              </div>
             </SectionCard>
-            </ManualBuilderGroup>
+
+            <SectionCard title="Stamp Design" description="Pick the stamp mark that will represent each customer visit. Recommended options appear first.">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {stampIconOptions.map((option) => (
+                  <label key={option.value} className="group flex min-h-20 cursor-pointer items-center gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-md">
+                    <input
+                      type="radio"
+                      value={option.value}
+                      checked={stampIcon === option.value}
+                      onChange={() => commitDesignChange({ ...currentDesignSnapshot, stampIcon: option.value })}
+                      className="h-4 w-4 accent-[var(--business-primary)]"
+                    />
+                    <span
+                      className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[#E2E8F0] bg-white text-[#111827] group-has-[:checked]:border-[var(--business-primary)] group-has-[:checked]:business-bg"
+                      aria-hidden="true"
+                    >
+                      <StampIconGraphic stampIcon={option.value} className="h-5 w-5" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-[#111827] group-has-[:checked]:business-text">{option.label}</span>
+                      {option.recommended ? <span className="mt-1 block text-xs font-semibold business-text">Recommended</span> : null}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </SectionCard>
+
+            <SectionCard title="Reward Box" description="Choose how rewards are presented to your customers.">
+              <div className="grid gap-3 md:grid-cols-2">
+                {designStudioRewardStyleOptions.map((option) => {
+                  const active = rewardStyle === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => commitDesignChange({ ...currentDesignSnapshot, rewardStyle: option.value })}
+                      className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
+                      data-active={active}
+                      aria-pressed={active}
+                    >
+                      <RewardStyleThumbnail rewardStyle={option.value} />
+                      <span className="flex items-start justify-between gap-3">
+                        <span className="min-w-0">
+                          <span className="block text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
+                          <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                        </span>
+                        <span className="rounded-full border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
+                            Selected
+                          </span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </SectionCard>
+
+            <WizardStepNav onPrevious={goPrevious} onNext={goNext} nextLabel="Next: Content" />
+          </div>
+        ) : null}
+
+        {wizardStep === 4 ? (
+          <div className="grid gap-5 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200">
+            <SectionCard title="Card Layout" description="Choose how much information appears on the loyalty card.">
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                {designStudioCardLayoutOptions.map((option) => {
+                  const active = selectedCardLayoutOption.id === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => commitDesignChange({ ...currentDesignSnapshot, visibleSections: { ...option.visibleSections } })}
+                      className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
+                      data-active={active}
+                      aria-pressed={active}
+                    >
+                      <CardLayoutThumbnail visibleSections={option.visibleSections} />
+                      <span className="flex items-start justify-between gap-3">
+                        <span className="min-w-0">
+                          <span className="block text-sm font-semibold text-[#111827] group-data-[active=true]:business-text">{option.label}</span>
+                          <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                        </span>
+                        <span className="rounded-full border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#64748B] opacity-0 transition group-data-[active=true]:border-[var(--business-primary)] group-data-[active=true]:business-bg group-data-[active=true]:opacity-100">
+                            Selected
+                          </span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <details className="mt-4 rounded-2xl border border-[#E5E7EB] bg-white p-4">
+                <summary className="cursor-pointer text-sm font-semibold text-[#111827] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)]">
+                  Advanced section visibility
+                </summary>
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  {designStudioCardContentOptions.map((option) => {
+                    const active = visibleSections[option.value];
+                    return (
+                      <label
+                        key={option.value}
+                        className="group flex min-h-24 cursor-pointer items-start gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--business-primary)] has-[:focus-visible]:ring-offset-2"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={active}
+                          onChange={() =>
+                            commitDesignChange({
+                              ...currentDesignSnapshot,
+                              visibleSections: {
+                                ...currentDesignSnapshot.visibleSections,
+                                [option.value]: !currentDesignSnapshot.visibleSections[option.value],
+                              },
+                            })
+                          }
+                          className="mt-1 h-5 w-5 rounded border-[#CBD5E1] text-[var(--business-primary)] focus:ring-[var(--business-primary)]"
+                        />
+                        <span className="min-w-0">
+                          <span className="block text-sm font-semibold text-[#111827] group-has-[:checked]:business-text">{option.label}</span>
+                          <span className="mt-1 block text-xs leading-5 text-[#64748B]">{option.description}</span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </details>
+            </SectionCard>
+
+            <WizardStepNav onPrevious={goPrevious} onNext={goNext} nextLabel="Next: Review & Save" />
+          </div>
+        ) : null}
+
+        {wizardStep === 5 ? (
+          <div className="grid gap-5 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200">
+            <SectionCard title="Review Your Design" description="Confirm everything looks right before saving.">
+              <div className="grid gap-5 sm:grid-cols-[minmax(0,180px)_1fr] sm:items-start">
+                <div className="mx-auto w-full max-w-[200px] sm:mx-0">
+                  <PreviewContextFrame context={previewContext}>
+                    <CardFinishPreviewFrame decorationStyle={decorationStyle}>
+                      <VisibleCardPreview
+                        businessName={businessName}
+                        businessLogoUrl={branding.logoUrl}
+                        customerName="Mina Hanna"
+                        memberSince="Jun 2026"
+                        tierLabel="Silver Member"
+                        tierIcon="S"
+                        theme={previewTheme}
+                        programName={programName}
+                        rewardName={rewardName}
+                        visibleSections={visibleSections}
+                        stampJourneyStyle={stampJourneyStyle}
+                        stampIcon={stampIcon}
+                        rewardStyle={rewardStyle}
+                        typographyPreset={typographyPreset}
+                        backgroundStyle={backgroundStyle}
+                        backgroundPattern={backgroundPattern}
+                      />
+                    </CardFinishPreviewFrame>
+                  </PreviewContextFrame>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <PreviewChip label={`Card Style: ${selectedStyleLabel}`} />
+                  <PreviewChip label={`Typography: ${selectedTypographyLabel}`} />
+                  <PreviewChip label={`Reward Progress: ${selectedJourneyLabel}`} />
+                  <PreviewChip label={`Stamp Style: ${selectedStampIconLabel}`} />
+                  <PreviewChip label={`Reward Style: ${selectedRewardStyleLabel}`} />
+                  <PreviewChip label={`Background: ${selectedBackgroundLabel}`} />
+                  <PreviewChip label={`Visibility: ${visibleSectionCount}/${designStudioCardContentOptions.length} sections`} />
+                </div>
+              </div>
+            </SectionCard>
+
+            <SectionCard title="Save as Business Preset" description="Optional - save this design to reuse it on another loyalty program.">
+              <div className="rounded-2xl border border-[#E5E7EB] bg-[#F8FAFC] p-4">
+                <label className="grid gap-2 text-sm font-semibold text-[#111827]">
+                  Preset Name
+                  <input
+                    type="text"
+                    name="presetName"
+                    placeholder="e.g. VIP coffee card"
+                    maxLength={80}
+                    className="h-11 rounded-xl border border-[#CBD5E1] bg-white px-3 text-sm font-medium text-[#111827] outline-none transition focus:border-[var(--business-primary)] focus:ring-2 focus:ring-[var(--business-primary)]/20"
+                  />
+                </label>
+                <Button formAction={savePresetAction} type="submit" variant="business" className="mt-3 w-full sm:w-fit">
+                  Save Current Design
+                </Button>
+              </div>
+            </SectionCard>
+
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#E2E8F0] bg-white p-3 shadow-sm">
+              <button
+                type="button"
+                onClick={goPrevious}
+                className="inline-flex h-11 items-center justify-center rounded-xl border border-[#CBD5E1] bg-white px-5 text-sm font-black text-[#111827] transition hover:bg-[#F8FAFC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+              >
+                Previous
+              </button>
+              <Button type="submit" variant="business" size="lg">
+                Save Design
+              </Button>
+            </div>
           </div>
         ) : null}
       </div>
@@ -1223,45 +1217,71 @@ export function ProgramDesignStudioForm({
   );
 }
 
-function ManualBuilderGroup({
-  title,
-  description,
-  defaultOpen = false,
-  children,
-}: {
-  title: string;
-  description: string;
-  defaultOpen?: boolean;
-  children: ReactNode;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-
+function WizardStepper({ current, onSelect }: { current: WizardStep; onSelect: (step: WizardStep) => void }) {
   return (
-    <section className="overflow-hidden rounded-[1.6rem] border border-[#E2E8F0] bg-white shadow-sm transition hover:shadow-md">
+    <ol className="flex items-center gap-1 rounded-2xl border border-[#E2E8F0] bg-[#F1F5F9] p-1.5" aria-label="Design studio steps">
+      {wizardSteps.map((step) => {
+        const active = current === step.value;
+        const complete = current > step.value;
+        return (
+          <li key={step.value} className="min-w-0 flex-1">
+            <button
+              type="button"
+              onClick={() => onSelect(step.value)}
+              aria-current={active ? "step" : undefined}
+              className="flex w-full flex-col items-center gap-1 rounded-xl px-1 py-2 text-center transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:bg-white data-[active=true]:shadow-sm"
+              data-active={active}
+            >
+              <span
+                className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-black transition"
+                style={{
+                  background: active || complete ? "var(--business-primary)" : "#E2E8F0",
+                  color: active || complete ? "var(--business-primary-foreground)" : "#64748B",
+                }}
+              >
+                {complete ? "âœ“" : step.value}
+              </span>
+              <span className="hidden truncate text-[11px] font-bold text-[#64748B] data-[active=true]:text-[#111827] sm:block" data-active={active}>
+                {step.label}
+              </span>
+            </button>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function WizardStepNav({
+  onPrevious,
+  onNext,
+  nextLabel,
+}: {
+  onPrevious?: () => void;
+  onNext: () => void;
+  nextLabel: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#E2E8F0] bg-white p-3 shadow-sm">
+      {onPrevious ? (
+        <button
+          type="button"
+          onClick={onPrevious}
+          className="inline-flex h-11 items-center justify-center rounded-xl border border-[#CBD5E1] bg-white px-5 text-sm font-black text-[#111827] transition hover:bg-[#F8FAFC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+        >
+          Previous
+        </button>
+      ) : (
+        <span />
+      )}
       <button
         type="button"
-        onClick={() => setOpen((current) => !current)}
-        className="flex w-full items-center justify-between gap-4 p-5 text-left transition hover:bg-[#F8FAFC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-inset md:p-6"
-        aria-expanded={open}
+        onClick={onNext}
+        className="inline-flex h-11 items-center justify-center rounded-xl business-bg px-6 text-sm font-black transition hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
       >
-        <span className="min-w-0">
-          <span className="block text-lg font-black text-[#111827]">{title}</span>
-          <span className="mt-1 block text-sm leading-6 text-[#64748B]">{description}</span>
-        </span>
-        <span
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#E2E8F0] bg-white text-lg font-black business-text transition-transform duration-200 data-[open=true]:rotate-180"
-          data-open={open}
-          aria-hidden="true"
-        >
-          v
-        </span>
+        {nextLabel}
       </button>
-      <div className="grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none" style={{ gridTemplateRows: open ? "1fr" : "0fr" }}>
-        <div className="min-h-0 overflow-hidden">
-          <div className="grid gap-5 border-t border-[#E2E8F0] bg-[#F8FAFC]/70 p-4 md:p-5">{children}</div>
-        </div>
-      </div>
-    </section>
+    </div>
   );
 }
 
@@ -1476,61 +1496,20 @@ function CardFinishPreviewFrame({ children, decorationStyle }: { children: React
   );
 }
 
-function PreviewContextFrame({ children, context, label }: { children: ReactNode; context: PreviewContext; label: string }) {
-  if (context === "apple-wallet") {
-    return (
-      <div className="rounded-[2rem] bg-[radial-gradient(circle_at_top,#F8FAFC_0%,#EEF2FF_46%,#CBD5E1_100%)] p-3 transition-colors duration-200">
-        <div className="mx-auto max-w-[286px] overflow-hidden rounded-[2rem] border border-white/70 bg-[#F8FAFC] shadow-2xl shadow-slate-950/20">
-          <div className="flex items-center justify-between border-b border-[#E2E8F0] bg-white/85 px-4 py-3">
-            <span className="text-sm font-black text-[#111827]">Wallet</span>
-            <span className="rounded-full bg-[#EEF2FF] px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#475569]">Pass</span>
-          </div>
-          <div className="grid min-h-[540px] content-start gap-3 bg-[linear-gradient(180deg,#F8FAFC_0%,#E2E8F0_100%)] px-3 py-5">
-            <div className="mx-auto h-5 w-40 rounded-t-[1.3rem] bg-white/60 shadow-sm" aria-hidden="true" />
-            <div className="mx-auto flex w-full justify-center overflow-hidden rounded-[1.8rem] bg-white/40 px-1 pb-3 pt-1 shadow-xl shadow-slate-950/10">
-              {children}
-            </div>
-          </div>
-        </div>
-        <p className="mt-3 text-center text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">{label} Preview</p>
-      </div>
-    );
-  }
-
-  if (context === "google-wallet") {
-    return (
-      <div className="rounded-[2rem] bg-[linear-gradient(135deg,#EFF6FF_0%,#F8FAFC_48%,#DCFCE7_100%)] p-3 transition-colors duration-200">
-        <div className="mx-auto max-w-[286px] overflow-hidden rounded-[1.8rem] border border-[#D8E2EF] bg-[#F8FAFC] shadow-2xl shadow-slate-950/20">
-          <div className="flex items-center justify-between bg-white px-4 py-3">
-            <span className="text-sm font-black text-[#1F2937]">Google Wallet</span>
-            <span className="grid h-7 w-7 place-items-center rounded-full bg-[#E0F2FE] text-xs font-black text-[#0369A1]">G</span>
-          </div>
-          <div className="min-h-[540px] bg-[#F1F5F9] px-3 py-5">
-            <div className="mb-4 rounded-2xl bg-white px-3 py-2 text-xs font-bold text-[#64748B] shadow-sm">Loyalty passes</div>
-            <div className="mx-auto flex w-full justify-center overflow-hidden rounded-[1.65rem] bg-white/75 px-1 pb-3 pt-1 shadow-lg shadow-slate-950/10">
-              {children}
-            </div>
-          </div>
-        </div>
-        <p className="mt-3 text-center text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">{label} Preview</p>
-      </div>
-    );
-  }
-
+function PreviewContextFrame({ children, context }: { children: ReactNode; context: PreviewContext }) {
+  const chrome = previewFrameChrome[context];
   return (
-    <div className="rounded-[2rem] bg-[#F8FAFC] p-3 transition-colors duration-200">
-      <p className="mb-3 text-center text-xs font-black uppercase tracking-[0.18em] text-[#64748B]">iPhone Preview</p>
-      <div className="mx-auto max-w-[258px] rounded-[2rem] border-[5px] border-[#111827] bg-[#111827] p-1 shadow-2xl shadow-slate-950/25">
-        <div className="relative overflow-hidden rounded-[1.65rem] bg-white p-1">
-          <div className="absolute left-1/2 top-1.5 z-10 h-3 w-16 -translate-x-1/2 rounded-full bg-[#111827]" aria-hidden="true" />
-          <div className="h-[520px] overflow-hidden rounded-[1.45rem] bg-[#F8FAFC] pt-5">
-            <div className="flex min-h-full items-start justify-center overflow-hidden px-1 pb-2">{children}</div>
-          </div>
-        </div>
-      </div>
+    <div className="mx-auto w-full max-w-[220px] rounded-[1.6rem] p-2 shadow-md transition-colors duration-200" style={{ background: chrome.background }}>
+      <div className="overflow-hidden rounded-[1.2rem] bg-white/95">{children}</div>
     </div>
   );
 }
+
+const previewFrameChrome: Record<PreviewContext, { background: string }> = {
+  phone: { background: "#E2E8F0" },
+  "apple-wallet": { background: "linear-gradient(135deg,#EEF2FF 0%,#CBD5E1 100%)" },
+  "google-wallet": { background: "linear-gradient(135deg,#EFF6FF 0%,#DCFCE7 100%)" },
+};
 
 function VisibleCardPreview({
   businessName,
@@ -2183,17 +2162,11 @@ function getLivePreviewBackground(baseBackground: string, backgroundStyle: "SOLI
   return baseBackground;
 }
 
-const previewContextOptions: Array<{ value: PreviewContext; label: string }> = [
-  { value: "phone", label: "Phone" },
-  { value: "apple-wallet", label: "Apple Wallet" },
-  { value: "google-wallet", label: "Google Wallet" },
+const previewContextOptions: Array<{ value: PreviewContext; label: string; shortLabel: string }> = [
+  { value: "phone", label: "Phone", shortLabel: "Phone" },
+  { value: "apple-wallet", label: "Apple Wallet", shortLabel: "Apple" },
+  { value: "google-wallet", label: "Google Wallet", shortLabel: "Google" },
 ];
-
-const previewContextFooter: Record<PreviewContext, string> = {
-  phone: "Previewing your loyalty card on a customer's phone.",
-  "apple-wallet": "Previewing your loyalty card inside Apple Wallet.",
-  "google-wallet": "Previewing your loyalty card inside Google Wallet.",
-};
 
 const previewZoomOptions: Array<{ value: PreviewZoom; label: string }> = [
   { value: "75", label: "75%" },
@@ -2243,4 +2216,3 @@ const designStartOptions: Array<{ value: DesignStartMode; label: string; descrip
   { value: "manual", label: "Build From Scratch", description: "Open the full editor" },
   { value: "duplicate", label: "Duplicate Existing Design", description: "Copy another program" },
 ];
-
