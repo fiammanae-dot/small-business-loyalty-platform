@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { RecordStatus, UserRole } from "@prisma/client";
 import { devFallbackUser, isDevAuthFallbackEnabled } from "@/lib/dev-auth";
+import { attachMonitoringContext } from "@/lib/monitoring";
 import { prisma } from "@/lib/prisma";
 import { roleHomePath } from "@/lib/roles";
 import { getSessionSecret } from "@/lib/secrets";
@@ -153,6 +154,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     session.userId === devFallbackUser.id &&
     session.role === devFallbackUser.role
   ) {
+    attachMonitoringContext(devFallbackUser);
     return devFallbackUser;
   }
 
@@ -182,10 +184,11 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     });
 
     if (!user || user.sessionVersion !== session.sessionVersion) {
+      attachMonitoringContext(null);
       return null;
     }
 
-    return {
+    const authUser: AuthUser = {
       id: user.id,
       uuid: user.uuid,
       name: user.name,
@@ -196,6 +199,9 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       branchId: user.branchId,
       forcePasswordChange: user.forcePasswordChange,
     };
+
+    attachMonitoringContext(authUser);
+    return authUser;
   } catch (error) {
     console.error("Session database lookup failed", error);
     return null;

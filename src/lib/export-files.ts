@@ -1,5 +1,5 @@
 ﻿import { NextResponse } from "next/server";
-import { toCsv } from "@/lib/csv";
+import { sanitizeExportCell, toCsv } from "@/lib/csv";
 
 export type ExportRow = Record<string, string | number | boolean | null | undefined>;
 export type ExportFormat = "csv" | "excel" | "pdf";
@@ -43,7 +43,7 @@ function createXlsx(rows: ExportRow[], title: string) {
   const worksheetRows = [headers, ...bodyRows.map((row) => headers.map((header) => row[header] ?? ""))];
   const sheetXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheetData>${worksheetRows
-    .map((row, rowIndex) => `<row r="${rowIndex + 1}">${row.map((cell, columnIndex) => `<c r="${columnName(columnIndex)}${rowIndex + 1}" t="inlineStr"><is><t>${xmlEscape(String(cell))}</t></is></c>`).join("")}</row>`)
+    .map((row, rowIndex) => `<row r="${rowIndex + 1}">${row.map((cell, columnIndex) => `<c r="${columnName(columnIndex)}${rowIndex + 1}" t="inlineStr"><is><t>${xmlEscape(sanitizeExportCell(String(cell)))}</t></is></c>`).join("")}</row>`)
     .join("")}</sheetData></worksheet>`;
 
   const files = [

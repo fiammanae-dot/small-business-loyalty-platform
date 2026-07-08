@@ -365,6 +365,21 @@ model FailedLoginAudit {
   @@map("failed_login_audit")
 }
 
+// Generic rate-limit ledger for public, unauthenticated write endpoints (program
+// self-enrollment today; contact form / demo requests etc. can reuse it via `scope`).
+model RateLimitAttempt {
+  id         Int      @id @default(autoincrement())
+  scope      String
+  identifier String?  @map("identifier")
+  ipAddress  String   @map("ip_address")
+  outcome    String
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([scope, ipAddress, createdAt])
+  @@index([scope, identifier, createdAt])
+  @@map("rate_limit_attempts")
+}
+
 model Business {
   id           Int          @id @default(autoincrement())
   uuid         String       @unique @default(uuid()) @db.Uuid

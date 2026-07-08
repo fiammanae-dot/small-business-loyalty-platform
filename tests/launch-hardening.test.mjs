@@ -10,8 +10,8 @@ test("production session secret fails closed and dev auth is production-disabled
   const secrets = read("src/lib/secrets.ts");
   const devAuth = read("src/lib/dev-auth.ts");
 
-  assert.match(secrets, /NODE_ENV === "production" && !secret/);
-  assert.match(secrets, /throw new Error\("SESSION_SECRET is required in production\."\)/);
+  assert.match(secrets, /NODE_ENV !== "development"/);
+  assert.match(secrets, /throw new Error\("SESSION_SECRET is required and was not set\."\)/);
   assert.match(devAuth, /NODE_ENV !== "production"/);
   assert.match(devAuth, /DEV_AUTH_FALLBACK === "true"/);
 });

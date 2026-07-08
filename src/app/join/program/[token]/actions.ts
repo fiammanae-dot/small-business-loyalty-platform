@@ -8,8 +8,12 @@ import { generateCardToken } from "@/lib/customer-cards";
 import { normalizePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { getStartingBonusStampsForEvent } from "@/lib/programs";
+import { isPublicActionRateLimited, recordPublicActionAttempt } from "@/lib/rate-limit";
 import { generateReferralCode } from "@/lib/referrals";
+import { getRequestInfo } from "@/lib/request-info";
 import { generateScanToken } from "@/lib/scan";
+
+const JOIN_PROGRAM_RATE_LIMIT_SCOPE = "public_join_program" as const;
 
 const joinProgramSchema = z.object({
   token: z.string().trim().uuid("Program link is invalid."),
@@ -63,6 +67,22 @@ export async function joinProgramAction(formData: FormData) {
   if (!program || !program.active || program.business.status !== "ACTIVE") {
     fail(parsed.data.token, "This program is not available for public enrollment.");
   }
+
+  const { ipAddress } = await getRequestInfo();
+  const rateLimited = await isPublicActionRateLimited({
+    scope: JOIN_PROGRAM_RATE_LIMIT_SCOPE,
+    ipAddress,
+    identifier: parsed.data.token,
+  });
+  if (rateLimited) {
+    fail(parsed.data.token, "Too many enrollment attempts. Please wait a few minutes and try again.");
+  }
+  await recordPublicActionAttempt({
+    scope: JOIN_PROGRAM_RATE_LIMIT_SCOPE,
+    ipAddress,
+    identifier: parsed.data.token,
+    outcome: "ATTEMPTED",
+  });
 
   let result: { cardToken: string };
   try {

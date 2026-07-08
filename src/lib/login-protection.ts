@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
+import { isOverThreshold, windowStart } from "@/lib/rate-limit";
 import { getRequestInfo } from "@/lib/request-info";
 
 const WINDOW_MINUTES = 15;
@@ -9,13 +10,9 @@ const MAX_FAILED_ATTEMPTS = 5;
 export const LOGIN_LOCKOUT_MESSAGE =
   "Too many failed login attempts. Please wait 15 minutes and try again.";
 
-function sinceWindow() {
-  return new Date(Date.now() - WINDOW_MINUTES * 60 * 1000);
-}
-
 export async function isLoginTemporarilyLocked(email: string) {
   const { ipAddress } = await getRequestInfo();
-  const since = sinceWindow();
+  const since = windowStart(WINDOW_MINUTES);
 
   const [emailFailures, ipFailures] = await Promise.all([
     prisma.failedLoginAudit.count({
@@ -34,7 +31,7 @@ export async function isLoginTemporarilyLocked(email: string) {
     }),
   ]);
 
-  return emailFailures >= MAX_FAILED_ATTEMPTS || ipFailures >= MAX_FAILED_ATTEMPTS;
+  return isOverThreshold(emailFailures, MAX_FAILED_ATTEMPTS) || isOverThreshold(ipFailures, MAX_FAILED_ATTEMPTS);
 }
 
 export async function recordFailedLogin(email: string, outcome: "FAILED" | "LOCKED") {

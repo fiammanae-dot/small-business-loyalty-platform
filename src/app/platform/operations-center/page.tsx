@@ -196,7 +196,13 @@ export default async function OperationsCenterPage({ searchParams }: { searchPar
   return (
     <DashboardShell user={currentUser} eyebrow="System Administrator" title="Operations Center">
       <section className="flex flex-col gap-1">
-        <p className="text-xs text-[#9AA0AD]">Support · Compliance, Platform Health, and Background Jobs coming soon</p>
+        <p className="text-xs text-[#9AA0AD]">
+          Support · Compliance ·{" "}
+          <Link href="/platform/health" className="underline hover:text-[#F97316]">
+            Platform Health
+          </Link>{" "}
+          · Background Jobs coming soon
+        </p>
       </section>
 
       <section

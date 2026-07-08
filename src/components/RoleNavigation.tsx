@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
+  Activity,
   Bell,
   Building2,
   CreditCard,
@@ -115,6 +116,7 @@ const platformMobileMoreItems: NavigationItem[] = [
   { href: "/platform/tenant-center", label: "Tenant Center", icon: Layers3 },
   { href: "/platform/settings", label: "Settings", icon: Settings },
   { href: "/platform/database", label: "Database", icon: Database },
+  { href: "/platform/health", label: "Platform Health", icon: Activity },
   { href: "/platform/launch-readiness", label: "Launch Readiness", icon: Rocket },
 ];
 
@@ -131,6 +133,7 @@ const platformSidebarItems: NavigationItem[] = [
   { href: "/platform/billing-center", label: "Billing Center", icon: CircleDollarSign },
   { href: "/platform/tenant-center", label: "Tenant Center", icon: Layers3 },
   { href: "/platform/database", label: "Database", icon: Database },
+  { href: "/platform/health", label: "Platform Health", icon: Activity },
   { href: "/platform/launch-readiness", label: "Launch Readiness", icon: Rocket },
   { href: "/platform/settings", label: "Settings", icon: Settings },
 ];
