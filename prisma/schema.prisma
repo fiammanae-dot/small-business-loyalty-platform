@@ -327,6 +327,7 @@ model User {
   supportRequestsRequested   SupportRequest[]             @relation("SupportRequestRequestedBy")
   supportRequestsReviewed    SupportRequest[]             @relation("SupportRequestReviewedBy")
   supportSessionActivities SupportSessionActivity[] @relation("SupportSessionActivityAdminUser")
+  archivedBusinesses Business[] @relation("BusinessArchivedBy")
 
   @@index([businessId])
   @@index([branchId])
@@ -389,6 +390,14 @@ model Business {
   supportAccessPolicy SupportAccessPolicy @default(IMMEDIATE) @map("support_access_policy")
   createdAt           DateTime            @default(now()) @map("created_at")
   updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  // Soft delete: Platform Admin "removal" archives a business instead of deleting the
+  // row, so AuditEvent history and subscription/invoice/customer records are preserved.
+  deletedAt     DateTime? @map("deleted_at")
+  archivedAt    DateTime? @map("archived_at")
+  archivedById  Int?      @map("archived_by_id")
+  archiveReason String?   @map("archive_reason")
+  archivedBy    User?     @relation("BusinessArchivedBy", fields: [archivedById], references: [id])
 
   users                         User[]
   branches                      Branch[]
@@ -1345,7 +1354,9 @@ model AuditEvent {
   createdAt   DateTime @default(now()) @map("created_at")
 
   actorUser User?     @relation(fields: [actorUserId], references: [id])
-  business  Business? @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  // SetNull, not Cascade: audit history must survive even if a Business row is ever
+  // physically deleted (application code always archives instead - see Business.archivedAt).
+  business  Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
   branch    Branch?   @relation(fields: [branchId], references: [id])
 
   @@index([businessId, createdAt])

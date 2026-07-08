@@ -9,6 +9,7 @@ import { validateCsrfForm } from "@/lib/csrf";
 import { createFormFailure, getFirstZodMessage, getZodFieldErrors, type PreservedFormState } from "@/lib/form-state";
 import { prisma } from "@/lib/prisma";
 import { createDefaultAbusePolicies } from "@/lib/alert-engine";
+import { logAuditEvent } from "@/lib/audit";
 import { requireRole } from "@/lib/session";
 import { getSubscriptionPeriodEnd, isBillingCycleSupported } from "@/lib/subscription-plans";
 
@@ -47,6 +48,12 @@ const createBusinessSchema = z.object({
   whatsappBusinessNumber: z.string().trim().optional(),
   senderEmail: z.string().trim().email("Sender email must be valid.").optional().or(z.literal("")),
   senderName: z.string().trim().optional(),
+});
+
+const archiveBusinessSchema = z.object({
+  businessId: z.coerce.number().int().positive(),
+  businessUuid: z.string().trim().min(1),
+  archiveReason: z.string().trim().min(1, "A reason is required to archive a business."),
 });
 
 const updateBusinessSchema = z.object({
@@ -502,4 +509,99 @@ export async function toggleBusinessStatusAction(formData: FormData) {
   revalidatePath("/platform/businesses");
   revalidatePath(`/platform/businesses/${businessUuid}`);
   redirect(`/platform/businesses?success=Business ${nextStatus === "ACTIVE" ? "enabled" : "disabled"}.`);
+}
+
+// Soft delete: archiving marks the business row instead of deleting it, so AuditEvent
+// history and subscription/invoice/customer records are preserved untouched.
+export async function archiveBusinessAction(formData: FormData) {
+  const businessUuid = getString(formData, "businessUuid");
+  validateSecurity(formData, `/platform/businesses/${businessUuid}`);
+  const platformUser = await requireRole("PLATFORM_OWNER");
+
+  const parsed = archiveBusinessSchema.safeParse({
+    businessId: getString(formData, "businessId"),
+    businessUuid,
+    archiveReason: getString(formData, "archiveReason"),
+  });
+
+  if (!parsed.success) {
+    redirectWithError(`/platform/businesses/${businessUuid}`, parsed.error.issues[0]?.message ?? "A reason is required to archive a business.");
+  }
+
+  const now = new Date();
+
+  await prisma.$transaction(async (tx) => {
+    await tx.business.update({
+      where: { id: parsed.data.businessId },
+      data: {
+        status: "ARCHIVED",
+        deletedAt: now,
+        archivedAt: now,
+        archivedById: platformUser.id,
+        archiveReason: parsed.data.archiveReason,
+      },
+    });
+
+    await tx.user.updateMany({
+      where: {
+        businessId: parsed.data.businessId,
+        role: { in: ["BUSINESS_OWNER", "BRANCH_MANAGER", "STAFF"] },
+      },
+      data: { sessionVersion: { increment: 1 } },
+    });
+
+    await logAuditEvent({
+      tx,
+      actorUserId: platformUser.id,
+      businessId: parsed.data.businessId,
+      action: "BUSINESS_ARCHIVED",
+      entityType: "Business",
+      entityId: parsed.data.businessId,
+      metadata: { reason: parsed.data.archiveReason },
+    });
+  });
+
+  revalidatePath("/platform/businesses");
+  revalidatePath(`/platform/businesses/${businessUuid}`);
+  redirect(`/platform/businesses?success=${encodeURIComponent("Business archived.")}`);
+}
+
+export async function restoreBusinessAction(formData: FormData) {
+  const businessUuid = getString(formData, "businessUuid");
+  validateSecurity(formData, `/platform/businesses/${businessUuid}`);
+  const platformUser = await requireRole("PLATFORM_OWNER");
+  const businessId = Number(getString(formData, "businessId"));
+
+  if (!businessId) {
+    redirect("/platform/businesses");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.business.update({
+      where: { id: businessId },
+      data: {
+        // Restored businesses come back INACTIVE, not ACTIVE: an admin must deliberately
+        // re-enable customer-facing access via the existing Enable/Disable control rather
+        // than a restore silently reopening the business to staff and customers.
+        status: "INACTIVE",
+        deletedAt: null,
+        archivedAt: null,
+        archivedById: null,
+        archiveReason: null,
+      },
+    });
+
+    await logAuditEvent({
+      tx,
+      actorUserId: platformUser.id,
+      businessId,
+      action: "BUSINESS_RESTORED",
+      entityType: "Business",
+      entityId: businessId,
+    });
+  });
+
+  revalidatePath("/platform/businesses");
+  revalidatePath(`/platform/businesses/${businessUuid}`);
+  redirect(`/platform/businesses/${businessUuid}?success=${encodeURIComponent("Business restored. It is now inactive until re-enabled.")}`);
 }

@@ -35,7 +35,7 @@ const sortableFields = {
 } as const;
 
 const validBusinessTypes = Object.keys(businessTypeLabels) as BusinessType[];
-const validStatuses: RecordStatus[] = ["ACTIVE", "INACTIVE"];
+const validStatuses: RecordStatus[] = ["ACTIVE", "INACTIVE", "ARCHIVED"];
 const suspiciousBusinessNamePattern = /(demo|test|phase|debug|updated|\d{10,})/i;
 
 function getParam(params: BusinessesSearchParams, key: keyof BusinessesSearchParams) {
@@ -124,7 +124,9 @@ export default async function BusinessesPage({
   const where: Prisma.BusinessWhereInput = {
     ...(query ? { name: { contains: query, mode: "insensitive" } } : {}),
     ...(selectedType ? { businessType: selectedType } : {}),
-    ...(selectedStatus ? { status: selectedStatus } : {}),
+    // Archived businesses are hidden from every normal view unless explicitly requested
+    // via ?status=ARCHIVED - this is a soft-delete list, not a status like any other.
+    ...(selectedStatus ? { status: selectedStatus } : { status: { not: "ARCHIVED" } }),
     ...(createdFrom || createdTo ? { createdAt } : {}),
     ...(selectedPlanId
       ? {
@@ -213,6 +215,7 @@ export default async function BusinessesPage({
       <QuickChip href="/platform/businesses" label="All" active={!selectedStatus && !selectedPlanId && !suspectOnly} />
       <QuickChip href={buildQuickFilterHref({ status: "ACTIVE" })} label="Active" active={selectedStatus === "ACTIVE"} />
       <QuickChip href={buildQuickFilterHref({ status: "INACTIVE" })} label="Inactive" active={selectedStatus === "INACTIVE"} />
+      <QuickChip href={buildQuickFilterHref({ status: "ARCHIVED" })} label="Archived" active={selectedStatus === "ARCHIVED"} />
       {growthPlan ? (
         <QuickChip href={buildQuickFilterHref({ plan: growthPlan.id.toString() })} label="Growth Plan" active={selectedPlanId === growthPlan.id} />
       ) : null}
@@ -265,9 +268,10 @@ export default async function BusinessesPage({
             </label>
 
             <SelectField label="Status" name="status" defaultValue={selectedStatus}>
-              <option value="">All statuses</option>
+              <option value="">All statuses (excludes archived)</option>
               <option value="ACTIVE">Active</option>
               <option value="INACTIVE">Inactive</option>
+              <option value="ARCHIVED">Archived</option>
             </SelectField>
 
             <SearchableCombobox

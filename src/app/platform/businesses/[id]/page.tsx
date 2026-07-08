@@ -1,19 +1,19 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { SubscriptionStatus } from "@prisma/client";
-import { ChevronRight, Pencil, Power } from "lucide-react";
+import { Archive, ChevronRight, Pencil, Power, RotateCcw } from "lucide-react";
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { StatusBadge } from "@/components/StatusBadge";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatDateTime } from "@/lib/format";
 import { formatMoney, getInvoiceDisplayStatus } from "@/lib/billing";
 import { formatBillingCycle } from "@/lib/subscription-plans";
 import { prisma } from "@/lib/prisma";
 import { businessTypeLabels, roleLabels } from "@/lib/roles";
 import { requireRole } from "@/lib/session";
 import { getSubscriptionRemainingDays, getTrialRemainingDays } from "@/lib/subscriptions";
-import { toggleBusinessStatusAction } from "@/app/platform/businesses/actions";
+import { archiveBusinessAction, restoreBusinessAction, toggleBusinessStatusAction } from "@/app/platform/businesses/actions";
 import { extendSubscriptionAction, startTrialAction, updateSubscriptionStatusAction } from "@/app/platform/subscriptions/actions";
 
 export default async function BusinessDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; success?: string }> }) {
@@ -54,6 +54,7 @@ export default async function BusinessDetailPage({ params, searchParams }: { par
           _count: { select: { activities: true } },
         },
       },
+      archivedBy: { select: { name: true, email: true } },
     },
   });
 
@@ -98,21 +99,86 @@ export default async function BusinessDetailPage({ params, searchParams }: { par
               <Pencil className="h-4 w-4" />
               Edit
             </Link>
-            <form action={toggleBusinessStatusAction} className="min-w-0">
-              <CsrfInput scope="platform:businesses" />
-              <input type="hidden" name="businessId" value={business.id} />
-              <input type="hidden" name="businessUuid" value={business.uuid} />
-              <input type="hidden" name="nextStatus" value={nextStatus} />
-              <ConfirmSubmitButton
-                message={nextStatus === "ACTIVE" ? "Enable this business and restore access?" : "Disable this business? Owners, staff, scanners, and customer activity may be blocked."}
-                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316] sm:w-auto"
-              >
-                <Power className="h-4 w-4" />
-                {nextStatus === "ACTIVE" ? "Enable" : "Disable"}
-              </ConfirmSubmitButton>
-            </form>
+            {business.status === "ARCHIVED" ? (
+              <form action={restoreBusinessAction} className="min-w-0">
+                <CsrfInput scope="platform:businesses" />
+                <input type="hidden" name="businessId" value={business.id} />
+                <input type="hidden" name="businessUuid" value={business.uuid} />
+                <ConfirmSubmitButton
+                  message="Restore this business? It returns as Inactive until you re-enable it from this page."
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316] sm:w-auto"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Restore
+                </ConfirmSubmitButton>
+              </form>
+            ) : (
+              <form action={toggleBusinessStatusAction} className="min-w-0">
+                <CsrfInput scope="platform:businesses" />
+                <input type="hidden" name="businessId" value={business.id} />
+                <input type="hidden" name="businessUuid" value={business.uuid} />
+                <input type="hidden" name="nextStatus" value={nextStatus} />
+                <ConfirmSubmitButton
+                  message={nextStatus === "ACTIVE" ? "Enable this business and restore access?" : "Disable this business? Owners, staff, scanners, and customer activity may be blocked."}
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316] sm:w-auto"
+                >
+                  <Power className="h-4 w-4" />
+                  {nextStatus === "ACTIVE" ? "Enable" : "Disable"}
+                </ConfirmSubmitButton>
+              </form>
+            )}
           </div>
         </div>
+
+        {business.status === "ARCHIVED" ? (
+          <div className="mt-4 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4 text-sm text-[#374151]">
+            <p className="font-semibold text-[#111827]">This business is archived.</p>
+            <p className="mt-1">
+              Archived {business.archivedAt ? formatDateTime(business.archivedAt) : "-"}
+              {business.archivedBy ? ` by ${business.archivedBy.name}` : ""}.
+            </p>
+            {business.archiveReason ? <p className="mt-1">Reason: {business.archiveReason}</p> : null}
+            <p className="mt-2 text-xs text-[#6B7280]">
+              Data is preserved (subscriptions, invoices, customers, audit history). Use Restore above to bring it back.
+            </p>
+          </div>
+        ) : (
+          <details className="mt-4 rounded-md border border-[#E5E7EB] bg-white">
+            <summary className="flex cursor-pointer list-none items-center gap-2 rounded-md px-4 py-3 text-sm font-semibold text-[#111827] transition hover:bg-[#FAFAFA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316]">
+              <Archive className="h-4 w-4" />
+              Archive this business
+            </summary>
+            <div className="border-t border-[#E5E7EB] p-4">
+              <p className="text-sm text-[#6B7280]">
+                Archiving hides this business from active lists and blocks all staff/owner logins. It does not delete any
+                data - subscriptions, invoices, customers, and audit history are preserved, and it can be restored later.
+              </p>
+              <form action={archiveBusinessAction} className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
+                <CsrfInput scope="platform:businesses" />
+                <input type="hidden" name="businessId" value={business.id} />
+                <input type="hidden" name="businessUuid" value={business.uuid} />
+                <label className="flex-1 text-sm font-medium text-[#171A21]">
+                  Reason for archiving
+                  <textarea
+                    name="archiveReason"
+                    required
+                    rows={2}
+                    placeholder="e.g. Requested by owner, non-payment, closed business"
+                    className="mt-1 w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#F97316] focus:ring-2 focus:ring-orange-100"
+                  />
+                </label>
+                <ConfirmSubmitButton
+                  message="Archive this business? This blocks all staff/owner logins immediately. Data is preserved and this can be undone with Restore."
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-red-200 px-4 text-sm font-semibold text-red-700 transition hover:bg-red-50 sm:w-auto"
+                  confirmLabel="Archive"
+                >
+                  <Archive className="h-4 w-4" />
+                  Archive
+                </ConfirmSubmitButton>
+              </form>
+            </div>
+          </details>
+        )}
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">
