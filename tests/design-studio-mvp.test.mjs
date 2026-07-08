@@ -255,8 +255,8 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /liveBackgroundPatterns/);
   assert.match(form, /visibleSections: \{/);
   assert.match(form, /visibleSections\.\$\{option\.value\}/);
-  assert.match(form, /previewContextOptions/);
-  assert.match(form, /PreviewContextFrame/);
+  assert.match(form, /MobileCardPreviewFrame/);
+  assert.match(form, /Live Mobile Preview/);
   assert.match(form, /designHistoryPast/);
   assert.match(form, /designHistoryFuture/);
   assert.match(form, /commitDesignChange/);
@@ -269,9 +269,8 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /Redo design change/);
   assert.match(form, /Ctrl\/Cmd\+Z/);
   assert.match(form, /Ctrl\/Cmd\+Shift\+Z or Ctrl\/Cmd\+Y/);
-  assert.match(form, /Phone/);
-  assert.match(form, /Apple Wallet/);
-  assert.match(form, /Google Wallet/);
+  assert.doesNotMatch(form, /Apple Wallet/, "Design Studio no longer offers separate wallet preview modes");
+  assert.doesNotMatch(form, /Google Wallet/, "Design Studio no longer offers separate wallet preview modes");
   assert.match(form, /previewZoomOptions/);
   assert.match(form, /previewZoomScales/);
   assert.match(form, /Zoom out/);

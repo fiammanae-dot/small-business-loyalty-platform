@@ -43,18 +43,14 @@ test("wizard stepper tracks active and completed steps correctly", () => {
   assert.match(source, /\{complete \? "✓" : step\.value\}/);
 });
 
-test("Phone, Apple Wallet, and Google Wallet each render visually distinct preview chrome", () => {
+test("Design Studio renders a single Mobile Card Preview with no Phone/Apple/Google wallet chrome", () => {
   const source = form();
 
-  assert.match(source, /if \(context === "apple-wallet"\)/);
-  assert.match(source, /if \(context === "google-wallet"\)/);
-  assert.match(source, />Wallet<\/span>/, "Apple Wallet context must render its own distinguishing chrome, not just a background color");
-  assert.match(source, />Pass<\/span>/);
-  assert.match(source, />Google Wallet<\/span>/, "Google Wallet context must render its own distinguishing chrome");
-  assert.match(source, />G<\/span>/);
-  // The regression collapsed all three contexts into one shared frame that only swapped a
-  // background color, so switching tabs looked like nothing happened.
-  assert.doesNotMatch(source, /const previewFrameChrome: Record<PreviewContext, \{ background: string \}>/, "must not regress to the single shared background-only frame");
+  // Wallet preview modes were deliberately removed from the Design Studio UI (the Google
+  // Wallet integration itself is untouched elsewhere in the app - see src/lib/google-wallet).
+  assert.match(source, /function MobileCardPreviewFrame/);
+  assert.doesNotMatch(source, /apple-wallet|google-wallet/i);
+  assert.doesNotMatch(source, />Wallet<\/span>|>Pass<\/span>|>Google Wallet<\/span>/, "must not reintroduce wallet-specific chrome into the Design Studio preview");
 });
 
 test("live preview is never height-clipped: no fixed/max-height + overflow-hidden combination wraps the card", () => {
@@ -78,7 +74,7 @@ test("zoom controls remain wired to the live preview scale", () => {
   assert.match(source, /aria-label="Zoom in"/);
 });
 
-test("Undo, Redo, Zoom, preview context tabs, and export actions live in one consolidated Preview section", () => {
+test("Undo, Redo, Zoom, and export actions live in one consolidated Preview section", () => {
   const source = form();
 
   const asideMatch = source.match(/<aside className="order-first[\s\S]*?<\/aside>/);
@@ -86,25 +82,18 @@ test("Undo, Redo, Zoom, preview context tabs, and export actions live in one con
   const aside = asideMatch[0];
 
   // Exactly one bordered card should contain the whole preview toolkit, not three separate
-  // floating cards as in the regression.
+  // floating cards as in an earlier regression.
   const cardBorders = aside.match(/rounded-2xl border border-\[#E2E8F0\]/g) ?? [];
   assert.equal(cardBorders.length, 1, "Preview controls must live in exactly one cohesive card, not multiple separate floating cards");
 
   assert.match(aside, /Undo/);
   assert.match(aside, /Redo/);
   assert.match(aside, /aria-label="Zoom out"/);
-  assert.match(aside, /aria-label="Preview context"/);
   assert.match(aside, /"PNG"/);
   assert.match(aside, /"PDF"/);
   assert.match(aside, /"Share"/);
   assert.match(aside, /onClick=\{downloadPreviewPng\}/);
   assert.match(aside, /onClick=\{downloadPreviewPdf\}/);
   assert.match(aside, /onClick=\{copyPreviewLink\}/);
-});
-
-test("preview context switch calls setPreviewContext for all three contexts", () => {
-  const source = form();
-
-  assert.match(source, /onClick=\{\(\) => setPreviewContext\(option\.value\)\}/);
-  assert.match(source, /previewContextOptions\.map/);
+  assert.doesNotMatch(aside, /aria-label="Preview context"/, "the Phone/Apple/Google switcher has been removed - only one preview mode remains");
 });

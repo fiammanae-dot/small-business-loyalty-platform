@@ -81,7 +81,6 @@ const wizardSteps: Array<{ value: WizardStep; label: string }> = [
   { value: 4, label: "Content" },
   { value: 5, label: "Review" },
 ];
-type PreviewContext = "phone" | "apple-wallet" | "google-wallet";
 type PreviewZoom = "fit" | "75" | "100" | "125";
 type ProfessionalPresetCategory = DesignStudioProfessionalPreset["category"];
 
@@ -147,7 +146,6 @@ export function ProgramDesignStudioForm({
   const [visibleSections, setVisibleSections] = useState<CardSectionVisibility>(initialDesign.visibleSections);
   const [designStartMode, setDesignStartMode] = useState<DesignStartMode>("template");
   const [presetApplied, setPresetApplied] = useState(false);
-  const [previewContext, setPreviewContext] = useState<PreviewContext>("phone");
   const [previewZoom, setPreviewZoom] = useState<PreviewZoom>("fit");
   const [professionalPresetCategory, setProfessionalPresetCategory] = useState<ProfessionalPresetCategory>(() => getDefaultProfessionalPresetCategory(businessType));
   const [professionalPresetSearch, setProfessionalPresetSearch] = useState("");
@@ -201,7 +199,6 @@ export function ProgramDesignStudioForm({
   const selectedStyleLabel = designStudioTemplateOptions.find((option) => option.value === layoutStyle)?.label ?? layoutStyle;
   const selectedTypographyOption = resolveDesignStudioTypographyOption(typographyPreset);
   const selectedTypographyLabel = selectedTypographyOption.label;
-  const selectedPreviewContextLabel = previewContextOptions.find((option) => option.value === previewContext)?.label ?? "Phone";
   const selectedStampIconLabel = stampIconOptions.find((option) => option.value === stampIcon)?.label ?? labelizeLocal(stampIcon);
   const selectedRewardStyleLabel = designStudioRewardStyleOptions.find((option) => option.value === rewardStyle)?.label ?? labelizeLocal(rewardStyle);
   const selectedBackgroundOption = resolveDesignStudioBackgroundGalleryOption(backgroundStyle, backgroundPattern);
@@ -426,9 +423,9 @@ export function ProgramDesignStudioForm({
 
   const livePreviewNode = (
     <div ref={previewExportRef}>
-      <PreviewContextFrame context={previewContext}>
+      <MobileCardPreviewFrame>
         <div
-          key={`${layoutStyle}-${stampJourneyStyle}-${stampIcon}-${rewardStyle}-${typographyPreset}-${decorationStyle}-${previewZoom}-${previewContext}`}
+          key={`${layoutStyle}-${stampJourneyStyle}-${stampIcon}-${rewardStyle}-${typographyPreset}-${decorationStyle}-${previewZoom}`}
           className="w-full origin-top transition duration-200 ease-out motion-reduce:transition-none"
           style={{ transform: `scale(${previewZoomScales[previewZoom]})` }}
         >
@@ -453,7 +450,7 @@ export function ProgramDesignStudioForm({
             />
           </CardFinishPreviewFrame>
         </div>
-      </PreviewContextFrame>
+      </MobileCardPreviewFrame>
     </div>
   );
 
@@ -475,27 +472,7 @@ export function ProgramDesignStudioForm({
 
       <aside className="order-first grid h-fit min-w-0 gap-3 lg:order-last lg:self-start">
         <div className="rounded-2xl border border-[#E2E8F0] bg-white/95 p-3 shadow-md backdrop-blur lg:sticky lg:top-6 lg:z-10">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-[#64748B]">Preview</p>
-            <div className="flex rounded-full border border-[#E2E8F0] bg-[#F8FAFC] p-0.5" aria-label="Preview context">
-              {previewContextOptions.map((option) => {
-                const active = previewContext === option.value;
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => setPreviewContext(option.value)}
-                    className="rounded-full px-2 py-1 text-[10px] font-black text-[#64748B] transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:business-bg"
-                    data-active={active}
-                    aria-pressed={active}
-                    title={option.label}
-                  >
-                    {option.shortLabel}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#64748B]">Live Mobile Preview</p>
 
           <div className="mt-2">{livePreviewNode}</div>
 
@@ -1138,7 +1115,7 @@ export function ProgramDesignStudioForm({
             <SectionCard title="Review Your Design" description="Confirm everything looks right before saving.">
               <div className="grid gap-5 sm:grid-cols-[minmax(0,180px)_1fr] sm:items-start">
                 <div className="mx-auto w-full sm:mx-0">
-                  <PreviewContextFrame context={previewContext}>
+                  <MobileCardPreviewFrame>
                     <CardFinishPreviewFrame decorationStyle={decorationStyle}>
                       <VisibleCardPreview
                         businessName={businessName}
@@ -1159,7 +1136,7 @@ export function ProgramDesignStudioForm({
                         backgroundPattern={backgroundPattern}
                       />
                     </CardFinishPreviewFrame>
-                  </PreviewContextFrame>
+                  </MobileCardPreviewFrame>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <PreviewChip label={`Card Style: ${selectedStyleLabel}`} />
@@ -1492,41 +1469,13 @@ function CardFinishPreviewFrame({ children, decorationStyle }: { children: React
   );
 }
 
-function PreviewContextFrame({ children, context }: { children: ReactNode; context: PreviewContext }) {
-  if (context === "apple-wallet") {
-    return (
-      <div className="mx-auto w-[min(100%,300px)] rounded-[1.6rem] bg-[radial-gradient(circle_at_top,#F8FAFC_0%,#EEF2FF_46%,#CBD5E1_100%)] p-2 shadow-md transition-colors duration-200">
-        <div className="overflow-hidden rounded-[1.3rem] border border-white/70 bg-[#F8FAFC] shadow-inner">
-          <div className="flex items-center justify-between border-b border-[#E2E8F0] bg-white/85 px-3 py-2">
-            <span className="text-xs font-black text-[#111827]">Wallet</span>
-            <span className="rounded-full bg-[#EEF2FF] px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-[#475569]">Pass</span>
-          </div>
-          <div className="bg-[linear-gradient(180deg,#F8FAFC_0%,#E2E8F0_100%)] px-2 py-3">{children}</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (context === "google-wallet") {
-    return (
-      <div className="mx-auto w-[min(100%,300px)] rounded-[1.6rem] bg-[linear-gradient(135deg,#EFF6FF_0%,#F8FAFC_48%,#DCFCE7_100%)] p-2 shadow-md transition-colors duration-200">
-        <div className="overflow-hidden rounded-[1.3rem] border border-[#D8E2EF] bg-[#F8FAFC] shadow-inner">
-          <div className="flex items-center justify-between bg-white px-3 py-2">
-            <span className="text-xs font-black text-[#1F2937]">Google Wallet</span>
-            <span className="grid h-5 w-5 place-items-center rounded-full bg-[#E0F2FE] text-[10px] font-black text-[#0369A1]">G</span>
-          </div>
-          <div className="bg-[#F1F5F9] px-2 py-3">{children}</div>
-        </div>
-      </div>
-    );
-  }
-
+// Single "Mobile Card Preview" mode - full width within its container, no phone bezel or
+// wallet chrome, so the loyalty card itself uses the available space instead of being
+// squeezed into a narrow fixed-width frame.
+function MobileCardPreviewFrame({ children }: { children: ReactNode }) {
   return (
-    <div className="mx-auto w-[min(100%,280px)] rounded-[1.6rem] bg-[#E2E8F0] p-2 shadow-md transition-colors duration-200">
-      <div className="relative overflow-hidden rounded-[1.3rem] border-2 border-[#111827] bg-white">
-        <div className="absolute left-1/2 top-1 z-10 h-2 w-12 -translate-x-1/2 rounded-full bg-[#111827]" aria-hidden="true" />
-        <div className="bg-[#F8FAFC] pt-4">{children}</div>
-      </div>
+    <div className="w-full rounded-[1.6rem] bg-[#F1F5F9] p-2 shadow-md">
+      <div className="overflow-hidden rounded-[1.3rem] bg-white">{children}</div>
     </div>
   );
 }
@@ -2181,12 +2130,6 @@ function getLivePreviewBackground(baseBackground: string, backgroundStyle: "SOLI
 
   return baseBackground;
 }
-
-const previewContextOptions: Array<{ value: PreviewContext; label: string; shortLabel: string }> = [
-  { value: "phone", label: "Phone", shortLabel: "Phone" },
-  { value: "apple-wallet", label: "Apple Wallet", shortLabel: "Apple" },
-  { value: "google-wallet", label: "Google Wallet", shortLabel: "Google" },
-];
 
 const previewZoomOptions: Array<{ value: PreviewZoom; label: string }> = [
   { value: "75", label: "75%" },
