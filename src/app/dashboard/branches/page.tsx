@@ -1,3 +1,4 @@
+import type { RecordStatus } from "@prisma/client";
 import { Building2, CircleCheck, MapPin, Plus, TicketCheck, Users } from "lucide-react";
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { DashboardShell } from "@/components/DashboardShell";
@@ -184,7 +185,7 @@ function BranchForm({
   country?: string;
   city?: string;
   address?: string;
-  status?: "ACTIVE" | "INACTIVE";
+  status?: RecordStatus;
   submitLabel: string;
 }) {
   return (

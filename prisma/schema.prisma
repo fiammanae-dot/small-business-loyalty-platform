@@ -135,6 +135,7 @@ enum ProgramMembershipStatus {
 enum ProgramEnrollmentSource {
   OWNER
   BRANCH_MANAGER
+  SELF_SIGNUP
 }
 
 enum StartingStampPolicy {

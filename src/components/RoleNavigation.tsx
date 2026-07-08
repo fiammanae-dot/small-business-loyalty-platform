@@ -35,6 +35,7 @@ import type { AuthUser } from "@/lib/session";
 
 type RoleNavigationProps = {
   role: AuthUser["role"];
+  supportSession?: { businessName: string; startedAt: string; expiresAt: string; readOnly: boolean };
 };
 
 type NavigationItem = {

@@ -49,6 +49,10 @@ export type CardThemeDefinition = WalletThemeTokens & {
   motif: string;
 };
 
+// The static style catalog intentionally omits `button`/`text`: resolveCardThemeColors
+// always derives those from the business's branding before a theme reaches the UI.
+export type CardThemeStyleDefinition = Omit<CardThemeDefinition, "button" | "text">;
+
 type BrandingInput = {
   primaryColor: string;
   secondaryColor: string;
@@ -204,7 +208,7 @@ export const walletStyleTokens: Record<WalletVisualStyle, Omit<WalletThemeTokens
   },
 };
 
-export const cardThemeOptions: CardThemeDefinition[] = [
+export const cardThemeOptions: CardThemeStyleDefinition[] = [
   {
     value: "BUSINESS_DEFAULT",
     motif: "Brand",
@@ -234,7 +238,7 @@ export const cardThemeOptions: CardThemeDefinition[] = [
   },
 ];
 
-const legacyThemeFallbacks: Partial<Record<CardTheme, CardThemeDefinition>> = {
+const legacyThemeFallbacks: Partial<Record<CardTheme, CardThemeStyleDefinition>> = {
   RETAIL_GENERAL: cardThemeOptions[1],
 };
 

@@ -70,9 +70,11 @@ export async function GET(request: Request) {
   ]);
 
   const rows: ExportRow[] = [
-    { Section: "Database Health", Metric: "Database", Value: health.database ? "Connected" : "Not Connected" },
-    { Section: "Database Health", Metric: "Prisma", Value: health.prisma ? "Connected" : "Not Connected" },
-    { Section: "Database Health", Metric: "Session Store", Value: health.session ? "Connected" : "Not Connected" },
+    { Section: "Database Health", Metric: "Database", Value: health.databaseConnected ? "Connected" : "Not Connected" },
+    { Section: "Database Health", Metric: "Prisma", Value: health.prismaConnected ? "Connected" : "Not Connected" },
+    // DatabaseHealth has never tracked a session store check; this row always
+    // rendered "Not Connected" (`health.session` didn't exist), kept as-is.
+    { Section: "Database Health", Metric: "Session Store", Value: "Not Connected" },
     { Section: "Database Health", Metric: "Database Size", Value: databaseStats.databaseSize },
     { Section: "Database Health", Metric: "Table Count", Value: databaseStats.tableCount },
     { Section: "Database Health", Metric: "Estimated Records", Value: databaseStats.totalRecords },

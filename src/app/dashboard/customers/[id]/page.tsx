@@ -913,6 +913,8 @@ function ProgramQrPanel({
     scanUrl: string;
     qrCode: string;
     nextScanStatus: string;
+    googleWalletUrl: string;
+    googleWalletStatus: Awaited<ReturnType<typeof getGoogleWalletStatus>>;
     membershipUuid: string;
   }>;
 }) {

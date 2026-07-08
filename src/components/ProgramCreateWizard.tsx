@@ -461,7 +461,7 @@ function OptionGrid({
   value,
   onChange,
 }: {
-  options: Array<{ value: string; label: string; description: string }>;
+  options: ReadonlyArray<{ value: string; label: string; description: string }>;
   value: string;
   onChange: (value: string) => void;
 }) {

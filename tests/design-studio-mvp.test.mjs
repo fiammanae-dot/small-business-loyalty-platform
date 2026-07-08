@@ -327,7 +327,7 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /name="stampJourneyStyle"/);
   assert.match(form, /name="stampIcon"/);
   assert.match(page, /where: \{ businessId: user\.businessId, uuid: \{ not: program\.uuid \} \}/);
-  assert.match(page, /const sourceDesign = resolveCardDesign\(sourceProgram\.cardDesign\)/);
+  assert.match(page, /const sourceDesign = resolveCardDesign\(asCardDesignInput\(sourceProgram\.cardDesign\)\)/);
   assert.match(page, /select: \{\s*uuid: true,\s*name: true,\s*cardDesign: true,\s*\}/);
   assert.doesNotMatch(form, /title="Card Template"/);
   assert.doesNotMatch(form, /title="Stamp Journey"/);

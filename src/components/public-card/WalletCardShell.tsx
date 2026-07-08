@@ -34,7 +34,7 @@ export function WalletCardShell({
           background: theme.cardBackground,
           backgroundImage: getCardBackground(theme.cardBackground, design.backgroundStyle, design.backgroundPattern),
           color: theme.cardText,
-          borderRadius: finish.radius ?? theme.radius,
+          borderRadius: theme.radius,
           boxShadow: finish.shadow ?? (exportMode ? "none" : theme.shadow),
           border: finish.border ?? (exportMode ? "1px solid rgba(255,255,255,0.18)" : theme.style === "minimal-light" ? "1px solid #E5E7EB" : undefined),
         }}

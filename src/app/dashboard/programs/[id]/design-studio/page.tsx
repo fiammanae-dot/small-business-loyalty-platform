@@ -10,7 +10,7 @@ import {
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { createCsrfToken, csrfFieldName } from "@/lib/csrf";
 import { resolveBranding } from "@/lib/customer-cards";
-import { getRecommendedStampIconsForBusinessType, resolveCardDesign, type CardDesignStampIcon } from "@/lib/card-design";
+import { asCardDesignInput, getRecommendedStampIconsForBusinessType, resolveCardDesign, type CardDesignStampIcon } from "@/lib/card-design";
 import { getAllowedStampIconsForBusinessType } from "@/lib/design-studio";
 import { prisma } from "@/lib/prisma";
 
@@ -46,7 +46,7 @@ export default async function ProgramDesignStudioPage({
   }
 
   const branding = resolveBranding(business.branding);
-  const cardDesign = resolveCardDesign(program.cardDesign);
+  const cardDesign = resolveCardDesign(asCardDesignInput(program.cardDesign));
   const businessPresets = await prisma.businessDesignPreset.findMany({
     where: { businessId: user.businessId },
     orderBy: { createdAt: "desc" },
@@ -115,7 +115,7 @@ export default async function ProgramDesignStudioPage({
             visibleSections: cardDesign.visibleSections,
           }}
           businessPresets={businessPresets.map((preset) => {
-            const presetDesign = resolveCardDesign(preset.cardDesign);
+            const presetDesign = resolveCardDesign(asCardDesignInput(preset.cardDesign));
             return {
               uuid: preset.uuid,
               name: preset.name,
@@ -134,7 +134,7 @@ export default async function ProgramDesignStudioPage({
             };
           })}
           sourcePrograms={sourcePrograms.map((sourceProgram) => {
-            const sourceDesign = resolveCardDesign(sourceProgram.cardDesign);
+            const sourceDesign = resolveCardDesign(asCardDesignInput(sourceProgram.cardDesign));
             return {
               uuid: sourceProgram.uuid,
               name: sourceProgram.name,

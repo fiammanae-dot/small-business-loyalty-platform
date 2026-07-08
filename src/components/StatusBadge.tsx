@@ -1,8 +1,8 @@
-import type { CustomerMembershipStatus, RecordStatus, SubscriptionStatus } from "@prisma/client";
+import type { CardStatus, CustomerMembershipStatus, RecordStatus, SubscriptionStatus } from "@prisma/client";
 import { StatusBadge as UiStatusBadge, type StatusBadgeTone } from "@/components/ui/StatusBadge";
 import { subscriptionStatusLabels } from "@/lib/subscriptions";
 
-export function StatusBadge({ status }: { status: RecordStatus | SubscriptionStatus | CustomerMembershipStatus }) {
+export function StatusBadge({ status }: { status: RecordStatus | SubscriptionStatus | CustomerMembershipStatus | CardStatus }) {
   const tone: StatusBadgeTone =
     status === "ACTIVE"
       ? "success"

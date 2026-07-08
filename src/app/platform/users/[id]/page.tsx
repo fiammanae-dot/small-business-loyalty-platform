@@ -104,7 +104,7 @@ export default async function PlatformUserDetailPage({ params }: { params: Promi
     notFound();
   }
 
-  const failedLoginCount = await prisma.failedLoginAudit.count({ where: { email: user.email } }).catch(() => 0);
+  const failedLoginCount = await prisma.failedLoginAudit.count({ where: { emailAttempted: user.email } }).catch(() => 0);
   const displayName = getDisplayUserName(user);
   const plan = user.business?.subscriptions[0]?.subscriptionPlan.name ?? "Not available";
 

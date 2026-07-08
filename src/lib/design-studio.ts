@@ -238,10 +238,15 @@ export type DesignStudioProfessionalPreset = {
   category: string;
   name: string;
   description: string;
-  layoutStyle: Extract<CardDesignLayoutStyle, "CLASSIC" | "MODERN" | "PREMIUM" | "LUXURY">;
+  // Widened beyond the curated professional-preset set (CLASSIC/MODERN/PREMIUM/LUXURY)
+  // because this type is reused for thumbnail previews of arbitrary saved business
+  // presets and existing program designs, which may use any CardDesignLayoutStyle.
+  layoutStyle: CardDesignLayoutStyle;
   backgroundStyle: Extract<CardDesignBackgroundStyle, "SOLID" | "GRADIENT" | "PATTERN">;
   backgroundPattern: CardDesignBackgroundPattern;
-  stampJourneyStyle: Extract<CardDesignStampJourneyStyle, "CIRCLES" | "CONNECTED_DOTS" | "PROGRESS_BAR">;
+  // Same reasoning as layoutStyle above: saved presets/programs may predate the
+  // curated stamp-journey picker and carry any CardDesignStampJourneyStyle value.
+  stampJourneyStyle: CardDesignStampJourneyStyle;
   stampIcon: CardDesignStampIcon;
   rewardStyle: CardDesignRewardStyle;
   typographyPreset: CardDesignTypographyPreset;
@@ -422,7 +427,7 @@ export const designStudioIndustryStyleOptions = [
 export const designStudioSchema = z.object({
   layoutStyle: z.enum(["CLASSIC", "MODERN", "PREMIUM", "LUXURY"]),
   stampJourneyStyle: z.enum(["CIRCLES", "CONNECTED_DOTS", "PROGRESS_BAR"]),
-  stampIcon: z.string().trim().min(1),
+  stampIcon: z.enum(stampIcons),
   backgroundStyle: z.enum(["SOLID", "GRADIENT", "PATTERN"]),
   backgroundPattern: z.enum(["NONE", "SUBTLE_DOTS", "DIAGONAL_LINES", "WAVES", "COFFEE_BEANS", "SCISSORS", "WATER_BUBBLES", "FOOD_PATTERN", "BEAUTY_PATTERN"]),
   rewardStyle: z.enum(["FILLED", "OUTLINE", "GLASS", "PREMIUM", "TICKET"]),

@@ -1,4 +1,4 @@
-import type { BusinessType, CardTheme } from "@prisma/client";
+import type { BusinessType, CardTheme, Prisma } from "@prisma/client";
 
 export type CardDesignVersion = "v1";
 export const cardLayoutStyles = ["CLASSIC", "MODERN", "PREMIUM", "MINIMAL", "LUXURY"] as const;
@@ -116,6 +116,14 @@ export type CardDesignInput =
     })
   | null
   | undefined;
+
+// Prisma stores program/preset card designs as a generic JSON column, so the value read
+// back is `Prisma.JsonValue` rather than `CardDesignInput`. The shape is always written by
+// this module (see buildProgramCardDesign/resolveCardDesign), so this narrows the boundary
+// once instead of repeating an assertion at every read site.
+export function asCardDesignInput(value: Prisma.JsonValue | null | undefined): CardDesignInput {
+  return value as CardDesignInput;
+}
 
 export type IndustryDesignPackId = "BARBERSHOP" | "BEAUTY_SALON" | "CAR_WASH" | "CAFE" | "RESTAURANT" | "GENERAL";
 

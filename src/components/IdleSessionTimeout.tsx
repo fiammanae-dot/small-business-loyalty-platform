@@ -6,7 +6,10 @@ const IDLE_TIMEOUT_MS = 15 * 60 * 1000;
 const ACTIVITY_EVENTS = ["click", "keydown", "mousemove", "scroll", "touchstart"] as const;
 
 export function IdleSessionTimeout() {
-  const timeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  // Explicit `number` (not `ReturnType<typeof window.setTimeout>`): with @types/node's
+  // ambient globals in scope, that alias resolves to NodeJS.Timeout even though this
+  // client component always runs in the browser, where setTimeout returns a number.
+  const timeoutRef = useRef<number | null>(null);
   const loggingOutRef = useRef(false);
 
   useEffect(() => {

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import type { CustomerMembershipStatus } from "@prisma/client";
 import type React from "react";
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CsrfInput } from "@/components/CsrfInput";
@@ -23,6 +24,7 @@ import { roleHomePath } from "@/lib/roles";
 import { getCurrentUser, hasActiveBusinessAccess } from "@/lib/session";
 import { issueStampAction, redeemRewardAction, undoStampAction } from "@/app/scan/actions";
 import { resolveCardThemeColors, withAlpha } from "@/lib/card-themes";
+import { asCardDesignInput } from "@/lib/card-design";
 import type { ConfirmationDialogTheme } from "@/components/ui";
 
 const CROSS_BUSINESS_SCAN_TITLE = "Access Denied";
@@ -383,7 +385,7 @@ export default async function ScanResultPage({
   const cardNumber = businessMembership.cardToken.length > 12 ? `${businessMembership.cardToken.slice(0, 8)}...${businessMembership.cardToken.slice(-4)}` : businessMembership.cardToken;
   const programTheme = resolveCardThemeColors({
     cardTheme: program.cardTheme,
-    cardDesign: program.cardDesign,
+    cardDesign: asCardDesignInput(program.cardDesign),
     branding: businessMembership.business.branding ?? defaultScannerBranding,
   });
   const scannerConfirmationTheme = buildScannerConfirmationTheme(programTheme);
@@ -528,7 +530,7 @@ function ActionSummarySection({
   customerName: string;
   phone: string;
   tier: string;
-  status: string;
+  status: CustomerMembershipStatus;
   businessName: string;
   branchName: string;
   programName: string;

@@ -193,7 +193,7 @@ function subscriptionRows(subscriptions: SubscriptionRow[], now: Date): ExportRo
     "Expiry Date": subscription.expiryDate ? formatDate(subscription.expiryDate) : "-",
     "Renewal Date": subscription.renewalDate ? formatDate(subscription.renewalDate) : "-",
     "Days Remaining": getSubscriptionRemainingDays(subscription) ?? "-",
-    "Trial Days Remaining": getTrialRemainingDays(subscription, now) ?? "-",
+    "Trial Days Remaining": getTrialRemainingDays(subscription) ?? "-",
     "Invoices": subscription.invoices.length,
     "Payments Recorded": subscription.invoices.reduce((sum, invoice) => sum + invoice.payments.length, 0),
     "Last Audit": subscription.auditLogs[0]?.action ?? "-",
@@ -204,6 +204,10 @@ function subscriptionRows(subscriptions: SubscriptionRow[], now: Date): ExportRo
 function invoiceRows(invoices: InvoiceRow[]): ExportRow[] {
   return invoices.map((invoice) => {
     const paidAmount = invoice.payments.reduce((sum, payment) => sum + Number(payment.amount), 0);
+    const lastPaidAt = invoice.payments.reduce<Date | null>(
+      (latest, payment) => (!latest || payment.paidAt > latest ? payment.paidAt : latest),
+      null,
+    );
     return {
       "Invoice Number": invoice.invoiceNumber,
       Business: invoice.business.name,
@@ -214,9 +218,9 @@ function invoiceRows(invoices: InvoiceRow[]): ExportRow[] {
       Status: getInvoiceDisplayStatus(invoice),
       "Raw Status": invoice.status,
       "Billing Cycle": formatBillingCycle(invoice.subscription.billingCycle),
-      "Issue Date": formatDate(invoice.issueDate),
+      "Issue Date": formatDate(invoice.invoiceDate),
       "Due Date": formatDate(invoice.dueDate),
-      "Payment Date": invoice.paymentDate ? formatDate(invoice.paymentDate) : "-",
+      "Payment Date": lastPaidAt ? formatDate(lastPaidAt) : "-",
       "Payments Recorded": invoice.payments.length,
       Notes: invoice.notes ?? "-",
     };

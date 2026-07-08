@@ -1,7 +1,7 @@
 import "server-only";
 
 import { randomInt } from "crypto";
-import type { Prisma } from "@prisma/client";
+import type { CustomerTierName, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getBaseUrl } from "@/lib/customer-cards";
 import { logAuditEvent } from "@/lib/audit";
@@ -171,7 +171,7 @@ export type ReferralReferrerLookupMatch = {
   id: number;
   globalCustomerId: number;
   referralCode: string;
-  currentTier: string;
+  currentTier: CustomerTierName;
   firstName: string;
   lastName: string | null;
   normalizedPhone: string;

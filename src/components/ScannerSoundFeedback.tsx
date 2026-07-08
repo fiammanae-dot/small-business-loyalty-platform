@@ -12,16 +12,20 @@ export function ScannerSoundFeedback({ event, enabled = true }: ScannerSoundFeed
   useEffect(() => {
     if (!event || !enabled || typeof window === "undefined") return;
 
+    // Narrowed copy: the nested function declaration below doesn't retain the
+    // `!event` narrowing from this guard, since TS re-widens closed-over
+    // variables inside nested function bodies.
+    const activeEvent = event;
     let cancelled = false;
 
     async function playAfterAllowed() {
-      const played = await playScannerSound(event, enabled);
+      const played = await playScannerSound(activeEvent, enabled);
       if (played || cancelled) return;
 
       const playOnGesture = async () => {
         if (cancelled) return;
         await unlockScannerAudio();
-        await playScannerSound(event, enabled);
+        await playScannerSound(activeEvent, enabled);
         removeGestureListeners();
       };
 

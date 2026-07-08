@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { commerciallyUsableStatuses } from "@/lib/subscriptions";
 
 export const businessOwnerInclude = {
@@ -25,4 +26,4 @@ export const businessOwnerInclude = {
       loyaltyPrograms: true,
     },
   },
-} as const;
+} satisfies Prisma.BusinessInclude;

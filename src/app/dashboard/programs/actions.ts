@@ -9,7 +9,7 @@ import { validateCsrfForm } from "@/lib/csrf";
 import { requireUsableSubscription } from "@/lib/commercial-access";
 import { createEngagementEventIfAllowed } from "@/lib/engagement";
 import { prisma } from "@/lib/prisma";
-import { getIndustryDefaultCardTheme } from "@/lib/card-design";
+import { asCardDesignInput, getIndustryDefaultCardTheme } from "@/lib/card-design";
 import { buildProgramCardDesign, getCardThemeForDesignStudioTemplate, parseDesignStudioForm } from "@/lib/design-studio";
 import { getStartingBonusStampsForEvent, parseProgramDate, programSchema } from "@/lib/programs";
 import { generateScanToken } from "@/lib/scan";
@@ -215,7 +215,7 @@ export async function updateProgramDesignStudioAction(formData: FormData) {
   const parsed = parseDesignStudioForm(formData, program.businessType);
   if (!parsed.success) fail(path, parsed.error.issues[0]?.message ?? "Design selection is invalid.");
 
-  const cardDesign = buildProgramCardDesign(parsed.data, program.cardDesign);
+  const cardDesign = buildProgramCardDesign(parsed.data, asCardDesignInput(program.cardDesign));
   await prisma.loyaltyProgram.update({
     where: { id: program.id },
     data: {
@@ -262,7 +262,7 @@ export async function saveBusinessDesignPresetAction(formData: FormData) {
 
   const parsed = parseDesignStudioForm(formData, program.businessType);
   if (!parsed.success) fail(path, parsed.error.issues[0]?.message ?? "Design selection is invalid.");
-  const cardDesign = buildProgramCardDesign(parsed.data, program.cardDesign);
+  const cardDesign = buildProgramCardDesign(parsed.data, asCardDesignInput(program.cardDesign));
 
   try {
     await prisma.businessDesignPreset.create({
