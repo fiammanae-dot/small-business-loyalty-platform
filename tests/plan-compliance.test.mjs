@@ -34,16 +34,16 @@ test("starter multi-branch detection creates internal audit warning only", () =>
   assert.match(compliance, /recordAuditEvent/);
   assert.doesNotMatch(compliance, /suspend/i);
   assert.doesNotMatch(compliance, /block scanner/i);
-  assert.match(dashboard, /Plan Compliance Status/);
-  assert.match(dashboard, /Potential Multi-Branch Activity Detected/);
-  assert.match(auditCenter, /Plan Compliance Warnings/);
+  assert.match(dashboard, /planCompliance\.status === "POTENTIAL_MULTI_BRANCH"/);
+  assert.match(dashboard, /Potential multi-branch activity/);
+  assert.match(auditCenter, /label="compliance"/);
   assert.match(auditCenter, /Compliance Events/);
 });
-test("dashboard wires computed plan compliance into BusinessHealthPanel", () => {
+test("dashboard wires computed plan compliance into the account status card", () => {
   const dashboard = read("src/app/dashboard/page.tsx");
 
   assert.match(dashboard, /const planCompliance = await getPlanComplianceSummary/);
   assert.match(dashboard, /planCompliance=\{planCompliance\}/);
-  assert.match(dashboard, /function BusinessHealthPanel\(\{[\s\S]*planCompliance[\s\S]*PlanComplianceSummary/);
-  assert.match(dashboard, /<PlanComplianceCard compliance=\{planCompliance\} \/>/);
+  assert.match(dashboard, /function AccountCard\(\{[\s\S]*planCompliance[\s\S]*PlanComplianceSummary/);
+  assert.match(dashboard, /score \{planCompliance\.score\}\/100/);
 });

@@ -11,14 +11,14 @@ function read(file) {
 test("dashboard quick action labels keep single-line desktop affordance", () => {
   const page = read("src/app/dashboard/page.tsx");
   const layout = read("src/components/layouts/DashboardPageLayout.tsx");
+  const button = read("src/components/ui/Button.tsx");
 
   assert.match(layout, /min-w-0 max-w-full space-y-5/, "Dashboard page layout should not allow children to widen the mobile viewport");
-  assert.match(page, /grid min-w-0 gap-5 xl:grid-cols-\[minmax\(0,1fr\)_360px\]/, "Dashboard main content grid should allow columns to shrink on mobile");
-  assert.match(page, /grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 min-\[1180px\]:grid-cols-4/, "Quick action cards should use equal responsive grid tracks");
-  assert.match(page, /flex min-h-24 w-full min-w-0 items-center gap-3/, "Quick action cards should fill their grid track without fixed overflow");
-  assert.match(page, /shrink-0 items-center justify-center/, "Quick action icons should remain fixed size");
-  assert.match(page, /sm:whitespace-nowrap/, "Quick action labels should stay on one line on desktop while allowing mobile wrapping");
-  assert.doesNotMatch(page, /break-words text-lg font-semibold/, "Quick action labels should not force multi-line wrapping");
+  assert.match(page, /grid min-w-0 gap-4 xl:grid-cols-\[minmax\(0,1\.35fr\)_minmax\(0,1fr\)\]/, "Dashboard main content grid should allow columns to shrink on mobile");
+  assert.match(button, /inline-flex min-w-0 items-center justify-center gap-2/, "Shared button/link component should keep icon and label on one line without overflow");
+  assert.match(page, /ButtonLink href="\/dashboard\/scanner" variant="business" size="lg" leftIcon=\{<ScanLine/, "Desktop hero should expose an Open Scanner quick action");
+  assert.match(page, /ButtonLink href="\/dashboard\/customers\/new" variant="outline" leftIcon=\{<UserPlus/, "Desktop hero should expose an Add Customer quick action");
+  assert.match(page, /grid gap-2 md:hidden/, "Mobile quick actions should stack in their own compact grid");
 });
 
 test("dashboard search inputs avoid mobile browser zoom", () => {
@@ -29,32 +29,28 @@ test("dashboard search inputs avoid mobile browser zoom", () => {
   assert.match(searchBar, /text-base placeholder:text-\[#94A3B8\] outline-none sm:text-sm/, "Shared SearchBar should avoid iOS input auto-zoom on mobile");
 });
 
-test("referral center uses stacked full-width sections and help dialog", () => {
+test("referral center uses stacked full-width sections and static how-it-works guide", () => {
   const page = read("src/app/dashboard/referrals/page.tsx");
 
   assert.match(page, /How referrals work/);
-  assert.match(page, /role="dialog" aria-label="How referrals work"/);
+  assert.match(page, /HowStep n=\{1\} title="Invited"/);
   assert.doesNotMatch(page, /<aside className=/, "Referral Center should not keep a narrow permanent sidebar");
-  assert.doesNotMatch(page, /<h2 className="text-lg font-semibold text-\[#111827\]">Growth Funnel<\/h2>/, "Growth Funnel should not occupy permanent dashboard space");
-  assert.match(page, /<h2 className="text-lg font-semibold text-\[#111827\]">Referral List<\/h2>/);
-  assert.match(page, /<h2 className="text-lg font-semibold text-\[#111827\]">Top Referrers<\/h2>/);
-  assert.match(page, /grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5/);
+  assert.match(page, /<h2 className="text-base font-bold tracking-tight text-\[#171A21\]">Referrals /);
+  assert.match(page, /<h2 className="text-base font-bold tracking-tight text-\[#171A21\]">Top referrers<\/h2>/);
+  assert.match(page, /grid gap-3 md:grid-cols-2 xl:grid-cols-5/);
   assert.match(page, /take: 10/);
   assert.match(page, /No top referrers yet\./);
 });
 
-test("referral cards use compact responsive metadata grid", () => {
+test("referral cards use compact responsive row layout", () => {
   const page = read("src/app/dashboard/referrals/page.tsx");
 
-  assert.match(page, /<dl className="mt-5 grid min-w-0 gap-3 text-sm text-\[#6B7280\] lg:grid-cols-2">/);
-  for (const label of ["Created", "Qualified", "Reward", "First Visit", "Branch", "Referrer", "Referred"]) {
-    assert.match(page, new RegExp(`ReferralMeta label="${label}"`));
-  }
-  assert.match(page, /<p className="mb-3 text-xs font-semibold uppercase tracking-wide text-\[#9CA3AF\]">Actions<\/p>/);
-  assert.match(page, /flex min-w-0 flex-wrap items-center gap-2/);
-  assert.match(page, /inline-flex h-10 shrink-0 items-center justify-center/);
-  assert.match(page, /whitespace-normal break-words font-medium leading-5/);
-  assert.doesNotMatch(page, /<dd className="mt-1 truncate/);
+  assert.match(page, /function ReferralListRow/);
+  assert.match(page, /className="truncate text-sm font-semibold text-\[#111827\]"/, "Referrer/referred name line should truncate instead of overflowing");
+  assert.match(page, /className=\{`mt-0\.5 truncate text-xs/, "Referral meta line (code/date/branch) should truncate instead of overflowing");
+  assert.match(page, /<StatusPill status=\{referral\.status\}/);
+  assert.match(page, /\+\{latestReward\.bonusStamps\} stamp/, "Granted referral rewards should surface the bonus stamp count");
+  assert.match(page, /flex shrink-0 flex-col items-end gap-1/, "Status/reward column should stay a fixed width on narrow screens");
 });
 
 test("business billing history does not expose broken download action", () => {
@@ -68,7 +64,7 @@ test("business billing history does not expose broken download action", () => {
 test("alert analytics handles long source names and counts safely", () => {
   const page = read("src/app/dashboard/notifications/page.tsx");
 
-  assert.match(page, /Top Alert Sources/);
+  assert.match(page, /Top alert sources/);
   assert.match(page, /className="min-w-0 truncate text-\[#6B7280\]" title=\{row\.label\}/);
   assert.match(page, /className="w-8 shrink-0 text-right text-\[#111827\]"/);
   assert.match(page, /mt-1 h-2 overflow-hidden rounded-full/);

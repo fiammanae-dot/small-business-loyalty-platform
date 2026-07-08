@@ -136,13 +136,13 @@ test("business owner customer profile recalculates and stores tiers from visit e
   const profile = read("src/app/dashboard/customers/[id]/page.tsx");
   const scanActions = read("src/app/scan/actions.ts");
 
-  assert.match(profile, /Current tier/);
+  assert.match(profile, /Tier status/);
   assert.match(profile, /Visits completed/);
   assert.match(profile, /Next tier/);
-  assert.match(profile, /Tier progress/);
+  assert.match(profile, /customerTier\.progressPercent/);
   assert.match(profile, /visitEvents: stampTransactions\.map/);
   assert.match(profile, /currentTier: customerTier\.storedTier/);
-  assert.match(profile, /Top Tier Member/);
+  assert.match(profile, /Top tier member with exclusive rewards available/);
   assert.match(profile, /Rewards redeemed/);
   assert.match(scanActions, /calculateCustomerTier/);
   assert.match(scanActions, /visitEvents: tierVisitEvents\.map/);

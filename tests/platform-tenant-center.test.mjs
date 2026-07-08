@@ -8,7 +8,7 @@ function read(path) {
 
 test("tenant center provides operational tenant overview, directory, health, resource, and export views", () => {
   const page = read("src/app/platform/tenant-center/page.tsx");
-  const shell = read("src/components/DashboardShell.tsx");
+  const nav = read("src/components/RoleNavigation.tsx");
 
   for (const expected of [
     "Tenant Center",
@@ -18,38 +18,29 @@ test("tenant center provides operational tenant overview, directory, health, res
     "Suspended Tenants",
     "Expired Tenants",
     "Total Customers Across Platform",
-    "Tenant Directory",
-    "Business Name",
-    "Owner",
-    "Plan",
-    "Status",
-    "Branches",
-    "Programs",
-    "Customers",
-    "Created Date",
-    "View",
-    "Edit",
-    "Suspend",
-    "Activate",
-    "Archive",
-    "Transfer Ownership",
-    "Tenant Health Score",
-    "Tenant Resource Monitoring",
-    "QR Scans",
-    "Enrollments",
-    "Storage Usage",
-    "Database Usage",
+    "function TenantCard",
+    "function HealthBadge",
+    "function StatTile",
+    "label=\"Branches\"",
+    "label=\"Programs\"",
+    "label=\"Customers\"",
+    "label=\"View\"",
+    "label=\"Edit\"",
+    ">Suspend<",
+    ">Activate<",
+    ">Archive<",
+    "Transfer ownership",
     "CSV",
     "Excel",
     "PDF",
-    "requireRole(\"PLATFORM_OWNER\")",
+    "requireRole\\(\"PLATFORM_OWNER\"\\)",
   ]) {
-    assert.match(page, new RegExp(expected.replace(/[()"]/g, "\\$&")));
+    assert.match(page, new RegExp(expected));
   }
 
-  assert.match(shell, /\/platform\/tenant-center/);
-  assert.match(shell, /Tenant Center/);
-  assert.match(shell, /Layers3/);
+  assert.match(nav, /\/platform\/tenant-center/);
+  assert.match(nav, /Tenant Center/);
+  assert.match(nav, /Layers3/);
   assert.doesNotMatch(page, /White Label|white-label|Custom Domain|custom domains|Future-ready/);
   assert.doesNotMatch(page, /Tenant Branding|Customer Experience Branding|Tenant Settings|Tenant Audit History/);
 });

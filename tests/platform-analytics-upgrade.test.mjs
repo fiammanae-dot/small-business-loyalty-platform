@@ -10,23 +10,22 @@ test("platform analytics page includes charts, top business tables, exports, and
   const page = read("src/app/platform/health-analytics/page.tsx");
 
   for (const expected of [
-    "requireRole(\"PLATFORM_OWNER\")",
-    "Business growth trend",
-    "Customer growth trend",
-    "Subscription growth trend",
-    "Alert trend",
-    "Plan distribution",
-    "Top businesses by customers",
-    "Top businesses by scans",
-    "Top businesses by enrollments",
+    "requireRole\\(\"PLATFORM_OWNER\"\\)",
+    "businessGrowthTrend",
+    "customerGrowthTrend",
+    "subscriptionGrowthTrend",
+    "alertTrend",
+    "topBusinessesByCustomers",
+    "topBusinessesByScans",
+    "topBusinessesByEnrollments",
+    "LeaderboardTabs",
     "PDF",
     "Excel",
     "CSV",
-    "Platform Overview",
-    "Loyalty Activity",
-    "Subscription Overview",
-    "Security Monitoring",
+    "aria-label=\"Platform overview\"",
+    "aria-label=\"Loyalty activity\"",
+    "aria-label=\"Security monitoring\"",
   ]) {
-    assert.match(page, new RegExp(expected.replace(/[()"]/g, "\\$&")));
+    assert.match(page, new RegExp(expected));
   }
 });

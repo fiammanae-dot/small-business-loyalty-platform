@@ -10,32 +10,28 @@ test("platform dashboard uses SaaS admin hierarchy, KPIs, icons, and recent acti
   const page = read("src/app/platform/page.tsx");
   const cards = read("src/components/PlatformCards.tsx");
   const shell = read("src/components/DashboardShell.tsx");
+  const activityFilters = read("src/components/PlatformActivityFilters.tsx");
+  const nav = read("src/components/RoleNavigation.tsx");
 
   for (const expected of [
     "Platform Operations Center",
-    "No trend data yet",
-    "No revenue recorded yet",
-    "Quick Actions",
+    "aria-label=\"Quick actions\"",
     "Management",
     "Recent Activity",
     "Total Businesses",
     "Active Subscriptions",
     "Monthly Revenue",
     "Open Alerts",
-    "All Activity",
-    "Alerts",
-    "Invoices",
-    "Users",
-    "Subscriptions",
-    "24 Hours",
-    "7 Days",
-    "30 Days",
     "New Business",
     "Billing Center",
     "Create Plan",
     "Add User",
   ]) {
     assert.match(page, new RegExp(expected));
+  }
+
+  for (const expected of ["All Activity", "Alerts", "Invoices", "Users", "Subscriptions", "24 Hours", "7 Days", "30 Days"]) {
+    assert.match(activityFilters, new RegExp(expected));
   }
 
   for (const expected of ["Building2", "Package", "CreditCard", "Receipt", "Users", "BarChart3", "Settings"]) {
@@ -51,9 +47,9 @@ test("platform dashboard uses SaaS admin hierarchy, KPIs, icons, and recent acti
   assert.match(shell, /headerAside/);
   assert.match(shell, /Welcome back/);
   assert.match(shell, /Dashboard/);
-  assert.match(shell, /Businesses/);
-  assert.match(shell, /Analytics/);
-  assert.match(shell, /Audit Center/);
-  assert.match(shell, /Billing Center/);
-  assert.match(shell, /Tenant Center/);
+  assert.match(nav, /Businesses/);
+  assert.match(nav, /Analytics/);
+  assert.match(nav, /Audit Center/);
+  assert.match(nav, /Billing Center/);
+  assert.match(nav, /Tenant Center/);
 });

@@ -13,19 +13,20 @@ test("platform plans page exposes KPI cards, search, sorting, plan cards, and de
     "Total Plans",
     "Active Subscriptions",
     "Most Popular Plan",
-    "Total Revenue",
+    "Recurring Revenue",
     "Search plan name",
-    "Sort by active subscriptions",
-    "Sort by businesses using plan",
-    "Sort by revenue",
-    "PlanCard",
-    "Utilization",
-    "Detailed Analysis",
-    "Plan comparison table",
+    "activeSubscriptions: \"Active subscriptions\"",
+    "businesses: \"Businesses using plan\"",
+    "revenue: \"Revenue\"",
+    "Sort by \\{label\\.toLowerCase\\(\\)\\}",
+    "function PlanCard",
+    "Adoption",
+    "AnalysisRow",
+    "Plan comparison",
     "System Administrator",
-    "requireRole(\"PLATFORM_OWNER\")",
+    "requireRole\\(\"PLATFORM_OWNER\"\\)",
   ]) {
-    assert.match(page, new RegExp(expected.replace(/[()"]/g, "\\$&")));
+    assert.match(page, new RegExp(expected));
   }
 
   assert.doesNotMatch(page, /Monthly Revenue/);

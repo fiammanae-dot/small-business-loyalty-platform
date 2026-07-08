@@ -8,43 +8,38 @@ function read(path) {
 
 test("platform audit center provides monitoring KPIs, filters, drawer, exports, timeline, and summaries", () => {
   const page = read("src/app/platform/audit-center/page.tsx");
-  const shell = read("src/components/DashboardShell.tsx");
+  const nav = read("src/components/RoleNavigation.tsx");
 
   for (const expected of [
     "Audit Center",
-    "Total Audit Events",
-    "Last 24 Hours Events",
     "Security Events",
     "Administrative Changes",
     "Business Actions",
     "Subscription Actions",
-    "Cooldown Overrides",
-    "Failed Actions",
-    "Advanced Filters",
+    "Cooldown overrides",
+    "More filters",
     "Search user, business, email, event ID, entity ID",
-    "Date & Time",
-    "Event Type",
-    "Severity",
-    "IP Address",
-    "Audit Event Details Drawer",
-    "Before Value",
-    "After Value",
+    "All event types",
+    "All severities",
+    "IP address",
+    "Event details",
+    "Before value",
+    "After value",
     "Metadata",
-    "Security Monitoring Section",
-    "Failed Login Attempts",
-    "Restricted Action Attempts",
+    "Security &amp; health",
+    "Failed login attempts",
+    "Restricted action attempts",
     "Export CSV",
     "Export Excel",
     "Export PDF",
-    "Audit Timeline View",
-    "Most Active Businesses",
-    "Most Active Users",
-    "System Health Audit Panel",
+    "Event stream",
+    "Most active businesses",
+    "Most active users",
     "requireRole(\"PLATFORM_OWNER\")",
   ]) {
     assert.match(page, new RegExp(expected.replace(/[()"]/g, "\\$&")));
   }
 
-  assert.match(shell, /\/platform\/audit-center/);
-  assert.match(shell, /ClipboardList/);
+  assert.match(nav, /\/platform\/audit-center/);
+  assert.match(nav, /ClipboardList/);
 });

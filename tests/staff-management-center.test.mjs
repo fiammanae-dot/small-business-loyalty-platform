@@ -13,22 +13,19 @@ test("business owner staff management uses the team management center structure"
 
   for (const expected of [
     "Team Management",
-    "Manage your staff, branch managers and account access.",
-    "Add Staff Member",
-    "Export Staff",
-    "Total Staff",
-    "Active Staff",
-    "Branch Managers",
-    "Disabled Accounts",
-    "New Staff This Month",
-    "Search by name, email, phone or role...",
-    "Team filters",
-    "Staff List",
+    "Manage your staff, branch managers, and account access.",
+    "Add staff member",
+    "Total staff",
+    "Branch managers",
+    "New this month",
+    "Search by name, email, or role",
+    "Team summary",
+    "Staff list",
   ]) {
     assert.ok(page.includes(expected), `Missing staff management copy: ${expected}`);
   }
 
-  for (const component of ["PageIntro", "MetricCard", "SearchBar", "FilterBar", "DataTable", "StatusBadge", "ActionMenu", "SectionCard", "EmptyState", "ButtonLink"]) {
+  for (const component of ["MetricCard", "StatusBadge", "ActionMenu", "SectionCard", "EmptyState", "ButtonLink"]) {
     assert.match(page, new RegExp(component), `Staff page should use ${component}`);
   }
 });

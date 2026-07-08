@@ -42,12 +42,13 @@ test("operations center and business owner pages expose support approval workflo
   const history = read("src/app/dashboard/support-history/page.tsx");
   const settings = read("src/app/dashboard/settings/page.tsx");
 
-  assert.match(operations, /Pending Requests/);
-  assert.match(operations, /Approved, Rejected & Expired Requests/);
+  assert.match(operations, /pendingRequests\.length/);
+  assert.match(operations, /awaiting approval/);
+  assert.match(operations, /Support ledger/);
   assert.match(startPage, /Emergency access/);
   assert.match(startPage, /Support Policy/);
   assert.match(startPage, /Submit Support Request/);
-  assert.match(history, /Pending Support Requests/);
+  assert.match(history, /Pending your approval/);
   assert.match(history, /approveSupportRequestAction/);
   assert.match(history, /rejectSupportRequestAction/);
   assert.match(settings, /Support Access Policy/);

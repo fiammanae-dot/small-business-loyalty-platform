@@ -8,25 +8,25 @@ function read(path) {
 
 test("billing center provides commercial dashboard, filters, lifecycle views, exports, and platform-owner protection", () => {
   const page = read("src/app/platform/billing-center/page.tsx");
-  const shell = read("src/components/DashboardShell.tsx");
+  const nav = read("src/components/RoleNavigation.tsx");
 
   for (const expected of [
     "Billing Center",
-    "Monthly Revenue (MRR)",
-    "Annual Revenue Projection (ARR)",
+    "Monthly Revenue \\(MRR\\)",
+    "ARR projection",
     "Active Subscriptions",
-    "Trial Subscriptions",
+    "on trial",
     "Expiring Within 30 Days",
-    "Overdue Invoices",
-    "Suspended Accounts",
-    "Cancelled Subscriptions",
+    "label=\"overdue\"",
+    "label=\"suspended\"",
+    "label=\"cancelled subscriptions\"",
     "Revenue Summary Panel",
-    "Monthly Revenue Trend",
-    "Subscription Growth Trend",
-    "Business Growth Trend",
-    "Plan Distribution",
-    "Revenue by Plan",
-    "Renewal Forecast",
+    "Monthly revenue",
+    "Subscription growth",
+    "Business growth",
+    "Plan distribution",
+    "Revenue by plan",
+    "Renewal forecast",
     "Subscription Management",
     "Renewal Center",
     "Trial Management",
@@ -36,17 +36,17 @@ test("billing center provides commercial dashboard, filters, lifecycle views, ex
     "Churn Analytics",
     "Billing Alerts",
     "Billing Health Score",
-    "Global Filters",
+    "Filters",
     "CSV",
     "Excel",
     "PDF",
-    "requireRole(\"PLATFORM_OWNER\")",
+    "requireRole\\(\"PLATFORM_OWNER\"\\)",
   ]) {
-    assert.match(page, new RegExp(expected.replace(/[()"]/g, "\\$&")));
+    assert.match(page, new RegExp(expected));
   }
 
-  assert.match(shell, /\/platform\/billing-center/);
-  assert.match(shell, /CircleDollarSign/);
+  assert.match(nav, /\/platform\/billing-center/);
+  assert.match(nav, /CircleDollarSign/);
 });
 
 test("platform business detail includes billing profile without changing business logic", () => {

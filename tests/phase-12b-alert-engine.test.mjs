@@ -73,10 +73,9 @@ test("alert governance remains available while dashboard shows one compact alert
   const notifications = read("src/app/dashboard/notifications/page.tsx");
 
   for (const expected of [
-    "alertCount",
-    "ActionRequiredSection",
+    "totalOpenAlerts",
     "href=\"/dashboard/notifications\"",
-    "Open Alerts",
+    "open \\{totalOpenAlerts === 1",
   ]) {
     assert.match(dashboard, new RegExp(expected));
   }
@@ -90,11 +89,11 @@ test("alert governance remains available while dashboard shows one compact alert
     "All rule types",
     "Risk min",
     "Risk max",
-    "Alerts by Day",
-    "Alerts by Severity",
-    "Alerts by Category",
-    "Top Alert Sources",
-    "Risk score",
+    "Alerts by day",
+    "Alerts by severity",
+    "Alerts by category",
+    "Top alert sources",
+    "riskTextClass\\(alert\\.riskScore\\)",
   ]) {
     assert.match(notifications, new RegExp(expected));
   }

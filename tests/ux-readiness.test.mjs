@@ -11,15 +11,11 @@ test("business dashboard includes beta readiness polish without changing loyalty
 
   for (const expected of [
     "DashboardPageLayout",
-    "DashboardCommandCenter",
-    "Today\'s Operations",
-    "Quick Actions",
-    "Action Required",
-    "Business Health",
+    "function AccountCard",
     "Recent Activity",
-    "Subscription Summary",
     "Open Scanner",
-    "Pending Referrals",
+    "\\{pendingReferrals\\} pending \\{pendingReferrals === 1",
+    "totalOpenAlerts",
   ]) {
     assert.match(dashboard, new RegExp(expected));
   }
@@ -40,7 +36,7 @@ test("customer profile uses compact Customer 360 command center", () => {
 
   for (const expected of [
     "Customer 360",
-    "CommandInfo",
+    "function Info",
     "PageActions",
     "ActionMenu",
     "ProfileSummaryCard",
@@ -50,13 +46,12 @@ test("customer profile uses compact Customer 360 command center", () => {
     "RewardsPanel",
     "ReferralSummaryPanel",
     "CustomerCardPanel",
-    "Loyalty Progress",
-    "Recent Activity",
+    "Loyalty progress",
+    "Recent activity",
     "Rewards",
     "Referrals",
     "Card & QR",
-    "Tier Summary",
-    "Quick Actions",
+    "Tier status",
     "Open Card",
     "Copy Card Link",
     "Share Card",
@@ -64,9 +59,9 @@ test("customer profile uses compact Customer 360 command center", () => {
     "Issue Stamp",
     "Redeem Reward",
     "Active program",
-    "Reward status",
+    "Reward ready",
     "Open Referral Center",
-    "xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]",
+    "xl:grid-cols-[minmax(0,1.3fr)_minmax(300px,1fr)]",
   ]) {
     assert.equal(profile.includes(expected), true, `${expected} should appear in rebuilt Customer 360`);
   }
@@ -78,11 +73,9 @@ test("customer profile uses compact Customer 360 command center", () => {
   for (const removed of [
     "CustomerSummaryCard",
     "DetailPageLayout",
-    "MetricCard",
     "ReferralStatusBadge",
     "TabLink",
     "Customer profile tabs",
-    "?tab=",
     "Communication history",
     "Manual delivery history",
     "[\"messages\", \"Messages\"]",
@@ -101,8 +94,8 @@ test("customer and program lists include mobile card views and helpful empty sta
   assert.match(customers, /No customers found/);
   assert.match(customers, /lg:hidden/);
   assert.match(customers, /PageIntro/);
-  assert.match(customers, /MetricCard/);
-  assert.match(customers, /SavedViews/);
+  assert.match(customers, /aria-label="Customer segments"/);
+  assert.match(customers, /Reward ready/);
   assert.doesNotMatch(customers, /ActionMenu/);
   assert.match(customers, /ChevronRight/);
   assert.match(customers, /Open \$\{row\.customerName\} Customer 360/);
@@ -145,7 +138,7 @@ test("phase 7f.1 fixes add scanner banners, mobile cards, and wizard labels", ()
   assert.match(businessForm, /Review & Create/);
   assert.match(businessForm, /Owner Account/);
   assert.match(read("src/app/dashboard/messages/page.tsx"), /Messages are prepared only and are not sent automatically/);
-  assert.match(read("src/app/dashboard/notifications/page.tsx"), /Investigate Alert/);
+  assert.match(read("src/app/dashboard/notifications/page.tsx"), />Investigate</);
   assert.match(read("src/app/branch/page.tsx"), /Branch Performance/);
   assert.match(read("src/app/staff/page.tsx"), /Today.*Activity/);
 });

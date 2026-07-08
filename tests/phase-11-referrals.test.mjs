@@ -90,7 +90,7 @@ test("public customer card exposes referral link and aggregate referral stats on
 test("business dashboard does not duplicate referral reporting after cleanup", () => {
   const dashboard = read("src/app/dashboard/page.tsx");
 
-  assert.match(dashboard, /Pending Referrals/);
+  assert.match(dashboard, /\{pendingReferrals\} pending \{pendingReferrals === 1 \? "referral" : "referrals"\}/);
   assert.doesNotMatch(dashboard, /Qualified Referrals/);
   assert.doesNotMatch(dashboard, /Referral Rewards Granted/);
   assert.doesNotMatch(dashboard, /TopReferrers/);
@@ -105,7 +105,7 @@ test("business owner referral center exposes referral reporting and detail visib
     "Pending referrals",
     "Qualified referrals",
     "Rewards granted",
-    "Top Referrers",
+    "Top referrers",
     "businessId: user.businessId",
     "referralCode",
   ]) {

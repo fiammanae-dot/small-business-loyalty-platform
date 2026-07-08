@@ -11,19 +11,18 @@ test("platform subscriptions page uses compact toolbar, directory rows, badges, 
   const detail = read("src/app/platform/businesses/[id]/page.tsx");
 
   for (const expected of [
-    "Business subscriptions",
+    "Subscription management",
+    "View lifecycle status, expiry, renewal, and audit activity\\.",
     "Active Subscriptions",
     "Trial Subscriptions",
     "Expiring Within 30 Days",
     "Suspended Subscriptions",
-    "Apply filters",
     "Clear filters",
-    "Showing {subscriptions.length} subscriptions",
     "Review flagged",
     "SubscriptionCard",
-    "CompactBadge",
+    "BusinessBadges",
   ]) {
-    assert.match(page, new RegExp(expected.replace(/[{}]/g, "\\$&")));
+    assert.match(page, new RegExp(expected));
   }
 
   assert.match(page, /Open \$\{subscription\.business\.name\} subscription details/);

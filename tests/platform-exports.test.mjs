@@ -62,7 +62,7 @@ test("System Administrator KPI cards navigate to supported investigation pages",
   assert.match(auditCenter, /href="\/platform\/audit-center\?status=Failed"/);
 
   const billingCenter = readFileSync("src/app/platform/billing-center/page.tsx", "utf8");
-  assert.match(billingCenter, /href="\/platform\/subscriptions\?status=TRIAL"/);
+  assert.match(billingCenter, /TrialManagement subscriptions=\{trialSubscriptions\}/);
   assert.match(billingCenter, /href="\/platform\/subscriptions\?expiry=next30"/);
   assert.match(billingCenter, /href="\/platform\/invoices\?status=OVERDUE"/);
 

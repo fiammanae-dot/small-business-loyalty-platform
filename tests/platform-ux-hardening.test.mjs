@@ -43,17 +43,15 @@ test("notifications have alert governance filters and standardized KPIs", () => 
     "High Risk",
     "Medium Risk",
     "Low Risk",
-    "Branch Risk Overview",
+    "Branch risk",
     "workflowTabs",
-    "All severities",
     "All owners",
     "All branches",
-    "Showing {alerts.length} alerts",
-    "Clear Filters",
+    "Clear filters",
     "Actions",
-    "Investigate Alert",
+    ">Investigate<",
   ]) {
-    assert.match(notifications, new RegExp(expected.replace(/[{}]/g, "\\$&")));
+    assert.match(notifications, new RegExp(expected));
   }
 });
 

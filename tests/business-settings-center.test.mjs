@@ -42,7 +42,8 @@ test("business owner settings page uses design-system foundations and preserves 
 test("business owner settings page is responsive and avoids debug data", () => {
   const page = read("src/app/dashboard/settings/page.tsx");
 
-  assert.match(page, /SettingsMobileSectionSelect/);
+  assert.match(page, /aria-label="Settings categories"/, "Settings page should expose a categories nav for switching sections on mobile");
+  assert.match(page, /overflow-x-auto border-b border-\[#E5E7EB\] \[scrollbar-gutter:stable\]/, "Settings categories nav should scroll horizontally on mobile instead of overflowing");
   assert.match(page, /md:grid/);
   assert.match(page, /overflow-x-hidden/);
   assert.doesNotMatch(page, /JSON\.stringify|debug payload|raw uuid/i);

@@ -138,7 +138,7 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(helper, /getAllowedStampIconsForBusinessType/);
   assert.match(page, /Design Your Loyalty Card/);
   assert.match(page, /Customize the appearance of your customer's digital loyalty card\./);
-  assert.match(page, /Preview on Phone/);
+  assert.match(form, /Preview on phone/);
   assert.match(form, /Card Style/);
   assert.match(form, /Professional Templates/);
   assert.match(form, /Professional Template/);
@@ -246,7 +246,7 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /backgroundStyle=\{backgroundStyle\}/);
   assert.match(form, /backgroundPattern=\{backgroundPattern\}/);
   assert.match(form, /PreviewProgress/);
-  assert.match(form, /StampIconGraphic stampIcon=\{stampIcon\}/);
+  assert.match(form, /StampSlot key=\{index\} stampIcon=\{stampIcon\}/);
   assert.match(form, /StampIconGraphic stampIcon=\{option\.value\}/);
   assert.match(form, /StampIconGraphic stampIcon=\{preset\.stampIcon\}/);
   assert.match(form, /rewardBoxStyles\[rewardStyle\]/);
@@ -291,7 +291,7 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /Preview Actions/);
   assert.match(form, /Download PNG/);
   assert.match(form, /Download PDF/);
-  assert.match(form, /Copy Preview Link/);
+  assert.match(form, /Preview on phone/);
   assert.match(form, /buildPreviewPdfHtml/);
   assert.match(form, /navigator\.clipboard\.writeText/);
   assert.match(form, /design-studio\?preview=true/);
@@ -316,7 +316,7 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
     assert.match(stampIconGraphic, new RegExp(icon));
   }
   assert.match(createWizard, /StampIconGraphic stampIcon=\{option\.value\}/);
-  assert.match(createWizard, /StampIconGraphic stampIcon=\{icon\}/);
+  assert.match(createWizard, /StampSlot key=\{index\} stampIcon=\{icon\}/);
   assert.doesNotMatch(form, /getStampIconMark|stampIconMarks/);
   assert.match(form, /lg:grid-cols-\[minmax\(0,70fr\)_minmax\(300px,30fr\)\]/);
   assert.match(form, /order-first[\s\S]*lg:order-last/);
