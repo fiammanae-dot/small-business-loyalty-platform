@@ -76,10 +76,10 @@ type DesignStartMode = "template" | "manual" | "duplicate";
 type WizardStep = 1 | 2 | 3 | 4 | 5;
 const wizardSteps: Array<{ value: WizardStep; label: string }> = [
   { value: 1, label: "Start" },
-  { value: 2, label: "Card Style" },
-  { value: 3, label: "Stamps & Rewards" },
+  { value: 2, label: "Style" },
+  { value: 3, label: "Rewards" },
   { value: 4, label: "Content" },
-  { value: 5, label: "Review & Save" },
+  { value: 5, label: "Review" },
 ];
 type PreviewContext = "phone" | "apple-wallet" | "google-wallet";
 type PreviewZoom = "fit" | "75" | "100" | "125";
@@ -474,116 +474,109 @@ export function ProgramDesignStudioForm({
       ))}
 
       <aside className="order-first grid h-fit min-w-0 gap-3 lg:order-last lg:self-start">
-        <div className="sticky top-2 z-10 grid gap-3 lg:top-6">
-          <div className="rounded-2xl border border-[#E2E8F0] bg-white/95 p-3 shadow-md backdrop-blur">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-[#64748B]">Live Preview</p>
-              <div className="flex rounded-full border border-[#E2E8F0] bg-[#F8FAFC] p-0.5" aria-label="Preview context">
-                {previewContextOptions.map((option) => {
-                  const active = previewContext === option.value;
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => setPreviewContext(option.value)}
-                      className="rounded-full px-2 py-1 text-[10px] font-black text-[#64748B] transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:business-bg"
-                      data-active={active}
-                      aria-pressed={active}
-                      title={option.label}
-                    >
-                      {option.shortLabel}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-            <div className="mt-2 max-h-[38vh] overflow-y-auto lg:max-h-[52vh]">{livePreviewNode}</div>
-          </div>
-        </div>
-
-        <div className="grid gap-3 lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto lg:pr-1">
-          <div className="rounded-2xl border border-[#E2E8F0] bg-white/90 p-3 shadow-sm">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={undoDesignChange}
-                  disabled={!canUndoDesign}
-                  className="rounded-xl border border-[#CBD5E1] bg-white px-3 py-1.5 text-xs font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-45 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
-                  aria-label="Undo last design change"
-                  title="Undo (Ctrl/Cmd+Z)"
-                >
-                  Undo
-                </button>
-                <button
-                  type="button"
-                  onClick={redoDesignChange}
-                  disabled={!canRedoDesign}
-                  className="rounded-xl border border-[#CBD5E1] bg-white px-3 py-1.5 text-xs font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-45 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
-                  aria-label="Redo design change"
-                  title="Redo (Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y)"
-                >
-                  Redo
-                </button>
-              </div>
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => setPreviewZoom(previousPreviewZoom(previewZoom))}
-                  className="grid h-7 w-7 place-items-center rounded-lg text-xs font-black text-[#64748B] transition hover:bg-[#F8FAFC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)]"
-                  aria-label="Zoom out"
-                >
-                  -
-                </button>
-                <span className="w-10 text-center text-[11px] font-bold text-[#64748B]">{previewZoomOptions.find((option) => option.value === previewZoom)?.label ?? "Fit"}</span>
-                <button
-                  type="button"
-                  onClick={() => setPreviewZoom(nextPreviewZoom(previewZoom))}
-                  className="grid h-7 w-7 place-items-center rounded-lg text-xs font-black text-[#64748B] transition hover:bg-[#F8FAFC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)]"
-                  aria-label="Zoom in"
-                >
-                  +
-                </button>
-              </div>
+        <div className="sticky top-2 z-10 rounded-2xl border border-[#E2E8F0] bg-white/95 p-3 shadow-md backdrop-blur lg:top-6">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-[#64748B]">Preview</p>
+            <div className="flex rounded-full border border-[#E2E8F0] bg-[#F8FAFC] p-0.5" aria-label="Preview context">
+              {previewContextOptions.map((option) => {
+                const active = previewContext === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setPreviewContext(option.value)}
+                    className="rounded-full px-2 py-1 text-[10px] font-black text-[#64748B] transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:business-bg"
+                    data-active={active}
+                    aria-pressed={active}
+                    title={option.label}
+                  >
+                    {option.shortLabel}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          <div className="rounded-2xl border border-[#E2E8F0] bg-white/90 p-3 shadow-sm">
-            <div className="grid grid-cols-3 gap-2">
+          <div className="mt-2">{livePreviewNode}</div>
+
+          <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#E2E8F0] pt-3">
+            <div className="flex gap-2">
               <button
                 type="button"
-                onClick={downloadPreviewPng}
-                disabled={previewActionPending !== null}
-                title="Download PNG"
-                className="rounded-xl business-bg px-2 py-2 text-xs font-black transition hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                onClick={undoDesignChange}
+                disabled={!canUndoDesign}
+                className="rounded-xl border border-[#CBD5E1] bg-white px-3 py-1.5 text-xs font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-45 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                aria-label="Undo last design change"
+                title="Undo (Ctrl/Cmd+Z)"
               >
-                {previewActionPending === "png" ? "..." : "PNG"}
+                Undo
               </button>
               <button
                 type="button"
-                onClick={downloadPreviewPdf}
-                disabled={previewActionPending !== null}
-                title="Download PDF"
-                className="rounded-xl border border-[#CBD5E1] bg-white px-2 py-2 text-xs font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                onClick={redoDesignChange}
+                disabled={!canRedoDesign}
+                className="rounded-xl border border-[#CBD5E1] bg-white px-3 py-1.5 text-xs font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-45 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                aria-label="Redo design change"
+                title="Redo (Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y)"
               >
-                {previewActionPending === "pdf" ? "..." : "PDF"}
-              </button>
-              <button
-                type="button"
-                onClick={copyPreviewLink}
-                disabled={previewActionPending !== null}
-                title="Preview on phone"
-                className="rounded-xl border border-[#CBD5E1] bg-white px-2 py-2 text-xs font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
-              >
-                {previewActionPending === "link" ? "..." : "Share"}
+                Redo
               </button>
             </div>
-            {previewActionMessage ? (
-              <p className="mt-2 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5 text-xs font-semibold text-[#475569]" aria-live="polite">
-                {previewActionMessage}
-              </p>
-            ) : null}
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setPreviewZoom(previousPreviewZoom(previewZoom))}
+                className="grid h-7 w-7 place-items-center rounded-lg text-xs font-black text-[#64748B] transition hover:bg-[#F8FAFC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)]"
+                aria-label="Zoom out"
+              >
+                -
+              </button>
+              <span className="w-10 text-center text-[11px] font-bold text-[#64748B]">{previewZoomOptions.find((option) => option.value === previewZoom)?.label ?? "Fit"}</span>
+              <button
+                type="button"
+                onClick={() => setPreviewZoom(nextPreviewZoom(previewZoom))}
+                className="grid h-7 w-7 place-items-center rounded-lg text-xs font-black text-[#64748B] transition hover:bg-[#F8FAFC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)]"
+                aria-label="Zoom in"
+              >
+                +
+              </button>
+            </div>
           </div>
+
+          <div className="mt-3 grid grid-cols-3 gap-2 border-t border-[#E2E8F0] pt-3">
+            <button
+              type="button"
+              onClick={downloadPreviewPng}
+              disabled={previewActionPending !== null}
+              title="Download PNG"
+              className="rounded-xl business-bg px-2 py-2 text-xs font-black transition hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+            >
+              {previewActionPending === "png" ? "..." : "PNG"}
+            </button>
+            <button
+              type="button"
+              onClick={downloadPreviewPdf}
+              disabled={previewActionPending !== null}
+              title="Download PDF"
+              className="rounded-xl border border-[#CBD5E1] bg-white px-2 py-2 text-xs font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+            >
+              {previewActionPending === "pdf" ? "..." : "PDF"}
+            </button>
+            <button
+              type="button"
+              onClick={copyPreviewLink}
+              disabled={previewActionPending !== null}
+              title="Preview on phone"
+              className="rounded-xl border border-[#CBD5E1] bg-white px-2 py-2 text-xs font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+            >
+              {previewActionPending === "link" ? "..." : "Share"}
+            </button>
+          </div>
+          {previewActionMessage ? (
+            <p className="mt-2 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5 text-xs font-semibold text-[#475569]" aria-live="polite">
+              {previewActionMessage}
+            </p>
+          ) : null}
         </div>
       </aside>
 
@@ -880,7 +873,7 @@ export function ProgramDesignStudioForm({
               )}
             </SectionCard>
 
-            <WizardStepNav onNext={goNext} nextLabel="Next: Card Style" />
+            <WizardStepNav onNext={goNext} nextLabel="Next: Style" />
           </>
         ) : null}
 
@@ -984,7 +977,7 @@ export function ProgramDesignStudioForm({
               </div>
             </SectionCard>
 
-            <WizardStepNav onPrevious={goPrevious} onNext={goNext} nextLabel="Next: Stamps & Rewards" />
+            <WizardStepNav onPrevious={goPrevious} onNext={goNext} nextLabel="Next: Rewards" />
           </div>
         ) : null}
 
@@ -1136,7 +1129,7 @@ export function ProgramDesignStudioForm({
               </details>
             </SectionCard>
 
-            <WizardStepNav onPrevious={goPrevious} onNext={goNext} nextLabel="Next: Review & Save" />
+            <WizardStepNav onPrevious={goPrevious} onNext={goNext} nextLabel="Next: Review" />
           </div>
         ) : null}
 
@@ -1144,7 +1137,7 @@ export function ProgramDesignStudioForm({
           <div className="grid gap-5 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200">
             <SectionCard title="Review Your Design" description="Confirm everything looks right before saving.">
               <div className="grid gap-5 sm:grid-cols-[minmax(0,180px)_1fr] sm:items-start">
-                <div className="mx-auto w-full max-w-[200px] sm:mx-0">
+                <div className="mx-auto w-full max-w-[240px] sm:mx-0">
                   <PreviewContextFrame context={previewContext}>
                     <CardFinishPreviewFrame decorationStyle={decorationStyle}>
                       <VisibleCardPreview
@@ -1219,17 +1212,17 @@ export function ProgramDesignStudioForm({
 
 function WizardStepper({ current, onSelect }: { current: WizardStep; onSelect: (step: WizardStep) => void }) {
   return (
-    <ol className="flex items-center gap-1 rounded-2xl border border-[#E2E8F0] bg-[#F1F5F9] p-1.5" aria-label="Design studio steps">
+    <ol className="grid grid-cols-5 gap-1 rounded-2xl border border-[#E2E8F0] bg-[#F1F5F9] p-1.5 sm:gap-2" aria-label="Design studio steps">
       {wizardSteps.map((step) => {
         const active = current === step.value;
         const complete = current > step.value;
         return (
-          <li key={step.value} className="min-w-0 flex-1">
+          <li key={step.value} className="min-w-0">
             <button
               type="button"
               onClick={() => onSelect(step.value)}
               aria-current={active ? "step" : undefined}
-              className="flex w-full flex-col items-center gap-1 rounded-xl px-1 py-2 text-center transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:bg-white data-[active=true]:shadow-sm"
+              className="flex w-full flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-center transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:bg-white data-[active=true]:shadow-sm"
               data-active={active}
             >
               <span
@@ -1239,9 +1232,12 @@ function WizardStepper({ current, onSelect }: { current: WizardStep; onSelect: (
                   color: active || complete ? "var(--business-primary-foreground)" : "#64748B",
                 }}
               >
-                {complete ? "âœ“" : step.value}
+                {complete ? "✓" : step.value}
               </span>
-              <span className="hidden truncate text-[11px] font-bold text-[#64748B] data-[active=true]:text-[#111827] sm:block" data-active={active}>
+              <span
+                className="w-full truncate text-[10px] font-bold text-[#64748B] data-[active=true]:text-[#111827] sm:text-[11px]"
+                data-active={active}
+              >
                 {step.label}
               </span>
             </button>
@@ -1497,19 +1493,43 @@ function CardFinishPreviewFrame({ children, decorationStyle }: { children: React
 }
 
 function PreviewContextFrame({ children, context }: { children: ReactNode; context: PreviewContext }) {
-  const chrome = previewFrameChrome[context];
+  if (context === "apple-wallet") {
+    return (
+      <div className="mx-auto w-full max-w-[240px] rounded-[1.6rem] bg-[radial-gradient(circle_at_top,#F8FAFC_0%,#EEF2FF_46%,#CBD5E1_100%)] p-2 shadow-md transition-colors duration-200">
+        <div className="overflow-hidden rounded-[1.3rem] border border-white/70 bg-[#F8FAFC] shadow-inner">
+          <div className="flex items-center justify-between border-b border-[#E2E8F0] bg-white/85 px-3 py-2">
+            <span className="text-xs font-black text-[#111827]">Wallet</span>
+            <span className="rounded-full bg-[#EEF2FF] px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-[#475569]">Pass</span>
+          </div>
+          <div className="bg-[linear-gradient(180deg,#F8FAFC_0%,#E2E8F0_100%)] px-2 py-3">{children}</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (context === "google-wallet") {
+    return (
+      <div className="mx-auto w-full max-w-[240px] rounded-[1.6rem] bg-[linear-gradient(135deg,#EFF6FF_0%,#F8FAFC_48%,#DCFCE7_100%)] p-2 shadow-md transition-colors duration-200">
+        <div className="overflow-hidden rounded-[1.3rem] border border-[#D8E2EF] bg-[#F8FAFC] shadow-inner">
+          <div className="flex items-center justify-between bg-white px-3 py-2">
+            <span className="text-xs font-black text-[#1F2937]">Google Wallet</span>
+            <span className="grid h-5 w-5 place-items-center rounded-full bg-[#E0F2FE] text-[10px] font-black text-[#0369A1]">G</span>
+          </div>
+          <div className="bg-[#F1F5F9] px-2 py-3">{children}</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="mx-auto w-full max-w-[220px] rounded-[1.6rem] p-2 shadow-md transition-colors duration-200" style={{ background: chrome.background }}>
-      <div className="overflow-hidden rounded-[1.2rem] bg-white/95">{children}</div>
+    <div className="mx-auto w-full max-w-[220px] rounded-[1.6rem] bg-[#E2E8F0] p-2 shadow-md transition-colors duration-200">
+      <div className="relative overflow-hidden rounded-[1.3rem] border-2 border-[#111827] bg-white">
+        <div className="absolute left-1/2 top-1 z-10 h-2 w-12 -translate-x-1/2 rounded-full bg-[#111827]" aria-hidden="true" />
+        <div className="bg-[#F8FAFC] pt-4">{children}</div>
+      </div>
     </div>
   );
 }
-
-const previewFrameChrome: Record<PreviewContext, { background: string }> = {
-  phone: { background: "#E2E8F0" },
-  "apple-wallet": { background: "linear-gradient(135deg,#EEF2FF 0%,#CBD5E1 100%)" },
-  "google-wallet": { background: "linear-gradient(135deg,#EFF6FF 0%,#DCFCE7 100%)" },
-};
 
 function VisibleCardPreview({
   businessName,

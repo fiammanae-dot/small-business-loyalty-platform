@@ -255,7 +255,6 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /liveBackgroundPatterns/);
   assert.match(form, /visibleSections: \{/);
   assert.match(form, /visibleSections\.\$\{option\.value\}/);
-  assert.match(form, /Live Preview/);
   assert.match(form, /previewContextOptions/);
   assert.match(form, /PreviewContextFrame/);
   assert.match(form, /designHistoryPast/);
