@@ -474,7 +474,7 @@ export function ProgramDesignStudioForm({
       ))}
 
       <aside className="order-first grid h-fit min-w-0 gap-3 lg:order-last lg:self-start">
-        <div className="sticky top-2 z-10 rounded-2xl border border-[#E2E8F0] bg-white/95 p-3 shadow-md backdrop-blur lg:top-6">
+        <div className="rounded-2xl border border-[#E2E8F0] bg-white/95 p-3 shadow-md backdrop-blur lg:sticky lg:top-6 lg:z-10">
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-[#64748B]">Preview</p>
             <div className="flex rounded-full border border-[#E2E8F0] bg-[#F8FAFC] p-0.5" aria-label="Preview context">
@@ -1137,7 +1137,7 @@ export function ProgramDesignStudioForm({
           <div className="grid gap-5 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200">
             <SectionCard title="Review Your Design" description="Confirm everything looks right before saving.">
               <div className="grid gap-5 sm:grid-cols-[minmax(0,180px)_1fr] sm:items-start">
-                <div className="mx-auto w-full max-w-[240px] sm:mx-0">
+                <div className="mx-auto w-full sm:mx-0">
                   <PreviewContextFrame context={previewContext}>
                     <CardFinishPreviewFrame decorationStyle={decorationStyle}>
                       <VisibleCardPreview
@@ -1495,7 +1495,7 @@ function CardFinishPreviewFrame({ children, decorationStyle }: { children: React
 function PreviewContextFrame({ children, context }: { children: ReactNode; context: PreviewContext }) {
   if (context === "apple-wallet") {
     return (
-      <div className="mx-auto w-full max-w-[240px] rounded-[1.6rem] bg-[radial-gradient(circle_at_top,#F8FAFC_0%,#EEF2FF_46%,#CBD5E1_100%)] p-2 shadow-md transition-colors duration-200">
+      <div className="mx-auto w-[min(100%,300px)] rounded-[1.6rem] bg-[radial-gradient(circle_at_top,#F8FAFC_0%,#EEF2FF_46%,#CBD5E1_100%)] p-2 shadow-md transition-colors duration-200">
         <div className="overflow-hidden rounded-[1.3rem] border border-white/70 bg-[#F8FAFC] shadow-inner">
           <div className="flex items-center justify-between border-b border-[#E2E8F0] bg-white/85 px-3 py-2">
             <span className="text-xs font-black text-[#111827]">Wallet</span>
@@ -1509,7 +1509,7 @@ function PreviewContextFrame({ children, context }: { children: ReactNode; conte
 
   if (context === "google-wallet") {
     return (
-      <div className="mx-auto w-full max-w-[240px] rounded-[1.6rem] bg-[linear-gradient(135deg,#EFF6FF_0%,#F8FAFC_48%,#DCFCE7_100%)] p-2 shadow-md transition-colors duration-200">
+      <div className="mx-auto w-[min(100%,300px)] rounded-[1.6rem] bg-[linear-gradient(135deg,#EFF6FF_0%,#F8FAFC_48%,#DCFCE7_100%)] p-2 shadow-md transition-colors duration-200">
         <div className="overflow-hidden rounded-[1.3rem] border border-[#D8E2EF] bg-[#F8FAFC] shadow-inner">
           <div className="flex items-center justify-between bg-white px-3 py-2">
             <span className="text-xs font-black text-[#1F2937]">Google Wallet</span>
@@ -1522,7 +1522,7 @@ function PreviewContextFrame({ children, context }: { children: ReactNode; conte
   }
 
   return (
-    <div className="mx-auto w-full max-w-[220px] rounded-[1.6rem] bg-[#E2E8F0] p-2 shadow-md transition-colors duration-200">
+    <div className="mx-auto w-[min(100%,280px)] rounded-[1.6rem] bg-[#E2E8F0] p-2 shadow-md transition-colors duration-200">
       <div className="relative overflow-hidden rounded-[1.3rem] border-2 border-[#111827] bg-white">
         <div className="absolute left-1/2 top-1 z-10 h-2 w-12 -translate-x-1/2 rounded-full bg-[#111827]" aria-hidden="true" />
         <div className="bg-[#F8FAFC] pt-4">{children}</div>
@@ -2201,7 +2201,10 @@ const previewZoomScales: Record<PreviewZoom, number> = {
   "75": 0.75,
   "100": 0.88,
   "125": 1,
-  fit: 0.82,
+  // "Fit" is the default state and must show the card filling its frame at natural size
+  // (no artificial shrink). transform: scale() does not affect layout, so shrinking here
+  // by default was the cause of the symmetric left/right dead space around the card.
+  fit: 1,
 };
 
 function previousPreviewZoom(value: PreviewZoom): PreviewZoom {
