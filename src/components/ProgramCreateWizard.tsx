@@ -299,25 +299,29 @@ export function ProgramCreateWizard({
             </DesignWizardGroup>
 
             <DesignWizardGroup title="Rewards" description="Customize how customers collect visits and understand their reward.">
-              <SectionCard title="Stamp Design" description="Choose the marker customers see as they collect stamps.">
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <SectionCard title="Stamp Design" description="Choose the emoji stamp customers see as they collect visits.">
+                <p className="mb-3 text-sm font-medium text-[#64748B]">Recommended emoji appear first.</p>
+                <div className="grid grid-cols-5 gap-2 sm:grid-cols-7 xl:grid-cols-8">
                   {stampIconOptions.map((option) => (
                     <button
                       key={option.value}
                       type="button"
                       onClick={() => setStampIcon(option.value)}
                       data-active={stampIcon === option.value}
-                      className="flex min-h-20 items-center gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)]"
+                      aria-label={option.label}
+                      aria-pressed={stampIcon === option.value}
+                      className="group grid aspect-square place-items-center rounded-2xl border border-[#E5E7EB] bg-white p-2 shadow-sm transition duration-150 hover:-translate-y-0.5 hover:scale-[1.03] hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:scale-[1.04] data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
                     >
-                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[#E2E8F0] bg-white text-[#111827]">
-                        <StampIconGraphic stampIcon={option.value} className="h-5 w-5" />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block text-sm font-black text-[#111827]">{option.label}</span>
-                        {option.recommended ? <span className="mt-1 inline-flex rounded-full business-bg px-2 py-0.5 text-[10px] font-black">Recommended</span> : null}
+                      <span className="grid h-full w-full place-items-center rounded-xl bg-white/70 group-data-[active=true]:bg-white">
+                        <StampIconGraphic stampIcon={option.value} className="h-8 w-8" />
                       </span>
                     </button>
                   ))}
+                </div>
+                <div className="mt-4 flex items-center gap-3 rounded-2xl border border-[#E5E7EB] bg-white px-4 py-3">
+                  <span className="text-sm font-semibold text-[#64748B]">Selected:</span>
+                  <StampIconGraphic stampIcon={stampIcon} className="h-7 w-7" />
+                  <span className="text-sm font-black text-[#111827]">{stampIconOptions.find((option) => option.value === stampIcon)?.label ?? labelize(stampIcon)}</span>
                 </div>
               </SectionCard>
 
@@ -733,4 +737,8 @@ function presetPreviewBackground(preset: DesignStudioProfessionalPreset) {
 
 function formatInputDate(value?: Date | null) {
   return value ? value.toISOString().slice(0, 10) : "";
+}
+
+function labelize(value: string) {
+  return value.toLowerCase().replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }

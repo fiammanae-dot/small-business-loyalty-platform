@@ -84,8 +84,10 @@ test("saved stamp icons are applied to live customer card progress markers", () 
   assert.match(stampIconGraphic, /mode\?: "selector" \| "customer"/);
   assert.match(stampIconGraphic, /export function StampSlot/);
   assert.match(stampIconGraphic, /rounded-full border border-\[#E5E7EB\] bg-white/);
-  assert.match(stampIconGraphic, /filled \? "opacity-100" : "opacity-30 grayscale-\[25%\]"/);
-  assert.match(stampIconGraphic, /premiumStampMarks/);
+  assert.match(stampIconGraphic, /filled \? "opacity-100" : "opacity-30 grayscale-\[20%\]"/);
+  assert.match(stampIconGraphic, /stampEmojiMarks/);
+  assert.match(stampIconGraphic, /getStampEmoji/);
+  assert.doesNotMatch(stampIconGraphic, /lucide-react/);
   assert.match(stampIconGraphic, /COFFEE_CUP/);
   assert.match(stampIconGraphic, /SCISSORS/);
   assert.match(stampIconGraphic, /WATER_DROP/);

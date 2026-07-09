@@ -980,29 +980,29 @@ export function ProgramDesignStudioForm({
               </div>
             </SectionCard>
 
-            <SectionCard title="Stamp Design" description="Pick the stamp mark that will represent each customer visit. Recommended options appear first.">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <SectionCard title="Stamp Design" description="Pick the emoji stamp that will represent each customer visit.">
+              <p className="mb-3 text-sm font-medium text-[#64748B]">Recommended emoji appear first.</p>
+              <div className="grid grid-cols-5 gap-2 sm:grid-cols-7 lg:grid-cols-8">
                 {stampIconOptions.map((option) => (
-                  <label key={option.value} className="group flex min-h-20 cursor-pointer items-center gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-md">
+                  <label key={option.value} className="group grid aspect-square cursor-pointer place-items-center rounded-2xl border border-[#E5E7EB] bg-white p-2 shadow-sm transition duration-150 hover:-translate-y-0.5 hover:scale-[1.03] hover:border-[var(--business-primary)] hover:shadow-md has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--business-primary)] has-[:focus-visible]:ring-offset-2 has-[:checked]:scale-[1.04] has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-md">
                     <input
                       type="radio"
                       value={option.value}
                       checked={stampIcon === option.value}
                       onChange={() => commitDesignChange({ ...currentDesignSnapshot, stampIcon: option.value })}
-                      className="h-4 w-4 accent-[var(--business-primary)]"
+                      aria-label={option.label}
+                      className="sr-only"
                     />
-                    <span
-                      className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[#E2E8F0] bg-white text-[#111827] group-has-[:checked]:border-[var(--business-primary)] group-has-[:checked]:business-bg"
-                      aria-hidden="true"
-                    >
-                      <StampIconGraphic stampIcon={option.value} className="h-5 w-5" />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-sm font-semibold text-[#111827] group-has-[:checked]:business-text">{option.label}</span>
-                      {option.recommended ? <span className="mt-1 block text-xs font-semibold business-text">Recommended</span> : null}
+                    <span className="grid h-full w-full place-items-center rounded-xl bg-white/70 group-has-[:checked]:bg-white">
+                      <StampIconGraphic stampIcon={option.value} className="h-8 w-8" />
                     </span>
                   </label>
                 ))}
+              </div>
+              <div className="mt-4 flex items-center gap-3 rounded-2xl border border-[#E5E7EB] bg-white px-4 py-3">
+                <span className="text-sm font-semibold text-[#64748B]">Selected:</span>
+                <StampIconGraphic stampIcon={stampIcon} className="h-7 w-7" />
+                <span className="text-sm font-black text-[#111827]">{selectedStampIconLabel}</span>
               </div>
             </SectionCard>
 

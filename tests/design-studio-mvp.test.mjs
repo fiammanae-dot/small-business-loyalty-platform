@@ -299,10 +299,11 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(form, /3 visits until reward/);
   assert.match(form, /PreviewChip/);
   assert.doesNotMatch(form, /Typography Preview/);
-  assert.match(stampIconGraphic, /stampIconComponents/);
-  for (const icon of ["Scissors", "Coffee", "Car", "Droplets", "Utensils", "Brush", "Gift"]) {
-    assert.match(stampIconGraphic, new RegExp(icon));
-  }
+  assert.match(stampIconGraphic, /stampEmojiMarks/);
+  assert.match(stampIconGraphic, /getStampEmoji/);
+  assert.doesNotMatch(stampIconGraphic, /lucide-react/);
+  assert.match(form, /Recommended emoji appear first\./);
+  assert.match(form, /Selected:/);
   assert.match(createWizard, /StampIconGraphic stampIcon=\{option\.value\}/);
   assert.match(createWizard, /StampSlot key=\{index\} stampIcon=\{icon\}/);
   assert.doesNotMatch(form, /getStampIconMark|stampIconMarks/);
@@ -339,6 +340,5 @@ test("public card reads saved program card design with fallback behavior", () =>
   assert.match(actions, /revalidatePath\("\/card\/\[token\]", "page"\)/);
   assert.doesNotMatch(actions, /businessCustomerMembership\.updateMany|customerProgramMembership\.updateMany/);
 });
-
 
 
