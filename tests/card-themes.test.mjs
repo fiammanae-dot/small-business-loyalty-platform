@@ -129,7 +129,7 @@ test("public customer card renders selected program theme through shared wallet 
   assert.match(walletCard, /useState<"wallet" \| "scan">/);
   assert.match(walletCard, /WalletView/);
   assert.match(walletCard, /ScanView/);
-  assert.match(walletCard, /Scan at Checkout/);
+  assert.match(walletCard, /View QR Code/);
   assert.match(walletCard, /Present this QR at checkout/);
   assert.match(walletCard, /showScanView = !exportMode && mode === "scan"/);
   assert.match(walletCard, /Member Since/);
@@ -192,7 +192,7 @@ test("public customer card supports saving the loyalty card as a PNG image", () 
   assert.doesNotMatch(frontExport, /shadow-(?:sm|md|lg|xl|2xl)|ring-1|blur-3xl|backdrop-blur/);
   assert.doesNotMatch(backExport, /shadow-(?:sm|md|lg|xl|2xl)|ring-1|blur-3xl|backdrop-blur/);
   assert.match(walletCard, /showScanView = !exportMode && mode === "scan"/);
-  assert.match(walletCard, /Scan at Checkout/);
+  assert.match(walletCard, /View QR Code/);
   assert.match(walletShell, /exportMode/);
   assert.match(walletShell, /boxShadow: exportMode \? "none" : theme\.phoneShadow/);
   assert.match(walletShell, /boxShadow: finish\.shadow \?\? \(exportMode \? "none" : theme\.shadow\)/);

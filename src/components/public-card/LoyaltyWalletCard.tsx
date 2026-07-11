@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState, type CSSProperties } from "react";
 import { StampSlot } from "@/components/design-studio/StampIconGraphic";
 import { WalletCardShell, type WalletTheme } from "@/components/public-card/WalletCardShell";
@@ -73,48 +74,86 @@ export function LoyaltyWalletCard({
 
   return (
     <WalletCardShell theme={theme} exportMode={exportMode} cardDesign={design}>
-      <div
-        className="transition-opacity duration-[220ms] motion-reduce:transition-none"
-        aria-live="polite"
-      >
-        {showScanView ? (
-          <ScanView
-            businessName={businessName}
-            displayProgram={displayProgram}
-            displayProgress={displayProgress}
-            displayRequired={displayRequired}
-            displayReward={displayReward}
-            exportMode={exportMode}
-            qrCode={qrCode}
-            qrHelperText={qrHelperText}
-            rewardReady={rewardReady}
-            statusText={statusText}
-            theme={theme}
-            design={design}
-            onBack={() => setMode("wallet")}
-          />
-        ) : (
-          <WalletView
-            businessLogoUrl={businessLogoUrl}
-            businessName={businessName}
-            customerName={customerName}
-            displayCompletion={displayCompletion}
-            displayProgram={displayProgram}
-            displayProgress={displayProgress}
-            displayRequired={displayRequired}
-            displayReward={displayReward}
-            exportMode={exportMode}
-            memberSince={memberSince}
-            rewardReady={rewardReady}
-            statusText={statusText}
-            theme={theme}
-            design={design}
-            tierIcon={tierIcon}
-            tierLabel={tierLabel}
-            onScan={() => setMode("scan")}
-          />
-        )}
-      </div>
+      {exportMode ? (
+        <WalletView
+          businessLogoUrl={businessLogoUrl}
+          businessName={businessName}
+          customerName={customerName}
+          displayCompletion={displayCompletion}
+          displayProgram={displayProgram}
+          displayProgress={displayProgress}
+          displayRequired={displayRequired}
+          displayReward={displayReward}
+          exportMode={exportMode}
+          memberSince={memberSince}
+          rewardReady={rewardReady}
+          statusText={statusText}
+          theme={theme}
+          design={design}
+          tierIcon={tierIcon}
+          tierLabel={tierLabel}
+          onScan={() => {}}
+        />
+      ) : (
+        <div style={{ perspective: "1600px" }}>
+          <div
+            className="grid transition-transform duration-500 ease-in-out motion-reduce:transition-none"
+            style={{
+              transform: showScanView ? "rotateY(180deg)" : "rotateY(0deg)",
+              transformStyle: "preserve-3d",
+            }}
+          >
+            <div
+              className="col-start-1 row-start-1"
+              style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
+              aria-hidden={showScanView}
+              inert={showScanView}
+            >
+              <WalletView
+                businessLogoUrl={businessLogoUrl}
+                businessName={businessName}
+                customerName={customerName}
+                displayCompletion={displayCompletion}
+                displayProgram={displayProgram}
+                displayProgress={displayProgress}
+                displayRequired={displayRequired}
+                displayReward={displayReward}
+                exportMode={exportMode}
+                memberSince={memberSince}
+                rewardReady={rewardReady}
+                statusText={statusText}
+                theme={theme}
+                design={design}
+                tierIcon={tierIcon}
+                tierLabel={tierLabel}
+                onScan={() => setMode("scan")}
+              />
+            </div>
+            <div
+              className="col-start-1 row-start-1"
+              style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+              aria-hidden={!showScanView}
+              inert={!showScanView}
+            >
+              <ScanView
+                businessName={businessName}
+                displayProgram={displayProgram}
+                displayProgress={displayProgress}
+                displayRequired={displayRequired}
+                displayReward={displayReward}
+                exportMode={exportMode}
+                qrCode={qrCode}
+                qrHelperText={qrHelperText}
+                rewardReady={rewardReady}
+                statusText={statusText}
+                theme={theme}
+                design={design}
+                onBack={() => setMode("wallet")}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       <span className="sr-only">Customer {customerName}. Member Since {memberSince}.</span>
     </WalletCardShell>
@@ -210,20 +249,7 @@ function WalletView({
 
       {design.visibleSections.footer ? (
         <div className="pt-5">
-          {exportMode ? (
-            <div className="flex min-h-12 w-full items-center justify-center rounded-[16px] px-5 text-[15px] font-bold shadow-sm" style={{ background: theme.ctaBackground, color: theme.ctaForeground }}>
-              Scan at Checkout
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={onScan}
-              className="flex min-h-12 w-full items-center justify-center rounded-[16px] px-5 text-[15px] font-bold shadow-sm transition duration-[180ms] hover:translate-y-[-1px] focus:outline-none focus:ring-4 focus:ring-orange-200 active:translate-y-0 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
-              style={{ background: theme.ctaBackground, color: theme.ctaForeground }}
-            >
-              Scan at Checkout
-            </button>
-          )}
+          <CardFlipFooterButton label="View QR Code" direction="down" onClick={onScan} theme={theme} exportMode={exportMode} />
         </div>
       ) : null}
     </div>
@@ -260,22 +286,12 @@ function ScanView({
   onBack: () => void;
 }) {
   return (
-    <div className="px-6 pb-5 pt-7">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-[12px] font-semibold uppercase tracking-[0.18em]" style={{ color: theme.mutedText }}>
-            Scan View
-          </p>
-          <h2 className="mt-1 text-[22px] font-extrabold tracking-[-0.04em]">Present this QR at checkout</h2>
-        </div>
-        <button
-          type="button"
-          onClick={onBack}
-          className="rounded-full px-3 py-2 text-[13px] font-bold ring-1 transition hover:bg-white/10 focus:outline-none focus:ring-4 focus:ring-orange-200 motion-reduce:transition-none"
-          style={{ color: theme.cardText, borderColor: theme.badgeBorder, backgroundColor: theme.badgeBackground }}
-        >
-          Back
-        </button>
+    <div className={`px-6 pb-5 pt-7 ${cardPaddingClass(design)}`}>
+      <div>
+        <p className="text-[12px] font-semibold uppercase tracking-[0.18em]" style={{ color: theme.mutedText }}>
+          Scan View
+        </p>
+        <h2 className="mt-1 text-[22px] font-extrabold tracking-[-0.04em]">Present this QR at checkout</h2>
       </div>
 
       {design.visibleSections.qr ? (
@@ -287,7 +303,7 @@ function ScanView({
           sizeClassName="h-[220px] w-[220px]"
         />
         <p className="pt-4 text-[15px] font-semibold" style={{ color: theme.cardText }}>
-          Present this QR at checkout
+          Present this QR code to a staff member to collect your loyalty stamp.
         </p>
         <p className="pt-1 text-[13px]" style={{ color: theme.mutedText }}>
           {qrHelperText}
@@ -305,7 +321,54 @@ function ScanView({
           </div>
         </div>
       </section>
+
+      {design.visibleSections.footer ? (
+        <div className="pt-5">
+          <CardFlipFooterButton label="Back to Card" direction="up" onClick={onBack} theme={theme} exportMode={exportMode} />
+        </div>
+      ) : null}
     </div>
+  );
+}
+
+function CardFlipFooterButton({
+  label,
+  direction,
+  onClick,
+  theme,
+  exportMode,
+}: {
+  label: string;
+  direction: "down" | "up";
+  onClick: () => void;
+  theme: WalletTheme;
+  exportMode: boolean;
+}) {
+  const Icon = direction === "down" ? ChevronDown : ChevronUp;
+  const content = (
+    <>
+      <Icon className="h-4 w-4" aria-hidden="true" />
+      {label}
+    </>
+  );
+
+  if (exportMode) {
+    return (
+      <div className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] px-5 text-[15px] font-bold shadow-sm" style={{ background: theme.ctaBackground, color: theme.ctaForeground }}>
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] px-5 text-[15px] font-bold shadow-sm transition duration-[180ms] hover:translate-y-[-1px] focus:outline-none focus:ring-4 focus:ring-orange-200 active:translate-y-0 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+      style={{ background: theme.ctaBackground, color: theme.ctaForeground }}
+    >
+      {content}
+    </button>
   );
 }
 
