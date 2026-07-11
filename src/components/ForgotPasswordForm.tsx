@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import type { ForgotPasswordState } from "@/app/forgot-password/actions";
 import { forgotPasswordAction } from "@/app/forgot-password/actions";
+import { RequiredMark } from "@/components/ui/RequiredMark";
 
 const initialState: ForgotPasswordState = {};
 
@@ -15,7 +16,7 @@ export function ForgotPasswordForm({ csrfToken }: { csrfToken: string }) {
       <input type="hidden" name="csrfToken" value={csrfToken} />
       <div className="space-y-2">
         <label htmlFor="email" className="text-sm font-medium text-[#111827]">
-          Email address
+          Email address<RequiredMark />
         </label>
         <input
           id="email"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { RequiredMark } from "@/components/ui/RequiredMark";
 
 const countryCityOptions = [
   {
@@ -68,7 +69,10 @@ export function BranchLocationFields({ defaultCountry = "", defaultCity = "" }: 
   return (
     <>
       <label className="min-w-0 space-y-2">
-        <span className="text-sm font-medium text-[#111827]">Country</span>
+        <span className="text-sm font-medium text-[#111827]">
+          Country
+          <RequiredMark />
+        </span>
         <select
           name="country"
           value={selectedCountry}
@@ -86,7 +90,10 @@ export function BranchLocationFields({ defaultCountry = "", defaultCity = "" }: 
       </label>
 
       <label className="min-w-0 space-y-2">
-        <span className="text-sm font-medium text-[#111827]">City</span>
+        <span className="text-sm font-medium text-[#111827]">
+          City
+          <RequiredMark />
+        </span>
         <select
           key={selectedCountry}
           name="city"

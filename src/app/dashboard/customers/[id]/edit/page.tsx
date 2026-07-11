@@ -3,6 +3,7 @@ import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { getBusinessCustomerOrRedirect } from "@/lib/customers";
+import { RequiredMark } from "@/components/ui/RequiredMark";
 import { formatUaePhoneDisplay } from "@/lib/phone";
 import { updateCustomerAction } from "@/app/dashboard/actions";
 
@@ -84,7 +85,10 @@ function Input({
 }) {
   return (
     <label className="space-y-2">
-      <span className="text-sm font-medium text-[#111827]">{label}</span>
+      <span className="text-sm font-medium text-[#111827]">
+        {label}
+        {required ? <RequiredMark /> : null}
+      </span>
       <input
         name={name}
         type={type}

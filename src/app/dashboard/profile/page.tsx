@@ -1,6 +1,7 @@
 import { DashboardShell } from "@/components/DashboardShell";
 import { CsrfInput } from "@/components/CsrfInput";
 import { StatusBadge } from "@/components/StatusBadge";
+import { RequiredMark } from "@/components/ui/RequiredMark";
 import { getBusinessOwnerContext, getCurrentPlan } from "@/lib/business-owner";
 import { formatDate } from "@/lib/format";
 import { businessTypeOptions } from "@/lib/platform-options";
@@ -23,7 +24,10 @@ export default async function BusinessProfilePage({
         <Message error={params.error} success={params.success} />
         <div className="grid gap-4 md:grid-cols-2">
           <label className="space-y-2">
-            <span className="text-sm font-medium text-[#111827]">Business name</span>
+            <span className="text-sm font-medium text-[#111827]">
+              Business name
+              <RequiredMark />
+            </span>
             <input name="name" defaultValue={business.name} required className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0" />
           </label>
           <label className="space-y-2">

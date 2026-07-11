@@ -4,6 +4,7 @@ import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { StaffPasswordResetAction } from "@/components/StaffPasswordResetAction";
+import { RequiredMark } from "@/components/ui/RequiredMark";
 import {
   ActionMenu,
   ActionMenuItem,
@@ -202,6 +203,6 @@ function FilterPill({ href, active, children }: { href: string; active: boolean;
 function SelectField({ label, name, defaultValue, options }: { label: string; name: string; defaultValue: string; options: Array<{ value: string; label: string }> }) {
   return <label className="min-w-0"><span className="sr-only">{label}</span><select name={name} defaultValue={defaultValue} className="h-10 rounded-md border border-[#CBD5E1] bg-white px-3 text-sm">{options.map((option) => <option key={`${name}-${option.value}`} value={option.value}>{option.label}</option>)}</select></label>;
 }
-function Input({ label, name, type = "text" }: { label: string; name: string; type?: string }) { return <label className="min-w-0 space-y-1.5"><span className="text-sm font-medium text-[#111827]">{label}</span><input name={name} type={type} required className="h-11 w-full max-w-full min-w-0 rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0 business-border" /></label>; }
+function Input({ label, name, type = "text" }: { label: string; name: string; type?: string }) { return <label className="min-w-0 space-y-1.5"><span className="text-sm font-medium text-[#111827]">{label}<RequiredMark /></span><input name={name} type={type} required className="h-11 w-full max-w-full min-w-0 rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0 business-border" /></label>; }
 function staffStatusBadge(status: "ACTIVE" | "INACTIVE") { return status === "ACTIVE" ? <StatusBadge tone="success">Active</StatusBadge> : <StatusBadge tone="danger">Disabled</StatusBadge>; }
 function Message({ error, success }: { error?: string; success?: string }) { if (!error && !success) return null; return <p className={`rounded-md border px-3 py-2 text-sm ${error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>{error ?? success}</p>; }

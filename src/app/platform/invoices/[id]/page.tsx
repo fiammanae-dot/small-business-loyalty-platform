@@ -5,6 +5,7 @@ import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { InvoiceBadge } from "@/components/InvoiceBadge";
+import { RequiredMark } from "@/components/ui/RequiredMark";
 import { formatMoney, getInvoiceDisplayStatus, paymentMethodLabels, paymentMethods } from "@/lib/billing";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -74,7 +75,10 @@ export default async function PlatformInvoiceDetailPage({
               <Input name="amount" label="Amount paid" type="number" step="0.01" min="0.01" defaultValue={remaining ? remaining.toFixed(2) : Number(invoice.amount).toFixed(2)} />
               <Input name="currency" label="Currency" defaultValue={invoice.currency} />
               <label className="space-y-2">
-                <span className="text-sm font-medium text-[#111827]">Payment method</span>
+                <span className="text-sm font-medium text-[#111827]">
+                  Payment method
+                  <RequiredMark />
+                </span>
                 <select name="paymentMethod" required className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm">
                   {paymentMethods.map((method) => <option key={method} value={method}>{paymentMethodLabels[method]}</option>)}
                 </select>
@@ -189,7 +193,10 @@ function Input({
 }) {
   return (
     <label className="space-y-2">
-      <span className="text-sm font-medium text-[#111827]">{label}</span>
+      <span className="text-sm font-medium text-[#111827]">
+        {label}
+        {required ? <RequiredMark /> : null}
+      </span>
       <input name={name} type={type} defaultValue={defaultValue} step={step} min={min} required={required} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm" />
     </label>
   );

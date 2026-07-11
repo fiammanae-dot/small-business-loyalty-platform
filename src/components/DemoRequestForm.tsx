@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CheckCircle2 } from "lucide-react";
+import { RequiredMark } from "@/components/ui/RequiredMark";
 
 const businessTypes = ["Coffee Shop", "Restaurant", "Salon / Barber", "Gym", "Retail Store", "Car Care", "Service Business", "Other"];
 const countries = ["United Arab Emirates", "Saudi Arabia", "Kuwait", "Qatar", "Bahrain", "Oman", "Jordan", "Egypt", "Other"];
@@ -43,7 +44,7 @@ export function DemoRequestForm() {
         <FormField label="Phone" name="phone" type="tel" placeholder="050 123 4567" required />
       </div>
       <label className="grid gap-2 text-sm font-semibold text-[#111827]">
-        Country
+        Country<RequiredMark />
         <select name="country" required className="h-12 rounded-2xl border border-[#E5E7EB] bg-white px-4 text-sm outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100">
           <option value="">Select country</option>
           {countries.map((country) => (
@@ -53,7 +54,7 @@ export function DemoRequestForm() {
       </label>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="grid gap-2 text-sm font-semibold text-[#111827]">
-          Business type
+          Business type<RequiredMark />
           <select name="businessType" required className="h-12 rounded-2xl border border-[#E5E7EB] bg-white px-4 text-sm outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100">
             <option value="">Select type</option>
             {businessTypes.map((type) => (
@@ -86,6 +87,7 @@ function FormField({ label, name, type = "text", placeholder, required = false, 
   return (
     <label className="grid gap-2 text-sm font-semibold text-[#111827]">
       {label}
+      {required ? <RequiredMark /> : null}
       <input
         name={name}
         type={type}

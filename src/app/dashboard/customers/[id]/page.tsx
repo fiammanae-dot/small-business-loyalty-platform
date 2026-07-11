@@ -37,6 +37,7 @@ import { formatUaePhoneDisplay } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { progressValue } from "@/lib/programs";
 import { getScanQrDataUrl, getScanUrl, scanStatusLabel } from "@/lib/scan";
+import { RequiredMark } from "@/components/ui/RequiredMark";
 import { manualStampCorrectionAction, toggleCustomerCardAction, toggleProgramScanTokenAction } from "@/app/dashboard/actions";
 
 type TimelineItem = {
@@ -608,7 +609,7 @@ function ManualStampCorrectionForm({
         <p className="text-xs leading-5 text-orange-800">Business Owner only. This adjusts progress and records the reason in audit history.</p>
         <div className="mt-3 grid gap-2 md:grid-cols-[120px_minmax(0,1fr)_auto] md:items-end">
           <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-orange-900">
-            Stamps
+            Stamps<RequiredMark />
             <select name="adjustment" required className="min-h-10 rounded-md border border-orange-200 bg-white px-3 text-sm font-semibold text-[#111827]">
               <option value="">Select</option>
               <option value="-1">-1</option>
@@ -620,7 +621,7 @@ function ManualStampCorrectionForm({
             </select>
           </label>
           <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-orange-900">
-            Reason
+            Reason<RequiredMark />
             <input name="correctionReason" required minLength={5} maxLength={500} placeholder="Required correction reason" className="min-h-10 rounded-md border border-orange-200 bg-white px-3 text-sm font-semibold text-[#111827]" />
           </label>
           <ConfirmSubmitButton

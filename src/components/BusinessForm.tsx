@@ -4,6 +4,7 @@ import type { BillingCycle, BusinessBranding, BusinessCommunicationSettings, Bus
 import { useActionState, useEffect, useRef, type ReactNode } from "react";
 import { BranchLocationFields } from "@/components/BranchLocationFields";
 import { PlanBillingCycleFields } from "@/components/PlanBillingCycleFields";
+import { RequiredMark } from "@/components/ui/RequiredMark";
 import type { PreservedFormState } from "@/lib/form-state";
 import { businessTypeOptions, statusOptions } from "@/lib/platform-options";
 
@@ -342,7 +343,10 @@ function Field({
   const errorId = error ? `${name}-error` : undefined;
   return (
     <label className="space-y-2">
-      <span className="text-sm font-medium text-[#111827]">{label}</span>
+      <span className="text-sm font-medium text-[#111827]">
+        {label}
+        {required ? <RequiredMark /> : null}
+      </span>
       <input
         name={name}
         type={type}
@@ -382,7 +386,10 @@ function SelectField<T extends string>({
   const errorId = error ? `${name}-error` : undefined;
   return (
     <label className="space-y-2">
-      <span className="text-sm font-medium text-[#111827]">{label}</span>
+      <span className="text-sm font-medium text-[#111827]">
+        {label}
+        <RequiredMark />
+      </span>
       <select
         name={name}
         defaultValue={defaultValue ?? options[0]?.value}

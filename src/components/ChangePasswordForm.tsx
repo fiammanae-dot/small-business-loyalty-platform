@@ -4,6 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useActionState, useState } from "react";
 import type { ChangePasswordState } from "@/app/change-password/actions";
 import { changePasswordAction } from "@/app/change-password/actions";
+import { RequiredMark } from "@/components/ui/RequiredMark";
 
 const initialState: ChangePasswordState = {};
 
@@ -71,7 +72,7 @@ function PasswordField({
   return (
     <div className="space-y-2">
       <label htmlFor={id} className="text-sm font-medium text-[#111827]">
-        {label}
+        {label}<RequiredMark />
       </label>
       <div className="relative">
         <input

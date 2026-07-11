@@ -9,6 +9,7 @@ import { IdempotencyInput } from "@/components/IdempotencyInput";
 import { ScannerSoundFeedback } from "@/components/ScannerSoundFeedback";
 import { StatusBadge } from "@/components/StatusBadge";
 import { StampWhatsAppSharePrompt } from "@/components/StampWhatsAppSharePrompt";
+import { RequiredMark } from "@/components/ui/RequiredMark";
 import { ButtonLink, EmptyState, MetricCard, ProgressBar, SectionCard } from "@/components/ui";
 import { ScannerResultCard } from "@/components/domain";
 import { DetailPageLayout } from "@/components/layouts";
@@ -680,7 +681,7 @@ function StampUndoPanel({
               <CsrfInput scope="scan:stamp-undo" />
               <input type="hidden" name="scanToken" value={token} />
               <input type="hidden" name="stampTransactionId" value={transactionId} />
-              <label className="text-xs font-bold uppercase tracking-wide" htmlFor="undoReason">Reason</label>
+              <label className="text-xs font-bold uppercase tracking-wide" htmlFor="undoReason">Reason<RequiredMark /></label>
               <select id="undoReason" name="undoReason" required className="min-h-10 rounded-md border border-[#CBD5E1] bg-white px-3 text-sm font-semibold text-[#0F172A]">
                 <option value="">Select reason</option>
                 {stampUndoReasons.map((reason) => <option key={reason} value={reason}>{reason}</option>)}

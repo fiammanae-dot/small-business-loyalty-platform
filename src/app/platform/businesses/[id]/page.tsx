@@ -6,6 +6,7 @@ import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { StatusBadge } from "@/components/StatusBadge";
+import { RequiredMark } from "@/components/ui/RequiredMark";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { formatMoney, getInvoiceDisplayStatus } from "@/lib/billing";
 import { formatBillingCycle } from "@/lib/subscription-plans";
@@ -159,6 +160,7 @@ export default async function BusinessDetailPage({ params, searchParams }: { par
                 <input type="hidden" name="businessUuid" value={business.uuid} />
                 <label className="flex-1 text-sm font-medium text-[#171A21]">
                   Reason for archiving
+                  <RequiredMark />
                   <textarea
                     name="archiveReason"
                     required

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState, useEffect, useRef, type ReactNode } from "react";
 import { SearchableCombobox, type ComboboxOption } from "@/components/SearchableCombobox";
+import { RequiredMark } from "@/components/ui/RequiredMark";
 import type { PreservedFormState } from "@/lib/form-state";
 
 type CustomerCreateAction = (prevState: PreservedFormState, formData: FormData) => Promise<PreservedFormState>;
@@ -227,7 +228,10 @@ function Input({
   const errorId = error ? `${name}-error` : undefined;
   return (
     <label className="space-y-2">
-      <span className="text-sm font-medium text-[#111827]">{label}</span>
+      <span className="text-sm font-medium text-[#111827]">
+        {label}
+        {required ? <RequiredMark /> : null}
+      </span>
       <input
         name={name}
         type={type}

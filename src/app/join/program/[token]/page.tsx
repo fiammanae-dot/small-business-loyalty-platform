@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { joinProgramAction } from "@/app/join/program/[token]/actions";
 import { BusinessBrandingProvider } from "@/components/BusinessBrandingProvider";
+import { RequiredMark } from "@/components/ui/RequiredMark";
 import { resolveBusinessBranding } from "@/lib/business-branding";
 import { getCardUrl } from "@/lib/customer-cards";
 import { prisma } from "@/lib/prisma";
@@ -122,6 +123,7 @@ function Input({
   return (
     <label className="grid gap-2 text-sm font-semibold text-[#111827]">
       {label}
+      {required ? <RequiredMark /> : null}
       <input
         name={name}
         required={required}

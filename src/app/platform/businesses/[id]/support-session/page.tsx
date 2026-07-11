@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { SupportCountdown } from "@/components/SupportCountdown";
+import { RequiredMark } from "@/components/ui/RequiredMark";
 import { formatDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
@@ -108,11 +109,12 @@ export default async function StartSupportSessionPage({
 
               <label className="grid gap-2 text-sm font-medium text-[#111827]">
                 Reason for access
+                <RequiredMark />
                 <textarea name="reason" required rows={4} disabled={archived} className="min-h-28 rounded-md border border-[#E5E7EB] px-3 py-2 text-sm font-normal outline-none focus:border-[#F97316] disabled:bg-[#F3F4F6]" placeholder="Describe why support access is needed." />
               </label>
 
               <fieldset className="grid gap-3">
-                <legend className="text-sm font-semibold text-[#111827]">Duration</legend>
+                <legend className="text-sm font-semibold text-[#111827]">Duration<RequiredMark /></legend>
                 <div className="grid gap-3 sm:grid-cols-3">
                   {[15, 30, 60].map((duration) => (
                     <label key={duration} className="flex min-h-11 items-center gap-3 rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827]">

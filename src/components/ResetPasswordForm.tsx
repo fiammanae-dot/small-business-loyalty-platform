@@ -5,6 +5,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useActionState, useState } from "react";
 import type { ResetPasswordState } from "@/app/reset-password/actions";
 import { resetPasswordAction } from "@/app/reset-password/actions";
+import { RequiredMark } from "@/components/ui/RequiredMark";
 
 const initialState: ResetPasswordState = {};
 
@@ -20,7 +21,7 @@ export function ResetPasswordForm({ csrfToken, token }: { csrfToken: string; tok
 
       <div className="space-y-2">
         <label htmlFor="newPassword" className="text-sm font-medium text-[#111827]">
-          New password
+          New password<RequiredMark />
         </label>
         <div className="relative">
           <input
@@ -47,7 +48,7 @@ export function ResetPasswordForm({ csrfToken, token }: { csrfToken: string; tok
 
       <div className="space-y-2">
         <label htmlFor="confirmPassword" className="text-sm font-medium text-[#111827]">
-          Confirm password
+          Confirm password<RequiredMark />
         </label>
         <div className="relative">
           <input

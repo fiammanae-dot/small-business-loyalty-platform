@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import type { LoginState } from "@/app/login/actions";
 import { loginAction } from "@/app/login/actions";
+import { RequiredMark } from "@/components/ui/RequiredMark";
 
 const initialState: LoginState = {};
 
@@ -17,7 +18,7 @@ export function LoginForm({ csrfToken }: { csrfToken: string }) {
       <input type="hidden" name="csrfToken" value={csrfToken} />
       <div className="space-y-2">
         <label htmlFor="email" className="text-sm font-medium text-[#111827]">
-          Email
+          Email<RequiredMark />
         </label>
         <input
           id="email"
@@ -32,7 +33,7 @@ export function LoginForm({ csrfToken }: { csrfToken: string }) {
 
       <div className="space-y-2">
         <label htmlFor="password" className="text-sm font-medium text-[#111827]">
-          Password
+          Password<RequiredMark />
         </label>
         <div className="relative">
           <input

@@ -13,6 +13,7 @@ export * from "./PageActions";
 export * from "./PageHeader";
 export * from "./PageIntro";
 export * from "./ProgressBar";
+export * from "./RequiredMark";
 export * from "./SearchBar";
 export * from "./SectionCard";
 export * from "./SeverityBadge";

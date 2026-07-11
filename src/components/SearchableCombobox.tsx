@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, Loader2, Search, X } from "lucide-react";
+import { RequiredMark } from "@/components/ui/RequiredMark";
 
 export type ComboboxOption = {
   value: string;
@@ -79,7 +80,10 @@ export function SearchableCombobox({
 
   return (
     <div className="relative text-sm font-medium text-[#111827]">
-      <span>{label}</span>
+      <span>
+        {label}
+        {required ? <RequiredMark /> : null}
+      </span>
       <input type="hidden" name={name} value={selectedValue} required={required} />
       <div className="mt-1 flex gap-2">
         <button

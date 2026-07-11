@@ -28,7 +28,7 @@ import {
   type DesignStudioProfessionalPreset,
 } from "@/lib/design-studio";
 import { resolveCardThemeColors } from "@/lib/card-themes";
-import { Button, SectionCard } from "@/components/ui";
+import { Button, RequiredMark, SectionCard } from "@/components/ui";
 import { BackgroundGalleryThumbnail } from "@/components/design-studio/BackgroundGalleryThumbnail";
 import { CardLayoutThumbnail } from "@/components/design-studio/CardLayoutThumbnail";
 import { StampIconGraphic, StampSlot } from "@/components/design-studio/StampIconGraphic";
@@ -199,7 +199,10 @@ export function ProgramCreateWizard({
             <Input name="rewardName" label="Reward Name" defaultValue={rewardName} required />
             <Input name="requiredStamps" label="Required Stamps" type="number" min="1" defaultValue={requiredStamps.toString()} required />
             <label className="space-y-2 md:col-span-2">
-              <span className="text-sm font-medium text-[#111827]">Reward Description</span>
+              <span className="text-sm font-medium text-[#111827]">
+                Reward Description
+                <RequiredMark />
+              </span>
               <textarea name="rewardDescription" rows={3} defaultValue={rewardDescription} required className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none business-ring focus:ring-0" />
             </label>
           </div>
@@ -524,7 +527,10 @@ function Input({
 }) {
   return (
     <label className="space-y-2">
-      <span className="text-sm font-medium text-[#111827]">{label}</span>
+      <span className="text-sm font-medium text-[#111827]">
+        {label}
+        {required ? <RequiredMark /> : null}
+      </span>
       <input name={name} type={type} min={min} defaultValue={defaultValue} required={required} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0" />
     </label>
   );

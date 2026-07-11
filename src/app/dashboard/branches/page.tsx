@@ -4,7 +4,7 @@ import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { DashboardShell } from "@/components/DashboardShell";
 import { CsrfInput } from "@/components/CsrfInput";
 import { StatusBadge } from "@/components/StatusBadge";
-import { MetricCard } from "@/components/ui";
+import { MetricCard, RequiredMark } from "@/components/ui";
 import { getBusinessOwnerContext, getCurrentPlan } from "@/lib/business-owner";
 import { formatDate } from "@/lib/format";
 import { statusOptions } from "@/lib/platform-options";
@@ -212,7 +212,10 @@ function BranchForm({
 function Input({ label, name, defaultValue }: { label: string; name: string; defaultValue?: string }) {
   return (
     <label className="space-y-2">
-      <span className="text-sm font-medium text-[#111827]">{label}</span>
+      <span className="text-sm font-medium text-[#111827]">
+        {label}
+        <RequiredMark />
+      </span>
       <input name={name} defaultValue={defaultValue} required className="h-10 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100" />
     </label>
   );
