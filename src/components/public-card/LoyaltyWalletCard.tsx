@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState, type CSSProperties } from "react";
 import { StampSlot } from "@/components/design-studio/StampIconGraphic";
 import { WalletCardShell, type WalletTheme } from "@/components/public-card/WalletCardShell";
@@ -249,7 +248,7 @@ function WalletView({
 
       {design.visibleSections.footer ? (
         <div className="pt-5">
-          <CardFlipFooterButton label="View QR Code" direction="down" onClick={onScan} theme={theme} exportMode={exportMode} />
+          <CardFlipFooterButton label="View QR Code" icon="📱" onClick={onScan} theme={theme} exportMode={exportMode} />
         </div>
       ) : null}
     </div>
@@ -287,12 +286,9 @@ function ScanView({
 }) {
   return (
     <div className={`px-6 pb-5 pt-7 ${cardPaddingClass(design)}`}>
-      <div>
-        <p className="text-[12px] font-semibold uppercase tracking-[0.18em]" style={{ color: theme.mutedText }}>
-          Scan View
-        </p>
-        <h2 className="mt-1 text-[22px] font-extrabold tracking-[-0.04em]">Present this QR at checkout</h2>
-      </div>
+      <p className="text-[12px] font-semibold uppercase tracking-[0.18em]" style={{ color: theme.mutedText }}>
+        Scan View
+      </p>
 
       {design.visibleSections.qr ? (
       <section className="pt-7 text-center">
@@ -300,12 +296,12 @@ function ScanView({
           businessName={businessName}
           exportMode={exportMode}
           qrCode={qrCode}
-          sizeClassName="h-[220px] w-[220px]"
+          sizeClassName="h-[264px] w-[264px]"
         />
-        <p className="pt-4 text-[15px] font-semibold" style={{ color: theme.cardText }}>
+        <p className="pt-5 text-[15px] font-semibold leading-snug" style={{ color: theme.cardText }}>
           Present this QR code to a staff member to collect your loyalty stamp.
         </p>
-        <p className="pt-1 text-[13px]" style={{ color: theme.mutedText }}>
+        <p className="pt-1.5 text-[13px]" style={{ color: theme.mutedText }}>
           {qrHelperText}
         </p>
       </section>
@@ -324,7 +320,7 @@ function ScanView({
 
       {design.visibleSections.footer ? (
         <div className="pt-5">
-          <CardFlipFooterButton label="Back to Card" direction="up" onClick={onBack} theme={theme} exportMode={exportMode} />
+          <CardFlipFooterButton label="Back to Loyalty Card" icon="💳" onClick={onBack} theme={theme} exportMode={exportMode} />
         </div>
       ) : null}
     </div>
@@ -333,21 +329,20 @@ function ScanView({
 
 function CardFlipFooterButton({
   label,
-  direction,
+  icon,
   onClick,
   theme,
   exportMode,
 }: {
   label: string;
-  direction: "down" | "up";
+  icon: string;
   onClick: () => void;
   theme: WalletTheme;
   exportMode: boolean;
 }) {
-  const Icon = direction === "down" ? ChevronDown : ChevronUp;
   const content = (
     <>
-      <Icon className="h-4 w-4" aria-hidden="true" />
+      <span aria-hidden="true">{icon}</span>
       {label}
     </>
   );
@@ -562,7 +557,7 @@ function QrBlock({
             style={{ backgroundImage: `url("${qrCode}")` }}
           />
         ) : (
-          <Image src={qrCode} alt={`${businessName} customer card QR code`} width={192} height={192} unoptimized priority className="h-full w-full" />
+          <Image src={qrCode} alt={`${businessName} customer card QR code`} width={232} height={232} unoptimized priority className="h-full w-full" />
         )
       ) : (
         <div className="flex h-full w-full items-center justify-center rounded-md text-sm font-bold text-[#F97316]">

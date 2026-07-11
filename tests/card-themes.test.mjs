@@ -130,10 +130,10 @@ test("public customer card renders selected program theme through shared wallet 
   assert.match(walletCard, /WalletView/);
   assert.match(walletCard, /ScanView/);
   assert.match(walletCard, /View QR Code/);
-  assert.match(walletCard, /Present this QR at checkout/);
+  assert.match(walletCard, /Present this QR code to a staff member to collect your loyalty stamp\./);
   assert.match(walletCard, /showScanView = !exportMode && mode === "scan"/);
   assert.match(walletCard, /Member Since/);
-  assert.match(walletCard, /h-\[220px\] w-\[220px\]/);
+  assert.match(walletCard, /h-\[264px\] w-\[264px\]/);
   assert.match(walletCard, /h-\[10px\]|h-\[12px\]/);
   assert.match(walletCard, /Next reward/);
   assert.match(walletCard, /Reward Ready/);
