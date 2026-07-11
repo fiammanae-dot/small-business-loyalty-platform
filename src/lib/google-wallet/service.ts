@@ -89,6 +89,58 @@ export async function syncGoogleWalletObjectAfterLoyaltyChange(customerProgramMe
   }
 }
 
+export type GoogleWalletClassSyncResult =
+  | { ok: true; skipped: false; classId: string }
+  | { ok: true; skipped: true; reason: "NOT_CONFIGURED" | "NO_EXISTING_CLASS" | "NO_MEMBERSHIP_CONTEXT" }
+  | { ok: false; reason: "SYNC_FAILED"; error: string };
+
+/**
+ * Refreshes the shared Google Wallet Class for a program with the current
+ * LoyaltyProgram.cardDesign. Google Wallet holds one Class per program and
+ * every customer's Object references it, so patching the Class alone
+ * refreshes the appearance for every existing pass without touching Objects.
+ */
+export async function syncGoogleWalletClassForProgram(loyaltyProgramId: number): Promise<GoogleWalletClassSyncResult> {
+  const config = getGoogleWalletConfig();
+  if (!config) {
+    return { ok: true, skipped: true, reason: "NOT_CONFIGURED" };
+  }
+
+  const existingClass = await prisma.googleWalletClass.findUnique({
+    where: { loyaltyProgramId },
+  });
+  if (!existingClass) {
+    return { ok: true, skipped: true, reason: "NO_EXISTING_CLASS" };
+  }
+
+  const membership = await prisma.customerProgramMembership.findFirst({
+    where: { loyaltyProgramId },
+    include: membershipInclude,
+  });
+  if (!membership) {
+    return { ok: true, skipped: true, reason: "NO_MEMBERSHIP_CONTEXT" };
+  }
+
+  const api = createGoogleWalletApiClient(config);
+
+  try {
+    await ensureGoogleWalletClass({
+      api,
+      config,
+      membership: membership as GoogleWalletProgramMembership,
+      classId: existingClass.classId,
+      now: new Date(),
+    });
+    return { ok: true, skipped: false, classId: existingClass.classId };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Google Wallet class sync failed.";
+    await prisma.googleWalletClass
+      .update({ where: { id: existingClass.id }, data: { status: "FAILED", lastError: message } })
+      .catch(() => undefined);
+    return { ok: false, reason: "SYNC_FAILED", error: message };
+  }
+}
+
 export async function syncGoogleWalletObject(customerProgramMembershipId: number, options: { includeSaveUrl?: boolean } = {}): Promise<SyncResult> {
   const config = getGoogleWalletConfig();
   if (!config) {

@@ -14,6 +14,7 @@ import { buildProgramCardDesign, getCardThemeForDesignStudioTemplate, parseDesig
 import { getStartingBonusStampsForEvent, parseProgramDate, programSchema } from "@/lib/programs";
 import { generateScanToken } from "@/lib/scan";
 import { commerciallyUsableStatuses, limitReachedMessage } from "@/lib/subscriptions";
+import { summarizeWalletSyncForUser, syncWalletProvidersForProgram } from "@/lib/wallet-sync";
 
 function getString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -241,7 +242,25 @@ export async function updateProgramDesignStudioAction(formData: FormData) {
   revalidatePath("/dashboard/customers");
   revalidatePath("/dashboard/customers/[id]", "page");
   revalidatePath("/card/[token]", "page");
-  redirect(`${path}?success=Design Studio settings saved.`);
+
+  const walletOutcomes = await synchronizeWalletProvidersSafely({
+    programId: program.id,
+    programUuid: program.uuid,
+    businessId: user.businessId,
+  });
+  const walletSummary = summarizeWalletSyncForUser(walletOutcomes);
+  const successMessage = walletSummary ? `Design Studio settings saved. ${walletSummary}` : "Design Studio settings saved.";
+
+  redirect(`${path}?success=${encodeURIComponent(successMessage)}`);
+}
+
+async function synchronizeWalletProvidersSafely(context: Parameters<typeof syncWalletProvidersForProgram>[0]) {
+  try {
+    return await syncWalletProvidersForProgram(context);
+  } catch (error) {
+    console.warn("[wallet-sync] unexpected failure during Design Studio save", error);
+    return [];
+  }
 }
 
 export async function saveBusinessDesignPresetAction(formData: FormData) {
