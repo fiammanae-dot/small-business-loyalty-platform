@@ -83,15 +83,17 @@ export function StampSlot({
 
 function StampEmoji({ stampIcon, className }: { stampIcon: CardDesignStampIcon; className: string }) {
   return (
-    <span
-      className={`inline-grid select-none place-items-center leading-none ${className}`}
-      aria-hidden="true"
-      title={getStampAriaLabel(stampIcon)}
-      style={{
-        fontFamily: "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Twemoji Mozilla', sans-serif",
-      }}
-    >
-      <span className="text-[1.35em] leading-none">{getStampEmoji(stampIcon)}</span>
+    <span className={`relative inline-block ${className}`} aria-hidden="true" title={getStampAriaLabel(stampIcon)}>
+      <span
+        className="absolute left-1/2 top-1/2 select-none whitespace-nowrap leading-none"
+        style={{
+          transform: "translate(-50%, -50%)",
+          fontFamily: "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Twemoji Mozilla', sans-serif",
+          fontSize: "1.35em",
+        }}
+      >
+        {getStampEmoji(stampIcon)}
+      </span>
     </span>
   );
 }
