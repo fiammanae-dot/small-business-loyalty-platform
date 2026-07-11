@@ -94,17 +94,15 @@ export function LoyaltyWalletCard({
           onScan={() => {}}
         />
       ) : (
-        <div style={{ perspective: "1600px" }}>
-          <div
-            className="grid transition-transform duration-500 ease-in-out motion-reduce:transition-none"
-            style={{
-              transform: showScanView ? "rotateY(180deg)" : "rotateY(0deg)",
-              transformStyle: "preserve-3d",
-            }}
-          >
+        <div style={{ perspective: "1600px", WebkitPerspective: "1600px" }}>
+          <div className="grid">
             <div
-              className="col-start-1 row-start-1"
-              style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
+              className="col-start-1 row-start-1 transition-transform duration-500 ease-in-out motion-reduce:transition-none"
+              style={{
+                transform: showScanView ? "rotateY(180deg)" : "rotateY(0deg)",
+                backfaceVisibility: "hidden",
+                WebkitBackfaceVisibility: "hidden",
+              }}
               aria-hidden={showScanView}
               inert={showScanView}
             >
@@ -129,8 +127,12 @@ export function LoyaltyWalletCard({
               />
             </div>
             <div
-              className="col-start-1 row-start-1"
-              style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+              className="col-start-1 row-start-1 transition-transform duration-500 ease-in-out motion-reduce:transition-none"
+              style={{
+                transform: showScanView ? "rotateY(360deg)" : "rotateY(180deg)",
+                backfaceVisibility: "hidden",
+                WebkitBackfaceVisibility: "hidden",
+              }}
               aria-hidden={!showScanView}
               inert={!showScanView}
             >
