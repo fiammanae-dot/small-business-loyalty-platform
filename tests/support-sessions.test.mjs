@@ -230,7 +230,7 @@ test("business owners can view support history without internal audit details", 
   assert.doesNotMatch(page, /Session ID/);
   assert.match(dashboard, /Support access/);
   assert.match(dashboard, /no support access recorded/);
-  assert.match(dashboard, /LoyaltyBase Support is currently assisting with your workspace/);
+  assert.match(dashboard, /Loyalty Card UAE Support is currently assisting with your workspace/);
   assert.match(navigation, /\/dashboard\/support-history/);
   assert.match(actions, /businessNotification\.create/);
   assert.match(actions, /Support Access Completed/);

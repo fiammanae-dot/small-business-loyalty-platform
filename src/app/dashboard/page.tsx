@@ -382,7 +382,7 @@ function ActiveSupportNotice({ session }: { session: { reason: string; expiresAt
             <ShieldCheck className="h-5 w-5" aria-hidden="true" />
           </span>
           <div className="min-w-0">
-            <p className="text-sm font-bold text-red-800">LoyaltyBase Support is currently assisting with your workspace.</p>
+            <p className="text-sm font-bold text-red-800">Loyalty Card UAE Support is currently assisting with your workspace.</p>
             <p className="mt-1 text-sm text-red-700">Reason: {session.reason}</p>
           </div>
         </div>

@@ -103,9 +103,9 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
           <div className="flex min-w-0 items-center justify-between gap-4">
             <Link href={roleHomePath[user.role]} className="flex min-w-0 items-center gap-2">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#E86A33] text-xs font-bold text-white shadow-[0_2px_6px_rgba(232,106,51,0.35)] business-bg sm:h-9 sm:w-9 sm:text-sm">
-                LB
+                LC
               </span>
-              <span className="text-sm font-bold tracking-tight text-[#171A21]">LoyaltyBase</span>
+              <span className="text-sm font-bold tracking-tight text-[#171A21]">Loyalty Card UAE</span>
               {activeSupportSession ? (
                 <span className="rounded-md bg-red-600 px-2 py-1 text-xs font-black uppercase text-white">Support</span>
               ) : null}
