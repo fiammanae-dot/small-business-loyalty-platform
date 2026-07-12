@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { toPng } from "html-to-image";
+import { Check, Search } from "lucide-react";
 import Link from "next/link";
 import type {
   CardDesignBackgroundPattern,
@@ -610,7 +611,7 @@ export function ProgramDesignStudioForm({
                       <label className="relative w-full lg:max-w-sm">
                         <span className="sr-only">Search Templates</span>
                         <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" aria-hidden="true">
-                          âŒ•
+                          <Search className="h-4 w-4" />
                         </span>
                         <input
                           type="search"
@@ -676,7 +677,7 @@ export function ProgramDesignStudioForm({
                                 <PresetThumbnail preset={preset} />
                                 {active ? (
                                   <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-blue-600 px-2.5 py-1 text-[11px] font-black text-white shadow-sm">
-                                    <span aria-hidden="true">âœ“</span>
+                                    <Check className="h-3 w-3" aria-hidden="true" />
                                     Selected
                                   </span>
                                 ) : null}
@@ -697,7 +698,7 @@ export function ProgramDesignStudioForm({
                               </button>
                               {active ? (
                                 <span className="inline-flex items-center gap-1 rounded-xl bg-blue-600 px-3 py-2 text-sm font-black text-white">
-                                  <span aria-hidden="true">âœ“</span>
+                                  <Check className="h-3 w-3" aria-hidden="true" />
                                   Selected
                                 </span>
                               ) : (
@@ -716,7 +717,9 @@ export function ProgramDesignStudioForm({
                     </div>
                   ) : (
                     <div className="grid place-items-center gap-4 rounded-[1.5rem] border border-dashed border-[#CBD5E1] bg-white p-10 text-center text-sm text-[#64748B]">
-                      <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#F8FAFC] text-2xl" aria-hidden="true">âŒ•</div>
+                      <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#F8FAFC] text-[#94A3B8]" aria-hidden="true">
+                        <Search className="h-6 w-6" />
+                      </div>
                       <p className="text-lg font-black text-[#111827]">No templates found for this category.</p>
                       <p>Try another keyword or clear the current search.</p>
                       <button
@@ -769,7 +772,7 @@ export function ProgramDesignStudioForm({
                               <PresetThumbnail preset={sourceProgramToThumbnailPreset(sourceProgram)} />
                               {active ? (
                                 <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-blue-600 px-2.5 py-1 text-[11px] font-black text-white shadow-sm">
-                                  <span aria-hidden="true">âœ“</span>
+                                  <Check className="h-3 w-3" aria-hidden="true" />
                                   Copied
                                 </span>
                               ) : null}
@@ -1336,7 +1339,7 @@ function buildPreviewPdfHtml({
     <section class="sheet">
       <p class="eyebrow">Loyalty Card UAE Design Preview</p>
       <h1>${escapeHtml(businessName)}</h1>
-      <p class="meta">${escapeHtml(programName)} Â· Generated ${escapeHtml(generatedAt)}</p>
+      <p class="meta">${escapeHtml(programName)} · Generated ${escapeHtml(generatedAt)}</p>
       <img class="preview" src="${imageDataUrl}" alt="Loyalty card design preview" />
       <p class="eyebrow">Design Summary</p>
       <div class="summary">${summaryHtml}</div>
