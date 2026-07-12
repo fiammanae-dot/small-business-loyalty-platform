@@ -1,25 +1,23 @@
 "use server";
 
 import { Prisma } from "@prisma/client";
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 import { z } from "zod";
 import { createEngagementEventIfAllowed } from "@/lib/engagement";
 import { generateCardToken } from "@/lib/customer-cards";
+import { customerIdentitySchema, getCheckbox, parseBirthday } from "@/lib/customers";
 import { normalizePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { getStartingBonusStampsForEvent } from "@/lib/programs";
 import { isPublicActionRateLimited, recordPublicActionAttempt } from "@/lib/rate-limit";
-import { generateReferralCode } from "@/lib/referrals";
+import { createPendingReferralForEnrollment, extractReferralCode, findActiveReferralReferrerByPhone, generateReferralCode } from "@/lib/referrals";
 import { getRequestInfo } from "@/lib/request-info";
 import { generateScanToken } from "@/lib/scan";
 
 const JOIN_PROGRAM_RATE_LIMIT_SCOPE = "public_join_program" as const;
 
-const joinProgramSchema = z.object({
+const joinProgramSchema = customerIdentitySchema.extend({
   token: z.string().trim().uuid("Program link is invalid."),
-  firstName: z.string().trim().min(1, "First name is required."),
-  lastName: z.string().trim().optional(),
-  phone: z.string().trim().min(1, "Phone number is required."),
 });
 
 function getString(formData: FormData, key: string) {
@@ -51,7 +49,10 @@ export async function joinProgramAction(formData: FormData) {
     firstName: getString(formData, "firstName"),
     lastName: getString(formData, "lastName"),
     phone: getString(formData, "phone"),
+    email: getString(formData, "email"),
+    birthday: getString(formData, "birthday"),
   });
+  const marketingConsent = getCheckbox(formData, "marketingConsent");
 
   if (!parsed.success) fail(token, parsed.error.issues[0]?.message ?? "Enrollment failed.");
 
@@ -84,6 +85,31 @@ export async function joinProgramAction(formData: FormData) {
     outcome: "ATTEMPTED",
   });
 
+  // Same referral resolution rules as the manual enrollment engine
+  // (enrollCustomerForBusiness), using the same shared helpers. Resolved before
+  // the transaction so validation failures redirect with their real message.
+  const explicitReferralCodeInput = getString(formData, "referralCode");
+  const referredBySearch = getString(formData, "referredBySearch");
+  const referralLookupInput = explicitReferralCodeInput || referredBySearch;
+  let referralCodeForEnrollment = extractReferralCode(referralLookupInput);
+
+  if (!referralCodeForEnrollment && referralLookupInput.trim()) {
+    const phoneLookup = await findActiveReferralReferrerByPhone({
+      tx: prisma,
+      businessId: program.businessId,
+      phone: referralLookupInput,
+    });
+
+    if (phoneLookup.status === "INVALID_PHONE") {
+      fail(parsed.data.token, "Check the referrer and select a matching customer before submitting.");
+    }
+    if (phoneLookup.status === "NOT_FOUND" || !phoneLookup.referrer?.referralCode) {
+      fail(parsed.data.token, "No matching referrer found.");
+    }
+
+    referralCodeForEnrollment = phoneLookup.referrer.referralCode;
+  }
+
   let result: { cardToken: string };
   try {
     result = await prisma.$transaction(async (tx) => {
@@ -98,6 +124,8 @@ export async function joinProgramAction(formData: FormData) {
           lastName: parsed.data.lastName || null,
           phone: normalizedPhone,
           normalizedPhone,
+          email: parsed.data.email || null,
+          birthday: parseBirthday(parsed.data.birthday),
         },
         select: { id: true },
       }));
@@ -162,6 +190,21 @@ export async function joinProgramAction(formData: FormData) {
       return { cardToken: existingMembership.cardToken };
     }
 
+    // Mirrors the manual enrollment engine's duplicate guard: an email already
+    // used by another customer of this business blocks a second profile.
+    if (parsed.data.email) {
+      const duplicateEmailMembership = await tx.businessCustomerMembership.findFirst({
+        where: {
+          businessId: program.businessId,
+          email: { equals: parsed.data.email, mode: "insensitive" },
+        },
+        select: { id: true },
+      });
+      if (duplicateEmailMembership) {
+        fail(parsed.data.token, "This customer is already enrolled in your business.");
+      }
+    }
+
     const referralCode = await generateReferralCode({
       tx,
       businessId: program.businessId,
@@ -177,9 +220,9 @@ export async function joinProgramAction(formData: FormData) {
         lastName: parsed.data.lastName || null,
         phone: normalizedPhone,
         normalizedPhone,
-        email: null,
-        birthday: null,
-        marketingConsent: false,
+        email: parsed.data.email || null,
+        birthday: parseBirthday(parsed.data.birthday),
+        marketingConsent,
         source: "SELF_SIGNUP",
         status: "ACTIVE",
         cardToken: generateCardToken(),
@@ -210,6 +253,14 @@ export async function joinProgramAction(formData: FormData) {
       select: { id: true },
     });
 
+    await createPendingReferralForEnrollment({
+      tx,
+      businessId: program.businessId,
+      referredGlobalCustomerId: globalCustomer.id,
+      referredMembershipId: membership.id,
+      referralCode: referralCodeForEnrollment,
+    });
+
     await createEngagementEventIfAllowed({
       tx,
       businessId: program.businessId,
@@ -225,6 +276,7 @@ export async function joinProgramAction(formData: FormData) {
     return { cardToken: membership.cardToken };
     });
   } catch (error) {
+    unstable_rethrow(error);
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       const existingCardToken = await findExistingProgramCardToken(normalizedPhone, program.businessId, program.id);
       if (existingCardToken) {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { joinProgramAction } from "@/app/join/program/[token]/actions";
 import { BusinessBrandingProvider } from "@/components/BusinessBrandingProvider";
+import { ReferralReferrerLookupPreview } from "@/components/ReferralReferrerLookupPreview";
 import { RequiredMark } from "@/components/ui/RequiredMark";
 import { resolveBusinessBranding } from "@/lib/business-branding";
 import { getCardUrl } from "@/lib/customer-cards";
@@ -11,10 +12,24 @@ export default async function ProgramJoinPage({
   searchParams,
 }: {
   params: Promise<{ token: string }>;
-  searchParams: Promise<{ card?: string; error?: string }>;
+  searchParams: Promise<{
+    card?: string;
+    error?: string;
+    ref?: string;
+    referralCode?: string;
+    referredBySearch?: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    email?: string;
+    birthday?: string;
+    marketingConsent?: string;
+  }>;
 }) {
   const { token } = await params;
   const qs = await searchParams;
+  const referredBySearch = qs.referredBySearch ?? qs.ref ?? "";
+  const selectedReferralCode = qs.referralCode ?? qs.ref ?? "";
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(token);
   const program = isUuid
     ? await prisma.loyaltyProgram.findUnique({
@@ -86,12 +101,50 @@ export default async function ProgramJoinPage({
 
             <form action={joinProgramAction} className="mt-5 grid gap-4">
               <input type="hidden" name="token" value={token} />
-              <Input label="First name" name="firstName" autoComplete="given-name" required />
-              <Input label="Last name" name="lastName" autoComplete="family-name" />
-              <Input label="Phone number" name="phone" autoComplete="tel" required placeholder="0501234567" />
+              <Input label="First name" name="firstName" autoComplete="given-name" required defaultValue={qs.firstName} />
+              <Input label="Last name" name="lastName" autoComplete="family-name" defaultValue={qs.lastName} />
+              <Input label="Phone number" name="phone" autoComplete="tel" required placeholder="0501234567" defaultValue={qs.phone} />
               <p className="text-xs leading-5 text-[#64748B]">
                 We use your phone number to find or create your customer profile for this business only.
               </p>
+              <Input label="Email" name="email" type="email" autoComplete="email" defaultValue={qs.email} />
+              <Input label="Birthday" name="birthday" type="date" autoComplete="bday" defaultValue={qs.birthday} />
+              <label className="flex items-center gap-2 text-sm font-semibold text-[#111827]">
+                <input
+                  type="checkbox"
+                  name="marketingConsent"
+                  defaultChecked={qs.marketingConsent === "on"}
+                  className="h-4 w-4 rounded border-[#E5E7EB]"
+                />
+                I agree to receive offers and updates from this business
+              </label>
+              <div className="grid gap-3 rounded-xl border border-[#E5E7EB] bg-[#F8FAFC] p-4">
+                <div>
+                  <p className="text-sm font-semibold text-[#111827]">Referred by a friend?</p>
+                  <p className="mt-1 text-xs leading-5 text-[#64748B]">
+                    Optional. Enter their phone, name, referral code, or referral link.
+                  </p>
+                </div>
+                <Input
+                  label="Referrer"
+                  name="referredBySearch"
+                  placeholder="Phone, name, referral code, or referral link"
+                  defaultValue={referredBySearch}
+                />
+                <ReferralReferrerLookupPreview
+                  businessId={program.businessId}
+                  query={referredBySearch}
+                  selectedReferralCode={selectedReferralCode}
+                />
+                <button
+                  type="submit"
+                  formAction={`/join/program/${token}`}
+                  formMethod="get"
+                  className="w-fit rounded-xl border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-semibold text-[#111827]"
+                >
+                  Check referrer
+                </button>
+              </div>
               <button
                 type="submit"
                 className="min-h-12 rounded-xl business-button px-5 text-sm font-bold transition hover:brightness-95"
@@ -110,25 +163,33 @@ export default async function ProgramJoinPage({
 function Input({
   label,
   name,
+  type = "text",
   required = false,
   autoComplete,
   placeholder,
+  defaultValue,
 }: {
   label: string;
   name: string;
+  type?: string;
   required?: boolean;
   autoComplete?: string;
   placeholder?: string;
+  defaultValue?: string;
 }) {
   return (
     <label className="grid gap-2 text-sm font-semibold text-[#111827]">
-      {label}
-      {required ? <RequiredMark /> : null}
+      <span>
+        {label}
+        {required ? <RequiredMark /> : null}
+      </span>
       <input
         name={name}
+        type={type}
         required={required}
         autoComplete={autoComplete}
         placeholder={placeholder}
+        defaultValue={defaultValue}
         className="h-12 rounded-xl border border-[#E5E7EB] px-4 text-sm font-normal outline-none transition business-ring focus:ring-0"
       />
     </label>

@@ -42,6 +42,29 @@ test("public program join page renders enrollment and verified card success", ()
   assert.doesNotMatch(action, /rewardRedemption\.create/);
 });
 
+test("public program join collects the manual-enrollment profile fields through shared logic", () => {
+  const page = read("src/app/join/program/[token]/page.tsx");
+  const action = read("src/app/join/program/[token]/actions.ts");
+
+  assert.match(page, /name="email"/);
+  assert.match(page, /name="birthday"/);
+  assert.match(page, /name="marketingConsent"/);
+  assert.match(page, /name="referredBySearch"/);
+  assert.match(page, /ReferralReferrerLookupPreview/);
+  assert.doesNotMatch(page, /name="notes"/, "notes are staff-only and must not appear on the public join form");
+  assert.doesNotMatch(page, /name="createdBranchId"/, "branch selection is staff-only");
+  assert.doesNotMatch(page, /name="selectedProgramUuid"/, "the program is fixed by the QR token");
+
+  assert.match(action, /customerIdentitySchema\.extend/, "join validation must reuse the shared customer identity schema");
+  assert.match(action, /parseBirthday\(parsed\.data\.birthday\)/, "birthday must be stored through the shared parser");
+  assert.match(action, /getCheckbox\(formData, "marketingConsent"\)/);
+  assert.match(action, /extractReferralCode/);
+  assert.match(action, /findActiveReferralReferrerByPhone/);
+  assert.match(action, /createPendingReferralForEnrollment/, "referrals must go through the shared deferred-reward helper");
+  assert.doesNotMatch(action, /z\.string\(\)\.trim\(\)\.email/, "email validation must come from customerIdentitySchema, not a duplicate rule");
+  assert.doesNotMatch(action, /referral\.create/, "the join action must not re-implement referral record creation");
+});
+
 test("business owner program detail exposes join QR controls without changing scanner flow", () => {
   const detail = read("src/app/dashboard/programs/[id]/page.tsx");
   const poster = read("src/app/dashboard/programs/[id]/join-poster/page.tsx");
