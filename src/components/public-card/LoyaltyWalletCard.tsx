@@ -199,54 +199,56 @@ function WalletView({
   onScan: () => void;
 }) {
   return (
-    <div className={`px-6 pb-5 pt-7 ${cardPaddingClass(design)}`}>
-      {(design.visibleSections.logo || design.visibleSections.businessName || design.visibleSections.programName || design.visibleSections.tierBadge) ? (
-        <CardHeader
-          businessLogoUrl={businessLogoUrl}
-          businessName={businessName}
-          displayProgram={displayProgram}
-          theme={theme}
-          design={design}
-          tierIcon={tierIcon}
-          tierLabel={tierLabel}
-        />
-      ) : null}
+    <div className={`flex h-full flex-col px-6 pb-5 pt-7 ${cardPaddingClass(design)}`}>
+      <div className="flex-1">
+        {(design.visibleSections.logo || design.visibleSections.businessName || design.visibleSections.programName || design.visibleSections.tierBadge) ? (
+          <CardHeader
+            businessLogoUrl={businessLogoUrl}
+            businessName={businessName}
+            displayProgram={displayProgram}
+            theme={theme}
+            design={design}
+            tierIcon={tierIcon}
+            tierLabel={tierLabel}
+          />
+        ) : null}
 
-      {design.visibleSections.customerName ? (
-        <section className="pt-7">
-          <p className={labelClass(design)} style={{ color: theme.mutedText }}>
-            Customer
-          </p>
-          <h2 className={customerClass(design)}>
-            {customerName}
-          </h2>
-          <p className={supportingClass(design)} style={{ color: theme.mutedText }}>
-            Member since {memberSince}
-          </p>
-        </section>
-      ) : null}
+        {design.visibleSections.customerName ? (
+          <section className="pt-7">
+            <p className={labelClass(design)} style={{ color: theme.mutedText }}>
+              Customer
+            </p>
+            <h2 className={customerClass(design)}>
+              {customerName}
+            </h2>
+            <p className={supportingClass(design)} style={{ color: theme.mutedText }}>
+              Member since {memberSince}
+            </p>
+          </section>
+        ) : null}
 
-      {design.visibleSections.progress ? (
-        <ProgressSection
-          completion={displayCompletion}
-          current={displayProgress}
-          design={design}
-          required={displayRequired}
-          rewardReady={rewardReady}
-          statusText={statusText}
-          theme={theme}
-        />
-      ) : null}
+        {design.visibleSections.progress ? (
+          <ProgressSection
+            completion={displayCompletion}
+            current={displayProgress}
+            design={design}
+            required={displayRequired}
+            rewardReady={rewardReady}
+            statusText={statusText}
+            theme={theme}
+          />
+        ) : null}
 
-      {design.visibleSections.rewardBox ? (
-        <RewardPanel
-          design={design}
-          displayReward={displayReward}
-          rewardReady={rewardReady}
-          statusText={statusText}
-          theme={theme}
-        />
-      ) : null}
+        {design.visibleSections.rewardBox ? (
+          <RewardPanel
+            design={design}
+            displayReward={displayReward}
+            rewardReady={rewardReady}
+            statusText={statusText}
+            theme={theme}
+          />
+        ) : null}
+      </div>
 
       {design.visibleSections.footer ? (
         <div className="pt-5">
@@ -287,38 +289,40 @@ function ScanView({
   onBack: () => void;
 }) {
   return (
-    <div className={`px-6 pb-5 pt-7 ${cardPaddingClass(design)}`}>
-      <p className="text-[12px] font-semibold uppercase tracking-[0.18em]" style={{ color: theme.mutedText }}>
-        Scan View
-      </p>
-
-      {design.visibleSections.qr ? (
-      <section className="pt-7 text-center">
-        <QrBlock
-          businessName={businessName}
-          exportMode={exportMode}
-          qrCode={qrCode}
-          sizeClassName="h-[264px] w-[264px]"
-        />
-        <p className="pt-5 text-[15px] font-semibold leading-snug" style={{ color: theme.cardText }}>
-          Present this QR code to a staff member to collect your loyalty stamp.
+    <div className={`flex h-full flex-col px-6 pb-5 pt-7 ${cardPaddingClass(design)}`}>
+      <div className="flex-1">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.18em]" style={{ color: theme.mutedText }}>
+          Scan View
         </p>
-        <p className="pt-1.5 text-[13px]" style={{ color: theme.mutedText }}>
-          {qrHelperText}
-        </p>
-      </section>
-      ) : null}
 
-      <section className="pt-7">
-        <div className="rounded-[18px] px-4 py-4 ring-1" style={{ backgroundColor: theme.rewardPanelBackground, color: theme.rewardPanelText, borderColor: theme.rewardPanelBorder }}>
-          <div className="grid gap-3">
-            {design.visibleSections.programName ? <SummaryLine label="Program" value={displayProgram} theme={theme} /> : null}
-            {design.visibleSections.progress ? <SummaryLine label="Progress" value={`${displayProgress} / ${displayRequired} visits`} theme={theme} /> : null}
-            {design.visibleSections.rewardBox ? <SummaryLine label="Next reward" value={displayReward} theme={theme} /> : null}
-            {design.visibleSections.visits ? <SummaryLine label="Status" value={rewardReady ? "Reward Ready" : statusText} theme={theme} /> : null}
+        {design.visibleSections.qr ? (
+        <section className="pt-7 text-center">
+          <QrBlock
+            businessName={businessName}
+            exportMode={exportMode}
+            qrCode={qrCode}
+            sizeClassName="h-[264px] w-[264px]"
+          />
+          <p className="pt-5 text-[15px] font-semibold leading-snug" style={{ color: theme.cardText }}>
+            Present this QR code to a staff member to collect your loyalty stamp.
+          </p>
+          <p className="pt-1.5 text-[13px]" style={{ color: theme.mutedText }}>
+            {qrHelperText}
+          </p>
+        </section>
+        ) : null}
+
+        <section className="pt-7">
+          <div className="rounded-[18px] px-4 py-4 ring-1" style={{ backgroundColor: theme.rewardPanelBackground, color: theme.rewardPanelText, borderColor: theme.rewardPanelBorder }}>
+            <div className="grid gap-3">
+              {design.visibleSections.programName ? <SummaryLine label="Program" value={displayProgram} theme={theme} /> : null}
+              {design.visibleSections.progress ? <SummaryLine label="Progress" value={`${displayProgress} / ${displayRequired} visits`} theme={theme} /> : null}
+              {design.visibleSections.rewardBox ? <SummaryLine label="Next reward" value={displayReward} theme={theme} /> : null}
+              {design.visibleSections.visits ? <SummaryLine label="Status" value={rewardReady ? "Reward Ready" : statusText} theme={theme} /> : null}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
       {design.visibleSections.footer ? (
         <div className="pt-5">
