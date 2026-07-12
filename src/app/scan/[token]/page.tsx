@@ -403,20 +403,6 @@ export default async function ScanResultPage({
       <ScannerSoundFeedback event={soundEvent} enabled={scannerSoundEffectsEnabled} />
       <ScanStatusBanner tone="green" title="Valid Customer" description="This loyalty QR belongs to your business and is ready for service." />
 
-      <ActionSummarySection
-        customerName={customerName}
-        phone={businessMembership.normalizedPhone}
-        tier={fromStoredTier(businessMembership.currentTier) ?? "Bronze"}
-        status={businessMembership.status}
-        businessName={businessMembership.business.name}
-        branchName={scannerBranch?.name ?? businessMembership.createdBranch?.name ?? "Unassigned"}
-        programName={program.name}
-        progress={progress}
-        requiredStamps={program.requiredStamps}
-        rewardReady={rewardReady}
-        rewardName={program.rewardName}
-      />
-
       {!redemption ? (
         <QuickScanActions
           token={scanToken}
@@ -461,6 +447,20 @@ export default async function ScanResultPage({
       {redemption ? (
         <ScanStatusBanner tone="green" title="Reward redeemed successfully" description={`Progress has been reset to 0 / ${program.requiredStamps}.`} />
       ) : null}
+
+      <ActionSummarySection
+        customerName={customerName}
+        phone={businessMembership.normalizedPhone}
+        tier={fromStoredTier(businessMembership.currentTier) ?? "Bronze"}
+        status={businessMembership.status}
+        businessName={businessMembership.business.name}
+        branchName={scannerBranch?.name ?? businessMembership.createdBranch?.name ?? "Unassigned"}
+        programName={program.name}
+        progress={progress}
+        requiredStamps={program.requiredStamps}
+        rewardReady={rewardReady}
+        rewardName={program.rewardName}
+      />
 
       <DetailPageLayout>
       <section className="grid gap-3">
