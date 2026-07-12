@@ -221,6 +221,7 @@ export function ProgramDesignStudioForm({
     ) ?? null;
   const activePresetId = activeProfessionalPreset?.id ?? null;
   const professionalTemplatesVisible = designStartMode === "template" && !presetApplied;
+  const recommendedTemplateCategory = getDefaultProfessionalPresetCategory(businessType);
   const duplicateDesignVisible = designStartMode === "duplicate";
   const normalizedPresetSearch = professionalPresetSearch.trim().toLowerCase();
   const filteredProfessionalPresets = useMemo(
@@ -456,7 +457,7 @@ export function ProgramDesignStudioForm({
   );
 
   return (
-    <form action={action} className="grid gap-6 lg:grid-cols-[minmax(0,68fr)_minmax(220px,32fr)] lg:items-start xl:grid-cols-[minmax(0,72fr)_minmax(240px,28fr)] 2xl:gap-8">
+    <form action={action} className="grid gap-6 lg:grid-cols-[minmax(0,65fr)_minmax(300px,35fr)] lg:items-start xl:grid-cols-[minmax(0,70fr)_minmax(340px,30fr)] 2xl:gap-8">
       <input type="hidden" name={csrfName} value={csrfToken} />
       <input type="hidden" name="programUuid" value={programUuid} />
       <input type="hidden" name="layoutStyle" value={layoutStyle} />
@@ -558,7 +559,7 @@ export function ProgramDesignStudioForm({
         </div>
       </aside>
 
-      <div className="order-last grid min-w-0 gap-5 lg:order-first lg:max-w-[1080px] [&>section]:rounded-2xl [&>section]:p-5 md:[&>section]:p-6">
+      <div className="order-last grid min-w-0 gap-6 lg:order-first lg:max-w-[1080px] [&>section]:rounded-2xl [&>section]:p-5 md:[&>section]:p-6">
         <WizardStepper current={wizardStep} onSelect={goToStep} />
 
         {wizardStep === 1 ? (
@@ -583,8 +584,8 @@ export function ProgramDesignStudioForm({
                         data-active={active}
                         aria-pressed={active}
                       >
-                        <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full border border-[#CBD5E1] bg-white text-[10px] font-black data-[active=true]:border-[var(--business-primary)] data-[active=true]:business-bg" data-active={active}>
-                          {active ? "*" : ""}
+                        <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full border border-[#E2E8F0] bg-white data-[active=true]:border-[var(--business-primary)] data-[active=true]:business-bg" data-active={active}>
+                          {active ? <Check className="h-3 w-3" aria-hidden="true" /> : null}
                         </span>
                         <span className="min-w-0">
                           <span className="block text-sm font-black text-[#111827]">{option.label}</span>
@@ -658,23 +659,29 @@ export function ProgramDesignStudioForm({
                     </div>
                   </div>
                   {filteredProfessionalPresets.length > 0 ? (
-                    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                    <div className="grid gap-7 md:grid-cols-2">
                       {filteredProfessionalPresets.map((preset) => {
                         const active = activePresetId === preset.id;
+                        const recommended = preset.category === recommendedTemplateCategory;
                         return (
                           <article
                             key={preset.id}
-                            className="group grid overflow-hidden rounded-[1.65rem] border border-[#E2E8F0] bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:scale-[1.01] hover:border-[var(--business-primary)] hover:shadow-2xl data-[active=true]:border-blue-500 data-[active=true]:shadow-xl data-[active=true]:ring-2 data-[active=true]:ring-blue-100"
+                            className="group grid overflow-hidden rounded-[1.65rem] border border-[#E2E8F0] bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:scale-[1.01] hover:border-[var(--business-primary)] hover:shadow-2xl data-[active=true]:-translate-y-1 data-[active=true]:border-blue-500 data-[active=true]:ring-2 data-[active=true]:ring-blue-200 data-[active=true]:shadow-[0_18px_50px_rgba(37,99,235,0.22)]"
                             data-active={active}
                           >
                             <button
                               type="button"
                               onClick={() => applyProfessionalPreset(preset)}
-                              className="grid gap-5 p-5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-inset"
+                              className="grid gap-5 p-6 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-inset"
                               aria-pressed={active}
                             >
-                              <span className="relative [&>span]:min-h-[190px] [&>span]:p-5">
+                              <span className="relative [&>span]:min-h-[240px] [&>span]:p-6">
                                 <PresetThumbnail preset={preset} />
+                                {recommended ? (
+                                  <span className="absolute left-3 top-3 inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-black text-amber-800 ring-1 ring-amber-200">
+                                    Recommended
+                                  </span>
+                                ) : null}
                                 {active ? (
                                   <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-blue-600 px-2.5 py-1 text-[11px] font-black text-white shadow-sm">
                                     <Check className="h-3 w-3" aria-hidden="true" />
@@ -685,7 +692,7 @@ export function ProgramDesignStudioForm({
                               <span className="min-w-0 px-1 pb-1">
                                 <span className="block truncate text-lg font-black text-[#111827]">{preset.name}</span>
                                 <span className="mt-1 block text-xs font-black uppercase tracking-[0.16em] text-[#94A3B8]">{preset.category}</span>
-                                <span className="mt-3 line-clamp-1 block text-sm leading-6 text-[#64748B]">{preset.description}</span>
+                                <span className="mt-3 line-clamp-2 block text-sm leading-6 text-[#64748B]">{preset.description}</span>
                               </span>
                             </button>
                             <div className="flex items-center justify-between gap-2 border-t border-[#E2E8F0] bg-[#F8FAFC] p-4">
@@ -736,18 +743,54 @@ export function ProgramDesignStudioForm({
                 </div>
               </SectionCard>
             ) : presetApplied && designStartMode === "template" ? (
-              <div className="rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-sm">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPresetApplied(false);
-                    setDesignStartMode("template");
-                  }}
-                  className="rounded-xl border border-[var(--business-primary)] px-4 py-2 text-sm font-black business-text transition hover:bg-[var(--business-primary-soft)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
-                >
-                  Choose Another Template
-                </button>
-              </div>
+              <SectionCard title="Quick Customize" description="Your brand is applied to the template automatically. Continue to fine-tune style, stamps, and content.">
+                <div className="grid gap-5">
+                  <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+                    {branding.logoUrl ? (
+                      <span
+                        aria-label={`${businessName} logo`}
+                        className="h-12 w-12 shrink-0 rounded-full bg-cover bg-center ring-1 ring-black/5"
+                        style={{ backgroundImage: `url(${branding.logoUrl})` }}
+                      />
+                    ) : (
+                      <span
+                        aria-hidden="true"
+                        className="grid h-12 w-12 shrink-0 place-items-center rounded-full text-lg font-black text-white ring-1 ring-black/5"
+                        style={{ backgroundColor: branding.primaryColor }}
+                      >
+                        {businessName.slice(0, 1).toUpperCase()}
+                      </span>
+                    )}
+                    <span className="min-w-0">
+                      <span className="block truncate text-base font-black text-[#111827]">{businessName}</span>
+                      <span className="mt-0.5 block text-xs font-semibold text-[#64748B]">{programName}</span>
+                    </span>
+                    <span className="ml-auto flex items-center gap-3">
+                      <BrandColorSwatch label="Primary" color={branding.primaryColor} />
+                      <BrandColorSwatch label="Secondary" color={branding.secondaryColor} />
+                      <BrandColorSwatch label="Accent" color={branding.buttonColor} />
+                    </span>
+                  </div>
+                  <p className="text-xs leading-5 text-[#94A3B8]">
+                    Brand logo and colors are managed in your business branding settings and apply to every card automatically.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button type="button" variant="business" onClick={() => setWizardStep(2)}>
+                      Continue to Style
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPresetApplied(false);
+                        setDesignStartMode("template");
+                      }}
+                      className="rounded-xl border border-[var(--business-primary)] px-4 py-2 text-sm font-black business-text transition hover:bg-[var(--business-primary-soft)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                    >
+                      Choose Another Template
+                    </button>
+                  </div>
+                </div>
+              </SectionCard>
             ) : null}
 
             {duplicateDesignVisible ? (
@@ -1422,6 +1465,15 @@ function designSummary(design: DesignStudioPresetDesign) {
 
 function formatPresetDate(value: string) {
   return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
+}
+
+function BrandColorSwatch({ label, color }: { label: string; color: string }) {
+  return (
+    <span className="grid justify-items-center gap-1">
+      <span className="h-8 w-8 rounded-full ring-1 ring-black/10" style={{ backgroundColor: color }} title={color} />
+      <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#94A3B8]">{label}</span>
+    </span>
+  );
 }
 
 function PresetThumbnail({ preset }: { preset: DesignStudioProfessionalPreset }) {
