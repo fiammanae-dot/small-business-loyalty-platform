@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CheckCircle2, Gift, ScanLine, Search, ShieldCheck, UserPlus, Users } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
+import { BusinessLogoAvatar } from "@/components/BusinessLogoAvatar";
 import { DashboardPageLayout } from "@/components/layouts";
 import { ButtonLink, MetricCard, ProgressBar, SectionCard as UiSectionCard, StatusBadge as UiStatusBadge, Timeline, TimelineItem } from "@/components/ui";
 import { getBusinessDisplayName, getBusinessTypeDisplayName } from "@/lib/business-display";
@@ -211,13 +212,12 @@ export default async function BusinessDashboard({
           <UiSectionCard className="business-border-soft business-bg-soft">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex min-w-0 items-center gap-3.5">
-                <div
-                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border business-border-soft bg-white bg-cover bg-center text-sm font-bold business-text"
-                  style={business.branding?.logoUrl ? { backgroundImage: `url(${business.branding.logoUrl})` } : undefined}
-                  aria-label="Business logo"
-                >
-                  {!business.branding?.logoUrl ? getInitials(businessDisplayName) : null}
-                </div>
+                <BusinessLogoAvatar
+                  logoUrl={business.branding?.logoUrl ?? null}
+                  businessName={businessDisplayName}
+                  fallback={getInitials(businessDisplayName)}
+                  className="h-12 w-12 rounded-lg border business-border-soft bg-white text-sm font-bold business-text"
+                />
                 <div className="min-w-0">
                   <h2 className="truncate text-lg font-bold tracking-tight text-[#171A21]">
                     Good {greeting}, {user.name} — {businessDisplayName}

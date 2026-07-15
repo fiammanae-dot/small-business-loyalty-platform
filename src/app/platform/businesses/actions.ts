@@ -15,6 +15,17 @@ import { getSubscriptionPeriodEnd, isBillingCycleSupported } from "@/lib/subscri
 
 const colorSchema = z.string().trim().regex(/^#[0-9A-Fa-f]{6}$/, "Use a hex color like #F97316.");
 
+// Accepts uploaded logos (site-relative /uploads/logos/... paths), legacy
+// absolute URLs saved before uploads existed, or empty (no logo).
+const logoUrlSchema = z
+  .string()
+  .trim()
+  .refine(
+    (value) => value === "" || value.startsWith("/uploads/logos/") || /^https?:\/\/\S+$/i.test(value),
+    "Upload a logo image or provide a valid logo URL.",
+  )
+  .optional();
+
 const createBusinessSchema = z.object({
   name: z.string().trim().min(1, "Business name is required."),
   businessType: z.enum([
@@ -35,7 +46,7 @@ const createBusinessSchema = z.object({
   temporaryPassword: z.string().min(8, "Temporary password must be at least 8 characters."),
   subscriptionPlanId: z.coerce.number().int().positive("Subscription plan is required."),
   billingCycle: z.enum(["MONTHLY", "YEARLY"]),
-  logoUrl: z.string().trim().url("Logo URL must be valid.").optional().or(z.literal("")),
+  logoUrl: logoUrlSchema,
   primaryColor: colorSchema.default("#000000"),
   secondaryColor: colorSchema.default("#FFFFFF"),
   backgroundColor: colorSchema.default("#FFFFFF"),
@@ -70,7 +81,7 @@ const updateBusinessSchema = z.object({
   status: z.enum(["ACTIVE", "INACTIVE"]),
   subscriptionPlanId: z.coerce.number().int().positive("Subscription plan is required."),
   billingCycle: z.enum(["MONTHLY", "YEARLY"]),
-  logoUrl: z.string().trim().url("Logo URL must be valid.").optional().or(z.literal("")),
+  logoUrl: logoUrlSchema,
   primaryColor: colorSchema,
   secondaryColor: colorSchema,
   backgroundColor: colorSchema,

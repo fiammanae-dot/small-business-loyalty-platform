@@ -1,8 +1,10 @@
 "use client";
 
 import type { BillingCycle, BusinessBranding, BusinessCommunicationSettings, BusinessType, RecordStatus, SubscriptionPlan } from "@prisma/client";
-import { useActionState, useEffect, useRef, type ReactNode } from "react";
+import { useActionState, useEffect, useRef, useState, type ReactNode } from "react";
 import { BranchLocationFields } from "@/components/BranchLocationFields";
+import { BusinessLogoAvatar } from "@/components/BusinessLogoAvatar";
+import { BusinessLogoUploadField } from "@/components/BusinessLogoUploadField";
 import { PlanBillingCycleFields } from "@/components/PlanBillingCycleFields";
 import { RequiredMark } from "@/components/ui/RequiredMark";
 import type { PreservedFormState } from "@/lib/form-state";
@@ -78,8 +80,9 @@ export function BusinessForm({ action, plans, error, mode, business, csrfInput }
     buttonColor: "#F97316",
   };
   const defaultBrandingValues = mode === "create" ? createBrandingDefaults : editBrandingDefaults;
+  const [logoUrl, setLogoUrl] = useState(() => value("logoUrl", branding?.logoUrl ?? defaultBrandingValues.logoUrl));
   const brandingValues = {
-    logoUrl: value("logoUrl", branding?.logoUrl ?? defaultBrandingValues.logoUrl),
+    logoUrl,
     primaryColor: value("primaryColor", branding?.primaryColor ?? defaultBrandingValues.primaryColor),
     secondaryColor: value("secondaryColor", branding?.secondaryColor ?? defaultBrandingValues.secondaryColor),
     backgroundColor: value("backgroundColor", branding?.backgroundColor ?? defaultBrandingValues.backgroundColor),
@@ -172,7 +175,12 @@ export function BusinessForm({ action, plans, error, mode, business, csrfInput }
         </div>
         <div className="mt-5 grid gap-6 lg:grid-cols-[1fr_360px]">
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Logo URL" name="logoUrl" type="url" defaultValue={brandingValues.logoUrl} error={fieldErrors.logoUrl} />
+            <BusinessLogoUploadField
+              value={logoUrl}
+              onChange={setLogoUrl}
+              businessName={value("name", business?.name ?? "")}
+              error={fieldErrors.logoUrl}
+            />
             <Field label="Primary color" name="primaryColor" defaultValue={brandingValues.primaryColor} error={fieldErrors.primaryColor} required />
             <Field label="Secondary color" name="secondaryColor" defaultValue={brandingValues.secondaryColor} error={fieldErrors.secondaryColor} required />
             <Field label="Background color" name="backgroundColor" defaultValue={brandingValues.backgroundColor} error={fieldErrors.backgroundColor} required />
@@ -300,13 +308,13 @@ function BrandingPreview({
     <div className="rounded-md border border-[#E5E7EB] p-5" style={{ backgroundColor: values.backgroundColor, color: values.textColor }}>
       <p className="text-sm font-semibold" style={{ color: values.primaryColor }}>Brand appearance</p>
       <div className="mt-4 flex items-center gap-3">
-        {values.logoUrl ? (
-          <div className="h-12 w-12 rounded-md bg-cover bg-center" style={{ backgroundImage: `url(${values.logoUrl})` }} />
-        ) : (
-          <div className="flex h-12 w-12 items-center justify-center rounded-md text-sm font-bold text-white" style={{ backgroundColor: values.primaryColor }}>
-            {businessName.slice(0, 2).toUpperCase()}
-          </div>
-        )}
+        <BusinessLogoAvatar
+          logoUrl={values.logoUrl || null}
+          businessName={businessName}
+          fallback={businessName.slice(0, 2).toUpperCase()}
+          className="h-12 w-12 rounded-md text-sm font-bold text-white"
+          style={{ backgroundColor: values.primaryColor }}
+        />
         <div>
           <h3 className="text-base font-semibold">{businessName}</h3>
           <p className="text-sm opacity-70">Member card style</p>

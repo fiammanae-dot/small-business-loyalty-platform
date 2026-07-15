@@ -29,6 +29,7 @@ import {
 } from "@/lib/design-studio";
 import { resolveCardThemeColors } from "@/lib/card-themes";
 import { Button, RequiredMark, SectionCard } from "@/components/ui";
+import { BusinessLogoAvatar } from "@/components/BusinessLogoAvatar";
 import { BackgroundGalleryThumbnail } from "@/components/design-studio/BackgroundGalleryThumbnail";
 import { CardLayoutThumbnail } from "@/components/design-studio/CardLayoutThumbnail";
 import { StampIconGraphic, StampSlot } from "@/components/design-studio/StampIconGraphic";
@@ -590,14 +591,12 @@ function CreateCardPreview({
         {(visibleSections.logo || visibleSections.businessName || visibleSections.programName) ? (
           <div className="flex items-center gap-3">
             {visibleSections.logo ? (
-              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-sm font-black" style={{ background: theme.logoBackground, color: theme.logoText }}>
-                {branding.logoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={branding.logoUrl} alt="" className="h-full w-full rounded-full object-cover" />
-                ) : (
-                  businessName.slice(0, 1).toUpperCase()
-                )}
-              </div>
+              <BusinessLogoAvatar
+                logoUrl={branding.logoUrl}
+                businessName={businessName}
+                className="h-10 w-10 rounded-full text-sm"
+                style={{ background: theme.logoBackground, color: theme.logoText }}
+              />
             ) : null}
             <div className="min-w-0">
               {visibleSections.businessName ? <p className="line-clamp-2 text-[13px] font-black leading-tight">{businessName}</p> : null}

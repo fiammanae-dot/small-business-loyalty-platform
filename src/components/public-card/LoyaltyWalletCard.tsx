@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState, type CSSProperties } from "react";
+import { BusinessLogoAvatar } from "@/components/BusinessLogoAvatar";
 import { StampSlot } from "@/components/design-studio/StampIconGraphic";
 import { WalletCardShell, type WalletTheme } from "@/components/public-card/WalletCardShell";
 import { resolveCardDesign, type CardDesign, type CardDesignInput } from "@/lib/card-design";
@@ -393,20 +394,14 @@ function CardHeader({
   const showSecondRow = design.visibleSections.programName || design.visibleSections.tierBadge;
   return (
     <div className="flex items-start gap-3">
-      {design.visibleSections.logo && businessLogoUrl ? (
-        <div
-          aria-label={`${businessName} logo`}
-          className="h-12 w-12 shrink-0 rounded-full bg-cover bg-center shadow-sm"
-          style={{ backgroundImage: `url(${businessLogoUrl})`, backgroundColor: theme.logoBackground }}
-        />
-      ) : design.visibleSections.logo ? (
-        <div
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-black shadow-sm"
+      {design.visibleSections.logo ? (
+        <BusinessLogoAvatar
+          logoUrl={businessLogoUrl ?? null}
+          businessName={businessName}
+          fallback={theme.style === "premium-dark" ? tierIcon : businessName.slice(0, 1).toUpperCase()}
+          className="h-12 w-12 rounded-full text-lg shadow-sm"
           style={{ backgroundColor: theme.logoBackground, color: theme.logoText }}
-          aria-hidden="true"
-        >
-          {theme.style === "premium-dark" ? tierIcon : businessName.slice(0, 1).toUpperCase()}
-        </div>
+        />
       ) : null}
       <div className="min-w-0 flex-1">
         {design.visibleSections.businessName ? <h1

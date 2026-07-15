@@ -34,6 +34,7 @@ import {
   type DesignStudioProfessionalPreset,
 } from "@/lib/design-studio";
 import { Button, SectionCard } from "@/components/ui";
+import { BusinessLogoAvatar } from "@/components/BusinessLogoAvatar";
 import { BackgroundGalleryThumbnail } from "@/components/design-studio/BackgroundGalleryThumbnail";
 import { CardLayoutThumbnail } from "@/components/design-studio/CardLayoutThumbnail";
 import { StampIconGraphic, StampSlot } from "@/components/design-studio/StampIconGraphic";
@@ -746,21 +747,12 @@ export function ProgramDesignStudioForm({
               <SectionCard title="Quick Customize" description="Your brand is applied to the template automatically. Continue to fine-tune style, stamps, and content.">
                 <div className="grid gap-5">
                   <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
-                    {branding.logoUrl ? (
-                      <span
-                        aria-label={`${businessName} logo`}
-                        className="h-12 w-12 shrink-0 rounded-full bg-cover bg-center ring-1 ring-black/5"
-                        style={{ backgroundImage: `url(${branding.logoUrl})` }}
-                      />
-                    ) : (
-                      <span
-                        aria-hidden="true"
-                        className="grid h-12 w-12 shrink-0 place-items-center rounded-full text-lg font-black text-white ring-1 ring-black/5"
-                        style={{ backgroundColor: branding.primaryColor }}
-                      >
-                        {businessName.slice(0, 1).toUpperCase()}
-                      </span>
-                    )}
+                    <BusinessLogoAvatar
+                      logoUrl={branding.logoUrl}
+                      businessName={businessName}
+                      className="h-12 w-12 rounded-full text-lg text-white ring-1 ring-black/5"
+                      style={{ backgroundColor: branding.primaryColor }}
+                    />
                     <span className="min-w-0">
                       <span className="block truncate text-base font-black text-[#111827]">{businessName}</span>
                       <span className="mt-0.5 block text-xs font-semibold text-[#64748B]">{programName}</span>
@@ -1580,17 +1572,12 @@ function VisibleCardPreview({
         {(visibleSections.logo || visibleSections.businessName || visibleSections.programName) ? (
           <div className="flex min-w-0 items-start gap-2.5">
             {visibleSections.logo ? (
-              <span
-                className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full text-xs font-black"
+              <BusinessLogoAvatar
+                logoUrl={businessLogoUrl}
+                businessName={businessName}
+                className="h-10 w-10 rounded-full text-xs"
                 style={{ background: theme.logoBackground, color: theme.logoText }}
-              >
-                {businessLogoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={businessLogoUrl} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  businessName.charAt(0).toUpperCase()
-                )}
-              </span>
+              />
             ) : null}
             <div className="min-w-0">
               {visibleSections.businessName ? <p className="line-clamp-2 text-[13px] font-black leading-tight">{businessName}</p> : null}

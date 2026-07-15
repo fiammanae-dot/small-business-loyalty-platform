@@ -14,6 +14,7 @@ import { ButtonLink, EmptyState, MetricCard, ProgressBar, SectionCard } from "@/
 import { ScannerResultCard } from "@/components/domain";
 import { DetailPageLayout } from "@/components/layouts";
 import { BRANCH_INACTIVE_MESSAGE, hasUsableSubscription, SUBSCRIPTION_REQUIRED_MESSAGE } from "@/lib/commercial-access";
+import { businessOwnerOperationalDefaults, resolveBusinessBranding } from "@/lib/business-branding";
 import { getCardUrl, maskPhoneNumber } from "@/lib/customer-cards";
 import { formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -24,8 +25,8 @@ import { isRewardReady } from "@/lib/rewards";
 import { roleHomePath } from "@/lib/roles";
 import { getCurrentUser, hasActiveBusinessAccess } from "@/lib/session";
 import { issueStampAction, redeemRewardAction, undoStampAction } from "@/app/scan/actions";
-import { resolveCardThemeColors, withAlpha } from "@/lib/card-themes";
-import { asCardDesignInput } from "@/lib/card-design";
+import { withAlpha } from "@/lib/card-themes";
+import { getReadableForeground } from "@/lib/color-contrast";
 import type { ConfirmationDialogTheme } from "@/components/ui";
 
 const CROSS_BUSINESS_SCAN_TITLE = "Access Denied";
@@ -34,13 +35,6 @@ const CROSS_BUSINESS_SCAN_HELPER = "If you believe this is a mistake, contact yo
 const OUT_OF_BRANCH_SCAN_DESCRIPTION = "This customer is outside your assigned branch scope. Customer information cannot be viewed or modified from this scanner.";
 const STAMP_UNDO_WINDOW_MINUTES = 3;
 const stampUndoReasons = ["Wrong customer scanned", "Duplicate scan", "Customer cancelled purchase", "System error", "Other"];
-const defaultScannerBranding = {
-  primaryColor: "#F97316",
-  secondaryColor: "#FDBA74",
-  backgroundColor: "#FFFFFF",
-  textColor: "#111827",
-  buttonColor: "#F97316",
-};
 
 function isOutOfAssignedBranch(user: { role: string; branchId?: number | null }, membership: { createdBranchId?: number | null }) {
   return (user.role === "STAFF" || user.role === "BRANCH_MANAGER") && (!user.branchId || membership.createdBranchId !== user.branchId);
@@ -110,14 +104,14 @@ function referralCodeFromScanRouteToken(token: string) {
   return decodedToken.startsWith("referral:") ? extractReferralCode(decodedToken.slice("referral:".length)) : null;
 }
 
-function buildScannerConfirmationTheme(theme: ReturnType<typeof resolveCardThemeColors>): ConfirmationDialogTheme {
-  const background = theme.ctaBackground || theme.accent || defaultScannerBranding.buttonColor;
-  const foreground = theme.ctaForeground || "#FFFFFF";
+function buildScannerConfirmationTheme(branding: ReturnType<typeof resolveBusinessBranding>): ConfirmationDialogTheme {
+  const background = branding.buttonColor || branding.primaryColor;
+  const foreground = getReadableForeground(background);
   return {
     background,
     foreground,
     hoverBackground: darkenHexColor(background, 12) ?? background,
-    focusRing: theme.accent || background,
+    focusRing: background,
     disabledBackground: background.startsWith("#") ? withAlpha(background, 0.55) : background,
   };
 }
@@ -384,12 +378,12 @@ export default async function ScanResultPage({
       })
     : { allowed: false, reason: "No stamp transaction selected." };
   const cardNumber = businessMembership.cardToken.length > 12 ? `${businessMembership.cardToken.slice(0, 8)}...${businessMembership.cardToken.slice(-4)}` : businessMembership.cardToken;
-  const programTheme = resolveCardThemeColors({
-    cardTheme: program.cardTheme,
-    cardDesign: asCardDesignInput(program.cardDesign),
-    branding: businessMembership.business.branding ?? defaultScannerBranding,
-  });
-  const scannerConfirmationTheme = buildScannerConfirmationTheme(programTheme);
+  const scannerConfirmationTheme = buildScannerConfirmationTheme(
+    resolveBusinessBranding(
+      businessMembership.business.branding,
+      authUser.role === "BUSINESS_OWNER" ? businessOwnerOperationalDefaults : undefined,
+    ),
+  );
   const soundEvent = qs.error
     ? "invalid"
     : issuedTransaction

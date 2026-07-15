@@ -1,5 +1,6 @@
 import QRCode from "qrcode";
 import { BusinessBrandingProvider } from "@/components/BusinessBrandingProvider";
+import { BusinessLogoAvatar } from "@/components/BusinessLogoAvatar";
 import { ReferralInviteActions } from "@/components/ReferralInviteActions";
 import { resolveBusinessBranding, type ResolvedBusinessBranding } from "@/lib/business-branding";
 import { getBaseUrl } from "@/lib/customer-cards";
@@ -182,13 +183,12 @@ function ReferralRegistered({
       <section className="mx-auto w-full max-w-md overflow-hidden rounded-3xl border border-[#E5E7EB] bg-white shadow-sm">
         <div className="business-bg px-5 py-6">
           <div className="flex items-center gap-3">
-            {logoUrl ? (
-              <img src={logoUrl} alt={`${businessName} logo`} className="h-14 w-14 rounded-xl bg-white object-cover p-1" />
-            ) : (
-              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 text-base font-bold text-current">
-                {initials}
-              </div>
-            )}
+            <BusinessLogoAvatar
+              logoUrl={logoUrl}
+              businessName={businessName}
+              fallback={initials}
+              className="h-14 w-14 rounded-xl bg-white/20 text-base font-bold text-current"
+            />
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-wide text-current opacity-80">Referral invitation</p>
               <h1 className="mt-1 break-words text-2xl font-semibold leading-tight">{businessName}</h1>
