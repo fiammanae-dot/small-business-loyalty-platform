@@ -2,16 +2,33 @@
 
 import { validateCsrfForm } from "@/lib/csrf";
 import { LOGO_MAX_BYTES, saveLogoFile, validateLogoBytes, validateLogoFile } from "@/lib/logo-storage";
-import { requireRole } from "@/lib/session";
+import { getCurrentUser } from "@/lib/session";
 
 export type BusinessLogoUploadResult = { url: string; error?: never } | { url?: never; error: string };
 
-export async function uploadBusinessLogoAction(formData: FormData): Promise<BusinessLogoUploadResult> {
-  await requireRole("PLATFORM_OWNER");
+// The two branding editors that legitimately upload logos: the platform admin
+// business form and the Business Owner Brand Assets Center. The CSRF token is
+// scope-bound, so we accept exactly these two scopes and nothing else.
+const allowedCsrfScopes = ["platform:businesses", "dashboard:brand-assets"] as const;
 
-  try {
-    validateCsrfForm(formData, "platform:businesses");
-  } catch {
+function hasValidCsrf(formData: FormData) {
+  return allowedCsrfScopes.some((scope) => {
+    try {
+      validateCsrfForm(formData, scope);
+      return true;
+    } catch {
+      return false;
+    }
+  });
+}
+
+export async function uploadBusinessLogoAction(formData: FormData): Promise<BusinessLogoUploadResult> {
+  const user = await getCurrentUser();
+  if (!user || (user.role !== "PLATFORM_OWNER" && user.role !== "BUSINESS_OWNER")) {
+    return { error: "You do not have permission to upload a business logo." };
+  }
+
+  if (!hasValidCsrf(formData)) {
     return { error: "Security check failed. Please refresh and try again." };
   }
 

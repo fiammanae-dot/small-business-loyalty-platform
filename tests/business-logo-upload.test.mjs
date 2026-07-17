@@ -23,12 +23,12 @@ test("logo storage validates type, size, and file bytes before saving to platfor
   assert.match(storage, /LOGO_UPLOAD_URL_PREFIX = "\/uploads\/logos\/"/);
 });
 
-test("logo upload action is platform-owner only and CSRF protected", () => {
+test("logo upload action is restricted to branding editors and CSRF protected", () => {
   const action = read("src/app/platform/businesses/logo-actions.ts");
 
   assert.match(action, /"use server"/);
-  assert.match(action, /requireRole\("PLATFORM_OWNER"\)/);
-  assert.match(action, /validateCsrfForm\(formData, "platform:businesses"\)/);
+  assert.match(action, /user\.role !== "PLATFORM_OWNER" && user\.role !== "BUSINESS_OWNER"/, "only platform admins and business owners may upload logos");
+  assert.match(action, /validateCsrfForm\(formData, scope\)/);
   assert.match(action, /validateLogoFile/);
   assert.match(action, /validateLogoBytes/);
   assert.doesNotMatch(action, /prisma/, "the upload action only stores the file; branding writes stay in the business actions");
@@ -49,10 +49,11 @@ test("business form uses logo upload instead of a raw URL field, with hidden log
 });
 
 test("business branding schema accepts uploaded paths and legacy absolute logo URLs", () => {
+  const lib = read("src/lib/branding-validation.ts");
   const actions = read("src/app/platform/businesses/actions.ts");
 
-  assert.match(actions, /startsWith\("\/uploads\/logos\/"\)/);
-  assert.match(actions, /https\?:/);
+  assert.match(lib, /startsWith\("\/uploads\/logos\/"\)/);
+  assert.match(lib, /https\?:/);
   assert.match(actions, /logoUrl: logoUrlSchema/);
 });
 
@@ -69,11 +70,36 @@ test("the shared logo avatar falls back to initials on missing or broken images 
     "src/components/BusinessForm.tsx",
     "src/components/BusinessLogoUploadField.tsx",
     "src/app/dashboard/page.tsx",
+    "src/app/dashboard/settings/page.tsx",
     "src/app/referral/[code]/page.tsx",
   ]) {
     assert.match(read(consumer), /BusinessLogoAvatar/, `${consumer} must use the shared logo fallback component`);
   }
   assert.doesNotMatch(read("src/components/public-card/LoyaltyWalletCard.tsx"), /backgroundImage: `url\(\$\{businessLogoUrl\}\)`/, "the public card must not use silent background-image logo rendering");
+});
+
+test("business logo rendering is standardized on one component with shared size variants", () => {
+  const avatar = read("src/components/BusinessLogoAvatar.tsx");
+
+  assert.match(avatar, /BusinessLogoAvatarSize = "xs" \| "sm" \| "md" \| "lg" \| "xl"/, "sizes come from shared variants, not ad-hoc width\\/height values");
+  assert.match(avatar, /sizeClasses\[size\]/);
+  assert.match(avatar, /object-contain/, "logos keep their aspect ratio without cropping or stretching");
+  assert.doesNotMatch(avatar, /object-cover/, "object-cover would crop rectangular logos");
+
+  const referral = read("src/app/referral/[code]/page.tsx");
+  assert.doesNotMatch(referral, /<img\s+src=\{referrer\.business\.branding/, "the referral landing header must use BusinessLogoAvatar, not a raw img");
+
+  // No business-logo render site may bypass the shared component with a raw
+  // background-image or img again.
+  for (const consumer of [
+    "src/app/dashboard/page.tsx",
+    "src/app/dashboard/settings/page.tsx",
+    "src/components/ProgramDesignStudioForm.tsx",
+    "src/components/ProgramCreateWizard.tsx",
+    "src/components/BusinessForm.tsx",
+  ]) {
+    assert.doesNotMatch(read(consumer), /backgroundImage: `url\(\$\{(branding|business\.branding|values)\.?logoUrl/, `${consumer} must not render the logo via background-image`);
+  }
 });
 
 test("uploaded logos are served sandboxed and remain wallet-compatible", () => {

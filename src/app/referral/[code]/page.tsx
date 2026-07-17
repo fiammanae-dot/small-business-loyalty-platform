@@ -82,17 +82,13 @@ export default async function ReferralLandingPage({
       <section className="mx-auto w-full max-w-md overflow-hidden rounded-3xl border border-[#E5E7EB] bg-white shadow-sm">
         <div className="business-bg px-5 py-6">
           <div className="flex items-center gap-3">
-            {referrer.business.branding?.logoUrl ? (
-              <img
-                src={referrer.business.branding.logoUrl}
-                alt={`${referrer.business.name} logo`}
-                className="h-14 w-14 rounded-xl bg-white object-cover p-1"
-              />
-            ) : (
-              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 text-base font-bold text-current">
-                {initials}
-              </div>
-            )}
+            <BusinessLogoAvatar
+              logoUrl={referrer.business.branding?.logoUrl ?? null}
+              businessName={referrer.business.name}
+              fallback={initials}
+              size="lg"
+              className="rounded-xl bg-white/20 text-current"
+            />
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-wide text-current opacity-80">Referral invitation</p>
               <h1 className="mt-1 break-words text-2xl font-semibold leading-tight">{referrer.business.name}</h1>
@@ -187,7 +183,8 @@ function ReferralRegistered({
               logoUrl={logoUrl}
               businessName={businessName}
               fallback={initials}
-              className="h-14 w-14 rounded-xl bg-white/20 text-base font-bold text-current"
+              size="lg"
+              className="rounded-xl bg-white/20 text-current"
             />
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-wide text-current opacity-80">Referral invitation</p>

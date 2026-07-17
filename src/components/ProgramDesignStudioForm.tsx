@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useFormStatus } from "react-dom";
 import { toPng } from "html-to-image";
-import { Check, Search } from "lucide-react";
+import { Check, ChevronDown, Search } from "lucide-react";
 import Link from "next/link";
 import type {
   CardDesignBackgroundPattern,
@@ -172,6 +173,8 @@ export function ProgramDesignStudioForm({
     }),
     [backgroundPattern, backgroundStyle, decorationStyle, layoutStyle, rewardStyle, stampJourneyStyle, stampIcon, typographyPreset, visibleSections],
   );
+  const savedDesignSnapshotRef = useRef<DesignHistorySnapshot>(currentDesignSnapshot);
+  const hasUnsavedChanges = !designSnapshotsMatch(currentDesignSnapshot, savedDesignSnapshotRef.current);
   const cardDesign = useMemo(
     () =>
       resolveCardDesign({
@@ -458,7 +461,7 @@ export function ProgramDesignStudioForm({
   );
 
   return (
-    <form action={action} className="grid gap-6 lg:grid-cols-[minmax(0,65fr)_minmax(300px,35fr)] lg:items-start xl:grid-cols-[minmax(0,70fr)_minmax(340px,30fr)] 2xl:gap-8">
+    <form action={action} className="grid gap-4">
       <input type="hidden" name={csrfName} value={csrfToken} />
       <input type="hidden" name="programUuid" value={programUuid} />
       <input type="hidden" name="layoutStyle" value={layoutStyle} />
@@ -473,8 +476,11 @@ export function ProgramDesignStudioForm({
         <input key={option.value} type="hidden" name={`visibleSections.${option.value}`} value={visibleSections[option.value] ? "true" : "false"} />
       ))}
 
-      <aside className="order-first grid h-fit min-w-0 gap-3 lg:order-last lg:self-start">
-        <div className="rounded-2xl border border-[#E2E8F0] bg-white/95 p-3 shadow-md backdrop-blur lg:sticky lg:top-6 lg:z-10">
+      <DesignStudioHeader programName={programName} branding={branding} hasUnsavedChanges={hasUnsavedChanges} action={action} />
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,58fr)_minmax(340px,42fr)] xl:grid-cols-[minmax(0,55fr)_minmax(400px,45fr)] 2xl:gap-8">
+      <aside className="order-first min-w-0 lg:order-last">
+        <div className="rounded-2xl border border-[#E2E8F0] bg-white/95 p-3 shadow-md backdrop-blur lg:sticky lg:top-20 lg:z-10">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-[#64748B]">Live Mobile Preview</p>
 
           <div className="mt-2">{livePreviewNode}</div>
@@ -485,7 +491,7 @@ export function ProgramDesignStudioForm({
                 type="button"
                 onClick={undoDesignChange}
                 disabled={!canUndoDesign}
-                className="rounded-xl border border-[#CBD5E1] bg-white px-3 py-1.5 text-xs font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-45 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                className="h-10 rounded-xl border border-[#CBD5E1] bg-white px-3 text-xs font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-45 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 sm:h-8"
                 aria-label="Undo last design change"
                 title="Undo (Ctrl/Cmd+Z)"
               >
@@ -495,7 +501,7 @@ export function ProgramDesignStudioForm({
                 type="button"
                 onClick={redoDesignChange}
                 disabled={!canRedoDesign}
-                className="rounded-xl border border-[#CBD5E1] bg-white px-3 py-1.5 text-xs font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-45 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                className="h-10 rounded-xl border border-[#CBD5E1] bg-white px-3 text-xs font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-45 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 sm:h-8"
                 aria-label="Redo design change"
                 title="Redo (Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y)"
               >
@@ -506,7 +512,7 @@ export function ProgramDesignStudioForm({
               <button
                 type="button"
                 onClick={() => setPreviewZoom(previousPreviewZoom(previewZoom))}
-                className="grid h-7 w-7 place-items-center rounded-lg text-xs font-black text-[#64748B] transition hover:bg-[#F8FAFC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)]"
+                className="grid h-9 w-9 place-items-center rounded-lg text-xs font-black text-[#64748B] transition hover:bg-[#F8FAFC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] sm:h-7 sm:w-7"
                 aria-label="Zoom out"
               >
                 -
@@ -515,7 +521,7 @@ export function ProgramDesignStudioForm({
               <button
                 type="button"
                 onClick={() => setPreviewZoom(nextPreviewZoom(previewZoom))}
-                className="grid h-7 w-7 place-items-center rounded-lg text-xs font-black text-[#64748B] transition hover:bg-[#F8FAFC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)]"
+                className="grid h-9 w-9 place-items-center rounded-lg text-xs font-black text-[#64748B] transition hover:bg-[#F8FAFC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] sm:h-7 sm:w-7"
                 aria-label="Zoom in"
               >
                 +
@@ -600,7 +606,7 @@ export function ProgramDesignStudioForm({
             </SectionCard>
 
             {professionalTemplatesVisible ? (
-              <SectionCard title="Professional Templates" description="Choose a business type, then browse professional starting points.">
+              <CollapsibleSection id="professionalTemplates" title="Professional Templates" description="Choose a business type, then browse professional starting points.">
                 <div className="grid gap-8">
                   <div className="grid gap-3">
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
@@ -692,7 +698,7 @@ export function ProgramDesignStudioForm({
                               </span>
                               <span className="min-w-0 px-1 pb-1">
                                 <span className="block truncate text-lg font-black text-[#111827]">{preset.name}</span>
-                                <span className="mt-1 block text-xs font-black uppercase tracking-[0.16em] text-[#94A3B8]">{preset.category}</span>
+                                <span className="mt-1 block text-xs font-black uppercase tracking-[0.16em] text-[#64748B]">{preset.category}</span>
                                 <span className="mt-3 line-clamp-2 block text-sm leading-6 text-[#64748B]">{preset.description}</span>
                               </span>
                             </button>
@@ -742,7 +748,7 @@ export function ProgramDesignStudioForm({
                     </div>
                   )}
                 </div>
-              </SectionCard>
+              </CollapsibleSection>
             ) : presetApplied && designStartMode === "template" ? (
               <SectionCard title="Quick Customize" description="Your brand is applied to the template automatically. Continue to fine-tune style, stamps, and content.">
                 <div className="grid gap-5">
@@ -750,7 +756,7 @@ export function ProgramDesignStudioForm({
                     <BusinessLogoAvatar
                       logoUrl={branding.logoUrl}
                       businessName={businessName}
-                      className="h-12 w-12 rounded-full text-lg text-white ring-1 ring-black/5"
+                      className="rounded-full text-white ring-1 ring-black/5"
                       style={{ backgroundColor: branding.primaryColor }}
                     />
                     <span className="min-w-0">
@@ -763,7 +769,7 @@ export function ProgramDesignStudioForm({
                       <BrandColorSwatch label="Accent" color={branding.buttonColor} />
                     </span>
                   </div>
-                  <p className="text-xs leading-5 text-[#94A3B8]">
+                  <p className="text-xs leading-5 text-[#64748B]">
                     Brand logo and colors are managed in your business branding settings and apply to every card automatically.
                   </p>
                   <div className="flex flex-wrap items-center gap-3">
@@ -786,7 +792,7 @@ export function ProgramDesignStudioForm({
             ) : null}
 
             {duplicateDesignVisible ? (
-              <SectionCard title="Duplicate From Another Program" description="Copy a design from one of your existing loyalty programs.">
+              <CollapsibleSection id="duplicateFromProgram" title="Duplicate From Another Program" description="Copy a design from one of your existing loyalty programs.">
                 {sourcePrograms.length > 0 ? (
                   <div className="grid gap-4">
                     {copiedSourceProgramUuid ? (
@@ -815,7 +821,7 @@ export function ProgramDesignStudioForm({
                             <div className="min-w-0">
                               <p className="truncate text-base font-black text-[#111827]">{sourceProgram.name}</p>
                               <p className="mt-1 text-sm leading-6 text-[#64748B]">{designSummary(sourceProgram.cardDesign)}</p>
-                              <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#94A3B8]">Design only</p>
+                              <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#64748B]">Design only</p>
                             </div>
                             <button
                               type="button"
@@ -835,10 +841,10 @@ export function ProgramDesignStudioForm({
                     No other loyalty programs are available yet. Create another program to duplicate its card design here.
                   </div>
                 )}
-              </SectionCard>
+              </CollapsibleSection>
             ) : null}
 
-            <SectionCard title="My Business Presets" description="Apply a saved business preset to this program.">
+            <CollapsibleSection id="myBusinessPresets" title="My Business Presets" description="Apply a saved business preset to this program.">
               {businessPresets.length > 0 ? (
                 <div className="grid gap-3 md:grid-cols-2">
                   {businessPresets.map((preset) => (
@@ -846,7 +852,7 @@ export function ProgramDesignStudioForm({
                       <PresetThumbnail preset={presetToThumbnailPreset(preset)} />
                       <div className="min-w-0">
                         <p className="truncate text-base font-semibold text-[#111827]">{preset.name}</p>
-                        <p className="mt-1 text-xs font-medium uppercase tracking-[0.16em] text-[#94A3B8]">Created {formatPresetDate(preset.createdAt)}</p>
+                        <p className="mt-1 text-xs font-medium uppercase tracking-[0.16em] text-[#64748B]">Created {formatPresetDate(preset.createdAt)}</p>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <button
@@ -886,7 +892,7 @@ export function ProgramDesignStudioForm({
                   No saved business presets yet. You can save your current design as a preset from the final Review &amp; Save step.
                 </div>
               )}
-            </SectionCard>
+            </CollapsibleSection>
 
             <WizardStepNav onNext={goNext} nextLabel="Next: Style" />
           </>
@@ -907,7 +913,7 @@ export function ProgramDesignStudioForm({
               </Link>
             </div>
 
-            <SectionCard title="Card Style" description="Choose the overall personality of your loyalty card.">
+            <CollapsibleSection id="cardStyle" title="Card Style" description="Choose the overall personality of your loyalty card.">
               <div className="grid gap-4 md:grid-cols-2">
                 {designStudioTemplateOptions.map((option) => (
                   <label key={option.value} className="group cursor-pointer rounded-[1.35rem] border border-[#E2E8F0] bg-white p-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-lg has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-lg">
@@ -933,8 +939,8 @@ export function ProgramDesignStudioForm({
                   </label>
                 ))}
               </div>
-            </SectionCard>
-            <SectionCard title="Background" description="Choose the visual background for this loyalty card.">
+            </CollapsibleSection>
+            <CollapsibleSection id="background" title="Background" description="Choose the visual background for this loyalty card.">
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {designStudioBackgroundGalleryOptions.map((option) => {
                   const active = selectedBackgroundOption.id === option.id;
@@ -961,9 +967,9 @@ export function ProgramDesignStudioForm({
                   );
                 })}
               </div>
-            </SectionCard>
+            </CollapsibleSection>
 
-            <SectionCard title="Typography" description="Choose the personality of your loyalty card.">
+            <CollapsibleSection id="typography" title="Typography" description="Choose the personality of your loyalty card.">
               <div className="grid gap-3 md:grid-cols-2">
                 {designStudioTypographyOptions.map((option) => {
                   const active = selectedTypographyOption.value === option.value;
@@ -990,7 +996,7 @@ export function ProgramDesignStudioForm({
                   );
                 })}
               </div>
-            </SectionCard>
+            </CollapsibleSection>
 
             <WizardStepNav onPrevious={goPrevious} onNext={goNext} nextLabel="Next: Rewards" />
           </div>
@@ -998,7 +1004,7 @@ export function ProgramDesignStudioForm({
 
         {wizardStep === 3 ? (
           <div className="grid gap-5 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200">
-            <SectionCard title="Reward Progress" description="Choose the progress pattern that best matches how customers earn their next reward.">
+            <CollapsibleSection id="rewardProgress" title="Reward Progress" description="Choose the progress pattern that best matches how customers earn their next reward.">
               <div className="grid gap-3 md:grid-cols-3">
                 {designStudioStampJourneyOptions.map((option) => (
                   <label key={option.value} className="group flex min-h-28 cursor-pointer gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-md">
@@ -1016,9 +1022,9 @@ export function ProgramDesignStudioForm({
                   </label>
                 ))}
               </div>
-            </SectionCard>
+            </CollapsibleSection>
 
-            <SectionCard title="Stamp Design" description="Pick the emoji stamp that will represent each customer visit.">
+            <CollapsibleSection id="stampDesign" title="Stamp Design" description="Pick the emoji stamp that will represent each customer visit.">
               <p className="mb-3 text-sm font-medium text-[#64748B]">Recommended emoji appear first.</p>
               <div className="grid grid-cols-5 gap-2 sm:grid-cols-7 lg:grid-cols-8">
                 {stampIconOptions.map((option) => (
@@ -1042,9 +1048,9 @@ export function ProgramDesignStudioForm({
                 <StampIconGraphic stampIcon={stampIcon} className="h-7 w-7" />
                 <span className="text-sm font-black text-[#111827]">{selectedStampIconLabel}</span>
               </div>
-            </SectionCard>
+            </CollapsibleSection>
 
-            <SectionCard title="Reward Box" description="Choose how rewards are presented to your customers.">
+            <CollapsibleSection id="rewardBox" title="Reward Box" description="Choose how rewards are presented to your customers.">
               <div className="grid gap-3 md:grid-cols-2">
                 {designStudioRewardStyleOptions.map((option) => {
                   const active = rewardStyle === option.value;
@@ -1071,7 +1077,7 @@ export function ProgramDesignStudioForm({
                   );
                 })}
               </div>
-            </SectionCard>
+            </CollapsibleSection>
 
             <WizardStepNav onPrevious={goPrevious} onNext={goNext} nextLabel="Next: Content" />
           </div>
@@ -1079,7 +1085,7 @@ export function ProgramDesignStudioForm({
 
         {wizardStep === 4 ? (
           <div className="grid gap-5 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200">
-            <SectionCard title="Card Layout" description="Choose how much information appears on the loyalty card.">
+            <CollapsibleSection id="cardLayout" title="Card Layout" description="Choose how much information appears on the loyalty card.">
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                 {designStudioCardLayoutOptions.map((option) => {
                   const active = selectedCardLayoutOption.id === option.id;
@@ -1142,7 +1148,7 @@ export function ProgramDesignStudioForm({
                   })}
                 </div>
               </details>
-            </SectionCard>
+            </CollapsibleSection>
 
             <WizardStepNav onPrevious={goPrevious} onNext={goNext} nextLabel="Next: Review" />
           </div>
@@ -1221,7 +1227,125 @@ export function ProgramDesignStudioForm({
           </div>
         ) : null}
       </div>
+      </div>
     </form>
+  );
+}
+
+function DesignStudioHeader({
+  programName,
+  branding,
+  hasUnsavedChanges,
+  action,
+}: {
+  programName: string;
+  branding: PreviewBranding;
+  hasUnsavedChanges: boolean;
+  action: (formData: FormData) => void | Promise<void>;
+}) {
+  return (
+    <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#E2E8F0] bg-white/95 px-4 py-3 shadow-sm backdrop-blur">
+      <div className="flex min-w-0 items-center gap-3">
+        <BusinessLogoAvatar
+          logoUrl={branding.logoUrl}
+          businessName={programName}
+          size="sm"
+          className="rounded-full text-white ring-1 ring-black/5"
+          style={{ backgroundColor: branding.primaryColor }}
+        />
+        <div className="min-w-0">
+          <p className="truncate text-base font-black text-[#111827]">{programName}</p>
+          <p className="text-xs font-semibold text-[#64748B]">Design Studio</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold transition ${
+            hasUnsavedChanges ? "bg-amber-100 text-amber-800" : "bg-emerald-50 text-emerald-700"
+          }`}
+          aria-live="polite"
+        >
+          <span className={`h-1.5 w-1.5 rounded-full ${hasUnsavedChanges ? "bg-amber-500" : "bg-emerald-500"}`} aria-hidden="true" />
+          {hasUnsavedChanges ? "Unsaved changes" : "All changes saved"}
+        </span>
+        <SaveDesignButton action={action} />
+      </div>
+    </div>
+  );
+}
+
+function SaveDesignButton({ action }: { action: (formData: FormData) => void | Promise<void> }) {
+  const status = useFormStatus();
+  const isSaving = status.pending && status.action === action;
+  return (
+    <Button type="submit" variant="business" disabled={isSaving}>
+      {isSaving ? "Saving…" : "Save Design"}
+    </Button>
+  );
+}
+
+const COLLAPSED_SECTIONS_STORAGE_KEY = "design-studio:collapsed-sections";
+
+function readCollapsedSectionIds(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  try {
+    const raw = window.localStorage.getItem(COLLAPSED_SECTIONS_STORAGE_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? new Set(parsed.filter((value): value is string => typeof value === "string")) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function writeCollapsedSectionIds(ids: Set<string>) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(COLLAPSED_SECTIONS_STORAGE_KEY, JSON.stringify(Array.from(ids)));
+  } catch {
+    // Collapsed-section memory is a nice-to-have; ignore storage failures (private browsing, quota).
+  }
+}
+
+// Same visual chrome as SectionCard, but as a native <details> so it can collapse. Left
+// uncontrolled by design (no `open` prop) - the remembered state is applied imperatively via
+// the ref right after mount, so a section never flashes the wrong state during SSR/hydration.
+function CollapsibleSection({
+  id,
+  title,
+  description,
+  children,
+}: {
+  id: string;
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+
+  useEffect(() => {
+    if (detailsRef.current) detailsRef.current.open = !readCollapsedSectionIds().has(id);
+  }, [id]);
+
+  return (
+    <details
+      ref={detailsRef}
+      className="group min-w-0 rounded-xl border border-[#E7E9EE] bg-white shadow-[0_1px_2px_rgba(15,18,25,0.04)]"
+      onToggle={(event) => {
+        const collapsed = readCollapsedSectionIds();
+        if (event.currentTarget.open) collapsed.delete(id);
+        else collapsed.add(id);
+        writeCollapsedSectionIds(collapsed);
+      }}
+    >
+      <summary className="flex cursor-pointer list-none items-start justify-between gap-3 p-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 md:p-5 [&::-webkit-details-marker]:hidden">
+        <span className="min-w-0">
+          <span className="block text-base font-bold tracking-tight text-[#171A21]">{title}</span>
+          <span className="mt-1 block text-[13px] leading-5 text-[#7A8091]">{description}</span>
+        </span>
+        <ChevronDown className="mt-0.5 h-5 w-5 shrink-0 text-[#7A8091] transition-transform duration-200 group-open:rotate-180" aria-hidden="true" />
+      </summary>
+      <div className="px-4 pb-4 md:px-5 md:pb-5">{children}</div>
+    </details>
   );
 }
 
@@ -1463,7 +1587,7 @@ function BrandColorSwatch({ label, color }: { label: string; color: string }) {
   return (
     <span className="grid justify-items-center gap-1">
       <span className="h-8 w-8 rounded-full ring-1 ring-black/10" style={{ backgroundColor: color }} title={color} />
-      <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#94A3B8]">{label}</span>
+      <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#64748B]">{label}</span>
     </span>
   );
 }
@@ -1575,7 +1699,8 @@ function VisibleCardPreview({
               <BusinessLogoAvatar
                 logoUrl={businessLogoUrl}
                 businessName={businessName}
-                className="h-10 w-10 rounded-full text-xs"
+                size="sm"
+                className="rounded-full"
                 style={{ background: theme.logoBackground, color: theme.logoText }}
               />
             ) : null}

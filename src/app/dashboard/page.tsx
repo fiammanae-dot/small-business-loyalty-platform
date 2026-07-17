@@ -216,7 +216,7 @@ export default async function BusinessDashboard({
                   logoUrl={business.branding?.logoUrl ?? null}
                   businessName={businessDisplayName}
                   fallback={getInitials(businessDisplayName)}
-                  className="h-12 w-12 rounded-lg border business-border-soft bg-white text-sm font-bold business-text"
+                  className="rounded-lg border business-border-soft bg-white business-text"
                 />
                 <div className="min-w-0">
                   <h2 className="truncate text-lg font-bold tracking-tight text-[#171A21]">

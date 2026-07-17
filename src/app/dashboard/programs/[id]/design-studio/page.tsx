@@ -16,14 +16,11 @@ import { prisma } from "@/lib/prisma";
 
 export default async function ProgramDesignStudioPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ success?: string; error?: string }>;
 }) {
   const { user, business } = await getBusinessOwnerContext();
   const { id } = await params;
-  const qs = await searchParams;
   const program = await prisma.loyaltyProgram.findFirst({
     where: { uuid: id, businessId: user.businessId },
     select: {
@@ -76,8 +73,6 @@ export default async function ProgramDesignStudioPage({
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Design Your Loyalty Card" hideWelcomeMessage>
       <div className="mx-auto grid w-full max-w-screen-2xl gap-6">
-        {qs.success ? <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{qs.success}</p> : null}
-        {qs.error ? <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{qs.error}</p> : null}
         <PageIntro
           eyebrow={program.name}
           description="Customize the appearance of your customer's digital loyalty card."

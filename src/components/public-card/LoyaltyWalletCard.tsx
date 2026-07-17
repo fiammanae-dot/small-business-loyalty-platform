@@ -399,7 +399,7 @@ function CardHeader({
           logoUrl={businessLogoUrl ?? null}
           businessName={businessName}
           fallback={theme.style === "premium-dark" ? tierIcon : businessName.slice(0, 1).toUpperCase()}
-          className="h-12 w-12 rounded-full text-lg shadow-sm"
+          className="rounded-full shadow-sm"
           style={{ backgroundColor: theme.logoBackground, color: theme.logoText }}
         />
       ) : null}

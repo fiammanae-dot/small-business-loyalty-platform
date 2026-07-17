@@ -8,6 +8,7 @@ import { z } from "zod";
 import type { BusinessType, RecordStatus, UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit";
+import { brandColorSchema, brandLogoUrlSchema } from "@/lib/branding-validation";
 import { requireBusinessOwner } from "@/lib/business-owner";
 import { validateCsrfForm } from "@/lib/csrf";
 import { requireUsableSubscription } from "@/lib/commercial-access";
@@ -487,6 +488,60 @@ export async function resetStaffPasswordAction(
 export async function updateBrandingAction() {
   await requireBusinessOwner();
   redirect("/dashboard");
+}
+
+const brandAssetsSchema = z.object({
+  logoUrl: brandLogoUrlSchema,
+  primaryColor: brandColorSchema,
+  secondaryColor: brandColorSchema,
+  backgroundColor: brandColorSchema,
+  textColor: brandColorSchema,
+  buttonColor: brandColorSchema,
+});
+
+export async function saveBrandAssetsAction(formData: FormData) {
+  validateActionSecurity(formData, "dashboard:brand-assets", "/dashboard/settings?tab=brand");
+  const user = await requireBusinessOwner();
+  const parsed = brandAssetsSchema.safeParse({
+    logoUrl: getCustomerString(formData, "logoUrl"),
+    primaryColor: getCustomerString(formData, "primaryColor"),
+    secondaryColor: getCustomerString(formData, "secondaryColor"),
+    backgroundColor: getCustomerString(formData, "backgroundColor"),
+    textColor: getCustomerString(formData, "textColor"),
+    buttonColor: getCustomerString(formData, "buttonColor"),
+  });
+
+  if (!parsed.success) fail("/dashboard/settings?tab=brand", parsed.error.issues[0]?.message ?? "Validation failed.");
+
+  const brandData = {
+    logoUrl: parsed.data.logoUrl || null,
+    primaryColor: parsed.data.primaryColor,
+    secondaryColor: parsed.data.secondaryColor,
+    backgroundColor: parsed.data.backgroundColor,
+    textColor: parsed.data.textColor,
+    buttonColor: parsed.data.buttonColor,
+  };
+
+  const branding = await prisma.businessBranding.upsert({
+    where: { businessId: user.businessId },
+    create: { businessId: user.businessId, ...brandData },
+    update: brandData,
+    select: { id: true },
+  });
+
+  await logAuditEvent({
+    actorUserId: user.id,
+    businessId: user.businessId,
+    action: "BUSINESS_BRAND_ASSETS_UPDATED",
+    entityType: "business_branding",
+    entityId: branding.id,
+    metadata: { logoConfigured: Boolean(brandData.logoUrl), primaryColor: brandData.primaryColor },
+  });
+
+  revalidatePath("/dashboard/settings");
+  revalidatePath("/dashboard");
+  revalidatePath("/card/[token]", "page");
+  redirect("/dashboard/settings?tab=brand&success=Brand assets saved.");
 }
 
 export async function saveScannerSettingsAction(formData: FormData) {

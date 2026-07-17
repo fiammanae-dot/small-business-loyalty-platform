@@ -31,7 +31,7 @@ test("the single mobile preview frame is full width, not a small fixed pixel cap
 test("preview panel is only sticky on desktop, so a tall preview can't end up hidden behind the fixed mobile bottom nav", () => {
   const source = form();
 
-  assert.match(source, /lg:sticky lg:top-6 lg:z-10/);
+  assert.match(source, /lg:sticky lg:top-20 lg:z-10/);
   assert.doesNotMatch(source, /className="sticky top-2 z-10/, "preview panel must not be unconditionally sticky - that let it grow tall on mobile and render behind the fixed bottom nav bar");
 });
 

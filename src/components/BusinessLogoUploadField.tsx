@@ -80,7 +80,7 @@ export function BusinessLogoUploadField({
         <BusinessLogoAvatar
           logoUrl={value || null}
           businessName={businessName || "Business"}
-          className="h-12 w-12 rounded-full border border-[#E5E7EB] bg-[#F8FAFC] text-lg text-[#111827]"
+          className="rounded-full border border-[#E5E7EB] bg-[#F8FAFC] text-[#111827]"
         />
         <div className="flex flex-wrap items-center gap-2">
           <button

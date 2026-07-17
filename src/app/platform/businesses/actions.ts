@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { BillingCycle, BusinessType, RecordStatus } from "@prisma/client";
+import { brandColorSchema, brandLogoUrlSchema } from "@/lib/branding-validation";
 import { validateCsrfForm } from "@/lib/csrf";
 import { createFormFailure, getFirstZodMessage, getZodFieldErrors, type PreservedFormState } from "@/lib/form-state";
 import { prisma } from "@/lib/prisma";
@@ -13,18 +14,8 @@ import { logAuditEvent } from "@/lib/audit";
 import { requireRole } from "@/lib/session";
 import { getSubscriptionPeriodEnd, isBillingCycleSupported } from "@/lib/subscription-plans";
 
-const colorSchema = z.string().trim().regex(/^#[0-9A-Fa-f]{6}$/, "Use a hex color like #F97316.");
-
-// Accepts uploaded logos (site-relative /uploads/logos/... paths), legacy
-// absolute URLs saved before uploads existed, or empty (no logo).
-const logoUrlSchema = z
-  .string()
-  .trim()
-  .refine(
-    (value) => value === "" || value.startsWith("/uploads/logos/") || /^https?:\/\/\S+$/i.test(value),
-    "Upload a logo image or provide a valid logo URL.",
-  )
-  .optional();
+const colorSchema = brandColorSchema;
+const logoUrlSchema = brandLogoUrlSchema;
 
 const createBusinessSchema = z.object({
   name: z.string().trim().min(1, "Business name is required."),

@@ -95,7 +95,7 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
 
   return (
     <BusinessBrandingProvider branding={businessBranding}>
-    <div className="min-h-screen max-w-full overflow-x-hidden bg-[#F6F7F9] text-[#171A21]">
+    <div className="min-h-screen max-w-full overflow-x-clip bg-[#F6F7F9] text-[#171A21]">
       <IdleSessionTimeout />
       {activeSupportSession ? <SupportActivityTracker supportSessionId={activeSupportSession.id} /> : null}
       <header className="border-b border-[#E7E9EE] bg-white">
@@ -168,7 +168,7 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
       ) : null}
 
       <main
-        className={`mx-auto grid w-full max-w-7xl min-w-0 gap-6 overflow-x-hidden px-4 py-6 sm:px-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:px-8 ${
+        className={`mx-auto grid w-full max-w-7xl min-w-0 gap-6 overflow-x-clip px-4 py-6 sm:px-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:px-8 ${
           user.role === "BUSINESS_OWNER" || user.role === "PLATFORM_OWNER" || user.role === "BRANCH_MANAGER" || user.role === "STAFF" ? "pb-24 lg:pb-6" : ""
         }`}
       >
@@ -181,7 +181,7 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
 
         {user.role === "BUSINESS_OWNER" ? <RoleNavigation role={user.role} supportSession={supportNavSession} /> : null}
 
-        <div className={`flex min-w-0 max-w-full flex-col gap-8 overflow-x-hidden ${hasSidebar ? "" : "lg:col-span-2"}`}>
+        <div className={`flex min-w-0 max-w-full flex-col gap-8 overflow-x-clip ${hasSidebar ? "" : "lg:col-span-2"}`}>
         <section className={`grid min-w-0 gap-5 lg:items-end ${headerPanel ? "lg:grid-cols-[minmax(0,1fr)_300px]" : ""}`}>
           <div>
             <div className="flex flex-wrap items-center gap-2">

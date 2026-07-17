@@ -594,7 +594,8 @@ function CreateCardPreview({
               <BusinessLogoAvatar
                 logoUrl={branding.logoUrl}
                 businessName={businessName}
-                className="h-10 w-10 rounded-full text-sm"
+                size="sm"
+                className="rounded-full"
                 style={{ background: theme.logoBackground, color: theme.logoText }}
               />
             ) : null}

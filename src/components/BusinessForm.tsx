@@ -312,7 +312,7 @@ function BrandingPreview({
           logoUrl={values.logoUrl || null}
           businessName={businessName}
           fallback={businessName.slice(0, 2).toUpperCase()}
-          className="h-12 w-12 rounded-md text-sm font-bold text-white"
+          className="rounded-md text-white"
           style={{ backgroundColor: values.primaryColor }}
         />
         <div>
