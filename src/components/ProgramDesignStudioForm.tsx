@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import { toPng } from "html-to-image";
-import { Check, ChevronDown, Search } from "lucide-react";
+import { Check, ChevronDown, Redo2, Undo2, ZoomIn, ZoomOut, Search } from "lucide-react";
 import Link from "next/link";
 import type {
   CardDesignBackgroundPattern,
@@ -99,6 +99,7 @@ export function ProgramDesignStudioForm({
   programName,
   rewardName,
   businessType,
+  lastSavedAt,
   branding,
   initialDesign,
   businessPresets,
@@ -116,6 +117,7 @@ export function ProgramDesignStudioForm({
   programName: string;
   rewardName: string;
   businessType: string | null;
+  lastSavedAt: string;
   branding: PreviewBranding;
   initialDesign: {
     layoutStyle: CardDesignLayoutStyle;
@@ -478,64 +480,67 @@ export function ProgramDesignStudioForm({
 
       <DesignStudioHeader programName={programName} branding={branding} hasUnsavedChanges={hasUnsavedChanges} action={action} />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,58fr)_minmax(340px,42fr)] xl:grid-cols-[minmax(0,55fr)_minmax(400px,45fr)] 2xl:gap-8">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,52fr)_minmax(380px,48fr)] xl:grid-cols-[minmax(0,48fr)_minmax(440px,52fr)] 2xl:gap-8">
       <aside className="order-first min-w-0 lg:order-last">
-        <div className="rounded-2xl border border-[#E2E8F0] bg-white/95 p-3 shadow-md backdrop-blur lg:sticky lg:top-20 lg:z-10">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#64748B]">Live Mobile Preview</p>
+        <div className="rounded-2xl border border-[#E2E8F0] bg-gradient-to-b from-white to-[#FAFBFC] p-5 shadow-[0_8px_30px_rgba(15,23,42,0.08)] backdrop-blur transition-shadow duration-200 lg:sticky lg:top-20 lg:z-10">
+          <div className="flex items-center gap-2">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full business-bg" aria-hidden="true" />
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-[#64748B]">Live Mobile Preview</p>
+          </div>
 
           <div className="mt-2">{livePreviewNode}</div>
 
-          <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#E2E8F0] pt-3">
-            <div className="flex gap-2">
+          <div className="mt-4 flex items-center justify-between gap-2 border-t border-[#E2E8F0] pt-4">
+            <div className="flex items-center gap-1 rounded-xl bg-[#F8FAFC] p-1">
               <button
                 type="button"
                 onClick={undoDesignChange}
                 disabled={!canUndoDesign}
-                className="h-10 rounded-xl border border-[#CBD5E1] bg-white px-3 text-xs font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-45 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 sm:h-8"
+                className="grid h-10 w-10 place-items-center rounded-lg text-[#111827] transition-all duration-200 hover:bg-white hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:shadow-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 sm:h-8 sm:w-8"
                 aria-label="Undo last design change"
                 title="Undo (Ctrl/Cmd+Z)"
               >
-                Undo
+                <Undo2 className="h-4 w-4" aria-hidden="true" />
               </button>
               <button
                 type="button"
                 onClick={redoDesignChange}
                 disabled={!canRedoDesign}
-                className="h-10 rounded-xl border border-[#CBD5E1] bg-white px-3 text-xs font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-45 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 sm:h-8"
+                className="grid h-10 w-10 place-items-center rounded-lg text-[#111827] transition-all duration-200 hover:bg-white hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:shadow-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 sm:h-8 sm:w-8"
                 aria-label="Redo design change"
                 title="Redo (Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y)"
               >
-                Redo
+                <Redo2 className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 rounded-xl bg-[#F8FAFC] p-1">
               <button
                 type="button"
                 onClick={() => setPreviewZoom(previousPreviewZoom(previewZoom))}
-                className="grid h-9 w-9 place-items-center rounded-lg text-xs font-black text-[#64748B] transition hover:bg-[#F8FAFC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] sm:h-7 sm:w-7"
+                className="grid h-10 w-10 place-items-center rounded-lg text-[#64748B] transition-all duration-200 hover:bg-white hover:text-[#111827] hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] sm:h-8 sm:w-8"
                 aria-label="Zoom out"
               >
-                -
+                <ZoomOut className="h-4 w-4" aria-hidden="true" />
               </button>
               <span className="w-10 text-center text-[11px] font-bold text-[#64748B]">{previewZoomOptions.find((option) => option.value === previewZoom)?.label ?? "Fit"}</span>
               <button
                 type="button"
                 onClick={() => setPreviewZoom(nextPreviewZoom(previewZoom))}
-                className="grid h-9 w-9 place-items-center rounded-lg text-xs font-black text-[#64748B] transition hover:bg-[#F8FAFC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] sm:h-7 sm:w-7"
+                className="grid h-10 w-10 place-items-center rounded-lg text-[#64748B] transition-all duration-200 hover:bg-white hover:text-[#111827] hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] sm:h-8 sm:w-8"
                 aria-label="Zoom in"
               >
-                +
+                <ZoomIn className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
           </div>
 
-          <div className="mt-3 grid grid-cols-3 gap-2 border-t border-[#E2E8F0] pt-3">
+          <div className="mt-4 grid grid-cols-3 gap-2 border-t border-[#E2E8F0] pt-4">
             <button
               type="button"
               onClick={downloadPreviewPng}
               disabled={previewActionPending !== null}
               title="Download PNG"
-              className="rounded-xl business-bg px-2 py-2 text-xs font-black transition hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+              className="h-10 rounded-xl business-bg text-xs font-black transition-all duration-200 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 sm:h-9"
             >
               {previewActionPending === "png" ? "..." : "PNG"}
             </button>
@@ -544,7 +549,7 @@ export function ProgramDesignStudioForm({
               onClick={downloadPreviewPdf}
               disabled={previewActionPending !== null}
               title="Download PDF"
-              className="rounded-xl border border-[#CBD5E1] bg-white px-2 py-2 text-xs font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+              className="h-10 rounded-xl border border-[#CBD5E1] bg-white text-xs font-black text-[#111827] transition-all duration-200 hover:border-[var(--business-primary)] hover:bg-[#F8FAFC] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 sm:h-9"
             >
               {previewActionPending === "pdf" ? "..." : "PDF"}
             </button>
@@ -553,7 +558,7 @@ export function ProgramDesignStudioForm({
               onClick={copyPreviewLink}
               disabled={previewActionPending !== null}
               title="Preview on phone"
-              className="rounded-xl border border-[#CBD5E1] bg-white px-2 py-2 text-xs font-black text-[#111827] transition hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+              className="h-10 rounded-xl border border-[#CBD5E1] bg-white text-xs font-black text-[#111827] transition-all duration-200 hover:border-[var(--business-primary)] hover:bg-[#F8FAFC] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 sm:h-9"
             >
               {previewActionPending === "link" ? "..." : "Share"}
             </button>
@@ -587,7 +592,7 @@ export function ProgramDesignStudioForm({
                             setWizardStep(2);
                           }
                         }}
-                        className="flex items-center gap-3 rounded-xl border border-transparent bg-transparent px-4 py-3 text-left transition hover:bg-white hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-white data-[active=true]:shadow-sm"
+                        className="flex items-center gap-3 rounded-xl border border-transparent bg-transparent px-4 py-3.5 text-left transition-all duration-200 hover:bg-white hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-white data-[active=true]:shadow-md data-[active=true]:ring-1 data-[active=true]:ring-[var(--business-primary)]"
                         data-active={active}
                         aria-pressed={active}
                       >
@@ -918,7 +923,7 @@ export function ProgramDesignStudioForm({
             <CollapsibleSection id="cardStyle" title="Card Style" description="Choose the overall personality of your loyalty card.">
               <div className="grid gap-4 md:grid-cols-2">
                 {designStudioTemplateOptions.map((option) => (
-                  <label key={option.value} className="group cursor-pointer rounded-[1.35rem] border border-[#E2E8F0] bg-white p-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-lg has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-lg">
+                  <label key={option.value} className="group cursor-pointer rounded-[1.35rem] border border-[#E2E8F0] bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:scale-[1.01] hover:border-[var(--business-primary)] hover:shadow-lg has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-lg has-[:checked]:ring-2 has-[:checked]:ring-[var(--business-primary)] has-[:checked]:ring-offset-1">
                     <input
                       type="radio"
                       value={option.value}
@@ -951,7 +956,7 @@ export function ProgramDesignStudioForm({
                       key={option.id}
                       type="button"
                       onClick={() => commitDesignChange({ ...currentDesignSnapshot, backgroundStyle: option.backgroundStyle, backgroundPattern: option.backgroundPattern })}
-                      className="group grid min-h-40 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
+                      className="group grid min-h-40 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition-all duration-200 hover:-translate-y-1 hover:scale-[1.01] hover:border-[var(--business-primary)] hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-lg data-[active=true]:ring-2 data-[active=true]:ring-[var(--business-primary)] data-[active=true]:ring-offset-1"
                       data-active={active}
                       aria-pressed={active}
                     >
@@ -980,7 +985,7 @@ export function ProgramDesignStudioForm({
                       key={option.value}
                       type="button"
                       onClick={() => commitDesignChange({ ...currentDesignSnapshot, typographyPreset: option.value })}
-                      className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
+                      className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition-all duration-200 hover:-translate-y-1 hover:scale-[1.01] hover:border-[var(--business-primary)] hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-lg data-[active=true]:ring-2 data-[active=true]:ring-[var(--business-primary)] data-[active=true]:ring-offset-1"
                       data-active={active}
                       aria-pressed={active}
                     >
@@ -1009,7 +1014,7 @@ export function ProgramDesignStudioForm({
             <CollapsibleSection id="rewardProgress" title="Reward Progress" description="Choose the progress pattern that best matches how customers earn their next reward.">
               <div className="grid gap-3 md:grid-cols-3">
                 {designStudioStampJourneyOptions.map((option) => (
-                  <label key={option.value} className="group flex min-h-28 cursor-pointer gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-md">
+                  <label key={option.value} className="group flex min-h-28 cursor-pointer gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:scale-[1.01] hover:border-[var(--business-primary)] hover:shadow-lg has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-lg has-[:checked]:ring-2 has-[:checked]:ring-[var(--business-primary)] has-[:checked]:ring-offset-1">
                     <input
                       type="radio"
                       value={option.value}
@@ -1030,7 +1035,7 @@ export function ProgramDesignStudioForm({
               <p className="mb-3 text-sm font-medium text-[#64748B]">Recommended emoji appear first.</p>
               <div className="grid grid-cols-5 gap-2 sm:grid-cols-7 lg:grid-cols-8">
                 {stampIconOptions.map((option) => (
-                  <label key={option.value} className="group grid aspect-square cursor-pointer place-items-center rounded-2xl border border-[#E5E7EB] bg-white p-2 shadow-sm transition duration-150 hover:-translate-y-0.5 hover:scale-[1.03] hover:border-[var(--business-primary)] hover:shadow-md has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--business-primary)] has-[:focus-visible]:ring-offset-2 has-[:checked]:scale-[1.04] has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-md">
+                  <label key={option.value} className="group grid aspect-square cursor-pointer place-items-center rounded-2xl border border-[#E5E7EB] bg-white p-2 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:scale-105 hover:border-[var(--business-primary)] hover:shadow-md has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--business-primary)] has-[:focus-visible]:ring-offset-2 has-[:checked]:scale-105 has-[:checked]:border-[var(--business-primary)] has-[:checked]:bg-[var(--business-primary-soft)] has-[:checked]:shadow-lg has-[:checked]:ring-2 has-[:checked]:ring-[var(--business-primary)]">
                     <input
                       type="radio"
                       value={option.value}
@@ -1061,7 +1066,7 @@ export function ProgramDesignStudioForm({
                       key={option.value}
                       type="button"
                       onClick={() => commitDesignChange({ ...currentDesignSnapshot, rewardStyle: option.value })}
-                      className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
+                      className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition-all duration-200 hover:-translate-y-1 hover:scale-[1.01] hover:border-[var(--business-primary)] hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-lg data-[active=true]:ring-2 data-[active=true]:ring-[var(--business-primary)] data-[active=true]:ring-offset-1"
                       data-active={active}
                       aria-pressed={active}
                     >
@@ -1096,7 +1101,7 @@ export function ProgramDesignStudioForm({
                       key={option.id}
                       type="button"
                       onClick={() => commitDesignChange({ ...currentDesignSnapshot, visibleSections: { ...option.visibleSections } })}
-                      className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--business-primary)] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-md"
+                      className="group grid min-h-36 gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-4 text-left shadow-sm transition-all duration-200 hover:-translate-y-1 hover:scale-[1.01] hover:border-[var(--business-primary)] hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 data-[active=true]:border-[var(--business-primary)] data-[active=true]:bg-[var(--business-primary-soft)] data-[active=true]:shadow-lg data-[active=true]:ring-2 data-[active=true]:ring-[var(--business-primary)] data-[active=true]:ring-offset-1"
                       data-active={active}
                       aria-pressed={active}
                     >
@@ -1158,41 +1163,17 @@ export function ProgramDesignStudioForm({
 
         {wizardStep === 5 ? (
           <div className="grid gap-5 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-200">
-            <SectionCard title="Review Your Design" description="Confirm everything looks right before saving.">
-              <div className="grid gap-5 sm:grid-cols-[minmax(0,180px)_1fr] sm:items-start">
-                <div className="mx-auto w-full sm:mx-0">
-                  <MobileCardPreviewFrame>
-                    <CardFinishPreviewFrame decorationStyle={decorationStyle}>
-                      <VisibleCardPreview
-                        businessName={businessName}
-                        businessLogoUrl={branding.logoUrl}
-                        customerName="Mina Hanna"
-                        memberSince="Jun 2026"
-                        tierLabel="Silver Member"
-                        tierIcon="S"
-                        theme={previewTheme}
-                        programName={programName}
-                        rewardName={rewardName}
-                        visibleSections={visibleSections}
-                        stampJourneyStyle={stampJourneyStyle}
-                        stampIcon={stampIcon}
-                        rewardStyle={rewardStyle}
-                        typographyPreset={typographyPreset}
-                        backgroundStyle={backgroundStyle}
-                        backgroundPattern={backgroundPattern}
-                      />
-                    </CardFinishPreviewFrame>
-                  </MobileCardPreviewFrame>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <PreviewChip label={`Card Style: ${selectedStyleLabel}`} />
-                  <PreviewChip label={`Typography: ${selectedTypographyLabel}`} />
-                  <PreviewChip label={`Reward Progress: ${selectedJourneyLabel}`} />
-                  <PreviewChip label={`Stamp Style: ${selectedStampIconLabel}`} />
-                  <PreviewChip label={`Reward Style: ${selectedRewardStyleLabel}`} />
-                  <PreviewChip label={`Background: ${selectedBackgroundLabel}`} />
-                  <PreviewChip label={`Visibility: ${visibleSectionCount}/${designStudioCardContentOptions.length} sections`} />
-                </div>
+            <SectionCard title="Review Your Design" description="Confirm everything looks right before saving. The live preview on the right reflects exactly what customers will see.">
+              <div className="flex flex-wrap gap-2">
+                <PreviewChip label={`Card Style: ${selectedStyleLabel}`} />
+                <PreviewChip label={`Card Layout: ${selectedCardLayoutOption.label}`} />
+                <PreviewChip label={`Typography: ${selectedTypographyLabel}`} />
+                <PreviewChip label={`Reward Progress: ${selectedJourneyLabel}`} />
+                <PreviewChip label={`Stamp Style: ${selectedStampIconLabel}`} />
+                <PreviewChip label={`Reward Style: ${selectedRewardStyleLabel}`} />
+                <PreviewChip label={`Background: ${selectedBackgroundLabel}`} />
+                <PreviewChip label={`Visibility: ${visibleSectionCount}/${designStudioCardContentOptions.length} sections`} />
+                <PreviewChip label={`Last Saved: ${formatPresetDate(lastSavedAt)}`} />
               </div>
             </SectionCard>
 
@@ -1214,15 +1195,26 @@ export function ProgramDesignStudioForm({
               </div>
             </SectionCard>
 
-            <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#E2E8F0] bg-white p-3 shadow-sm">
-              <button
-                type="button"
-                onClick={goPrevious}
-                className="inline-flex h-11 items-center justify-center rounded-xl border border-[#CBD5E1] bg-white px-5 text-sm font-black text-[#111827] transition hover:bg-[#F8FAFC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
-              >
-                Previous
-              </button>
-              <Button type="submit" variant="business" size="lg">
+            <div className="flex flex-col items-stretch gap-3 rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={goPrevious}
+                  className="inline-flex h-11 items-center justify-center rounded-xl border border-[#CBD5E1] bg-white px-5 text-sm font-black text-[#111827] transition-all duration-200 hover:border-[var(--business-primary)] hover:bg-[#F8FAFC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                >
+                  Return to Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadPreviewPng}
+                  disabled={previewActionPending !== null}
+                  title="Download PNG"
+                  className="inline-flex h-11 items-center justify-center rounded-xl border border-[#CBD5E1] bg-white px-4 text-sm font-black text-[#111827] transition-all duration-200 hover:border-[var(--business-primary)] hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                >
+                  {previewActionPending === "png" ? "…" : "Export"}
+                </button>
+              </div>
+              <Button type="submit" variant="business" size="lg" className="shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.98]">
                 Save Design
               </Button>
             </div>
@@ -1246,7 +1238,7 @@ function DesignStudioHeader({
   action: (formData: FormData) => void | Promise<void>;
 }) {
   return (
-    <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#E2E8F0] bg-white/95 px-4 py-3 shadow-sm backdrop-blur">
+    <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#E2E8F0] bg-white/95 px-5 py-3 shadow-sm backdrop-blur transition-shadow">
       <div className="flex min-w-0 items-center gap-3">
         <BusinessLogoAvatar
           logoUrl={branding.logoUrl}
@@ -1256,19 +1248,17 @@ function DesignStudioHeader({
           style={{ backgroundColor: branding.primaryColor }}
         />
         <div className="min-w-0">
-          <p className="truncate text-base font-black text-[#111827]">{programName}</p>
+          <p className="truncate text-base font-black leading-tight text-[#111827]">{programName}</p>
           <p className="text-xs font-semibold text-[#64748B]">Design Studio</p>
         </div>
       </div>
-      <div className="flex items-center gap-3">
-        <span
-          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold transition ${
-            hasUnsavedChanges ? "bg-amber-100 text-amber-800" : "bg-emerald-50 text-emerald-700"
-          }`}
-          aria-live="polite"
-        >
-          <span className={`h-1.5 w-1.5 rounded-full ${hasUnsavedChanges ? "bg-amber-500" : "bg-emerald-500"}`} aria-hidden="true" />
-          {hasUnsavedChanges ? "Unsaved changes" : "All changes saved"}
+      <div className="flex items-center gap-4">
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#64748B]" aria-live="polite">
+          <span
+            className={`h-1.5 w-1.5 shrink-0 rounded-full transition-colors duration-200 ${hasUnsavedChanges ? "bg-amber-500" : "bg-emerald-500"}`}
+            aria-hidden="true"
+          />
+          <span className="hidden sm:inline">{hasUnsavedChanges ? "Unsaved changes" : "All changes saved"}</span>
         </span>
         <SaveDesignButton action={action} />
       </div>
@@ -1280,7 +1270,7 @@ function SaveDesignButton({ action }: { action: (formData: FormData) => void | P
   const status = useFormStatus();
   const isSaving = status.pending && status.action === action;
   return (
-    <Button type="submit" variant="business" disabled={isSaving}>
+    <Button type="submit" variant="business" size="lg" disabled={isSaving} className="shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.98]">
       {isSaving ? "Saving…" : "Save Design"}
     </Button>
   );
@@ -1331,7 +1321,7 @@ function CollapsibleSection({
   return (
     <details
       ref={detailsRef}
-      className="group min-w-0 rounded-xl border border-[#E7E9EE] bg-white shadow-[0_1px_2px_rgba(15,18,25,0.04)]"
+      className="group min-w-0 overflow-hidden rounded-xl border border-[#E7E9EE] bg-white shadow-[0_1px_2px_rgba(15,18,25,0.04)] transition-shadow duration-200"
       onToggle={(event) => {
         const collapsed = readCollapsedSectionIds();
         if (event.currentTarget.open) collapsed.delete(id);
@@ -1339,10 +1329,13 @@ function CollapsibleSection({
         writeCollapsedSectionIds(collapsed);
       }}
     >
-      <summary className="flex cursor-pointer list-none items-start justify-between gap-3 p-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 md:p-5 [&::-webkit-details-marker]:hidden">
-        <span className="min-w-0">
-          <span className="block text-base font-bold tracking-tight text-[#171A21]">{title}</span>
-          <span className="mt-1 block text-[13px] leading-5 text-[#7A8091]">{description}</span>
+      <summary className="flex cursor-pointer list-none items-start justify-between gap-3 p-4 transition-colors duration-200 hover:bg-[#F8FAFC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2 md:p-5 [&::-webkit-details-marker]:hidden">
+        <span className="flex min-w-0 items-start gap-3">
+          <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full business-bg" aria-hidden="true" />
+          <span className="min-w-0">
+            <span className="block text-base font-bold tracking-tight text-[#171A21]">{title}</span>
+            <span className="mt-1 block text-[13px] leading-5 text-[#7A8091]">{description}</span>
+          </span>
         </span>
         <ChevronDown className="mt-0.5 h-5 w-5 shrink-0 text-[#7A8091] transition-transform duration-200 group-open:rotate-180" aria-hidden="true" />
       </summary>
@@ -1353,7 +1346,7 @@ function CollapsibleSection({
 
 function WizardStepper({ current, onSelect }: { current: WizardStep; onSelect: (step: WizardStep) => void }) {
   return (
-    <ol className="grid grid-cols-5 gap-1 rounded-2xl border border-[#E2E8F0] bg-[#F1F5F9] p-1.5 sm:gap-2" aria-label="Design studio steps">
+    <ol className="grid grid-cols-5 gap-1.5 rounded-2xl border border-[#E2E8F0] bg-[#F1F5F9] p-2 sm:gap-2.5" aria-label="Design studio steps">
       {wizardSteps.map((step) => {
         const active = current === step.value;
         const complete = current > step.value;
@@ -1363,11 +1356,11 @@ function WizardStepper({ current, onSelect }: { current: WizardStep; onSelect: (
               type="button"
               onClick={() => onSelect(step.value)}
               aria-current={active ? "step" : undefined}
-              className="flex w-full flex-col items-center gap-1 rounded-xl px-0.5 py-2 text-center transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:bg-white data-[active=true]:shadow-sm"
+              className="flex w-full flex-col items-center gap-1.5 rounded-xl px-0.5 py-2.5 text-center transition-all duration-200 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] data-[active=true]:bg-white data-[active=true]:shadow-md sm:py-3"
               data-active={active}
             >
               <span
-                className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-black transition"
+                className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-black shadow-sm transition-all duration-200 ${active ? "scale-110 ring-2 ring-[var(--business-primary)] ring-offset-2" : ""}`}
                 style={{
                   background: active || complete ? "var(--business-primary)" : "#E2E8F0",
                   color: active || complete ? "var(--business-primary-foreground)" : "#64748B",

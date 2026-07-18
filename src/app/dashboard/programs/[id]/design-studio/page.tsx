@@ -29,6 +29,7 @@ export default async function ProgramDesignStudioPage({
       rewardName: true,
       businessType: true,
       cardDesign: true,
+      updatedAt: true,
     },
   });
 
@@ -97,6 +98,7 @@ export default async function ProgramDesignStudioPage({
           programName={program.name}
           rewardName={program.rewardName}
           businessType={program.businessType}
+          lastSavedAt={program.updatedAt.toISOString()}
           branding={branding}
           initialDesign={{
             layoutStyle: cardDesign.layoutStyle,

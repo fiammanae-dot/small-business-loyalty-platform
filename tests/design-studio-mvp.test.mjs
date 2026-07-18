@@ -307,8 +307,8 @@ test("Design Studio MVP exposes only approved controls and live preview", () => 
   assert.match(createWizard, /StampIconGraphic stampIcon=\{option\.value\}/);
   assert.match(createWizard, /StampSlot key=\{index\} stampIcon=\{icon\}/);
   assert.doesNotMatch(form, /getStampIconMark|stampIconMarks/);
-  assert.match(form, /lg:grid-cols-\[minmax\(0,58fr\)_minmax\(340px,42fr\)\]/);
-  assert.match(form, /xl:grid-cols-\[minmax\(0,55fr\)_minmax\(400px,45fr\)\]/);
+  assert.match(form, /lg:grid-cols-\[minmax\(0,52fr\)_minmax\(380px,48fr\)\]/);
+  assert.match(form, /xl:grid-cols-\[minmax\(0,48fr\)_minmax\(440px,52fr\)\]/);
   assert.match(form, /order-first[\s\S]*lg:order-last/);
   assert.match(form, /lg:sticky lg:top-20/, "preview panel must only be sticky on desktop, not mobile, so it can't end up hidden behind the fixed mobile bottom nav");
   assert.doesNotMatch(form, /sticky bottom-3/);
