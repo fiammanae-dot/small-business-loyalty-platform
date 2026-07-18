@@ -682,8 +682,10 @@ export function ProgramDesignStudioForm({
                               className="grid gap-5 p-6 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-inset"
                               aria-pressed={active}
                             >
-                              <span className="relative [&>span]:min-h-[240px] [&>span]:p-6">
-                                <PresetThumbnail preset={preset} />
+                              <span className="relative">
+                                <span className="block min-h-[240px] p-6">
+                                  <PresetThumbnail preset={preset} />
+                                </span>
                                 {recommended ? (
                                   <span className="absolute left-3 top-3 inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-black text-amber-800 ring-1 ring-amber-200">
                                     Recommended
