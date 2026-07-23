@@ -14,6 +14,8 @@ import { validateCsrfForm } from "@/lib/csrf";
 import { requireUsableSubscription } from "@/lib/commercial-access";
 import { createFormFailure, isFormActionError, type PreservedFormState } from "@/lib/form-state";
 import { syncGoogleWalletObjectAfterLoyaltyChange } from "@/lib/google-wallet/service";
+import { hasWalletRelevantBrandingChange, hasWalletRelevantBusinessChange } from "@/lib/wallet-sync/change-detection";
+import { enqueueWalletSyncForBusiness } from "@/lib/wallet-sync/enqueue";
 import { commerciallyUsableStatuses, limitReachedMessage } from "@/lib/subscriptions";
 import {
   customerIdentitySchema,
@@ -179,6 +181,11 @@ export async function updateBusinessProfileAction(formData: FormData) {
 
   if (!parsed.success) fail("/dashboard/profile", parsed.error.issues[0]?.message ?? "Validation failed.");
 
+  const businessBeforeUpdate = await prisma.business.findUnique({
+    where: { id: user.businessId },
+    select: { name: true, branding: true },
+  });
+
   await prisma.business.update({
     where: { id: user.businessId },
     data: {
@@ -186,6 +193,16 @@ export async function updateBusinessProfileAction(formData: FormData) {
       businessType: parsed.data.businessType as BusinessType,
     },
   });
+
+  if (
+    businessBeforeUpdate &&
+    hasWalletRelevantBusinessChange(
+      { name: businessBeforeUpdate.name, branding: businessBeforeUpdate.branding },
+      { name: parsed.data.name, branding: businessBeforeUpdate.branding },
+    )
+  ) {
+    enqueueWalletSyncForBusiness({ businessId: user.businessId, trigger: "business-profile" });
+  }
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/profile");
@@ -522,6 +539,11 @@ export async function saveBrandAssetsAction(formData: FormData) {
     buttonColor: parsed.data.buttonColor,
   };
 
+  const brandingBeforeUpdate = await prisma.businessBranding.findUnique({
+    where: { businessId: user.businessId },
+    select: { logoUrl: true, primaryColor: true, secondaryColor: true, backgroundColor: true, textColor: true, buttonColor: true },
+  });
+
   const branding = await prisma.businessBranding.upsert({
     where: { businessId: user.businessId },
     create: { businessId: user.businessId, ...brandData },
@@ -537,6 +559,10 @@ export async function saveBrandAssetsAction(formData: FormData) {
     entityId: branding.id,
     metadata: { logoConfigured: Boolean(brandData.logoUrl), primaryColor: brandData.primaryColor },
   });
+
+  if (hasWalletRelevantBrandingChange(brandingBeforeUpdate, brandData)) {
+    enqueueWalletSyncForBusiness({ businessId: user.businessId, trigger: "brand-assets" });
+  }
 
   revalidatePath("/dashboard/settings");
   revalidatePath("/dashboard");

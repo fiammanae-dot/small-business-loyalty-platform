@@ -15,6 +15,8 @@ import { getStartingBonusStampsForEvent, parseProgramDate, programSchema } from 
 import { generateScanToken } from "@/lib/scan";
 import { commerciallyUsableStatuses, limitReachedMessage } from "@/lib/subscriptions";
 import { summarizeWalletSyncForUser, syncWalletProvidersForProgram } from "@/lib/wallet-sync";
+import { hasWalletRelevantProgramChange } from "@/lib/wallet-sync/change-detection";
+import { enqueueWalletSync } from "@/lib/wallet-sync/enqueue";
 
 function getString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -105,7 +107,7 @@ export async function createProgramAction(formData: FormData) {
       cardDesign: cardDesign as unknown as Prisma.InputJsonValue,
       cardTheme: getCardThemeForDesignStudioTemplate(parsedDesign.data.layoutStyle),
     },
-    select: { uuid: true },
+    select: { id: true, uuid: true },
   });
   await logAuditEvent({
     actorUserId: user.id,
@@ -115,6 +117,8 @@ export async function createProgramAction(formData: FormData) {
     entityId: program.uuid,
     metadata: { active: parsed.data.active, requiredStamps: parsed.data.requiredStamps },
   });
+
+  enqueueWalletSync({ programId: program.id, programUuid: program.uuid, businessId: user.businessId, trigger: "program-created" });
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/programs");
@@ -133,7 +137,7 @@ export async function updateProgramAction(formData: FormData) {
 
   const program = await prisma.loyaltyProgram.findFirst({
     where: { uuid, businessId: user.businessId },
-    select: { id: true },
+    select: { id: true, name: true, rewardName: true, cardTheme: true, active: true },
   });
   if (!program) fail("/dashboard/programs", "Program not found.");
 
@@ -165,6 +169,17 @@ export async function updateProgramAction(formData: FormData) {
     metadata: { active: parsed.data.active, requiredStamps: parsed.data.requiredStamps },
   });
 
+  if (
+    hasWalletRelevantProgramChange(program, {
+      name: parsed.data.name,
+      rewardName: parsed.data.rewardName,
+      cardTheme: parsed.data.cardTheme,
+      active: parsed.data.active,
+    })
+  ) {
+    enqueueWalletSync({ programId: program.id, programUuid: uuid, businessId: user.businessId, trigger: "program-settings" });
+  }
+
   revalidatePath("/dashboard/programs");
   revalidatePath(`/dashboard/programs/${uuid}`);
   redirect(`/dashboard/programs/${uuid}?success=Program updated.`);
@@ -178,7 +193,7 @@ export async function toggleProgramAction(formData: FormData) {
 
   const program = await prisma.loyaltyProgram.findFirst({
     where: { uuid, businessId: user.businessId },
-    select: { id: true },
+    select: { id: true, active: true },
   });
   if (!program) fail("/dashboard/programs", "Program not found.");
 
@@ -194,6 +209,10 @@ export async function toggleProgramAction(formData: FormData) {
     entityId: program.id,
     metadata: { active },
   });
+
+  if (program.active !== active) {
+    enqueueWalletSync({ programId: program.id, programUuid: uuid, businessId: user.businessId, trigger: "program-toggle" });
+  }
 
   revalidatePath("/dashboard/programs");
   revalidatePath(`/dashboard/programs/${uuid}`);

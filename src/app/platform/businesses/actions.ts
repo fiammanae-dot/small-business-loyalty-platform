@@ -13,6 +13,8 @@ import { createDefaultAbusePolicies } from "@/lib/alert-engine";
 import { logAuditEvent } from "@/lib/audit";
 import { requireRole } from "@/lib/session";
 import { getSubscriptionPeriodEnd, isBillingCycleSupported } from "@/lib/subscription-plans";
+import { hasWalletRelevantBusinessChange } from "@/lib/wallet-sync/change-detection";
+import { enqueueWalletSyncForBusiness } from "@/lib/wallet-sync/enqueue";
 
 const colorSchema = brandColorSchema;
 const logoUrlSchema = brandLogoUrlSchema;
@@ -350,6 +352,11 @@ export async function updateBusinessAction(formData: FormData) {
     redirectWithError(`/platform/businesses/${businessUuid}/edit`, "Selected billing cycle is not supported by this plan.");
   }
 
+  const businessBeforeUpdate = await prisma.business.findUnique({
+    where: { id: data.businessId },
+    select: { name: true, branding: true },
+  });
+
   await prisma.$transaction(async (tx) => {
     await tx.business.update({
       where: { id: data.businessId },
@@ -474,6 +481,25 @@ export async function updateBusinessAction(formData: FormData) {
       });
     }
   });
+
+  if (
+    hasWalletRelevantBusinessChange(
+      { name: businessBeforeUpdate?.name ?? data.name, branding: businessBeforeUpdate?.branding ?? null },
+      {
+        name: data.name,
+        branding: {
+          logoUrl: data.logoUrl || null,
+          primaryColor: data.primaryColor,
+          secondaryColor: data.secondaryColor,
+          backgroundColor: data.backgroundColor,
+          textColor: data.textColor,
+          buttonColor: data.buttonColor,
+        },
+      },
+    )
+  ) {
+    enqueueWalletSyncForBusiness({ businessId: data.businessId, trigger: "admin-business-form" });
+  }
 
   revalidatePath("/platform/businesses");
   revalidatePath(`/platform/businesses/${businessUuid}`);
