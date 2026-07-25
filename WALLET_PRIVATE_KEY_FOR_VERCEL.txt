@@ -1,0 +1,1 @@
+This file is safe to delete. The Google private key was already added to Vercel and your local .env; nothing sensitive remains here.
