@@ -32,7 +32,14 @@ export function createGoogleWalletApiClient(config: GoogleWalletConfig): GoogleW
     id?: string;
     body?: Record<string, unknown>;
   }): Promise<T> {
-    const headers = await authClient.getRequestHeaders();
+    const rawHeaders = await authClient.getRequestHeaders();
+    // google-auth-library v10 returns a Web `Headers` object. Spreading it with
+    // `{ ...rawHeaders }` produces an empty object and drops the Authorization
+    // token, making Google reject the request with a 401. Normalize to a plain
+    // record so the spread below preserves the auth header. Older versions of the
+    // library already returned a plain object, which this handles too.
+    const headers: Record<string, string> =
+      rawHeaders instanceof Headers ? Object.fromEntries(rawHeaders.entries()) : (rawHeaders as unknown as Record<string, string>);
     const response = await retry(async () => {
       const url = id ? `${WALLET_API_BASE}/${resource}/${encodeURIComponent(id)}` : `${WALLET_API_BASE}/${resource}`;
       return fetch(url, {
