@@ -43,9 +43,12 @@ export async function buildGoogleWalletClassPayload({
     issuerName: businessName,
     programName: membership.loyaltyProgram.name,
     reviewStatus: "UNDER_REVIEW",
-    hexBackgroundColor: normalizeHex(theme.cardBackground ?? branding.primaryColor),
+    hexBackgroundColor: resolveHexBackgroundColor(theme.cardBackground, branding),
     programLogo: imageModule(absoluteUrl(branding.logoUrl, appUrl) ?? `${appUrl}/logo.png`, `${businessName} logo`),
-    heroImage: imageModule(`${appUrl}/logo.png`, `${businessName} loyalty card`),
+    // heroImage is intentionally omitted. Google Wallet's hero is a wide banner and the
+    // business has no dedicated banner asset; the previous code used the platform's
+    // logo.png here, which made every pass show the generic Loyalty Card UAE image. A
+    // rendered card image can be set here later for full visual fidelity.
     localizedIssuerName: localizedString(businessName),
     localizedProgramName: localizedString(membership.loyaltyProgram.name),
     linksModuleData: {
@@ -187,8 +190,29 @@ function absoluteUrl(value: string | null | undefined, appUrl: string) {
   return `${appUrl}/${value}`;
 }
 
-function normalizeHex(value: string) {
-  return /^#[0-9a-f]{6}$/i.test(value) ? value : "#F97316";
+function firstHexColor(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (/^#[0-9a-f]{6}$/i.test(trimmed)) return trimmed;
+  const match = trimmed.match(/#[0-9a-f]{6}/i);
+  return match ? match[0] : null;
+}
+
+// Google Wallet only accepts a single solid `hexBackgroundColor`. Card themes often express
+// the card background as a CSS gradient string, so pull the first real hex out of it (the
+// card's dominant colour) and then fall back through the brand colours. The previous
+// implementation rejected any non-hex string and fell back to a generic orange (#F97316),
+// which made most passes orange regardless of the business's brand.
+function resolveHexBackgroundColor(
+  cardBackground: string | null | undefined,
+  branding: { primaryColor: string; backgroundColor: string },
+): string {
+  return (
+    firstHexColor(cardBackground) ??
+    firstHexColor(branding.primaryColor) ??
+    firstHexColor(branding.backgroundColor) ??
+    "#1F2937"
+  );
 }
 
 function safeIdPart(value: string) {
