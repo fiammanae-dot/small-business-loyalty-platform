@@ -3,10 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { requireBusinessScopedUserOrRedirect, requirePlatformAdmin } from "@/lib/authz";
 import { validateCsrfForm } from "@/lib/csrf";
 import { prisma } from "@/lib/prisma";
 import { recordSupportActivity } from "@/lib/support-activity";
-import { requireRole } from "@/lib/session";
 import {
   clearSupportSessionCookie,
   expireStaleSupportRequests,
@@ -131,7 +131,7 @@ export async function startSupportSessionAction(formData: FormData) {
   const path = getSafeRedirectPath(getString(formData, "formPath"), defaultPath);
   const activeRedirectTo = getSafeRedirectPath(getString(formData, "activeRedirectTo"), defaultPath);
   validateSecurity(formData, path);
-  const adminUser = await requireRole("PLATFORM_OWNER");
+  const adminUser = await requirePlatformAdmin();
 
   const parsed = startSupportSessionSchema.safeParse({
     businessId: getString(formData, "businessId"),
@@ -252,7 +252,7 @@ export async function joinSupportSessionAction(formData: FormData) {
   const businessUuid = getString(formData, "businessUuid");
   const path = businessUuid ? `/platform/businesses/${businessUuid}/support-session` : "/platform/businesses";
   validateSecurity(formData, path);
-  const adminUser = await requireRole("PLATFORM_OWNER");
+  const adminUser = await requirePlatformAdmin();
 
   const parsed = joinSupportSessionSchema.safeParse({
     supportSessionId: getString(formData, "supportSessionId"),
@@ -295,10 +295,10 @@ export async function joinSupportSessionAction(formData: FormData) {
 export async function approveSupportRequestAction(formData: FormData) {
   const redirectTo = getSafeRedirectPath(getString(formData, "redirectTo"), "/dashboard/support-history");
   validateSecurity(formData, redirectTo);
-  const owner = await requireRole("BUSINESS_OWNER");
-  if (!owner.businessId) {
-    fail(redirectTo, "Business context is required.");
-  }
+  const owner = await requireBusinessScopedUserOrRedirect({
+    roles: ["BUSINESS_OWNER"],
+    onMissingBusiness: () => fail(redirectTo, "Business context is required."),
+  });
 
   const parsed = supportRequestDecisionSchema.safeParse({
     supportRequestId: getString(formData, "supportRequestId"),
@@ -354,10 +354,10 @@ export async function approveSupportRequestAction(formData: FormData) {
 export async function rejectSupportRequestAction(formData: FormData) {
   const redirectTo = getSafeRedirectPath(getString(formData, "redirectTo"), "/dashboard/support-history");
   validateSecurity(formData, redirectTo);
-  const owner = await requireRole("BUSINESS_OWNER");
-  if (!owner.businessId) {
-    fail(redirectTo, "Business context is required.");
-  }
+  const owner = await requireBusinessScopedUserOrRedirect({
+    roles: ["BUSINESS_OWNER"],
+    onMissingBusiness: () => fail(redirectTo, "Business context is required."),
+  });
 
   const parsed = supportRequestDecisionSchema.safeParse({
     supportRequestId: getString(formData, "supportRequestId"),
@@ -397,10 +397,10 @@ export async function rejectSupportRequestAction(formData: FormData) {
 export async function saveSupportAccessPolicyAction(formData: FormData) {
   const redirectTo = getSafeRedirectPath(getString(formData, "redirectTo"), "/dashboard/settings?tab=support");
   validateSecurity(formData, redirectTo);
-  const owner = await requireRole("BUSINESS_OWNER");
-  if (!owner.businessId) {
-    fail(redirectTo, "Business context is required.");
-  }
+  const owner = await requireBusinessScopedUserOrRedirect({
+    roles: ["BUSINESS_OWNER"],
+    onMissingBusiness: () => fail(redirectTo, "Business context is required."),
+  });
 
   const parsed = supportAccessPolicySchema.safeParse({
     supportAccessPolicy: getString(formData, "supportAccessPolicy"),
@@ -423,7 +423,7 @@ export async function saveSupportAccessPolicyAction(formData: FormData) {
 export async function endSupportSessionAction(formData: FormData) {
   const redirectTo = getSafeRedirectPath(getString(formData, "redirectTo"), "/platform");
   validateSecurity(formData, redirectTo);
-  const adminUser = await requireRole("PLATFORM_OWNER");
+  const adminUser = await requirePlatformAdmin();
   const parsed = endSupportSessionSchema.safeParse({
     supportSessionId: getString(formData, "supportSessionId"),
     businessUuid: getString(formData, "businessUuid"),

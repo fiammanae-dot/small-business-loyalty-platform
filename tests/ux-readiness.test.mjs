@@ -122,7 +122,7 @@ test("csv exports and launch readiness are business or platform scoped", () => {
 });
 
 test("demo mode is platform controlled and visible in the shared shell", () => {
-  assert.match(read("src/app/platform/settings/actions.ts"), /requireRole\("PLATFORM_OWNER"\)/);
+  assert.match(read("src/app/platform/settings/actions.ts"), /requirePlatformAdmin\(\)/);
   assert.match(read("src/components/DashboardShell.tsx"), /Demo/);
   assert.match(read("prisma/migrations/0016_phase_7f_operational_readiness/migration.sql"), /platform_settings/);
 });

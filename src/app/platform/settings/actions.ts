@@ -2,10 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { requirePlatformAdmin } from "@/lib/authz";
 import { validateCsrfForm } from "@/lib/csrf";
 import { logAuditEvent } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/session";
 
 export async function toggleDemoModeAction(formData: FormData) {
   try {
@@ -14,7 +14,7 @@ export async function toggleDemoModeAction(formData: FormData) {
     redirect("/platform/settings?error=Security check failed. Please refresh and try again.");
   }
 
-  const user = await requireRole("PLATFORM_OWNER");
+  const user = await requirePlatformAdmin();
   const enabled = formData.get("enabled") === "true";
 
   const existing = await prisma.platformSetting.findUnique({
