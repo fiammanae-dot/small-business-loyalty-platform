@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { logAuditEvent } from "@/lib/audit";
-import { requireActiveBranch, requireUsableSubscription } from "@/lib/commercial-access";
+import { isOutOfAssignedBranch, requireBusinessScopedUser } from "@/lib/authz";
 import { createAbuseAlert } from "@/lib/alert-engine";
 import { enforceStampCooldown } from "@/lib/cooldowns";
 import { validateCsrfForm } from "@/lib/csrf";
@@ -15,8 +15,6 @@ import { prisma } from "@/lib/prisma";
 import { getStartingBonusStampsForEvent, progressValue } from "@/lib/programs";
 import { qualifyReferralFromFirstStamp } from "@/lib/referrals";
 import { isRewardReady } from "@/lib/rewards";
-import { roleHomePath } from "@/lib/roles";
-import { getCurrentUser, hasActiveBusinessAccess, INACTIVE_BUSINESS_ACCESS_MESSAGE } from "@/lib/session";
 
 const stampIssueSchema = z
   .object({
@@ -45,10 +43,6 @@ const stampUndoSchema = z.object({
   stampTransactionId: z.coerce.number().int().positive("Stamp transaction is required."),
   reason: z.enum(STAMP_UNDO_REASONS, { message: "Undo reason is required." }),
 });
-
-function isOutOfAssignedBranch(user: { role: string; branchId?: number | null }, membership: { createdBranchId?: number | null }) {
-  return (user.role === "STAFF" || user.role === "BRANCH_MANAGER") && (!user.branchId || membership.createdBranchId !== user.branchId);
-}
 
 function getString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -81,15 +75,11 @@ export async function issueStampAction(formData: FormData) {
     fail(token, "Security check failed. Please refresh and try again.");
   }
 
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
-  if (!["BUSINESS_OWNER", "BRANCH_MANAGER", "STAFF"].includes(user.role)) redirect(roleHomePath[user.role]);
-  if (!user.businessId) redirect(roleHomePath[user.role]);
-  if (!hasActiveBusinessAccess(user)) fail(token, INACTIVE_BUSINESS_ACCESS_MESSAGE);
-  await requireUsableSubscription(user.businessId).catch((error) => fail(token, error.message));
-  if (user.branchId) {
-    await requireActiveBranch(user.branchId, user.businessId).catch((error) => fail(token, error.message));
-  }
+  const { user } = await requireBusinessScopedUser({
+    requireSubscription: true,
+    requireActiveBranch: true,
+    fail: (message) => fail(token, message),
+  });
 
   const parsed = stampIssueSchema.safeParse({
     scanToken: getString(formData, "scanToken"),
@@ -454,15 +444,11 @@ export async function redeemRewardAction(formData: FormData) {
     fail(scanToken, "Security check failed. Please refresh and try again.");
   }
 
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
-  if (!["BUSINESS_OWNER", "BRANCH_MANAGER", "STAFF"].includes(user.role)) redirect(roleHomePath[user.role]);
-  if (!user.businessId) redirect(roleHomePath[user.role]);
-  if (!hasActiveBusinessAccess(user)) fail(scanToken, INACTIVE_BUSINESS_ACCESS_MESSAGE);
-  await requireUsableSubscription(user.businessId).catch((error) => fail(scanToken, error.message));
-  if (user.branchId) {
-    await requireActiveBranch(user.branchId, user.businessId).catch((error) => fail(scanToken, error.message));
-  }
+  const { user } = await requireBusinessScopedUser({
+    requireSubscription: true,
+    requireActiveBranch: true,
+    fail: (message) => fail(scanToken, message),
+  });
 
   const notes = getString(formData, "notes");
   const idempotencyKey = getString(formData, "idempotencyKey");
@@ -634,15 +620,11 @@ export async function undoStampAction(formData: FormData) {
     fail(scanToken, "Security check failed. Please refresh and try again.");
   }
 
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
-  if (!["BUSINESS_OWNER", "BRANCH_MANAGER", "STAFF"].includes(user.role)) redirect(roleHomePath[user.role]);
-  if (!user.businessId) redirect(roleHomePath[user.role]);
-  if (!hasActiveBusinessAccess(user)) fail(scanToken, INACTIVE_BUSINESS_ACCESS_MESSAGE);
-  await requireUsableSubscription(user.businessId).catch((error) => fail(scanToken, error.message));
-  if (user.branchId) {
-    await requireActiveBranch(user.branchId, user.businessId).catch((error) => fail(scanToken, error.message));
-  }
+  const { user } = await requireBusinessScopedUser({
+    requireSubscription: true,
+    requireActiveBranch: true,
+    fail: (message) => fail(scanToken, message),
+  });
 
   const parsed = stampUndoSchema.safeParse({
     scanToken,

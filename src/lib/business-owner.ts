@@ -2,20 +2,16 @@ import "server-only";
 
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { requireBusinessScopedUserOrRedirect } from "@/lib/authz";
 import { businessOwnerInclude } from "@/lib/business-context";
 import { getActiveSupportSessionForCurrentAdmin } from "@/lib/support-sessions";
-import { requireRole, type AuthUser } from "@/lib/session";
 
 export { businessOwnerInclude } from "@/lib/business-context";
 
 export async function requireBusinessOwner() {
-  const user = await requireRole("BUSINESS_OWNER");
-
-  if (!user.businessId) {
-    redirect("/login");
-  }
-
-  return user as AuthUser & { businessId: number };
+  // Same behavior as before: requireRole("BUSINESS_OWNER") semantics, then a
+  // missing businessId redirects to /login (the guard's default).
+  return requireBusinessScopedUserOrRedirect({ roles: ["BUSINESS_OWNER"] });
 }
 
 export async function getBusinessOwnerContext() {
