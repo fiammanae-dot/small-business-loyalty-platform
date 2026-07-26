@@ -2,7 +2,7 @@ import "server-only";
 
 import type { BusinessBranding, BusinessCustomerMembership, CustomerProgramMembership, LoyaltyProgram } from "@prisma/client";
 import { resolveCardThemeColors } from "@/lib/card-themes";
-import type { CardDesignInput } from "@/lib/card-design";
+import { resolveCardDesign, type CardDesignInput } from "@/lib/card-design";
 import { getCardUrl, resolveBranding } from "@/lib/customer-cards";
 import { progressValue } from "@/lib/programs";
 import { getScanUrl } from "@/lib/scan";
@@ -37,6 +37,13 @@ export async function buildGoogleWalletClassPayload({
     cardDesign,
   });
   const businessName = membership.businessCustomerMembership.business.name;
+  const sections = resolveCardDesign(cardDesign).visibleSections;
+
+  // Honor the card design's section visibility so hidden sections don't reappear on the pass.
+  const classTextModules = [
+    ...(sections.rewardBox ? [{ id: "reward", header: "Reward", body: membership.loyaltyProgram.rewardName }] : []),
+    ...(sections.businessName ? [{ id: "business", header: "Business", body: businessName }] : []),
+  ];
 
   return compactObject({
     id: classId,
@@ -59,18 +66,7 @@ export async function buildGoogleWalletClassPayload({
         },
       ],
     },
-    textModulesData: [
-      {
-        id: "reward",
-        header: "Reward",
-        body: membership.loyaltyProgram.rewardName,
-      },
-      {
-        id: "business",
-        header: "Business",
-        body: businessName,
-      },
-    ],
+    textModulesData: classTextModules.length ? classTextModules : undefined,
     issuerId,
   });
 }
@@ -94,6 +90,25 @@ export async function buildGoogleWalletObjectPayload({
   const rewardReady = progress >= required;
   const cardUrl = await getCardUrl(customer.cardToken);
   const scanUrl = await getScanUrl(membership.scanToken);
+  const sections = resolveCardDesign(membership.loyaltyProgram.cardDesign as CardDesignInput).visibleSections;
+
+  // Honor the card design's section visibility so hidden sections don't reappear on the pass.
+  const objectTextModules = [
+    ...(sections.customerName ? [{ id: "customer", header: "Customer", body: customerName }] : []),
+    ...(sections.programName ? [{ id: "program", header: "Program", body: membership.loyaltyProgram.name }] : []),
+    ...(sections.rewardBox
+      ? [
+          {
+            id: "reward",
+            header: rewardReady ? "Reward ready" : "Next reward",
+            body: rewardReady
+              ? `${membership.loyaltyProgram.rewardName} is ready to redeem.`
+              : `${remaining} visit${remaining === 1 ? "" : "s"} until ${membership.loyaltyProgram.rewardName}.`,
+          },
+        ]
+      : []),
+    ...(sections.tierBadge ? [{ id: "tier", header: "Tier", body: customer.currentTier }] : []),
+  ];
 
   return compactObject({
     id: objectId,
@@ -118,28 +133,7 @@ export async function buildGoogleWalletObjectPayload({
       value: scanUrl,
       alternateText: "Scan at checkout",
     },
-    textModulesData: [
-      {
-        id: "customer",
-        header: "Customer",
-        body: customerName,
-      },
-      {
-        id: "program",
-        header: "Program",
-        body: membership.loyaltyProgram.name,
-      },
-      {
-        id: "reward",
-        header: rewardReady ? "Reward ready" : "Next reward",
-        body: rewardReady ? `${membership.loyaltyProgram.rewardName} is ready to redeem.` : `${remaining} visit${remaining === 1 ? "" : "s"} until ${membership.loyaltyProgram.rewardName}.`,
-      },
-      {
-        id: "tier",
-        header: "Tier",
-        body: customer.currentTier,
-      },
-    ],
+    textModulesData: objectTextModules.length ? objectTextModules : undefined,
     linksModuleData: {
       uris: [
         {

@@ -86,6 +86,16 @@ export default async function ProgramDesignStudioPage({
           }
         />
 
+        <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 text-sm text-[#475569]">
+          <p className="font-semibold text-[#171A21]">About Apple &amp; Google Wallet passes</p>
+          <p className="mt-1">
+            When customers add this card to Apple or Google Wallet, the pass shows your brand color, logo,
+            program name, reward, and QR code — but Wallet uses its own fixed layout, so the stamp style,
+            background pattern, and fonts you pick here won&apos;t appear on the Wallet pass itself. The web
+            card link always shows your full design.
+          </p>
+        </div>
+
         <ProgramDesignStudioForm
           action={updateProgramDesignStudioAction}
           savePresetAction={saveBusinessDesignPresetAction}

@@ -99,7 +99,7 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
       <IdleSessionTimeout />
       {activeSupportSession ? <SupportActivityTracker supportSessionId={activeSupportSession.id} /> : null}
       <header className="border-b border-[#E7E9EE] bg-white">
-        <div className="mx-auto flex max-w-7xl min-w-0 flex-col gap-2 px-4 py-2.5 sm:px-6 sm:py-4 lg:gap-4 lg:px-8">
+        <div className="mx-auto flex max-w-screen-2xl min-w-0 flex-col gap-2 px-4 py-2.5 sm:px-6 sm:py-4 lg:gap-4 lg:px-8">
           <div className="flex min-w-0 items-center justify-between gap-4">
             <Link href={roleHomePath[user.role]} className="flex min-w-0 items-center gap-2">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#E86A33] text-xs font-bold text-white shadow-[0_2px_6px_rgba(232,106,51,0.35)] business-bg sm:h-9 sm:w-9 sm:text-sm">
@@ -168,7 +168,7 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
       ) : null}
 
       <main
-        className={`mx-auto grid w-full max-w-7xl min-w-0 gap-6 overflow-x-clip px-4 py-6 sm:px-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:px-8 ${
+        className={`mx-auto grid w-full max-w-screen-2xl min-w-0 gap-6 overflow-x-clip px-4 py-6 sm:px-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:px-8 ${
           user.role === "BUSINESS_OWNER" || user.role === "PLATFORM_OWNER" || user.role === "BRANCH_MANAGER" || user.role === "STAFF" ? "pb-24 lg:pb-6" : ""
         }`}
       >
