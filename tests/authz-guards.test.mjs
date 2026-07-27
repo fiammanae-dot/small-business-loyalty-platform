@@ -1,16 +1,31 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import {
-  BUSINESS_SCOPED_ROLES,
-  evaluateBusinessScopedAccess,
-  isOutOfAssignedBranch,
-  isSameBusiness,
-} from "../src/lib/authz-policy.ts";
+import ts from "typescript";
 
 function read(path) {
   return readFileSync(path, "utf8");
 }
+
+// CI runs `node --test` on Node 20, which cannot import .ts sources directly.
+// Following the repo convention of testing the real source file, we read
+// src/lib/authz-policy.ts, transpile it with the repo's existing TypeScript
+// devDependency, and import the result as an in-memory ES module — so these
+// behavioral tests still exercise the actual policy implementation, not a
+// copy. This only works because the policy module is pure by design: its
+// single import is type-only and erased at transpile time.
+const policySource = read("src/lib/authz-policy.ts");
+assert.doesNotMatch(
+  policySource,
+  /^import (?!type )/m,
+  "src/lib/authz-policy.ts must stay free of runtime imports (type-only imports allowed) so its behavioral tests can run on CI's Node 20",
+);
+const transpiledPolicy = ts.transpileModule(policySource, {
+  compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+}).outputText;
+const { BUSINESS_SCOPED_ROLES, evaluateBusinessScopedAccess, isOutOfAssignedBranch, isSameBusiness } = await import(
+  `data:text/javascript;base64,${Buffer.from(transpiledPolicy).toString("base64")}`
+);
 
 function makeUser(overrides = {}) {
   return {
