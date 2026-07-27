@@ -49,7 +49,9 @@ test("redemption uses transaction row locking before resetting stamps", () => {
 });
 
 test("suspended subscriptions and inactive branches are enforced on critical workflows", () => {
-  const scanActions = read("src/app/scan/actions.ts");
+  // The scanner actions delegate subscription/branch gating to the shared
+  // guard, so their audited source includes src/lib/authz.ts.
+  const scanActions = read("src/app/scan/actions.ts") + read("src/lib/authz.ts");
   const scanPage = read("src/app/scan/[token]/page.tsx");
   const dashboardActions = read("src/app/dashboard/actions.ts");
   const programActions = read("src/app/dashboard/programs/actions.ts");
@@ -63,4 +65,6 @@ test("suspended subscriptions and inactive branches are enforced on critical wor
   for (const source of [scanActions, scanPage, staffCustomerActions, branchCustomerActions]) {
     assert.match(source, /requireActiveBranch|BRANCH_INACTIVE_MESSAGE/);
   }
+
+  assert.match(read("src/app/scan/actions.ts"), /requireBusinessScopedUser\(\{\s*requireSubscription: true,\s*requireActiveBranch: true,/);
 });

@@ -137,7 +137,7 @@ test("staff can redeem ready rewards through the protected scanner action", () =
   const actions = read("src/app/scan/actions.ts");
   const redemptionAction = actions.slice(actions.indexOf("export async function redeemRewardAction"));
 
-  assert.match(redemptionAction, /\["BUSINESS_OWNER", "BRANCH_MANAGER", "STAFF"\]\.includes\(user\.role\)/);
+  assert.match(redemptionAction, /requireBusinessScopedUser\(\{/);
   assert.match(redemptionAction, /businessMembership\.businessId !== user\.businessId/);
   assert.match(redemptionAction, /Reward is not ready yet\./);
   assert.match(redemptionAction, /redeemedByUserId:\s*user\.id/);

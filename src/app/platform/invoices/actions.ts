@@ -7,7 +7,7 @@ import type { InvoiceStatus, PaymentMethod } from "@prisma/client";
 import { validateCsrfForm } from "@/lib/csrf";
 import { blockDemoModeExternalAction } from "@/lib/platform-settings";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/session";
+import { requirePlatformAdmin } from "@/lib/authz";
 import { paymentMethods } from "@/lib/billing";
 
 const paymentSchema = z.object({
@@ -39,7 +39,7 @@ function validateSecurity(formData: FormData, path: string) {
 
 export async function updateInvoiceStatusAction(formData: FormData) {
   validateSecurity(formData, "/platform/invoices");
-  const user = await requireRole("PLATFORM_OWNER");
+  const user = await requirePlatformAdmin();
   const invoiceUuid = getString(formData, "invoiceUuid");
   const nextStatus = getString(formData, "nextStatus") as InvoiceStatus;
   const path = invoiceUuid ? `/platform/invoices/${invoiceUuid}` : "/platform/invoices";
@@ -94,7 +94,7 @@ export async function updateInvoiceStatusAction(formData: FormData) {
 
 export async function recordPaymentAction(formData: FormData) {
   validateSecurity(formData, `/platform/invoices/${getString(formData, "invoiceUuid")}`);
-  const user = await requireRole("PLATFORM_OWNER");
+  const user = await requirePlatformAdmin();
   const parsed = paymentSchema.safeParse({
     invoiceUuid: getString(formData, "invoiceUuid"),
     amount: getString(formData, "amount"),

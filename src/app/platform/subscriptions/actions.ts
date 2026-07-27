@@ -3,9 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { SubscriptionStatus } from "@prisma/client";
+import { requirePlatformAdmin } from "@/lib/authz";
 import { validateCsrfForm } from "@/lib/csrf";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/session";
 
 function getString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -32,7 +32,7 @@ function addDays(date: Date, days: number) {
 
 export async function updateSubscriptionStatusAction(formData: FormData) {
   validateSecurity(formData);
-  const user = await requireRole("PLATFORM_OWNER");
+  const user = await requirePlatformAdmin();
   const subscriptionId = Number(getString(formData, "subscriptionId"));
   const nextStatus = getString(formData, "nextStatus") as SubscriptionStatus;
 
@@ -74,7 +74,7 @@ export async function updateSubscriptionStatusAction(formData: FormData) {
 
 export async function extendSubscriptionAction(formData: FormData) {
   validateSecurity(formData);
-  const user = await requireRole("PLATFORM_OWNER");
+  const user = await requirePlatformAdmin();
   const subscriptionId = Number(getString(formData, "subscriptionId"));
   const days = Number(getString(formData, "days") || "30");
 
@@ -120,7 +120,7 @@ export async function extendSubscriptionAction(formData: FormData) {
 
 export async function startTrialAction(formData: FormData) {
   validateSecurity(formData);
-  const user = await requireRole("PLATFORM_OWNER");
+  const user = await requirePlatformAdmin();
   const subscriptionId = Number(getString(formData, "subscriptionId"));
   const days = Number(getString(formData, "days") || "14");
 

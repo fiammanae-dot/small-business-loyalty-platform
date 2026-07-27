@@ -77,8 +77,13 @@ test("inactive business access is blocked for operational roles", () => {
   assert.match(login, /INACTIVE_BUSINESS_ACCESS_MESSAGE/);
   assert.match(login, /isBusinessScopedRole/);
   assert.match(login, /INACTIVE_BUSINESS_ACCESS_MESSAGE/);
-  assert.match(scanActions, /hasActiveBusinessAccess/);
-  assert.match(scanActions, /INACTIVE_BUSINESS_ACCESS_MESSAGE/);
+  // Scanner actions enforce the inactive-business block through the shared
+  // guard, which fails with the same INACTIVE_BUSINESS_ACCESS_MESSAGE.
+  const authz = read("src/lib/authz.ts");
+  assert.match(scanActions, /requireBusinessScopedUser/);
+  assert.match(authz, /hasActiveBusinessAccess/);
+  assert.match(authz, /INACTIVE_BUSINESS_ACCESS_MESSAGE/);
+  assert.match(read("src/lib/authz-policy.ts"), /INACTIVE_BUSINESS/);
   assert.match(scanPage, /hasActiveBusinessAccess/);
   assert.match(scanPage, /business-inactive/);
   assert.match(blockedPage, /INACTIVE_BUSINESS_ACCESS_MESSAGE/);

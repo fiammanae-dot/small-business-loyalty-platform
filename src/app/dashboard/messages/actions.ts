@@ -3,12 +3,21 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { CommunicationChannel } from "@prisma/client";
+import { requireBusinessScopedUserOrRedirect } from "@/lib/authz";
 import { validateCsrfForm } from "@/lib/csrf";
 import { getMessageTemplate, isMarketingEngagement, renderEngagementMessage } from "@/lib/engagement";
 import { getMaskedRecipient, sendableChannels } from "@/lib/messages";
 import { blockDemoModeExternalAction } from "@/lib/platform-settings";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/session";
+
+function requireMessagingBusinessOwner() {
+  // Same behavior as the previous inline pair: requireRole("BUSINESS_OWNER")
+  // semantics, then a missing businessId redirects to /dashboard.
+  return requireBusinessScopedUserOrRedirect({
+    roles: ["BUSINESS_OWNER"],
+    onMissingBusiness: () => redirect("/dashboard"),
+  });
+}
 
 function getString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -31,8 +40,7 @@ export async function prepareMessageAction(formData: FormData) {
   const eventUuid = getString(formData, "eventUuid");
   const path = `/dashboard/engagement/${eventUuid}`;
   validateSecurity(formData, "dashboard:messages", path);
-  const user = await requireRole("BUSINESS_OWNER");
-  if (!user.businessId) redirect("/dashboard");
+  const user = await requireMessagingBusinessOwner();
 
   const channel = getString(formData, "channel") as CommunicationChannel;
   if (!sendableChannels.includes(channel)) fail(path, "Select a valid message channel.");
@@ -84,8 +92,7 @@ export async function markMessageSentManuallyAction(formData: FormData) {
   const messageUuid = getString(formData, "messageUuid");
   const path = `/dashboard/messages/${messageUuid}`;
   validateSecurity(formData, "dashboard:messages", path);
-  const user = await requireRole("BUSINESS_OWNER");
-  if (!user.businessId) redirect("/dashboard");
+  const user = await requireMessagingBusinessOwner();
 
   const message = await prisma.messageDeliveryQueue.findFirst({
     where: { uuid: messageUuid, businessId: user.businessId },
@@ -123,8 +130,7 @@ export async function cancelMessageAction(formData: FormData) {
   const messageUuid = getString(formData, "messageUuid");
   const path = `/dashboard/messages/${messageUuid}`;
   validateSecurity(formData, "dashboard:messages", path);
-  const user = await requireRole("BUSINESS_OWNER");
-  if (!user.businessId) redirect("/dashboard");
+  const user = await requireMessagingBusinessOwner();
 
   const message = await prisma.messageDeliveryQueue.findFirst({
     where: { uuid: messageUuid, businessId: user.businessId },

@@ -41,7 +41,9 @@ test("duplicate idempotency keys are rejected at database and action level", () 
 
 test("reward redemption permissions and reset behavior remain correct", () => {
   const redemptionAction = scanActions.slice(scanActions.indexOf("export async function redeemRewardAction"));
-  assert.match(redemptionAction, /\["BUSINESS_OWNER", "BRANCH_MANAGER", "STAFF"\]\.includes\(user\.role\)/);
+  // Role scoping is enforced by the shared guard, whose default role set is
+  // exactly BUSINESS_OWNER/BRANCH_MANAGER/STAFF (locked in by authz tests).
+  assert.match(redemptionAction, /requireBusinessScopedUser\(\{/);
   assert.match(redemptionAction, /businessMembership\.businessId !== user\.businessId/);
   assert.match(redemptionAction, /redeemedByUserId:\s*user\.id/);
   assert.match(redemptionAction, /earnedStamps:\s*0/);
@@ -63,13 +65,17 @@ test("starting stamp policy migration preserves existing program reset behavior"
 });
 
 test("subscription and inactive branch restrictions guard critical workflows", () => {
+  // The scanner actions now enforce subscription/branch gating through the
+  // shared guard in src/lib/authz.ts, so its source is part of the audited
+  // surface for these workflows.
   for (const expected of [
     "requireUsableSubscription",
     "requireActiveBranch",
     "SUBSCRIPTION_REQUIRED_MESSAGE",
     "BRANCH_INACTIVE_MESSAGE",
   ]) {
-    assert.match(scanActions + read("src/app/scan/[token]/page.tsx"), new RegExp(expected));
+    assert.match(scanActions + read("src/lib/authz.ts") + read("src/app/scan/[token]/page.tsx"), new RegExp(expected));
   }
+  assert.match(scanActions, /requireBusinessScopedUser\(\{\s*requireSubscription: true,\s*requireActiveBranch: true,/);
 });
 

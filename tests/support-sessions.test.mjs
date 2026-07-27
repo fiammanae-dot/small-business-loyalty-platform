@@ -37,7 +37,7 @@ test("support session activity schema and migration track auditable support work
 
 test("platform owner can create support sessions with required reason and duration", function () {
   const actions = read("src/app/platform/businesses/support-actions.ts");
-  assert.match(actions, /requireRole\("PLATFORM_OWNER"\)/);
+  assert.match(actions, /requirePlatformAdmin\(\)/);
   assert.match(actions, /Reason for access is required/);
   assert.match(actions, /SUPPORT_SESSION_DURATIONS\.includes/);
   assert.match(actions, /expiresAt: new Date\(now\.getTime\(\) \+ data\.durationMinutes \* 60 \* 1000\)/);
@@ -54,7 +54,8 @@ test("platform owner can create support sessions with required reason and durati
 test("business users cannot create support sessions through platform guard", function () {
   const actions = read("src/app/platform/businesses/support-actions.ts");
   const helper = read("src/lib/support-sessions.ts");
-  assert.match(actions, /await requireRole\("PLATFORM_OWNER"\)/);
+  assert.match(actions, /await requirePlatformAdmin\(\)/);
+  assert.match(read("src/lib/authz.ts"), /requireRole\("PLATFORM_OWNER"\)/);
   assert.match(helper, /currentUser\.role !== "PLATFORM_OWNER"/);
   assert.match(helper, /redirect\(roleHomePath\[currentUser\.role\]\)/);
 });

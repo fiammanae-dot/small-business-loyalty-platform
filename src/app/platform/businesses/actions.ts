@@ -11,7 +11,7 @@ import { createFormFailure, getFirstZodMessage, getZodFieldErrors, type Preserve
 import { prisma } from "@/lib/prisma";
 import { createDefaultAbusePolicies } from "@/lib/alert-engine";
 import { logAuditEvent } from "@/lib/audit";
-import { requireRole } from "@/lib/session";
+import { requirePlatformAdmin } from "@/lib/authz";
 import { getSubscriptionPeriodEnd, isBillingCycleSupported } from "@/lib/subscription-plans";
 import { hasWalletRelevantBusinessChange } from "@/lib/wallet-sync/change-detection";
 import { enqueueWalletSyncForBusiness } from "@/lib/wallet-sync/enqueue";
@@ -151,7 +151,7 @@ export async function createBusinessAction(_prevState: PreservedFormState, formD
   } catch {
     return createBusinessFailure(formData, "Security check failed. Please refresh and try again.");
   }
-  const platformUser = await requireRole("PLATFORM_OWNER");
+  const platformUser = await requirePlatformAdmin();
 
   const parsed = createBusinessSchema.safeParse({
     name: getString(formData, "name"),
@@ -306,7 +306,7 @@ export async function createBusinessAction(_prevState: PreservedFormState, formD
 
 export async function updateBusinessAction(formData: FormData) {
   validateSecurity(formData, "/platform/businesses");
-  const platformUser = await requireRole("PLATFORM_OWNER");
+  const platformUser = await requirePlatformAdmin();
   const businessUuid = getString(formData, "businessUuid");
 
   const parsed = updateBusinessSchema.safeParse({
@@ -508,7 +508,7 @@ export async function updateBusinessAction(formData: FormData) {
 
 export async function toggleBusinessStatusAction(formData: FormData) {
   validateSecurity(formData, "/platform/businesses");
-  await requireRole("PLATFORM_OWNER");
+  await requirePlatformAdmin();
   const businessUuid = getString(formData, "businessUuid");
   const businessId = Number(getString(formData, "businessId"));
   const nextStatus = getString(formData, "nextStatus") as RecordStatus;
@@ -544,7 +544,7 @@ export async function toggleBusinessStatusAction(formData: FormData) {
 export async function archiveBusinessAction(formData: FormData) {
   const businessUuid = getString(formData, "businessUuid");
   validateSecurity(formData, `/platform/businesses/${businessUuid}`);
-  const platformUser = await requireRole("PLATFORM_OWNER");
+  const platformUser = await requirePlatformAdmin();
 
   const parsed = archiveBusinessSchema.safeParse({
     businessId: getString(formData, "businessId"),
@@ -597,7 +597,7 @@ export async function archiveBusinessAction(formData: FormData) {
 export async function restoreBusinessAction(formData: FormData) {
   const businessUuid = getString(formData, "businessUuid");
   validateSecurity(formData, `/platform/businesses/${businessUuid}`);
-  const platformUser = await requireRole("PLATFORM_OWNER");
+  const platformUser = await requirePlatformAdmin();
   const businessId = Number(getString(formData, "businessId"));
 
   if (!businessId) {

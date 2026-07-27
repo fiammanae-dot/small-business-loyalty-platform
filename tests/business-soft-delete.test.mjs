@@ -48,7 +48,7 @@ test("archiveBusinessAction sets ARCHIVED status, records archive metadata, and 
   const actions = read("src/app/platform/businesses/actions.ts");
 
   assert.match(actions, /export async function archiveBusinessAction/);
-  assert.match(actions, /requireRole\("PLATFORM_OWNER"\)/);
+  assert.match(actions, /requirePlatformAdmin\(\)/);
   assert.match(actions, /archiveReason:\s*z\.string\(\)\.trim\(\)\.min\(1/, "an archive reason must be required, not optional");
   assert.match(actions, /status:\s*"ARCHIVED"/);
   assert.match(actions, /deletedAt:\s*now/);

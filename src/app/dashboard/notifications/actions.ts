@@ -4,10 +4,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { recordAlertLifecycleEvent } from "@/lib/alert-engine";
+import { requireBusinessScopedUser } from "@/lib/authz";
 import { validateCsrfForm } from "@/lib/csrf";
 import { prisma } from "@/lib/prisma";
-import { roleHomePath } from "@/lib/roles";
-import { getCurrentUser } from "@/lib/session";
 
 const reviewAlertSchema = z.object({
   alertId: z.coerce.number().int().positive("Alert not found."),
@@ -34,10 +33,12 @@ export async function reviewActivityAlertAction(formData: FormData) {
     fail("Security check failed. Please refresh and try again.");
   }
 
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
-  if (!["BUSINESS_OWNER", "BRANCH_MANAGER"].includes(user.role)) redirect(roleHomePath[user.role]);
-  if (!user.businessId) redirect(roleHomePath[user.role]);
+  // Security fix over the previous inline checks: an INACTIVE business is now
+  // blocked here too (previously only role + businessId were verified).
+  const { user } = await requireBusinessScopedUser({
+    roles: ["BUSINESS_OWNER", "BRANCH_MANAGER"],
+    fail: (message) => fail(message),
+  });
   const parsed = reviewAlertSchema.safeParse({
     alertId: getString(formData, "alertId"),
     status: getString(formData, "status"),
