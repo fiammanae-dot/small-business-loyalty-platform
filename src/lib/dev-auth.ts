@@ -11,6 +11,7 @@ export const devFallbackUser: AuthUser = {
   businessStatus: null,
   branchId: null,
   forcePasswordChange: false,
+  twoFactorEnabled: false,
 };
 
 export function isDevAuthFallbackEnabled() {
