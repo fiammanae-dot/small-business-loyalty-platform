@@ -295,6 +295,10 @@ model User {
   forcePasswordChange Boolean             @default(false) @map("force_password_change")
   passwordChangedAt DateTime            @default(now()) @map("password_changed_at")
   lastLoginAt         DateTime?           @map("last_login_at")
+  twoFactorEnabled     Boolean            @default(false) @map("two_factor_enabled")
+  twoFactorSecret      String?            @map("two_factor_secret")
+  twoFactorActivatedAt DateTime?          @map("two_factor_activated_at")
+  lastTotpStep         Int?               @map("last_totp_step")
   role                UserRole
   businessId          Int?                @map("business_id")
   branchId            Int?                @map("branch_id")
@@ -323,6 +327,7 @@ model User {
   auditEvents                AuditEvent[]
   cooldownEvents             CooldownEvent[]
   passwordResetTokens PasswordResetToken[]
+  twoFactorBackupCodes TwoFactorBackupCode[]
   supportSessionsStarted SupportSession[] @relation("SupportSessionAdminUser")
   supportRequestsRequested   SupportRequest[]             @relation("SupportRequestRequestedBy")
   supportRequestsReviewed    SupportRequest[]             @relation("SupportRequestReviewedBy")
@@ -350,6 +355,22 @@ model PasswordResetToken {
   @@index([userId, createdAt])
   @@index([expiresAt])
   @@map("password_reset_tokens")
+}
+
+// Single-use recovery codes for TOTP two-factor authentication. Only the hash is
+// stored; the plaintext code is shown to the user exactly once at generation time.
+model TwoFactorBackupCode {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  codeHash  String    @map("code_hash")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, codeHash])
+  @@index([userId, usedAt])
+  @@map("two_factor_backup_codes")
 }
 
 model FailedLoginAudit {
