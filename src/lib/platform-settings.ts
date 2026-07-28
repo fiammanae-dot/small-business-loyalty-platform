@@ -3,6 +3,7 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import { logAuditEvent } from "@/lib/audit";
 import { prisma } from "@/lib/prisma";
+import { DEFAULT_TWO_FACTOR_REQUIREMENT, type TwoFactorRequirement } from "@/lib/two-factor-policy";
 
 export const demoModeRestrictions = [
   { label: "Email sending disabled", enabled: true },
@@ -21,6 +22,38 @@ export async function isDemoModeEnabled() {
   });
   const value = setting?.value;
   return Boolean(typeof value === "object" && value && !Array.isArray(value) && "enabled" in value && value.enabled);
+}
+
+export const TWO_FACTOR_REQUIREMENT_SETTING_KEY = "two_factor_requirement";
+
+/**
+ * Per-role "require 2FA" switches. Both default to false, so an environment
+ * that has never touched this setting behaves exactly as before.
+ */
+export async function getTwoFactorRequirement(): Promise<TwoFactorRequirement> {
+  const setting = await prisma.platformSetting.findUnique({
+    where: { key: TWO_FACTOR_REQUIREMENT_SETTING_KEY },
+    select: { value: true },
+  });
+
+  const value = setting?.value;
+  if (typeof value !== "object" || !value || Array.isArray(value)) {
+    return DEFAULT_TWO_FACTOR_REQUIREMENT;
+  }
+
+  const record = value as Record<string, unknown>;
+  return {
+    requireTwoFactorPlatformOwner: record.requireTwoFactorPlatformOwner === true,
+    requireTwoFactorBusinessOwner: record.requireTwoFactorBusinessOwner === true,
+  };
+}
+
+export async function setTwoFactorRequirement(requirement: TwoFactorRequirement) {
+  await prisma.platformSetting.upsert({
+    where: { key: TWO_FACTOR_REQUIREMENT_SETTING_KEY },
+    update: { value: { ...requirement } },
+    create: { key: TWO_FACTOR_REQUIREMENT_SETTING_KEY, value: { ...requirement } },
+  });
 }
 
 export async function blockDemoModeExternalAction({

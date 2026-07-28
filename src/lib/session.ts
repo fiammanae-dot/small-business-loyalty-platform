@@ -6,9 +6,11 @@ import { redirect } from "next/navigation";
 import type { RecordStatus, UserRole } from "@prisma/client";
 import { devFallbackUser, isDevAuthFallbackEnabled } from "@/lib/dev-auth";
 import { attachMonitoringContext } from "@/lib/monitoring";
+import { getTwoFactorRequirement } from "@/lib/platform-settings";
 import { prisma } from "@/lib/prisma";
 import { roleHomePath } from "@/lib/roles";
 import { getSessionSecret } from "@/lib/secrets";
+import { canUseTwoFactor, requiresTwoFactorSetup } from "@/lib/two-factor-policy";
 
 const SESSION_COOKIE = "loyalty_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
@@ -32,6 +34,7 @@ export type AuthUser = {
   businessStatus: RecordStatus | null;
   branchId: number | null;
   forcePasswordChange: boolean;
+  twoFactorEnabled: boolean;
 };
 
 export function isBusinessScopedRole(role: UserRole) {
@@ -173,6 +176,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
         role: true,
         sessionVersion: true,
         forcePasswordChange: true,
+        twoFactorEnabled: true,
         businessId: true,
         business: {
           select: {
@@ -198,6 +202,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       businessStatus: user.business?.status ?? null,
       branchId: user.branchId,
       forcePasswordChange: user.forcePasswordChange,
+      twoFactorEnabled: user.twoFactorEnabled,
     };
 
     attachMonitoringContext(authUser);
@@ -227,7 +232,23 @@ export async function requireRole(role: UserRole) {
     redirect("/change-password");
   }
 
+  if (await requiresTwoFactorEnrollment(user)) {
+    redirect("/account/two-factor/setup");
+  }
+
   return user;
+}
+
+/**
+ * Mirrors the forcePasswordChange gate: when an administrator has switched on
+ * the "require 2FA" setting for this user's role and they have not enrolled,
+ * they must finish setup before the rest of the app becomes reachable. Both
+ * switches default to false, so this returns false for every existing
+ * deployment until one is turned on.
+ */
+export async function requiresTwoFactorEnrollment(user: Pick<AuthUser, "role" | "twoFactorEnabled">) {
+  if (user.twoFactorEnabled || !canUseTwoFactor(user.role)) return false;
+  return requiresTwoFactorSetup(user, await getTwoFactorRequirement());
 }
 
 export async function redirectAuthenticatedUser() {

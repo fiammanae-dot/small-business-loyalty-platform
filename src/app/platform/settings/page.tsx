@@ -30,11 +30,12 @@ import type { ActivityAlertStatus } from "@prisma/client";
 import Link from "next/link";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
-import { toggleDemoModeAction } from "@/app/platform/settings/actions";
+import { setTwoFactorRequirementAction, toggleDemoModeAction } from "@/app/platform/settings/actions";
 import { formatDateTime } from "@/lib/format";
-import { demoModeRestrictions, isDemoModeEnabled } from "@/lib/platform-settings";
+import { demoModeRestrictions, getTwoFactorRequirement, isDemoModeEnabled } from "@/lib/platform-settings";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
+import { isTwoFactorConfigured } from "@/lib/two-factor";
 
 const activeAlertStatuses: ActivityAlertStatus[] = ["OPEN", "ASSIGNED", "UNDER_REVIEW", "ESCALATED"];
 
@@ -68,6 +69,12 @@ export default async function PlatformSettingsPage({
   const params = await searchParams;
   const activeTab = normalizeTab(params.tab);
   const demoModeEnabled = await isDemoModeEnabled();
+  const twoFactorRequirement = await getTwoFactorRequirement();
+  const twoFactorState = {
+    ...twoFactorRequirement,
+    encryptionKeyConfigured: isTwoFactorConfigured(),
+    selfEnrolled: user.twoFactorEnabled,
+  };
 
   const [businesses, users, activeSubscriptions, openAlerts, preparedMessages, auditEvents] = await Promise.all([
     prisma.business.count(),
@@ -148,7 +155,7 @@ export default async function PlatformSettingsPage({
           })}
         </nav>
 
-        {activeTab === "security" ? <SecurityTab state={operationalState} /> : null}
+        {activeTab === "security" ? <SecurityTab state={operationalState} twoFactor={twoFactorState} /> : null}
         {activeTab === "communications" ? <CommunicationsTab state={operationalState} /> : null}
         {activeTab === "restrictions" ? <RestrictionsTab demoModeEnabled={demoModeEnabled} /> : null}
         {activeTab === "audit-logs" ? <AuditLogsTab auditEvents={auditEvents} /> : null}
@@ -159,8 +166,101 @@ export default async function PlatformSettingsPage({
   );
 }
 
-function SecurityTab({ state }: { state: ReturnType<typeof buildStateType> }) {
+type TwoFactorTabState = {
+  requireTwoFactorPlatformOwner: boolean;
+  requireTwoFactorBusinessOwner: boolean;
+  encryptionKeyConfigured: boolean;
+  selfEnrolled: boolean;
+};
+
+function TwoFactorSection({ twoFactor }: { twoFactor: TwoFactorTabState }) {
   return (
+    <section className="rounded-2xl border border-[#E7E9EE] bg-white p-4 shadow-sm md:p-5">
+      <SectionHeader
+        icon={ShieldCheck}
+        title="Two-factor authentication"
+        description="Authenticator-app sign-in for administrative roles. Enrollment is optional until a role switch is turned on."
+      />
+
+      <div className="mt-5 grid gap-3 md:grid-cols-2">
+        <StatusRow
+          icon={KeyRound}
+          label="Encryption key status"
+          value={twoFactor.encryptionKeyConfigured ? "Configured" : "Missing"}
+          tone={twoFactor.encryptionKeyConfigured ? "success" : "danger"}
+          detail={
+            twoFactor.encryptionKeyConfigured
+              ? "TWO_FACTOR_ENCRYPTION_KEY is present. Secrets are encrypted with AES-256-GCM at rest."
+              : "TWO_FACTOR_ENCRYPTION_KEY is missing. Two-factor endpoints fail closed until it is set."
+          }
+        />
+        <StatusRow
+          icon={ShieldCheck}
+          label="Your own account"
+          value={twoFactor.selfEnrolled ? "Enrolled" : "Not enrolled"}
+          tone={twoFactor.selfEnrolled ? "success" : "neutral"}
+          detail="Set up your authenticator app before requiring it for other System Administrators."
+        />
+      </div>
+
+      <div className="mt-5 grid gap-3">
+        <TwoFactorRequirementToggle
+          role="PLATFORM_OWNER"
+          label="Require for System Administrators"
+          description="Every PLATFORM_OWNER must finish two-factor setup before using the platform."
+          enabled={twoFactor.requireTwoFactorPlatformOwner}
+        />
+        <TwoFactorRequirementToggle
+          role="BUSINESS_OWNER"
+          label="Require for Business Owners"
+          description="Every BUSINESS_OWNER must finish two-factor setup before using their workspace."
+          enabled={twoFactor.requireTwoFactorBusinessOwner}
+        />
+        <AdminLink href="/account/two-factor/setup" label="Manage my two-factor authentication" description="Enrol, view status, or regenerate your backup codes." />
+      </div>
+    </section>
+  );
+}
+
+function TwoFactorRequirementToggle({
+  role,
+  label,
+  description,
+  enabled,
+}: {
+  role: "PLATFORM_OWNER" | "BUSINESS_OWNER";
+  label: string;
+  description: string;
+  enabled: boolean;
+}) {
+  return (
+    <div className="flex flex-col gap-3 rounded-xl border border-[#E7E9EE] bg-[#FAFAFA] p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm font-bold text-[#111827]">{label}</p>
+          <StatusBadge label={enabled ? "Required" : "Optional"} tone={enabled ? "warning" : "neutral"} />
+        </div>
+        <p className="mt-1 text-sm leading-6 text-[#64748B]">{description}</p>
+      </div>
+      <form action={setTwoFactorRequirementAction} className="shrink-0">
+        <CsrfInput scope="platform:settings" />
+        <input type="hidden" name="role" value={role} />
+        <input type="hidden" name="enabled" value={enabled ? "false" : "true"} />
+        <button
+          type="submit"
+          className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white px-4 text-sm font-bold text-[#111827] transition hover:border-[#F97316] hover:text-[#EA580C] focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:ring-offset-2"
+        >
+          {enabled ? "Make optional" : "Require"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function SecurityTab({ state, twoFactor }: { state: ReturnType<typeof buildStateType>; twoFactor: TwoFactorTabState }) {
+  return (
+    <div className="grid gap-4">
+    <TwoFactorSection twoFactor={twoFactor} />
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
       <section className="rounded-2xl border border-[#E7E9EE] bg-white p-4 shadow-sm md:p-5">
         <SectionHeader icon={ShieldCheck} title="Security posture" description="Real protections currently enforced by platform code and environment configuration." />
@@ -182,6 +282,7 @@ function SecurityTab({ state }: { state: ReturnType<typeof buildStateType> }) {
           <AdminLink href="/platform/operations-center" label="Open operations center" description="Review support sessions and operational access requests." />
         </div>
       </section>
+    </div>
     </div>
   );
 }
