@@ -19,8 +19,31 @@ test("logo storage validates type, size, and file bytes before saving to platfor
   assert.match(storage, /"RIFF"[\s\S]*"WEBP"/, "WEBP uploads are verified by RIFF header");
   assert.match(storage, /<script\[\\s>\]\|javascript:/, "scripted SVG uploads are rejected");
   assert.match(storage, /randomUUID\(\)/, "stored filenames are unguessable");
-  assert.match(storage, /"public", "uploads", "logos"/);
-  assert.match(storage, /LOGO_UPLOAD_URL_PREFIX = "\/uploads\/logos\/"/);
+});
+
+test("logos are uploaded to R2 object storage, not the read-only Vercel filesystem", () => {
+  const storage = read("src/lib/logo-storage.ts");
+
+  assert.match(storage, /import \{ PutObjectCommand, S3Client \} from "@aws-sdk\/client-s3"/);
+  assert.match(storage, /region: "auto"/);
+  assert.match(storage, /forcePathStyle: true/);
+  assert.match(storage, /Key: key/);
+  assert.match(storage, /`logos\/\$\{fileName\}`/, "objects are namespaced under logos/");
+  assert.match(storage, /CacheControl: "public, max-age=31536000, immutable"/);
+
+  // Writing to the local filesystem silently lost every upload on Vercel.
+  assert.doesNotMatch(storage, /node:fs|writeFile|mkdir/, "logo uploads must not touch the local filesystem");
+  assert.doesNotMatch(storage, /"public", "uploads", "logos"/);
+
+  // Credentials are read at call time and every one is required, so a
+  // misconfigured deploy fails loudly instead of storing an unreachable URL.
+  for (const key of ["R2_ENDPOINT", "R2_BUCKET", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY", "R2_PUBLIC_BASE_URL"]) {
+    assert.match(storage, new RegExp(`process\\.env\\.${key}`), `${key} must be read from the environment`);
+  }
+  assert.match(storage, /Missing environment variable\(s\)/);
+
+  // The returned URL is absolute https and free of double slashes.
+  assert.match(storage, /publicBaseUrl as string\)\.replace\(\/\\\/\+\$\/, ""\)/, "trailing slashes are stripped from the public base URL");
 });
 
 test("logo upload action is restricted to branding editors and CSRF protected", () => {
