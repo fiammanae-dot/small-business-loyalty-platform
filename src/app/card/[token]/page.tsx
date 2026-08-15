@@ -5,7 +5,7 @@ import { getCardQrDataUrl, getCardUrl, resolveBranding } from "@/lib/customer-ca
 import { resolveCardThemeColors } from "@/lib/card-themes";
 import type { CardDesignInput } from "@/lib/card-design";
 import { buildCardRenderModel } from "@/lib/card-render-model";
-import { calculateCustomerTier } from "@/lib/customer-tiers";
+import { calculateCustomerTier, computeTierMaintenance, tierQualificationWindowLabels } from "@/lib/customer-tiers";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { progressValue } from "@/lib/programs";
@@ -109,11 +109,18 @@ export default async function PublicCustomerCardPage({
       select: { createdAt: true },
     }),
   ]);
+  const tierVisitDates = visitEvents.map((visit) => visit.createdAt);
   const tier = calculateCustomerTier({
-    visitEvents: visitEvents.map((visit) => visit.createdAt),
+    visitEvents: tierVisitDates,
     config: membership.business.tierSetting,
     achievedTier: membership.currentTier,
   });
+  const tierMaintenance = computeTierMaintenance({
+    visitEvents: tierVisitDates,
+    config: membership.business.tierSetting,
+    tier: tier.tier,
+  });
+  const tierWindowLabel = tierQualificationWindowLabels[tier.tierQualificationWindow];
   if (membership.currentTier !== tier.storedTier) {
     await prisma.businessCustomerMembership.update({
       where: { id: membership.id },
@@ -200,6 +207,11 @@ export default async function PublicCustomerCardPage({
             visitsRemaining={tier.visitsRemaining}
             progressPercent={tier.progressPercent}
             theme={primaryCardTheme}
+            maintainThreshold={tierMaintenance.maintainThreshold}
+            windowedVisits={tierMaintenance.windowedVisits}
+            expiresAt={tierMaintenance.expiresAt ? tierMaintenance.expiresAt.toISOString() : null}
+            isPermanent={tierMaintenance.isPermanent}
+            windowLabel={tierWindowLabel}
           />
         </div>
 

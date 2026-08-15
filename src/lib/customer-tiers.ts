@@ -195,14 +195,117 @@ export function countQualifyingVisits(
   }).length;
 }
 
-export function getTierWindowStart(qualificationWindow: CustomerTierQualificationWindow, now = new Date()) {
+// One definition of how long each rolling window is, so the backward shift that
+// opens the window and the forward shift that dates its expiry can never drift
+// apart.
+const tierWindowOffsets: Record<
+  Exclude<CustomerTierQualificationWindow, "LIFETIME">,
+  { days: number } | { months: number }
+> = {
+  DAYS_30: { days: 30 },
+  DAYS_60: { days: 60 },
+  DAYS_90: { days: 90 },
+  MONTHS_12: { months: 12 },
+};
+
+function shiftByTierWindow(date: Date, qualificationWindow: CustomerTierQualificationWindow, direction: 1 | -1) {
   if (qualificationWindow === "LIFETIME") return null;
-  const start = new Date(now);
-  if (qualificationWindow === "DAYS_30") start.setDate(start.getDate() - 30);
-  if (qualificationWindow === "DAYS_60") start.setDate(start.getDate() - 60);
-  if (qualificationWindow === "DAYS_90") start.setDate(start.getDate() - 90);
-  if (qualificationWindow === "MONTHS_12") start.setMonth(start.getMonth() - 12);
-  return start;
+  const offset = tierWindowOffsets[qualificationWindow];
+  const shifted = new Date(date);
+  if ("days" in offset) shifted.setDate(shifted.getDate() + direction * offset.days);
+  else shifted.setMonth(shifted.getMonth() + direction * offset.months);
+  return shifted;
+}
+
+export function getTierWindowStart(qualificationWindow: CustomerTierQualificationWindow, now = new Date()) {
+  return shiftByTierWindow(now, qualificationWindow, -1);
+}
+
+export type TierMaintenanceSummary = {
+  maintainThreshold: number;
+  windowedVisits: number;
+  expiresAt: Date | null;
+  isPermanent: boolean;
+};
+
+/**
+ * Describes what it takes to hold on to the tier a customer already has, for
+ * the "Maintain / Upgrade" view on their card.
+ *
+ * The tier engine answers "what have they earned"; this answers "what happens
+ * if they stop coming". Pure - it reads nothing and writes nothing.
+ */
+export function computeTierMaintenance({
+  visitEvents,
+  config,
+  tier,
+  now = new Date(),
+}: {
+  visitEvents?: Array<Date | string>;
+  config?: Partial<CustomerTierConfig> | null;
+  tier: CustomerTierName | PrismaCustomerTierName;
+  now?: Date;
+}): TierMaintenanceSummary {
+  const normalized = normalizeTierConfig(config);
+  const currentTier = fromStoredTier(tier) ?? "Bronze";
+  const maintainThreshold = getTierThreshold(currentTier, normalized).visits;
+  const events = visitEvents ?? [];
+
+  // A permanent tier is never revoked, and a lifetime count only ever grows -
+  // neither can expire.
+  const isPermanent =
+    normalized.tierMaintenanceMode === "PERMANENT" || normalized.tierQualificationWindow === "LIFETIME";
+
+  return {
+    maintainThreshold,
+    windowedVisits: countQualifyingVisits(events, normalized.tierQualificationWindow, now),
+    expiresAt: resolveTierExpiry({
+      events,
+      maintainThreshold,
+      isPermanent,
+      qualificationWindow: normalized.tierQualificationWindow,
+      now,
+    }),
+    isPermanent,
+  };
+}
+
+/**
+ * The date the in-window visit count would fall below the current tier's
+ * requirement if the customer never visits again.
+ *
+ * Sorted newest first, the visit at index `maintainThreshold - 1` is the one
+ * currently holding the tier up: the moment it ages out, the count drops by one
+ * and lands under the requirement.
+ */
+function resolveTierExpiry({
+  events,
+  maintainThreshold,
+  isPermanent,
+  qualificationWindow,
+  now,
+}: {
+  events: Array<Date | string>;
+  maintainThreshold: number;
+  isPermanent: boolean;
+  qualificationWindow: CustomerTierQualificationWindow;
+  now: Date;
+}) {
+  // Bronze has nothing to hold on to.
+  if (isPermanent || maintainThreshold === 0) return null;
+
+  const newestFirst = events
+    .map((eventDate) => (eventDate instanceof Date ? eventDate : new Date(eventDate)))
+    .filter((date) => !Number.isNaN(date.getTime()) && date <= now)
+    .sort((first, second) => second.getTime() - first.getTime());
+
+  const tierHoldingVisit = newestFirst[maintainThreshold - 1];
+  if (!tierHoldingVisit) return null;
+
+  const expiresAt = shiftByTierWindow(tierHoldingVisit, qualificationWindow, 1);
+
+  // Already below the requirement: there is no future date to promise.
+  return expiresAt && expiresAt > now ? expiresAt : null;
 }
 
 export function toStoredTier(tier: CustomerTierName): PrismaCustomerTierName {
