@@ -118,6 +118,71 @@ export function calculateCustomerTier({
   };
 }
 
+export type TierMaintenanceDecision = {
+  nextStoredTier: PrismaCustomerTierName;
+  changed: boolean;
+  downgraded: boolean;
+};
+
+/**
+ * Decides what a customer's stored tier should become during the scheduled
+ * maintenance sweep, without touching the database.
+ *
+ * The scan flow only recalculates a tier when the customer shows up, so someone
+ * who stops visiting keeps a tier they no longer qualify for. This is the
+ * counterpart that runs on a schedule instead.
+ *
+ * It can only lower a tier or leave it alone. Upgrades stay with the scan flow,
+ * which is the path that congratulates the customer - promoting someone here
+ * would silently skip that notification.
+ *
+ * Accepts either raw `visitEvents` (filtered to the window internally) or a
+ * `visits` count already restricted to the window, so the caller can aggregate
+ * in SQL rather than loading every stamp.
+ */
+export function decideTierMaintenance({
+  currentStoredTier,
+  visitEvents,
+  visits,
+  config,
+  now = new Date(),
+}: {
+  currentStoredTier?: CustomerTierName | PrismaCustomerTierName | null;
+  visitEvents?: Array<Date | string>;
+  visits?: number;
+  config?: Partial<CustomerTierConfig> | null;
+  now?: Date;
+}): TierMaintenanceDecision {
+  const normalized = normalizeTierConfig(config);
+  const storedTier = fromStoredTier(currentStoredTier) ?? "Bronze";
+  const unchanged: TierMaintenanceDecision = {
+    nextStoredTier: toStoredTier(storedTier),
+    changed: false,
+    downgraded: false,
+  };
+
+  // A permanent tier is a promise to the customer and is never revoked.
+  if (normalized.tierMaintenanceMode === "PERMANENT") return unchanged;
+  // A lifetime visit count only ever grows, so it can never fall below a threshold.
+  if (normalized.tierQualificationWindow === "LIFETIME") return unchanged;
+  // Bronze is the floor.
+  if (tierRank[storedTier] === 0) return unchanged;
+
+  const recalculated = calculateCustomerTier({
+    visits,
+    visitEvents,
+    config: normalized,
+    achievedTier: storedTier,
+    now,
+  });
+
+  if (tierRank[recalculated.tier] >= tierRank[storedTier]) return unchanged;
+
+  // `changed` and `downgraded` agree by construction here; both are reported so
+  // callers can express "needs a write" and "lost a tier" separately.
+  return { nextStoredTier: recalculated.storedTier, changed: true, downgraded: true };
+}
+
 export function countQualifyingVisits(
   visitEvents: Array<Date | string>,
   qualificationWindow: CustomerTierQualificationWindow,
