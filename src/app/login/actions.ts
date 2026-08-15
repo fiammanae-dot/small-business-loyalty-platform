@@ -10,6 +10,7 @@ import { isLoginTemporarilyLocked, LOGIN_LOCKOUT_MESSAGE, recordFailedLogin } fr
 import { prisma } from "@/lib/prisma";
 import { roleHomePath } from "@/lib/roles";
 import { createSession, INACTIVE_BUSINESS_ACCESS_MESSAGE, isBusinessScopedRole } from "@/lib/session";
+import { setTwoFactorPendingCookie } from "@/lib/two-factor";
 
 const loginSchema = z.object({
   email: z.string().trim().email(),
@@ -46,6 +47,7 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
     role: UserRole;
     status: RecordStatus;
     forcePasswordChange: boolean;
+    twoFactorEnabled: boolean;
     businessId: number | null;
     business: { status: RecordStatus } | null;
   } | null;
@@ -60,6 +62,7 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
         role: true,
         status: true,
         forcePasswordChange: true,
+        twoFactorEnabled: true,
         businessId: true,
         business: {
           select: {
@@ -94,6 +97,14 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
 
   if (isBusinessScopedRole(user.role) && (!user.businessId || user.business?.status !== "ACTIVE")) {
     return { error: INACTIVE_BUSINESS_ACCESS_MESSAGE };
+  }
+
+  // Password was correct, but an enrolled user is not signed in yet: hold the
+  // session back and hand off to the second factor. The pending cookie proves
+  // only that this step succeeded and grants nothing beyond /login/2fa.
+  if (user.twoFactorEnabled) {
+    await setTwoFactorPendingCookie(user.id);
+    redirect("/login/2fa");
   }
 
   await prisma.user.update({

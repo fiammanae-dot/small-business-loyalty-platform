@@ -1,13 +1,9 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 export const LOGO_MAX_BYTES = 2 * 1024 * 1024;
-export const LOGO_UPLOAD_URL_PREFIX = "/uploads/logos/";
-
-const logoUploadDirectory = path.join(process.cwd(), "public", "uploads", "logos");
 
 const allowedLogoTypes = [
   { extension: "png", mimeTypes: ["image/png"] },
@@ -16,6 +12,13 @@ const allowedLogoTypes = [
   { extension: "svg", mimeTypes: ["image/svg+xml"] },
   { extension: "webp", mimeTypes: ["image/webp"] },
 ] as const;
+
+const logoContentTypes: Record<string, string> = {
+  png: "image/png",
+  jpg: "image/jpeg",
+  svg: "image/svg+xml",
+  webp: "image/webp",
+};
 
 export type LogoValidationResult =
   | { ok: true; extension: string }
@@ -75,9 +78,60 @@ export function validateLogoBytes(buffer: Buffer, extension: string): LogoValida
   return { ok: true, extension };
 }
 
+/**
+ * Uploads the logo to Cloudflare R2 (S3-compatible) and returns its public
+ * https URL. Vercel's filesystem is read-only and ephemeral, so writing to
+ * public/uploads/ silently lost every upload in production.
+ *
+ * Env is read at call time (not module load) so a missing variable surfaces as
+ * a normal upload failure the caller can report, rather than breaking any route
+ * that happens to import this module.
+ */
 export async function saveLogoFile(buffer: Buffer, extension: string) {
+  const endpoint = process.env.R2_ENDPOINT;
+  const bucket = process.env.R2_BUCKET;
+  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+  const publicBaseUrl = process.env.R2_PUBLIC_BASE_URL;
+
+  const missing = Object.entries({
+    R2_ENDPOINT: endpoint,
+    R2_BUCKET: bucket,
+    R2_ACCESS_KEY_ID: accessKeyId,
+    R2_SECRET_ACCESS_KEY: secretAccessKey,
+    R2_PUBLIC_BASE_URL: publicBaseUrl,
+  })
+    .filter(([, value]) => !value?.trim())
+    .map(([key]) => key);
+
+  if (missing.length > 0) {
+    throw new Error(`Logo storage is not configured. Missing environment variable(s): ${missing.join(", ")}.`);
+  }
+
   const fileName = `${randomUUID()}.${extension}`;
-  await mkdir(logoUploadDirectory, { recursive: true });
-  await writeFile(path.join(logoUploadDirectory, fileName), buffer);
-  return `${LOGO_UPLOAD_URL_PREFIX}${fileName}`;
+  const key = `logos/${fileName}`;
+
+  const client = new S3Client({
+    region: "auto",
+    endpoint,
+    forcePathStyle: true,
+    credentials: {
+      accessKeyId: accessKeyId as string,
+      secretAccessKey: secretAccessKey as string,
+    },
+  });
+
+  await client.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: buffer,
+      ContentType: logoContentTypes[extension] ?? "application/octet-stream",
+      // Filenames are random UUIDs, so a stored object is never replaced and
+      // can be cached permanently.
+      CacheControl: "public, max-age=31536000, immutable",
+    }),
+  );
+
+  return `${(publicBaseUrl as string).replace(/\/+$/, "")}/${key}`;
 }
