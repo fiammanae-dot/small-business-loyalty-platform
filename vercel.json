@@ -4,6 +4,10 @@
     {
       "path": "/api/cron/tier-recalc",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/engagement-sweep",
+      "schedule": "0 3 * * *"
     }
   ]
 }
