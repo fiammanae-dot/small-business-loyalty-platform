@@ -3,9 +3,12 @@
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { z } from "zod";
 import type { BillingCycle, BusinessType, RecordStatus } from "@prisma/client";
+import { getRequestBaseUrl } from "@/lib/app-url";
 import { brandColorSchema, brandLogoUrlSchema } from "@/lib/branding-validation";
+import { sendBusinessWelcomeEmail } from "@/lib/business-welcome-email";
 import { validateCsrfForm } from "@/lib/csrf";
 import { createFormFailure, getFirstZodMessage, getZodFieldErrors, type PreservedFormState } from "@/lib/form-state";
 import { prisma } from "@/lib/prisma";
@@ -292,10 +295,30 @@ export async function createBusinessAction(_prevState: PreservedFormState, formD
         businessId: createdBusiness.id,
         branchId: branch.id,
         status: "ACTIVE",
+        // The admin sets this password, so the owner must replace it at first
+        // sign-in via the existing /change-password redirect in src/lib/authz.ts.
+        forcePasswordChange: true,
       },
     });
 
     return createdBusiness;
+  });
+
+  // Courtesy notification only: the business is already created and the owner
+  // can sign in with the temporary password regardless. Runs after the response
+  // so a slow or unreachable provider never delays the admin's redirect, and a
+  // failure is logged rather than surfaced.
+  after(async () => {
+    try {
+      await sendBusinessWelcomeEmail({
+        to: data.ownerEmail,
+        businessName: data.name,
+        ownerName: data.ownerName,
+        loginUrl: `${await getRequestBaseUrl()}/login`,
+      });
+    } catch (error) {
+      console.error("Business welcome email failed", error);
+    }
   });
 
   revalidatePath("/platform");
