@@ -379,12 +379,6 @@ function CustomerMobileCard({ row }: { row: CustomerRow }) {
       </div>
       <div className="mt-2.5 flex flex-wrap gap-1.5">
         <TierBadge tier={row.tier} />
-        {row.rewardReady ? (
-          <StatusBadge tone="warning" className="whitespace-nowrap">
-            <Gift className="mr-1 h-3.5 w-3.5" aria-hidden />
-            Reward Ready
-          </StatusBadge>
-        ) : null}
       </div>
       <div className="mt-3">
         <CustomerProgress row={row} />
