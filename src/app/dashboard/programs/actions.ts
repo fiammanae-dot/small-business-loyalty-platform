@@ -8,6 +8,7 @@ import { logAuditEvent } from "@/lib/audit";
 import { validateCsrfForm } from "@/lib/csrf";
 import { requireUsableSubscription } from "@/lib/commercial-access";
 import { createEngagementEventIfAllowed } from "@/lib/engagement";
+import { scheduleWelcomeCardMessage } from "@/lib/whatsapp/send-welcome-card";
 import { prisma } from "@/lib/prisma";
 import { asCardDesignInput, getIndustryDefaultCardTheme } from "@/lib/card-design";
 import { buildProgramCardDesign, getCardThemeForDesignStudioTemplate, parseDesignStudioForm } from "@/lib/design-studio";
@@ -439,6 +440,8 @@ export async function enrollCustomerInProgramAction(formData: FormData) {
   } catch {
     fail(path, "Customer is already enrolled in this program.");
   }
+
+  scheduleWelcomeCardMessage({ businessId: user.businessId, membershipId: membership.id });
 
   revalidatePath(path);
   redirect(`${path}?success=Customer enrolled.`);

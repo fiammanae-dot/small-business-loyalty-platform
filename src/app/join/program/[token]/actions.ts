@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { redirect, unstable_rethrow } from "next/navigation";
 import { z } from "zod";
 import { createEngagementEventIfAllowed } from "@/lib/engagement";
+import { scheduleWelcomeCardMessage } from "@/lib/whatsapp/send-welcome-card";
 import { generateCardToken } from "@/lib/customer-cards";
 import { customerIdentitySchema, getCheckbox, parseBirthday } from "@/lib/customers";
 import { normalizePhone } from "@/lib/phone";
@@ -110,7 +111,7 @@ export async function joinProgramAction(formData: FormData) {
     referralCodeForEnrollment = phoneLookup.referrer.referralCode;
   }
 
-  let result: { cardToken: string };
+  let result: { cardToken: string; welcomeMembershipId: number | null };
   try {
     result = await prisma.$transaction(async (tx) => {
     const globalCustomer =
@@ -154,6 +155,10 @@ export async function joinProgramAction(formData: FormData) {
         fail(parsed.data.token, "This customer account is not available for public enrollment.");
       }
 
+      // Only a first-time enrollment into this program raises WELCOME_CUSTOMER,
+      // so only that case may schedule the automated welcome card.
+      let welcomeMembershipId: number | null = null;
+
       if (existingMembership.programMemberships.length === 0) {
         const programMembership = await tx.customerProgramMembership.create({
           data: {
@@ -185,9 +190,11 @@ export async function joinProgramAction(formData: FormData) {
             rewardName: program.rewardName,
           },
         });
+
+        welcomeMembershipId = existingMembership.id;
       }
 
-      return { cardToken: existingMembership.cardToken };
+      return { cardToken: existingMembership.cardToken, welcomeMembershipId };
     }
 
     // Mirrors the manual enrollment engine's duplicate guard: an email already
@@ -273,7 +280,7 @@ export async function joinProgramAction(formData: FormData) {
       },
     });
 
-    return { cardToken: membership.cardToken };
+    return { cardToken: membership.cardToken, welcomeMembershipId: membership.id };
     });
   } catch (error) {
     unstable_rethrow(error);
@@ -285,6 +292,10 @@ export async function joinProgramAction(formData: FormData) {
     }
 
     fail(parsed.data.token, "Enrollment could not be completed. Please try again.");
+  }
+
+  if (result.welcomeMembershipId !== null) {
+    scheduleWelcomeCardMessage({ businessId: program.businessId, membershipId: result.welcomeMembershipId });
   }
 
   redirect(`/join/program/${encodeURIComponent(parsed.data.token)}?card=${encodeURIComponent(result.cardToken)}`);
