@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireActiveBranch, requireUsableSubscription } from "@/lib/commercial-access";
 import { validateCsrfForm } from "@/lib/csrf";
 import { createEngagementEventIfAllowed } from "@/lib/engagement";
+import { scheduleWelcomeCardMessage } from "@/lib/whatsapp/send-welcome-card";
 import { prisma } from "@/lib/prisma";
 import { getStartingBonusStampsForEvent } from "@/lib/programs";
 import { generateScanToken } from "@/lib/scan";
@@ -88,6 +89,8 @@ export async function enrollBranchCustomerInProgramAction(formData: FormData) {
   } catch {
     fail(path, "Customer is already enrolled in this program.");
   }
+
+  scheduleWelcomeCardMessage({ businessId: user.businessId as number, membershipId: membership.id });
 
   revalidatePath(path);
   redirect(`${path}?success=Customer enrolled.`);

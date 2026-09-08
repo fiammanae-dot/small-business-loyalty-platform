@@ -9,6 +9,7 @@ import { logAuditEvent } from "@/lib/audit";
 import { normalizePhone } from "@/lib/phone";
 import { generateCardToken } from "@/lib/customer-cards";
 import { createEngagementEventIfAllowed } from "@/lib/engagement";
+import { scheduleWelcomeCardMessage } from "@/lib/whatsapp/send-welcome-card";
 import { getFirstZodMessage, getZodFieldErrors, isFormActionError, throwFormActionError, type FormFieldErrors } from "@/lib/form-state";
 import { createPendingReferralForEnrollment, extractReferralCode, findActiveReferralReferrerByPhone, generateReferralCode } from "@/lib/referrals";
 import { getStartingBonusStampsForEvent } from "@/lib/programs";
@@ -187,6 +188,8 @@ export async function createCustomerProgramMembershipForEnrollment({
       rewardName: loyaltyProgram.rewardName,
     },
   });
+
+  scheduleWelcomeCardMessage({ businessId, membershipId: businessCustomerMembershipId });
 
   return programMembership;
 }

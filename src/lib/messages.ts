@@ -15,6 +15,7 @@ export const deliveryStatusLabels: Record<MessageDeliveryStatus, string> = {
   DRAFT: "Draft",
   READY: "Ready",
   SENT_MANUALLY: "Sent Manually",
+  SENT: "Sent Automatically",
   CANCELLED: "Cancelled",
   FAILED: "Failed",
 };

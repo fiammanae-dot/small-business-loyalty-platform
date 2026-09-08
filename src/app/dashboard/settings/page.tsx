@@ -6,6 +6,7 @@ import { BrandAssetsCenter } from "@/components/BrandAssetsCenter";
 import { ButtonLink, EmptyState, MetricCard, PageIntro, SectionCard, StatusBadge } from "@/components/ui";
 import { saveAbusePolicyAction, saveCooldownRuleAction, saveCustomerTierSettingsAction, saveScannerSettingsAction } from "@/app/dashboard/actions";
 import { saveSupportAccessPolicyAction } from "@/app/platform/businesses/support-actions";
+import { sendWhatsAppTestMessageAction } from "@/app/dashboard/settings/whatsapp-actions";
 import { getBusinessOwnerContext, getCurrentPlan, getCurrentSubscription } from "@/lib/business-owner";
 import { normalizeTierConfig, tierMaintenanceModeLabels, tierQualificationWindowLabels } from "@/lib/customer-tiers";
 import { formatDate } from "@/lib/format";
@@ -38,6 +39,18 @@ export default async function BusinessSettingsPage({ searchParams }: { searchPar
   const tierConfig = normalizeTierConfig(business.tierSetting);
   const cooldownRule = await prisma.cooldownRule.findFirst({ where: { businessId: user.businessId, active: true }, orderBy: { updatedAt: "desc" } });
   const abusePolicies = await prisma.abusePolicy.findMany({ where: { businessId: user.businessId }, orderBy: { ruleType: "asc" } });
+  // Read-mostly for owners: credentials are inserted admin-side in Phase 1, so the
+  // panel never selects the encrypted token, only what the owner needs to see.
+  const whatsAppChannel = await prisma.businessWhatsAppChannel.findUnique({
+    where: { businessId: user.businessId },
+    select: {
+      connectionStatus: true,
+      welcomeTemplateName: true,
+      welcomeTemplateStatus: true,
+      lastErrorMessage: true,
+      lastCheckedAt: true,
+    },
+  });
   const [twoFactorRecord, twoFactorRequirement, unusedBackupCodes] = await Promise.all([
     prisma.user.findUnique({ where: { id: user.id }, select: { twoFactorEnabled: true } }),
     getTwoFactorRequirement(),
@@ -112,6 +125,7 @@ export default async function BusinessSettingsPage({ searchParams }: { searchPar
         ) : null}
         {activeCategory === "messaging" ? (
           <div className="grid gap-5">
+            <WhatsAppAutomationSection channel={whatsAppChannel} />
             <NotificationsSection communicationSettings={communicationSettings} />
             <CommunicationsSection communicationSettings={communicationSettings} />
             <IntegrationsSection communicationSettings={communicationSettings} />
@@ -140,6 +154,43 @@ function BusinessProfileSection({ business, user }: { business: Awaited<ReturnTy
   return <SectionCard title="Business Profile" description="Core identity and public-facing business information."><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3"><Item label="Business Name" value={business.name} /><Item label="Business Type" value={businessTypeLabels[business.businessType]} /><Item label="Owner Name" value={user.name} /><Item label="Owner Email" value={user.email} /><Item label="Phone" value="Not configured" /><Item label="Address" value={primaryBranch ? `${primaryBranch.address}, ${primaryBranch.city}, ${primaryBranch.country}` : "No branch address configured"} /><Item label="Timezone" value="Business default" /><Item label="Language" value="English" /><Item label="Logo" value={business.branding?.logoUrl ? "Configured" : "Not configured"} /></div></SectionCard>;
 }
 function SecuritySection({ user, twoFactorEnabled, twoFactorRequired, unusedBackupCodes }: { user: Awaited<ReturnType<typeof getBusinessOwnerContext>>["user"] & { passwordChangedAt?: Date | null }; twoFactorEnabled: boolean; twoFactorRequired: boolean; unusedBackupCodes: number }) { return <SectionCard title="Security" description="Account access and session-related information for the Business Owner."><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4"><Item label="Password" value="Managed through secure account flow" /><Item label="Two-factor status" value={twoFactorEnabled ? `Enabled (${unusedBackupCodes} backup codes left)` : twoFactorRequired ? "Required - setup pending" : "Not enabled"} /><Item label="Recent password change" value={user.passwordChangedAt ? formatDate(user.passwordChangedAt) : "Not recorded"} /><Item label="Active sessions" value="Current session managed automatically" /></div><div className="mt-4 flex flex-wrap gap-2"><ButtonLink href="/change-password" variant="outline">Reset Password</ButtonLink><ButtonLink href="/account/two-factor/setup" variant="outline">{twoFactorEnabled ? "Manage Two-Factor Authentication" : "Set Up Two-Factor Authentication"}</ButtonLink></div></SectionCard>; }
+function WhatsAppAutomationSection({ channel }: { channel: { connectionStatus: string; welcomeTemplateName: string; welcomeTemplateStatus: string; lastErrorMessage: string | null; lastCheckedAt: Date | null } | null }) {
+  const connected = channel?.connectionStatus === "CONNECTED";
+  const templateApproved = channel?.welcomeTemplateStatus === "APPROVED";
+  const canSendTest = connected && templateApproved;
+
+  return (
+    <SectionCard
+      title="WhatsApp Automation"
+      description="Send each new customer their loyalty card automatically, from your own WhatsApp number."
+      actions={<StatusBadge tone={connected ? "success" : channel?.connectionStatus === "ERROR" ? "danger" : "neutral"}>{connected ? "Connected" : channel?.connectionStatus === "ERROR" ? "Error" : "Not connected"}</StatusBadge>}
+    >
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <Item label="Connection" value={connected ? "Connected" : "Not connected"} />
+        <Item label="Welcome template" value={channel?.welcomeTemplateName ?? "Not configured"} />
+        <Item label="Template approval" value={templateApproved ? "Approved" : channel?.welcomeTemplateStatus === "REJECTED" ? "Rejected by Meta" : "Pending Meta review"} />
+        <Item label="Last checked" value={channel?.lastCheckedAt ? formatDate(channel.lastCheckedAt) : "Never"} />
+      </div>
+
+      {channel?.lastErrorMessage ? (
+        <p className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">Last error: {channel.lastErrorMessage}</p>
+      ) : null}
+
+      {canSendTest ? (
+        <form action={sendWhatsAppTestMessageAction} className="mt-5 grid gap-3 md:grid-cols-[minmax(0,320px)_auto] md:items-end">
+          <CsrfInput scope="dashboard:whatsapp-test" />
+          <Input name="testPhone" label="Send a test to your number (e.g. 050 123 4567)" type="tel" />
+          <button type="submit" className="h-11 w-fit rounded-md business-button px-4 text-sm font-semibold text-white">Send test message</button>
+        </form>
+      ) : (
+        <p className="mt-5 rounded-md business-border-soft business-bg-soft px-3 py-2 text-sm business-primary-strong">
+          {channel ? "Automated sending starts once the connection is live and Meta has approved the welcome template." : "WhatsApp automation is set up by Loyalty Card UAE support. Contact us to connect your business number."}
+        </p>
+      )}
+    </SectionCard>
+  );
+}
+
 function NotificationsSection({ communicationSettings }: { communicationSettings: Awaited<ReturnType<typeof getBusinessOwnerContext>>["business"]["communicationSettings"] }) { return <SectionCard title="Notifications" description="Customer and team notification preferences currently available for this business."><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5"><Item label="Email notifications" value={communicationSettings?.emailEnabled ? "Enabled" : "Disabled"} /><Item label="Referral notifications" value="Prepared manually" /><Item label="Reward notifications" value="Prepared manually" /><Item label="Staff notifications" value="Workspace alerts" /><Item label="Billing notifications" value="Platform managed" /></div></SectionCard>; }
 function BrandingSection({ branding, businessName }: { branding: Awaited<ReturnType<typeof getBusinessOwnerContext>>["business"]["branding"]; businessName: string }) { return <SectionCard title="Branding" description="Your business identity is managed in the Brand Assets center and applied to every customer-facing surface."><div className="flex flex-wrap items-center gap-4"><BusinessLogoAvatar logoUrl={branding?.logoUrl ?? null} businessName={businessName} fallback={businessName.slice(0, 2).toUpperCase()} size="md" className="rounded-md text-white" style={{ background: branding?.primaryColor ?? "#F97316" }} /><div className="flex gap-2">{[branding?.primaryColor ?? "#F97316", branding?.secondaryColor ?? "#FDBA74", branding?.buttonColor ?? "#F97316"].map((color, index) => <span key={index} className="h-6 w-6 rounded-full ring-1 ring-black/10" style={{ backgroundColor: color }} />)}</div><ButtonLink href="/dashboard/settings?tab=brand" variant="outline">Open Brand Assets</ButtonLink></div></SectionCard>; }
 function PreferencesSection({ business, communicationSettings }: { business: Awaited<ReturnType<typeof getBusinessOwnerContext>>["business"]; communicationSettings: Awaited<ReturnType<typeof getBusinessOwnerContext>>["business"]["communicationSettings"] }) { return <SectionCard title="Preferences" description="Display and workspace defaults currently available for this business."><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4"><Item label="Language" value="English" /><Item label="Date format" value="System default" /><Item label="Timezone" value="Business default" /><Item label="Display preferences" value="Standard dashboard layout" /><Item label="Default channel" value={messageChannelLabels[communicationSettings?.preferredDefaultChannel ?? "NONE"]} /><Item label="Business type" value={businessTypeLabels[business.businessType]} /></div></SectionCard>; }

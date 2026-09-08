@@ -215,8 +215,30 @@ enum MessageDeliveryStatus {
   DRAFT
   READY
   SENT_MANUALLY
+  // Delivered by an automated provider send (WhatsApp Cloud API), as opposed to
+  // SENT_MANUALLY, which records a staff member sending through a wa.me link.
+  SENT
   CANCELLED
   FAILED
+}
+
+enum WhatsAppProvider {
+  META_CLOUD_API
+  // Reserved: a BSP slots in behind the same WhatsAppSender interface without
+  // touching call sites.
+  THREE_SIXTY_DIALOG
+}
+
+enum WhatsAppConnectionStatus {
+  NOT_CONNECTED
+  CONNECTED
+  ERROR
+}
+
+enum WhatsAppTemplateStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum GoogleWalletSyncStatus {
@@ -457,6 +479,7 @@ model Business {
   designPresets                 BusinessDesignPreset[]
   googleWalletClasses           GoogleWalletClass[]
   googleWalletObjects           GoogleWalletObject[]
+  whatsAppChannel               BusinessWhatsAppChannel?
 
   @@map("businesses")
 }
@@ -1271,6 +1294,43 @@ model MessageDeliveryQueue {
   @@index([preparedByUserId])
   @@index([sentByUserId])
   @@map("message_delivery_queue")
+}
+
+/// Per-business WhatsApp sending channel. Each business sends from its own number
+/// and its own credentials, so this is one row per business, never platform-wide.
+///
+/// Dormant by design: connectionStatus starts NOT_CONNECTED and the welcome
+/// template starts PENDING, so nothing sends until real Meta credentials and an
+/// approved template are inserted for that business.
+model BusinessWhatsAppChannel {
+  id         Int              @id @default(autoincrement())
+  uuid       String           @unique @default(uuid()) @db.Uuid
+  businessId Int              @unique @map("business_id")
+  provider   WhatsAppProvider @default(META_CLOUD_API)
+
+  phoneNumberId String @map("phone_number_id")
+  wabaId        String @map("waba_id")
+  /// AES-256-GCM ciphertext (see lib/whatsapp/credentials). Never the raw token.
+  accessTokenEncrypted String @map("access_token_encrypted")
+
+  connectionStatus WhatsAppConnectionStatus @default(NOT_CONNECTED) @map("connection_status")
+
+  /// Meta approves templates per name + language, so both are stored and sent.
+  welcomeTemplateName     String                 @map("welcome_template_name")
+  welcomeTemplateLanguage String                 @default("en") @map("welcome_template_language")
+  welcomeTemplateStatus   WhatsAppTemplateStatus @default(PENDING) @map("welcome_template_status")
+
+  /// Last provider error, for the owner-facing panel. Never contains the token.
+  lastErrorMessage String?   @map("last_error_message")
+  lastCheckedAt    DateTime? @map("last_checked_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([connectionStatus])
+  @@map("business_whatsapp_channels")
 }
 
 model SupportRequest {
