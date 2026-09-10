@@ -4,6 +4,7 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { ReferralReferrerLookupPreview } from "@/components/ReferralReferrerLookupPreview";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
+import { businessTracksVehicles } from "@/lib/vehicles";
 import { createBranchCustomerAction } from "@/app/branch/customers/actions";
 
 export default async function NewBranchCustomerPage({
@@ -22,6 +23,9 @@ export default async function NewBranchCustomerPage({
         orderBy: { createdAt: "asc" },
       })
     : [];
+  const business = user.businessId
+    ? await prisma.business.findUnique({ where: { id: user.businessId }, select: { businessType: true } })
+    : null;
 
   return (
     <DashboardShell user={user} eyebrow="Branch Manager" title="Enroll customer" hideWelcomeMessage>
@@ -32,6 +36,7 @@ export default async function NewBranchCustomerPage({
           cancelHref="/branch/customers"
           lookupPath="/branch/customers/new"
           activePrograms={activePrograms}
+          showVehicleFields={businessTracksVehicles(business?.businessType)}
           initialValues={{
             referralCode: selectedReferralCode,
             referredBySearch,

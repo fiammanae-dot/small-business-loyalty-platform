@@ -7,6 +7,7 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { getCardUrl, getShortCardToken } from "@/lib/customer-cards";
 import { formatUaePhoneDisplay } from "@/lib/phone";
+import { formatPlateDisplay, formatVehicleDescription, vehicleSizeLabels } from "@/lib/vehicles";
 import { prisma } from "@/lib/prisma";
 import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
 import { requireRole } from "@/lib/session";
@@ -51,6 +52,16 @@ export default async function StaffCustomerProfilePage({
   }
 
   const customerName = `${membership.firstName} ${membership.lastName ?? ""}`.trim();
+  const plateDisplay = formatPlateDisplay({
+    emirate: membership.vehicleEmirate,
+    code: membership.vehicleCode,
+    number: membership.vehicleNumber,
+  });
+  const vehicleDescription = formatVehicleDescription({
+    colour: membership.vehicleColour,
+    brand: membership.vehicleBrand,
+    model: membership.vehicleModel,
+  });
   const cardUrl = await getCardUrl(membership.cardToken);
   const cardQrCode = await QRCode.toDataURL(cardUrl, {
     errorCorrectionLevel: "M",
@@ -67,6 +78,17 @@ export default async function StaffCustomerProfilePage({
             <p className="text-sm font-semibold business-primary">Read-only customer view</p>
             <h2 className="mt-1 break-words text-2xl font-semibold text-[#111827]">{customerName}</h2>
             <p className="mt-2 text-sm text-[#6B7280]">{formatUaePhoneDisplay(membership.normalizedPhone)}</p>
+            {plateDisplay ? (
+              <p className="mt-2 inline-block rounded border border-[#E5E7EB] bg-[#FAFAFA] px-2.5 py-1 font-mono text-base font-semibold tracking-wide text-[#111827]">
+                {plateDisplay}
+              </p>
+            ) : null}
+            {vehicleDescription ? (
+              <p className="mt-1 text-sm text-[#6B7280]">
+                {vehicleDescription}
+                {membership.vehicleSize ? ` (${vehicleSizeLabels[membership.vehicleSize]})` : ""}
+              </p>
+            ) : null}
           </div>
           <Link href="/staff/customers" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">
             Back

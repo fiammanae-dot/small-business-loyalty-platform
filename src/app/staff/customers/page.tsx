@@ -4,6 +4,7 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { getShortCardToken } from "@/lib/customer-cards";
 import { formatUaePhoneDisplay, normalizePhone } from "@/lib/phone";
+import { businessTracksVehicles, formatPlateDisplay, formatVehicleDescription, parsePlateQuery } from "@/lib/vehicles";
 import { prisma } from "@/lib/prisma";
 import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
 import { requireRole } from "@/lib/session";
@@ -17,6 +18,7 @@ export default async function StaffCustomerSearchPage({
   const params = await searchParams;
   const query = params.q?.trim();
   const normalizedQueryPhone = query ? normalizePhone(query) : null;
+  const plateQuery = parsePlateQuery(query ?? "");
 
   if (!user.businessId) {
     return (
@@ -25,6 +27,12 @@ export default async function StaffCustomerSearchPage({
       </DashboardShell>
     );
   }
+
+  const business = await prisma.business.findUnique({
+    where: { id: user.businessId },
+    select: { businessType: true },
+  });
+  const tracksVehicles = businessTracksVehicles(business?.businessType);
 
   const customers = query
     ? await prisma.businessCustomerMembership.findMany({
@@ -37,6 +45,11 @@ export default async function StaffCustomerSearchPage({
             { phone: { contains: query, mode: "insensitive" } },
             { normalizedPhone: { contains: query, mode: "insensitive" } },
             ...(normalizedQueryPhone ? [{ normalizedPhone: normalizedQueryPhone }] : []),
+            // Plate: the exact key when the query pinned down the emirate, and the
+            // bare number otherwise - a washer reading a dirty plate is often only
+            // sure of the digits.
+            ...(plateQuery.normalizedPlate ? [{ normalizedPlate: plateQuery.normalizedPlate }] : []),
+            ...(plateQuery.numberOnly ? [{ vehicleNumber: plateQuery.numberOnly }] : []),
             { cardToken: { contains: query, mode: "insensitive" } },
             { referralCode: { contains: query, mode: "insensitive" } },
             { programMemberships: { some: { scanToken: { contains: query, mode: "insensitive" } } } },
@@ -59,7 +72,11 @@ export default async function StaffCustomerSearchPage({
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <div>
           <p className="text-sm font-semibold business-primary">Customer lookup</p>
-          <p className="mt-2 text-sm text-[#6B7280]">Search customers across your business by name, phone, email, card number, referral code, or QR code.</p>
+          <p className="mt-2 text-sm text-[#6B7280]">
+            {tracksVehicles
+              ? "Search by plate number, name, phone, email, card number, referral code, or QR code. Plate works on the digits alone - \"12345\" - or the whole plate, \"Dubai A 12345\"."
+              : "Search customers across your business by name, phone, email, card number, referral code, or QR code."}
+          </p>
         </div>
         <form className="mt-5 flex flex-col gap-3 sm:flex-row">
           <label className="sr-only" htmlFor="staff-customer-search">Search customers</label>
@@ -69,7 +86,7 @@ export default async function StaffCustomerSearchPage({
               id="staff-customer-search"
               name="q"
               defaultValue={params.q ?? ""}
-              placeholder="Name, phone, email, card, referral, or QR code"
+              placeholder={tracksVehicles ? "Plate number, name, phone, email, card, or QR code" : "Name, phone, email, card, referral, or QR code"}
               className="h-11 w-full rounded-md border border-[#E5E7EB] pl-10 pr-3 text-sm outline-none business-ring focus:ring-0"
             />
           </div>
@@ -87,6 +104,16 @@ export default async function StaffCustomerSearchPage({
         <div className="mt-5 grid gap-3">
           {customers.map((membership) => {
             const customerName = `${membership.firstName} ${membership.lastName ?? ""}`.trim();
+            const plateDisplay = formatPlateDisplay({
+              emirate: membership.vehicleEmirate,
+              code: membership.vehicleCode,
+              number: membership.vehicleNumber,
+            });
+            const vehicleDescription = formatVehicleDescription({
+              colour: membership.vehicleColour,
+              brand: membership.vehicleBrand,
+              model: membership.vehicleModel,
+            });
             return (
               <Link
                 key={membership.uuid}
@@ -97,6 +124,16 @@ export default async function StaffCustomerSearchPage({
                   <div className="min-w-0">
                     <p className="break-words font-semibold text-[#111827]">{customerName}</p>
                     <p className="mt-1 text-sm text-[#6B7280]">{formatUaePhoneDisplay(membership.normalizedPhone)}</p>
+                    {plateDisplay || vehicleDescription ? (
+                      <p className="mt-1 flex flex-wrap items-center gap-2">
+                        {plateDisplay ? (
+                          <span className="inline-block rounded border border-[#E5E7EB] bg-white px-2 py-0.5 font-mono text-sm font-semibold tracking-wide text-[#111827]">
+                            {plateDisplay}
+                          </span>
+                        ) : null}
+                        {vehicleDescription ? <span className="text-sm text-[#6B7280]">{vehicleDescription}</span> : null}
+                      </p>
+                    ) : null}
                     <p className="mt-1 text-xs text-[#6B7280]">Card: {getShortCardToken(membership.cardToken)}</p>
                   </div>
                   <div className="flex flex-wrap gap-2">

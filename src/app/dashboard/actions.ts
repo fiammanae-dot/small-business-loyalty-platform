@@ -18,12 +18,14 @@ import { hasWalletRelevantBrandingChange, hasWalletRelevantBusinessChange } from
 import { enqueueWalletSyncForBusiness } from "@/lib/wallet-sync/enqueue";
 import { commerciallyUsableStatuses, limitReachedMessage } from "@/lib/subscriptions";
 import {
-  customerIdentitySchema,
+  customerIdentityInputSchema,
   customerMembershipSchema,
   enrollCustomerForBusiness,
   getCheckbox,
   getString as getCustomerString,
   parseBirthday,
+  readVehicleFormFields,
+  vehicleColumnsFrom,
 } from "@/lib/customers";
 import { normalizePhone } from "@/lib/phone";
 
@@ -792,12 +794,14 @@ export async function updateCustomerAction(formData: FormData) {
   const user = await requireBusinessOwner();
   const membershipUuid = getString(formData, "membershipUuid");
   const path = `/dashboard/customers/${membershipUuid}/edit`;
-  const identity = customerIdentitySchema.safeParse({
+  const vehicleFieldsSubmitted = getCustomerString(formData, "vehicleFieldsPresent") === "1";
+  const identity = customerIdentityInputSchema.safeParse({
     firstName: getCustomerString(formData, "firstName"),
     lastName: getCustomerString(formData, "lastName"),
     phone: getCustomerString(formData, "phone"),
     email: getCustomerString(formData, "email"),
     birthday: getCustomerString(formData, "birthday"),
+    ...readVehicleFormFields(formData),
   });
   const membership = customerMembershipSchema.pick({
     marketingConsent: true,
@@ -850,6 +854,10 @@ export async function updateCustomerAction(formData: FormData) {
       marketingConsent: membership.data.marketingConsent,
       status: membership.data.status,
       notes: membership.data.notes || null,
+      // Cars change hands, so the plate has to be editable - and clearing the
+      // number has to clear the derived key too, or the old car keeps matching.
+      // Only touched when the form actually rendered the plate fields.
+      ...(vehicleFieldsSubmitted ? vehicleColumnsFrom(identity.data) : {}),
     },
   });
   await logAuditEvent({

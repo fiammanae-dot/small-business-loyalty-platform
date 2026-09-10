@@ -4,6 +4,7 @@ import type React from "react";
 import {
   Award,
   CalendarDays,
+  Car,
   Check,
   CreditCard,
   Crown,
@@ -34,6 +35,7 @@ import { customerSourceLabels, getBusinessCustomerOrRedirect } from "@/lib/custo
 import { formatDate, formatDateTime } from "@/lib/format";
 import { getGoogleWalletStatus } from "@/lib/google-wallet/service";
 import { formatUaePhoneDisplay } from "@/lib/phone";
+import { formatPlateDisplay, formatVehicleDescription, vehicleSizeLabels } from "@/lib/vehicles";
 import { prisma } from "@/lib/prisma";
 import { progressValue } from "@/lib/programs";
 import { getScanQrDataUrl, getScanUrl, scanStatusLabel } from "@/lib/scan";
@@ -67,6 +69,16 @@ export default async function CustomerProfilePage({
   const cardUrl = await getCardUrl(membership.cardToken);
   const nextCardStatus = membership.cardStatus === "ACTIVE" ? "DISABLED" : "ACTIVE";
   const customerName = `${membership.firstName} ${membership.lastName ?? ""}`.trim();
+  const plateDisplay = formatPlateDisplay({
+    emirate: membership.vehicleEmirate,
+    code: membership.vehicleCode,
+    number: membership.vehicleNumber,
+  });
+  const vehicleDescription = formatVehicleDescription({
+    colour: membership.vehicleColour,
+    brand: membership.vehicleBrand,
+    model: membership.vehicleModel,
+  });
   const cardShareMessageType = qs.success?.includes("Customer created") ? "welcome" : "resend";
 
   const programCards = await Promise.all(
@@ -270,6 +282,17 @@ return (
               </div>
               <div className="mt-2.5 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-[#6B7280]">
                 <span className="inline-flex items-center gap-1.5"><Phone className="h-4 w-4 text-[#94A3B8]" aria-hidden />{formatUaePhoneDisplay(membership.normalizedPhone)}</span>
+                {plateDisplay ? (
+                  <span className="inline-flex items-center gap-1.5 font-mono font-semibold tracking-wide text-[#111827]">
+                    <Car className="h-4 w-4 text-[#94A3B8]" aria-hidden />{plateDisplay}
+                  </span>
+                ) : null}
+                {vehicleDescription ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    {vehicleDescription}
+                    {membership.vehicleSize ? ` (${vehicleSizeLabels[membership.vehicleSize]})` : ""}
+                  </span>
+                ) : null}
                 <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-4 w-4 text-[#94A3B8]" aria-hidden />Member since {formatDate(membership.joinedAt)}</span>
                 {membership.createdBranch?.name ? (
                   <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4 text-[#94A3B8]" aria-hidden />{membership.createdBranch.name}</span>

@@ -6,7 +6,14 @@ import { z } from "zod";
 import { createEngagementEventIfAllowed } from "@/lib/engagement";
 import { scheduleWelcomeCardMessage } from "@/lib/whatsapp/send-welcome-card";
 import { generateCardToken } from "@/lib/customer-cards";
-import { customerIdentitySchema, getCheckbox, parseBirthday } from "@/lib/customers";
+import {
+  customerIdentitySchema,
+  getCheckbox,
+  parseBirthday,
+  readVehicleFormFields,
+  vehicleColumnsFrom,
+  withVehicleChecks,
+} from "@/lib/customers";
 import { normalizePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { getStartingBonusStampsForEvent } from "@/lib/programs";
@@ -17,9 +24,13 @@ import { generateScanToken } from "@/lib/scan";
 
 const JOIN_PROGRAM_RATE_LIMIT_SCOPE = "public_join_program" as const;
 
-const joinProgramSchema = customerIdentitySchema.extend({
-  token: z.string().trim().uuid("Program link is invalid."),
-});
+// Extend first, then apply the plate rules - a schema carrying refinements
+// can no longer be extended.
+const joinProgramSchema = withVehicleChecks(
+  customerIdentitySchema.extend({
+    token: z.string().trim().uuid("Program link is invalid."),
+  }),
+);
 
 function getString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -52,6 +63,7 @@ export async function joinProgramAction(formData: FormData) {
     phone: getString(formData, "phone"),
     email: getString(formData, "email"),
     birthday: getString(formData, "birthday"),
+    ...readVehicleFormFields(formData),
   });
   const marketingConsent = getCheckbox(formData, "marketingConsent");
 
@@ -237,6 +249,7 @@ export async function joinProgramAction(formData: FormData) {
         referralEnabled: true,
         cardStatus: "ACTIVE",
         cardCreatedAt: new Date(),
+        ...vehicleColumnsFrom(parsed.data),
       },
       select: { id: true, cardToken: true },
     });

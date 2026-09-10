@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Finding a Customer by Plate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --ink:#16181D; --ink-soft:#565E6C; --ink-faint:#858D9B;
+    --surface:#FFFFFF; --sunken:#F4F6F8; --raised:#FFFFFF;
+    --line:#E1E5EB; --line-soft:#EDF0F4;
+    --accent:#EA6A12; --accent-ink:#A8410A; --accent-wash:#FDF2E8;
+    --stop:#B42318; --stop-wash:#FEF0EF;
+    --go:#06744A; --go-wash:#ECF7F1;
+    --hold:#8A6100; --hold-wash:#FBF4E4;
+    --measure:68ch;
+    --step--1:0.8125rem; --step-0:1rem; --step-1:1.1875rem;
+    --step-2:1.5rem; --step-3:2rem; --step-4:2.75rem;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink:#E7EAEF; --ink-soft:#A2AAB8; --ink-faint:#7C8492;
+      --surface:#131519; --sunken:#1A1D23; --raised:#1D2027;
+      --line:#2C313A; --line-soft:#23272F;
+      --accent:#FB8F42; --accent-ink:#FFB578; --accent-wash:#2A1B0E;
+      --stop:#F97066; --stop-wash:#2B1514;
+      --go:#4ED397; --go-wash:#0E251C;
+      --hold:#E5B84B; --hold-wash:#261E0C;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink:#E7EAEF; --ink-soft:#A2AAB8; --ink-faint:#7C8492;
+    --surface:#131519; --sunken:#1A1D23; --raised:#1D2027;
+    --line:#2C313A; --line-soft:#23272F;
+    --accent:#FB8F42; --accent-ink:#FFB578; --accent-wash:#2A1B0E;
+    --stop:#F97066; --stop-wash:#2B1514;
+    --go:#4ED397; --go-wash:#0E251C;
+    --hold:#E5B84B; --hold-wash:#261E0C;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--surface); color:var(--ink);
+    font-family:"IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size:var(--step-0); line-height:1.6; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:78ch; margin-inline:auto; padding-inline:20px; padding-block:0 5rem; }
+  h1,h2,h3 { font-family:Archivo, ui-sans-serif, system-ui, sans-serif; text-wrap:balance; margin:0; letter-spacing:-0.015em; }
+  p, ul, ol { margin:0; } p, li { max-width:var(--measure); }
+  code { font-family:"IBM Plex Mono", ui-monospace, Menlo, monospace; font-size:0.875em;
+    background:var(--sunken); border:1px solid var(--line-soft); border-radius:3px; padding:0.08em 0.34em; white-space:nowrap; }
+
+  .masthead { border-bottom:1px solid var(--line); padding-block:3.5rem 2.25rem; display:flex; flex-direction:column; gap:1rem; }
+  .eyebrow { font-family:"IBM Plex Mono", monospace; font-size:var(--step--1); letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-faint); display:flex; flex-wrap:wrap; gap:0.5rem 1rem; }
+  .masthead h1 { font-size:var(--step-4); font-weight:700; line-height:1.05; }
+  .standfirst { font-size:var(--step-1); color:var(--ink-soft); max-width:60ch; }
+
+  section { padding-block:3.25rem 0; }
+  section > h2 { font-size:var(--step-2); font-weight:600; padding-bottom:0.9rem; border-bottom:1px solid var(--line); margin-bottom:1.5rem; }
+  .stack { display:flex; flex-direction:column; gap:1.1rem; }
+  h3 { font-size:var(--step-1); font-weight:600; margin-top:0.5rem; }
+
+  /* plate mock */
+  .plate { display:inline-flex; align-items:stretch; border:2px solid var(--ink); border-radius:6px; overflow:hidden; background:#fff; font-family:Archivo, sans-serif; margin-block:0.4rem; }
+  .plate .em { background:var(--ink); color:#fff; padding:0.5rem 0.7rem; font-size:var(--step--1); display:grid; place-items:center; letter-spacing:0.04em; }
+  .plate .code { color:#111; padding:0.5rem 0.7rem; font-size:1.35rem; font-weight:700; border-right:1px solid #ccc; display:grid; place-items:center; }
+  .plate .num { color:#111; padding:0.5rem 0.9rem; font-size:1.35rem; font-weight:700; display:grid; place-items:center; letter-spacing:0.02em; }
+  .plate-note { font-size:var(--step--1); color:var(--ink-faint); }
+
+  .callout { border:1px solid var(--line); border-left:3px solid var(--stop); background:var(--stop-wash); border-radius:0 6px 6px 0; padding:1.4rem 1.6rem; display:flex; flex-direction:column; gap:0.75rem; }
+  .callout h3 { margin:0; font-size:var(--step-1); }
+  .aside { border-left:3px solid var(--accent); background:var(--accent-wash); padding:1.15rem 1.4rem; border-radius:0 6px 6px 0; display:flex; flex-direction:column; gap:0.6rem; }
+  .aside .tag { font-family:"IBM Plex Mono", monospace; font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent-ink); }
+
+  pre { background:var(--sunken); border:1px solid var(--line); border-radius:6px; padding:1rem 1.15rem; overflow-x:auto;
+    font-family:"IBM Plex Mono", monospace; font-size:var(--step--1); line-height:1.55; margin:0; }
+  pre .c { color:var(--ink-faint); } pre .k { color:var(--accent-ink); }
+
+  ol.flow { list-style:none; padding:0; display:flex; flex-direction:column; gap:0; counter-reset:step; }
+  ol.flow > li { counter-increment:step; display:grid; grid-template-columns:2.4rem 1fr; gap:0 1rem; padding-block:1.05rem; border-bottom:1px solid var(--line-soft); max-width:none; }
+  ol.flow > li:last-child { border-bottom:0; }
+  ol.flow > li::before { content:counter(step); font-family:"IBM Plex Mono", monospace; font-size:var(--step--1); font-weight:500;
+    color:var(--accent-ink); background:var(--accent-wash); border-radius:4px; width:1.9rem; height:1.9rem; display:grid; place-items:center; font-variant-numeric:tabular-nums; }
+  ol.flow .what { font-weight:500; display:block; }
+  ol.flow .where { font-family:"IBM Plex Mono", monospace; font-size:0.7rem; letter-spacing:0.05em; color:var(--ink-faint); display:block; margin-bottom:0.2rem; }
+  ol.flow .detail { color:var(--ink-soft); font-size:var(--step--1); margin-top:0.3rem; }
+
+  ul.dashed { list-style:none; padding:0; display:flex; flex-direction:column; gap:0.55rem; }
+  ul.dashed > li { padding-left:1.1rem; position:relative; }
+  ul.dashed > li::before { content:""; position:absolute; left:0; top:0.72em; width:0.45rem; height:1px; background:var(--accent); }
+
+  .scroller { overflow-x:auto; border:1px solid var(--line); border-radius:6px; }
+  table { border-collapse:collapse; width:100%; min-width:30rem; }
+  th,td { text-align:left; padding:0.75rem 1rem; border-bottom:1px solid var(--line-soft); vertical-align:top; font-size:var(--step--1); }
+  th { font-family:"IBM Plex Mono", monospace; font-size:0.72rem; letter-spacing:0.09em; text-transform:uppercase; color:var(--ink-faint); font-weight:500; background:var(--sunken); border-bottom:1px solid var(--line); }
+  tbody tr:last-child td { border-bottom:0; }
+  td:first-child { font-weight:500; color:var(--ink); font-family:"IBM Plex Mono", monospace; }
+
+  footer { margin-top:4rem; padding-top:1.5rem; border-top:1px solid var(--line); color:var(--ink-faint); font-size:var(--step--1); display:flex; flex-direction:column; gap:0.4rem; }
+
+  @media (max-width:540px) {
+    :root { --step-4:2.15rem; --step-3:1.7rem; --step-2:1.35rem; }
+    ol.flow > li { grid-template-columns:1.9rem 1fr; gap:0 0.75rem; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation:none !important; transition:none !important; } }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">
+      <span>Loyalty Card UAE</span>
+      <span>Vehicle lookup</span>
+      <span>10 Sep 2026</span>
+    </div>
+    <h1>Finding a Customer by Plate</h1>
+    <p class="standfirst">A washer sees a car, not a phone number. If car washes are the first segment, plate lookup is what decides whether the app is faster than the paper card it replaces — and right now the platform has no idea vehicles exist.</p>
+  </header>
+
+  <section>
+    <h2>Why this comes before milestone rewards</h2>
+    <div class="stack">
+      <p>Al Bab Al Abyad's card has two customer fields: mobile number and <strong>vehicle number</strong>. They print both because the plate is how the card gets found at the counter.</p>
+
+      <p>The counter reality: a car pulls in, and often the driver isn't the account holder — it's the wife, the driver, the son. Asking "what's your mobile number?" while an engine idles is slower than reading the plate off the bonnet. Twenty times a day, that difference is the whole product experience.</p>
+
+      <div class="callout">
+        <h3>An app that is slower than paper does not survive a pilot</h3>
+        <p>Milestone rewards make the <em>offer</em> match what a business already runs. Plate lookup makes the <em>daily use</em> work. A car wash will happily live with one reward at nine stamps for a month. It will not live with a counter flow that costs an extra thirty seconds per car.</p>
+      </div>
+
+      <p>It is also the cheaper change: additive fields plus a search path, with no stamp-engine rewrite, no migration policy, and none of the seventeen inlined reward comparisons.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>What a UAE plate is</h2>
+    <div class="stack">
+      <div class="plate">
+        <span class="em">DUBAI</span>
+        <span class="code">A</span>
+        <span class="num">12345</span>
+      </div>
+      <p class="plate-note">Emirate &middot; code &middot; number — three parts, entered and searched separately.</p>
+
+      <p>Storing this as one free-text field is the mistake to avoid. People write the same plate as <code>A12345</code>, <code>A 12345</code>, <code>Dubai A 12345</code> or <code>dxb-a-12345</code>, and a search that relies on matching those to each other will fail exactly when a queue is forming.</p>
+
+      <p>Three fields, one derived key:</p>
+
+      <pre><span class="c">// on BusinessCustomerMembership - per business, matching how phone is stored</span>
+vehicleEmirate  VehicleEmirate?  @map("vehicle_emirate")   <span class="c">// DUBAI, SHARJAH, ...</span>
+vehicleCode     String?          @map("vehicle_code")      <span class="c">// as entered: "A", "12"</span>
+vehicleNumber   String?          @map("vehicle_number")    <span class="c">// as entered: "12345"</span>
+
+<span class="c">// derived on write, indexed, never shown - the thing searches match on</span>
+normalizedPlate String?          @map("normalized_plate")  <span class="c">// "DUBAI-A-12345"</span>
+
+<span class="k">enum</span> VehicleEmirate {
+  ABU_DHABI  DUBAI  SHARJAH  AJMAN  UMM_AL_QUWAIN  RAS_AL_KHAIMAH  FUJAIRAH
+}</pre>
+
+      <div class="aside">
+        <span class="tag">The pattern already exists in your schema</span>
+        <p>This mirrors <code>phone</code> plus <code>normalizedPhone</code> exactly: keep what the user typed for display, derive a canonical form for matching, index the canonical one. No new idea to maintain — the same rule, applied to a second identifier.</p>
+      </div>
+
+      <p><strong>Codes differ by emirate</strong> — some use letters, some numbers, and the valid sets have changed over the years. I would not hard-code them. Accept one or two alphanumeric characters, uppercase them, and let the emirate field carry the meaning. Validating against a fixed list risks rejecting a plate that is sitting in front of the washer, which is worse than accepting an odd one.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Where it lives, and why not on the shared customer</h2>
+    <div class="stack">
+      <p>On <code>BusinessCustomerMembership</code>, not <code>GlobalCustomer</code>. Three reasons:</p>
+      <ul class="dashed">
+        <li><strong>Tenant isolation.</strong> <code>GlobalCustomer</code> is shared identity across every business on the platform. A plate written there would be readable by whichever business touched that customer next. A coffee shop has no business knowing what its customer drives.</li>
+        <li><strong>It is the business's own record.</strong> The car wash enters the plate, corrects it, and relies on it. That is per-business data, exactly like the <code>notes</code> field already there.</li>
+        <li><strong>It matches the existing shape.</strong> <code>firstName</code>, <code>phone</code> and <code>email</code> are already duplicated onto the membership rather than read through the global record.</li>
+      </ul>
+      <p>The cost is duplication if one car uses two car washes on the platform. That is the right trade: two businesses, two records, no leakage.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Show it only where it makes sense</h2>
+    <div class="stack">
+      <p><code>BusinessType</code> already has <code>CAR_CARE_CENTER</code>. Gate every vehicle field and the plate search on it, so a coffee shop never sees an empty "vehicle number" box on its enrollment form.</p>
+      <p>The data model stays general — a vet storing a pet name later reuses the same three-field shape. Only the UI is segment-specific, which is the cheap half to change.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>What changes</h2>
+    <div class="stack">
+      <ol class="flow">
+        <li>
+          <div>
+            <span class="where">prisma/schema.prisma + migration 0047</span>
+            <span class="what">Four nullable columns and one enum</span>
+            <p class="detail">All nullable, all additive, no backfill. Index <code>[businessId, normalizedPlate]</code> — the search is always within one business, so the composite index is what actually gets used.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <span class="where">src/lib/vehicles.ts (new)</span>
+            <span class="what">Parse, normalize, format</span>
+            <p class="detail">One module, the shape of <code>src/lib/phone.ts</code>: <code>normalizePlate()</code> for storage, <code>formatPlateDisplay()</code> for the UI, and a parser that accepts what a washer would actually type into a single box. Pure functions, easy to test, no database.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <span class="where">staff/customers + dashboard/customers</span>
+            <span class="what">Plate joins the search</span>
+            <p class="detail">Both pages already match on name and <code>normalizedPhone</code>. Add a third clause on <code>normalizedPlate</code>, and try to parse the query as a plate the same way they already try to parse it as a phone. Typing <code>12345</code> should find the car.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <span class="where">enrollment forms + customer detail</span>
+            <span class="what">Capture and display</span>
+            <p class="detail">Emirate dropdown, code, number — on the owner, branch and public join forms. Shown on the customer record, and on the card, where it reassures the customer their car is the one on file.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <span class="where">staff/scanner</span>
+            <span class="what">The flow that actually matters</span>
+            <p class="detail">Plate as the primary way in: type the number, get the customer, stamp. This is the screen a washer uses twenty times a day, and the one worth watching someone use before calling it done.</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <h2>Decisions before code</h2>
+    <div class="stack">
+      <div class="scroller">
+        <table>
+          <thead><tr><th>Question</th><th>Suggested answer</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Duplicate plates</td>
+              <td>Warn, do not block. Cars get sold, and a family may share one. A hard unique constraint will eventually stop a real customer being enrolled while they wait.</td>
+            </tr>
+            <tr>
+              <td>Required?</td>
+              <td>Optional in the schema, encouraged in the UI for car washes. A walk-in without their car should still be enrollable.</td>
+            </tr>
+            <tr>
+              <td>Editable later</td>
+              <td>Yes. People change cars, and staff mistype. Worth an audit entry, since the plate is how the account is found.</td>
+            </tr>
+            <tr>
+              <td>Search partial numbers</td>
+              <td>Yes on the number alone. A washer reading a dirty plate may only be sure of the digits — matching those and showing a short list beats an exact match that fails.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Suggested order</h2>
+    <div class="stack">
+      <ol class="flow">
+        <li><div><span class="what">Vehicle lookup</span><p class="detail">Additive, no engine changes, makes the daily counter flow work. This document.</p></div></li>
+        <li><div><span class="what">Reward-check consolidation</span><p class="detail">Route 17 inlined comparisons through the helper in <code>rewards.ts</code>. Behaviour-neutral, green tests, makes the next step a one-file change instead of a twelve-file one.</p></div></li>
+        <li><div><span class="what">Milestone rewards, Stage 1</span><p class="detail">Schema, engine, redemption, card and Wallet. Nothing visible changes.</p></div></li>
+        <li><div><span class="what">Milestone rewards, Stage 2</span><p class="detail">The editor that lets an owner put the discount at visit 2, 3 or 5 — whatever their card says.</p></div></li>
+      </ol>
+      <p>With no deadline and one demo business, this is the cheapest moment to do all four. Every one of them gets more expensive once real customers are mid-card.</p>
+    </div>
+  </section>
+
+  <footer>
+    <span>Verified against the repository on 10 September 2026: schema.prisma (GlobalCustomer, BusinessCustomerMembership, BusinessType), staff/customers/page.tsx, dashboard/customers/page.tsx, lib/phone.ts.</span>
+    <span>Reference card: Al Bab Al Abyad Auto Services, Industrial Area 4, Sharjah.</span>
+  </footer>
+
+</div>
+
+</body>
+</html>

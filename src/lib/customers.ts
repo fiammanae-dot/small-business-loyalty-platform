@@ -7,6 +7,17 @@ import type { AuthUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit";
 import { normalizePhone } from "@/lib/phone";
+import {
+  checkVehicleCode,
+  isVehicleBrand,
+  isVehicleColour,
+  isVehicleEmirate,
+  isVehicleSize,
+  normalizePlate,
+  normalizeVehicleCode,
+  normalizeVehicleModel,
+  normalizeVehicleNumber,
+} from "@/lib/vehicles";
 import { generateCardToken } from "@/lib/customer-cards";
 import { createEngagementEventIfAllowed } from "@/lib/engagement";
 import { scheduleWelcomeCardMessage } from "@/lib/whatsapp/send-welcome-card";
@@ -47,7 +58,96 @@ export const customerIdentitySchema = z.object({
     .optional()
     .or(z.literal(""))
     .refine((value) => !value || new Date(value) <= new Date(), "Birthday cannot be a future date."),
+  // Vehicle is optional in the schema and only surfaced for CAR_CARE_CENTER
+  // businesses. A walk-in without their car must still be enrollable.
+  vehicleEmirate: z.string().trim().optional().or(z.literal("")),
+  vehicleCode: z.string().trim().optional().or(z.literal("")),
+  vehicleNumber: z.string().trim().optional().or(z.literal("")),
+  vehicleBrand: z.string().trim().optional().or(z.literal("")),
+  vehicleModel: z.string().trim().max(40, "Model is too long.").optional().or(z.literal("")),
+  vehicleColour: z.string().trim().optional().or(z.literal("")),
+  vehicleSize: z.string().trim().optional().or(z.literal("")),
 });
+
+type VehicleFields = {
+  vehicleEmirate?: string;
+  vehicleCode?: string;
+  vehicleNumber?: string;
+  vehicleBrand?: string;
+  vehicleModel?: string;
+  vehicleColour?: string;
+  vehicleSize?: string;
+};
+
+/**
+ * Everything the dropdowns produce, normalized. Unknown values become null
+ * rather than an error: these fields are all optional, and a stale option in a
+ * cached page must never block an enrollment at the counter.
+ */
+export function vehicleColumnsFrom(data: VehicleFields) {
+  return {
+    vehicleEmirate: isVehicleEmirate(data.vehicleEmirate) ? data.vehicleEmirate : null,
+    vehicleCode: normalizeVehicleCode(data.vehicleCode),
+    vehicleNumber: normalizeVehicleNumber(data.vehicleNumber),
+    normalizedPlate: normalizePlate({
+      emirate: data.vehicleEmirate,
+      code: data.vehicleCode,
+      number: data.vehicleNumber,
+    }),
+    vehicleBrand: isVehicleBrand(data.vehicleBrand) ? data.vehicleBrand : null,
+    vehicleModel: normalizeVehicleModel(data.vehicleModel),
+    vehicleColour: isVehicleColour(data.vehicleColour) ? data.vehicleColour : null,
+    vehicleSize: isVehicleSize(data.vehicleSize) ? data.vehicleSize : null,
+  };
+}
+
+/** Every field a plate form submits, read straight off the FormData. */
+export function readVehicleFormFields(formData: FormData): VehicleFields {
+  return {
+    vehicleEmirate: getString(formData, "vehicleEmirate"),
+    vehicleCode: getString(formData, "vehicleCode"),
+    vehicleNumber: getString(formData, "vehicleNumber"),
+    vehicleBrand: getString(formData, "vehicleBrand"),
+    vehicleModel: getString(formData, "vehicleModel"),
+    vehicleColour: getString(formData, "vehicleColour"),
+    vehicleSize: getString(formData, "vehicleSize"),
+  };
+}
+
+/**
+ * The plate rules live here rather than inside customerIdentitySchema because
+ * the join form extends that schema, and a schema carrying refinements can no
+ * longer be extended. So callers compose: extend the object first, then wrap.
+ */
+export function withVehicleChecks<T extends z.ZodType<VehicleFields>>(schema: T) {
+  return schema.superRefine((data, ctx) => {
+    if (data.vehicleNumber) {
+      if (!isVehicleEmirate(data.vehicleEmirate)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Select the emirate the plate was issued in.",
+          path: ["vehicleEmirate"],
+        });
+      }
+      if (normalizeVehicleNumber(data.vehicleNumber) === null) {
+        ctx.addIssue({ code: "custom", message: "Plate number must be 1-5 digits.", path: ["vehicleNumber"] });
+      }
+    }
+
+    // Codes are shaped differently per emirate - Dubai letters, Abu Dhabi and
+    // Sharjah numbers - so the message has to come from the emirate, not one
+    // global rule.
+    if (data.vehicleCode && isVehicleEmirate(data.vehicleEmirate)) {
+      const problem = checkVehicleCode(data.vehicleEmirate, data.vehicleCode);
+      if (problem) {
+        ctx.addIssue({ code: "custom", message: problem, path: ["vehicleCode"] });
+      }
+    }
+  });
+}
+
+/** customerIdentitySchema with the plate rules applied. Use this to parse. */
+export const customerIdentityInputSchema = withVehicleChecks(customerIdentitySchema);
 
 export const customerMembershipSchema = z.object({
   marketingConsent: z.boolean(),
@@ -220,12 +320,13 @@ export async function enrollCustomerForBusiness({
     fail(path, message);
   }
 
-  const identity = customerIdentitySchema.safeParse({
+  const identity = customerIdentityInputSchema.safeParse({
     firstName: getString(formData, "firstName"),
     lastName: getString(formData, "lastName"),
     phone: getString(formData, "phone"),
     email: getString(formData, "email"),
     birthday: getString(formData, "birthday"),
+    ...readVehicleFormFields(formData),
   });
   const membership = customerMembershipSchema.safeParse({
     marketingConsent: getCheckbox(formData, "marketingConsent"),
@@ -313,6 +414,7 @@ export async function enrollCustomerForBusiness({
           cardStatus: "ACTIVE",
           cardCreatedAt: new Date(),
           notes: membership.data.notes || null,
+          ...vehicleColumnsFrom(identity.data),
         },
         select: { id: true, uuid: true, cardToken: true },
       });

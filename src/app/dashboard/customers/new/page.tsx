@@ -4,6 +4,7 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { ReferralReferrerLookupPreview } from "@/components/ReferralReferrerLookupPreview";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { prisma } from "@/lib/prisma";
+import { businessTracksVehicles } from "@/lib/vehicles";
 import { createCustomerAction } from "@/app/dashboard/actions";
 
 export default async function NewCustomerPage({
@@ -30,6 +31,7 @@ export default async function NewCustomerPage({
           cancelHref="/dashboard/customers"
           lookupPath="/dashboard/customers/new"
           activePrograms={activePrograms}
+          showVehicleFields={businessTracksVehicles(business.businessType)}
           branchOptions={[
             { value: "", label: "No branch selected", description: "Enroll without branch attribution" },
             ...business.branches.map((branch) => ({
