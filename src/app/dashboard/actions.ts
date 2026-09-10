@@ -20,6 +20,7 @@ import { commerciallyUsableStatuses, limitReachedMessage } from "@/lib/subscript
 import {
   customerIdentityInputSchema,
   customerMembershipSchema,
+  customerVehicleFormFields,
   enrollCustomerForBusiness,
   getCheckbox,
   getString as getCustomerString,
@@ -140,6 +141,7 @@ const customerCreateFormFields = [
   "referredByPhoneNumber",
   "referralCode",
   "notes",
+  ...customerVehicleFormFields,
 ];
 
 function customerCreateFailure(formData: FormData, message: string, fieldErrors?: Record<string, string>): PreservedFormState {

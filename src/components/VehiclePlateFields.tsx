@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   EMIRATE_CODE_TYPE,
   VEHICLE_BRANDS,
@@ -52,6 +52,14 @@ export function VehiclePlateFields({
   focusClass = "business-ring focus:ring-0",
 }: VehiclePlateFieldsProps) {
   const [emirate, setEmirate] = useState(defaultEmirate);
+
+  // A rejected form re-renders this component with the submitted emirate. A
+  // useState initial value is only read on mount, so without this the code and
+  // number come back but the emirate silently resets - the worst outcome,
+  // because the plate looks half-entered and staff retype the whole thing.
+  useEffect(() => {
+    setEmirate(defaultEmirate);
+  }, [defaultEmirate]);
   const selected: VehicleEmirate | null = isVehicleEmirate(emirate) ? emirate : null;
   const codeIsNumeric = selected ? EMIRATE_CODE_TYPE[selected] === "NUMBER" : false;
 
@@ -83,7 +91,8 @@ export function VehiclePlateFields({
           <span className="text-sm font-medium text-[#111827]">Emirate</span>
           <select
             name="vehicleEmirate"
-            value={emirate}
+            defaultValue={defaultEmirate}
+            key={defaultEmirate}
             onChange={(event) => setEmirate(event.target.value)}
             aria-invalid={Boolean(errors.vehicleEmirate)}
             aria-describedby={errors.vehicleEmirate ? "vehicleEmirate-error" : undefined}
@@ -110,9 +119,16 @@ export function VehiclePlateFields({
             placeholder={codeHint}
             inputMode={codeIsNumeric ? "numeric" : "text"}
             autoCapitalize="characters"
+            // Uppercase the typed value, not the element: a CSS text-transform
+            // shouts the placeholder too, and "PICK THE EMIRATE FIRST" reads
+            // like an error rather than a hint.
+            onInput={(event) => {
+              const input = event.currentTarget;
+              input.value = input.value.toUpperCase();
+            }}
             aria-invalid={Boolean(errors.vehicleCode)}
             aria-describedby={errors.vehicleCode ? "vehicleCode-error" : undefined}
-            className={`${inputClass} uppercase`}
+            className={inputClass}
           />
           {errors.vehicleCode ? (
             <span id="vehicleCode-error" className="block text-sm text-red-700">{errors.vehicleCode}</span>

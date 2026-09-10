@@ -92,6 +92,12 @@ export function CustomerCreateForm({
       </div>
       {showVehicleFields ? (
         <VehiclePlateFields
+          // The emirate select seeds React state from its default, and a
+          // useState initial value is ignored on re-render - so without a key
+          // tied to the submitted value, a rejected form silently drops the
+          // emirate while keeping the code and number. Same pattern as the
+          // branch combobox above.
+          key={`vehicle-${value("vehicleEmirate")}`}
           defaultEmirate={value("vehicleEmirate")}
           defaultCode={value("vehicleCode")}
           defaultNumber={value("vehicleNumber")}

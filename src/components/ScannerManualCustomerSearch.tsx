@@ -157,7 +157,7 @@ export async function ScannerManualCustomerSearch({ businessId, branchId, query,
                       ) : null}
                       <StatusBadge status={membership.status} />
                     </div>
-                    <div className="mt-2 grid gap-1 text-sm text-[#6B7280] sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="mt-2 grid gap-x-4 gap-y-1 text-sm text-[#6B7280] sm:grid-cols-2 lg:grid-cols-5">
                       <p>{formatUaePhoneDisplay(membership.normalizedPhone)}</p>
                       {vehicleDescription ? <p>{vehicleDescription}</p> : null}
                       <p>{membership.createdBranch?.name ?? "No branch"}</p>

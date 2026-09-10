@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { requireActiveBranch, requireUsableSubscription } from "@/lib/commercial-access";
 import { validateCsrfForm } from "@/lib/csrf";
-import { enrollCustomerForBusiness, getString } from "@/lib/customers";
+import { customerVehicleFormFields, enrollCustomerForBusiness, getString } from "@/lib/customers";
 import { createFormFailure, isFormActionError, type PreservedFormState } from "@/lib/form-state";
 import { requireRole } from "@/lib/session";
 
@@ -19,6 +19,7 @@ const customerCreateFormFields = [
   "referredByPhoneNumber",
   "referralCode",
   "notes",
+  ...customerVehicleFormFields,
 ];
 
 function customerCreateFailure(formData: FormData, message: string, fieldErrors?: Record<string, string>): PreservedFormState {

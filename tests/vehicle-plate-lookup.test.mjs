@@ -231,6 +231,38 @@ test("every write path stores the plate and its derived search key", () => {
   assert.match(read("src/components/VehiclePlateFields.tsx"), /name="vehicleFieldsPresent"/);
 });
 
+test("a rejected form gives the plate back instead of throwing it away", () => {
+  // The counter re-typing a plate because the phone number was wrong is the
+  // fastest way to make staff stop recording plates at all.
+  const customers = read("src/lib/customers.ts");
+  assert.match(customers, /export const customerVehicleFormFields/);
+  for (const field of ["vehicleEmirate", "vehicleCode", "vehicleNumber", "vehicleBrand", "vehicleModel", "vehicleColour", "vehicleSize"]) {
+    assert.match(customers, new RegExp(`"${field}"`), `${field} must be preserved on failure`);
+  }
+
+  for (const path of [
+    "src/app/dashboard/actions.ts",
+    "src/app/staff/customers/actions.ts",
+    "src/app/branch/customers/actions.ts",
+  ]) {
+    assert.match(
+      read(path),
+      /\.\.\.customerVehicleFormFields/,
+      `${path} must preserve the vehicle fields on a failed enrollment`,
+    );
+  }
+
+  // The form has to read them back for the round trip to close.
+  const form = read("src/components/CustomerCreateForm.tsx");
+  assert.match(form, /defaultEmirate=\{value\("vehicleEmirate"\)\}/);
+  assert.match(form, /defaultNumber=\{value\("vehicleNumber"\)\}/);
+
+  // The emirate select seeds React state from its prop, so it needs a key tied
+  // to the submitted value or a rejected form keeps the number and loses the
+  // emirate - the worst of both, because the plate looks half-entered.
+  assert.match(form, /key=\{`vehicle-\$\{value\("vehicleEmirate"\)\}`\}/);
+});
+
 test("plate search is wired into every place staff look a customer up", () => {
   for (const path of [
     "src/app/staff/customers/page.tsx",

@@ -101,6 +101,22 @@ export function vehicleColumnsFrom(data: VehicleFields) {
   };
 }
 
+/**
+ * The plate form's field names. Every create action has to list these among
+ * the fields it preserves on a validation failure, or a rejected form throws
+ * the plate away and the counter has to re-enter it.
+ */
+export const customerVehicleFormFields = [
+  "vehicleFieldsPresent",
+  "vehicleEmirate",
+  "vehicleCode",
+  "vehicleNumber",
+  "vehicleBrand",
+  "vehicleModel",
+  "vehicleColour",
+  "vehicleSize",
+];
+
 /** Every field a plate form submits, read straight off the FormData. */
 export function readVehicleFormFields(formData: FormData): VehicleFields {
   return {
