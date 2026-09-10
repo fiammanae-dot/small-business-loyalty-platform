@@ -137,3 +137,19 @@ dist
 
 # runtime business logo uploads
 /public/uploads/
+
+# Local scratch and secret-bearing files - never commit
+_to_delete/
+Claude outputs/
+loyalty-platform/
+backups/*.json
+*dburl*
+.claude/settings.local.json
+.env.bak*
+.env.*.bak
+
+# Secrets that were committed by mistake - untracked, rotate the values
+TWO_FACTOR_KEY_FOR_VERCEL.txt
+TWO_FACTOR_VALUE_ONLY.txt
+WALLET_PRIVATE_KEY_FOR_VERCEL.txt
+cookies.txt

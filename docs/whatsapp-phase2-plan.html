@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Phase 2 Without a Licence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --ink:        #16181D;
+    --ink-soft:   #565E6C;
+    --ink-faint:  #858D9B;
+    --surface:    #FFFFFF;
+    --sunken:     #F4F6F8;
+    --raised:     #FFFFFF;
+    --line:       #E1E5EB;
+    --line-soft:  #EDF0F4;
+    --accent:     #EA6A12;
+    --accent-ink: #A8410A;
+    --accent-wash:#FDF2E8;
+    --stop:       #B42318;
+    --stop-wash:  #FEF0EF;
+    --go:         #06744A;
+    --go-wash:    #ECF7F1;
+    --hold:       #8A6100;
+    --hold-wash:  #FBF4E4;
+
+    --measure: 68ch;
+    --step--1: 0.8125rem;
+    --step-0:  1rem;
+    --step-1:  1.1875rem;
+    --step-2:  1.5rem;
+    --step-3:  2rem;
+    --step-4:  2.75rem;
+
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink:        #E7EAEF;
+      --ink-soft:   #A2AAB8;
+      --ink-faint:  #7C8492;
+      --surface:    #131519;
+      --sunken:     #1A1D23;
+      --raised:     #1D2027;
+      --line:       #2C313A;
+      --line-soft:  #23272F;
+      --accent:     #FB8F42;
+      --accent-ink: #FFB578;
+      --accent-wash:#2A1B0E;
+      --stop:       #F97066;
+      --stop-wash:  #2B1514;
+      --go:         #4ED397;
+      --go-wash:    #0E251C;
+      --hold:       #E5B84B;
+      --hold-wash:  #261E0C;
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ink:        #E7EAEF;
+    --ink-soft:   #A2AAB8;
+    --ink-faint:  #7C8492;
+    --surface:    #131519;
+    --sunken:     #1A1D23;
+    --raised:     #1D2027;
+    --line:       #2C313A;
+    --line-soft:  #23272F;
+    --accent:     #FB8F42;
+    --accent-ink: #FFB578;
+    --accent-wash:#2A1B0E;
+    --stop:       #F97066;
+    --stop-wash:  #2B1514;
+    --go:         #4ED397;
+    --go-wash:    #0E251C;
+    --hold:       #E5B84B;
+    --hold-wash:  #261E0C;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--surface);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: var(--step-0);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 78ch;
+    margin-inline: auto;
+    padding-inline: 20px;
+    padding-block: 0 5rem;
+  }
+
+  h1, h2, h3 {
+    font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
+    text-wrap: balance;
+    margin: 0;
+    letter-spacing: -0.015em;
+  }
+
+  p, ul, ol { margin: 0; }
+  p, li { max-width: var(--measure); }
+
+  code, .mono {
+    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.875em;
+  }
+  code {
+    background: var(--sunken);
+    border: 1px solid var(--line-soft);
+    border-radius: 3px;
+    padding: 0.08em 0.34em;
+    white-space: nowrap;
+  }
+
+  a { color: var(--accent-ink); text-underline-offset: 2px; }
+  a:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    border-bottom: 1px solid var(--line);
+    padding-block: 3.5rem 2.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: var(--step--1);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+  }
+  .masthead h1 {
+    font-size: var(--step-4);
+    font-weight: 700;
+    line-height: 1.05;
+  }
+  .standfirst {
+    font-size: var(--step-1);
+    color: var(--ink-soft);
+    max-width: 60ch;
+  }
+
+  /* ---------- verdict ---------- */
+
+  .verdict {
+    margin-top: 2.5rem;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--stop);
+    background: var(--stop-wash);
+    border-radius: 0 6px 6px 0;
+    padding: 1.5rem 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+  .verdict h2 { font-size: var(--step-1); font-weight: 600; }
+  .verdict p { color: var(--ink); }
+  blockquote {
+    margin: 0;
+    padding-left: 1rem;
+    border-left: 2px solid var(--line);
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+
+  /* ---------- sections ---------- */
+
+  section { padding-block: 3.25rem 0; }
+  section > h2 {
+    font-size: var(--step-2);
+    font-weight: 600;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 1.5rem;
+  }
+  .stack { display: flex; flex-direction: column; gap: 1.1rem; }
+
+  h3 {
+    font-size: var(--step-1);
+    font-weight: 600;
+    margin-top: 0.75rem;
+  }
+
+  /* ---------- ceiling figures ---------- */
+
+  .figures {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .figure {
+    background: var(--raised);
+    padding: 1.15rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  .figure .num {
+    font-family: Archivo, sans-serif;
+    font-size: var(--step-3);
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent-ink);
+  }
+  .figure .lbl {
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+
+  /* ---------- gates table ---------- */
+
+  .scroller { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; }
+  table { border-collapse: collapse; width: 100%; min-width: 34rem; }
+  th, td {
+    text-align: left;
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid var(--line-soft);
+    vertical-align: top;
+    font-size: var(--step--1);
+  }
+  th {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 500;
+    background: var(--sunken);
+    border-bottom: 1px solid var(--line);
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  td:first-child { font-weight: 500; color: var(--ink); }
+
+  .pill {
+    display: inline-block;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.16rem 0.5rem;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .pill.stop { background: var(--stop-wash); color: var(--stop); border: 1px solid color-mix(in srgb, var(--stop) 30%, transparent); }
+  .pill.go   { background: var(--go-wash);   color: var(--go);   border: 1px solid color-mix(in srgb, var(--go) 30%, transparent); }
+  .pill.hold { background: var(--hold-wash); color: var(--hold); border: 1px solid color-mix(in srgb, var(--hold) 32%, transparent); }
+
+  /* ---------- ordered flow ---------- */
+
+  ol.flow { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0; counter-reset: step; }
+  ol.flow > li {
+    counter-increment: step;
+    display: grid;
+    grid-template-columns: 2.4rem 1fr;
+    gap: 0 1rem;
+    padding-block: 1.05rem;
+    border-bottom: 1px solid var(--line-soft);
+    max-width: none;
+  }
+  ol.flow > li:last-child { border-bottom: 0; }
+  ol.flow > li::before {
+    content: counter(step);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: var(--step--1);
+    font-weight: 500;
+    color: var(--accent-ink);
+    background: var(--accent-wash);
+    border-radius: 4px;
+    width: 1.9rem;
+    height: 1.9rem;
+    display: grid;
+    place-items: center;
+    font-variant-numeric: tabular-nums;
+  }
+  ol.flow .who {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    display: block;
+    margin-bottom: 0.15rem;
+  }
+  ol.flow .what { font-weight: 500; display: block; }
+  ol.flow .detail { color: var(--ink-soft); font-size: var(--step--1); margin-top: 0.25rem; }
+
+  /* ---------- work items ---------- */
+
+  ul.work { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  ul.work > li { background: var(--raised); padding: 1.1rem 1.25rem; max-width: none; display: flex; flex-direction: column; gap: 0.3rem; }
+  ul.work .head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.6rem; }
+  ul.work .name { font-weight: 600; }
+  ul.work .note { color: var(--ink-soft); font-size: var(--step--1); }
+
+  /* ---------- plain lists ---------- */
+
+  ul.dashed { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+  ul.dashed > li { padding-left: 1.1rem; position: relative; }
+  ul.dashed > li::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0.72em;
+    width: 0.45rem; height: 1px;
+    background: var(--accent);
+  }
+
+  .aside {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-wash);
+    padding: 1.15rem 1.4rem;
+    border-radius: 0 6px 6px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .aside .tag {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+  }
+  .aside p { color: var(--ink); }
+
+  footer {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+    color: var(--ink-faint);
+    font-size: var(--step--1);
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  @media (max-width: 540px) {
+    :root { --step-4: 2.15rem; --step-3: 1.7rem; --step-2: 1.35rem; }
+    ol.flow > li { grid-template-columns: 1.9rem 1fr; gap: 0 0.75rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">
+      <span>Loyalty Card UAE</span>
+      <span>WhatsApp Phase 2</span>
+      <span>10 Sep 2026</span>
+    </div>
+    <h1>Phase 2 Without a Licence</h1>
+    <p class="standfirst">Phase 1 is live and sending. The one-click path to onboarding clients is gated behind a trade licence you don't have yet — so this is the route that works in the meantime, and what changes when the licence exists.</p>
+  </header>
+
+  <div class="verdict">
+    <h2>The Partner shortcut is closed</h2>
+    <p>Having a client share their WhatsApp Business Account with Loyalty Card UAE looked like a way around Tech Provider status. Meta's documentation rules it out on two counts:</p>
+    <blockquote>Share your WABA (or any of your business assets) with any <strong>business-verified</strong> partner… The partner's app must have <strong>Advanced access</strong> for the <code>whatsapp_business_management</code> permission to access your shared WABA via the API. Without it, API calls return error code 200.</blockquote>
+    <p>Both requirements trace back to business verification, which requires a trade licence. Partner sharing, Embedded Signup and Tech Provider status are all behind the same door.</p>
+  </div>
+
+  <section>
+    <h2>What you can do anyway</h2>
+    <div class="stack">
+      <p>Verification is not required to send real messages to real customers. An unverified business runs on the Cloud API with these ceilings:</p>
+
+      <div class="figures">
+        <div class="figure">
+          <span class="num">250</span>
+          <span class="lbl">unique customers per rolling 24 hours</span>
+        </div>
+        <div class="figure">
+          <span class="num">2</span>
+          <span class="lbl">business phone numbers per WABA</span>
+        </div>
+        <div class="figure">
+          <span class="num">250</span>
+          <span class="lbl">message templates per WABA</span>
+        </div>
+        <div class="figure">
+          <span class="num">—</span>
+          <span class="lbl">no display name; chats show the phone number</span>
+        </div>
+      </div>
+
+      <p>A café enrolling thirty new customers a day sits at roughly a tenth of that ceiling. The binding constraint isn't volume — it's that the chat header shows a raw phone number instead of the business name, and that onboarding each client is manual work you perform rather than a button they press.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Where each gate stands</h2>
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th>Gate</th><th>Status</th><th>What it needs</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Phase 1 sending</td>
+            <td><span class="pill go">Live</span></td>
+            <td>Done — verified end to end on Emirates Coffee House</td>
+          </tr>
+          <tr>
+            <td>Facebook Login for Business</td>
+            <td><span class="pill go">Configured</span></td>
+            <td>Already on the app; the product Embedded Signup builds on</td>
+          </tr>
+          <tr>
+            <td>Manual client onboarding</td>
+            <td><span class="pill hold">Buildable now</span></td>
+            <td>A connect form in settings, plus the runbook below</td>
+          </tr>
+          <tr>
+            <td>Business verification</td>
+            <td><span class="pill stop">Blocked</span></td>
+            <td>A UAE trade licence — mainland DED, free zone, or freelance permit</td>
+          </tr>
+          <tr>
+            <td>App Review &amp; Advanced access</td>
+            <td><span class="pill stop">Blocked</span></td>
+            <td>Business verification first</td>
+          </tr>
+          <tr>
+            <td>Tech Provider / Embedded Signup</td>
+            <td><span class="pill stop">Blocked</span></td>
+            <td>Verification and Advanced access</td>
+          </tr>
+          <tr>
+            <td>Partner-shared WABA</td>
+            <td><span class="pill stop">Blocked</span></td>
+            <td>Same two gates — not a workaround</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>The onboarding model that works now</h2>
+    <div class="stack">
+      <p>The key move: <strong>the client's business is the verified one, not yours.</strong> A licensed café in Dubai can verify itself. You operate inside their Meta portfolio as an admin they invite, rather than as an external partner business.</p>
+
+      <ol class="flow">
+        <li>
+          <div>
+            <span class="who">Client</span>
+            <span class="what">Creates a Meta Business Portfolio, or uses the one they have</span>
+            <p class="detail">Most businesses running Facebook or Instagram pages already have one.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <span class="who">Client</span>
+            <span class="what">Adds you as an admin under People</span>
+            <p class="detail">Person-level access inside their portfolio. This is what replaces partner sharing, and it needs nothing from Loyalty Card UAE.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <span class="who">You</span>
+            <span class="what">Sets up their WhatsApp Business Account and registers their number</span>
+            <p class="detail">The number must not be active in the WhatsApp Business app — expect this to be the most common snag with small businesses. Registration needs the <code>/register</code> call with a 6-digit PIN, the same step that fixed error 133010 on the test number.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <span class="who">You</span>
+            <span class="what">Creates and submits their <code>new_loyalty_card</code> template</span>
+            <p class="detail">Templates live per WABA, so every client needs their own copy approved. Body <code>{{1}}</code> customer, <code>{{2}}</code> business; URL button base <code>https://loyaltycarduae.com/card/{{1}}</code>.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <span class="who">You</span>
+            <span class="what">Generates a system-user token in their portfolio and connects the channel</span>
+            <p class="detail">Assets assigned first, then the token — assets before token, or the token comes out powerless.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <span class="who">Client</span>
+            <span class="what">Verifies their own business with Meta</span>
+            <p class="detail">Optional, and theirs to do. It's what turns the chat header from a phone number into their business name.</p>
+          </div>
+        </li>
+      </ol>
+
+      <div class="aside">
+        <span class="tag">Worth deciding early</span>
+        <p>This model means you hold admin access to your clients' Meta portfolios and their access tokens. That's a real trust position and a real liability. Put it in writing in the service agreement — what you can access, what you'll never do with it, and how a client revokes it when they leave.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What to build</h2>
+    <div class="stack">
+      <p>Ordered by what blocks the next client, not by size.</p>
+
+      <ul class="work">
+        <li>
+          <div class="head"><span class="name">A connect form in business settings</span><span class="pill hold">First</span></div>
+          <p class="note">The WhatsApp panel is read-only today — it renders status and a test send, but has no inputs. Every channel so far was written by a one-off script. Add fields for phone number ID, WABA ID and access token, plus a save action that calls the existing <code>encryptWhatsAppAccessToken</code>. That function is written and tested but currently has no caller anywhere in the codebase.</p>
+        </li>
+        <li>
+          <div class="head"><span class="name">Platform-admin scope</span></div>
+          <p class="note">Channel setup is your job, not the business owner's — the panel's own copy already says so. The form belongs behind platform-admin auth, with business owners keeping the read-only view they have now.</p>
+        </li>
+        <li>
+          <div class="head"><span class="name">Template provisioning</span></div>
+          <p class="note">Create <code>new_loyalty_card</code> on a client's WABA through the API rather than by hand in WhatsApp Manager, and store the returned status. <code>whatsapp_business_management</code> covers this on their own WABA — no Advanced access needed when you're inside their portfolio.</p>
+        </li>
+        <li>
+          <div class="head"><span class="name">Template status sync</span></div>
+          <p class="note">Today <code>welcomeTemplateStatus</code> is whatever was typed into the database. If Meta later rejects or pauses a template, nothing notices and sends fail one by one. Poll the template endpoint, or subscribe to the <code>message_template_status_update</code> webhook — the test console showed one firing already.</p>
+        </li>
+        <li>
+          <div class="head"><span class="name">Delivery visibility</span></div>
+          <p class="note">Failures currently surface as a single <code>lastErrorMessage</code> on the channel. With several clients live you'll want the delivery queue visible in the platform admin, filtered by status, so a business quietly failing every send is noticed by you rather than reported by them.</p>
+        </li>
+        <li>
+          <div class="head"><span class="name">Token expiry handling</span></div>
+          <p class="note">System-user tokens can be set to never expire, but they can be revoked — by the client removing your access, or by Meta. Decide what the panel shows when a token stops working, so it reads as "reconnect needed" rather than a raw Meta error code.</p>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Carried over from Phase 1</h2>
+    <div class="stack">
+      <p>Loose ends from the deployment that shouldn't get lost:</p>
+      <ul class="dashed">
+        <li><strong>Rotate the committed secrets.</strong> <code>TWO_FACTOR_KEY_FOR_VERCEL.txt</code>, <code>TWO_FACTOR_VALUE_ONLY.txt</code>, <code>WALLET_PRIVATE_KEY_FOR_VERCEL.txt</code> and <code>cookies.txt</code> are in public GitHub history. Rotating the 2FA key forces enrolled admins to re-enrol, so plan that one.</li>
+        <li><strong>Delete the scratch folder.</strong> <code>_to_delete/</code> holds the production database password in plaintext, plus the WhatsApp token file. Gitignored now, but still on disk.</li>
+        <li><strong>Separate local from production.</strong> Your local <code>.env</code> points <code>DATABASE_URL</code> at the production database. A Neon branch for development would remove a whole class of accident.</li>
+        <li><strong>Commit the <code>.gitignore</code> change</strong> — it's still an uncommitted edit in the working tree.</li>
+        <li><strong>Prove idempotency live</strong> when a second program exists: a customer joining their second programme at one business must not get a second welcome card. The unit test covers it; production hasn't exercised it.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>When the licence exists</h2>
+    <div class="stack">
+      <p>None of the above is wasted — the manual model and the Tech Provider model write the same rows into the same table. <code>BusinessWhatsAppChannel</code> already stores <code>phoneNumberId</code>, <code>wabaId</code> and an encrypted token per business, which is exactly what Embedded Signup returns.</p>
+      <ol class="flow">
+        <li><div><span class="who">Days 1–10</span><span class="what">Submit business verification</span><p class="detail">Trade licence as the primary document, address proof second. Set the region to United Arab Emirates first — it currently reads "Other". Meta quotes 2–10 business days.</p></div></li>
+        <li><div><span class="who">Then</span><span class="what">Onboard as Tech Provider and submit App Review</span><p class="detail">The recordings App Review wants are of a working send — which you now have.</p></div></li>
+        <li><div><span class="who">Then</span><span class="what">Swap the connect form for Embedded Signup</span><p class="detail">Same destination columns, different source. The manual form stays as the fallback for clients who can't complete the popup flow.</p></div></li>
+      </ol>
+      <p>Onboarding is capped at 10 customers per 7-day window until verification, App Review and access verification are all complete, then rises to 200. Ten is more clients than the manual route would comfortably carry anyway.</p>
+    </div>
+  </section>
+
+  <footer>
+    <span>Sources: Meta WhatsApp Business Platform documentation — WhatsApp Business Accounts, Embedded Signup overview, Become a Tech Provider.</span>
+    <span>Status verified against the Loyalty Card UAE app and business portfolio on 10 September 2026.</span>
+  </footer>
+
+</div>
+
+</body>
+</html>
