@@ -5,15 +5,14 @@
  *   node scripts/whatsapp/check-delivery.mjs --business "Emirates Coffee House" [--limit 10]
  */
 import pg from "pg";
-import { parseArgs, require_, fromEnvFile } from "./_args.mjs";
+import { parseArgs, require_, resolveDatabaseUrl } from "./_args.mjs";
 
 const USAGE = `Usage:\n  node scripts/whatsapp/check-delivery.mjs --business "<name>" [--limit 10]`;
 const args = parseArgs();
 const businessName = require_(args, "business", USAGE);
 const limit = Number(args.limit ?? 10);
 
-const DATABASE_URL = fromEnvFile("DATABASE_URL");
-if (!DATABASE_URL) { console.error("DATABASE_URL not found in .env"); process.exit(1); }
+const DATABASE_URL = resolveDatabaseUrl();
 
 const client = new pg.Client({ connectionString: DATABASE_URL });
 await client.connect();

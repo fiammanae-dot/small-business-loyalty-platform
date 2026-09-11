@@ -53,6 +53,50 @@ enum SupportSessionActivityType {
   SESSION_EXPIRED
 }
 
+/// Plate-issuing emirates. Codes differ per emirate and have changed over the
+/// years, so the code itself is free text - see lib/vehicles.ts.
+enum VehicleEmirate {
+  ABU_DHABI
+  DUBAI
+  SHARJAH
+  AJMAN
+  UMM_AL_QUWAIN
+  RAS_AL_KHAIMAH
+  FUJAIRAH
+}
+
+/// Closed sets, so they are enums. Brand and model are deliberately NOT
+/// enums: new brands reach the UAE constantly, and adding one must be a code
+/// edit rather than a migration.
+enum VehicleColour {
+  WHITE
+  BLACK
+  SILVER
+  GREY
+  BLUE
+  RED
+  BROWN
+  BEIGE
+  GOLD
+  GREEN
+  YELLOW
+  ORANGE
+  MAROON
+  PURPLE
+  OTHER
+}
+
+/// The tiers a car wash prices by, smallest first.
+enum VehicleSize {
+  SMALL_CAR
+  SEDAN
+  SUV
+  LARGE_SUV
+  PICKUP
+  VAN
+  MOTORCYCLE
+}
+
 enum BusinessType {
   COFFEE_SHOP
   RESTAURANT
@@ -748,6 +792,18 @@ model BusinessCustomerMembership {
   currentTier      CustomerTierName         @default(BRONZE) @map("current_tier")
   tierUpdatedAt    DateTime?                @map("tier_updated_at")
   notes            String?
+  /// Vehicle, for car care businesses. Emirate + code + number as entered;
+  /// normalizedPlate is the derived key searches match on, never displayed.
+  vehicleEmirate   VehicleEmirate?          @map("vehicle_emirate")
+  vehicleCode      String?                  @map("vehicle_code")
+  vehicleNumber    String?                  @map("vehicle_number")
+  normalizedPlate  String?                  @map("normalized_plate")
+  /// What the car is. All optional - a busy washer records the plate now and
+  /// the rest later.
+  vehicleBrand     String?                  @map("vehicle_brand")
+  vehicleModel     String?                  @map("vehicle_model")
+  vehicleColour    VehicleColour?           @map("vehicle_colour")
+  vehicleSize      VehicleSize?             @map("vehicle_size")
   joinedAt         DateTime                 @default(now()) @map("joined_at")
   createdAt        DateTime                 @default(now()) @map("created_at")
   updatedAt        DateTime                 @updatedAt @map("updated_at")
@@ -771,6 +827,7 @@ model BusinessCustomerMembership {
   @@index([businessId, firstName])
   @@index([businessId, lastName])
   @@index([businessId, status])
+  @@index([businessId, normalizedPlate])
   @@index([businessId, createdBranchId, status])
   @@index([createdBranchId])
   @@index([createdByUserId])

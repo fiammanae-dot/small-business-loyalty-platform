@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/format";
 import { formatUaePhoneDisplay, normalizePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { extractScanToken } from "@/lib/scan";
+import { businessTracksVehicles, formatPlateDisplay, formatVehicleDescription, parsePlateQuery } from "@/lib/vehicles";
 
 type ScannerManualCustomerSearchProps = {
   businessId: number;
@@ -32,7 +33,13 @@ export async function ScannerManualCustomerSearch({ businessId, branchId, query,
   const trimmedQuery = query?.trim() ?? "";
   const secureScanToken = trimmedQuery ? extractScanToken(trimmedQuery) : "";
   const normalizedPhone = trimmedQuery && !secureScanToken ? normalizePhone(trimmedQuery) : null;
-  const shouldSearch = !secureScanToken && trimmedQuery.length >= 2;
+  const business = await prisma.business.findUnique({ where: { id: businessId }, select: { businessType: true } });
+  const tracksVehicles = businessTracksVehicles(business?.businessType);
+  const plateQuery = secureScanToken ? null : parsePlateQuery(trimmedQuery);
+  // Vanity plates go down to a single digit, so a car wash must be able to
+  // search "7". Everywhere else two characters stays the floor.
+  const shouldSearch =
+    !secureScanToken && (trimmedQuery.length >= 2 || (tracksVehicles && /^\d$/.test(trimmedQuery)));
 
   const results = shouldSearch
     ? await prisma.businessCustomerMembership.findMany({
@@ -45,6 +52,8 @@ export async function ScannerManualCustomerSearch({ businessId, branchId, query,
             { phone: { contains: trimmedQuery, mode: "insensitive" } },
             { normalizedPhone: { contains: trimmedQuery, mode: "insensitive" } },
             ...(normalizedPhone ? [{ normalizedPhone }] : []),
+            ...(plateQuery?.normalizedPlate ? [{ normalizedPlate: plateQuery.normalizedPlate }] : []),
+            ...(plateQuery?.numberOnly ? [{ vehicleNumber: plateQuery.numberOnly }] : []),
             { cardToken: { contains: trimmedQuery, mode: "insensitive" } },
             { referralCode: { contains: trimmedQuery, mode: "insensitive" } },
           ],
@@ -67,7 +76,15 @@ export async function ScannerManualCustomerSearch({ businessId, branchId, query,
     : [];
 
   return (
-    <SectionCard title="Search customer" description="Search by name, phone, card link, QR link, scan token, or referral code." className="max-w-full overflow-x-hidden">
+    <SectionCard
+      title="Search customer"
+      description={
+        tracksVehicles
+          ? "Search by plate number, name, phone, card link, QR link, scan token, or referral code."
+          : "Search by name, phone, card link, QR link, scan token, or referral code."
+      }
+      className="max-w-full overflow-x-hidden"
+    >
       <div className="flex items-center gap-3">
         <span className="h-px flex-1 bg-[#E5E7EB]" aria-hidden="true" />
         <span className="rounded-full border border-[#E5E7EB] bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#6B7280]">OR</span>
@@ -78,7 +95,7 @@ export async function ScannerManualCustomerSearch({ businessId, branchId, query,
         <input
           name="customerSearch"
           defaultValue={trimmedQuery}
-          placeholder="Name, phone, card link, scan token, or referral code"
+          placeholder={tracksVehicles ? "Plate number, name, phone, card link, or scan token" : "Name, phone, card link, scan token, or referral code"}
           className="min-h-12 min-w-0 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm outline-none business-ring focus:ring-0"
         />
         <button type="submit" className="inline-flex min-h-12 items-center justify-center rounded-md business-button px-5 text-sm font-semibold">
@@ -113,6 +130,16 @@ export async function ScannerManualCustomerSearch({ businessId, branchId, query,
         <div className="mt-4 grid gap-3">
           {results.map((membership) => {
             const customerName = `${membership.firstName} ${membership.lastName ?? ""}`.trim();
+            const plateDisplay = formatPlateDisplay({
+              emirate: membership.vehicleEmirate,
+              code: membership.vehicleCode,
+              number: membership.vehicleNumber,
+            });
+            const vehicleDescription = formatVehicleDescription({
+              colour: membership.vehicleColour,
+              brand: membership.vehicleBrand,
+              model: membership.vehicleModel,
+            });
             const activePrograms = membership.programMemberships;
             const scanToken = activePrograms.length === 1 ? activePrograms[0].scanToken : membership.cardToken;
             const canOpenScanFlow = membership.status === "ACTIVE" && membership.cardStatus === "ACTIVE" && activePrograms.length > 0;
@@ -123,10 +150,16 @@ export async function ScannerManualCustomerSearch({ businessId, branchId, query,
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-semibold text-[#111827]">{customerName}</p>
+                      {plateDisplay ? (
+                        <span className="rounded border border-[#E5E7EB] bg-[#FAFAFA] px-2 py-0.5 font-mono text-sm font-semibold tracking-wide text-[#111827]">
+                          {plateDisplay}
+                        </span>
+                      ) : null}
                       <StatusBadge status={membership.status} />
                     </div>
-                    <div className="mt-2 grid gap-1 text-sm text-[#6B7280] sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="mt-2 grid gap-x-4 gap-y-1 text-sm text-[#6B7280] sm:grid-cols-2 lg:grid-cols-5">
                       <p>{formatUaePhoneDisplay(membership.normalizedPhone)}</p>
+                      {vehicleDescription ? <p>{vehicleDescription}</p> : null}
                       <p>{membership.createdBranch?.name ?? "No branch"}</p>
                       <p>Joined {formatDate(membership.joinedAt)}</p>
                       <p>{activePrograms.length} active program{activePrograms.length === 1 ? "" : "s"}</p>

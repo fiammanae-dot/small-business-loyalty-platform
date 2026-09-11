@@ -18,6 +18,7 @@ import {
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { formatDate } from "@/lib/format";
 import { formatUaePhoneDisplay, normalizePhone } from "@/lib/phone";
+import { businessTracksVehicles, formatPlateDisplay, parsePlateQuery } from "@/lib/vehicles";
 import { prisma } from "@/lib/prisma";
 
 const tierOptions = ["BRONZE", "SILVER", "GOLD", "VIP"] as const;
@@ -44,6 +45,7 @@ export default async function CustomersPage({
   const params = await searchParams;
   const query = params.q?.trim();
   const normalizedQueryPhone = query ? normalizePhone(query) : null;
+  const plateQuery = parsePlateQuery(query ?? "");
   const status = ["ACTIVE", "INACTIVE", "BLOCKED"].includes(params.status ?? "") ? params.status : undefined;
   const source = ["STAFF", "OWNER", "IMPORT", "SELF_SIGNUP"].includes(params.source ?? "") ? params.source : undefined;
   const consent = ["yes", "no"].includes(params.consent ?? "") ? params.consent : undefined;
@@ -74,6 +76,8 @@ export default async function CustomersPage({
                 { phone: { contains: query, mode: "insensitive" } },
                 { normalizedPhone: { contains: query, mode: "insensitive" } },
                 ...(normalizedQueryPhone ? [{ normalizedPhone: normalizedQueryPhone }] : []),
+                ...(plateQuery.normalizedPlate ? [{ normalizedPlate: plateQuery.normalizedPlate }] : []),
+                ...(plateQuery.numberOnly ? [{ vehicleNumber: plateQuery.numberOnly }] : []),
                 { email: { contains: query, mode: "insensitive" } },
                 { cardToken: { contains: query, mode: "insensitive" } },
                 { referralCode: { contains: query, mode: "insensitive" } },
@@ -150,7 +154,11 @@ export default async function CustomersPage({
               label="Search customers"
               name="q"
               defaultValue={params.q ?? ""}
-              placeholder="Search by name, phone number, referral code or card number..."
+              placeholder={
+                businessTracksVehicles(business.businessType)
+                  ? "Search by plate number, name, phone, referral code or card number..."
+                  : "Search by name, phone number, referral code or card number..."
+              }
               className="text-base"
             />
             <button
@@ -316,6 +324,19 @@ const customerInclude = {
   },
 };
 
+/** Only renders when a plate is on file, so non-car businesses see nothing. */
+function CustomerPlate({ row }: { row: CustomerRow }) {
+  const plate = formatPlateDisplay({
+    emirate: row.raw.vehicleEmirate,
+    code: row.raw.vehicleCode,
+    number: row.raw.vehicleNumber,
+  });
+  if (!plate) return null;
+  return (
+    <span className="mt-0.5 block truncate font-mono text-xs font-semibold tracking-wide text-[#3D4352]">{plate}</span>
+  );
+}
+
 function CustomerTableRow({ row }: { row: CustomerRow }) {
   const customerHref = `/dashboard/customers/${row.raw.uuid}`;
 
@@ -331,6 +352,7 @@ function CustomerTableRow({ row }: { row: CustomerRow }) {
           <span className="min-w-0">
             <span className="block truncate font-semibold text-[#171A21] transition group-hover:business-text">{row.customerName}</span>
             <span className="block truncate text-xs text-[#7A8091]">{formatUaePhoneDisplay(row.raw.normalizedPhone)}</span>
+            <CustomerPlate row={row} />
           </span>
         </Link>
       </td>
@@ -371,6 +393,7 @@ function CustomerMobileCard({ row }: { row: CustomerRow }) {
               <ChevronRight className="h-4 w-4 shrink-0 text-[#9AA0AD]" aria-hidden />
             </p>
             <p className="truncate text-xs text-[#7A8091]">{formatUaePhoneDisplay(row.raw.normalizedPhone)}</p>
+            <CustomerPlate row={row} />
           </div>
         </div>
         <StatusBadge tone={row.status === "ACTIVE" ? "success" : row.status === "BLOCKED" ? "danger" : "neutral"} className="shrink-0 whitespace-nowrap">

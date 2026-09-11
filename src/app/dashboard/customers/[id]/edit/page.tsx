@@ -5,6 +5,8 @@ import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { getBusinessCustomerOrRedirect } from "@/lib/customers";
 import { RequiredMark } from "@/components/ui/RequiredMark";
 import { formatUaePhoneDisplay } from "@/lib/phone";
+import { businessTracksVehicles } from "@/lib/vehicles";
+import { VehiclePlateFields } from "@/components/VehiclePlateFields";
 import { updateCustomerAction } from "@/app/dashboard/actions";
 
 export default async function EditCustomerPage({
@@ -46,6 +48,17 @@ export default async function EditCustomerPage({
               </select>
             </label>
           </div>
+          {businessTracksVehicles(membership.business.businessType) ? (
+            <VehiclePlateFields
+              defaultEmirate={membership.vehicleEmirate ?? ""}
+              defaultCode={membership.vehicleCode ?? ""}
+              defaultNumber={membership.vehicleNumber ?? ""}
+              defaultBrand={membership.vehicleBrand ?? ""}
+              defaultModel={membership.vehicleModel ?? ""}
+              defaultColour={membership.vehicleColour ?? ""}
+              defaultSize={membership.vehicleSize ?? ""}
+            />
+          ) : null}
           <label className="flex items-center gap-2 text-sm text-[#111827]">
             <input type="checkbox" name="marketingConsent" defaultChecked={membership.marketingConsent} className="h-4 w-4 rounded border-[#E5E7EB]" />
             Marketing consent

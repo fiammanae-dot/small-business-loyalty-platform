@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useEffect, useRef, type ReactNode } from "react";
 import { SearchableCombobox, type ComboboxOption } from "@/components/SearchableCombobox";
 import { RequiredMark } from "@/components/ui/RequiredMark";
+import { VehiclePlateFields } from "@/components/VehiclePlateFields";
 import type { PreservedFormState } from "@/lib/form-state";
 
 type CustomerCreateAction = (prevState: PreservedFormState, formData: FormData) => Promise<PreservedFormState>;
@@ -17,6 +18,8 @@ type CustomerCreateFormProps = {
   branchOptions?: ComboboxOption[];
   referralPreview?: ReactNode;
   initialValues?: Record<string, string>;
+  /** Car wash businesses record the plate; nobody else needs the fields. */
+  showVehicleFields?: boolean;
   submitLabel?: string;
   submittingLabel?: string;
   inputFocusClass?: string;
@@ -32,6 +35,7 @@ export function CustomerCreateForm({
   branchOptions,
   referralPreview,
   initialValues = {},
+  showVehicleFields = false,
   submitLabel = "Enroll customer",
   submittingLabel = "Enrolling...",
   inputFocusClass = "business-ring focus:ring-0",
@@ -86,6 +90,30 @@ export function CustomerCreateForm({
           </div>
         ) : null}
       </div>
+      {showVehicleFields ? (
+        <VehiclePlateFields
+          // The emirate select seeds React state from its default, and a
+          // useState initial value is ignored on re-render - so without a key
+          // tied to the submitted value, a rejected form silently drops the
+          // emirate while keeping the code and number. Same pattern as the
+          // branch combobox above.
+          key={`vehicle-${value("vehicleEmirate")}`}
+          defaultEmirate={value("vehicleEmirate")}
+          defaultCode={value("vehicleCode")}
+          defaultNumber={value("vehicleNumber")}
+          defaultBrand={value("vehicleBrand")}
+          defaultModel={value("vehicleModel")}
+          defaultColour={value("vehicleColour")}
+          defaultSize={value("vehicleSize")}
+          errors={{
+            vehicleEmirate: fieldErrors.vehicleEmirate,
+            vehicleCode: fieldErrors.vehicleCode,
+            vehicleNumber: fieldErrors.vehicleNumber,
+            vehicleModel: fieldErrors.vehicleModel,
+          }}
+          focusClass={inputFocusClass}
+        />
+      ) : null}
       <label className="flex items-center gap-2 text-sm text-[#111827]">
         <input type="checkbox" name="marketingConsent" defaultChecked={checked("marketingConsent")} className="h-4 w-4 rounded border-[#E5E7EB]" />
         Marketing consent

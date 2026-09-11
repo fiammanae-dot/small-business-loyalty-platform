@@ -4,6 +4,7 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { ReferralReferrerLookupPreview } from "@/components/ReferralReferrerLookupPreview";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
+import { businessTracksVehicles } from "@/lib/vehicles";
 import { createStaffCustomerAction } from "@/app/staff/customers/actions";
 
 export default async function NewStaffCustomerPage({
@@ -22,6 +23,9 @@ export default async function NewStaffCustomerPage({
         orderBy: { createdAt: "asc" },
       })
     : [];
+  const business = user.businessId
+    ? await prisma.business.findUnique({ where: { id: user.businessId }, select: { businessType: true } })
+    : null;
 
   return (
     <DashboardShell user={user} eyebrow="Staff" title="Enroll customer" hideWelcomeMessage>
@@ -32,6 +36,7 @@ export default async function NewStaffCustomerPage({
           cancelHref="/staff"
           lookupPath="/staff/customers/new"
           activePrograms={activePrograms}
+          showVehicleFields={businessTracksVehicles(business?.businessType)}
           initialValues={{
             referralCode: selectedReferralCode,
             referredBySearch,
