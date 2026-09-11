@@ -12,6 +12,10 @@
  *   node scripts/db/migrate-production.mjs            shows what WOULD run
  *   node scripts/db/migrate-production.mjs --apply    actually applies it
  *
+ * Add --direct if a run fails with P1001 on a "-pooler" host: `migrate deploy`
+ * takes a session advisory lock, and a transaction-mode pooler cannot hold one.
+ * --direct strips "-pooler" from the hostname to use Neon's direct endpoint.
+ *
  * Additive migrations should be applied BEFORE merging the code that needs
  * them: new nullable columns are invisible to the running app, so production
  * keeps working, and the deploy then lands on a database that is already ready.
@@ -43,15 +47,25 @@ if (devHost && devHost === host) {
 }
 
 const apply = process.argv.includes("--apply");
+const direct = process.argv.includes("--direct");
+
+// Neon's direct endpoint is the same host without "-pooler".
+const targetUrl = direct ? url.replace("-pooler.", ".") : url;
+const targetHost = new URL(targetUrl).hostname;
+
+if (direct && targetHost === host) {
+  console.error("--direct was passed but the host has no \"-pooler\" in it, so there is nothing to strip.");
+  process.exit(1);
+}
 
 console.log("");
-console.log(`target      : ${host}`);
-console.log(`             (PRODUCTION_DATABASE_URL)`);
+console.log(`target      : ${targetHost}`);
+console.log(`             (PRODUCTION_DATABASE_URL${direct ? ", direct endpoint" : ""})`);
 if (devHost) console.log(`local dev   : ${devHost}  - not touched`);
 console.log(`mode        : ${apply ? "APPLY - this writes to production" : "dry run - nothing will be written"}`);
 console.log("");
 
-const env = { ...process.env, DATABASE_URL: url, PRISMA_HIDE_UPDATE_MESSAGE: "1" };
+const env = { ...process.env, DATABASE_URL: targetUrl, PRISMA_HIDE_UPDATE_MESSAGE: "1" };
 const args = apply ? ["prisma", "migrate", "deploy"] : ["prisma", "migrate", "status"];
 
 const result = spawnSync("npx", args, { env, stdio: "inherit", shell: process.platform === "win32" });
@@ -60,6 +74,16 @@ if (!apply) {
   console.log("");
   console.log("Nothing was written. To apply the migrations listed above, run:");
   console.log("   node scripts/db/migrate-production.mjs --apply");
+}
+
+// P1001 means the connection never opened, so nothing was written and a retry
+// is always safe. On Neon that is usually a suspended compute; if a retry does
+// not fix it, the pooled endpoint cannot hold the advisory lock deploy needs.
+if (result.status !== 0 && !direct && targetHost.includes("-pooler.")) {
+  console.log("");
+  console.log("If that failed with P1001, nothing was written. Retry once - a suspended");
+  console.log("Neon compute usually answers on the second attempt. If it fails again:");
+  console.log(`   node scripts/db/migrate-production.mjs ${apply ? "--apply " : ""}--direct`);
 }
 
 process.exit(result.status ?? 1);
