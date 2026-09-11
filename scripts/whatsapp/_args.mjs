@@ -46,3 +46,32 @@ export async function importTs(path) {
   }).outputText;
   return import(`data:text/javascript;base64,${Buffer.from(out).toString("base64")}`);
 }
+
+/**
+ * Which database the operational scripts should talk to.
+ *
+ * Once local .env points DATABASE_URL at a Neon *development* branch, these
+ * scripts must not silently follow it - connecting a client's WhatsApp channel
+ * on a dev branch looks like it worked and changes nothing in production.
+ * So: use PRODUCTION_DATABASE_URL when it exists, and always say which host
+ * is being used so a wrong target is visible before anything is written.
+ */
+export function resolveDatabaseUrl({ allowDev = false } = {}) {
+  const prod = fromEnvFile("PRODUCTION_DATABASE_URL");
+  const plain = fromEnvFile("DATABASE_URL");
+  const url = prod ?? plain;
+  if (!url) {
+    console.error("Neither PRODUCTION_DATABASE_URL nor DATABASE_URL found in .env");
+    process.exit(1);
+  }
+  const host = new URL(url).hostname;
+  const source = prod ? "PRODUCTION_DATABASE_URL" : "DATABASE_URL";
+  console.log(`database              : ${host}`);
+  console.log(`   (from ${source})`);
+  if (!prod && !allowDev) {
+    console.log("   NOTE: no PRODUCTION_DATABASE_URL set - this is whatever DATABASE_URL points at.");
+    console.log("   If you have moved local development onto a Neon dev branch, add");
+    console.log("   PRODUCTION_DATABASE_URL to .env so these scripts keep targeting production.");
+  }
+  return url;
+}

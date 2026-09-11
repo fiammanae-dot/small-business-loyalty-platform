@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Milestone Rewards Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --ink:        #16181D;
+    --ink-soft:   #565E6C;
+    --ink-faint:  #858D9B;
+    --surface:    #FFFFFF;
+    --sunken:     #F4F6F8;
+    --raised:     #FFFFFF;
+    --line:       #E1E5EB;
+    --line-soft:  #EDF0F4;
+    --accent:     #EA6A12;
+    --accent-ink: #A8410A;
+    --accent-wash:#FDF2E8;
+    --stop:       #B42318;
+    --stop-wash:  #FEF0EF;
+    --go:         #06744A;
+    --go-wash:    #ECF7F1;
+    --hold:       #8A6100;
+    --hold-wash:  #FBF4E4;
+    --measure: 68ch;
+    --step--1: 0.8125rem;
+    --step-0:  1rem;
+    --step-1:  1.1875rem;
+    --step-2:  1.5rem;
+    --step-3:  2rem;
+    --step-4:  2.75rem;
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink:#E7EAEF; --ink-soft:#A2AAB8; --ink-faint:#7C8492;
+      --surface:#131519; --sunken:#1A1D23; --raised:#1D2027;
+      --line:#2C313A; --line-soft:#23272F;
+      --accent:#FB8F42; --accent-ink:#FFB578; --accent-wash:#2A1B0E;
+      --stop:#F97066; --stop-wash:#2B1514;
+      --go:#4ED397; --go-wash:#0E251C;
+      --hold:#E5B84B; --hold-wash:#261E0C;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink:#E7EAEF; --ink-soft:#A2AAB8; --ink-faint:#7C8492;
+    --surface:#131519; --sunken:#1A1D23; --raised:#1D2027;
+    --line:#2C313A; --line-soft:#23272F;
+    --accent:#FB8F42; --accent-ink:#FFB578; --accent-wash:#2A1B0E;
+    --stop:#F97066; --stop-wash:#2B1514;
+    --go:#4ED397; --go-wash:#0E251C;
+    --hold:#E5B84B; --hold-wash:#261E0C;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--surface); color: var(--ink);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size: var(--step-0); line-height: 1.6; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 78ch; margin-inline: auto; padding-inline: 20px; padding-block: 0 5rem; }
+  h1,h2,h3 { font-family: Archivo, ui-sans-serif, system-ui, sans-serif; text-wrap: balance; margin: 0; letter-spacing: -0.015em; }
+  p, ul, ol { margin: 0; }
+  p, li { max-width: var(--measure); }
+  code, .mono { font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace; font-size: 0.875em; }
+  code { background: var(--sunken); border: 1px solid var(--line-soft); border-radius: 3px; padding: 0.08em 0.34em; white-space: nowrap; }
+  a { color: var(--accent-ink); }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .masthead { border-bottom: 1px solid var(--line); padding-block: 3.5rem 2.25rem; display: flex; flex-direction: column; gap: 1rem; }
+  .eyebrow { font-family: "IBM Plex Mono", monospace; font-size: var(--step--1); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; }
+  .masthead h1 { font-size: var(--step-4); font-weight: 700; line-height: 1.05; }
+  .standfirst { font-size: var(--step-1); color: var(--ink-soft); max-width: 60ch; }
+
+  section { padding-block: 3.25rem 0; }
+  section > h2 { font-size: var(--step-2); font-weight: 600; padding-bottom: 0.9rem; border-bottom: 1px solid var(--line); margin-bottom: 1.5rem; }
+  .stack { display: flex; flex-direction: column; gap: 1.1rem; }
+  h3 { font-size: var(--step-1); font-weight: 600; margin-top: 0.75rem; }
+
+  /* the card diagram */
+  .card-demo { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; max-width: 340px; margin-block: 0.5rem; }
+  .slot {
+    aspect-ratio: 1; border: 1px solid var(--line); border-radius: 8px;
+    display: grid; place-items: center; text-align: center;
+    font-family: Archivo, sans-serif; font-size: 1.4rem; font-weight: 600;
+    color: var(--ink-soft); background: var(--raised);
+  }
+  .slot.reward {
+    border-color: var(--accent); background: var(--accent-wash); color: var(--accent-ink);
+    font-size: var(--step--1); font-weight: 600; line-height: 1.25; padding: 0.4rem; font-family: "IBM Plex Sans", sans-serif;
+  }
+  .slot.final { border-width: 2px; }
+  .caption { font-size: var(--step--1); color: var(--ink-faint); }
+
+  .callout { border: 1px solid var(--line); border-left: 3px solid var(--stop); background: var(--stop-wash); border-radius: 0 6px 6px 0; padding: 1.4rem 1.6rem; display: flex; flex-direction: column; gap: 0.75rem; }
+  .callout h3 { margin: 0; font-size: var(--step-1); }
+  .aside { border-left: 3px solid var(--accent); background: var(--accent-wash); padding: 1.15rem 1.4rem; border-radius: 0 6px 6px 0; display: flex; flex-direction: column; gap: 0.6rem; }
+  .aside .tag { font-family: "IBM Plex Mono", monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-ink); }
+
+  pre { background: var(--sunken); border: 1px solid var(--line); border-radius: 6px; padding: 1rem 1.15rem; overflow-x: auto; font-family: "IBM Plex Mono", monospace; font-size: var(--step--1); line-height: 1.55; margin: 0; }
+  pre .c { color: var(--ink-faint); }
+  pre .k { color: var(--accent-ink); }
+
+  ol.flow { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0; counter-reset: step; }
+  ol.flow > li { counter-increment: step; display: grid; grid-template-columns: 2.4rem 1fr; gap: 0 1rem; padding-block: 1.05rem; border-bottom: 1px solid var(--line-soft); max-width: none; }
+  ol.flow > li:last-child { border-bottom: 0; }
+  ol.flow > li::before { content: counter(step); font-family: "IBM Plex Mono", monospace; font-size: var(--step--1); font-weight: 500; color: var(--accent-ink); background: var(--accent-wash); border-radius: 4px; width: 1.9rem; height: 1.9rem; display: grid; place-items: center; font-variant-numeric: tabular-nums; }
+  ol.flow .what { font-weight: 500; display: block; }
+  ol.flow .where { font-family: "IBM Plex Mono", monospace; font-size: 0.7rem; letter-spacing: 0.05em; color: var(--ink-faint); display: block; margin-bottom: 0.2rem; }
+  ol.flow .detail { color: var(--ink-soft); font-size: var(--step--1); margin-top: 0.3rem; }
+
+  ul.dashed { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.55rem; }
+  ul.dashed > li { padding-left: 1.1rem; position: relative; }
+  ul.dashed > li::before { content: ""; position: absolute; left: 0; top: 0.72em; width: 0.45rem; height: 1px; background: var(--accent); }
+
+  .scroller { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; }
+  table { border-collapse: collapse; width: 100%; min-width: 32rem; }
+  th, td { text-align: left; padding: 0.8rem 1rem; border-bottom: 1px solid var(--line-soft); vertical-align: top; font-size: var(--step--1); }
+  th { font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-faint); font-weight: 500; background: var(--sunken); border-bottom: 1px solid var(--line); }
+  tbody tr:last-child td { border-bottom: 0; }
+  td:first-child { font-weight: 500; color: var(--ink); }
+
+  .pill { display: inline-block; font-family: "IBM Plex Mono", monospace; font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.16rem 0.5rem; border-radius: 3px; white-space: nowrap; }
+  .pill.now { background: var(--go-wash); color: var(--go); border: 1px solid color-mix(in srgb, var(--go) 30%, transparent); }
+  .pill.later { background: var(--hold-wash); color: var(--hold); border: 1px solid color-mix(in srgb, var(--hold) 32%, transparent); }
+
+  footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--line); color: var(--ink-faint); font-size: var(--step--1); display: flex; flex-direction: column; gap: 0.4rem; }
+
+  @media (max-width: 540px) {
+    :root { --step-4: 2.15rem; --step-3: 1.7rem; --step-2: 1.35rem; }
+    ol.flow > li { grid-template-columns: 1.9rem 1fr; gap: 0 0.75rem; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">
+      <span>Loyalty Card UAE</span>
+      <span>Milestone rewards</span>
+      <span>10 Sep 2026</span>
+    </div>
+    <h1>Rewards Before the Card Is Full</h1>
+    <p class="standfirst">Al Bab Al Abyad's paper card gives 50% off at visit 5 and a free wash at visit 9. The platform can only express the second one. This is what it takes to support the first — and why the order of work matters more than the work itself.</p>
+  </header>
+
+  <section>
+    <h2>What the card actually does</h2>
+    <div class="stack">
+      <div class="card-demo">
+        <div class="slot">1</div><div class="slot">2</div><div class="slot">3</div>
+        <div class="slot">4</div><div class="slot reward">50% off car wash</div><div class="slot">6</div>
+        <div class="slot">7</div><div class="slot">8</div><div class="slot reward final">Free full wash</div>
+      </div>
+      <p class="caption">Al Bab Al Abyad Auto Services, Sharjah — nine slots, two rewards.</p>
+
+      <p>The reward at slot 5 is not a smaller prize. It is a retention device placed exactly where customers drift: past the novelty, not yet close enough to the finish to pull them back. The business spends a discount at the halfway point to buy the second half of the card.</p>
+
+      <p>Two properties matter for the build. <strong>Slot 5 does not complete the card</strong> — the customer collects the discount and keeps going. <strong>Slot 9 does</strong> — reward claimed, card starts again.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Why this isn't a small change</h2>
+    <div class="stack">
+      <div class="callout">
+        <h3>Redemption currently resets the card</h3>
+        <p>In <code>src/app/scan/actions.ts</code>, claiming a reward writes a <code>RewardRedemption</code> row and then sets <code>earnedStamps: 0</code>, recalculating bonus stamps for a <code>CARD_RESET</code> event. Redemption and completion are the same act.</p>
+        <p>A visit-5 reward breaks that assumption: it must be claimable <em>without</em> resetting anything. This is the heart of the work — not the new table.</p>
+      </div>
+
+      <p>The rest of the model carries the same assumption. <code>getRewardState()</code> in <code>src/lib/rewards.ts</code> returns <code>ACTIVE</code>, <code>REWARD_READY</code> or <code>REDEEMED</code> from a single comparison against <code>requiredStamps</code>. There is no concept of <em>which</em> reward is ready, because there has only ever been one.</p>
+
+      <p>And a claimed milestone has to be remembered <strong>per card cycle</strong>. A customer who takes the 50% at visit 5, completes the card, and starts again should get the 50% again on the new card — but not twice on the same one.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Schema</h2>
+    <div class="stack">
+      <p>One new table, plus one field to track what has been claimed in the current cycle.</p>
+      <pre><span class="c">// A reward at a point on the card. Every program gets at least one.</span>
+<span class="k">model</span> ProgramReward {
+  id                Int      @id @default(autoincrement())
+  loyaltyProgramId  Int      @map("loyalty_program_id")
+  atStamp           Int      @map("at_stamp")           <span class="c">// 5, 9</span>
+  rewardName        String   @map("reward_name")
+  rewardDescription String   @map("reward_description")
+  completesCard     Boolean  @default(false) @map("completes_card")
+
+  loyaltyProgram    LoyaltyProgram @relation(...)
+  redemptions       RewardRedemption[]
+
+  @@unique([loyaltyProgramId, atStamp])
+  @@index([loyaltyProgramId])
+  @@map("program_rewards")
+}
+
+<span class="c">// On CustomerProgramMembership - cleared when the card resets.</span>
+claimedRewardStamps Int[] @default([]) @map("claimed_reward_stamps")
+
+<span class="c">// On RewardRedemption - which milestone this was.</span>
+programRewardId Int? @map("program_reward_id")</pre>
+
+      <p><code>completesCard</code> is the field that carries the whole behavioural difference. Exactly one reward per program should have it set.</p>
+
+      <div class="aside">
+        <span class="tag">Why an array rather than a join table</span>
+        <p><code>claimedRewardStamps</code> is bounded by the number of milestones on a card — a handful at most — and it is cleared on every reset. A join table would need the same clearing logic plus a cycle identifier to distinguish this card from the last one. The array keeps "claimed on the current card" in one place that resets naturally.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>The four places code changes</h2>
+    <div class="stack">
+      <ol class="flow">
+        <li>
+          <div>
+            <span class="where">src/lib/rewards.ts</span>
+            <span class="what">Reward state becomes "which reward is ready", not "is the reward ready"</span>
+            <p class="detail"><code>getRewardState()</code> and <code>isRewardReady()</code> take the program's reward list and the claimed set, and return the next unclaimed milestone the customer has reached — or none. Every caller of these two functions needs revisiting; they are the shared vocabulary the rest of the app uses.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <span class="where">src/app/scan/actions.ts</span>
+            <span class="what">Redemption resets only when the claimed reward completes the card</span>
+            <p class="detail">Record <code>programRewardId</code> on the redemption. Append <code>atStamp</code> to <code>claimedRewardStamps</code>. Reset <code>earnedStamps</code> and clear the claimed set <em>only</em> when <code>completesCard</code> is true. The existing idempotency key and transaction locking stay exactly as they are.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <span class="where">card rendering + src/lib/google-wallet/mapper.ts</span>
+            <span class="what">The card shows where the rewards sit</span>
+            <p class="detail">A customer who cannot see the visit-5 reward coming gets none of the retention benefit — the paper card works precisely because the badge is visible from day one. The Wallet pass needs the same: <code>mapper.ts</code> currently writes "N visits until {rewardName}", which must become the <em>next</em> reward rather than the final one.</p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <span class="where">src/lib/programs.ts + program create/edit forms</span>
+            <span class="what">Business owners can add milestones</span>
+            <p class="detail">A repeatable "at visit N, give X" row in program setup. <code>programSchema</code> validates: every <code>atStamp</code> between 1 and <code>requiredStamps</code>, no duplicates, exactly one <code>completesCard</code>, and that one at <code>requiredStamps</code>. This is the only part that is purely additive UI.</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <h2>Do it in two stages</h2>
+    <div class="stack">
+      <p>The stages are split by one property: whether the work gets harder once customers exist.</p>
+
+      <div class="scroller">
+        <table>
+          <thead><tr><th>Stage</th><th>What</th><th>When</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Stage 1</td>
+              <td>Schema, backfill, reward-state logic, redemption behaviour, card and Wallet rendering</td>
+              <td><span class="pill now">Before the first customer enrolls</span></td>
+            </tr>
+            <tr>
+              <td>Stage 2</td>
+              <td>Milestone editor in program setup</td>
+              <td><span class="pill later">Any time after</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p><strong>Stage 1 changes nothing anyone can see.</strong> Every existing program gets exactly one <code>ProgramReward</code> row — at <code>requiredStamps</code>, with <code>completesCard: true</code> — which reproduces today's behaviour exactly. Same cards, same passes, same redemptions. It is a refactor with a migration, shipped while nobody is mid-card.</p>
+
+      <p><strong>Stage 2 is then pure addition.</strong> A form and a badge. No migration, no customers to reason about, ship whenever.</p>
+
+      <div class="aside">
+        <span class="tag">The reason for the split</span>
+        <p>Every problem with adding this later is a <em>people</em> problem, not a code problem: a customer sitting at 6 stamps when a visit-5 reward appears, Wallet passes on real phones that now say the wrong thing, and redemption history with no milestone to point at. Stage 1 done early means those questions never arise. Schema and engine get harder with every customer; UI stays cheap forever.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Backfill</h2>
+    <div class="stack">
+      <p>Additive and mechanical, in the shape of migration 0046:</p>
+      <ul class="dashed">
+        <li>Create <code>program_rewards</code>; add <code>claimed_reward_stamps</code> defaulting to <code>[]</code>; add nullable <code>program_reward_id</code> to <code>reward_redemptions</code>.</li>
+        <li>For every existing <code>LoyaltyProgram</code>, insert one row: <code>atStamp = requiredStamps</code>, name and description copied from the program, <code>completesCard = true</code>.</li>
+        <li>Point existing <code>reward_redemptions</code> at their program's new row. Every past redemption was a card completion, because that is the only kind that existed.</li>
+        <li>Leave <code>requiredStamps</code>, <code>rewardName</code> and <code>rewardDescription</code> on <code>LoyaltyProgram</code> in place for now. Removing them is a second, separate migration once nothing reads them.</li>
+      </ul>
+      <p>Run it the way 0046 went: <code>prisma migrate deploy</code> from a Windows terminal against <code>PRODUCTION_DATABASE_URL</code>, after testing on the <code>dev</code> branch. Vercel does not run migrations.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Decisions to make before writing code</h2>
+    <div class="stack">
+      <ul class="dashed">
+        <li><strong>Can a milestone be skipped?</strong> A customer reaches visit 9 without ever claiming the visit-5 discount. Do they lose it, or can they still claim it? Simplest rule: unclaimed milestones stay claimable until the card resets.</li>
+        <li><strong>Can two rewards be ready at once?</strong> Follows from the above. If yes, staff need to pick which they are redeeming — that is a scanner UI change, not just logic.</li>
+        <li><strong>Do bonus stamps count toward milestones?</strong> <code>progressValue()</code> combines earned and bonus. A customer starting with 2 bonus stamps is at visit 5 after 3 real visits. Probably fine, but it should be a decision rather than an accident.</li>
+        <li><strong>What does the welcome WhatsApp message say?</strong> The approved <code>new_loyalty_card</code> template is fixed text with no reward mention, so nothing breaks — but a card with a reward at visit 5 is a better thing to advertise, and template changes need Meta approval.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>What to test</h2>
+    <div class="stack">
+      <ul class="dashed">
+        <li>A card with one milestone behaves exactly as it does today — this is the regression that matters most, since every existing program is that case.</li>
+        <li>Claiming at visit 5 does not reset stamps; the customer continues from 5.</li>
+        <li>The visit-5 reward cannot be claimed twice on one card.</li>
+        <li>After completing at visit 9, the card resets and the visit-5 reward is available again.</li>
+        <li>Redeeming the same milestone concurrently from two devices consumes it once — the existing <code>idempotencyKey</code> and row lock should cover this, but it needs proving with two milestones in play.</li>
+        <li>The Wallet pass names the <em>next</em> reward, not the final one, and re-syncs when the milestone is claimed.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <span>Code paths verified against the repository on 10 September 2026: rewards.ts, scan/actions.ts, programs.ts, google-wallet/mapper.ts, wallet-sync/change-detection.ts, schema.prisma.</span>
+    <span>Card design: Al Bab Al Abyad Auto Services, Industrial Area 4, Sharjah.</span>
+  </footer>
+
+</div>
+
+</body>
+</html>

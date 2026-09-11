@@ -13,7 +13,7 @@
  *     [--template new_loyalty_card] [--language en] [--commit]
  */
 import pg from "pg";
-import { parseArgs, require_, fromEnvFile, readSecretFile, importTs } from "./_args.mjs";
+import { parseArgs, require_, fromEnvFile, readSecretFile, importTs, resolveDatabaseUrl } from "./_args.mjs";
 
 const USAGE = `Usage:
   node scripts/whatsapp/connect-channel.mjs --business "<name>" --phone-number-id <id> \\
@@ -28,8 +28,7 @@ const templateName = args.template ?? "new_loyalty_card";
 const templateLanguage = args.language ?? "en";
 const COMMIT = args._flags.has("commit");
 
-const DATABASE_URL = fromEnvFile("DATABASE_URL");
-if (!DATABASE_URL) { console.error("DATABASE_URL not found in .env"); process.exit(1); }
+const DATABASE_URL = resolveDatabaseUrl();
 
 const { parseWhatsAppEncryptionKey, encryptWhatsAppAccessToken, decryptWhatsAppAccessToken } =
   await importTs("src/lib/whatsapp/credentials.ts");
@@ -52,7 +51,7 @@ console.log("encrypt -> decrypt        : round-trips correctly");
 
 const client = new pg.Client({ connectionString: DATABASE_URL });
 await client.connect();
-console.log("connected to              :", new URL(DATABASE_URL).hostname);
+console.log("connected");
 
 const found = await client.query(`select id, name from businesses where name = $1`, [businessName]);
 if (found.rows.length !== 1) {
