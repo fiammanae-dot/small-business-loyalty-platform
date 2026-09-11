@@ -56,6 +56,56 @@ test("plate codes are validated by emirate, not by one global rule", () => {
   assert.equal(checkVehicleCode("DUBAI", null), null);
 });
 
+test("the code pick-list is the union of what sources claim, and never rejects", () => {
+  const { VEHICLE_CODES, isKnownVehicleCode, checkVehicleCode } = vehicles;
+
+  // Sources contradict each other - Wikipedia has Ajman at A,B,C,D,E,H while
+  // licenseplate.ae has the full alphabet - so the list takes the wider claim.
+  assert.equal(VEHICLE_CODES.SHARJAH.length, 4, "every source agrees Sharjah is 1-4");
+  assert.deepEqual([...VEHICLE_CODES.SHARJAH], ["1", "2", "3", "4"]);
+  assert.ok(VEHICLE_CODES.ABU_DHABI.includes("50"), "50 is its own Abu Dhabi category");
+  assert.ok(VEHICLE_CODES.DUBAI.includes("AA") && VEHICLE_CODES.DUBAI.includes("MM"));
+  assert.ok(VEHICLE_CODES.DUBAI.includes("P"), "Dubai P plates are common - the narrow source is wrong");
+  for (const emirate of ["AJMAN", "UMM_AL_QUWAIN", "RAS_AL_KHAIMAH", "FUJAIRAH"]) {
+    assert.equal(VEHICLE_CODES[emirate].length, 26, `${emirate} takes the full alphabet`);
+  }
+
+  // The list decides what is offered, never what is accepted.
+  assert.equal(isKnownVehicleCode("SHARJAH", "9"), false);
+  assert.equal(checkVehicleCode("SHARJAH", "9"), null, "an unlisted but well-shaped code must still pass");
+  assert.equal(isKnownVehicleCode("DUBAI", "ZZ"), false);
+  assert.equal(checkVehicleCode("DUBAI", "ZZ"), null);
+  assert.equal(isKnownVehicleCode("DUBAI", "aa"), true, "matching is case-insensitive");
+});
+
+test("plate entry reveals one step at a time and can never trap staff", () => {
+  const form = read("src/components/VehiclePlateFields.tsx");
+
+  // Emirate first: the code is meaningless until the emirate is known, because
+  // Dubai issues letters where Abu Dhabi and Sharjah issue numbers.
+  assert.match(form, /Step 1 . Emirate/);
+  assert.match(form, /Step 2 . \{vehicleEmirateLabels\[selected\]\}/);
+  assert.match(form, /Step 3 . Plate number/);
+  assert.match(form, /\{selected \? \(/, "step 2 renders only once an emirate is chosen");
+  assert.match(form, /const showNumber = Boolean\(selected\) && codeChoice !== ""/);
+
+  // The two escapes that stop the guided flow becoming a dead end.
+  assert.match(form, /This plate has no code/, "codeless plates must reach step 3");
+  assert.match(form, /Other - not in this list/, "an unlisted code must still be enterable");
+  assert.match(form, /codeChoice === OTHER_CODE \? otherCode/);
+
+  // Sentinels are UI-only; the server must receive a real code or nothing.
+  assert.match(form, /name="vehicleCode" value=\{submittedCode\}/);
+  assert.match(form, /codeChoice === NO_CODE \|\| codeChoice === "" \? ""/);
+
+  // Changing the emirate invalidates a code picked for the previous one.
+  assert.match(form, /setCodeChoice\(""\);/);
+
+  // A plate already on file survives a save that never reached step 3 - but
+  // only while the emirate is untouched, or we would invent a plate.
+  assert.match(form, /emirate === defaultEmirate \? \(/);
+});
+
 test("validation checks plate shape, never a whitelist of issued codes", () => {
   // Published sources disagree on which letters each northern emirate issues,
   // and emirates add codes over time. A whitelist would reject real plates.

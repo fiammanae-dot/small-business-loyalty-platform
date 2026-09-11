@@ -86,6 +86,53 @@ const MAX_LETTER_CODE_LENGTH: Record<VehicleEmirate, number> = {
   ABU_DHABI: 1, SHARJAH: 1,
 };
 
+/** A-Z, for the emirates whose published code set is the plain alphabet. */
+function alphabet(): string[] {
+  return Array.from({ length: 26 }, (_, index) => String.fromCharCode(65 + index));
+}
+
+/**
+ * The codes each emirate is known to issue, for the pick-list at the counter.
+ *
+ * Sources disagree, and not slightly: Wikipedia has Ajman issuing only
+ * A, B, C, D, E and H while licenseplate.ae has the full A-Z, and Wikipedia
+ * puts Dubai at A-E plus doubles, which is plainly narrower than what is on
+ * the road. So these are the UNION of what published sources claim - a wider
+ * list covers more real cars and never fewer.
+ *
+ * This exists to make entry fast, NOT to decide what is valid. Every form
+ * offers "Other" alongside it, and checkVehicleCode still validates only the
+ * shape, because a plate sitting in front of the washer has to be enterable
+ * whether or not a website ever listed its code.
+ */
+export const VEHICLE_CODES: Record<VehicleEmirate, readonly string[]> = {
+  // Single letters, then the doubles Dubai also issues.
+  DUBAI: [
+    ...alphabet(),
+    "AA", "BB", "CC", "DD", "EE", "FF", "HH", "II", "MM",
+  ],
+  // Numeric category codes: 1-22 in general circulation, plus 50.
+  ABU_DHABI: [
+    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11",
+    "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "50",
+  ],
+  // The most compact system in the country - every source agrees on 1-4.
+  SHARJAH: ["1", "2", "3", "4"],
+  AJMAN: alphabet(),
+  UMM_AL_QUWAIN: alphabet(),
+  RAS_AL_KHAIMAH: alphabet(),
+  FUJAIRAH: alphabet(),
+};
+
+/**
+ * Is this a code the emirate is known to issue? Only used to decide whether an
+ * existing plate opens in the dropdown or in the "Other" box - never to reject.
+ */
+export function isKnownVehicleCode(emirate: VehicleEmirate, code: string | null | undefined): boolean {
+  const value = normalizeVehicleCode(code);
+  return value !== null && VEHICLE_CODES[emirate].includes(value);
+}
+
 export function normalizeVehicleCode(code: string | null | undefined): string | null {
   const value = (code ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "");
   if (!value || value.length > 2) return null;
