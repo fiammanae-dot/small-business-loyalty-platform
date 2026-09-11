@@ -301,3 +301,14 @@ test("the plate index is additive and deliberately not unique", () => {
   assert.match(migration, /WHERE "normalized_plate" IS NOT NULL/, "index only the rows that have a plate");
   assert.match(schema, /@@index\(\[businessId, normalizedPlate\]\)/);
 });
+
+test("the production migration helper cannot be pointed at the wrong database", () => {
+  const script = read("scripts/db/migrate-production.mjs");
+
+  // Local .env points DATABASE_URL at a dev branch, so a plain
+  // `prisma migrate deploy` migrates dev and leaves production behind.
+  assert.match(script, /PRODUCTION_DATABASE_URL/);
+  assert.match(script, /migrate", "status"/, "the default run must be a dry run");
+  assert.match(script, /--apply/, "applying must take an explicit flag");
+  assert.match(script, /devHost === host/, "must refuse when dev and production are the same database");
+});
