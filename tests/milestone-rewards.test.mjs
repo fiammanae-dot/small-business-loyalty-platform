@@ -158,6 +158,35 @@ test("redemption resets the card only when the reward completes it", () => {
   assert.match(actions, /programRewards: \{ orderBy: \{ atStamp: "asc" \} \}/);
 });
 
+test("the card and the Wallet pass name the next reward, not the last one", () => {
+  const mapper = read("src/lib/google-wallet/mapper.ts");
+  const card = read("src/app/card/[token]/page.tsx");
+  const service = read("src/lib/google-wallet/service.ts");
+
+  // An invisible milestone retains nobody - the paper card works precisely
+  // because the badge at slot 5 is visible from day one.
+  for (const [label, source] of [["wallet mapper", mapper], ["customer card", card]]) {
+    assert.match(source, /getNextReward\(/, `${label} must count down to the next reward`);
+    assert.match(source, /getReadyRewards\(/, `${label} must know what is waiting now`);
+    assert.match(source, /claimedRewardStamps/, `${label} must exclude rewards already taken`);
+  }
+
+  // The old behaviour was a bare subtraction against the program's final
+  // requirement; that is exactly what hides a milestone.
+  assert.doesNotMatch(mapper, /required - progress/, "wallet must not count down to requiredStamps");
+  assert.doesNotMatch(card, /Math\.max\(required - progress, 0\)/, "card must not count down to requiredStamps");
+
+  // Both have to actually load the rewards, or they silently fall back.
+  assert.match(service, /programRewards: \{ orderBy: \{ atStamp: "asc" \} \}/);
+  assert.match(card, /programRewards: \{ orderBy: \{ atStamp: "asc" \} \}/);
+
+  // Two rewards waiting must both be named rather than one hiding the other.
+  assert.match(mapper, /readyRewards\.map\(\(reward\) => reward\.rewardName\)\.join\(" and "\)/);
+
+  // A finished card has nothing to count down to and must not say "0 visits".
+  assert.match(mapper, /All rewards on this card have been claimed\./);
+});
+
 test("the schema keeps completesCard and the claimed set together", () => {
   const schema = read("prisma/schema.prisma");
   const migration = read("prisma/migrations/0048_program_rewards/migration.sql");

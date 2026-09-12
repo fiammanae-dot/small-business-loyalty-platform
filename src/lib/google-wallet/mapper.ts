@@ -1,10 +1,17 @@
 import "server-only";
 
-import type { BusinessBranding, BusinessCustomerMembership, CustomerProgramMembership, LoyaltyProgram } from "@prisma/client";
+import type {
+  BusinessBranding,
+  BusinessCustomerMembership,
+  CustomerProgramMembership,
+  LoyaltyProgram,
+  ProgramReward,
+} from "@prisma/client";
 import { resolveCardThemeColors } from "@/lib/card-themes";
 import { resolveCardDesign, type CardDesignInput } from "@/lib/card-design";
 import { getCardUrl, resolveBranding } from "@/lib/customer-cards";
 import { progressValue } from "@/lib/programs";
+import { getNextReward, getReadyRewards, singleCardReward, type CardReward } from "@/lib/rewards";
 import { getScanUrl } from "@/lib/scan";
 
 export type GoogleWalletProgramMembership = CustomerProgramMembership & {
@@ -15,8 +22,16 @@ export type GoogleWalletProgramMembership = CustomerProgramMembership & {
       branding: BusinessBranding | null;
     };
   };
-  loyaltyProgram: LoyaltyProgram;
+  loyaltyProgram: LoyaltyProgram & { programRewards?: ProgramReward[] };
 };
+
+/**
+ * The rewards on this card. Migration 0048 backfilled a row for every program,
+ * so the fallback only covers a caller that has not loaded the relation.
+ */
+function cardRewardsFor(program: LoyaltyProgram & { programRewards?: ProgramReward[] }): CardReward[] {
+  return program.programRewards?.length ? program.programRewards : singleCardReward(program);
+}
 
 export async function buildGoogleWalletClassPayload({
   issuerId,
@@ -41,7 +56,10 @@ export async function buildGoogleWalletClassPayload({
 
   // Honor the card design's section visibility so hidden sections don't reappear on the pass.
   const classTextModules = [
-    ...(sections.rewardBox ? [{ id: "reward", header: "Reward", body: membership.loyaltyProgram.rewardName }] : []),
+    // The class is shared by every customer on the program, so it can only
+    // describe the card itself - the per-customer "next reward" lives on the
+    // object below.
+    ...(sections.rewardBox ? [{ id: "reward", header: "Reward", body: rewardBoxBody(membership) }] : []),
     ...(sections.businessName ? [{ id: "business", header: "Business", body: businessName }] : []),
   ];
 
@@ -86,8 +104,21 @@ export async function buildGoogleWalletObjectPayload({
   const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim();
   const progress = progressValue(membership.earnedStamps, membership.bonusStamps);
   const required = Math.max(1, membership.loyaltyProgram.requiredStamps);
-  const remaining = Math.max(0, required - progress);
-  const rewardReady = progress >= required;
+  const cardRewards = cardRewardsFor(membership.loyaltyProgram);
+  const cardInput = {
+    earnedStamps: membership.earnedStamps,
+    bonusStamps: membership.bonusStamps,
+    rewards: cardRewards,
+    claimedRewardStamps: membership.claimedRewardStamps,
+  };
+  // What the customer is actually working toward. On a nine-slot card with a
+  // milestone at five, someone on visit 2 is three away from the discount -
+  // telling them they are seven away from the wash is what makes a milestone
+  // invisible, and an invisible milestone retains nobody.
+  const readyRewards = getReadyRewards(cardInput);
+  const nextReward = getNextReward(cardInput);
+  const rewardReady = readyRewards.length > 0;
+  const remaining = nextReward ? Math.max(0, nextReward.atStamp - progress) : 0;
   const cardUrl = await getCardUrl(customer.cardToken);
   const scanUrl = await getScanUrl(membership.scanToken);
   const sections = resolveCardDesign(membership.loyaltyProgram.cardDesign as CardDesignInput).visibleSections;
@@ -102,8 +133,13 @@ export async function buildGoogleWalletObjectPayload({
             id: "reward",
             header: rewardReady ? "Reward ready" : "Next reward",
             body: rewardReady
-              ? `${membership.loyaltyProgram.rewardName} is ready to redeem.`
-              : `${remaining} visit${remaining === 1 ? "" : "s"} until ${membership.loyaltyProgram.rewardName}.`,
+              // More than one can be waiting - a customer who never claimed the
+              // milestone and then finished the card has both, and the pass
+              // should say so rather than name one and hide the other.
+              ? readyRewards.map((reward) => reward.rewardName).join(" and ") + " ready to redeem."
+              : nextReward
+                ? `${remaining} visit${remaining === 1 ? "" : "s"} until ${nextReward.rewardName}.`
+                : "All rewards on this card have been claimed.",
           },
         ]
       : []),
@@ -125,7 +161,7 @@ export async function buildGoogleWalletObjectPayload({
     secondaryLoyaltyPoints: {
       label: "Remaining",
       balance: {
-        string: rewardReady ? "Reward ready" : `${remaining} visit${remaining === 1 ? "" : "s"}`,
+        string: rewardReady ? "Reward ready" : nextReward ? `${remaining} visit${remaining === 1 ? "" : "s"}` : "Complete",
       },
     },
     barcode: {
@@ -215,4 +251,17 @@ function safeIdPart(value: string) {
 
 function compactObject<T extends Record<string, unknown>>(value: T): T {
   return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined && entry !== null)) as T;
+}
+
+/**
+ * What the shared class says under "Reward".
+ *
+ * A class is one row per program, so it cannot name a customer's next reward.
+ * When the card carries more than one it lists them in order, which is how the
+ * paper card reads: the badge at slot 5 is visible from day one.
+ */
+function rewardBoxBody(membership: GoogleWalletProgramMembership) {
+  const rewards = cardRewardsFor(membership.loyaltyProgram);
+  if (rewards.length <= 1) return membership.loyaltyProgram.rewardName;
+  return rewards.map((reward) => `Visit ${reward.atStamp}: ${reward.rewardName}`).join(" · ");
 }
