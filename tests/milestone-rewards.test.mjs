@@ -211,6 +211,26 @@ test("the scanner names the reward it will actually hand over", () => {
   assert.match(resultCard, /remainingToNext \?\? Math\.max\(0, required - current\)/);
 });
 
+test("the customer list flags people owed a mid-card reward", () => {
+  const list = read("src/app/dashboard/customers/page.tsx");
+
+  // An owner scanning this list has to see everyone owed something now.
+  // Comparing against requiredStamps alone hides exactly those people.
+  assert.match(list, /rewardReady: readyRewards\.length > 0/);
+  assert.doesNotMatch(list, /rewardReady: current >= required/, "the inlined comparison must be gone");
+
+  // "Near" means near the NEXT reward, so two visits from the milestone
+  // counts - not only two visits from finishing the card.
+  assert.match(list, /untilNext !== null && untilNext > 0 && untilNext <= 2/);
+  assert.doesNotMatch(list, /current >= Math\.max\(0, required - 2\)/);
+
+  // Somebody already holding a ready reward is not "near" one.
+  assert.match(list, /nearReward: readyRewards\.length === 0 &&/);
+
+  // The list has to load the rewards or it silently falls back to one.
+  assert.match(list, /programRewards: \{/);
+});
+
 test("the schema keeps completesCard and the claimed set together", () => {
   const schema = read("prisma/schema.prisma");
   const migration = read("prisma/migrations/0048_program_rewards/migration.sql");
