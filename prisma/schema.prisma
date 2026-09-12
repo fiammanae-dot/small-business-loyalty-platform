@@ -834,6 +834,36 @@ model BusinessCustomerMembership {
   @@map("business_customer_memberships")
 }
 
+/// A reward at a point on the card.
+///
+/// Al Bab Al Abyad's paper card gives 50% off at visit 5 and a free wash at
+/// visit 9. Only the second one completes the card; the first is a retention
+/// device placed where customers drift, and the customer collects it and keeps
+/// going. completesCard is the field that carries that whole difference.
+///
+/// Every program has exactly one reward with completesCard, at requiredStamps.
+/// The backfill in migration 0048 gives every existing program that one row, so
+/// today's behaviour is reproduced exactly.
+model ProgramReward {
+  id                Int            @id @default(autoincrement())
+  loyaltyProgramId  Int            @map("loyalty_program_id")
+  /// Which stamp on the card this reward sits at. 5, 9.
+  atStamp           Int            @map("at_stamp")
+  rewardName        String         @map("reward_name")
+  rewardDescription String         @map("reward_description")
+  /// Claiming this one resets the card. Exactly one per program.
+  completesCard     Boolean        @default(false) @map("completes_card")
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+
+  loyaltyProgram LoyaltyProgram     @relation(fields: [loyaltyProgramId], references: [id], onDelete: Cascade)
+  redemptions    RewardRedemption[]
+
+  @@unique([loyaltyProgramId, atStamp])
+  @@index([loyaltyProgramId])
+  @@map("program_rewards")
+}
+
 model LoyaltyProgram {
   id                        Int          @id @default(autoincrement())
   uuid                      String       @unique @default(uuid()) @db.Uuid
@@ -859,6 +889,7 @@ model LoyaltyProgram {
 
   business          Business                    @relation(fields: [businessId], references: [id], onDelete: Cascade)
   memberships       CustomerProgramMembership[]
+  programRewards    ProgramReward[]
   rewardRedemptions RewardRedemption[]
   referralRewards   ReferralReward[]
   cooldownEvents    CooldownEvent[]
@@ -876,6 +907,15 @@ model CustomerProgramMembership {
   loyaltyProgramId             Int                     @map("loyalty_program_id")
   earnedStamps                 Int                     @default(0) @map("earned_stamps")
   bonusStamps                  Int                     @default(0) @map("bonus_stamps")
+  /// Which rewards have been claimed on the CURRENT card, by atStamp.
+  ///
+  /// Cleared when the card resets, which is what lets a customer take the
+  /// visit-5 discount again on their next card but not twice on this one. An
+  /// array rather than a join table because it is bounded by the number of
+  /// rewards on a card - a handful - and "claimed on the current card" then
+  /// lives in one place that resets naturally, with no cycle identifier to
+  /// keep in step.
+  claimedRewardStamps          Int[]                   @default([]) @map("claimed_reward_stamps")
   enrollmentSource             ProgramEnrollmentSource @map("enrollment_source")
   status                       ProgramMembershipStatus @default(ACTIVE)
   scanToken                    String                  @unique @map("scan_token")
@@ -1060,6 +1100,9 @@ model RewardRedemption {
   branchId                    Int?     @map("branch_id")
   customerProgramMembershipId Int      @map("customer_program_membership_id")
   loyaltyProgramId            Int      @map("loyalty_program_id")
+  /// Which reward on the card this was. Nullable: redemptions recorded before
+  /// milestones existed have no row to point at, and history is not rewritten.
+  programRewardId             Int?     @map("program_reward_id")
   rewardName                  String   @map("reward_name")
   requiredStamps              Int      @map("required_stamps")
   redeemedByUserId            Int      @map("redeemed_by_user_id")
@@ -1072,12 +1115,14 @@ model RewardRedemption {
   branch                    Branch?                   @relation(fields: [branchId], references: [id])
   customerProgramMembership CustomerProgramMembership @relation(fields: [customerProgramMembershipId], references: [id])
   loyaltyProgram            LoyaltyProgram            @relation(fields: [loyaltyProgramId], references: [id])
+  programReward             ProgramReward?            @relation(fields: [programRewardId], references: [id])
   redeemedByUser            User                      @relation(fields: [redeemedByUserId], references: [id])
 
   @@index([businessId])
   @@index([branchId])
   @@index([customerProgramMembershipId])
   @@index([loyaltyProgramId])
+  @@index([programRewardId])
   @@index([redeemedByUserId])
   @@index([redeemedAt])
   @@map("reward_redemptions")
