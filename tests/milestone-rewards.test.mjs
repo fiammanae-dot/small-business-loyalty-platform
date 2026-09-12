@@ -187,6 +187,30 @@ test("the card and the Wallet pass name the next reward, not the last one", () =
   assert.match(mapper, /All rewards on this card have been claimed\./);
 });
 
+test("the scanner names the reward it will actually hand over", () => {
+  const scan = read("src/app/scan/[token]/page.tsx");
+  const resultCard = read("src/components/domain/ScannerResultCard.tsx");
+
+  // The scanner decides whether a reward can be redeemed at all, so it has to
+  // see every reward on the card. Without this the redeem button never appears
+  // for a milestone and the engine behind it is unreachable.
+  assert.match(scan, /programRewards: \{ orderBy: \{ atStamp: "asc" \} \}/);
+  assert.match(scan, /const readyRewards = getReadyRewards\(cardInput\)/);
+
+  // Redemption gives the EARLIEST reward owed, so the screen must name that
+  // one - saying "Free Coffee" while the button hands over the 50% discount is
+  // how a counter stops trusting the screen.
+  assert.match(scan, /const claimableReward = readyRewards\[0\] \?\? null/);
+  assert.match(scan, /rewardName=\{rewardHeadline\}/);
+  assert.match(scan, /Reward ready \(card continues\)/, "a milestone must say the card is not finishing");
+
+  // Every "visits remaining" on the screen counts to the same reward. The
+  // badge used to compute required - current itself and contradicted the panel
+  // directly beneath it.
+  assert.match(scan, /remainingToNext=\{remainingToNext\}/);
+  assert.match(resultCard, /remainingToNext \?\? Math\.max\(0, required - current\)/);
+});
+
 test("the schema keeps completesCard and the claimed set together", () => {
   const schema = read("prisma/schema.prisma");
   const migration = read("prisma/migrations/0048_program_rewards/migration.sql");

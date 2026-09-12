@@ -8,6 +8,7 @@ export function ScannerResultCard({
   current,
   required,
   rewardReady,
+  remainingToNext,
   actions,
 }: {
   customerName: string;
@@ -16,8 +17,15 @@ export function ScannerResultCard({
   current: number;
   required: number;
   rewardReady: boolean;
+  /**
+   * Visits until the NEXT reward. On a card with a milestone this is not
+   * required - current, and computing it here produced a badge that
+   * contradicted the reward panel directly beneath it.
+   */
+  remainingToNext?: number;
   actions?: ReactNode;
 }) {
+  const remaining = remainingToNext ?? Math.max(0, required - current);
   return (
     <Card className="business-border-soft">
       <CardContent>
@@ -29,7 +37,7 @@ export function ScannerResultCard({
           </div>
           <div className="flex flex-wrap gap-2">
             {tier ? <StatusBadge tone="brand">{tier}</StatusBadge> : null}
-            <StatusBadge tone={rewardReady ? "success" : "info"}>{rewardReady ? "Reward ready" : `${Math.max(0, required - current)} visits remaining`}</StatusBadge>
+            <StatusBadge tone={rewardReady ? "success" : "info"}>{rewardReady ? "Reward ready" : `${remaining} visit${remaining === 1 ? "" : "s"} remaining`}</StatusBadge>
           </div>
         </div>
         <div className="mt-4">

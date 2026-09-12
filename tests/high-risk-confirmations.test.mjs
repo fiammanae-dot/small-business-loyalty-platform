@@ -23,7 +23,11 @@ test("reusable confirmation submit button exists and submits the parent form aft
 test("scanner stamp and reward actions require confirmation", () => {
   const page = read("src/app/scan/[token]/page.tsx");
   assert.match(page, /This will add 1 visit to the customer\'s selected program\./);
-  assert.match(page, /This will redeem the customer\'s available reward and reset progress for this program\./);
+  // The confirmation now depends on WHICH reward is being claimed: promising a
+  // reset before handing over a mid-card milestone would be a lie, and staff
+  // would stop reading the dialog.
+  assert.match(page, /completesCard\s*\n?\s*\? "This will redeem the customer's reward and reset progress for this program\."/);
+  assert.match(page, /The customer keeps their stamps and carries on toward the next reward\./);
   assert.match(page, /resolveBusinessBranding/);
   assert.match(page, /buildScannerConfirmationTheme/);
   assert.match(page, /confirmationTheme=\{scannerConfirmationTheme\}/);

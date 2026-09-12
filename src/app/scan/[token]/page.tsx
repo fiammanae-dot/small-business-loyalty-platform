@@ -21,7 +21,7 @@ import { prisma } from "@/lib/prisma";
 import { fromStoredTier } from "@/lib/customer-tiers";
 import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
 import { extractReferralCode, resolveReferralLandingReferrer } from "@/lib/referrals";
-import { isRewardReady, singleCardReward } from "@/lib/rewards";
+import { getNextReward, getReadyRewards, singleCardReward, type CardReward } from "@/lib/rewards";
 import { roleHomePath } from "@/lib/roles";
 import { getCurrentUser, hasActiveBusinessAccess } from "@/lib/session";
 import { issueStampAction, redeemRewardAction, undoStampAction } from "@/app/scan/actions";
@@ -189,7 +189,9 @@ export default async function ScanResultPage({
   const programMembership = await prisma.customerProgramMembership.findUnique({
     where: { scanToken },
     include: {
-      loyaltyProgram: true,
+      // The scanner decides whether a reward can be redeemed, so it has to see
+      // every reward on the card - not only the one that completes it.
+      loyaltyProgram: { include: { programRewards: { orderBy: { atStamp: "asc" } } } },
       businessCustomerMembership: {
         include: {
           business: { include: { branding: true } },
@@ -339,12 +341,24 @@ export default async function ScanResultPage({
   const successProgress = issuedTransaction
     ? progressValue(issuedTransaction.customerProgramMembership.earnedStamps, issuedTransaction.customerProgramMembership.bonusStamps)
     : null;
-  const rewardReady = isRewardReady({
+  const cardRewards: CardReward[] = program.programRewards?.length
+    ? program.programRewards
+    : singleCardReward(program);
+  const cardInput = {
     earnedStamps: programMembership.earnedStamps,
     bonusStamps: programMembership.bonusStamps,
-    rewards: singleCardReward(program),
+    rewards: cardRewards,
     claimedRewardStamps: programMembership.claimedRewardStamps,
-  });
+  };
+  const readyRewards = getReadyRewards(cardInput);
+  const nextReward = getNextReward(cardInput);
+  const rewardReady = readyRewards.length > 0;
+  // Redemption always gives the EARLIEST reward still owed, so the scanner has
+  // to name that one - telling staff "Free Coffee" while the button hands over
+  // the 50% discount is how a counter loses trust in the screen.
+  const claimableReward = readyRewards[0] ?? null;
+  const rewardHeadline = claimableReward?.rewardName ?? nextReward?.rewardName ?? program.rewardName;
+  const remainingToNext = nextReward ? Math.max(0, nextReward.atStamp - progress) : 0;
   const redemption = redeemedId
     ? await prisma.rewardRedemption.findFirst({
         where: {
@@ -402,6 +416,8 @@ export default async function ScanResultPage({
         <QuickScanActions
           token={scanToken}
           rewardReady={rewardReady}
+          rewardName={rewardHeadline}
+          completesCard={claimableReward?.completesCard ?? true}
           canRedeem={["BUSINESS_OWNER", "BRANCH_MANAGER", "STAFF"].includes(authUser.role)}
           confirmationTheme={scannerConfirmationTheme}
         />
@@ -440,7 +456,17 @@ export default async function ScanResultPage({
       ) : null}
 
       {redemption ? (
-        <ScanStatusBanner tone="green" title="Reward redeemed successfully" description={`Progress has been reset to 0 / ${program.requiredStamps}.`} />
+        <ScanStatusBanner
+          tone="green"
+          title="Reward redeemed successfully"
+          // After a milestone the card is untouched, so promising a reset here
+          // would contradict the progress shown directly underneath.
+          description={
+            progress === 0
+              ? `Progress has been reset to 0 / ${program.requiredStamps}.`
+              : `Progress stays at ${progress} / ${program.requiredStamps} - the customer keeps collecting.`
+          }
+        />
       ) : null}
 
       <ActionSummarySection
@@ -454,7 +480,9 @@ export default async function ScanResultPage({
         progress={progress}
         requiredStamps={program.requiredStamps}
         rewardReady={rewardReady}
-        rewardName={program.rewardName}
+        rewardName={rewardHeadline}
+        remainingToNext={remainingToNext}
+        completesCard={claimableReward?.completesCard ?? true}
       />
 
       <DetailPageLayout>
@@ -522,6 +550,8 @@ function ActionSummarySection({
   requiredStamps,
   rewardReady,
   rewardName,
+  remainingToNext,
+  completesCard,
 }: {
   customerName: string;
   phone: string;
@@ -534,8 +564,12 @@ function ActionSummarySection({
   requiredStamps: number;
   rewardReady: boolean;
   rewardName: string;
+  /** Visits until the NEXT reward, which on a card with a milestone is not the last one. */
+  remainingToNext: number;
+  /** Whether the reward now claimable finishes the card. */
+  completesCard: boolean;
 }) {
-  const remaining = Math.max(0, requiredStamps - progress);
+  const remaining = remainingToNext;
 
   return (
     <SectionCard className="business-border-soft">
@@ -546,12 +580,18 @@ function ActionSummarySection({
         current={progress}
         required={requiredStamps}
         rewardReady={rewardReady}
+        remainingToNext={remainingToNext}
       />
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard label="Phone" value={maskPhoneNumber(phone)} />
         <MetricCard label="Workspace" value={businessName} helper={branchName} />
         <MetricCard label="Status" value={<StatusBadge status={status} />} />
-        <MetricCard label="Reward" value={rewardName} helper={rewardReady ? "Reward Ready" : remaining + " visits remaining"} tone={rewardReady ? "success" : "neutral"} />
+        <MetricCard
+          label={rewardReady && !completesCard ? "Reward ready (card continues)" : "Reward"}
+          value={rewardName}
+          helper={rewardReady ? "Reward Ready" : remaining + " visits remaining"}
+          tone={rewardReady ? "success" : "neutral"}
+        />
       </div>
       <div className="mt-4 rounded-md border border-[#E2E8F0] bg-white p-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -570,11 +610,17 @@ function ActionSummarySection({
 function QuickScanActions({
   token,
   rewardReady,
+  rewardName,
+  completesCard,
   canRedeem,
   confirmationTheme,
 }: {
   token: string;
   rewardReady: boolean;
+  /** The reward redemption will actually hand over - the earliest one owed. */
+  rewardName: string;
+  /** Whether claiming it finishes the card. A milestone must not promise a reset. */
+  completesCard: boolean;
   canRedeem: boolean;
   confirmationTheme: ConfirmationDialogTheme;
 }) {
@@ -588,7 +634,11 @@ function QuickScanActions({
             <input type="hidden" name="scanToken" value={token} />
             <ConfirmSubmitButton
               title="Redeem reward?"
-              message="This will redeem the customer's available reward and reset progress for this program."
+              message={
+                completesCard
+                  ? "This will redeem the customer's reward and reset progress for this program."
+                  : `This will give ${rewardName}. The customer keeps their stamps and carries on toward the next reward.`
+              }
               confirmLabel="Redeem Reward"
               cancelLabel="Cancel"
               confirmationTheme={confirmationTheme}
