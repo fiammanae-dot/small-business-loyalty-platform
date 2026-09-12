@@ -27,6 +27,7 @@ import { CopyButton } from "@/components/CopyButton";
 import { CsrfInput } from "@/components/CsrfInput";
 import { ActionMenu, ActionMenuItem, Avatar, ButtonLink, MetricCard, PageActions, ProgressBar, SectionCard, StatusBadge, Tabs } from "@/components/ui";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
+import { cardRewardsFor, getNextReward, getReadyRewards } from "@/lib/rewards";
 import { activityHref, staffProfileHref } from "@/lib/alert-investigation";
 import { alertTypeLabel } from "@/lib/alert-labels";
 import { getCardUrl, getShortCardToken } from "@/lib/customer-cards";
@@ -52,6 +53,44 @@ type TimelineItem = {
   icon: LucideIcon;
   tone: "default" | "alert" | "success";
 };
+
+/**
+ * What this card owes right now, and what it is working toward next.
+ *
+ * Every reward-aware surface on this page goes through here. Comparing
+ * progress against requiredStamps instead silently skips a reward the owner
+ * placed before the card is full.
+ */
+function rewardStatusFor(programMembership: {
+  earnedStamps: number;
+  bonusStamps: number;
+  status: string;
+  claimedRewardStamps: number[];
+  loyaltyProgram: {
+    requiredStamps: number;
+    rewardName: string;
+    rewardDescription: string;
+    programRewards?: { atStamp: number; rewardName: string; rewardDescription: string; completesCard: boolean }[];
+  };
+}) {
+  const cardInput = {
+    earnedStamps: programMembership.earnedStamps,
+    bonusStamps: programMembership.bonusStamps,
+    rewards: cardRewardsFor(programMembership.loyaltyProgram),
+    claimedRewardStamps: programMembership.claimedRewardStamps,
+  };
+  const readyRewards = getReadyRewards(cardInput);
+  const nextReward = getNextReward(cardInput);
+  const progress = progressValue(programMembership.earnedStamps, programMembership.bonusStamps);
+  return {
+    progress,
+    readyRewards,
+    nextReward,
+    rewardReady: readyRewards.length > 0 && programMembership.status !== "COMPLETED",
+    /** Stamps until the next unclaimed reward, not until the card is full. */
+    untilNext: nextReward ? Math.max(0, nextReward.atStamp - progress) : 0,
+  };
+}
 
 export default async function CustomerProfilePage({
   params,
@@ -153,9 +192,7 @@ export default async function CustomerProfilePage({
   const totalPrograms = membership.programMemberships.length;
   const activePrograms = membership.programMemberships.filter((programMembership) => programMembership.status === "ACTIVE").length;
   const rewardsReady = membership.programMemberships.filter(
-    (programMembership) =>
-      programMembership.status !== "COMPLETED" &&
-      progressValue(programMembership.earnedStamps, programMembership.bonusStamps) >= programMembership.loyaltyProgram.requiredStamps,
+    (programMembership) => rewardStatusFor(programMembership).rewardReady,
   ).length;
   const lastActivityDate =
     [membership.joinedAt, ...membership.programMemberships.map((programMembership) => programMembership.enrolledAt), ...stampTransactions.map((transaction) => transaction.createdAt), ...generatedAlerts.map((alert) => alert.createdAt)]
@@ -250,11 +287,7 @@ export default async function CustomerProfilePage({
   const primaryRequired = primaryProgram?.loyaltyProgram.requiredStamps ?? 0;
   const primaryScanHref = primaryProgram ? `/scan/${primaryProgram.scanToken}` : "/dashboard/scanner";
   const primaryGoogleWalletUrl = primaryProgram ? `/api/wallet/google/save/${primaryProgram.scanToken}` : null;
-  const primaryRewardReady = Boolean(
-    primaryProgram &&
-      primaryProgram.status !== "COMPLETED" &&
-      primaryProgress >= primaryProgram.loyaltyProgram.requiredStamps,
-  );
+  const primaryRewardReady = Boolean(primaryProgram && rewardStatusFor(primaryProgram).rewardReady);
   const referralStatus = membership.referralCode ? "ACTIVE" : "NOT_CONFIGURED";
 return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Customer 360">
@@ -575,18 +608,17 @@ function LoyaltyOverviewPanel({
       </div>
       <div className="mt-5 grid gap-4">
         {programCards.map(({ programMembership, membershipUuid }) => {
-          const progress = progressValue(programMembership.earnedStamps, programMembership.bonusStamps);
+          const { progress, readyRewards, nextReward, rewardReady: isRewardReady, untilNext: remaining } =
+            rewardStatusFor(programMembership);
           const required = programMembership.loyaltyProgram.requiredStamps;
           const progressPercent = required <= 0 ? 0 : Math.min(100, Math.round((progress / required) * 100));
-          const remaining = Math.max(0, required - progress);
-          const isRewardReady = progress >= required && programMembership.status !== "COMPLETED";
           const showGrid = required > 0 && required <= STAMP_GRID_CAP;
           return (
             <article key={programMembership.id} className={`rounded-xl border p-4 md:p-5 ${isRewardReady ? "border-[#F3D9A4] bg-[#FFFBF2]" : "border-[#E7E9EE] bg-white"}`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-base font-semibold text-[#111827]">{programMembership.loyaltyProgram.name}</p>
-                  <p className="mt-0.5 flex items-center gap-1.5 text-sm text-[#6B7280]"><Gift className="h-3.5 w-3.5 text-[#94A3B8]" aria-hidden />{programMembership.loyaltyProgram.rewardName}</p>
+                  <p className="mt-0.5 flex items-center gap-1.5 text-sm text-[#6B7280]"><Gift className="h-3.5 w-3.5 text-[#94A3B8]" aria-hidden />{(readyRewards[0] ?? nextReward)?.rewardName ?? programMembership.loyaltyProgram.rewardName}</p>
                 </div>
                 {isRewardReady ? <StatusBadge tone="warning">Reward ready</StatusBadge> : null}
               </div>
@@ -601,7 +633,9 @@ function LoyaltyOverviewPanel({
               </div>
               <ProgressBar value={progress} max={required} className="mt-3" />
               {!isRewardReady ? (
-                <p className="mt-2 text-sm text-[#6B7280]">{remaining} stamp{remaining === 1 ? "" : "s"} remaining until reward</p>
+                <p className="mt-2 text-sm text-[#6B7280]">
+                  {remaining} stamp{remaining === 1 ? "" : "s"} remaining until {nextReward ? nextReward.rewardName : "reward"}
+                </p>
               ) : null}
               <ManualStampCorrectionForm membershipUuid={membershipUuid} programMembershipUuid={programMembership.uuid} />
             </article>
@@ -786,10 +820,11 @@ function RewardsPanel({
     loyaltyProgram: { name: string };
   }>;
 }) {
-  const availableRewards = programCards.filter(({ programMembership }) => {
-    const progress = progressValue(programMembership.earnedStamps, programMembership.bonusStamps);
-    return progress >= programMembership.loyaltyProgram.requiredStamps && programMembership.status !== "COMPLETED";
-  });
+  // The scanner hands over the EARLIEST unclaimed reward, so name that one
+  // here - showing the card's final reward would promise the wrong thing.
+  const availableRewards = programCards
+    .map(({ programMembership }) => ({ programMembership, claimable: rewardStatusFor(programMembership).readyRewards[0] }))
+    .filter((row) => Boolean(row.claimable) && row.programMembership.status !== "COMPLETED");
 
   return (
     <section className="grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">
@@ -797,9 +832,9 @@ function RewardsPanel({
         <p className="text-sm font-semibold business-text">Available rewards</p>
         <h2 className="mt-1 text-xl font-semibold text-[#111827]">Ready to redeem</h2>
         <div className="mt-5 grid gap-3">
-          {availableRewards.map(({ programMembership }) => (
+          {availableRewards.map(({ programMembership, claimable }) => (
             <article key={programMembership.id} className="rounded-md border border-emerald-200 bg-emerald-50 p-4">
-              <p className="font-semibold text-emerald-900">{programMembership.loyaltyProgram.rewardName}</p>
+              <p className="font-semibold text-emerald-900">{claimable!.rewardName}</p>
               <p className="mt-1 text-sm text-emerald-800">{programMembership.loyaltyProgram.name}</p>
               <Link href={`/scan/${programMembership.scanToken}`} className="mt-3 inline-flex rounded-md business-button px-3 py-2 text-sm font-semibold text-white">
                 Redeem Reward

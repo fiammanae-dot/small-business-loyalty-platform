@@ -112,3 +112,20 @@ export function singleCardReward({
 }): CardReward[] {
   return [{ atStamp: Math.max(1, requiredStamps), rewardName, rewardDescription, completesCard: true }];
 }
+
+/**
+ * Every reward on a program's card, whether or not the owner added milestones.
+ *
+ * A program with no ProgramReward rows still has one reward - the one that
+ * fills the card. Callers that read requiredStamps directly instead of going
+ * through here go blind to milestones, which is how the customer list and the
+ * scanner each shipped a version that could not see a mid-card reward.
+ */
+export function cardRewardsFor(program: {
+  requiredStamps: number;
+  rewardName: string;
+  rewardDescription?: string;
+  programRewards?: readonly CardReward[] | null;
+}): CardReward[] {
+  return program.programRewards?.length ? [...program.programRewards] : singleCardReward(program);
+}

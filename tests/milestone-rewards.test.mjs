@@ -311,3 +311,67 @@ test("saving a program rewrites its rewards in the same transaction", () => {
   assert.match(editPage, /programRewards: \{ orderBy: \{ atStamp: "asc" \} \}/);
   assert.match(editPage, /filter\(\(reward\) => !reward\.completesCard\)/);
 });
+
+test("Customer 360 sees a mid-card reward the same way every other surface does", () => {
+  const page = read("src/app/dashboard/customers/[id]/page.tsx");
+  const customers = read("src/lib/customers.ts");
+
+  // This page shipped blind: four places compared progress against
+  // requiredStamps, so someone sitting on an unclaimed milestone showed no
+  // badge, no redeem button, and a countdown to the wrong reward.
+  assert.match(page, /function rewardStatusFor\(/);
+  assert.match(page, /cardRewardsFor, getNextReward, getReadyRewards/);
+
+  // Every reward-aware spot routes through the one helper.
+  assert.equal(
+    (page.match(/rewardStatusFor\(/g) ?? []).length,
+    5,
+    "definition plus the four surfaces: the ready count, the hero, the available-rewards panel, the progress card",
+  );
+  assert.doesNotMatch(
+    page,
+    />= programMembership\.loyaltyProgram\.requiredStamps/,
+    "comparing against requiredStamps is exactly what hid the milestone",
+  );
+  assert.doesNotMatch(page, />= primaryProgram\.loyaltyProgram\.requiredStamps/);
+
+  // The panel offers what the scanner will actually hand over - the earliest
+  // unclaimed reward - not whatever sits at the end of the card.
+  assert.match(page, /readyRewards\[0\]/);
+
+  // None of the above can work unless the query loads the rows.
+  assert.match(customers, /programRewards: \{ orderBy: \{ atStamp: "asc" \} \}/);
+});
+
+test("one helper answers what rewards a card has", () => {
+  const rewardsSource = read("src/lib/rewards.ts");
+  assert.match(rewardsSource, /export function cardRewardsFor\(/);
+
+  // Local copies of this fallback are how surfaces drift apart: the scanner
+  // and the Wallet mapper each had their own, and Customer 360 had none.
+  for (const path of [
+    "src/app/scan/actions.ts",
+    "src/lib/google-wallet/mapper.ts",
+    "src/app/dashboard/customers/[id]/page.tsx",
+  ]) {
+    const source = read(path);
+    assert.doesNotMatch(source, /^function cardRewardsFor\(/m, `${path} should import cardRewardsFor, not redefine it`);
+    assert.match(source, /cardRewardsFor/, `${path} should use cardRewardsFor`);
+  }
+
+  // A program with no milestone rows still has one reward: the one that fills
+  // the card.
+  assert.deepEqual(
+    rewards.cardRewardsFor({ requiredStamps: 8, rewardName: "Free wash", rewardDescription: "On us" }),
+    [{ atStamp: 8, rewardName: "Free wash", rewardDescription: "On us", completesCard: true }],
+  );
+  assert.deepEqual(
+    rewards.cardRewardsFor({
+      requiredStamps: 8,
+      rewardName: "Free wash",
+      rewardDescription: "On us",
+      programRewards: [{ atStamp: 5, rewardName: "50% off", rewardDescription: "", completesCard: false }],
+    }).map((reward) => reward.atStamp),
+    [5],
+  );
+});

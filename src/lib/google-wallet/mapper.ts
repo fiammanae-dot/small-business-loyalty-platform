@@ -11,7 +11,7 @@ import { resolveCardThemeColors } from "@/lib/card-themes";
 import { resolveCardDesign, type CardDesignInput } from "@/lib/card-design";
 import { getCardUrl, resolveBranding } from "@/lib/customer-cards";
 import { progressValue } from "@/lib/programs";
-import { getNextReward, getReadyRewards, singleCardReward, type CardReward } from "@/lib/rewards";
+import { cardRewardsFor, getNextReward, getReadyRewards, type CardReward } from "@/lib/rewards";
 import { getScanUrl } from "@/lib/scan";
 
 export type GoogleWalletProgramMembership = CustomerProgramMembership & {
@@ -29,10 +29,6 @@ export type GoogleWalletProgramMembership = CustomerProgramMembership & {
  * The rewards on this card. Migration 0048 backfilled a row for every program,
  * so the fallback only covers a caller that has not loaded the relation.
  */
-function cardRewardsFor(program: LoyaltyProgram & { programRewards?: ProgramReward[] }): CardReward[] {
-  return program.programRewards?.length ? program.programRewards : singleCardReward(program);
-}
-
 export async function buildGoogleWalletClassPayload({
   issuerId,
   classId,

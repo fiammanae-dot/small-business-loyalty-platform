@@ -233,7 +233,10 @@ export async function getBusinessCustomerOrRedirect(uuid: string, businessId: nu
       createdBranch: true,
       createdByUser: { select: { id: true, name: true, email: true, role: true } },
       programMemberships: {
-        include: { loyaltyProgram: true },
+        // programRewards comes along so callers can ask the rewards engine what
+        // this card owes rather than comparing against requiredStamps, which
+        // cannot see a reward placed before the card is full.
+        include: { loyaltyProgram: { include: { programRewards: { orderBy: { atStamp: "asc" } } } } },
         orderBy: { enrolledAt: "desc" },
       },
     },

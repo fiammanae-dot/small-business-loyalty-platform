@@ -14,7 +14,7 @@ import { syncGoogleWalletObjectAfterLoyaltyChange } from "@/lib/google-wallet/se
 import { prisma } from "@/lib/prisma";
 import { getStartingBonusStampsForEvent, progressValue } from "@/lib/programs";
 import { qualifyReferralFromFirstStamp } from "@/lib/referrals";
-import { getReadyRewards, isRewardReady, singleCardReward, type CardReward } from "@/lib/rewards";
+import { cardRewardsFor, getReadyRewards, isRewardReady } from "@/lib/rewards";
 
 /**
  * The rewards on a program's card, read from program_rewards.
@@ -25,15 +25,6 @@ import { getReadyRewards, isRewardReady, singleCardReward, type CardReward } fro
  * with no rewards at all would make redemption impossible and is not worth
  * risking at the counter.
  */
-function cardRewardsFor(program: {
-  requiredStamps: number;
-  rewardName: string;
-  rewardDescription: string;
-  programRewards?: { atStamp: number; rewardName: string; rewardDescription: string; completesCard: boolean }[];
-}): CardReward[] {
-  return program.programRewards?.length ? program.programRewards : singleCardReward(program);
-}
-
 const stampIssueSchema = z
   .object({
     scanToken: z.string().trim().min(1, "Scan token is required."),
