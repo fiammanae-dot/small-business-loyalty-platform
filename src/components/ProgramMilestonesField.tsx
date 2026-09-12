@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 
 export type MilestoneDraft = {
@@ -25,15 +25,32 @@ let nextKey = 0;
  */
 export function ProgramMilestonesField({
   initialMilestones = [],
-  requiredStamps,
+  requiredStamps: initialRequiredStamps,
 }: {
   initialMilestones?: MilestoneDraft[];
-  /** Read live from the Required Stamps input so the hint cannot go stale. */
+  /** The card length when the form loaded; tracked live from here on. */
   requiredStamps: number;
 }) {
   const [rows, setRows] = useState(() =>
     initialMilestones.map((milestone) => ({ ...milestone, key: `m${nextKey++}` })),
   );
+  const [requiredStamps, setRequiredStamps] = useState(initialRequiredStamps);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // This component watches the Required Stamps input rather than receiving its
+  // value as a prop. Lifting that state would mean making the whole program
+  // form a client component, which drags server-only modules (csrf, secrets)
+  // into the browser bundle and fails the build.
+  useEffect(() => {
+    const input = containerRef.current
+      ?.closest("form")
+      ?.querySelector<HTMLInputElement>('input[name="requiredStamps"]');
+    if (!input) return;
+    const read = () => setRequiredStamps(Number(input.value) || 1);
+    read();
+    input.addEventListener("input", read);
+    return () => input.removeEventListener("input", read);
+  }, []);
 
   const lastBefore = Math.max(1, requiredStamps - 1);
 
@@ -42,7 +59,7 @@ export function ProgramMilestonesField({
   }
 
   return (
-    <div className="grid gap-3">
+    <div ref={containerRef} className="grid gap-3">
       {rows.length === 0 ? (
         <p className="rounded-md border border-dashed border-[#E5E7EB] p-4 text-sm text-[#6B7280]">
           No extra rewards yet. Customers get{" "}

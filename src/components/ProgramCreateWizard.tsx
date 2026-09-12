@@ -1,6 +1,5 @@
 "use client";
 
-import type React from "react";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { ProgramMilestonesField, type MilestoneDraft } from "@/components/ProgramMilestonesField";
 import type { BusinessType, CardTheme, StartingStampPolicy } from "@prisma/client";
@@ -116,8 +115,6 @@ export function ProgramCreateWizard({
   const name = defaults.name ?? "";
   const productOrServiceName = defaults.productOrServiceName ?? "";
   const requiredStamps = defaults.requiredStamps ?? 1;
-  // Tracked live so the milestone hints follow the card length as it is typed.
-  const [requiredStampsValue, setRequiredStampsValue] = useState(requiredStamps);
   const startingBonusStamps = defaults.startingBonusStamps ?? 0;
   const startingStampPolicy = defaults.startingStampPolicy ?? "FIRST_ENROLLMENT_ONLY";
   const referralRewardBonusStamps = defaults.referralRewardBonusStamps ?? 1;
@@ -204,15 +201,7 @@ export function ProgramCreateWizard({
         <SectionCard title="Reward" description="Define the reward customers receive when they complete the program.">
           <div className="grid gap-4 md:grid-cols-2">
             <Input name="rewardName" label="Reward Name" defaultValue={rewardName} required />
-            <Input
-              name="requiredStamps"
-              label="Required Stamps"
-              type="number"
-              min="1"
-              defaultValue={requiredStamps.toString()}
-              required
-              onChange={(event) => setRequiredStampsValue(Number(event.target.value) || 1)}
-            />
+            <Input name="requiredStamps" label="Required Stamps" type="number" min="1" defaultValue={requiredStamps.toString()} required />
             <label className="space-y-2 md:col-span-2">
               <span className="text-sm font-medium text-[#111827]">
                 Reward Description
@@ -229,7 +218,7 @@ export function ProgramCreateWizard({
         >
           <ProgramMilestonesField
             initialMilestones={defaults.milestones ?? []}
-            requiredStamps={requiredStampsValue}
+            requiredStamps={requiredStamps}
           />
         </SectionCard>
 
@@ -542,7 +531,6 @@ function Input({
   defaultValue,
   required = false,
   min,
-  onChange,
 }: {
   label: string;
   name: string;
@@ -550,7 +538,6 @@ function Input({
   defaultValue?: string;
   required?: boolean;
   min?: string;
-  onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }) {
   return (
     <label className="space-y-2">
@@ -558,7 +545,7 @@ function Input({
         {label}
         {required ? <RequiredMark /> : null}
       </span>
-      <input name={name} type={type} min={min} defaultValue={defaultValue} required={required} onChange={onChange} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0" />
+      <input name={name} type={type} min={min} defaultValue={defaultValue} required={required} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0" />
     </label>
   );
 }
