@@ -13,6 +13,14 @@ import { prisma } from "@/lib/prisma";
 import { asCardDesignInput, getIndustryDefaultCardTheme } from "@/lib/card-design";
 import { buildProgramCardDesign, getCardThemeForDesignStudioTemplate, parseDesignStudioForm } from "@/lib/design-studio";
 import { getStartingBonusStampsForEvent, parseProgramDate, programSchema } from "@/lib/programs";
+import {
+  buildProgramRewardRows,
+  checkMilestones,
+  programMilestoneSchema,
+  readMilestoneFormRows,
+  type ProgramMilestoneInput,
+  type ProgramRewardRow,
+} from "@/lib/program-rewards";
 import { generateScanToken } from "@/lib/scan";
 import { commerciallyUsableStatuses, limitReachedMessage } from "@/lib/subscriptions";
 import { summarizeWalletSyncForUser, syncWalletProvidersForProgram } from "@/lib/wallet-sync";
@@ -57,6 +65,49 @@ function programData(formData: FormData, businessType: string, defaultCardTheme 
   return parsed;
 }
 
+/**
+ * Parses and validates the repeatable milestone rows, failing with a sentence
+ * rather than letting the database's unique constraint surface as a 500.
+ */
+function milestonesFromForm(formData: FormData, requiredStamps: number, path: string): ProgramMilestoneInput[] {
+  const milestones: ProgramMilestoneInput[] = [];
+  for (const row of readMilestoneFormRows(formData)) {
+    const parsed = programMilestoneSchema.safeParse(row);
+    if (!parsed.success) fail(path, parsed.error.issues[0]?.message ?? "A milestone reward is invalid.");
+    milestones.push(parsed.data);
+  }
+  const problem = checkMilestones(milestones, requiredStamps);
+  if (problem) fail(path, problem);
+  return milestones;
+}
+
+/**
+ * Rewrites a program's rewards to match the form exactly.
+ *
+ * Deletes what is gone, upserts what remains, in one transaction with the
+ * program itself - a program whose rewards half-saved would show customers a
+ * card that does not exist. Rewards are matched by atStamp, which is also the
+ * database's unique key, so an owner moving a milestone from visit 5 to 6 is a
+ * delete plus an insert rather than a silent duplicate.
+ */
+async function syncProgramRewards(
+  tx: Prisma.TransactionClient,
+  programId: number,
+  rows: ProgramRewardRow[],
+) {
+  const keep = rows.map((row) => row.atStamp);
+  await tx.programReward.deleteMany({
+    where: { loyaltyProgramId: programId, atStamp: { notIn: keep.length ? keep : [-1] } },
+  });
+  for (const row of rows) {
+    await tx.programReward.upsert({
+      where: { loyaltyProgramId_atStamp: { loyaltyProgramId: programId, atStamp: row.atStamp } },
+      create: { loyaltyProgramId: programId, ...row },
+      update: { rewardName: row.rewardName, rewardDescription: row.rewardDescription, completesCard: row.completesCard },
+    });
+  }
+}
+
 async function getBusinessTypeForProgramAction(businessId: number, path: string) {
   const business = await prisma.business.findUnique({
     where: { id: businessId },
@@ -89,7 +140,10 @@ export async function createProgramAction(formData: FormData) {
     fail(path, limitReachedMessage("program", maxPrograms));
   }
 
-  const program = await prisma.loyaltyProgram.create({
+  const milestones = milestonesFromForm(formData, parsed.data.requiredStamps, path);
+
+  const program = await prisma.$transaction(async (tx) => {
+    const created = await tx.loyaltyProgram.create({
     data: {
       businessId: user.businessId,
       name: parsed.data.name,
@@ -109,6 +163,22 @@ export async function createProgramAction(formData: FormData) {
       cardTheme: getCardThemeForDesignStudioTemplate(parsedDesign.data.layoutStyle),
     },
     select: { id: true, uuid: true },
+    });
+
+    // A program without its rewards would fall back to a single completing
+    // reward and quietly lose every milestone the owner just typed.
+    await syncProgramRewards(
+      tx,
+      created.id,
+      buildProgramRewardRows({
+        requiredStamps: parsed.data.requiredStamps,
+        rewardName: parsed.data.rewardName,
+        rewardDescription: parsed.data.rewardDescription,
+        milestones,
+      }),
+    );
+
+    return created;
   });
   await logAuditEvent({
     actorUserId: user.id,
@@ -142,7 +212,10 @@ export async function updateProgramAction(formData: FormData) {
   });
   if (!program) fail("/dashboard/programs", "Program not found.");
 
-  await prisma.loyaltyProgram.update({
+  const milestones = milestonesFromForm(formData, parsed.data.requiredStamps, path);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.loyaltyProgram.update({
     where: { id: program.id },
     data: {
       name: parsed.data.name,
@@ -160,6 +233,20 @@ export async function updateProgramAction(formData: FormData) {
       startDate: parseProgramDate(parsed.data.startDate),
       endDate: parseProgramDate(parsed.data.endDate),
     },
+    });
+
+    // Same transaction as the program: a card whose rewards half-saved would
+    // show customers something that does not exist.
+    await syncProgramRewards(
+      tx,
+      program.id,
+      buildProgramRewardRows({
+        requiredStamps: parsed.data.requiredStamps,
+        rewardName: parsed.data.rewardName,
+        rewardDescription: parsed.data.rewardDescription,
+        milestones,
+      }),
+    );
   });
   await logAuditEvent({
     actorUserId: user.id,

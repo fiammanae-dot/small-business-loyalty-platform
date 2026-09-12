@@ -18,6 +18,9 @@ export default async function EditProgramPage({
   const branding = resolveBranding(business.branding);
   const program = await prisma.loyaltyProgram.findFirst({
     where: { uuid: id, businessId: user.businessId },
+    // The milestones have to come back into the form, or saving any other
+    // field would silently wipe them.
+    include: { programRewards: { orderBy: { atStamp: "asc" } } },
   });
 
   if (!program) {
@@ -47,6 +50,13 @@ export default async function EditProgramPage({
             cardTheme: program.cardTheme,
             rewardName: program.rewardName,
             rewardDescription: program.rewardDescription,
+            milestones: program.programRewards
+              .filter((reward) => !reward.completesCard)
+              .map((reward) => ({
+                atStamp: String(reward.atStamp),
+                rewardName: reward.rewardName,
+                rewardDescription: reward.rewardDescription,
+              })),
             active: program.active,
             startDate: program.startDate,
             endDate: program.endDate,

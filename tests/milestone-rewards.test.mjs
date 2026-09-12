@@ -248,3 +248,66 @@ test("the schema keeps completesCard and the claimed set together", () => {
   assert.match(migration, /true,\s*\n\s*CURRENT_TIMESTAMP/, "backfilled rewards complete the card");
   assert.doesNotMatch(migration, /DROP /, "0048 must be additive");
 });
+
+test("milestone validation catches the mistakes before the database does", async () => {
+  // checkMilestones and buildProgramRewardRows are pure; only the zod schema
+  // beside them needs the dependency, so it is removed rather than faked -
+  // a fake would test the fake.
+  const source = read("src/lib/program-rewards.ts")
+    .replace(/^import \{ z \} from "zod";$/m, "")
+    .replace(/export const programMilestoneSchema = z[\s\S]*?\n\}\);\n/, "");
+  const transpiled = ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+  }).outputText;
+  const mod = await import(`data:text/javascript;base64,${Buffer.from(transpiled).toString("base64")}`);
+  const { checkMilestones, buildProgramRewardRows } = mod;
+
+  // A milestone at or past the end competes with the reward that completes the
+  // card - two rewards claiming the same slot.
+  assert.equal(checkMilestones([{ atStamp: 5, rewardName: "50% off" }], 10), null);
+  assert.match(checkMilestones([{ atStamp: 10, rewardName: "x" }], 10), /before the card is complete/);
+  assert.match(checkMilestones([{ atStamp: 11, rewardName: "x" }], 10), /before the card is complete/);
+
+  // Two on the same visit would hit the unique index as a 500 rather than a
+  // sentence the owner can act on.
+  assert.match(
+    checkMilestones([{ atStamp: 5, rewardName: "a" }, { atStamp: 5, rewardName: "b" }], 10),
+    /two rewards on visit 5/,
+  );
+
+  // The completing reward is built from the program, never edited as a
+  // milestone, so a card always has exactly one and it always sits at the end.
+  const rows = buildProgramRewardRows({
+    requiredStamps: 9,
+    rewardName: "Free full wash",
+    rewardDescription: "On the house",
+    milestones: [{ atStamp: 5, rewardName: "50% off", rewardDescription: "" }],
+  });
+  assert.deepEqual(rows.map((row) => row.atStamp), [5, 9], "earliest first");
+  assert.equal(rows.filter((row) => row.completesCard).length, 1);
+  assert.equal(rows.at(-1).completesCard, true);
+  assert.equal(rows.at(-1).atStamp, 9);
+  // An empty description falls back to the name rather than storing "".
+  assert.equal(rows[0].rewardDescription, "50% off");
+});
+
+test("saving a program rewrites its rewards in the same transaction", () => {
+  const actions = read("src/app/dashboard/programs/actions.ts");
+  const editPage = read("src/app/dashboard/programs/[id]/edit/page.tsx");
+
+  // Before this, nothing wrote program_rewards at all: a program created after
+  // migration 0048 had no rows and fell back to a single completing reward.
+  assert.match(actions, /async function syncProgramRewards/);
+  assert.match(actions, /buildProgramRewardRows\(/);
+  assert.equal((actions.match(/buildProgramRewardRows\(/g) ?? []).length, 2, "create and update both sync");
+
+  // Half-saved rewards would show customers a card that does not exist.
+  assert.match(actions, /prisma\.\$transaction\(async \(tx\) => \{/);
+  assert.match(actions, /tx\.programReward\.deleteMany/);
+  assert.match(actions, /tx\.programReward\.upsert/);
+
+  // The edit form must load milestones back, or saving any other field would
+  // silently wipe them.
+  assert.match(editPage, /programRewards: \{ orderBy: \{ atStamp: "asc" \} \}/);
+  assert.match(editPage, /filter\(\(reward\) => !reward\.completesCard\)/);
+});

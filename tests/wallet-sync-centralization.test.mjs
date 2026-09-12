@@ -112,7 +112,9 @@ test("Program Creation enqueues wallet sync exactly once", () => {
     actions.indexOf("export async function updateProgramAction"),
   );
 
-  const writeIndex = fnBody.indexOf("await prisma.loyaltyProgram.create");
+  // The program and its rewards are now written together in one transaction,
+  // so the marker is the transactional create rather than a bare prisma call.
+  const writeIndex = fnBody.indexOf("tx.loyaltyProgram.create");
   const enqueueIndex = fnBody.indexOf("enqueueWalletSync(");
   assert.ok(writeIndex > -1 && enqueueIndex > -1 && writeIndex < enqueueIndex, "program must be created before wallet sync is enqueued");
   assert.equal(countOccurrences(fnBody, /enqueueWalletSync\(/g), 1, "exactly one wallet sync per save");
@@ -128,7 +130,7 @@ test("Program Settings enqueues wallet sync exactly once, gated by change detect
   );
 
   assert.match(fnBody, /select: \{ id: true, name: true, rewardName: true, cardTheme: true, active: true \}/);
-  const writeIndex = fnBody.indexOf("await prisma.loyaltyProgram.update");
+  const writeIndex = fnBody.indexOf("tx.loyaltyProgram.update");
   const enqueueIndex = fnBody.indexOf("enqueueWalletSync(");
   assert.ok(writeIndex > -1 && enqueueIndex > -1 && writeIndex < enqueueIndex, "program must be saved before wallet sync is enqueued");
   assert.equal(countOccurrences(fnBody, /enqueueWalletSync\(/g), 1, "exactly one wallet sync per save");
