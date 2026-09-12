@@ -21,7 +21,7 @@ import { prisma } from "@/lib/prisma";
 import { fromStoredTier } from "@/lib/customer-tiers";
 import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
 import { extractReferralCode, resolveReferralLandingReferrer } from "@/lib/referrals";
-import { isRewardReady } from "@/lib/rewards";
+import { isRewardReady, singleCardReward } from "@/lib/rewards";
 import { roleHomePath } from "@/lib/roles";
 import { getCurrentUser, hasActiveBusinessAccess } from "@/lib/session";
 import { issueStampAction, redeemRewardAction, undoStampAction } from "@/app/scan/actions";
@@ -342,7 +342,8 @@ export default async function ScanResultPage({
   const rewardReady = isRewardReady({
     earnedStamps: programMembership.earnedStamps,
     bonusStamps: programMembership.bonusStamps,
-    requiredStamps: program.requiredStamps,
+    rewards: singleCardReward(program),
+    claimedRewardStamps: programMembership.claimedRewardStamps,
   });
   const redemption = redeemedId
     ? await prisma.rewardRedemption.findFirst({

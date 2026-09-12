@@ -14,7 +14,7 @@ import { syncGoogleWalletObjectAfterLoyaltyChange } from "@/lib/google-wallet/se
 import { prisma } from "@/lib/prisma";
 import { getStartingBonusStampsForEvent, progressValue } from "@/lib/programs";
 import { qualifyReferralFromFirstStamp } from "@/lib/referrals";
-import { isRewardReady } from "@/lib/rewards";
+import { isRewardReady, singleCardReward } from "@/lib/rewards";
 
 const stampIssueSchema = z
   .object({
@@ -138,7 +138,8 @@ export async function issueStampAction(formData: FormData) {
     isRewardReady({
       earnedStamps: programMembership.earnedStamps,
       bonusStamps: programMembership.bonusStamps,
-      requiredStamps: programMembership.loyaltyProgram.requiredStamps,
+      rewards: singleCardReward(programMembership.loyaltyProgram),
+      claimedRewardStamps: programMembership.claimedRewardStamps,
     })
   ) {
     fail(data.scanToken, STAFF_REWARD_READY_STAMP_BLOCK_MESSAGE);
@@ -498,7 +499,8 @@ export async function redeemRewardAction(formData: FormData) {
     !isRewardReady({
       earnedStamps: programMembership.earnedStamps,
       bonusStamps: programMembership.bonusStamps,
-      requiredStamps: programMembership.loyaltyProgram.requiredStamps,
+      rewards: singleCardReward(programMembership.loyaltyProgram),
+      claimedRewardStamps: programMembership.claimedRewardStamps,
     })
   ) {
     fail(scanToken, "Reward is not ready yet.");
@@ -548,7 +550,8 @@ export async function redeemRewardAction(formData: FormData) {
       !isRewardReady({
         earnedStamps: lockedMembership.earnedStamps,
         bonusStamps: lockedMembership.bonusStamps,
-        requiredStamps: lockedMembership.loyaltyProgram.requiredStamps,
+        rewards: singleCardReward(lockedMembership.loyaltyProgram),
+        claimedRewardStamps: lockedMembership.claimedRewardStamps,
       })
     ) {
       fail(scanToken, "Reward is not ready yet.");
