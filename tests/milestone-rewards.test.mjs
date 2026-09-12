@@ -122,6 +122,42 @@ test("a single-reward program behaves exactly as it does today", () => {
   assert.equal(singleCardReward({ requiredStamps: 0, rewardName: "x" })[0].atStamp, 1);
 });
 
+test("redemption resets the card only when the reward completes it", () => {
+  const actions = read("src/app/scan/actions.ts");
+
+  // The whole behavioural difference lives in this branch.
+  assert.match(actions, /if \(claimed\.completesCard\) \{/);
+  assert.match(actions, /claimedRewardStamps: \[\],/, "completing the card clears the claimed set");
+  assert.match(actions, /event: "CARD_RESET"/, "completing the card still resets stamps");
+  assert.match(
+    actions,
+    /claimedRewardStamps: \{ push: claimed\.atStamp \}/,
+    "a milestone is recorded without touching the stamps",
+  );
+
+  // A milestone must not reset anything. earnedStamps:0 may appear only inside
+  // the completesCard branch.
+  const completing = actions.slice(actions.indexOf("if (claimed.completesCard) {"));
+  const milestoneBranch = completing.slice(completing.indexOf("} else {"));
+  assert.doesNotMatch(milestoneBranch.slice(0, 600), /earnedStamps: 0/, "a milestone must not zero the card");
+
+  // Earliest-first is what protects an unclaimed milestone from being wiped.
+  assert.match(actions, /const claimed = readyRewards\[0\];/);
+
+  // The redemption records which reward it was, and the name as given.
+  assert.match(actions, /programRewardId: claimedRow\?\.id \?\? null/);
+  assert.match(actions, /rewardName: claimed\.rewardName/);
+  assert.match(actions, /requiredStamps: claimed\.atStamp/);
+
+  // Concurrency protection must survive untouched.
+  assert.match(actions, /FOR UPDATE/);
+  assert.match(actions, /idempotencyKey/);
+
+  // Both the pre-check and the locked re-check read the real card.
+  assert.equal((actions.match(/cardRewardsFor\(/g) ?? []).length >= 3, true);
+  assert.match(actions, /programRewards: \{ orderBy: \{ atStamp: "asc" \} \}/);
+});
+
 test("the schema keeps completesCard and the claimed set together", () => {
   const schema = read("prisma/schema.prisma");
   const migration = read("prisma/migrations/0048_program_rewards/migration.sql");

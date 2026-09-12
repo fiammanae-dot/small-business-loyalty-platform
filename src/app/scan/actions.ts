@@ -14,7 +14,25 @@ import { syncGoogleWalletObjectAfterLoyaltyChange } from "@/lib/google-wallet/se
 import { prisma } from "@/lib/prisma";
 import { getStartingBonusStampsForEvent, progressValue } from "@/lib/programs";
 import { qualifyReferralFromFirstStamp } from "@/lib/referrals";
-import { isRewardReady, singleCardReward } from "@/lib/rewards";
+import { getReadyRewards, isRewardReady, singleCardReward, type CardReward } from "@/lib/rewards";
+
+/**
+ * The rewards on a program's card, read from program_rewards.
+ *
+ * Falls back to the single completing reward the program has always described
+ * only if the table is somehow empty for this program - migration 0048
+ * backfilled a row for every program, so that should never happen, but a card
+ * with no rewards at all would make redemption impossible and is not worth
+ * risking at the counter.
+ */
+function cardRewardsFor(program: {
+  requiredStamps: number;
+  rewardName: string;
+  rewardDescription: string;
+  programRewards?: { atStamp: number; rewardName: string; rewardDescription: string; completesCard: boolean }[];
+}): CardReward[] {
+  return program.programRewards?.length ? program.programRewards : singleCardReward(program);
+}
 
 const stampIssueSchema = z
   .object({
@@ -104,7 +122,7 @@ export async function issueStampAction(formData: FormData) {
   const programMembership = await prisma.customerProgramMembership.findUnique({
     where: { scanToken: data.scanToken },
     include: {
-      loyaltyProgram: true,
+      loyaltyProgram: { include: { programRewards: { orderBy: { atStamp: "asc" } } } },
       businessCustomerMembership: {
         include: {
           createdBranch: true,
@@ -138,7 +156,7 @@ export async function issueStampAction(formData: FormData) {
     isRewardReady({
       earnedStamps: programMembership.earnedStamps,
       bonusStamps: programMembership.bonusStamps,
-      rewards: singleCardReward(programMembership.loyaltyProgram),
+      rewards: cardRewardsFor(programMembership.loyaltyProgram),
       claimedRewardStamps: programMembership.claimedRewardStamps,
     })
   ) {
@@ -466,7 +484,7 @@ export async function redeemRewardAction(formData: FormData) {
   const programMembership = await prisma.customerProgramMembership.findUnique({
     where: { scanToken },
     include: {
-      loyaltyProgram: true,
+      loyaltyProgram: { include: { programRewards: { orderBy: { atStamp: "asc" } } } },
       businessCustomerMembership: {
         include: {
           createdBranch: true,
@@ -499,7 +517,7 @@ export async function redeemRewardAction(formData: FormData) {
     !isRewardReady({
       earnedStamps: programMembership.earnedStamps,
       bonusStamps: programMembership.bonusStamps,
-      rewards: singleCardReward(programMembership.loyaltyProgram),
+      rewards: cardRewardsFor(programMembership.loyaltyProgram),
       claimedRewardStamps: programMembership.claimedRewardStamps,
     })
   ) {
@@ -529,7 +547,7 @@ export async function redeemRewardAction(formData: FormData) {
     const lockedMembership = await tx.customerProgramMembership.findUnique({
       where: { id: programMembership.id },
       include: {
-        loyaltyProgram: true,
+        loyaltyProgram: { include: { programRewards: { orderBy: { atStamp: "asc" } } } },
         businessCustomerMembership: true,
       },
     });
@@ -546,16 +564,32 @@ export async function redeemRewardAction(formData: FormData) {
     if (isOutOfAssignedBranch(user, lockedMembership.businessCustomerMembership)) {
       fail(scanToken, OUT_OF_BRANCH_ACTION_MESSAGE);
     }
-    if (
-      !isRewardReady({
-        earnedStamps: lockedMembership.earnedStamps,
-        bonusStamps: lockedMembership.bonusStamps,
-        rewards: singleCardReward(lockedMembership.loyaltyProgram),
-        claimedRewardStamps: lockedMembership.claimedRewardStamps,
-      })
-    ) {
+    // Which rewards this customer has reached and not yet taken, earliest
+    // first. More than one can be waiting: someone who never claimed the
+    // visit-5 discount and then reaches visit 9 has both.
+    const readyRewards = getReadyRewards({
+      earnedStamps: lockedMembership.earnedStamps,
+      bonusStamps: lockedMembership.bonusStamps,
+      rewards: cardRewardsFor(lockedMembership.loyaltyProgram),
+      claimedRewardStamps: lockedMembership.claimedRewardStamps,
+    });
+    if (readyRewards.length === 0) {
       fail(scanToken, "Reward is not ready yet.");
     }
+
+    // Always redeem the EARLIEST ready reward. That single rule is what stops
+    // an unclaimed milestone being destroyed: the card can only reset once the
+    // completing reward is the earliest thing still owed, so a customer sitting
+    // at visit 9 with the visit-5 discount outstanding collects the discount
+    // first and the wash on the next scan. Nothing is silently lost, and staff
+    // never have to notice.
+    const claimed = readyRewards[0];
+
+    // program_rewards rows are ordered and matched by atStamp, so this finds
+    // the row backing the reward the engine chose.
+    const claimedRow = lockedMembership.loyaltyProgram.programRewards.find(
+      (reward) => reward.atStamp === claimed.atStamp,
+    );
 
     const created = await tx.rewardRedemption.create({
       data: {
@@ -563,8 +597,11 @@ export async function redeemRewardAction(formData: FormData) {
         branchId,
         customerProgramMembershipId: programMembership.id,
         loyaltyProgramId: lockedMembership.loyaltyProgramId,
-        rewardName: lockedMembership.loyaltyProgram.rewardName,
-        requiredStamps: lockedMembership.loyaltyProgram.requiredStamps,
+        programRewardId: claimedRow?.id ?? null,
+        // The reward as it was named at the moment it was given, not as the
+        // program describes it today.
+        rewardName: claimed.rewardName,
+        requiredStamps: claimed.atStamp,
         redeemedByUserId: user.id,
         redeemedAt: now,
         idempotencyKey,
@@ -573,17 +610,32 @@ export async function redeemRewardAction(formData: FormData) {
       select: { id: true },
     });
 
-    await tx.customerProgramMembership.update({
-      where: { id: programMembership.id },
-      data: {
-        earnedStamps: 0,
-        bonusStamps: getStartingBonusStampsForEvent({
-          startingBonusStamps: lockedMembership.loyaltyProgram.startingBonusStamps,
-          startingStampPolicy: lockedMembership.loyaltyProgram.startingStampPolicy,
-          event: "CARD_RESET",
-        }),
-      },
-    });
+    if (claimed.completesCard) {
+      // The card is finished: stamps go back to the starting position and the
+      // claimed set empties, so every milestone is available again next time
+      // round.
+      await tx.customerProgramMembership.update({
+        where: { id: programMembership.id },
+        data: {
+          earnedStamps: 0,
+          claimedRewardStamps: [],
+          bonusStamps: getStartingBonusStampsForEvent({
+            startingBonusStamps: lockedMembership.loyaltyProgram.startingBonusStamps,
+            startingStampPolicy: lockedMembership.loyaltyProgram.startingStampPolicy,
+            event: "CARD_RESET",
+          }),
+        },
+      });
+    } else {
+      // A milestone. The customer collects it and keeps the stamps they have -
+      // this is the whole point of a reward before the card is full.
+      await tx.customerProgramMembership.update({
+        where: { id: programMembership.id },
+        data: {
+          claimedRewardStamps: { push: claimed.atStamp },
+        },
+      });
+    }
 
     await createEngagementEventIfAllowed({
       tx,
@@ -593,7 +645,8 @@ export async function redeemRewardAction(formData: FormData) {
       metadata: {
         programMembershipId: lockedMembership.id,
         programName: lockedMembership.loyaltyProgram.name,
-        rewardName: lockedMembership.loyaltyProgram.rewardName,
+        rewardName: claimed.rewardName,
+        completedCard: claimed.completesCard,
         redemptionId: created.id,
       },
     });
