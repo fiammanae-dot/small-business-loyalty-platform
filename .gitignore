@@ -153,3 +153,9 @@ TWO_FACTOR_KEY_FOR_VERCEL.txt
 TWO_FACTOR_VALUE_ONLY.txt
 WALLET_PRIVATE_KEY_FOR_VERCEL.txt
 cookies.txt
+qa-credentials.csv
+UsersmahmoAppDataLocalTemp*.txt
+
+# Scratch and captured command output - these belong in a terminal, not a repo
+audit-*-output.txt
+zz_*
