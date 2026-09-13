@@ -120,7 +120,10 @@ test("public customer card renders selected program theme through shared wallet 
   assert.match(publicCard, /getScanQrDataUrl/);
   assert.match(publicCard, /buildCardRenderModel/);
   assert.match(publicCard, /name: primaryProgram\.programMembership\.loyaltyProgram\.name/);
-  assert.match(publicCard, /rewardName: primaryProgram\.programMembership\.loyaltyProgram\.rewardName/);
+  // The render model is still fed a reward name, but no longer the program's
+  // final one: on a card with a milestone the customer is working toward the
+  // milestone, so the name comes from the computed ready/next reward.
+  assert.match(publicCard, /rewardName: primaryProgram\.rewardName/);
   assert.match(publicCard, /programName: primaryCardModel\.reward\.programName/);
   assert.match(publicCard, /rewardName: primaryCardModel\.reward\.rewardName/);
   assert.match(walletShell, /phoneBackground/);

@@ -9,6 +9,7 @@ import { calculateCustomerTier, computeTierMaintenance, tierQualificationWindowL
 import { formatDate, formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { progressValue } from "@/lib/programs";
+import { getNextReward, getReadyRewards, singleCardReward } from "@/lib/rewards";
 import { getScanQrDataUrl } from "@/lib/scan";
 import { getReferralUrl } from "@/lib/referrals";
 import {
@@ -39,7 +40,12 @@ export default async function PublicCustomerCardPage({
           tierSetting: true,
         },
       },
-      programMemberships: { include: { loyaltyProgram: true }, orderBy: { enrolledAt: "desc" } },
+      programMemberships: {
+        // The card must name the NEXT reward, which on a card with a milestone is
+        // not the program's final one.
+        include: { loyaltyProgram: { include: { programRewards: { orderBy: { atStamp: "asc" } } } } },
+        orderBy: { enrolledAt: "desc" },
+      },
     },
   });
 
@@ -61,9 +67,25 @@ export default async function PublicCustomerCardPage({
     membership.programMemberships.map(async (programMembership) => {
       const progress = progressValue(programMembership.earnedStamps, programMembership.bonusStamps);
       const required = programMembership.loyaltyProgram.requiredStamps;
-      const remaining = Math.max(required - progress, 0);
+      const cardInput = {
+        earnedStamps: programMembership.earnedStamps,
+        bonusStamps: programMembership.bonusStamps,
+        rewards: programMembership.loyaltyProgram.programRewards.length
+          ? programMembership.loyaltyProgram.programRewards
+          : singleCardReward(programMembership.loyaltyProgram),
+        claimedRewardStamps: programMembership.claimedRewardStamps,
+      };
+      // Count down to the reward the customer is actually working toward. On a
+      // nine-slot card with a milestone at five, someone on visit 2 is three
+      // away from the discount, not seven away from the wash.
+      const readyRewards = getReadyRewards(cardInput);
+      const nextReward = getNextReward(cardInput);
+      const remaining = nextReward ? Math.max(nextReward.atStamp - progress, 0) : 0;
       const completion = Math.min(Math.round((progress / required) * 100), 100);
-      const rewardReady = progress >= required;
+      const rewardReady = readyRewards.length > 0;
+      // The reward to name: what is waiting now, or what is coming next.
+      const rewardName =
+        readyRewards[0]?.rewardName ?? nextReward?.rewardName ?? programMembership.loyaltyProgram.rewardName;
       const programCardDesign = programMembership.loyaltyProgram.cardDesign as CardDesignInput;
       const theme = resolveCardThemeColors({ cardTheme: programMembership.loyaltyProgram.cardTheme, branding, cardDesign: programCardDesign });
 
@@ -75,6 +97,7 @@ export default async function PublicCustomerCardPage({
         remaining,
         completion,
         rewardReady,
+        rewardName,
         theme,
       };
     }),
@@ -145,7 +168,7 @@ export default async function PublicCustomerCardPage({
     program: primaryProgram
       ? {
           name: primaryProgram.programMembership.loyaltyProgram.name,
-          rewardName: primaryProgram.programMembership.loyaltyProgram.rewardName,
+          rewardName: primaryProgram.rewardName,
           progress: primaryProgram.progress,
           required: primaryProgram.required,
           remaining: primaryProgram.remaining,
@@ -267,11 +290,11 @@ export default async function PublicCustomerCardPage({
               <h2 className="text-base font-semibold text-[#1E293B]">Additional programs</h2>
             </div>
             <div className="mt-4 grid gap-3">
-              {programCards.slice(1).map(({ programMembership, qrCode, progress, required, remaining, completion, rewardReady, theme }) => (
+              {programCards.slice(1).map(({ programMembership, qrCode, progress, required, remaining, completion, rewardReady, rewardName, theme }) => (
                 <ProgramRewardCard
                   key={programMembership.id}
                   programName={programMembership.loyaltyProgram.name}
-                  rewardName={programMembership.loyaltyProgram.rewardName}
+                  rewardName={rewardName}
                   qrCode={qrCode}
                   progress={progress}
                   required={required}

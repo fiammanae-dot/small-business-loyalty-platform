@@ -114,7 +114,10 @@ test("manual scan token parser accepts scan URLs and direct tokens for existing 
 test("scanner reward-ready state hides stamp actions and shows dynamic reset message", () => {
   const scan = read("src/app/scan/[token]/page.tsx");
 
-  assert.match(scan, /description=\{`Progress has been reset to 0 \/ \$\{program\.requiredStamps\}\.\`\}/);
+  // After a milestone the card is untouched, so the success banner must not
+  // claim a reset that the progress shown underneath contradicts.
+  assert.match(scan, /Progress has been reset to 0 \/ \$\{program\.requiredStamps\}\./);
+  assert.match(scan, /Progress stays at \$\{progress\} \/ \$\{program\.requiredStamps\} - the customer keeps collecting\./);
   assert.match(scan, /\{rewardReady \? \(/);
   assert.match(scan, /canRedeem \? \(/);
   assert.match(scan, /\["BUSINESS_OWNER", "BRANCH_MANAGER", "STAFF"\]\.includes\(authUser\.role\)/);

@@ -1,0 +1,377 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { test } from "node:test";
+import ts from "typescript";
+
+function read(path) {
+  return readFileSync(path, "utf8");
+}
+
+// rewards.ts imports progressValue from @/lib/programs, which an in-memory
+// module cannot resolve. progressValue is `earned + bonus` and nothing more, so
+// the import is rewritten to a local definition rather than stubbing behaviour.
+async function importRewards() {
+  const source = read("src/lib/rewards.ts").replace(
+    'import { progressValue } from "@/lib/programs";',
+    "const progressValue = (earned, bonus) => earned + bonus;",
+  );
+  const transpiled = ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+  }).outputText;
+  return import(`data:text/javascript;base64,${Buffer.from(transpiled).toString("base64")}`);
+}
+
+const rewards = await importRewards();
+
+// Al Bab Al Abyad's card: 50% off at visit 5, free wash at visit 9.
+const CARD = [
+  { atStamp: 5, rewardName: "50% off car wash", rewardDescription: "Half price", completesCard: false },
+  { atStamp: 9, rewardName: "Free full wash", rewardDescription: "On the house", completesCard: true },
+];
+
+test("a milestone becomes ready without completing the card", () => {
+  const { getReadyRewards, isRewardReady } = rewards;
+
+  assert.deepEqual(getReadyRewards({ earnedStamps: 4, bonusStamps: 0, rewards: CARD }), []);
+  assert.equal(isRewardReady({ earnedStamps: 4, bonusStamps: 0, rewards: CARD }), false);
+
+  const atFive = getReadyRewards({ earnedStamps: 5, bonusStamps: 0, rewards: CARD });
+  assert.equal(atFive.length, 1);
+  assert.equal(atFive[0].atStamp, 5);
+  assert.equal(atFive[0].completesCard, false, "visit 5 must not complete the card");
+});
+
+test("claiming a milestone stops it being offered again on the same card", () => {
+  const { getReadyRewards } = rewards;
+
+  const afterClaim = getReadyRewards({
+    earnedStamps: 6,
+    bonusStamps: 0,
+    rewards: CARD,
+    claimedRewardStamps: [5],
+  });
+  assert.deepEqual(afterClaim, [], "the 50% was taken; nothing is waiting at visit 6");
+});
+
+test("two rewards can be waiting at once", () => {
+  const { getReadyRewards } = rewards;
+
+  // Never claimed the 50%, now reached the free wash.
+  const both = getReadyRewards({ earnedStamps: 9, bonusStamps: 0, rewards: CARD });
+  assert.deepEqual(both.map((r) => r.atStamp), [5, 9], "earliest first, and neither is hidden");
+
+  // Staff must be able to see both; collapsing to one would silently drop a
+  // reward the customer earned.
+  assert.equal(both[0].completesCard, false);
+  assert.equal(both[1].completesCard, true);
+});
+
+test("bonus stamps count toward rewards exactly as earned ones do", () => {
+  const { getReadyRewards } = rewards;
+  const viaBonus = getReadyRewards({ earnedStamps: 3, bonusStamps: 2, rewards: CARD });
+  assert.equal(viaBonus.length, 1);
+  assert.equal(viaBonus[0].atStamp, 5);
+});
+
+test("the countdown targets the next reward, not the last one", () => {
+  const { getNextReward, stampsUntilNextReward } = rewards;
+
+  // On visit 2 of a nine-slot card, the customer is 3 away from the discount -
+  // not 7 away from the wash. Naming the final reward here is what makes a
+  // milestone invisible, and an invisible milestone retains nobody.
+  assert.equal(getNextReward({ earnedStamps: 2, bonusStamps: 0, rewards: CARD }).atStamp, 5);
+  assert.equal(stampsUntilNextReward({ earnedStamps: 2, bonusStamps: 0, rewards: CARD }), 3);
+
+  assert.equal(getNextReward({ earnedStamps: 6, bonusStamps: 0, rewards: CARD }).atStamp, 9);
+  assert.equal(stampsUntilNextReward({ earnedStamps: 6, bonusStamps: 0, rewards: CARD }), 3);
+
+  assert.equal(getNextReward({ earnedStamps: 9, bonusStamps: 0, rewards: CARD }), null);
+  assert.equal(stampsUntilNextReward({ earnedStamps: 9, bonusStamps: 0, rewards: CARD }), null);
+});
+
+test("exactly one reward completes the card", () => {
+  const { getCompletingReward } = rewards;
+  assert.equal(getCompletingReward(CARD).atStamp, 9);
+  assert.equal(getCompletingReward([]), null);
+});
+
+test("a single-reward program behaves exactly as it does today", () => {
+  const { singleCardReward, getReadyRewards, isRewardReady, getRewardState, stampsUntilNextReward } = rewards;
+
+  // This is what migration 0048 backfilled for every existing program, so the
+  // old behaviour has to survive the rewrite untouched.
+  const legacy = singleCardReward({ requiredStamps: 10, rewardName: "Free Coffee" });
+  assert.equal(legacy.length, 1);
+  assert.equal(legacy[0].atStamp, 10);
+  assert.equal(legacy[0].completesCard, true);
+
+  assert.equal(isRewardReady({ earnedStamps: 9, bonusStamps: 0, rewards: legacy }), false);
+  assert.equal(isRewardReady({ earnedStamps: 10, bonusStamps: 0, rewards: legacy }), true);
+  assert.equal(getRewardState({ earnedStamps: 10, bonusStamps: 0, rewards: legacy }), "REWARD_READY");
+  assert.equal(getRewardState({ earnedStamps: 3, bonusStamps: 0, rewards: legacy }), "ACTIVE");
+  assert.equal(
+    getRewardState({ earnedStamps: 10, bonusStamps: 0, rewards: legacy, justRedeemed: true }),
+    "REDEEMED",
+  );
+  assert.equal(stampsUntilNextReward({ earnedStamps: 4, bonusStamps: 0, rewards: legacy }), 6);
+
+  // Overshooting still reads as ready - stamps can exceed the requirement.
+  assert.equal(isRewardReady({ earnedStamps: 14, bonusStamps: 0, rewards: legacy }), true);
+
+  // A program with a zero requirement must not produce a reward at stamp 0.
+  assert.equal(singleCardReward({ requiredStamps: 0, rewardName: "x" })[0].atStamp, 1);
+});
+
+test("redemption resets the card only when the reward completes it", () => {
+  const actions = read("src/app/scan/actions.ts");
+
+  // The whole behavioural difference lives in this branch.
+  assert.match(actions, /if \(claimed\.completesCard\) \{/);
+  assert.match(actions, /claimedRewardStamps: \[\],/, "completing the card clears the claimed set");
+  assert.match(actions, /event: "CARD_RESET"/, "completing the card still resets stamps");
+  assert.match(
+    actions,
+    /claimedRewardStamps: \{ push: claimed\.atStamp \}/,
+    "a milestone is recorded without touching the stamps",
+  );
+
+  // A milestone must not reset anything. earnedStamps:0 may appear only inside
+  // the completesCard branch.
+  const completing = actions.slice(actions.indexOf("if (claimed.completesCard) {"));
+  const milestoneBranch = completing.slice(completing.indexOf("} else {"));
+  assert.doesNotMatch(milestoneBranch.slice(0, 600), /earnedStamps: 0/, "a milestone must not zero the card");
+
+  // Earliest-first is what protects an unclaimed milestone from being wiped.
+  assert.match(actions, /const claimed = readyRewards\[0\];/);
+
+  // The redemption records which reward it was, and the name as given.
+  assert.match(actions, /programRewardId: claimedRow\?\.id \?\? null/);
+  assert.match(actions, /rewardName: claimed\.rewardName/);
+  assert.match(actions, /requiredStamps: claimed\.atStamp/);
+
+  // Concurrency protection must survive untouched.
+  assert.match(actions, /FOR UPDATE/);
+  assert.match(actions, /idempotencyKey/);
+
+  // Both the pre-check and the locked re-check read the real card.
+  assert.equal((actions.match(/cardRewardsFor\(/g) ?? []).length >= 3, true);
+  assert.match(actions, /programRewards: \{ orderBy: \{ atStamp: "asc" \} \}/);
+});
+
+test("the card and the Wallet pass name the next reward, not the last one", () => {
+  const mapper = read("src/lib/google-wallet/mapper.ts");
+  const card = read("src/app/card/[token]/page.tsx");
+  const service = read("src/lib/google-wallet/service.ts");
+
+  // An invisible milestone retains nobody - the paper card works precisely
+  // because the badge at slot 5 is visible from day one.
+  for (const [label, source] of [["wallet mapper", mapper], ["customer card", card]]) {
+    assert.match(source, /getNextReward\(/, `${label} must count down to the next reward`);
+    assert.match(source, /getReadyRewards\(/, `${label} must know what is waiting now`);
+    assert.match(source, /claimedRewardStamps/, `${label} must exclude rewards already taken`);
+  }
+
+  // The old behaviour was a bare subtraction against the program's final
+  // requirement; that is exactly what hides a milestone.
+  assert.doesNotMatch(mapper, /required - progress/, "wallet must not count down to requiredStamps");
+  assert.doesNotMatch(card, /Math\.max\(required - progress, 0\)/, "card must not count down to requiredStamps");
+
+  // Both have to actually load the rewards, or they silently fall back.
+  assert.match(service, /programRewards: \{ orderBy: \{ atStamp: "asc" \} \}/);
+  assert.match(card, /programRewards: \{ orderBy: \{ atStamp: "asc" \} \}/);
+
+  // Two rewards waiting must both be named rather than one hiding the other.
+  assert.match(mapper, /readyRewards\.map\(\(reward\) => reward\.rewardName\)\.join\(" and "\)/);
+
+  // A finished card has nothing to count down to and must not say "0 visits".
+  assert.match(mapper, /All rewards on this card have been claimed\./);
+});
+
+test("the scanner names the reward it will actually hand over", () => {
+  const scan = read("src/app/scan/[token]/page.tsx");
+  const resultCard = read("src/components/domain/ScannerResultCard.tsx");
+
+  // The scanner decides whether a reward can be redeemed at all, so it has to
+  // see every reward on the card. Without this the redeem button never appears
+  // for a milestone and the engine behind it is unreachable.
+  assert.match(scan, /programRewards: \{ orderBy: \{ atStamp: "asc" \} \}/);
+  assert.match(scan, /const readyRewards = getReadyRewards\(cardInput\)/);
+
+  // Redemption gives the EARLIEST reward owed, so the screen must name that
+  // one - saying "Free Coffee" while the button hands over the 50% discount is
+  // how a counter stops trusting the screen.
+  assert.match(scan, /const claimableReward = readyRewards\[0\] \?\? null/);
+  assert.match(scan, /rewardName=\{rewardHeadline\}/);
+  assert.match(scan, /Reward ready \(card continues\)/, "a milestone must say the card is not finishing");
+
+  // Every "visits remaining" on the screen counts to the same reward. The
+  // badge used to compute required - current itself and contradicted the panel
+  // directly beneath it.
+  assert.match(scan, /remainingToNext=\{remainingToNext\}/);
+  assert.match(resultCard, /remainingToNext \?\? Math\.max\(0, required - current\)/);
+});
+
+test("the customer list flags people owed a mid-card reward", () => {
+  const list = read("src/app/dashboard/customers/page.tsx");
+
+  // An owner scanning this list has to see everyone owed something now.
+  // Comparing against requiredStamps alone hides exactly those people.
+  assert.match(list, /rewardReady: readyRewards\.length > 0/);
+  assert.doesNotMatch(list, /rewardReady: current >= required/, "the inlined comparison must be gone");
+
+  // "Near" means near the NEXT reward, so two visits from the milestone
+  // counts - not only two visits from finishing the card.
+  assert.match(list, /untilNext !== null && untilNext > 0 && untilNext <= 2/);
+  assert.doesNotMatch(list, /current >= Math\.max\(0, required - 2\)/);
+
+  // Somebody already holding a ready reward is not "near" one.
+  assert.match(list, /nearReward: readyRewards\.length === 0 &&/);
+
+  // The list has to load the rewards or it silently falls back to one.
+  assert.match(list, /programRewards: \{/);
+});
+
+test("the schema keeps completesCard and the claimed set together", () => {
+  const schema = read("prisma/schema.prisma");
+  const migration = read("prisma/migrations/0048_program_rewards/migration.sql");
+
+  assert.match(schema, /model ProgramReward/);
+  assert.match(schema, /completesCard\s+Boolean\s+@default\(false\)/);
+  assert.match(schema, /@@unique\(\[loyaltyProgramId, atStamp\]\)/, "one reward per slot");
+  assert.match(schema, /claimedRewardStamps\s+Int\[\]/);
+  assert.match(schema, /programRewardId\s+Int\?/, "history predating milestones has no reward to point at");
+
+  // The backfill is what lets the engine read the table without changing
+  // behaviour, so it has to stay in the migration.
+  assert.match(migration, /INSERT INTO "program_rewards"/);
+  assert.match(migration, /FROM "loyalty_programs"/);
+  assert.match(migration, /true,\s*\n\s*CURRENT_TIMESTAMP/, "backfilled rewards complete the card");
+  assert.doesNotMatch(migration, /DROP /, "0048 must be additive");
+});
+
+test("milestone validation catches the mistakes before the database does", async () => {
+  // checkMilestones and buildProgramRewardRows are pure; only the zod schema
+  // beside them needs the dependency, so it is removed rather than faked -
+  // a fake would test the fake.
+  const source = read("src/lib/program-rewards.ts")
+    .replace(/^import \{ z \} from "zod";$/m, "")
+    .replace(/export const programMilestoneSchema = z[\s\S]*?\n\}\);\n/, "");
+  const transpiled = ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+  }).outputText;
+  const mod = await import(`data:text/javascript;base64,${Buffer.from(transpiled).toString("base64")}`);
+  const { checkMilestones, buildProgramRewardRows } = mod;
+
+  // A milestone at or past the end competes with the reward that completes the
+  // card - two rewards claiming the same slot.
+  assert.equal(checkMilestones([{ atStamp: 5, rewardName: "50% off" }], 10), null);
+  assert.match(checkMilestones([{ atStamp: 10, rewardName: "x" }], 10), /before the card is complete/);
+  assert.match(checkMilestones([{ atStamp: 11, rewardName: "x" }], 10), /before the card is complete/);
+
+  // Two on the same visit would hit the unique index as a 500 rather than a
+  // sentence the owner can act on.
+  assert.match(
+    checkMilestones([{ atStamp: 5, rewardName: "a" }, { atStamp: 5, rewardName: "b" }], 10),
+    /two rewards on visit 5/,
+  );
+
+  // The completing reward is built from the program, never edited as a
+  // milestone, so a card always has exactly one and it always sits at the end.
+  const rows = buildProgramRewardRows({
+    requiredStamps: 9,
+    rewardName: "Free full wash",
+    rewardDescription: "On the house",
+    milestones: [{ atStamp: 5, rewardName: "50% off", rewardDescription: "" }],
+  });
+  assert.deepEqual(rows.map((row) => row.atStamp), [5, 9], "earliest first");
+  assert.equal(rows.filter((row) => row.completesCard).length, 1);
+  assert.equal(rows.at(-1).completesCard, true);
+  assert.equal(rows.at(-1).atStamp, 9);
+  // An empty description falls back to the name rather than storing "".
+  assert.equal(rows[0].rewardDescription, "50% off");
+});
+
+test("saving a program rewrites its rewards in the same transaction", () => {
+  const actions = read("src/app/dashboard/programs/actions.ts");
+  const editPage = read("src/app/dashboard/programs/[id]/edit/page.tsx");
+
+  // Before this, nothing wrote program_rewards at all: a program created after
+  // migration 0048 had no rows and fell back to a single completing reward.
+  assert.match(actions, /async function syncProgramRewards/);
+  assert.match(actions, /buildProgramRewardRows\(/);
+  assert.equal((actions.match(/buildProgramRewardRows\(/g) ?? []).length, 2, "create and update both sync");
+
+  // Half-saved rewards would show customers a card that does not exist.
+  assert.match(actions, /prisma\.\$transaction\(async \(tx\) => \{/);
+  assert.match(actions, /tx\.programReward\.deleteMany/);
+  assert.match(actions, /tx\.programReward\.upsert/);
+
+  // The edit form must load milestones back, or saving any other field would
+  // silently wipe them.
+  assert.match(editPage, /programRewards: \{ orderBy: \{ atStamp: "asc" \} \}/);
+  assert.match(editPage, /filter\(\(reward\) => !reward\.completesCard\)/);
+});
+
+test("Customer 360 sees a mid-card reward the same way every other surface does", () => {
+  const page = read("src/app/dashboard/customers/[id]/page.tsx");
+  const customers = read("src/lib/customers.ts");
+
+  // This page shipped blind: four places compared progress against
+  // requiredStamps, so someone sitting on an unclaimed milestone showed no
+  // badge, no redeem button, and a countdown to the wrong reward.
+  assert.match(page, /function rewardStatusFor\(/);
+  assert.match(page, /cardRewardsFor, getNextReward, getReadyRewards/);
+
+  // Every reward-aware spot routes through the one helper.
+  assert.equal(
+    (page.match(/rewardStatusFor\(/g) ?? []).length,
+    5,
+    "definition plus the four surfaces: the ready count, the hero, the available-rewards panel, the progress card",
+  );
+  assert.doesNotMatch(
+    page,
+    />= programMembership\.loyaltyProgram\.requiredStamps/,
+    "comparing against requiredStamps is exactly what hid the milestone",
+  );
+  assert.doesNotMatch(page, />= primaryProgram\.loyaltyProgram\.requiredStamps/);
+
+  // The panel offers what the scanner will actually hand over - the earliest
+  // unclaimed reward - not whatever sits at the end of the card.
+  assert.match(page, /readyRewards\[0\]/);
+
+  // None of the above can work unless the query loads the rows.
+  assert.match(customers, /programRewards: \{ orderBy: \{ atStamp: "asc" \} \}/);
+});
+
+test("one helper answers what rewards a card has", () => {
+  const rewardsSource = read("src/lib/rewards.ts");
+  assert.match(rewardsSource, /export function cardRewardsFor\(/);
+
+  // Local copies of this fallback are how surfaces drift apart: the scanner
+  // and the Wallet mapper each had their own, and Customer 360 had none.
+  for (const path of [
+    "src/app/scan/actions.ts",
+    "src/lib/google-wallet/mapper.ts",
+    "src/app/dashboard/customers/[id]/page.tsx",
+  ]) {
+    const source = read(path);
+    assert.doesNotMatch(source, /^function cardRewardsFor\(/m, `${path} should import cardRewardsFor, not redefine it`);
+    assert.match(source, /cardRewardsFor/, `${path} should use cardRewardsFor`);
+  }
+
+  // A program with no milestone rows still has one reward: the one that fills
+  // the card.
+  assert.deepEqual(
+    rewards.cardRewardsFor({ requiredStamps: 8, rewardName: "Free wash", rewardDescription: "On us" }),
+    [{ atStamp: 8, rewardName: "Free wash", rewardDescription: "On us", completesCard: true }],
+  );
+  assert.deepEqual(
+    rewards.cardRewardsFor({
+      requiredStamps: 8,
+      rewardName: "Free wash",
+      rewardDescription: "On us",
+      programRewards: [{ atStamp: 5, rewardName: "50% off", rewardDescription: "", completesCard: false }],
+    }).map((reward) => reward.atStamp),
+    [5],
+  );
+});

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { RequiredMark } from "@/components/ui/RequiredMark";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { programTemplates } from "@/lib/programs";
+import { ProgramMilestonesField, type MilestoneDraft } from "@/components/ProgramMilestonesField";
 
 type ProgramPreviewBranding = {
   primaryColor: string;
@@ -28,6 +29,8 @@ type ProgramDefaults = {
   cardTheme?: CardTheme;
   rewardName?: string;
   rewardDescription?: string;
+  /** Rewards before the card is full, earliest first. */
+  milestones?: MilestoneDraft[];
   active?: boolean;
   startDate?: Date | null;
   endDate?: Date | null;
@@ -87,6 +90,16 @@ export function ProgramForm({
             <textarea name="rewardDescription" rows={3} defaultValue={rewardDescription} required className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none business-ring focus:ring-0" />
           </label>
         </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Rewards before the card is full"
+        description="Optional. A reward partway through gives customers a reason to come back before they finish."
+      >
+        <ProgramMilestonesField
+          initialMilestones={defaults.milestones ?? []}
+          requiredStamps={requiredStamps}
+        />
       </SectionCard>
 
       <SectionCard title="Qualification Rules" description="Control when the program is active and how it appears to customers.">

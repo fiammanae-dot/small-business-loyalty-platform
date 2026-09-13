@@ -19,6 +19,7 @@ import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { formatDate } from "@/lib/format";
 import { formatUaePhoneDisplay, normalizePhone } from "@/lib/phone";
 import { businessTracksVehicles, formatPlateDisplay, parsePlateQuery } from "@/lib/vehicles";
+import { getNextReward, getReadyRewards, singleCardReward } from "@/lib/rewards";
 import { prisma } from "@/lib/prisma";
 
 const tierOptions = ["BRONZE", "SILVER", "GOLD", "VIP"] as const;
@@ -318,7 +319,20 @@ const customerInclude = {
   programMemberships: {
     where: { status: "ACTIVE" as const },
     include: {
-      loyaltyProgram: { select: { name: true, requiredStamps: true } },
+      // Reward state is "which reward is ready", so the list needs every reward
+      // on the card - not only the one that completes it.
+      loyaltyProgram: {
+        select: {
+          name: true,
+          requiredStamps: true,
+          rewardName: true,
+          rewardDescription: true,
+          programRewards: {
+            orderBy: { atStamp: "asc" as const },
+            select: { atStamp: true, rewardName: true, rewardDescription: true, completesCard: true },
+          },
+        },
+      },
       stampTransactions: { orderBy: { createdAt: "desc" as const }, take: 1, select: { createdAt: true } },
     },
   },
@@ -515,12 +529,28 @@ function toCustomerSummary(membership: CustomerMembershipWithRelations) {
   const progressRows = membership.programMemberships.map((programMembership) => {
     const current = programMembership.earnedStamps + programMembership.bonusStamps;
     const required = programMembership.loyaltyProgram.requiredStamps;
+    const cardInput = {
+      earnedStamps: programMembership.earnedStamps,
+      bonusStamps: programMembership.bonusStamps,
+      rewards: programMembership.loyaltyProgram.programRewards.length
+        ? programMembership.loyaltyProgram.programRewards
+        : singleCardReward(programMembership.loyaltyProgram),
+      claimedRewardStamps: programMembership.claimedRewardStamps,
+    };
+    // A customer sitting on an unclaimed mid-card reward is owed something
+    // right now. Comparing against requiredStamps alone hides exactly the
+    // people an owner most needs to see in this list.
+    const readyRewards = getReadyRewards(cardInput);
+    const nextReward = getNextReward(cardInput);
+    const untilNext = nextReward ? nextReward.atStamp - current : null;
     return {
       current,
       required,
       programName: programMembership.loyaltyProgram.name,
-      rewardReady: current >= required,
-      nearReward: current < required && current >= Math.max(0, required - 2),
+      rewardReady: readyRewards.length > 0,
+      // "Near" now means near the NEXT reward, so someone two visits from the
+      // milestone counts, not only someone two visits from finishing.
+      nearReward: readyRewards.length === 0 && untilNext !== null && untilNext > 0 && untilNext <= 2,
       lastVisit: programMembership.stampTransactions[0]?.createdAt ?? null,
     };
   });

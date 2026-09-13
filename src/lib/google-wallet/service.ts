@@ -28,7 +28,9 @@ const membershipInclude = {
       },
     },
   },
-  loyaltyProgram: true,
+  // The pass has to name the NEXT reward, which on a card with a milestone is
+  // not the program's final one.
+  loyaltyProgram: { include: { programRewards: { orderBy: { atStamp: "asc" } } } },
 } satisfies Prisma.CustomerProgramMembershipInclude;
 
 export async function getGoogleWalletStatus(customerProgramMembershipId: number) {
