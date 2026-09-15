@@ -880,6 +880,8 @@ model LoyaltyProgram {
   rewardDescription         String       @map("reward_description")
   referralRewardBonusStamps Int          @default(1) @map("referral_reward_bonus_stamps")
   cardTheme                 CardTheme    @default(BUSINESS_DEFAULT) @map("card_theme")
+  /// The emoji drawn on the wallet card, one per stamp. Null falls back to a tick.
+  stampEmoji           String?             @map("stamp_emoji")
   cardDesign                Json?        @map("card_design")
   active                    Boolean      @default(true)
   startDate                 DateTime?    @map("start_date")

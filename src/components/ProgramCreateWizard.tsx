@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { ProgramMilestonesField, type MilestoneDraft } from "@/components/ProgramMilestonesField";
+import { StampIconPicker } from "@/components/StampIconPicker";
 import type { BusinessType, CardTheme, StartingStampPolicy } from "@prisma/client";
 import type {
   CardDesignBackgroundPattern,
@@ -56,6 +57,7 @@ type ProgramDefaults = {
   startingStampPolicy?: StartingStampPolicy;
   referralRewardBonusStamps?: number;
   cardTheme?: CardTheme;
+  stampEmoji?: string | null;
   rewardName?: string;
   rewardDescription?: string;
   /** Rewards before the card is full, earliest first. */
@@ -197,6 +199,13 @@ export function ProgramCreateWizard({
             </label>
           </div>
         </SectionCard>
+
+      <SectionCard
+        title="Stamp icon"
+        description="The picture customers see filling up on their Google Wallet and Apple Wallet card."
+      >
+        <StampIconPicker defaultEmoji={defaults.stampEmoji} />
+      </SectionCard>
 
         <SectionCard title="Reward" description="Define the reward customers receive when they complete the program.">
           <div className="grid gap-4 md:grid-cols-2">

@@ -129,7 +129,9 @@ test("Program Settings enqueues wallet sync exactly once, gated by change detect
     actions.indexOf("export async function toggleProgramAction"),
   );
 
-  assert.match(fnBody, /select: \{ id: true, name: true, rewardName: true, cardTheme: true, active: true \}/);
+  // stampEmoji is read here too: it is drawn into the pass image, so changing
+  // the icon has to resync every card, not just the program record.
+  assert.match(fnBody, /select: \{ id: true, name: true, rewardName: true, cardTheme: true, stampEmoji: true, active: true \}/);
   const writeIndex = fnBody.indexOf("tx.loyaltyProgram.update");
   const enqueueIndex = fnBody.indexOf("enqueueWalletSync(");
   assert.ok(writeIndex > -1 && enqueueIndex > -1 && writeIndex < enqueueIndex, "program must be saved before wallet sync is enqueued");

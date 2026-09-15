@@ -4,6 +4,10 @@ import { withSentryConfig } from "@sentry/nextjs";
 const nextConfig: NextConfig = {
   output: "standalone",
 
+  // sharp draws the wallet stamp picture and is a native module: bundling it
+  // breaks the binary it loads at runtime, so it has to be required as-is.
+  serverExternalPackages: ["sharp"],
+
   async headers() {
     const securityHeaders = [
       {

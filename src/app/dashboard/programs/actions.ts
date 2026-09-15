@@ -55,6 +55,7 @@ function programData(formData: FormData, businessType: string, defaultCardTheme 
     startingStampPolicy: getString(formData, "startingStampPolicy") || "FIRST_ENROLLMENT_ONLY",
     referralRewardBonusStamps: getString(formData, "referralRewardBonusStamps") || "1",
     cardTheme: getString(formData, "cardTheme") || defaultCardTheme,
+    stampEmoji: getString(formData, "stampEmoji") || null,
     rewardName: getString(formData, "rewardName"),
     rewardDescription: getString(formData, "rewardDescription"),
     active: getString(formData, "active") === "true",
@@ -208,7 +209,7 @@ export async function updateProgramAction(formData: FormData) {
 
   const program = await prisma.loyaltyProgram.findFirst({
     where: { uuid, businessId: user.businessId },
-    select: { id: true, name: true, rewardName: true, cardTheme: true, active: true },
+    select: { id: true, name: true, rewardName: true, cardTheme: true, stampEmoji: true, active: true },
   });
   if (!program) fail("/dashboard/programs", "Program not found.");
 
@@ -227,6 +228,7 @@ export async function updateProgramAction(formData: FormData) {
       startingStampPolicy: parsed.data.startingStampPolicy,
       referralRewardBonusStamps: parsed.data.referralRewardBonusStamps,
       cardTheme: parsed.data.cardTheme,
+      stampEmoji: parsed.data.stampEmoji,
       rewardName: parsed.data.rewardName,
       rewardDescription: parsed.data.rewardDescription,
       active: parsed.data.active,
@@ -262,6 +264,7 @@ export async function updateProgramAction(formData: FormData) {
       name: parsed.data.name,
       rewardName: parsed.data.rewardName,
       cardTheme: parsed.data.cardTheme,
+      stampEmoji: parsed.data.stampEmoji,
       active: parsed.data.active,
     })
   ) {

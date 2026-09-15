@@ -12,6 +12,8 @@ import { resolveCardDesign, type CardDesignInput } from "@/lib/card-design";
 import { getCardUrl, resolveBranding } from "@/lib/customer-cards";
 import { progressValue } from "@/lib/programs";
 import { cardRewardsFor, getNextReward, getReadyRewards, type CardReward } from "@/lib/rewards";
+import { getBaseUrl } from "@/lib/customer-cards";
+import { stampImagePath } from "@/lib/wallet/stamp-image";
 import { getScanUrl } from "@/lib/scan";
 
 export type GoogleWalletProgramMembership = CustomerProgramMembership & {
@@ -66,10 +68,8 @@ export async function buildGoogleWalletClassPayload({
     reviewStatus: "UNDER_REVIEW",
     hexBackgroundColor: resolveHexBackgroundColor(theme.cardBackground, branding),
     programLogo: imageModule(absoluteUrl(branding.logoUrl, appUrl) ?? `${appUrl}/logo.png`, `${businessName} logo`),
-    // heroImage is intentionally omitted. Google Wallet's hero is a wide banner and the
-    // business has no dedicated banner asset; the previous code used the platform's
-    // logo.png here, which made every pass show the generic Loyalty Card UAE image. A
-    // rendered card image can be set here later for full visual fidelity.
+    // No heroImage on the class. The per-customer stamp picture is set on the
+    // object instead, and a class hero would show through for anyone missing one.
     localizedIssuerName: localizedString(businessName),
     localizedProgramName: localizedString(membership.loyaltyProgram.name),
     linksModuleData: {
@@ -142,9 +142,23 @@ export async function buildGoogleWalletObjectPayload({
     ...(sections.tierBadge ? [{ id: "tier", header: "Tier", body: customer.currentTier }] : []),
   ];
 
+  // The stamp picture belongs on the object rather than the class. A class is
+  // shared by every customer on the program, so a hero image set there would
+  // show the same progress to all of them.
+  const stampImage = imageModule(
+    `${await getBaseUrl()}${stampImagePath(
+      membership.loyaltyProgram.uuid,
+      Math.min(progress, required),
+      required,
+      membership.loyaltyProgram.stampEmoji,
+    )}`,
+    `${Math.min(progress, required)} of ${required} stamps collected`,
+  );
+
   return compactObject({
     id: objectId,
     classId,
+    heroImage: stampImage,
     state: membership.scanStatus === "ACTIVE" && membership.status === "ACTIVE" ? "ACTIVE" : "INACTIVE",
     accountId,
     accountName: customerName,

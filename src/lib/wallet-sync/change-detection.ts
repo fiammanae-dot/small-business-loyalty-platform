@@ -6,6 +6,8 @@ export type WalletRelevantProgramFields = {
   name: string;
   rewardName: string;
   cardTheme: CardTheme;
+  /** The stamp icon is drawn into the pass image, so changing it must resync. */
+  stampEmoji: string | null;
   active: boolean;
 };
 
@@ -34,6 +36,7 @@ export function hasWalletRelevantProgramChange(before: WalletRelevantProgramFiel
     before.name !== after.name ||
     before.rewardName !== after.rewardName ||
     before.cardTheme !== after.cardTheme ||
+    before.stampEmoji !== after.stampEmoji ||
     before.active !== after.active
   );
 }

@@ -6,6 +6,7 @@ import { RequiredMark } from "@/components/ui/RequiredMark";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { programTemplates } from "@/lib/programs";
 import { ProgramMilestonesField, type MilestoneDraft } from "@/components/ProgramMilestonesField";
+import { StampIconPicker } from "@/components/StampIconPicker";
 
 type ProgramPreviewBranding = {
   primaryColor: string;
@@ -27,6 +28,7 @@ type ProgramDefaults = {
   startingStampPolicy?: StartingStampPolicy;
   referralRewardBonusStamps?: number;
   cardTheme?: CardTheme;
+  stampEmoji?: string | null;
   rewardName?: string;
   rewardDescription?: string;
   /** Rewards before the card is full, earliest first. */
@@ -76,6 +78,13 @@ export function ProgramForm({
             <textarea name="description" rows={3} defaultValue={defaults.description ?? ""} className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none business-ring focus:ring-0" />
           </label>
         </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Stamp icon"
+        description="The picture customers see filling up on their Google Wallet and Apple Wallet card."
+      >
+        <StampIconPicker defaultEmoji={defaults.stampEmoji} />
       </SectionCard>
 
       <SectionCard title="Reward" description="Define the reward customers receive when they complete the program.">
