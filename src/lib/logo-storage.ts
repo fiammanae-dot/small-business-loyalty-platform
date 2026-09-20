@@ -5,6 +5,13 @@ import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 export const LOGO_MAX_BYTES = 2 * 1024 * 1024;
 
+/**
+ * The wallet card picture is a photograph rather than a mark, so it needs more
+ * headroom than a logo. Google renders it around 1032x812, which a reasonable
+ * JPG fits inside well under this ceiling.
+ */
+export const WALLET_PHOTO_MAX_BYTES = 4 * 1024 * 1024;
+
 const allowedLogoTypes = [
   { extension: "png", mimeTypes: ["image/png"] },
   { extension: "jpg", mimeTypes: ["image/jpeg"] },
@@ -87,7 +94,7 @@ export function validateLogoBytes(buffer: Buffer, extension: string): LogoValida
  * a normal upload failure the caller can report, rather than breaking any route
  * that happens to import this module.
  */
-export async function saveLogoFile(buffer: Buffer, extension: string) {
+export async function saveImageFile(buffer: Buffer, extension: string, folder: "logos" | "wallet-photos") {
   const endpoint = process.env.R2_ENDPOINT;
   const bucket = process.env.R2_BUCKET;
   const accessKeyId = process.env.R2_ACCESS_KEY_ID;
@@ -109,7 +116,7 @@ export async function saveLogoFile(buffer: Buffer, extension: string) {
   }
 
   const fileName = `${randomUUID()}.${extension}`;
-  const key = `logos/${fileName}`;
+  const key = `${folder}/${fileName}`;
 
   const client = new S3Client({
     region: "auto",
@@ -134,4 +141,40 @@ export async function saveLogoFile(buffer: Buffer, extension: string) {
   );
 
   return `${(publicBaseUrl as string).replace(/\/+$/, "")}/${key}`;
+}
+
+export function saveLogoFile(buffer: Buffer, extension: string) {
+  return saveImageFile(buffer, extension, "logos");
+}
+
+export function saveWalletPhotoFile(buffer: Buffer, extension: string) {
+  return saveImageFile(buffer, extension, "wallet-photos");
+}
+
+/**
+ * Same checks as a logo, with two differences: SVG is rejected because Google
+ * Wallet fetches the picture and renders it as a bitmap, and the size ceiling
+ * is higher because this is a photograph rather than a mark.
+ */
+export function validateWalletPhotoFile(file: File): LogoValidationResult {
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+  if (extension === "svg") {
+    return { ok: false, error: "Google Wallet cannot show SVG pictures. Use PNG, JPG, or WEBP." };
+  }
+
+  const allowed = allowedLogoTypes.find((type) => type.extension === extension);
+  if (!allowed) {
+    return { ok: false, error: "Unsupported file type. Use PNG, JPG, JPEG, or WEBP." };
+  }
+  if (file.type && !(allowed.mimeTypes as readonly string[]).includes(file.type)) {
+    return { ok: false, error: "The file content does not match its extension." };
+  }
+  if (file.size === 0) {
+    return { ok: false, error: "The selected file is empty." };
+  }
+  if (file.size > WALLET_PHOTO_MAX_BYTES) {
+    return { ok: false, error: "The picture must be 4MB or smaller." };
+  }
+
+  return { ok: true, extension: extension === "jpeg" ? "jpg" : extension };
 }

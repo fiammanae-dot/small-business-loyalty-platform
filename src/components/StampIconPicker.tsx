@@ -39,7 +39,7 @@ export function StampIconPicker({ defaultEmoji }: { defaultEmoji?: string | null
         })}
       </div>
       <p className="text-sm text-[#6B7280]">
-        Customers see this on their wallet card. Collected stamps appear in colour, the rest in grey.
+        Customers see this on their wallet card. Collected stamps show the icon; the ones still to come show an empty circle.
       </p>
     </div>
   );

@@ -142,18 +142,30 @@ export async function buildGoogleWalletObjectPayload({
     ...(sections.tierBadge ? [{ id: "tier", header: "Tier", body: customer.currentTier }] : []),
   ];
 
-  // The stamp picture belongs on the object rather than the class. A class is
+  // Google Wallet gives an issuer one picture slot, so the business chooses what
+  // goes in it. A photo looks better; the stamps tell the customer where they
+  // are without reading anything. PHOTO falls back to the stamps when no photo
+  // has been uploaded, so the slot is never left empty.
+  const baseUrl = await getBaseUrl();
+  const photoUrl =
+    membership.loyaltyProgram.walletHeroStyle === "PHOTO"
+      ? absoluteUrl(membership.loyaltyProgram.walletPhotoUrl, baseUrl)
+      : null;
+
+  // Either way this belongs on the object rather than the class. A class is
   // shared by every customer on the program, so a hero image set there would
-  // show the same progress to all of them.
-  const stampImage = imageModule(
-    `${await getBaseUrl()}${stampImagePath(
-      membership.loyaltyProgram.uuid,
-      Math.min(progress, required),
-      required,
-      membership.loyaltyProgram.stampEmoji,
-    )}`,
-    `${Math.min(progress, required)} of ${required} stamps collected`,
-  );
+  // show one person's progress to all of them.
+  const stampImage = photoUrl
+    ? imageModule(photoUrl, `${membership.loyaltyProgram.name} card picture`)
+    : imageModule(
+        `${baseUrl}${stampImagePath(
+          membership.loyaltyProgram.uuid,
+          Math.min(progress, required),
+          required,
+          membership.loyaltyProgram.stampEmoji,
+        )}`,
+        `${Math.min(progress, required)} of ${required} stamps collected`,
+      );
 
   return compactObject({
     id: objectId,

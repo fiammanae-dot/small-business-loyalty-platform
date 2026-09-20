@@ -100,6 +100,15 @@ export const programSchema = z
       .trim()
       .nullish()
       .transform((value) => (value && STAMP_ICONS.some((icon) => icon.emoji === value) ? value : null)),
+    // Google Wallet shows one picture on the card: the stamps or the business's
+    // own photo. PHOTO with no photo stored falls back to the stamps rather
+    // than leaving the slot empty.
+    walletHeroStyle: z.enum(["STAMPS", "PHOTO"]).default("STAMPS"),
+    walletPhotoUrl: z
+      .string()
+      .trim()
+      .nullish()
+      .transform((value) => (value && /^https:\/\//i.test(value) ? value : null)),
     rewardName: z.string().trim().min(1, "Reward name is required."),
     rewardDescription: z.string().trim().min(1, "Reward description is required."),
     active: z.boolean(),

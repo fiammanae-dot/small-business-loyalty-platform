@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { CardTheme } from "@prisma/client";
+import type { CardTheme, WalletHeroStyle } from "@prisma/client";
 
 export type WalletRelevantProgramFields = {
   name: string;
@@ -8,6 +8,9 @@ export type WalletRelevantProgramFields = {
   cardTheme: CardTheme;
   /** The stamp icon is drawn into the pass image, so changing it must resync. */
   stampEmoji: string | null;
+  /** Which picture the card shows, and the photo behind the PHOTO choice. */
+  walletHeroStyle: WalletHeroStyle;
+  walletPhotoUrl: string | null;
   active: boolean;
 };
 
@@ -37,6 +40,8 @@ export function hasWalletRelevantProgramChange(before: WalletRelevantProgramFiel
     before.rewardName !== after.rewardName ||
     before.cardTheme !== after.cardTheme ||
     before.stampEmoji !== after.stampEmoji ||
+    before.walletHeroStyle !== after.walletHeroStyle ||
+    before.walletPhotoUrl !== after.walletPhotoUrl ||
     before.active !== after.active
   );
 }

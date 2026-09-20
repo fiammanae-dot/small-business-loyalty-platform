@@ -104,7 +104,16 @@ export function BusinessLogoUploadField({
             </button>
           ) : null}
         </div>
-        <p className="w-full text-xs text-[#6B7280]">PNG, JPG, JPEG, SVG, or WEBP. Maximum 2MB.</p>
+        <div className="w-full space-y-1.5 rounded-md border border-[#FDE68A] bg-[#FFFBEB] p-3">
+        <p className="text-xs font-semibold text-[#92400E]">Google Wallet crops this logo into a circle</p>
+        <ul className="list-disc space-y-0.5 pl-4 text-xs text-[#92400E]">
+          <li>Use a <strong>square</strong> image, at least 660 x 660 pixels</li>
+          <li>Use the symbol only - any words beside it will be cut off</li>
+          <li>Leave about 15% empty space around the edge</li>
+          <li>Upload it square; do not cut it into a circle yourself</li>
+        </ul>
+      </div>
+      <p className="w-full text-xs text-[#6B7280]">PNG, JPG, JPEG, SVG, or WEBP. Maximum 2MB.</p>
       </div>
       {uploadError || error ? <p className="text-sm text-red-700">{uploadError ?? error}</p> : null}
     </div>

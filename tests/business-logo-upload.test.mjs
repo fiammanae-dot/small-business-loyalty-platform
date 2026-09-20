@@ -28,7 +28,10 @@ test("logos are uploaded to R2 object storage, not the read-only Vercel filesyst
   assert.match(storage, /region: "auto"/);
   assert.match(storage, /forcePathStyle: true/);
   assert.match(storage, /Key: key/);
-  assert.match(storage, /`logos\/\$\{fileName\}`/, "objects are namespaced under logos/");
+  // The card picture shares this bucket, so each kind of upload gets its own
+  // prefix and a logo can never be mistaken for a card photo.
+  assert.match(storage, /`\$\{folder\}\/\$\{fileName\}`/, "objects are namespaced by folder");
+  assert.match(storage, /saveImageFile\(buffer, extension, "logos"\)/, "logos still land under logos/");
   assert.match(storage, /CacheControl: "public, max-age=31536000, immutable"/);
 
   // Writing to the local filesystem silently lost every upload on Vercel.

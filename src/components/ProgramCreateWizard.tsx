@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { ProgramMilestonesField, type MilestoneDraft } from "@/components/ProgramMilestonesField";
-import { StampIconPicker } from "@/components/StampIconPicker";
+import { WalletCardPictureField } from "@/components/WalletCardPictureField";
 import type { BusinessType, CardTheme, StartingStampPolicy } from "@prisma/client";
 import type {
   CardDesignBackgroundPattern,
@@ -58,6 +58,8 @@ type ProgramDefaults = {
   referralRewardBonusStamps?: number;
   cardTheme?: CardTheme;
   stampEmoji?: string | null;
+  walletHeroStyle?: "STAMPS" | "PHOTO" | null;
+  walletPhotoUrl?: string | null;
   rewardName?: string;
   rewardDescription?: string;
   /** Rewards before the card is full, earliest first. */
@@ -201,10 +203,14 @@ export function ProgramCreateWizard({
         </SectionCard>
 
       <SectionCard
-        title="Stamp icon"
-        description="The picture customers see filling up on their Google Wallet and Apple Wallet card."
+        title="Picture on the wallet card"
+        description="Google Wallet shows one picture on the card. Choose the stamps or your own photo."
       >
-        <StampIconPicker defaultEmoji={defaults.stampEmoji} />
+        <WalletCardPictureField
+          defaultHeroStyle={defaults.walletHeroStyle}
+          defaultPhotoUrl={defaults.walletPhotoUrl}
+          defaultEmoji={defaults.stampEmoji}
+        />
       </SectionCard>
 
         <SectionCard title="Reward" description="Define the reward customers receive when they complete the program.">

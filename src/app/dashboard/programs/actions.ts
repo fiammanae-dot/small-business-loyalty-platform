@@ -56,6 +56,8 @@ function programData(formData: FormData, businessType: string, defaultCardTheme 
     referralRewardBonusStamps: getString(formData, "referralRewardBonusStamps") || "1",
     cardTheme: getString(formData, "cardTheme") || defaultCardTheme,
     stampEmoji: getString(formData, "stampEmoji") || null,
+    walletHeroStyle: getString(formData, "walletHeroStyle") || "STAMPS",
+    walletPhotoUrl: getString(formData, "walletPhotoUrl") || null,
     rewardName: getString(formData, "rewardName"),
     rewardDescription: getString(formData, "rewardDescription"),
     active: getString(formData, "active") === "true",
@@ -155,6 +157,9 @@ export async function createProgramAction(formData: FormData) {
       startingBonusStamps: parsed.data.startingBonusStamps,
       startingStampPolicy: parsed.data.startingStampPolicy,
       referralRewardBonusStamps: parsed.data.referralRewardBonusStamps,
+      stampEmoji: parsed.data.stampEmoji,
+      walletHeroStyle: parsed.data.walletHeroStyle,
+      walletPhotoUrl: parsed.data.walletPhotoUrl,
       rewardName: parsed.data.rewardName,
       rewardDescription: parsed.data.rewardDescription,
       active: parsed.data.active,
@@ -209,7 +214,16 @@ export async function updateProgramAction(formData: FormData) {
 
   const program = await prisma.loyaltyProgram.findFirst({
     where: { uuid, businessId: user.businessId },
-    select: { id: true, name: true, rewardName: true, cardTheme: true, stampEmoji: true, active: true },
+    select: {
+      id: true,
+      name: true,
+      rewardName: true,
+      cardTheme: true,
+      stampEmoji: true,
+      walletHeroStyle: true,
+      walletPhotoUrl: true,
+      active: true,
+    },
   });
   if (!program) fail("/dashboard/programs", "Program not found.");
 
@@ -229,6 +243,8 @@ export async function updateProgramAction(formData: FormData) {
       referralRewardBonusStamps: parsed.data.referralRewardBonusStamps,
       cardTheme: parsed.data.cardTheme,
       stampEmoji: parsed.data.stampEmoji,
+      walletHeroStyle: parsed.data.walletHeroStyle,
+      walletPhotoUrl: parsed.data.walletPhotoUrl,
       rewardName: parsed.data.rewardName,
       rewardDescription: parsed.data.rewardDescription,
       active: parsed.data.active,
@@ -265,6 +281,8 @@ export async function updateProgramAction(formData: FormData) {
       rewardName: parsed.data.rewardName,
       cardTheme: parsed.data.cardTheme,
       stampEmoji: parsed.data.stampEmoji,
+      walletHeroStyle: parsed.data.walletHeroStyle,
+      walletPhotoUrl: parsed.data.walletPhotoUrl,
       active: parsed.data.active,
     })
   ) {
