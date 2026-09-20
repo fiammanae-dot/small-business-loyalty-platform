@@ -1,4 +1,5 @@
 import "server-only";
+import { STAMP_ICONS } from "@/lib/wallet/stamp-icons";
 
 import { z } from "zod";
 import type { BusinessType, StartingStampPolicy } from "@prisma/client";
@@ -92,6 +93,22 @@ export const programSchema = z
     startingStampPolicy: z.enum(startingStampPolicyValues).default("FIRST_ENROLLMENT_ONLY"),
     referralRewardBonusStamps: z.coerce.number().int().min(0, "Referral reward bonus stamps cannot be negative."),
     cardTheme: z.enum(["BUSINESS_DEFAULT", "COFFEE_CAFE", "RESTAURANT", "BEAUTY_SALON", "AUTOMOTIVE", "RETAIL_GENERAL"]).default("BUSINESS_DEFAULT"),
+    // Only an icon we ship artwork for is stored; anything else becomes null and
+    // the card falls back to a plain tick rather than drawing nothing.
+    stampEmoji: z
+      .string()
+      .trim()
+      .nullish()
+      .transform((value) => (value && STAMP_ICONS.some((icon) => icon.emoji === value) ? value : null)),
+    // Google Wallet shows one picture on the card: the stamps or the business's
+    // own photo. PHOTO with no photo stored falls back to the stamps rather
+    // than leaving the slot empty.
+    walletHeroStyle: z.enum(["STAMPS", "PHOTO"]).default("STAMPS"),
+    walletPhotoUrl: z
+      .string()
+      .trim()
+      .nullish()
+      .transform((value) => (value && /^https:\/\//i.test(value) ? value : null)),
     rewardName: z.string().trim().min(1, "Reward name is required."),
     rewardDescription: z.string().trim().min(1, "Reward description is required."),
     active: z.boolean(),

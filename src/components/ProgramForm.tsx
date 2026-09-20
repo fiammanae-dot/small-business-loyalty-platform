@@ -6,6 +6,7 @@ import { RequiredMark } from "@/components/ui/RequiredMark";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { programTemplates } from "@/lib/programs";
 import { ProgramMilestonesField, type MilestoneDraft } from "@/components/ProgramMilestonesField";
+import { WalletCardPictureField } from "@/components/WalletCardPictureField";
 
 type ProgramPreviewBranding = {
   primaryColor: string;
@@ -27,6 +28,9 @@ type ProgramDefaults = {
   startingStampPolicy?: StartingStampPolicy;
   referralRewardBonusStamps?: number;
   cardTheme?: CardTheme;
+  stampEmoji?: string | null;
+  walletHeroStyle?: "STAMPS" | "PHOTO" | null;
+  walletPhotoUrl?: string | null;
   rewardName?: string;
   rewardDescription?: string;
   /** Rewards before the card is full, earliest first. */
@@ -76,6 +80,17 @@ export function ProgramForm({
             <textarea name="description" rows={3} defaultValue={defaults.description ?? ""} className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none business-ring focus:ring-0" />
           </label>
         </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Picture on the wallet card"
+        description="Google Wallet shows one picture on the card. Choose the stamps or your own photo."
+      >
+        <WalletCardPictureField
+          defaultHeroStyle={defaults.walletHeroStyle}
+          defaultPhotoUrl={defaults.walletPhotoUrl}
+          defaultEmoji={defaults.stampEmoji}
+        />
       </SectionCard>
 
       <SectionCard title="Reward" description="Define the reward customers receive when they complete the program.">

@@ -106,6 +106,13 @@ enum BusinessType {
   OTHER
 }
 
+/// What fills the one picture slot Google Wallet gives us. The slot holds one
+/// thing: either the stamps or the business's own photo, never both.
+enum WalletHeroStyle {
+  STAMPS
+  PHOTO
+}
+
 enum CardTheme {
   BUSINESS_DEFAULT
   COFFEE_CAFE
@@ -880,6 +887,11 @@ model LoyaltyProgram {
   rewardDescription         String       @map("reward_description")
   referralRewardBonusStamps Int          @default(1) @map("referral_reward_bonus_stamps")
   cardTheme                 CardTheme    @default(BUSINESS_DEFAULT) @map("card_theme")
+  /// The emoji drawn on the wallet card, one per stamp. Null falls back to a tick.
+  stampEmoji           String?             @map("stamp_emoji")
+  walletHeroStyle      WalletHeroStyle     @default(STAMPS) @map("wallet_hero_style")
+  /// Only used when walletHeroStyle is PHOTO; the card falls back to stamps if unset.
+  walletPhotoUrl       String?             @map("wallet_photo_url")
   cardDesign                Json?        @map("card_design")
   active                    Boolean      @default(true)
   startDate                 DateTime?    @map("start_date")
