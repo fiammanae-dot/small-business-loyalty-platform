@@ -299,6 +299,22 @@ enum GoogleWalletSyncStatus {
   DISABLED
 }
 
+enum WalletBroadcastChannel {
+  GOOGLE_WALLET
+  /// Reserved. TODO: Apple Wallet broadcast (post-enrollment).
+  APPLE_WALLET
+}
+
+enum WalletBroadcastStatus {
+  /// Every program with a wallet card received the message.
+  SENT
+  /// Some programs received it, at least one failed.
+  PARTIAL
+  /// Nothing to send to (not configured, or no wallet cards yet).
+  SKIPPED
+  FAILED
+}
+
 enum CustomerNotificationType {
   NEW_STAMP_EARNED
   TIER_UPGRADED
@@ -406,6 +422,7 @@ model User {
   supportRequestsReviewed    SupportRequest[]             @relation("SupportRequestReviewedBy")
   supportSessionActivities SupportSessionActivity[] @relation("SupportSessionActivityAdminUser")
   archivedBusinesses Business[] @relation("BusinessArchivedBy")
+  walletBroadcastsSent WalletBroadcast[] @relation("WalletBroadcastSentBy")
 
   @@index([businessId])
   @@index([branchId])
@@ -529,6 +546,7 @@ model Business {
   businessNotifications BusinessNotification[]
   designPresets                 BusinessDesignPreset[]
   googleWalletClasses           GoogleWalletClass[]
+  walletBroadcasts              WalletBroadcast[]
   googleWalletObjects           GoogleWalletObject[]
   whatsAppChannel               BusinessWhatsAppChannel?
 
@@ -902,6 +920,7 @@ model LoyaltyProgram {
   business          Business                    @relation(fields: [businessId], references: [id], onDelete: Cascade)
   memberships       CustomerProgramMembership[]
   programRewards    ProgramReward[]
+  walletBroadcasts  WalletBroadcast[]
   rewardRedemptions RewardRedemption[]
   referralRewards   ReferralReward[]
   cooldownEvents    CooldownEvent[]
@@ -1613,4 +1632,30 @@ model CooldownEvent {
   @@map("cooldown_events")
 }
 
+/// One owner-sent message pushed to the lock screen of every customer holding
+/// the business's card in a phone wallet. Also the history and the source of
+/// the per-business cooldown (see lib/wallet-broadcast/policy).
+model WalletBroadcast {
+  id               Int                    @id @default(autoincrement())
+  uuid             String                 @unique @default(uuid()) @db.Uuid
+  businessId       Int                    @map("business_id")
+  /// Null means business-wide (every active program).
+  loyaltyProgramId Int?                   @map("loyalty_program_id")
+  channel          WalletBroadcastChannel @default(GOOGLE_WALLET)
+  header           String
+  body             String
+  status           WalletBroadcastStatus
+  programsReached  Int                    @default(0) @map("programs_reached")
+  programsSkipped  Int                    @default(0) @map("programs_skipped")
+  programsFailed   Int                    @default(0) @map("programs_failed")
+  error            String?
+  sentByUserId     Int?                   @map("sent_by_user_id")
+  sentAt           DateTime               @default(now()) @map("sent_at")
 
+  business       Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  loyaltyProgram LoyaltyProgram? @relation(fields: [loyaltyProgramId], references: [id], onDelete: SetNull)
+  sentByUser     User?           @relation("WalletBroadcastSentBy", fields: [sentByUserId], references: [id], onDelete: SetNull)
+
+  @@index([businessId, sentAt])
+  @@map("wallet_broadcasts")
+}

@@ -29,6 +29,7 @@ test("Business Owner routes require business owner context", () => {
     "src/app/dashboard/notifications/page.tsx",
     "src/app/dashboard/messages/page.tsx",
     "src/app/dashboard/messages/[id]/page.tsx",
+    "src/app/dashboard/wallet-broadcast/page.tsx",
   ]) {
     assert.match(read(path), /getBusinessOwnerContext|requireBusinessOwner/, path);
   }

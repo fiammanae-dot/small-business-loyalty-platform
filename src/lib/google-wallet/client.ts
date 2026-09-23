@@ -8,10 +8,24 @@ const WALLET_API_BASE = "https://walletobjects.googleapis.com/walletobjects/v1";
 
 export type GoogleWalletResource = "loyaltyClass" | "loyaltyObject";
 
+/**
+ * A message shown on the back of a pass. TEXT_AND_NOTIFY also pushes a
+ * notification to every phone holding the pass; plain TEXT only adds it to the
+ * pass details silently.
+ */
+export type GoogleWalletMessage = {
+  id: string;
+  header: string;
+  body: string;
+  messageType: "TEXT" | "TEXT_AND_NOTIFY";
+};
+
 export type GoogleWalletApiClient = {
   get(resource: GoogleWalletResource, id: string): Promise<Record<string, unknown> | null>;
   insert(resource: GoogleWalletResource, payload: Record<string, unknown>): Promise<Record<string, unknown>>;
   patch(resource: GoogleWalletResource, id: string, payload: Record<string, unknown>): Promise<Record<string, unknown>>;
+  /** POST {resource}/{id}/addMessage. On a loyaltyClass it reaches every holder of that program's card at once. */
+  addMessage(resource: GoogleWalletResource, id: string, message: GoogleWalletMessage): Promise<Record<string, unknown>>;
 };
 
 export function createGoogleWalletApiClient(config: GoogleWalletConfig): GoogleWalletApiClient {
@@ -25,11 +39,14 @@ export function createGoogleWalletApiClient(config: GoogleWalletConfig): GoogleW
     method,
     resource,
     id,
+    action,
     body,
   }: {
     method: "GET" | "POST" | "PATCH";
     resource: GoogleWalletResource;
     id?: string;
+    /** A custom method on the resource, e.g. `addMessage` → {resource}/{id}/addMessage. */
+    action?: "addMessage";
     body?: Record<string, unknown>;
   }): Promise<T> {
     const rawHeaders = await authClient.getRequestHeaders();
@@ -41,7 +58,8 @@ export function createGoogleWalletApiClient(config: GoogleWalletConfig): GoogleW
     const headers: Record<string, string> =
       rawHeaders instanceof Headers ? Object.fromEntries(rawHeaders.entries()) : (rawHeaders as unknown as Record<string, string>);
     const response = await retry(async () => {
-      const url = id ? `${WALLET_API_BASE}/${resource}/${encodeURIComponent(id)}` : `${WALLET_API_BASE}/${resource}`;
+      const base = id ? `${WALLET_API_BASE}/${resource}/${encodeURIComponent(id)}` : `${WALLET_API_BASE}/${resource}`;
+      const url = action ? `${base}/${action}` : base;
       return fetch(url, {
         method,
         headers: {
@@ -76,6 +94,9 @@ export function createGoogleWalletApiClient(config: GoogleWalletConfig): GoogleW
     },
     patch(resource, id, payload) {
       return request<Record<string, unknown>>({ method: "PATCH", resource, id, body: payload });
+    },
+    addMessage(resource, id, message) {
+      return request<Record<string, unknown>>({ method: "POST", resource, id, action: "addMessage", body: { message } });
     },
   };
 }
