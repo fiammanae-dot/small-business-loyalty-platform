@@ -30,6 +30,7 @@ import {
   Gift,
   UserPlus,
   Users,
+  Megaphone,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { AuthUser } from "@/lib/session";
@@ -64,6 +65,7 @@ const businessOwnerNavigationGroups: Array<{ label: string; items: NavigationIte
       { href: "/dashboard/programs", label: "Programs", icon: Sparkles },
       { href: "/dashboard/referrals", label: "Referrals", icon: Share2 },
       { href: "/dashboard/messages", label: "Messages", icon: MessageSquare },
+      { href: "/dashboard/wallet-broadcast", label: "Wallet message", icon: Megaphone },
     ],
   },
   {
@@ -96,6 +98,7 @@ const mobileMoreItems: NavigationItem[] = [
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
   { href: "/dashboard/notifications", label: "Alerts", icon: Bell },
   { href: "/dashboard/messages", label: "Messages", icon: MessageSquare },
+  { href: "/dashboard/wallet-broadcast", label: "Wallet message", icon: Megaphone },
   { href: "/dashboard/profile", label: "Profile", icon: Store },
 ];
 

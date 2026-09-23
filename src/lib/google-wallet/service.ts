@@ -1,9 +1,17 @@
 import "server-only";
 
+import { randomUUID } from "node:crypto";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createGoogleWalletApiClient } from "@/lib/google-wallet/client";
 import { getGoogleWalletConfig, requireGoogleWalletConfig } from "@/lib/google-wallet/config";
+import {
+  runGoogleWalletBusinessBroadcast,
+  runGoogleWalletProgramBroadcast,
+  type GoogleWalletBroadcastDeps,
+  type WalletBroadcastMessage,
+} from "@/lib/google-wallet/broadcast";
+import type { GoogleWalletConfig } from "@/lib/google-wallet/config";
 import { buildSaveToGoogleWalletUrl, signSaveToGoogleWalletJwt } from "@/lib/google-wallet/jwt";
 import {
   buildGoogleWalletAccountId,
@@ -315,3 +323,47 @@ async function markWalletSyncFailed({
     },
   });
 }
+
+function googleWalletBroadcastDeps(): GoogleWalletBroadcastDeps<GoogleWalletConfig> {
+  return {
+    getConfig: getGoogleWalletConfig,
+    findClassId: async (loyaltyProgramId) => {
+      const walletClass = await prisma.googleWalletClass.findUnique({
+        where: { loyaltyProgramId },
+        select: { classId: true },
+      });
+      return walletClass?.classId ?? null;
+    },
+    createClient: (config) => createGoogleWalletApiClient(config),
+    newMessageId: () => `broadcast-${randomUUID()}`,
+  };
+}
+
+/**
+ * Pushes a message to every customer holding this program's card in Google
+ * Wallet, by adding it to the program's shared Class. Free; never throws.
+ */
+export function sendGoogleWalletProgramBroadcast(loyaltyProgramId: number, message: WalletBroadcastMessage) {
+  return runGoogleWalletProgramBroadcast(googleWalletBroadcastDeps(), loyaltyProgramId, message);
+}
+
+/** Broadcasts to every active program of a business and totals the outcome. Never throws. */
+export function sendGoogleWalletBroadcastForBusiness(businessId: number, message: WalletBroadcastMessage) {
+  return runGoogleWalletBusinessBroadcast(
+    {
+      ...googleWalletBroadcastDeps(),
+      listActiveProgramIds: async (id) => {
+        const programs = await prisma.loyaltyProgram.findMany({
+          where: { businessId: id, active: true },
+          select: { id: true },
+          orderBy: { id: "asc" },
+        });
+        return programs.map((program) => program.id);
+      },
+    },
+    businessId,
+    message,
+  );
+}
+
+// TODO: Apple Wallet broadcast (post-enrollment)
