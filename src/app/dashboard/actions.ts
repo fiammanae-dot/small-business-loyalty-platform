@@ -5,6 +5,7 @@ import { randomInt } from "crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { businessTypeValues } from "@/lib/roles";
 import type { BusinessType, RecordStatus, UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit";
@@ -32,14 +33,7 @@ import { normalizePhone } from "@/lib/phone";
 
 const profileSchema = z.object({
   name: z.string().trim().min(1, "Business name is required."),
-  businessType: z.enum([
-    "COFFEE_SHOP",
-    "RESTAURANT",
-    "BARBERSHOP",
-    "BEAUTY_SALON",
-    "CAR_CARE_CENTER",
-    "OTHER",
-  ]),
+  businessType: z.enum(businessTypeValues),
 });
 
 const branchSchema = z.object({

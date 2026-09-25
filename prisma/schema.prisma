@@ -103,6 +103,10 @@ enum BusinessType {
   BARBERSHOP
   BEAUTY_SALON
   CAR_CARE_CENTER
+  /// Laser, skin and aesthetic clinics. They sell a package of sessions rather
+  /// than single visits, so their card counts a package down instead of
+  /// rewarding repeat purchases.
+  AESTHETIC_CLINIC
   OTHER
 }
 

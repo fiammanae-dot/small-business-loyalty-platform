@@ -1,5 +1,6 @@
 import "server-only";
 import { STAMP_ICONS } from "@/lib/wallet/stamp-icons";
+import { businessTypeValues } from "@/lib/roles";
 
 import { z } from "zod";
 import type { BusinessType, StartingStampPolicy } from "@prisma/client";
@@ -80,12 +81,24 @@ export const programTemplates: Record<
     rewardName: "Free Wash",
     rewardDescription: "A free wash after completing the card.",
   },
+  // A clinic package is the other way round from a coffee card: the customer
+  // has already paid for the sessions, so the card counts down what they have
+  // left rather than earning them something free. That is why this one starts
+  // at zero - starting stamps here would be sessions the clinic gives away.
+  AESTHETIC_CLINIC: {
+    name: "Treatment Package",
+    productOrServiceName: "Session",
+    requiredStamps: 6,
+    startingBonusStamps: 0,
+    rewardName: "Complimentary Session",
+    rewardDescription: "A complimentary session once the package is complete.",
+  },
 };
 
 export const programSchema = z
   .object({
     name: z.string().trim().min(1, "Program name is required."),
-    businessType: z.enum(["COFFEE_SHOP", "RESTAURANT", "BARBERSHOP", "BEAUTY_SALON", "CAR_CARE_CENTER", "OTHER"]),
+    businessType: z.enum(businessTypeValues),
     productOrServiceName: z.string().trim().min(1, "Product or service name is required."),
     description: z.string().trim().optional(),
     requiredStamps: z.coerce.number().int().min(1, "Required stamps must be at least 1."),

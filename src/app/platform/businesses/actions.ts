@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { z } from "zod";
+import { businessTypeValues } from "@/lib/roles";
 import type { BillingCycle, BusinessType, RecordStatus } from "@prisma/client";
 import { getRequestBaseUrl } from "@/lib/app-url";
 import { brandColorSchema, brandLogoUrlSchema } from "@/lib/branding-validation";
@@ -24,14 +25,7 @@ const logoUrlSchema = brandLogoUrlSchema;
 
 const createBusinessSchema = z.object({
   name: z.string().trim().min(1, "Business name is required."),
-  businessType: z.enum([
-    "COFFEE_SHOP",
-    "RESTAURANT",
-    "BARBERSHOP",
-    "BEAUTY_SALON",
-    "CAR_CARE_CENTER",
-    "OTHER",
-  ]),
+  businessType: z.enum(businessTypeValues),
   status: z.enum(["ACTIVE", "INACTIVE"]),
   branchName: z.string().trim().min(1, "Branch name is required."),
   country: z.string().trim().min(1, "Country is required."),
@@ -66,14 +60,7 @@ const archiveBusinessSchema = z.object({
 const updateBusinessSchema = z.object({
   businessId: z.coerce.number().int().positive(),
   name: z.string().trim().min(1, "Business name is required."),
-  businessType: z.enum([
-    "COFFEE_SHOP",
-    "RESTAURANT",
-    "BARBERSHOP",
-    "BEAUTY_SALON",
-    "CAR_CARE_CENTER",
-    "OTHER",
-  ]),
+  businessType: z.enum(businessTypeValues),
   status: z.enum(["ACTIVE", "INACTIVE"]),
   subscriptionPlanId: z.coerce.number().int().positive("Subscription plan is required."),
   billingCycle: z.enum(["MONTHLY", "YEARLY"]),

@@ -158,6 +158,14 @@ export const industryAssetDefaults: Record<IndustryDesignPackId, IndustryAssetDe
     typography: assetId("TYPOGRAPHY", "PREMIUM"),
     stampJourney: assetId("STAMP_JOURNEY", "CIRCLES"),
   },
+  AESTHETIC_CLINIC: {
+    layout: assetId("LAYOUT", "MINIMAL"),
+    stampIcon: assetId("STAMP_ICON", "SPARKLE"),
+    background: assetId("BACKGROUND", "PATTERN"),
+    pattern: assetId("PATTERN", "SUBTLE_DOTS"),
+    typography: assetId("TYPOGRAPHY", "MINIMAL"),
+    stampJourney: assetId("STAMP_JOURNEY", "PROGRESS_BAR"),
+  },
   GENERAL: {
     layout: assetId("LAYOUT", "CLASSIC"),
     stampIcon: assetId("STAMP_ICON", "STAR"),

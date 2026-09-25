@@ -759,6 +759,8 @@ function getDefaultPresetCategory(businessType: BusinessType): DesignStudioProfe
   if (businessType === "BEAUTY_SALON") return "Beauty Salon";
   if (businessType === "BARBERSHOP") return "Barbershop";
   if (businessType === "CAR_CARE_CENTER") return "Car Wash";
+  // No clinic preset pack yet; the salon one is the closest in feel.
+  if (businessType === "AESTHETIC_CLINIC") return "Beauty Salon";
   return "General";
 }
 
