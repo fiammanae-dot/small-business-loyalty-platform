@@ -7,6 +7,7 @@ export const businessTypeOptions: Array<{ value: BusinessType; label: string }> 
   { value: "BARBERSHOP", label: businessTypeLabels.BARBERSHOP },
   { value: "BEAUTY_SALON", label: businessTypeLabels.BEAUTY_SALON },
   { value: "CAR_CARE_CENTER", label: businessTypeLabels.CAR_CARE_CENTER },
+  { value: "AESTHETIC_CLINIC", label: businessTypeLabels.AESTHETIC_CLINIC },
   { value: "OTHER", label: businessTypeLabels.OTHER },
 ];
 

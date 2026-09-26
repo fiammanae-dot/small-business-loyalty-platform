@@ -12,6 +12,9 @@ export const cafeStampIcons = ["COFFEE_CUP", "COFFEE_BEAN", "ESPRESSO", "CROISSA
 export const restaurantStampIcons = ["PLATE", "BURGER", "PIZZA", "CHEF_HAT", "SANDWICH", "CAKE"] as const;
 export const carWashStampIcons = ["CAR", "WATER_DROP", "BUBBLES", "WHEEL", "SPRAY"] as const;
 export const beautySalonStampIcons = ["LIPSTICK", "MIRROR", "MAKEUP_BRUSH", "NAIL_POLISH", "SPARKLE", "GEM"] as const;
+// Clinics reuse icons that already exist rather than adding artwork: a card on a
+// customer's phone should say "a session happened", not name a treatment.
+export const clinicStampIcons = ["SPARKLE", "GEM", "STAR", "CHECK", "HEART"] as const;
 export const stampIcons = [
   ...generalStampIcons,
   ...barbershopStampIcons,
@@ -125,7 +128,7 @@ export function asCardDesignInput(value: Prisma.JsonValue | null | undefined): C
   return value as CardDesignInput;
 }
 
-export type IndustryDesignPackId = "BARBERSHOP" | "BEAUTY_SALON" | "CAR_WASH" | "CAFE" | "RESTAURANT" | "GENERAL";
+export type IndustryDesignPackId = "BARBERSHOP" | "BEAUTY_SALON" | "CAR_WASH" | "CAFE" | "RESTAURANT" | "AESTHETIC_CLINIC" | "GENERAL";
 
 export type IndustryDesignPack = {
   id: IndustryDesignPackId;
@@ -161,6 +164,22 @@ export const industryDesignPacks: Record<IndustryDesignPackId, IndustryDesignPac
       backgroundStyle: "INDUSTRY_PATTERN",
       backgroundPattern: "BEAUTY_PATTERN",
       templateId: "industry-beauty-salon-v1",
+    },
+  },
+  AESTHETIC_CLINIC: {
+    id: "AESTHETIC_CLINIC",
+    label: "Aesthetic Clinic",
+    businessTypes: ["AESTHETIC_CLINIC"],
+    cardDesign: {
+      ...defaultCardDesign,
+      // Clean and quiet rather than decorated. A clinic card sits next to a
+      // customer's bank cards, and a busy pattern reads as a voucher.
+      cardStyle: "minimal-light",
+      stampIcon: "SPARKLE",
+      typographyPreset: "MINIMAL",
+      backgroundStyle: "PATTERN",
+      backgroundPattern: "SUBTLE_DOTS",
+      templateId: "industry-aesthetic-clinic-v1",
     },
   },
   CAR_WASH: {
@@ -348,6 +367,7 @@ export const industryRecommendedStampIcons: Record<IndustryDesignPackId, readonl
   CAR_WASH: carWashStampIcons,
   CAFE: cafeStampIcons,
   RESTAURANT: restaurantStampIcons,
+  AESTHETIC_CLINIC: clinicStampIcons,
   GENERAL: generalStampIcons,
 };
 

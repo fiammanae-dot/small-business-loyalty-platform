@@ -24,11 +24,29 @@ export const roleHomePath: Record<UserRole, string> = {
   STAFF: "/staff",
 };
 
-export const businessTypeLabels = {
+/**
+ * The single list of business categories, in the order they are offered.
+ *
+ * Every form that validates a category reads this. Before it existed the list
+ * was retyped in four places, so adding a category made it selectable in one
+ * screen and rejected on save in another.
+ */
+export const businessTypeValues = [
+  "COFFEE_SHOP",
+  "RESTAURANT",
+  "BARBERSHOP",
+  "BEAUTY_SALON",
+  "CAR_CARE_CENTER",
+  "AESTHETIC_CLINIC",
+  "OTHER",
+] as const;
+
+export const businessTypeLabels: Record<(typeof businessTypeValues)[number], string> = {
   COFFEE_SHOP: "Coffee Shop",
   RESTAURANT: "Restaurant",
   BARBERSHOP: "Barbershop",
   BEAUTY_SALON: "Beauty Salon",
   CAR_CARE_CENTER: "Car Care Center",
+  AESTHETIC_CLINIC: "Aesthetic Clinic",
   OTHER: "Other",
 } as const;

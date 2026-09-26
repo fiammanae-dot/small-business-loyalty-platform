@@ -2328,6 +2328,7 @@ function getDefaultProfessionalPresetCategory(businessType: string | null): Prof
   if (businessType === "BARBERSHOP") return "Barbershop";
   if (businessType === "BEAUTY_SALON") return "Beauty Salon";
   if (businessType === "CAR_CARE_CENTER") return "Car Wash";
+  if (businessType === "AESTHETIC_CLINIC") return "Beauty Salon";
   return "General";
 }
 
