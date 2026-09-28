@@ -4,7 +4,7 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { BusinessLogoAvatar } from "@/components/BusinessLogoAvatar";
 import { BrandAssetsCenter } from "@/components/BrandAssetsCenter";
 import { ButtonLink, EmptyState, MetricCard, PageIntro, SectionCard, StatusBadge } from "@/components/ui";
-import { saveAbusePolicyAction, saveCooldownRuleAction, saveCustomerTierSettingsAction, saveScannerSettingsAction } from "@/app/dashboard/actions";
+import { saveAbusePolicyAction, saveCashbackSettingsAction, saveCooldownRuleAction, saveCustomerTierSettingsAction, saveMembershipSettingsAction, saveScannerSettingsAction } from "@/app/dashboard/actions";
 import { saveSupportAccessPolicyAction } from "@/app/platform/businesses/support-actions";
 import { sendWhatsAppTestMessageAction } from "@/app/dashboard/settings/whatsapp-actions";
 import { getBusinessOwnerContext, getCurrentPlan, getCurrentSubscription } from "@/lib/business-owner";
@@ -17,7 +17,7 @@ import { countUnusedBackupCodes } from "@/lib/two-factor";
 import { isTwoFactorRequiredForRole } from "@/lib/two-factor-policy";
 import { businessTypeLabels } from "@/lib/roles";
 import { getSubscriptionRemainingDays, getTrialRemainingDays, subscriptionDisplayDate, subscriptionStatusLabels } from "@/lib/subscriptions";
-import { Bell, Building2, CreditCard, LockKeyhole, Palette, Plug, Settings2, ShieldAlert, SlidersHorizontal, UserRound } from "lucide-react";
+import { Bell, Building2, CreditCard, LockKeyhole, Palette, Plug, Settings2, ShieldAlert, Sparkles, SlidersHorizontal, UserRound } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -36,6 +36,9 @@ export default async function BusinessSettingsPage({ searchParams }: { searchPar
   const trialDays = getTrialRemainingDays(subscription);
   const communicationSettings = business.communicationSettings;
   const scannerSoundEffectsEnabled = business.scannerSettings?.soundEffectsEnabled ?? true;
+  const membershipsEnabled = business.membershipSettings?.enabled ?? false;
+  const cashbackEnabled = business.cashbackSettings?.enabled ?? false;
+  const cashbackRate = business.cashbackSettings?.ratePercent != null ? business.cashbackSettings.ratePercent.toString() : "5";
   const tierConfig = normalizeTierConfig(business.tierSetting);
   const cooldownRule = await prisma.cooldownRule.findFirst({ where: { businessId: user.businessId, active: true }, orderBy: { updatedAt: "desc" } });
   const abusePolicies = await prisma.abusePolicy.findMany({ where: { businessId: user.businessId }, orderBy: { ruleType: "asc" } });
@@ -65,6 +68,7 @@ export default async function BusinessSettingsPage({ searchParams }: { searchPar
     { key: "security", label: "Security & access", icon: ShieldAlert },
     { key: "messaging", label: "Messaging", icon: Bell },
     { key: "loyalty", label: "Loyalty rules", icon: SlidersHorizontal },
+    { key: "features", label: "Features", icon: Sparkles },
     { key: "billing", label: "Billing", icon: CreditCard },
   ] as const;
 
@@ -139,6 +143,12 @@ export default async function BusinessSettingsPage({ searchParams }: { searchPar
             <CooldownSection cooldownRule={cooldownRule} />
           </div>
         ) : null}
+        {activeCategory === "features" ? (
+          <div className="grid gap-5">
+            <MembershipsSection membershipsEnabled={membershipsEnabled} />
+            <CashbackSection cashbackEnabled={cashbackEnabled} cashbackRate={cashbackRate} />
+          </div>
+        ) : null}
         {activeCategory === "billing" ? (
           <div className="grid gap-5">
             <SubscriptionSection plan={plan} subscription={subscription} expiryDate={expiryDate} remainingDays={remainingDays} trialDays={trialDays} business={business} />
@@ -210,8 +220,51 @@ function CooldownSection({ cooldownRule }: { cooldownRule: { minimumMinutesBetwe
 function SubscriptionSection({ plan, subscription, expiryDate, remainingDays, trialDays, business }: { plan: ReturnType<typeof getCurrentPlan>; subscription: ReturnType<typeof getCurrentSubscription>; expiryDate: Date | null; remainingDays: number | null; trialDays: number | null; business: Awaited<ReturnType<typeof getBusinessOwnerContext>>["business"] }) { return <SectionCard title="Subscription" description="Plan and lifecycle details are managed by the System Administrator." actions={subscription ? <StatusBadge tone={subscription.status === "ACTIVE" ? "success" : subscription.status === "TRIAL" ? "warning" : "danger"}>{subscriptionStatusLabels[subscription.status]}</StatusBadge> : null}><div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4"><Item label="Current plan" value={plan?.name ?? "Unassigned"} /><Item label="Renewal date" value={subscription?.renewalDate ? formatDate(subscription.renewalDate) : "Not set"} /><Item label="Expiry date" value={expiryDate ? formatDate(expiryDate) : "Not set"} /><Item label="Remaining days" value={remainingDays === null ? "Not set" : remainingDays.toString()} /><Item label="Trial remaining days" value={trialDays === null ? "Not in trial" : trialDays.toString()} /><Item label="Branch usage" value={`${business._count.branches} / ${plan?.maxBranches ?? 1}`} /><Item label="Program usage" value={`${business._count.loyaltyPrograms} / ${plan?.maxLoyaltyPrograms ?? 1}`} /></div></SectionCard>; }
 function CommunicationsSection({ communicationSettings }: { communicationSettings: Awaited<ReturnType<typeof getBusinessOwnerContext>>["business"]["communicationSettings"] }) { return <SectionCard title="Communication Channels" description="Provider-level channel settings are managed by the System Administrator. Messages are prepared manually only."><div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3"><Item label="WhatsApp enabled" value={communicationSettings?.whatsappEnabled ? "Yes" : "No"} /><Item label="SMS enabled" value={communicationSettings?.smsEnabled ? "Yes" : "No"} /><Item label="Email enabled" value={communicationSettings?.emailEnabled ? "Yes" : "No"} /><Item label="Default channel" value={messageChannelLabels[communicationSettings?.preferredDefaultChannel ?? "NONE"]} /><Item label="WhatsApp business number" value={communicationSettings?.whatsappBusinessNumber ?? "Not set"} /><Item label="Sender email" value={communicationSettings?.senderEmail ?? "Not set"} /><Item label="Sender name" value={communicationSettings?.senderName ?? "Not set"} /></div></SectionCard>; }
 
+function MembershipsSection({ membershipsEnabled }: { membershipsEnabled: boolean }) {
+  return (
+    <SectionCard
+      title="Memberships"
+      description="Sell tiered membership packages that include a set number of visits or treatments. Turn this on to create membership programs for this business."
+      actions={<StatusBadge tone={membershipsEnabled ? "success" : "neutral"}>{membershipsEnabled ? "Enabled" : "Off"}</StatusBadge>}
+    >
+      <form action={saveMembershipSettingsAction} className="grid gap-4">
+        <CsrfInput scope="dashboard:membership-settings" />
+        <label className="flex items-center justify-between gap-4 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
+          <span>
+            <span className="block text-sm font-semibold text-[#111827]">Enable memberships</span>
+            <span className="mt-1 block text-sm text-[#6B7280]">Allow this business to offer membership packages to customers.</span>
+          </span>
+          <input type="checkbox" name="enabled" defaultChecked={membershipsEnabled} className="h-5 w-5 rounded border-[#E5E7EB] business-primary" aria-label="Enable memberships" />
+        </label>
+        <button type="submit" className="h-11 w-fit rounded-md business-button px-4 text-sm font-semibold text-white">Save membership settings</button>
+      </form>
+    </SectionCard>
+  );
+}
+function CashbackSection({ cashbackEnabled, cashbackRate }: { cashbackEnabled: boolean; cashbackRate: string }) {
+  return (
+    <SectionCard
+      title="Cashback wallet"
+      description="Give customers a cashback balance they can spend on future visits. Staff add a percentage of each bill; the customer spends it later."
+      actions={<StatusBadge tone={cashbackEnabled ? "success" : "neutral"}>{cashbackEnabled ? "Enabled" : "Off"}</StatusBadge>}
+    >
+      <form action={saveCashbackSettingsAction} className="grid gap-4">
+        <CsrfInput scope="dashboard:cashback-settings" />
+        <label className="flex items-center justify-between gap-4 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
+          <span>
+            <span className="block text-sm font-semibold text-[#111827]">Enable cashback</span>
+            <span className="mt-1 block text-sm text-[#6B7280]">Let staff add cashback to customer balances after a payment.</span>
+          </span>
+          <input type="checkbox" name="enabled" defaultChecked={cashbackEnabled} className="h-5 w-5 rounded border-[#E5E7EB] business-primary" aria-label="Enable cashback" />
+        </label>
+        <Input name="ratePercent" label="Cashback rate (% of amount paid)" type="number" min="0" max="100" defaultValue={cashbackRate} />
+        <button type="submit" className="h-11 w-fit rounded-md business-button px-4 text-sm font-semibold text-white">Save cashback settings</button>
+      </form>
+    </SectionCard>
+  );
+}
 function resolveSettingsCategory(tab?: string) {
-  const categories = ["general", "brand", "security", "messaging", "loyalty", "billing"];
+  const categories = ["general", "brand", "security", "messaging", "loyalty", "features", "billing"];
   if (tab && categories.includes(tab)) return tab;
   const sectionToCategory: Record<string, string> = {
     overview: "general", profile: "general", branding: "brand", preferences: "general",

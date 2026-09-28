@@ -544,6 +544,8 @@ model Business {
   cooldownRules                 CooldownRule[]
   cooldownEvents                CooldownEvent[]
   tierSetting                   CustomerTierSetting?
+  membershipSettings            BusinessMembershipSettings?
+  cashbackSettings              BusinessCashbackSettings?
   supportSessions               SupportSession[]
   supportRequests               SupportRequest[]
   supportSessionActivities      SupportSessionActivity[]
@@ -1397,6 +1399,38 @@ model BusinessScannerSettings {
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
   @@map("business_scanner_settings")
+}
+
+/// Per-business switch for the tiered clinic-style membership programs
+/// (Feature 1). Off by default; only businesses that sell memberships turn it
+/// on. One row per business, created lazily on first save.
+model BusinessMembershipSettings {
+  id         Int      @id @default(autoincrement())
+  businessId Int      @unique @map("business_id")
+  enabled    Boolean  @default(false)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@map("business_membership_settings")
+}
+
+/// Per-business cashback wallet configuration (Feature 2). Off by default. The
+/// rate is a percentage of the amount paid (default 5%), kept as a setting so
+/// any business can offer cashback at its own rate. One row per business.
+model BusinessCashbackSettings {
+  id          Int      @id @default(autoincrement())
+  businessId  Int      @unique @map("business_id")
+  enabled     Boolean  @default(false)
+  ratePercent Decimal  @default(5) @map("rate_percent") @db.Decimal(5, 2)
+  currency    String   @default("AED")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@map("business_cashback_settings")
 }
 
 model MessageDeliveryQueue {
