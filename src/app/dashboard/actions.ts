@@ -76,6 +76,18 @@ const scannerSettingsSchema = z.object({
   soundEffectsEnabled: z.boolean(),
 });
 
+const membershipSettingsSchema = z.object({
+  enabled: z.boolean(),
+});
+
+const cashbackSettingsSchema = z.object({
+  enabled: z.boolean(),
+  ratePercent: z.coerce
+    .number({ error: "Cashback rate must be a number." })
+    .min(0, "Cashback rate cannot be negative.")
+    .max(100, "Cashback rate cannot exceed 100%."),
+});
+
 const customerTierSettingsSchema = z
   .object({
     tierQualificationWindow: z.enum(["LIFETIME", "DAYS_30", "DAYS_60", "DAYS_90", "MONTHS_12"]),
@@ -598,6 +610,65 @@ export async function saveScannerSettingsAction(formData: FormData) {
 
   revalidatePath("/dashboard/settings");
   redirect("/dashboard/settings?tab=scanner&success=Scanner settings saved.");
+}
+
+export async function saveMembershipSettingsAction(formData: FormData) {
+  validateActionSecurity(formData, "dashboard:membership-settings", "/dashboard/settings");
+  const user = await requireBusinessOwner();
+  const parsed = membershipSettingsSchema.safeParse({
+    enabled: getCheckbox(formData, "enabled"),
+  });
+
+  if (!parsed.success) fail("/dashboard/settings", parsed.error.issues[0]?.message ?? "Validation failed.");
+
+  const settings = await prisma.businessMembershipSettings.upsert({
+    where: { businessId: user.businessId },
+    create: { businessId: user.businessId, enabled: parsed.data.enabled },
+    update: { enabled: parsed.data.enabled },
+    select: { id: true },
+  });
+
+  await logAuditEvent({
+    actorUserId: user.id,
+    businessId: user.businessId,
+    action: "MEMBERSHIP_SETTINGS_UPDATED",
+    entityType: "business_membership_settings",
+    entityId: settings.id,
+    metadata: { enabled: parsed.data.enabled },
+  });
+
+  revalidatePath("/dashboard/settings");
+  redirect("/dashboard/settings?tab=features&success=Membership settings saved.");
+}
+
+export async function saveCashbackSettingsAction(formData: FormData) {
+  validateActionSecurity(formData, "dashboard:cashback-settings", "/dashboard/settings");
+  const user = await requireBusinessOwner();
+  const parsed = cashbackSettingsSchema.safeParse({
+    enabled: getCheckbox(formData, "enabled"),
+    ratePercent: getString(formData, "ratePercent") || "5",
+  });
+
+  if (!parsed.success) fail("/dashboard/settings", parsed.error.issues[0]?.message ?? "Validation failed.");
+
+  const settings = await prisma.businessCashbackSettings.upsert({
+    where: { businessId: user.businessId },
+    create: { businessId: user.businessId, enabled: parsed.data.enabled, ratePercent: parsed.data.ratePercent },
+    update: { enabled: parsed.data.enabled, ratePercent: parsed.data.ratePercent },
+    select: { id: true },
+  });
+
+  await logAuditEvent({
+    actorUserId: user.id,
+    businessId: user.businessId,
+    action: "CASHBACK_SETTINGS_UPDATED",
+    entityType: "business_cashback_settings",
+    entityId: settings.id,
+    metadata: { enabled: parsed.data.enabled, ratePercent: parsed.data.ratePercent },
+  });
+
+  revalidatePath("/dashboard/settings");
+  redirect("/dashboard/settings?tab=features&success=Cashback settings saved.");
 }
 
 export async function saveCustomerTierSettingsAction(formData: FormData) {

@@ -6,6 +6,8 @@ export const businessOwnerInclude = {
   tierSetting: true,
   communicationSettings: true,
   scannerSettings: true,
+  membershipSettings: true,
+  cashbackSettings: true,
   branches: { orderBy: { createdAt: "asc" } },
   users: {
     where: { role: { in: ["BRANCH_MANAGER", "STAFF"] } },
