@@ -10,7 +10,7 @@ import type { BusinessType, RecordStatus, UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit";
 import { brandColorSchema, brandLogoUrlSchema } from "@/lib/branding-validation";
-import { requireBusinessOwner } from "@/lib/business-owner";
+import { requireBusinessOwner, requireBusinessOwnerForWrite } from "@/lib/business-owner";
 import { validateCsrfForm } from "@/lib/csrf";
 import { requireUsableSubscription } from "@/lib/commercial-access";
 import { createFormFailure, isFormActionError, type PreservedFormState } from "@/lib/form-state";
@@ -614,7 +614,7 @@ export async function saveScannerSettingsAction(formData: FormData) {
 
 export async function saveMembershipSettingsAction(formData: FormData) {
   validateActionSecurity(formData, "dashboard:membership-settings", "/dashboard/settings");
-  const user = await requireBusinessOwner();
+  const user = await requireBusinessOwnerForWrite();
   const parsed = membershipSettingsSchema.safeParse({
     enabled: getCheckbox(formData, "enabled"),
   });
@@ -643,7 +643,7 @@ export async function saveMembershipSettingsAction(formData: FormData) {
 
 export async function saveCashbackSettingsAction(formData: FormData) {
   validateActionSecurity(formData, "dashboard:cashback-settings", "/dashboard/settings");
-  const user = await requireBusinessOwner();
+  const user = await requireBusinessOwnerForWrite();
   const parsed = cashbackSettingsSchema.safeParse({
     enabled: getCheckbox(formData, "enabled"),
     ratePercent: getString(formData, "ratePercent") || "5",
