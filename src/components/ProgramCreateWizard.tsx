@@ -81,6 +81,7 @@ export function ProgramCreateWizard({
   csrfToken,
   initialDesign,
   stampIconOptions,
+  membershipsEnabled,
 }: {
   action: (formData: FormData) => void | Promise<void>;
   defaults: ProgramDefaults;
@@ -101,6 +102,7 @@ export function ProgramCreateWizard({
     visibleSections: CardSectionVisibility;
   };
   stampIconOptions: Array<{ value: CardDesignStampIcon; label: string; recommended: boolean }>;
+  membershipsEnabled?: boolean;
 }) {
   const wizardRef = useRef<HTMLFormElement>(null);
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -115,6 +117,7 @@ export function ProgramCreateWizard({
   const [decorationStyle, setDecorationStyle] = useState(initialDesign.decorationStyle);
   const [visibleSections, setVisibleSections] = useState<CardSectionVisibility>(initialDesign.visibleSections);
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
+  const [isMembership, setIsMembership] = useState(false);
 
   const name = defaults.name ?? "";
   const productOrServiceName = defaults.productOrServiceName ?? "";
@@ -267,6 +270,35 @@ export function ProgramCreateWizard({
             </fieldset>
           </div>
         </SectionCard>
+
+        {membershipsEnabled ? (
+          <SectionCard title="Membership package" description="Sell this as a paid membership tier with a price, included treatments, and member perks. The Required Stamps above become the number of included sessions.">
+            <div className="grid gap-4">
+              <label className="flex items-center justify-between gap-4 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
+                <span>
+                  <span className="block text-sm font-semibold text-[#111827]">This is a membership package</span>
+                  <span className="mt-1 block text-sm text-[#6B7280]">Turn on to charge a one-time price and list the treatments the customer can choose from.</span>
+                </span>
+                <input type="checkbox" name="isMembership" value="true" checked={isMembership} onChange={(event) => setIsMembership(event.target.checked)} className="h-5 w-5 rounded border-[#E5E7EB] business-primary" aria-label="This is a membership package" />
+              </label>
+              {isMembership ? (
+                <div className="grid gap-4">
+                  <Input name="priceAmount" label="Membership price (AED)" type="number" min="0" defaultValue="" required />
+                  <label className="grid gap-2">
+                    <span className="text-sm font-medium text-[#111827]">Included treatments</span>
+                    <span className="text-xs text-[#6B7280]">One treatment per line.</span>
+                    <textarea name="membershipTreatments" rows={5} placeholder="Hydrafacial&#10;Organic Facial&#10;Forma Skin Tightening" className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none business-ring focus:ring-0" />
+                  </label>
+                  <label className="grid gap-2">
+                    <span className="text-sm font-medium text-[#111827]">Member perks</span>
+                    <span className="text-xs text-[#6B7280]">One perk per line.</span>
+                    <textarea name="membershipBenefits" rows={4} placeholder="Priority booking&#10;Exclusive member pricing&#10;Complimentary consultation" className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none business-ring focus:ring-0" />
+                  </label>
+                </div>
+              ) : null}
+            </div>
+          </SectionCard>
+        ) : null}
 
       </div>
 

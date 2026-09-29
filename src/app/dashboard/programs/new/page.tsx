@@ -60,6 +60,7 @@ export default async function NewProgramPage({
             visibleSections: defaultCardDesign.visibleSections,
           }}
           stampIconOptions={stampIconOptions}
+          membershipsEnabled={business.membershipSettings?.enabled ?? false}
         />
       </section>
     </DashboardShell>

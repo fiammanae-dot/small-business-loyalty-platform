@@ -54,7 +54,7 @@ export default async function ProgramsPage({
         },
       },
       rewardRedemptions: { select: { id: true } },
-      _count: { select: { memberships: true } },
+      _count: { select: { memberships: true, membershipTreatments: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -86,6 +86,9 @@ export default async function ProgramsPage({
       stampsIssued,
       rewardsRedeemed,
       averageVisits,
+      isMembership: program.isMembership,
+      priceLabel: program.priceAmount != null ? `AED ${Number(program.priceAmount).toLocaleString()}` : null,
+      membershipTreatmentCount: program._count.membershipTreatments,
     };
   });
 
@@ -209,6 +212,7 @@ export default async function ProgramsPage({
                             <span className="break-words">{row.program.name}</span>
                           </Link>
                           <div className="mt-1 text-xs font-normal text-[#64748B]">{businessTypeLabels[row.program.businessType]} - {row.program.productOrServiceName}</div>
+                          {row.isMembership ? <div className="mt-1 text-xs font-semibold business-primary-strong">Membership{row.priceLabel ? ` \u00b7 ${row.priceLabel}` : ""}</div> : null}
                         </DataTableCell>
                         <DataTableCell>
                           <div className="font-medium text-[#0F172A]">{row.program.rewardName}</div>
@@ -260,6 +264,9 @@ type ProgramRow = {
   stampsIssued: number;
   rewardsRedeemed: number;
   averageVisits: number;
+  isMembership: boolean;
+  priceLabel: string | null;
+  membershipTreatmentCount: number;
 };
 
 function ProgramCard({ row }: { row: ProgramRow }) {
@@ -276,6 +283,11 @@ function ProgramCard({ row }: { row: ProgramRow }) {
             </Link>
           </h3>
           <p className="mt-1 text-sm text-[#64748B]">{businessTypeLabels[row.program.businessType]} - {row.program.productOrServiceName}</p>
+          {row.isMembership ? (
+            <p className="mt-2 inline-block rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-0.5 text-xs font-semibold text-[#0F172A]">
+              Membership{row.priceLabel ? ` \u00b7 ${row.priceLabel}` : ""}{row.membershipTreatmentCount > 0 ? ` \u00b7 ${row.membershipTreatmentCount} treatments` : ""}
+            </p>
+          ) : null}
         </div>
         <ProgramStatus active={row.program.active} rewardReadyCount={row.rewardReadyCount} />
       </div>

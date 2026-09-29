@@ -127,6 +127,10 @@ export const programSchema = z
     active: z.boolean(),
     startDate: z.string().trim().optional(),
     endDate: z.string().trim().optional(),
+    isMembership: z.boolean().default(false),
+    priceAmount: z.coerce.number().min(0, "Membership price cannot be negative.").optional(),
+    membershipTreatments: z.array(z.string().trim().min(1)).default([]),
+    membershipBenefits: z.array(z.string().trim().min(1)).default([]),
   })
   .refine((data) => data.startingBonusStamps <= data.requiredStamps, {
     message: "Starting stamps cannot exceed required stamps.",
@@ -135,6 +139,10 @@ export const programSchema = z
   .refine((data) => !data.startDate || !data.endDate || new Date(data.startDate) <= new Date(data.endDate), {
     message: "End date must be after start date.",
     path: ["endDate"],
+  })
+  .refine((data) => !data.isMembership || (data.priceAmount != null && data.priceAmount > 0), {
+    message: "A membership tier needs a price.",
+    path: ["priceAmount"],
   });
 
 export function parseProgramDate(value?: string) {

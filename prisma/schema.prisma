@@ -910,6 +910,13 @@ model LoyaltyProgram {
   rewardName                String       @map("reward_name")
   rewardDescription         String       @map("reward_description")
   referralRewardBonusStamps Int          @default(1) @map("referral_reward_bonus_stamps")
+  /// Membership package (Feature 1): true marks this program as a paid
+  /// membership tier rather than an ordinary stamp card.
+  isMembership              Boolean      @default(false) @map("is_membership")
+  /// One-time price of the membership, when isMembership is true.
+  priceAmount               Decimal?     @map("price_amount") @db.Decimal(10, 2)
+  /// Member perks shown on the tier (priority booking, member pricing, etc.).
+  membershipBenefits        String[]     @default([]) @map("membership_benefits")
   cardTheme                 CardTheme    @default(BUSINESS_DEFAULT) @map("card_theme")
   /// The emoji drawn on the wallet card, one per stamp. Null falls back to a tick.
   stampEmoji           String?             @map("stamp_emoji")
@@ -925,6 +932,7 @@ model LoyaltyProgram {
 
   business          Business                    @relation(fields: [businessId], references: [id], onDelete: Cascade)
   memberships       CustomerProgramMembership[]
+  membershipTreatments MembershipTreatment[]
   programRewards    ProgramReward[]
   walletBroadcasts  WalletBroadcast[]
   rewardRedemptions RewardRedemption[]
@@ -935,6 +943,25 @@ model LoyaltyProgram {
   @@index([businessId])
   @@index([businessId, active])
   @@map("loyalty_programs")
+}
+
+/// One treatment on a membership tier's included-treatment menu (Feature 1).
+/// Staff pick from these when recording a member's monthly session. Ordered by
+/// sortOrder; the same treatment may be taken more than once across the term.
+model MembershipTreatment {
+  id               Int      @id @default(autoincrement())
+  uuid             String   @unique @default(uuid()) @db.Uuid
+  loyaltyProgramId Int      @map("loyalty_program_id")
+  name             String
+  sortOrder        Int      @default(0) @map("sort_order")
+  active           Boolean  @default(true)
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  loyaltyProgram LoyaltyProgram @relation(fields: [loyaltyProgramId], references: [id], onDelete: Cascade)
+
+  @@index([loyaltyProgramId])
+  @@map("membership_treatments")
 }
 
 model CustomerProgramMembership {
