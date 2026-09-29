@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { Prisma } from "@prisma/client";
-import { requireBusinessOwner } from "@/lib/business-owner";
+import { requireBusinessOwner, requireBusinessOwnerForWrite } from "@/lib/business-owner";
 import { logAuditEvent } from "@/lib/audit";
 import { validateCsrfForm } from "@/lib/csrf";
 import { requireUsableSubscription } from "@/lib/commercial-access";
@@ -130,7 +130,7 @@ async function getBusinessTypeForProgramAction(businessId: number, path: string)
 
 export async function createProgramAction(formData: FormData) {
   validateActionSecurity(formData, "dashboard:programs", "/dashboard/programs/new");
-  const user = await requireBusinessOwner();
+  const user = await requireBusinessOwnerForWrite();
   await requireUsableSubscription(user.businessId).catch((error) => fail("/dashboard/programs/new", error.message));
   const path = "/dashboard/programs/new";
   const businessType = await getBusinessTypeForProgramAction(user.businessId, path);
