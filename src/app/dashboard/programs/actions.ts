@@ -32,6 +32,10 @@ function getString(formData: FormData, key: string) {
   return typeof value === "string" ? value : "";
 }
 
+function splitLines(value: string) {
+  return value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+}
+
 function fail(path: string, message: string): never {
   redirect(`${path}?error=${encodeURIComponent(message)}`);
 }
@@ -63,6 +67,10 @@ function programData(formData: FormData, businessType: string, defaultCardTheme 
     active: getString(formData, "active") === "true",
     startDate: getString(formData, "startDate"),
     endDate: getString(formData, "endDate"),
+    isMembership: getString(formData, "isMembership") === "true",
+    priceAmount: getString(formData, "priceAmount") || undefined,
+    membershipTreatments: splitLines(getString(formData, "membershipTreatments")),
+    membershipBenefits: splitLines(getString(formData, "membershipBenefits")),
   });
 
   return parsed;
@@ -165,6 +173,9 @@ export async function createProgramAction(formData: FormData) {
       active: parsed.data.active,
       startDate: parseProgramDate(parsed.data.startDate),
       endDate: parseProgramDate(parsed.data.endDate),
+      isMembership: parsed.data.isMembership,
+      priceAmount: parsed.data.isMembership ? parsed.data.priceAmount ?? null : null,
+      membershipBenefits: parsed.data.isMembership ? parsed.data.membershipBenefits : [],
       cardDesign: cardDesign as unknown as Prisma.InputJsonValue,
       cardTheme: getCardThemeForDesignStudioTemplate(parsedDesign.data.layoutStyle),
     },
@@ -183,6 +194,16 @@ export async function createProgramAction(formData: FormData) {
         milestones,
       }),
     );
+
+    if (parsed.data.isMembership && parsed.data.membershipTreatments.length > 0) {
+      await tx.membershipTreatment.createMany({
+        data: parsed.data.membershipTreatments.map((name, index) => ({
+          loyaltyProgramId: created.id,
+          name,
+          sortOrder: index,
+        })),
+      });
+    }
 
     return created;
   });
