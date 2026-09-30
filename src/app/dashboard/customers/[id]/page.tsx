@@ -244,7 +244,9 @@ export default async function CustomerProfilePage({
       id: `stamp-${transaction.id}`,
       createdAt: transaction.createdAt,
       title: `${transaction.quantity} stamp${transaction.quantity === 1 ? "" : "s"} issued at ${transaction.branch?.name ?? "No branch"} by ${transaction.issuedByUser.name}`,
-      detail: transaction.customerProgramMembership.loyaltyProgram.name,
+      detail: transaction.treatmentName
+        ? `${transaction.customerProgramMembership.loyaltyProgram.name} · ${transaction.treatmentName}`
+        : transaction.customerProgramMembership.loyaltyProgram.name,
       href: activityHref(transaction.id, highlightedAlertId ?? undefined),
       highlighted: highlightedTransactionId === transaction.id,
       icon: TicketCheck,

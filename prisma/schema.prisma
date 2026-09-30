@@ -958,7 +958,8 @@ model MembershipTreatment {
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 
-  loyaltyProgram LoyaltyProgram @relation(fields: [loyaltyProgramId], references: [id], onDelete: Cascade)
+  loyaltyProgram   LoyaltyProgram     @relation(fields: [loyaltyProgramId], references: [id], onDelete: Cascade)
+  stampTransactions StampTransaction[]
 
   @@index([loyaltyProgramId])
   @@map("membership_treatments")
@@ -1064,11 +1065,14 @@ model StampTransaction {
   source                      StampTransactionSource
   idempotencyKey              String?                @unique @map("idempotency_key")
   createdAt                   DateTime               @default(now()) @map("created_at")
+  membershipTreatmentId       Int?                   @map("membership_treatment_id")
+  treatmentName               String?                @map("treatment_name")
 
   business                  Business                  @relation(fields: [businessId], references: [id], onDelete: Cascade)
   branch                    Branch?                   @relation(fields: [branchId], references: [id])
   customerProgramMembership CustomerProgramMembership @relation(fields: [customerProgramMembershipId], references: [id])
   issuedByUser              User                      @relation(fields: [issuedByUserId], references: [id])
+  membershipTreatment       MembershipTreatment?      @relation(fields: [membershipTreatmentId], references: [id], onDelete: SetNull)
   referralQualifications    Referral[]
 
   @@index([businessId])
@@ -1078,6 +1082,7 @@ model StampTransaction {
   @@index([issuedByUserId])
   @@index([issuedByUserId, createdAt])
   @@index([businessId, createdAt])
+  @@index([membershipTreatmentId])
   @@map("stamp_transactions")
 }
 
