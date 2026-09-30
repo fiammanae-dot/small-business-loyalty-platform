@@ -176,6 +176,7 @@ test("the sweep is scheduled daily and the scan flow is left alone", () => {
   assert.deepEqual(vercelConfig.crons, [
     { path: "/api/cron/tier-recalc", schedule: "0 2 * * *" },
     { path: "/api/cron/engagement-sweep", schedule: "0 3 * * *" },
+    { path: "/api/cron/membership-expiry", schedule: "0 4 * * *" },
   ]);
 
   assert.match(read(".env.example"), /^CRON_SECRET=""$/m, "the example env carries a blank placeholder, never a secret");
