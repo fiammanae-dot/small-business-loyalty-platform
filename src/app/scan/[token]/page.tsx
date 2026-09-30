@@ -20,6 +20,7 @@ import { formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { fromStoredTier } from "@/lib/customer-tiers";
 import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
+import { membershipSessionSummary } from "@/lib/membership-sessions";
 import { extractReferralCode, resolveReferralLandingReferrer } from "@/lib/referrals";
 import { getNextReward, getReadyRewards, singleCardReward, type CardReward } from "@/lib/rewards";
 import { roleHomePath } from "@/lib/roles";
@@ -417,6 +418,17 @@ export default async function ScanResultPage({
     <DashboardShell user={authUser} eyebrow={roleEyebrow(authUser.role)} title="Scan result" hideWelcomeMessage>
       <ScannerSoundFeedback event={soundEvent} enabled={scannerSoundEffectsEnabled} />
       <ScanStatusBanner tone="green" title="Valid Customer" description="This loyalty QR belongs to your business and is ready for service." />
+
+      {program.isMembership ? (
+        <MembershipSessionsNote
+          summary={membershipSessionSummary({
+            requiredStamps: program.requiredStamps,
+            earnedStamps: programMembership.earnedStamps,
+            bonusStamps: programMembership.bonusStamps,
+            sessionsForfeited: programMembership.sessionsForfeited,
+          })}
+        />
+      ) : null}
 
       {!redemption ? (
         <QuickScanActions
@@ -1145,6 +1157,21 @@ function StampIssuanceSection({
           </div>
         ) : null}
       </form>
+    </section>
+  );
+}
+
+function MembershipSessionsNote({ summary }: { summary: ReturnType<typeof membershipSessionSummary> }) {
+  const depleted = summary.remaining <= 0;
+  return (
+    <section className={`rounded-md border p-4 ${depleted ? "border-red-200 bg-red-50 text-red-700" : "business-border-soft business-bg-soft business-text-strong"}`}>
+      <p className="text-sm font-semibold">
+        Membership: {summary.remaining} of {summary.total} session{summary.total === 1 ? "" : "s"} remaining
+      </p>
+      <p className="mt-1 text-xs">
+        {summary.used} used{summary.forfeited > 0 ? ` \u00b7 ${summary.forfeited} expired (unused monthly sessions)` : ""}
+        {depleted ? " \u2014 no sessions left to redeem." : ""}
+      </p>
     </section>
   );
 }

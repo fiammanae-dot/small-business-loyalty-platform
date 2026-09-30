@@ -13,6 +13,7 @@ import { createEngagementEventIfAllowed, createProgramEngagementEvents } from "@
 import { syncGoogleWalletObjectAfterLoyaltyChange } from "@/lib/google-wallet/service";
 import { prisma } from "@/lib/prisma";
 import { getStartingBonusStampsForEvent, progressValue } from "@/lib/programs";
+import { membershipSessionSummary } from "@/lib/membership-sessions";
 import { qualifyReferralFromFirstStamp } from "@/lib/referrals";
 import { cardRewardsFor, getReadyRewards, isRewardReady } from "@/lib/rewards";
 
@@ -165,6 +166,15 @@ export async function issueStampAction(formData: FormData) {
   let membershipTreatmentId: number | null = null;
   let treatmentName: string | null = null;
   if (programMembership.loyaltyProgram.isMembership) {
+    const sessions = membershipSessionSummary({
+      requiredStamps: programMembership.loyaltyProgram.requiredStamps,
+      earnedStamps: programMembership.earnedStamps,
+      bonusStamps: programMembership.bonusStamps,
+      sessionsForfeited: programMembership.sessionsForfeited,
+    });
+    if (sessions.remaining <= 0) {
+      fail(data.scanToken, "This membership has no sessions left \u2014 all sessions have been used or have expired.");
+    }
     if (data.quantity !== 1) {
       fail(data.scanToken, "Membership visits are recorded one treatment at a time. Set the quantity to 1.");
     }

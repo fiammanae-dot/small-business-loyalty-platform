@@ -972,6 +972,12 @@ model CustomerProgramMembership {
   loyaltyProgramId             Int                     @map("loyalty_program_id")
   earnedStamps                 Int                     @default(0) @map("earned_stamps")
   bonusStamps                  Int                     @default(0) @map("bonus_stamps")
+  /// Prepaid membership sessions auto-forfeited by the monthly use-it-or-lose-it
+  /// sweep. Only meaningful when the program is a membership (isMembership).
+  sessionsForfeited            Int                     @default(0) @map("sessions_forfeited")
+  /// How many monthly forfeit cycles the sweep has already evaluated for this
+  /// membership, so a cycle is never double-counted across cron runs.
+  forfeitCyclesProcessed       Int                     @default(0) @map("forfeit_cycles_processed")
   /// Which rewards have been claimed on the CURRENT card, by atStamp.
   ///
   /// Cleared when the card resets, which is what lets a customer take the
