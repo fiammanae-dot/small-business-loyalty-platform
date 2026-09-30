@@ -39,6 +39,7 @@ import { formatUaePhoneDisplay } from "@/lib/phone";
 import { formatPlateDisplay, formatVehicleDescription, vehicleSizeLabels } from "@/lib/vehicles";
 import { prisma } from "@/lib/prisma";
 import { progressValue } from "@/lib/programs";
+import { membershipSessionSummary } from "@/lib/membership-sessions";
 import { getScanQrDataUrl, getScanUrl, scanStatusLabel } from "@/lib/scan";
 import { RequiredMark } from "@/components/ui/RequiredMark";
 import { manualStampCorrectionAction, toggleCustomerCardAction, toggleProgramScanTokenAction } from "@/app/dashboard/actions";
@@ -634,7 +635,24 @@ function LoyaltyOverviewPanel({
                 <span className={`text-sm font-semibold ${isRewardReady ? "text-emerald-600" : "business-text"}`}>{isRewardReady ? "Ready to redeem" : `${progressPercent}%`}</span>
               </div>
               <ProgressBar value={progress} max={required} className="mt-3" />
-              {!isRewardReady ? (
+              {programMembership.loyaltyProgram.isMembership ? (
+                (() => {
+                  const sessions = membershipSessionSummary({
+                    requiredStamps: required,
+                    earnedStamps: programMembership.earnedStamps,
+                    bonusStamps: programMembership.bonusStamps,
+                    sessionsForfeited: programMembership.sessionsForfeited,
+                  });
+                  return (
+                    <p className="mt-2 text-sm font-semibold text-[#111827]">
+                      {sessions.remaining} of {sessions.total} session{sessions.total === 1 ? "" : "s"} remaining
+                      <span className="font-normal text-[#6B7280]">
+                        {" \u00b7 "}{sessions.used} used{sessions.forfeited > 0 ? ` \u00b7 ${sessions.forfeited} forfeited` : ""}
+                      </span>
+                    </p>
+                  );
+                })()
+              ) : !isRewardReady ? (
                 <p className="mt-2 text-sm text-[#6B7280]">
                   {remaining} stamp{remaining === 1 ? "" : "s"} remaining until {nextReward ? nextReward.rewardName : "reward"}
                 </p>
