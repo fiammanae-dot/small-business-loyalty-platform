@@ -113,7 +113,12 @@ export async function issueStampAction(formData: FormData) {
   const programMembership = await prisma.customerProgramMembership.findUnique({
     where: { scanToken: data.scanToken },
     include: {
-      loyaltyProgram: { include: { programRewards: { orderBy: { atStamp: "asc" } } } },
+      loyaltyProgram: {
+        include: {
+          programRewards: { orderBy: { atStamp: "asc" } },
+          membershipTreatments: { where: { active: true }, orderBy: { sortOrder: "asc" } },
+        },
+      },
       businessCustomerMembership: {
         include: {
           createdBranch: true,
@@ -152,6 +157,32 @@ export async function issueStampAction(formData: FormData) {
     })
   ) {
     fail(data.scanToken, STAFF_REWARD_READY_STAMP_BLOCK_MESSAGE);
+  }
+
+  // Phase 2: a membership visit records which treatment was delivered. The
+  // treatment is required for membership programs and is either a menu item
+  // (membershipTreatmentId) or a free-text "Other" name captured at the counter.
+  let membershipTreatmentId: number | null = null;
+  let treatmentName: string | null = null;
+  if (programMembership.loyaltyProgram.isMembership) {
+    if (data.quantity !== 1) {
+      fail(data.scanToken, "Membership visits are recorded one treatment at a time. Set the quantity to 1.");
+    }
+    const treatmentChoice = getString(formData, "membershipTreatment").trim();
+    const treatmentOther = getString(formData, "treatmentOther").trim();
+    if (treatmentChoice === "other") {
+      if (!treatmentOther) fail(data.scanToken, "Type the treatment used for this visit.");
+      treatmentName = treatmentOther.slice(0, 200);
+    } else if (treatmentChoice) {
+      const chosen = programMembership.loyaltyProgram.membershipTreatments.find(
+        (treatment) => String(treatment.id) === treatmentChoice,
+      );
+      if (!chosen) fail(data.scanToken, "Select a valid treatment for this visit.");
+      membershipTreatmentId = chosen.id;
+      treatmentName = chosen.name;
+    } else {
+      fail(data.scanToken, "Select the treatment for this visit.");
+    }
   }
 
   const now = new Date();
@@ -230,6 +261,8 @@ export async function issueStampAction(formData: FormData) {
         reason: data.reason || null,
         source: "QR_SCAN",
         idempotencyKey: data.idempotencyKey,
+        membershipTreatmentId,
+        treatmentName,
         createdAt: now,
       },
       select: { id: true },

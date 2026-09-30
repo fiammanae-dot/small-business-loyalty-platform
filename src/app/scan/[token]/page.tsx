@@ -191,7 +191,12 @@ export default async function ScanResultPage({
     include: {
       // The scanner decides whether a reward can be redeemed, so it has to see
       // every reward on the card - not only the one that completes it.
-      loyaltyProgram: { include: { programRewards: { orderBy: { atStamp: "asc" } } } },
+      loyaltyProgram: {
+        include: {
+          programRewards: { orderBy: { atStamp: "asc" } },
+          membershipTreatments: { where: { active: true }, orderBy: { sortOrder: "asc" } },
+        },
+      },
       businessCustomerMembership: {
         include: {
           business: { include: { branding: true } },
@@ -319,6 +324,7 @@ export default async function ScanResultPage({
 
   const customerName = (businessMembership.firstName + " " + (businessMembership.lastName ?? "")).trim();
   const program = programMembership.loyaltyProgram;
+  const membershipTreatmentOptions = program.membershipTreatments.map((treatment) => ({ id: treatment.id, name: treatment.name }));
   const progress = progressValue(programMembership.earnedStamps, programMembership.bonusStamps);
   const cardUrl = await getCardUrl(businessMembership.cardToken);
   const issuedTransactionId = qs.issued ? Number(qs.issued) : null;
@@ -419,6 +425,8 @@ export default async function ScanResultPage({
           rewardName={rewardHeadline}
           completesCard={claimableReward?.completesCard ?? true}
           canRedeem={["BUSINESS_OWNER", "BRANCH_MANAGER", "STAFF"].includes(authUser.role)}
+          isMembership={program.isMembership}
+          treatments={membershipTreatmentOptions}
           confirmationTheme={scannerConfirmationTheme}
         />
       ) : null}
@@ -432,6 +440,7 @@ export default async function ScanResultPage({
           token={scanToken}
           transactionId={issuedTransaction.id}
           quantity={issuedTransaction.quantity}
+          treatmentName={issuedTransaction.treatmentName}
           canUndo={undoEligibility.allowed}
           unavailableReason={undoEligibility.reason}
           sharePrompt={
@@ -530,6 +539,8 @@ export default async function ScanResultPage({
           progress={progress}
           requiredStamps={program.requiredStamps}
           canOverrideCooldown={authUser.role !== "STAFF"}
+          isMembership={program.isMembership}
+          treatments={membershipTreatmentOptions}
           confirmationTheme={scannerConfirmationTheme}
         />
       ) : null}
@@ -613,6 +624,8 @@ function QuickScanActions({
   rewardName,
   completesCard,
   canRedeem,
+  isMembership,
+  treatments,
   confirmationTheme,
 }: {
   token: string;
@@ -622,6 +635,8 @@ function QuickScanActions({
   /** Whether claiming it finishes the card. A milestone must not promise a reset. */
   completesCard: boolean;
   canRedeem: boolean;
+  isMembership: boolean;
+  treatments: { id: number; name: string }[];
   confirmationTheme: ConfirmationDialogTheme;
 }) {
   return (
@@ -659,6 +674,7 @@ function QuickScanActions({
             <IdempotencyInput scope="stamp" />
             <input type="hidden" name="scanToken" value={token} />
             <input type="hidden" name="quantity" value="1" />
+            {isMembership ? <MembershipTreatmentFields treatments={treatments} /> : null}
             <ConfirmSubmitButton
               title="Issue stamp?"
               message="This will add 1 visit to the customer's selected program."
@@ -676,6 +692,7 @@ function QuickScanActions({
             <input type="hidden" name="scanToken" value={token} />
             <input type="hidden" name="quantity" value="1" />
             <input type="hidden" name="shareAfterStamp" value="whatsapp" />
+            {isMembership ? <MembershipTreatmentFields treatments={treatments} /> : null}
             <ConfirmSubmitButton
               title="Issue stamp and share updated card?"
               message="This will add 1 visit, then prepare a WhatsApp message with the customer's updated loyalty card."
@@ -697,6 +714,7 @@ function StampUndoPanel({
   token,
   transactionId,
   quantity,
+  treatmentName,
   canUndo,
   unavailableReason,
   sharePrompt,
@@ -704,6 +722,7 @@ function StampUndoPanel({
   token: string;
   transactionId: number;
   quantity: number;
+  treatmentName?: string | null;
   canUndo: boolean;
   unavailableReason: string | null;
   sharePrompt?: React.ReactNode;
@@ -718,6 +737,7 @@ function StampUndoPanel({
               ? "Multiple stamps were issued in one transaction. This may create an alert for Business Owner review."
               : "The customer stamp progress was updated."}
           </p>
+          {treatmentName ? <p className="mt-2 text-sm font-semibold">Treatment recorded: {treatmentName}</p> : null}
           {!canUndo && unavailableReason ? <p className="mt-2 text-xs font-semibold opacity-80">Undo unavailable: {unavailableReason}</p> : null}
         </div>
         <div className="flex flex-col gap-2 sm:flex-row lg:justify-end">
@@ -771,12 +791,16 @@ function AdvancedStampOptions({
   progress,
   requiredStamps,
   canOverrideCooldown,
+  isMembership,
+  treatments,
   confirmationTheme,
 }: {
   token: string;
   progress: number;
   requiredStamps: number;
   canOverrideCooldown: boolean;
+  isMembership: boolean;
+  treatments: { id: number; name: string }[];
   confirmationTheme: ConfirmationDialogTheme;
 }) {
   return (
@@ -799,6 +823,8 @@ function AdvancedStampOptions({
           progress={progress}
           requiredStamps={requiredStamps}
           canOverrideCooldown={canOverrideCooldown}
+          isMembership={isMembership}
+          treatments={treatments}
           confirmationTheme={confirmationTheme}
         />
       </div>
@@ -1037,12 +1063,16 @@ function StampIssuanceSection({
   progress,
   requiredStamps,
   canOverrideCooldown,
+  isMembership,
+  treatments,
   confirmationTheme,
 }: {
   token: string;
   progress: number;
   requiredStamps: number;
   canOverrideCooldown: boolean;
+  isMembership: boolean;
+  treatments: { id: number; name: string }[];
   confirmationTheme: ConfirmationDialogTheme;
 }) {
   return (
@@ -1061,19 +1091,27 @@ function StampIssuanceSection({
         <CsrfInput scope="scan:stamp" />
         <IdempotencyInput scope="stamp" />
         <input type="hidden" name="scanToken" value={token} />
-        <label className="grid gap-2 text-sm font-semibold text-[#111827]">
-          Stamp Quantity
-          <div className="grid grid-cols-5 gap-2">
-            {[1, 2, 3, 4, 5].map((quantity) => (
-              <label key={quantity} className="cursor-pointer">
-                <input className="peer sr-only" type="radio" name="quantity" value={quantity} defaultChecked={quantity === 1} />
-                <span className="flex min-h-12 items-center justify-center rounded-md border border-[#E5E7EB] bg-white text-sm font-semibold text-[#111827] transition peer-checked:border-[var(--business-primary,#F97316)] peer-checked:bg-[var(--business-button,#F97316)] peer-checked:text-[var(--business-button-foreground,#ffffff)]">
-                  +{quantity}
-                </span>
-              </label>
-            ))}
+        {isMembership ? (
+          <div className="md:col-span-3">
+            <input type="hidden" name="quantity" value="1" />
+            <p className="mb-2 text-sm font-semibold text-[#111827]">Membership visit &mdash; one treatment per stamp.</p>
+            <MembershipTreatmentFields treatments={treatments} />
           </div>
-        </label>
+        ) : (
+          <label className="grid gap-2 text-sm font-semibold text-[#111827]">
+            Stamp Quantity
+            <div className="grid grid-cols-5 gap-2">
+              {[1, 2, 3, 4, 5].map((quantity) => (
+                <label key={quantity} className="cursor-pointer">
+                  <input className="peer sr-only" type="radio" name="quantity" value={quantity} defaultChecked={quantity === 1} />
+                  <span className="flex min-h-12 items-center justify-center rounded-md border border-[#E5E7EB] bg-white text-sm font-semibold text-[#111827] transition peer-checked:border-[var(--business-primary,#F97316)] peer-checked:bg-[var(--business-button,#F97316)] peer-checked:text-[var(--business-button-foreground,#ffffff)]">
+                    +{quantity}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </label>
+        )}
         <label className="grid gap-2 text-sm font-semibold text-[#111827]">
           Reason for multiple stamps or repeated stamps
           <textarea
@@ -1108,6 +1146,38 @@ function StampIssuanceSection({
         ) : null}
       </form>
     </section>
+  );
+}
+
+function MembershipTreatmentFields({ treatments }: { treatments: { id: number; name: string }[] }) {
+  return (
+    <div className="mb-3 grid gap-2 text-left">
+      <label className="grid gap-1 text-sm font-semibold text-[#111827]">
+        Treatment for this visit<RequiredMark />
+        <select
+          name="membershipTreatment"
+          required
+          defaultValue=""
+          className="h-11 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm font-normal text-[#111827] outline-none focus:border-[var(--business-primary,#F97316)] focus:ring-4 focus:ring-[var(--business-primary-soft,#ffedd5)]"
+        >
+          <option value="" disabled>
+            Select a treatment…
+          </option>
+          {treatments.map((treatment) => (
+            <option key={treatment.id} value={treatment.id}>
+              {treatment.name}
+            </option>
+          ))}
+          <option value="other">Other (type below)</option>
+        </select>
+      </label>
+      <input
+        name="treatmentOther"
+        maxLength={200}
+        placeholder="If Other: type the treatment used"
+        className="h-11 rounded-md border border-[#E5E7EB] px-3 text-sm font-normal text-[#111827] outline-none focus:border-[var(--business-primary,#F97316)] focus:ring-4 focus:ring-[var(--business-primary-soft,#ffedd5)]"
+      />
+    </div>
   );
 }
 
