@@ -42,7 +42,9 @@ import { progressValue } from "@/lib/programs";
 import { membershipSessionSummary } from "@/lib/membership-sessions";
 import { getScanQrDataUrl, getScanUrl, scanStatusLabel } from "@/lib/scan";
 import { RequiredMark } from "@/components/ui/RequiredMark";
-import { manualStampCorrectionAction, toggleCustomerCardAction, toggleProgramScanTokenAction } from "@/app/dashboard/actions";
+import { addCashbackAction, manualStampCorrectionAction, toggleCustomerCardAction, toggleProgramScanTokenAction, useCashbackAction } from "@/app/dashboard/actions";
+import { formatAed } from "@/lib/cashback";
+import { randomUUID } from "node:crypto";
 
 type TimelineItem = {
   id: string;
@@ -133,6 +135,35 @@ export default async function CustomerProfilePage({
     })),
   );
   const programMembershipIds = membership.programMemberships.map((programMembership) => programMembership.id);
+
+  const cashbackSettings = await prisma.businessCashbackSettings.findUnique({
+    where: { businessId: user.businessId },
+    select: { enabled: true, ratePercent: true, currency: true },
+  });
+  const cashbackEnabled = Boolean(cashbackSettings?.enabled);
+  const cashbackRate = Number(cashbackSettings?.ratePercent ?? 0);
+  const cashbackCurrency = cashbackSettings?.currency ?? "AED";
+  const cashbackBalance = Number(membership.cashbackBalance ?? 0);
+  const cashbackLedger = cashbackEnabled
+    ? (
+        await prisma.cashbackTransaction.findMany({
+          where: { businessId: user.businessId, businessCustomerMembershipId: membership.id },
+          orderBy: { createdAt: "desc" },
+          take: 20,
+          include: { issuedByUser: { select: { name: true } }, branch: { select: { name: true } } },
+        })
+      ).map((row) => ({
+        id: row.id,
+        type: row.type as "EARN" | "SPEND" | "REVERSAL",
+        amount: Number(row.amount),
+        balanceAfter: Number(row.balanceAfter),
+        currency: row.currency,
+        note: row.note,
+        createdAt: row.createdAt,
+        staffName: row.issuedByUser?.name ?? null,
+        branchName: row.branch?.name ?? null,
+      }))
+    : [];
 
   const [stampTransactions, generatedAlerts, rewardRedemptions, correctionEvents] = await Promise.all([
     prisma.stampTransaction.findMany({
@@ -423,6 +454,23 @@ return (
         label="Customer sections"
         defaultValue={resolveCustomerTab(qs.tab)}
         items={[
+          ...(cashbackEnabled
+            ? [
+                {
+                  id: "cashback",
+                  label: "Cashback",
+                  content: (
+                    <CashbackPanel
+                      membershipUuid={membership.uuid}
+                      balance={cashbackBalance}
+                      currency={cashbackCurrency}
+                      ratePercent={cashbackRate}
+                      transactions={cashbackLedger}
+                    />
+                  ),
+                },
+              ]
+            : []),
           {
             id: "overview",
             label: "Overview",
@@ -1113,8 +1161,95 @@ function startOfDay(value: Date) {
   return date;
 }
 
+function CashbackPanel({
+  membershipUuid,
+  balance,
+  currency,
+  ratePercent,
+  transactions,
+}: {
+  membershipUuid: string;
+  balance: number;
+  currency: string;
+  ratePercent: number;
+  transactions: Array<{
+    id: number;
+    type: "EARN" | "SPEND" | "REVERSAL";
+    amount: number;
+    balanceAfter: number;
+    currency: string;
+    note: string | null;
+    createdAt: Date;
+    staffName: string | null;
+    branchName: string | null;
+  }>;
+}) {
+  const addKey = randomUUID();
+  const spendKey = randomUUID();
+  const canSpend = balance > 0;
+  return (
+    <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(320px,1.1fr)]">
+      <section className="rounded-xl border border-[#E7E9EE] bg-white p-5 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
+        <h2 className="text-base font-bold tracking-tight text-[#171A21]">Cashback wallet</h2>
+        <p className="mt-1 text-sm text-[#6B7280]">Store credit the customer can spend on future visits.</p>
+        <div className="mt-4 rounded-lg border border-[#E7E9EE] bg-[#F8FAFC] p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">Current balance</p>
+          <p className="mt-1 text-3xl font-bold tabular-nums text-[#111827]">{formatAed(balance, currency)}</p>
+        </div>
+        <form action={addCashbackAction} className="mt-5 grid gap-2">
+          <CsrfInput scope="dashboard:cashback-add" />
+          <input type="hidden" name="membershipUuid" value={membershipUuid} />
+          <input type="hidden" name="idempotencyKey" value={addKey} />
+          <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-[#475569]">
+            Amount paid ({currency})<RequiredMark />
+            <input name="billAmount" type="number" required min="0.01" step="0.01" inputMode="decimal" placeholder="e.g. 500" className="min-h-10 rounded-md border border-[#D1D5DB] bg-white px-3 text-sm font-semibold text-[#111827]" />
+          </label>
+          <p className="text-xs text-[#6B7280]">Adds {ratePercent}% of the amount paid as cashback.</p>
+          <button type="submit" className="min-h-10 rounded-md bg-[#0f766e] px-4 text-sm font-bold text-white transition hover:bg-[#0b544e]">Add cashback</button>
+        </form>
+        <form action={useCashbackAction} className="mt-4 grid gap-2 border-t border-[#EEF1F4] pt-4">
+          <CsrfInput scope="dashboard:cashback-spend" />
+          <input type="hidden" name="membershipUuid" value={membershipUuid} />
+          <input type="hidden" name="idempotencyKey" value={spendKey} />
+          <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-[#475569]">
+            Use balance ({currency})<RequiredMark />
+            <input name="amount" type="number" required min="0.01" step="0.01" max={canSpend ? balance : undefined} inputMode="decimal" placeholder="Amount to redeem" disabled={!canSpend} className="min-h-10 rounded-md border border-[#D1D5DB] bg-white px-3 text-sm font-semibold text-[#111827] disabled:bg-[#F1F5F9]" />
+          </label>
+          <button type="submit" disabled={!canSpend} className="min-h-10 rounded-md border border-[#0f766e] px-4 text-sm font-bold text-[#0b544e] transition hover:bg-[#d8ede9] disabled:cursor-not-allowed disabled:border-[#CBD5E1] disabled:text-[#94A3B8]">Use cashback</button>
+        </form>
+      </section>
+      <section className="rounded-xl border border-[#E7E9EE] bg-white p-5 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
+        <h2 className="text-base font-bold tracking-tight text-[#171A21]">Cashback history</h2>
+        {transactions.length === 0 ? (
+          <p className="mt-4 text-sm text-[#6B7280]">No cashback activity yet.</p>
+        ) : (
+          <ul className="mt-4 grid gap-2">
+            {transactions.map((entry) => {
+              const isEarn = entry.type === "EARN";
+              const sign = isEarn ? "+" : "-";
+              const label = entry.type === "EARN" ? "Added" : entry.type === "SPEND" ? "Used" : "Reversal";
+              return (
+                <li key={entry.id} className="flex items-center justify-between gap-3 rounded-lg border border-[#EEF1F4] px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-[#111827]">{label}</p>
+                    <p className="text-xs text-[#6B7280]">{formatDateTime(entry.createdAt)}{entry.staffName ? ` \u00b7 ${entry.staffName}` : ""}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className={`text-sm font-bold tabular-nums ${isEarn ? "text-[#1f7a4d]" : "text-[#a63f37]"}`}>{sign}{formatAed(entry.amount, entry.currency)}</p>
+                    <p className="text-xs text-[#6B7280]">Balance {formatAed(entry.balanceAfter, entry.currency)}</p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+    </div>
+  );
+}
+
 function resolveCustomerTab(tab: string | undefined) {
-  const allowed = ["overview", "activity", "rewards", "referrals", "card"];
+  const allowed = ["overview", "cashback", "activity", "rewards", "referrals", "card"];
   return allowed.includes(tab ?? "") ? tab! : "overview";
 }
 

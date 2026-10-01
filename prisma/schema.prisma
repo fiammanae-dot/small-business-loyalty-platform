@@ -428,6 +428,7 @@ model User {
   archivedBusinesses Business[] @relation("BusinessArchivedBy")
   walletBroadcastsSent WalletBroadcast[] @relation("WalletBroadcastSentBy")
 
+  cashbackTransactions CashbackTransaction[]
   @@index([businessId])
   @@index([branchId])
   @@map("users")
@@ -556,6 +557,7 @@ model Business {
   googleWalletObjects           GoogleWalletObject[]
   whatsAppChannel               BusinessWhatsAppChannel?
 
+  cashbackTransactions CashbackTransaction[]
   @@map("businesses")
 }
 
@@ -616,6 +618,7 @@ model Branch {
   auditEvents                 AuditEvent[]
   cooldownEvents              CooldownEvent[]
 
+  cashbackTransactions CashbackTransaction[]
   @@index([businessId])
   @@map("branches")
 }
@@ -850,6 +853,8 @@ model BusinessCustomerMembership {
   referralsMade         Referral[]                  @relation("ReferralReferrer")
   referralsReceived     Referral[]                  @relation("ReferralReferredMembership")
 
+  cashbackBalance      Decimal                  @default(0) @map("cashback_balance") @db.Decimal(12, 2)
+  cashbackTransactions CashbackTransaction[]
   @@unique([businessId, globalCustomerId])
   @@unique([businessId, normalizedPhone])
   @@unique([businessId, referralCode])
@@ -1734,4 +1739,45 @@ model WalletBroadcast {
 
   @@index([businessId, sentAt])
   @@map("wallet_broadcasts")
+}
+
+enum CashbackTransactionType {
+  EARN
+  SPEND
+  REVERSAL
+}
+
+/// Cashback wallet ledger (Feature 2). One row per top-up, spend or reversal
+/// against a customer's AED balance. balanceAfter records the running balance so
+/// each row is auditable on its own; idempotencyKey makes a double-submit a
+/// no-op. amount is always the positive magnitude - `type` gives the direction.
+model CashbackTransaction {
+  id                           Int                     @id @default(autoincrement())
+  uuid                         String                  @unique @default(uuid()) @db.Uuid
+  businessId                   Int                     @map("business_id")
+  businessCustomerMembershipId Int                     @map("business_customer_membership_id")
+  branchId                     Int?                    @map("branch_id")
+  type                         CashbackTransactionType
+  /// For EARN rows: the bill the cashback was calculated from and the rate used.
+  billAmount                   Decimal?                @map("bill_amount") @db.Decimal(12, 2)
+  ratePercent                  Decimal?                @map("rate_percent") @db.Decimal(5, 2)
+  amount                       Decimal                 @db.Decimal(12, 2)
+  balanceAfter                 Decimal                 @map("balance_after") @db.Decimal(12, 2)
+  currency                     String                  @default("AED")
+  note                         String?
+  issuedByUserId               Int?                    @map("issued_by_user_id")
+  idempotencyKey               String?                 @unique @map("idempotency_key")
+  createdAt                    DateTime                @default(now()) @map("created_at")
+
+  business                   Business                   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessCustomerMembership BusinessCustomerMembership @relation(fields: [businessCustomerMembershipId], references: [id], onDelete: Cascade)
+  branch                     Branch?                    @relation(fields: [branchId], references: [id])
+  issuedByUser               User?                      @relation(fields: [issuedByUserId], references: [id])
+
+  @@index([businessId])
+  @@index([businessCustomerMembershipId])
+  @@index([businessCustomerMembershipId, createdAt])
+  @@index([branchId])
+  @@index([issuedByUserId])
+  @@map("cashback_transactions")
 }
