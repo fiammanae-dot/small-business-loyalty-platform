@@ -1,0 +1,85 @@
+# Production deploy fallback
+#
+# Safety net for the rare case where Vercel's GitHub App misses a push to `main`
+# and never creates a production deployment (this is what happened with the
+# Phase 3 / PR #25 merge — the push event was dropped and production stayed on
+# the previous build).
+#
+# On every push to `main` this waits for Vercel to react, then asks the GitHub
+# Deployments API whether a *Production* deployment already exists for this exact
+# commit. If one does (the normal case), it does nothing — no duplicate build.
+# If none exists after a few checks, it fires the Vercel deploy hook to build
+# `main` to production, so a dropped webhook can never silently leave prod stale.
+#
+# Requires one repo secret: VERCEL_DEPLOY_HOOK_URL
+#   (Settings -> Secrets and variables -> Actions -> New repository secret)
+
+name: Production deploy fallback
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {} # allow manual runs for testing
+
+concurrency:
+  group: prod-deploy-fallback
+  cancel-in-progress: false
+
+jobs:
+  ensure-production-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      deployments: read
+      contents: read
+    steps:
+      - name: Wait for Vercel to pick up the push
+        run: sleep 150
+
+      - name: Ensure a production deployment exists (fire deploy hook if not)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.sha }}
+          DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${DEPLOY_HOOK_URL:-}" ]; then
+            echo "::error::VERCEL_DEPLOY_HOOK_URL secret is not set. Add it in repo Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+
+          # Poll a few times in case Vercel is a little slow to register its deployment.
+          for attempt in 1 2 3; do
+            echo "Attempt $attempt: looking for a Production deployment of $SHA ..."
+            deployments="$(gh api \
+              -H "Accept: application/vnd.github+json" \
+              "/repos/${GITHUB_REPOSITORY}/deployments?sha=${SHA}&per_page=100")"
+
+            # Vercel records a GitHub Deployment whose environment contains "Production"
+            # for production deploys (previews use "Preview - <branch>").
+            found="$(echo "$deployments" | jq -r '[.[] | select((.environment // "") | test("[Pp]roduction"))] | length')"
+
+            if [ "${found:-0}" -gt 0 ]; then
+              echo "Found ${found} Production deployment(s) for ${SHA}. Vercel handled it - nothing to do."
+              exit 0
+            fi
+
+            echo "No Production deployment found yet."
+            if [ "$attempt" -lt 3 ]; then
+              echo "Waiting 60s before retry ..."
+              sleep 60
+            fi
+          done
+
+          echo "No Production deployment for ${SHA} after retries. Firing Vercel deploy hook as a fallback."
+          http_code="$(curl -s -o /tmp/hook_resp.json -w '%{http_code}' -X POST "$DEPLOY_HOOK_URL")"
+          echo "Deploy hook responded with HTTP ${http_code}"
+          cat /tmp/hook_resp.json 2>/dev/null || true
+          echo
+
+          if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+            echo "Fallback production deployment triggered successfully."
+          else
+            echo "::error::Deploy hook call failed with HTTP ${http_code}"
+            exit 1
+          fi
