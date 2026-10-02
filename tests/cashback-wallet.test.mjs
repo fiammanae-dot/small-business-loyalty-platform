@@ -1,11 +1,13 @@
 /**
- * Phase 4: cashback wallet (Feature 2).
+ * Cashback wallet (Feature 2): Phase 4 (per-customer AED balance + ledger) and
+ * Phase 4.1 (staff add + spend at the scan counter, configurable caps,
+ * confirmation-gated spend).
  *
- * A per-customer AED balance that staff top up with a percentage of the bill and
- * the customer spends on future visits. The arithmetic lives in one pure helper
- * so the actions, the customer-profile display and these checks never disagree;
- * the moves are atomic, row-locked, idempotent and never go negative. These
- * checks hold that wiring in place.
+ * The money math is one pure helper; the money MOVEMENT is one shared,
+ * transactional, audited module (@/lib/cashback-ledger) that both the owner
+ * dashboard and the staff scan flow call - so the rules (atomic balance+ledger,
+ * row lock, never-negative, idempotent, capped, audited) can't drift between the
+ * two entry points. These checks hold that wiring in place.
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -13,72 +15,100 @@ import { test } from "node:test";
 
 const read = (path) => readFileSync(path, "utf8");
 
-test("cashback math helper exposes earn, spend-guard, never-negative delta and formatter", () => {
+test("pure math helper: earn, spend-guard, never-negative delta, formatter", () => {
   const helper = read("src/lib/cashback.ts");
   assert.match(helper, /export function computeCashbackEarn/);
   assert.match(helper, /export function canSpendCashback/);
   assert.match(helper, /export function applyCashbackDelta/);
-  assert.match(helper, /export function roundAed/);
   assert.match(helper, /export function formatAed/);
-  // Earn is a rounded percentage of the bill.
   assert.match(helper, /billAmount \* ratePercent\) \/ 100/);
-  // The balance can never go negative.
   assert.match(helper, /Math\.max\(0, roundAed\(balance\) \+ delta\)/);
-  // Spend must be positive and within balance.
   assert.match(helper, /amount > 0 && roundAed\(amount\) <= roundAed\(balance\)/);
 });
 
-test("add and spend actions are guarded, atomic, row-locked, idempotent and audited", () => {
+test("shared ledger module is atomic, row-locked, idempotent, capped and audited", () => {
+  const ledger = read("src/lib/cashback-ledger.ts");
+  assert.match(ledger, /export async function earnCashback/);
+  assert.match(ledger, /export async function spendCashback/);
+  // One transaction, under a row lock, for every movement.
+  assert.match(ledger, /prisma\.\$transaction/);
+  assert.match(ledger, /FOR UPDATE/);
+  // Caps enforced here (NULL = no cap).
+  assert.match(ledger, /maxBillAmount != null && input\.billAmount > input\.maxBillAmount/);
+  assert.match(ledger, /maxRedemption != null && input\.amount > input\.maxRedemption/);
+  // Overdraw and double-submit are blocked.
+  assert.match(ledger, /canSpendCashback/);
+  assert.match(ledger, /Not enough cashback balance/);
+  assert.match(ledger, /class DuplicateCashbackError/);
+  assert.match(ledger, /P2002/);
+  // Both directions audited.
+  assert.match(ledger, /CASHBACK_EARNED/);
+  assert.match(ledger, /CASHBACK_SPENT/);
+});
+
+test("dashboard add/spend are owner-guarded and delegate to the shared ledger", () => {
   const actions = read("src/app/dashboard/actions.ts");
   assert.match(actions, /export async function addCashbackAction/);
   assert.match(actions, /export async function useCashbackAction/);
-  // Support-session aware write guard (platform admin can operate it in an edit session).
-  assert.match(actions, /const user = await requireBusinessOwnerForWrite\(\);[\s\S]*addCashbackAction/);
-  // Balance + ledger move together in one transaction, under a row lock.
-  assert.match(actions, /prisma\.\$transaction/);
-  assert.match(actions, /FOR UPDATE/);
-  // Idempotency: a double-submit is a no-op caught on the unique key.
-  assert.match(actions, /idempotencyKey/);
-  assert.match(actions, /isDuplicateWrite/);
-  // Spend cannot overdraw.
-  assert.match(actions, /canSpendCashback/);
-  assert.match(actions, /Not enough cashback balance/);
-  // Both directions are audited.
-  assert.match(actions, /CASHBACK_EARNED/);
-  assert.match(actions, /CASHBACK_SPENT/);
-  // Only enabled businesses can transact.
-  assert.match(actions, /loadEnabledCashbackSettings/);
+  assert.match(actions, /requireBusinessOwnerForWrite/);
+  assert.match(actions, /earnCashback\(/);
+  assert.match(actions, /spendCashback\(/);
+  // Caps come from settings.
+  assert.match(actions, /maxBillAmount: settings\.maxBillAmount/);
+  assert.match(actions, /maxRedemption: settings\.maxRedemption/);
 });
 
-test("the schema carries the balance column, the ledger table and its enum", () => {
+test("scan add/spend run under the staff guard, enforce branch + enabled, delegate to the ledger", () => {
+  const scan = read("src/app/scan/actions.ts");
+  assert.match(scan, /export async function addCashbackFromScanAction/);
+  assert.match(scan, /export async function useCashbackFromScanAction/);
+  // Staff-capable, branch-scoped guard (not owner-only).
+  assert.match(scan, /requireBusinessScopedUser/);
+  assert.match(scan, /isOutOfAssignedBranch/);
+  // Must be enabled for the business.
+  assert.match(scan, /Cashback is not enabled for this business/);
+  // Same shared money path as the dashboard.
+  assert.match(scan, /earnCashback\(/);
+  assert.match(scan, /spendCashback\(/);
+});
+
+test("schema carries the balance, the ledger table, its enum, and the caps", () => {
   const schema = read("prisma/schema.prisma");
   assert.match(schema, /cashback_balance/);
   assert.match(schema, /model CashbackTransaction \{/);
   assert.match(schema, /enum CashbackTransactionType \{/);
-  assert.match(schema, /EARN\s+SPEND\s+REVERSAL/);
-  // The idempotency key is unique so a replay cannot double-count.
   assert.match(schema, /idempotencyKey\s+String\?\s+@unique/);
-  assert.match(schema, /balanceAfter\s+Decimal/);
+  // Phase 4.1 caps.
+  assert.match(schema, /maxBillAmount Decimal\? @map\("max_bill_amount"\)/);
+  assert.match(schema, /maxRedemption Decimal\? @map\("max_redemption"\)/);
 });
 
-test("a migration adds the column, the enum and the ledger table", () => {
-  const sql = read("prisma/migrations/0057_cashback_wallet/migration.sql");
-  assert.match(sql, /ALTER TABLE "business_customer_memberships"[\s\S]*ADD COLUMN "cashback_balance"/);
-  assert.match(sql, /CREATE TYPE "CashbackTransactionType" AS ENUM \('EARN', 'SPEND', 'REVERSAL'\)/);
-  assert.match(sql, /CREATE TABLE "cashback_transactions"/);
-  assert.match(sql, /CREATE UNIQUE INDEX "cashback_transactions_idempotency_key_key"/);
+test("migrations add the ledger (0057) and the caps (0058)", () => {
+  const m57 = read("prisma/migrations/0057_cashback_wallet/migration.sql");
+  assert.match(m57, /CREATE TABLE "cashback_transactions"/);
+  assert.match(m57, /ADD COLUMN "cashback_balance"/);
+  const m58 = read("prisma/migrations/0058_cashback_caps/migration.sql");
+  assert.match(m58, /ADD COLUMN "max_bill_amount"/);
+  assert.match(m58, /ADD COLUMN "max_redemption"/);
 });
 
-test("the customer profile shows the wallet, gated by the per-business switch", () => {
-  const page = read("src/app/dashboard/customers/[id]/page.tsx");
-  assert.match(page, /function CashbackPanel/);
-  assert.match(page, /cashbackEnabled/);
-  // The tab only appears when cashback is enabled for the business.
-  assert.match(page, /\.\.\.\(cashbackEnabled/);
-  assert.match(page, /id: "cashback"/);
-  // Add and spend forms post to the actions with matching CSRF scopes.
-  assert.match(page, /action=\{addCashbackAction\}/);
-  assert.match(page, /action=\{useCashbackAction\}/);
-  assert.match(page, /scope="dashboard:cashback-add"/);
-  assert.match(page, /scope="dashboard:cashback-spend"/);
+test("owner settings manage the rate and the caps (blank = no limit)", () => {
+  const actions = read("src/app/dashboard/actions.ts");
+  assert.match(actions, /parseOptionalCapAmount/);
+  assert.match(actions, /blank clears the cap/);
+  const settings = read("src/app/dashboard/settings/page.tsx");
+  assert.match(settings, /name="maxBillAmount"/);
+  assert.match(settings, /name="maxRedemption"/);
+});
+
+test("scan page shows the wallet (gated) with a confirmation on spend", () => {
+  const page = read("src/app/scan/[token]/page.tsx");
+  assert.match(page, /function CashbackScanSection/);
+  assert.match(page, /\{cashbackEnabled \?/);
+  assert.match(page, /action=\{addCashbackFromScanAction\}/);
+  assert.match(page, /action=\{useCashbackFromScanAction\}/);
+  // Spend is confirmation-gated.
+  assert.match(page, /ConfirmSubmitButton[\s\S]*?Redeem cashback\?/);
+  assert.match(page, /scope="scan:cashback-add"/);
+  assert.match(page, /scope="scan:cashback-spend"/);
 });

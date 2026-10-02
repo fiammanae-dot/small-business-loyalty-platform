@@ -25,7 +25,8 @@ import { extractReferralCode, resolveReferralLandingReferrer } from "@/lib/refer
 import { getNextReward, getReadyRewards, singleCardReward, type CardReward } from "@/lib/rewards";
 import { roleHomePath } from "@/lib/roles";
 import { getCurrentUser, hasActiveBusinessAccess } from "@/lib/session";
-import { issueStampAction, redeemRewardAction, undoStampAction } from "@/app/scan/actions";
+import { addCashbackFromScanAction, issueStampAction, redeemRewardAction, undoStampAction, useCashbackFromScanAction } from "@/app/scan/actions";
+import { formatAed } from "@/lib/cashback";
 import { withAlpha } from "@/lib/card-themes";
 import { getReadableForeground } from "@/lib/color-contrast";
 import type { ConfirmationDialogTheme } from "@/components/ui";
@@ -129,7 +130,7 @@ export default async function ScanResultPage({
   searchParams,
 }: {
   params: Promise<{ token: string }>;
-  searchParams: Promise<{ error?: string; issued?: string; redeemed?: string; undone?: string; share?: string }>;
+  searchParams: Promise<{ error?: string; issued?: string; redeemed?: string; undone?: string; share?: string; cashback?: string }>;
 }) {
   const user = await getCurrentUser();
   const { token } = await params;
@@ -414,6 +415,15 @@ export default async function ScanResultPage({
         ? null
         : "valid";
 
+  const cashbackSettings = await prisma.businessCashbackSettings.findUnique({
+    where: { businessId: authUser.businessId },
+    select: { enabled: true, ratePercent: true, currency: true },
+  });
+  const cashbackEnabled = Boolean(cashbackSettings?.enabled);
+  const cashbackBalance = Number(businessMembership.cashbackBalance ?? 0);
+  const cashbackCurrency = cashbackSettings?.currency ?? "AED";
+  const cashbackRate = Number(cashbackSettings?.ratePercent ?? 0);
+
   return (
     <DashboardShell user={authUser} eyebrow={roleEyebrow(authUser.role)} title="Scan result" hideWelcomeMessage>
       <ScannerSoundFeedback event={soundEvent} enabled={scannerSoundEffectsEnabled} />
@@ -443,6 +453,13 @@ export default async function ScanResultPage({
         />
       ) : null}
 
+      {cashbackEnabled ? (
+        <CashbackScanSection token={scanToken} balance={cashbackBalance} currency={cashbackCurrency} ratePercent={cashbackRate} />
+      ) : null}
+
+      {qs.cashback ? (
+        <ScanStatusBanner tone="green" title="Cashback updated" description={qs.cashback} />
+      ) : null}
       {qs.error ? (
         <ScanStatusBanner tone="red" title="Action blocked" description={qs.error} />
       ) : null}
@@ -1240,3 +1257,65 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
 
 
 
+
+function CashbackScanSection({
+  token,
+  balance,
+  currency,
+  ratePercent,
+}: {
+  token: string;
+  balance: number;
+  currency: string;
+  ratePercent: number;
+}) {
+  const canSpend = balance > 0;
+  return (
+    <SectionCard
+      title="Cashback wallet"
+      description="Add cashback after payment, or let the customer spend their balance."
+    >
+      <div className="grid gap-4">
+        <div className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">Current balance</p>
+          <p className="mt-1 text-2xl font-bold tabular-nums text-[#111827]">{formatAed(balance, currency)}</p>
+        </div>
+
+        <form action={addCashbackFromScanAction} className="grid gap-2">
+          <CsrfInput scope="scan:cashback-add" />
+          <IdempotencyInput scope="scan-cashback-add" />
+          <input type="hidden" name="scanToken" value={token} />
+          <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-[#475569]">
+            Amount paid ({currency})<RequiredMark />
+            <input name="billAmount" type="number" required min="0.01" step="0.01" inputMode="decimal" placeholder="e.g. 500" className="min-h-11 rounded-md border border-[#D1D5DB] bg-white px-3 text-sm font-semibold text-[#111827]" />
+          </label>
+          <p className="text-xs text-[#6B7280]">Adds {ratePercent}% of the amount paid as cashback.</p>
+          <button type="submit" className="min-h-11 rounded-md business-button px-4 text-sm font-bold text-white">Add cashback</button>
+        </form>
+
+        {canSpend ? (
+          <form action={useCashbackFromScanAction} className="grid gap-2 border-t border-[#EEF1F4] pt-4">
+            <CsrfInput scope="scan:cashback-spend" />
+            <IdempotencyInput scope="scan-cashback-spend" />
+            <input type="hidden" name="scanToken" value={token} />
+            <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-[#475569]">
+              Use balance ({currency})<RequiredMark />
+              <input name="amount" type="number" required min="0.01" step="0.01" max={balance} inputMode="decimal" placeholder="Amount to redeem" className="min-h-11 rounded-md border border-[#D1D5DB] bg-white px-3 text-sm font-semibold text-[#111827]" />
+            </label>
+            <ConfirmSubmitButton
+              title="Redeem cashback?"
+              message="This deducts the entered amount from the customer's cashback balance and records it in audit history."
+              confirmLabel="Use cashback"
+              cancelLabel="Cancel"
+              className="min-h-11 rounded-md border business-border px-4 text-sm font-bold business-primary"
+            >
+              Use cashback
+            </ConfirmSubmitButton>
+          </form>
+        ) : (
+          <p className="border-t border-[#EEF1F4] pt-4 text-sm text-[#6B7280]">No balance to redeem yet.</p>
+        )}
+      </div>
+    </SectionCard>
+  );
+}
