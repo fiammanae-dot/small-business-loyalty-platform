@@ -1468,6 +1468,8 @@ model BusinessCashbackSettings {
   enabled     Boolean  @default(false)
   ratePercent Decimal  @default(5) @map("rate_percent") @db.Decimal(5, 2)
   currency    String   @default("AED")
+  maxBillAmount Decimal? @map("max_bill_amount") @db.Decimal(12, 2)
+  maxRedemption Decimal? @map("max_redemption") @db.Decimal(12, 2)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 

@@ -16,6 +16,8 @@ import { getStartingBonusStampsForEvent, progressValue } from "@/lib/programs";
 import { membershipSessionSummary } from "@/lib/membership-sessions";
 import { qualifyReferralFromFirstStamp } from "@/lib/referrals";
 import { cardRewardsFor, getReadyRewards, isRewardReady } from "@/lib/rewards";
+import { formatAed } from "@/lib/cashback";
+import { CashbackError, DuplicateCashbackError, earnCashback, spendCashback } from "@/lib/cashback-ledger";
 
 /**
  * The rewards on a program's card, read from program_rewards.
@@ -851,3 +853,157 @@ export async function undoStampAction(formData: FormData) {
   undoSuccess(data.scanToken, stampTransaction.id);
 }
 
+
+// ---------------------------------------------------------------------------
+// Cashback wallet at the counter (Phase 4.1)
+//
+// Staff-facing add + spend from the scan page. These run under the scan-flow
+// guard (requireBusinessScopedUser: a logged-in, branch-scoped staff/manager/
+// owner), verify the QR belongs to the business and the staffer's branch, then
+// delegate the money movement to @/lib/cashback-ledger - the SAME audited,
+// atomic, idempotent, capped path the owner dashboard uses. Spend is gated by a
+// confirmation in the UI; every movement is attributable via the ledger + audit.
+// ---------------------------------------------------------------------------
+
+const scanCashbackAddSchema = z.object({
+  scanToken: z.string().trim().min(1, "Scan token is required."),
+  billAmount: z.coerce
+    .number({ error: "Enter the amount paid." })
+    .positive("Amount paid must be greater than zero.")
+    .max(1_000_000, "Amount paid is too large."),
+  idempotencyKey: z.string().trim().min(16, "Security token is required."),
+});
+
+const scanCashbackSpendSchema = z.object({
+  scanToken: z.string().trim().min(1, "Scan token is required."),
+  amount: z.coerce
+    .number({ error: "Enter an amount to use." })
+    .positive("Amount must be greater than zero.")
+    .max(1_000_000, "Amount is too large."),
+  idempotencyKey: z.string().trim().min(16, "Security token is required."),
+});
+
+function cashbackSuccess(token: string, message: string): never {
+  redirect(`/scan/${token}?cashback=${encodeURIComponent(message)}`);
+}
+
+async function resolveScanCashback(
+  scanToken: string,
+  user: { businessId: number; role: string; branchId?: number | null },
+) {
+  const programMembership = await prisma.customerProgramMembership.findUnique({
+    where: { scanToken },
+    select: {
+      businessCustomerMembership: {
+        select: { id: true, businessId: true, createdBranchId: true },
+      },
+    },
+  });
+  if (!programMembership) fail(scanToken, "Invalid or unavailable loyalty QR.");
+  const membership = programMembership.businessCustomerMembership;
+  if (membership.businessId !== user.businessId) {
+    fail(scanToken, "This loyalty QR does not belong to your business.");
+  }
+  if (isOutOfAssignedBranch(user, membership)) {
+    fail(scanToken, OUT_OF_BRANCH_ACTION_MESSAGE);
+  }
+
+  const settings = await prisma.businessCashbackSettings.findUnique({
+    where: { businessId: user.businessId },
+    select: { enabled: true, ratePercent: true, currency: true, maxBillAmount: true, maxRedemption: true },
+  });
+  if (!settings?.enabled) fail(scanToken, "Cashback is not enabled for this business.");
+
+  return { membership, settings };
+}
+
+export async function addCashbackFromScanAction(formData: FormData) {
+  const token = getString(formData, "scanToken");
+  try {
+    validateCsrfForm(formData, "scan:cashback-add");
+  } catch {
+    fail(token, "Security check failed. Please refresh and try again.");
+  }
+
+  const { user } = await requireBusinessScopedUser({
+    requireSubscription: true,
+    requireActiveBranch: true,
+    fail: (message) => fail(token, message),
+  });
+
+  const parsed = scanCashbackAddSchema.safeParse({
+    scanToken: getString(formData, "scanToken"),
+    billAmount: getString(formData, "billAmount"),
+    idempotencyKey: getString(formData, "idempotencyKey"),
+  });
+  if (!parsed.success) fail(token, parsed.error.issues[0]?.message ?? "Validation failed.");
+  const data = parsed.data;
+
+  const { membership, settings } = await resolveScanCashback(data.scanToken, user);
+
+  let earned: number;
+  try {
+    const result = await earnCashback({
+      businessId: user.businessId,
+      membershipId: membership.id,
+      branchId: membership.createdBranchId,
+      actorUserId: user.id,
+      billAmount: data.billAmount,
+      ratePercent: Number(settings.ratePercent),
+      currency: settings.currency,
+      maxBillAmount: settings.maxBillAmount != null ? Number(settings.maxBillAmount) : null,
+      idempotencyKey: data.idempotencyKey,
+    });
+    earned = result.amount;
+  } catch (error) {
+    if (error instanceof DuplicateCashbackError) cashbackSuccess(data.scanToken, "Cashback already added.");
+    if (error instanceof CashbackError) fail(data.scanToken, error.message);
+    throw error;
+  }
+
+  cashbackSuccess(data.scanToken, `Added ${formatAed(earned, settings.currency)} cashback.`);
+}
+
+export async function useCashbackFromScanAction(formData: FormData) {
+  const token = getString(formData, "scanToken");
+  try {
+    validateCsrfForm(formData, "scan:cashback-spend");
+  } catch {
+    fail(token, "Security check failed. Please refresh and try again.");
+  }
+
+  const { user } = await requireBusinessScopedUser({
+    requireSubscription: true,
+    requireActiveBranch: true,
+    fail: (message) => fail(token, message),
+  });
+
+  const parsed = scanCashbackSpendSchema.safeParse({
+    scanToken: getString(formData, "scanToken"),
+    amount: getString(formData, "amount"),
+    idempotencyKey: getString(formData, "idempotencyKey"),
+  });
+  if (!parsed.success) fail(token, parsed.error.issues[0]?.message ?? "Validation failed.");
+  const data = parsed.data;
+
+  const { membership, settings } = await resolveScanCashback(data.scanToken, user);
+
+  try {
+    await spendCashback({
+      businessId: user.businessId,
+      membershipId: membership.id,
+      branchId: membership.createdBranchId,
+      actorUserId: user.id,
+      amount: data.amount,
+      currency: settings.currency,
+      maxRedemption: settings.maxRedemption != null ? Number(settings.maxRedemption) : null,
+      idempotencyKey: data.idempotencyKey,
+    });
+  } catch (error) {
+    if (error instanceof DuplicateCashbackError) cashbackSuccess(data.scanToken, "Cashback already used.");
+    if (error instanceof CashbackError) fail(data.scanToken, error.message);
+    throw error;
+  }
+
+  cashbackSuccess(data.scanToken, `Used ${formatAed(data.amount, settings.currency)} cashback.`);
+}

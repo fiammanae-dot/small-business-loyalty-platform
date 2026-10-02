@@ -39,6 +39,8 @@ export default async function BusinessSettingsPage({ searchParams }: { searchPar
   const membershipsEnabled = business.membershipSettings?.enabled ?? false;
   const cashbackEnabled = business.cashbackSettings?.enabled ?? false;
   const cashbackRate = business.cashbackSettings?.ratePercent != null ? business.cashbackSettings.ratePercent.toString() : "5";
+  const cashbackMaxBill = business.cashbackSettings?.maxBillAmount != null ? business.cashbackSettings.maxBillAmount.toString() : "";
+  const cashbackMaxRedemption = business.cashbackSettings?.maxRedemption != null ? business.cashbackSettings.maxRedemption.toString() : "";
   const tierConfig = normalizeTierConfig(business.tierSetting);
   const cooldownRule = await prisma.cooldownRule.findFirst({ where: { businessId: user.businessId, active: true }, orderBy: { updatedAt: "desc" } });
   const abusePolicies = await prisma.abusePolicy.findMany({ where: { businessId: user.businessId }, orderBy: { ruleType: "asc" } });
@@ -146,7 +148,7 @@ export default async function BusinessSettingsPage({ searchParams }: { searchPar
         {activeCategory === "features" ? (
           <div className="grid gap-5">
             <MembershipsSection membershipsEnabled={membershipsEnabled} />
-            <CashbackSection cashbackEnabled={cashbackEnabled} cashbackRate={cashbackRate} />
+            <CashbackSection cashbackEnabled={cashbackEnabled} cashbackRate={cashbackRate} maxBill={cashbackMaxBill} maxRedemption={cashbackMaxRedemption} />
           </div>
         ) : null}
         {activeCategory === "billing" ? (
@@ -241,7 +243,7 @@ function MembershipsSection({ membershipsEnabled }: { membershipsEnabled: boolea
     </SectionCard>
   );
 }
-function CashbackSection({ cashbackEnabled, cashbackRate }: { cashbackEnabled: boolean; cashbackRate: string }) {
+function CashbackSection({ cashbackEnabled, cashbackRate, maxBill, maxRedemption }: { cashbackEnabled: boolean; cashbackRate: string; maxBill: string; maxRedemption: string }) {
   return (
     <SectionCard
       title="Cashback wallet"
@@ -258,6 +260,11 @@ function CashbackSection({ cashbackEnabled, cashbackRate }: { cashbackEnabled: b
           <input type="checkbox" name="enabled" defaultChecked={cashbackEnabled} className="h-5 w-5 rounded border-[#E5E7EB] business-primary" aria-label="Enable cashback" />
         </label>
         <Input name="ratePercent" label="Cashback rate (% of amount paid)" type="number" min="0" max="100" defaultValue={cashbackRate} />
+        <div className="grid gap-4 md:grid-cols-2">
+          <Input name="maxBillAmount" label="Max amount paid per transaction (blank = no limit)" type="number" min="0" defaultValue={maxBill} />
+          <Input name="maxRedemption" label="Max redemption per transaction (blank = no limit)" type="number" min="0" defaultValue={maxRedemption} />
+        </div>
+        <p className="text-xs text-[#6B7280]">Per-transaction limits apply to staff at the counter and here. Leave blank for no limit.</p>
         <button type="submit" className="h-11 w-fit rounded-md business-button px-4 text-sm font-semibold text-white">Save cashback settings</button>
       </form>
     </SectionCard>

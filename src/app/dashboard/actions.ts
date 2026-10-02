@@ -11,7 +11,8 @@ import { prisma } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit";
 import { brandColorSchema, brandLogoUrlSchema } from "@/lib/branding-validation";
 import { requireBusinessOwner, requireBusinessOwnerForWrite } from "@/lib/business-owner";
-import { applyCashbackDelta, canSpendCashback, computeCashbackEarn, formatAed } from "@/lib/cashback";
+import { formatAed } from "@/lib/cashback";
+import { CashbackError, DuplicateCashbackError, earnCashback, spendCashback } from "@/lib/cashback-ledger";
 import { validateCsrfForm } from "@/lib/csrf";
 import { requireUsableSubscription } from "@/lib/commercial-access";
 import { createFormFailure, isFormActionError, type PreservedFormState } from "@/lib/form-state";
@@ -642,6 +643,14 @@ export async function saveMembershipSettingsAction(formData: FormData) {
   redirect("/dashboard/settings?tab=features&success=Membership settings saved.");
 }
 
+function parseOptionalCapAmount(raw: string): number | null | "invalid" {
+  const trimmed = raw.trim();
+  if (trimmed === "") return null; // blank clears the cap (no limit)
+  const value = Number(trimmed);
+  if (!Number.isFinite(value) || value <= 0 || value > 100_000_000) return "invalid";
+  return Math.round(value * 100) / 100;
+}
+
 export async function saveCashbackSettingsAction(formData: FormData) {
   validateActionSecurity(formData, "dashboard:cashback-settings", "/dashboard/settings");
   const user = await requireBusinessOwnerForWrite();
@@ -650,12 +659,32 @@ export async function saveCashbackSettingsAction(formData: FormData) {
     ratePercent: getString(formData, "ratePercent") || "5",
   });
 
-  if (!parsed.success) fail("/dashboard/settings", parsed.error.issues[0]?.message ?? "Validation failed.");
+  if (!parsed.success) fail("/dashboard/settings?tab=features", parsed.error.issues[0]?.message ?? "Validation failed.");
+
+  const maxBillAmount = parseOptionalCapAmount(getString(formData, "maxBillAmount"));
+  if (maxBillAmount === "invalid") {
+    fail("/dashboard/settings?tab=features", "Max amount paid must be a positive number, or left blank for no limit.");
+  }
+  const maxRedemption = parseOptionalCapAmount(getString(formData, "maxRedemption"));
+  if (maxRedemption === "invalid") {
+    fail("/dashboard/settings?tab=features", "Max redemption must be a positive number, or left blank for no limit.");
+  }
 
   const settings = await prisma.businessCashbackSettings.upsert({
     where: { businessId: user.businessId },
-    create: { businessId: user.businessId, enabled: parsed.data.enabled, ratePercent: parsed.data.ratePercent },
-    update: { enabled: parsed.data.enabled, ratePercent: parsed.data.ratePercent },
+    create: {
+      businessId: user.businessId,
+      enabled: parsed.data.enabled,
+      ratePercent: parsed.data.ratePercent,
+      maxBillAmount,
+      maxRedemption,
+    },
+    update: {
+      enabled: parsed.data.enabled,
+      ratePercent: parsed.data.ratePercent,
+      maxBillAmount,
+      maxRedemption,
+    },
     select: { id: true },
   });
 
@@ -665,7 +694,7 @@ export async function saveCashbackSettingsAction(formData: FormData) {
     action: "CASHBACK_SETTINGS_UPDATED",
     entityType: "business_cashback_settings",
     entityId: settings.id,
-    metadata: { enabled: parsed.data.enabled, ratePercent: parsed.data.ratePercent },
+    metadata: { enabled: parsed.data.enabled, ratePercent: parsed.data.ratePercent, maxBillAmount, maxRedemption },
   });
 
   revalidatePath("/dashboard/settings");
@@ -1108,25 +1137,11 @@ export async function manualStampCorrectionAction(formData: FormData) {
 // ---------------------------------------------------------------------------
 // Cashback wallet (Feature 2 / Phase 4)
 //
-// A per-customer AED store-credit balance. Staff add cashback as a percentage of
-// a bill and let customers spend it on future visits. Every move is a ledger row
-// carrying the running balance, written in the SAME transaction that moves the
-// balance, under a row lock, so concurrent taps cannot race. A per-form
-// idempotencyKey makes a double-submit a no-op (unique constraint). The balance
-// can never go negative. Writes go through requireBusinessOwnerForWrite, so a
-// platform admin can operate the wallet inside an edit-mode support session while
-// the audit row still records the admin as the actor.
+// Owner / support dashboard entry points. Authorization and customer lookup live
+// here; the money movement (atomic balance + ledger under a row lock,
+// never-negative, idempotent, capped, audited) lives in @/lib/cashback-ledger so
+// the dashboard and the staff scan flow enforce identical rules.
 // ---------------------------------------------------------------------------
-
-class CashbackActionError extends Error {}
-
-function isDuplicateWrite(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    (error as { code?: string }).code === "P2002"
-  );
-}
 
 const cashbackAddSchema = z.object({
   membershipUuid: z.string().uuid("Customer reference is invalid."),
@@ -1149,7 +1164,7 @@ const cashbackSpendSchema = z.object({
 async function loadEnabledCashbackSettings(businessId: number) {
   const settings = await prisma.businessCashbackSettings.findUnique({
     where: { businessId },
-    select: { enabled: true, ratePercent: true, currency: true },
+    select: { enabled: true, ratePercent: true, currency: true, maxBillAmount: true, maxRedemption: true },
   });
   return settings?.enabled ? settings : null;
 }
@@ -1172,61 +1187,33 @@ export async function addCashbackAction(formData: FormData) {
 
   const settings = await loadEnabledCashbackSettings(user.businessId);
   if (!settings) fail(redirectPath, "Cashback is not enabled for this business.");
-  const ratePercent = Number(settings.ratePercent);
-  const earned = computeCashbackEarn(data.billAmount, ratePercent);
-  if (earned <= 0) fail(redirectPath, "That amount does not earn any cashback.");
 
-  // Confirm the customer belongs to this business before taking the row lock.
-  const existing = await prisma.businessCustomerMembership.findFirst({
+  const membership = await prisma.businessCustomerMembership.findFirst({
     where: { uuid: data.membershipUuid, businessId: user.businessId },
-    select: { id: true },
+    select: { id: true, createdBranchId: true },
   });
-  if (!existing) fail(redirectPath, "Customer not found.");
+  if (!membership) fail(redirectPath, "Customer not found.");
 
+  let earned: number;
   try {
-    await prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT id FROM "business_customer_memberships" WHERE id = ${existing.id} FOR UPDATE`;
-      const locked = await tx.businessCustomerMembership.findUniqueOrThrow({
-        where: { id: existing.id },
-        select: { id: true, createdBranchId: true, cashbackBalance: true },
-      });
-      const newBalance = applyCashbackDelta(Number(locked.cashbackBalance), earned);
-      await tx.businessCustomerMembership.update({
-        where: { id: locked.id },
-        data: { cashbackBalance: newBalance },
-      });
-      const ledgerRow = await tx.cashbackTransaction.create({
-        data: {
-          businessId: user.businessId,
-          businessCustomerMembershipId: locked.id,
-          branchId: locked.createdBranchId,
-          type: "EARN",
-          billAmount: data.billAmount,
-          ratePercent,
-          amount: earned,
-          balanceAfter: newBalance,
-          currency: settings.currency,
-          issuedByUserId: user.id,
-          idempotencyKey: data.idempotencyKey ?? null,
-        },
-        select: { id: true },
-      });
-      await logAuditEvent({
-        tx,
-        actorUserId: user.id,
-        businessId: user.businessId,
-        branchId: locked.createdBranchId,
-        action: "CASHBACK_EARNED",
-        entityType: "cashback_transaction",
-        entityId: ledgerRow.id,
-        metadata: { billAmount: data.billAmount, ratePercent, amount: earned, balanceAfter: newBalance },
-      });
+    const result = await earnCashback({
+      businessId: user.businessId,
+      membershipId: membership.id,
+      branchId: membership.createdBranchId,
+      actorUserId: user.id,
+      billAmount: data.billAmount,
+      ratePercent: Number(settings.ratePercent),
+      currency: settings.currency,
+      maxBillAmount: settings.maxBillAmount != null ? Number(settings.maxBillAmount) : null,
+      idempotencyKey: data.idempotencyKey ?? null,
     });
+    earned = result.amount;
   } catch (error) {
-    if (isDuplicateWrite(error)) {
+    if (error instanceof DuplicateCashbackError) {
       revalidatePath(redirectPath);
       redirect(`${redirectPath}?tab=cashback&success=${encodeURIComponent("Cashback already added.")}`);
     }
+    if (error instanceof CashbackError) fail(redirectPath, error.message);
     throw error;
   }
 
@@ -1253,59 +1240,29 @@ export async function useCashbackAction(formData: FormData) {
   const settings = await loadEnabledCashbackSettings(user.businessId);
   if (!settings) fail(redirectPath, "Cashback is not enabled for this business.");
 
-  const existing = await prisma.businessCustomerMembership.findFirst({
+  const membership = await prisma.businessCustomerMembership.findFirst({
     where: { uuid: data.membershipUuid, businessId: user.businessId },
-    select: { id: true },
+    select: { id: true, createdBranchId: true },
   });
-  if (!existing) fail(redirectPath, "Customer not found.");
+  if (!membership) fail(redirectPath, "Customer not found.");
 
   try {
-    await prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT id FROM "business_customer_memberships" WHERE id = ${existing.id} FOR UPDATE`;
-      const locked = await tx.businessCustomerMembership.findUniqueOrThrow({
-        where: { id: existing.id },
-        select: { id: true, createdBranchId: true, cashbackBalance: true },
-      });
-      const current = Number(locked.cashbackBalance);
-      if (!canSpendCashback(current, data.amount)) {
-        throw new CashbackActionError("Not enough cashback balance.");
-      }
-      const newBalance = applyCashbackDelta(current, -data.amount);
-      await tx.businessCustomerMembership.update({
-        where: { id: locked.id },
-        data: { cashbackBalance: newBalance },
-      });
-      const ledgerRow = await tx.cashbackTransaction.create({
-        data: {
-          businessId: user.businessId,
-          businessCustomerMembershipId: locked.id,
-          branchId: locked.createdBranchId,
-          type: "SPEND",
-          amount: data.amount,
-          balanceAfter: newBalance,
-          currency: settings.currency,
-          issuedByUserId: user.id,
-          idempotencyKey: data.idempotencyKey ?? null,
-        },
-        select: { id: true },
-      });
-      await logAuditEvent({
-        tx,
-        actorUserId: user.id,
-        businessId: user.businessId,
-        branchId: locked.createdBranchId,
-        action: "CASHBACK_SPENT",
-        entityType: "cashback_transaction",
-        entityId: ledgerRow.id,
-        metadata: { amount: data.amount, balanceAfter: newBalance },
-      });
+    await spendCashback({
+      businessId: user.businessId,
+      membershipId: membership.id,
+      branchId: membership.createdBranchId,
+      actorUserId: user.id,
+      amount: data.amount,
+      currency: settings.currency,
+      maxRedemption: settings.maxRedemption != null ? Number(settings.maxRedemption) : null,
+      idempotencyKey: data.idempotencyKey ?? null,
     });
   } catch (error) {
-    if (isDuplicateWrite(error)) {
+    if (error instanceof DuplicateCashbackError) {
       revalidatePath(redirectPath);
       redirect(`${redirectPath}?tab=cashback&success=${encodeURIComponent("Cashback already used.")}`);
     }
-    if (error instanceof CashbackActionError) fail(redirectPath, error.message);
+    if (error instanceof CashbackError) fail(redirectPath, error.message);
     throw error;
   }
 
