@@ -39,6 +39,8 @@ export async function earnCashback(input: {
   actorUserId: number | null;
   billAmount: number;
   ratePercent: number;
+  /** Staff-entered invoice number this cashback was issued against (required by callers). */
+  invoiceNumber: string;
   currency: string;
   /** NULL / undefined = no cap. */
   maxBillAmount?: number | null;
@@ -76,6 +78,7 @@ export async function earnCashback(input: {
           amount,
           balanceAfter,
           currency: input.currency,
+          invoiceNumber: input.invoiceNumber,
           issuedByUserId: input.actorUserId,
           idempotencyKey: input.idempotencyKey ?? null,
         },
@@ -89,7 +92,7 @@ export async function earnCashback(input: {
         action: "CASHBACK_EARNED",
         entityType: "cashback_transaction",
         entityId: row.id,
-        metadata: { billAmount: input.billAmount, ratePercent: input.ratePercent, amount, balanceAfter },
+        metadata: { billAmount: input.billAmount, ratePercent: input.ratePercent, amount, balanceAfter, invoiceNumber: input.invoiceNumber },
       });
       return { amount, balanceAfter };
     });

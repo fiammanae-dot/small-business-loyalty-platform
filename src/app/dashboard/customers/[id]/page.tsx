@@ -159,6 +159,7 @@ export default async function CustomerProfilePage({
         balanceAfter: Number(row.balanceAfter),
         currency: row.currency,
         note: row.note,
+        invoiceNumber: row.invoiceNumber,
         createdAt: row.createdAt,
         staffName: row.issuedByUser?.name ?? null,
         branchName: row.branch?.name ?? null,
@@ -1179,6 +1180,7 @@ function CashbackPanel({
     balanceAfter: number;
     currency: string;
     note: string | null;
+    invoiceNumber: string | null;
     createdAt: Date;
     staffName: string | null;
     branchName: string | null;
@@ -1203,6 +1205,10 @@ function CashbackPanel({
           <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-[#475569]">
             Amount paid ({currency})<RequiredMark />
             <input name="billAmount" type="number" required min="0.01" step="0.01" inputMode="decimal" placeholder="e.g. 500" className="min-h-10 rounded-md border border-[#D1D5DB] bg-white px-3 text-sm font-semibold text-[#111827]" />
+          </label>
+          <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-[#475569]">
+            Invoice number<RequiredMark />
+            <input name="invoiceNumber" type="text" required maxLength={64} placeholder="e.g. INV-1042" className="min-h-10 rounded-md border border-[#D1D5DB] bg-white px-3 text-sm font-semibold text-[#111827]" />
           </label>
           <p className="text-xs text-[#6B7280]">Adds {ratePercent}% of the amount paid as cashback.</p>
           <button type="submit" className="min-h-10 rounded-md bg-[#0f766e] px-4 text-sm font-bold text-white transition hover:bg-[#0b544e]">Add cashback</button>
@@ -1231,8 +1237,8 @@ function CashbackPanel({
               return (
                 <li key={entry.id} className="flex items-center justify-between gap-3 rounded-lg border border-[#EEF1F4] px-3 py-2">
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-[#111827]">{label}</p>
-                    <p className="text-xs text-[#6B7280]">{formatDateTime(entry.createdAt)}{entry.staffName ? ` \u00b7 ${entry.staffName}` : ""}</p>
+                    <p className="text-sm font-semibold text-[#111827]">{label}{entry.invoiceNumber ? ` \u00b7 Invoice ${entry.invoiceNumber}` : ""}</p>
+                    <p className="text-xs text-[#6B7280]">{formatDateTime(entry.createdAt)}{entry.staffName ? ` \u00b7 by ${entry.staffName}` : ""}</p>
                   </div>
                   <div className="text-right">
                     <p className={`text-sm font-bold tabular-nums ${isEarn ? "text-[#1f7a4d]" : "text-[#a63f37]"}`}>{sign}{formatAed(entry.amount, entry.currency)}</p>

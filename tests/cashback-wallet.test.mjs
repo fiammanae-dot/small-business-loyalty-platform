@@ -83,13 +83,48 @@ test("schema carries the balance, the ledger table, its enum, and the caps", () 
   assert.match(schema, /maxRedemption Decimal\? @map\("max_redemption"\)/);
 });
 
-test("migrations add the ledger (0057) and the caps (0058)", () => {
+test("migrations add the ledger (0057), the caps (0058) and the invoice ref (0059)", () => {
   const m57 = read("prisma/migrations/0057_cashback_wallet/migration.sql");
   assert.match(m57, /CREATE TABLE "cashback_transactions"/);
   assert.match(m57, /ADD COLUMN "cashback_balance"/);
   const m58 = read("prisma/migrations/0058_cashback_caps/migration.sql");
   assert.match(m58, /ADD COLUMN "max_bill_amount"/);
   assert.match(m58, /ADD COLUMN "max_redemption"/);
+  const m59 = read("prisma/migrations/0059_cashback_invoice_number/migration.sql");
+  assert.match(m59, /ADD COLUMN "invoice_number"/);
+});
+
+test("Phase 4.2: a required invoice number is captured on add, stored, audited, and shown with the staff member who acted", () => {
+  // Schema carries the invoice-number column on the ledger.
+  const schema = read("prisma/schema.prisma");
+  assert.match(schema, /invoiceNumber\s+String\?\s+@map\("invoice_number"\)/);
+
+  // The shared money path stores it on the EARN row and in the audit metadata.
+  const ledger = read("src/lib/cashback-ledger.ts");
+  assert.match(ledger, /invoiceNumber: string;/);
+  assert.match(ledger, /invoiceNumber: input\.invoiceNumber/);
+  assert.match(ledger, /metadata: \{[^}]*invoiceNumber: input\.invoiceNumber[^}]*\}/);
+
+  // Both add entry points require it and thread it into earnCashback.
+  const dash = read("src/app/dashboard/actions.ts");
+  assert.match(dash, /invoiceNumber: z/);
+  assert.match(dash, /invoiceNumber: getString\(formData, "invoiceNumber"\)/);
+  assert.match(dash, /invoiceNumber: data\.invoiceNumber/);
+  const scan = read("src/app/scan/actions.ts");
+  assert.match(scan, /invoiceNumber: z/);
+  assert.match(scan, /invoiceNumber: getString\(formData, "invoiceNumber"\)/);
+  assert.match(scan, /invoiceNumber: data\.invoiceNumber/);
+
+  // Both add forms present a required invoice-number input.
+  const scanPage = read("src/app/scan/[token]/page.tsx");
+  assert.match(scanPage, /name="invoiceNumber"[^>]*required/);
+  const custPage = read("src/app/dashboard/customers/[id]/page.tsx");
+  assert.match(custPage, /name="invoiceNumber"[^>]*required/);
+
+  // The customer ledger history surfaces the invoice number and who acted.
+  assert.match(custPage, /invoiceNumber: row\.invoiceNumber/);
+  assert.match(custPage, /Invoice \$\{entry\.invoiceNumber\}/);
+  assert.match(custPage, /by \$\{entry\.staffName\}/);
 });
 
 test("owner settings manage the rate and the caps (blank = no limit)", () => {

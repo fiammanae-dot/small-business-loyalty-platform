@@ -1767,6 +1767,8 @@ model CashbackTransaction {
   balanceAfter                 Decimal                 @map("balance_after") @db.Decimal(12, 2)
   currency                     String                  @default("AED")
   note                         String?
+  /// For EARN rows: the staff-entered invoice number this cashback was issued against.
+  invoiceNumber                String?                 @map("invoice_number")
   issuedByUserId               Int?                    @map("issued_by_user_id")
   idempotencyKey               String?                 @unique @map("idempotency_key")
   createdAt                    DateTime                @default(now()) @map("created_at")
