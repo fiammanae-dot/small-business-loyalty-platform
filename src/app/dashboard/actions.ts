@@ -1149,6 +1149,11 @@ const cashbackAddSchema = z.object({
     .number({ error: "Enter the amount paid." })
     .positive("Amount paid must be greater than zero.")
     .max(1_000_000, "Amount paid is too large."),
+  invoiceNumber: z
+    .string({ error: "Enter the invoice number." })
+    .trim()
+    .min(1, "Enter the invoice number.")
+    .max(64, "Invoice number is too long."),
   idempotencyKey: z.string().min(1).max(100).optional(),
 });
 
@@ -1178,6 +1183,7 @@ export async function addCashbackAction(formData: FormData) {
   const parsed = cashbackAddSchema.safeParse({
     membershipUuid,
     billAmount: getString(formData, "billAmount"),
+    invoiceNumber: getString(formData, "invoiceNumber"),
     idempotencyKey: getString(formData, "idempotencyKey") || undefined,
   });
   if (!parsed.success) fail(redirectPath, parsed.error.issues[0]?.message ?? "Validation failed.");
@@ -1202,6 +1208,7 @@ export async function addCashbackAction(formData: FormData) {
       branchId: membership.createdBranchId,
       actorUserId: user.id,
       billAmount: data.billAmount,
+      invoiceNumber: data.invoiceNumber,
       ratePercent: Number(settings.ratePercent),
       currency: settings.currency,
       maxBillAmount: settings.maxBillAmount != null ? Number(settings.maxBillAmount) : null,

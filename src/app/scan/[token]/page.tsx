@@ -1289,6 +1289,10 @@ function CashbackScanSection({
             Amount paid ({currency})<RequiredMark />
             <input name="billAmount" type="number" required min="0.01" step="0.01" inputMode="decimal" placeholder="e.g. 500" className="min-h-11 rounded-md border border-[#D1D5DB] bg-white px-3 text-sm font-semibold text-[#111827]" />
           </label>
+          <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-[#475569]">
+            Invoice number<RequiredMark />
+            <input name="invoiceNumber" type="text" required maxLength={64} placeholder="e.g. INV-1042" className="min-h-11 rounded-md border border-[#D1D5DB] bg-white px-3 text-sm font-semibold text-[#111827]" />
+          </label>
           <p className="text-xs text-[#6B7280]">Adds {ratePercent}% of the amount paid as cashback.</p>
           <button type="submit" className="min-h-11 rounded-md business-button px-4 text-sm font-bold text-white">Add cashback</button>
         </form>

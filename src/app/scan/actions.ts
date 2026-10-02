@@ -871,6 +871,11 @@ const scanCashbackAddSchema = z.object({
     .number({ error: "Enter the amount paid." })
     .positive("Amount paid must be greater than zero.")
     .max(1_000_000, "Amount paid is too large."),
+  invoiceNumber: z
+    .string({ error: "Enter the invoice number." })
+    .trim()
+    .min(1, "Enter the invoice number.")
+    .max(64, "Invoice number is too long."),
   idempotencyKey: z.string().trim().min(16, "Security token is required."),
 });
 
@@ -934,6 +939,7 @@ export async function addCashbackFromScanAction(formData: FormData) {
   const parsed = scanCashbackAddSchema.safeParse({
     scanToken: getString(formData, "scanToken"),
     billAmount: getString(formData, "billAmount"),
+    invoiceNumber: getString(formData, "invoiceNumber"),
     idempotencyKey: getString(formData, "idempotencyKey"),
   });
   if (!parsed.success) fail(token, parsed.error.issues[0]?.message ?? "Validation failed.");
@@ -949,6 +955,7 @@ export async function addCashbackFromScanAction(formData: FormData) {
       branchId: membership.createdBranchId,
       actorUserId: user.id,
       billAmount: data.billAmount,
+      invoiceNumber: data.invoiceNumber,
       ratePercent: Number(settings.ratePercent),
       currency: settings.currency,
       maxBillAmount: settings.maxBillAmount != null ? Number(settings.maxBillAmount) : null,
