@@ -11,6 +11,7 @@ import { formatDate } from "@/lib/format";
 import { formatUaePhoneDisplay, normalizePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { progressValue } from "@/lib/programs";
+import { areTiersVisible } from "@/lib/customer-tiers";
 import { requireRole } from "@/lib/session";
 
 export default async function BranchCustomersPage({
@@ -31,6 +32,9 @@ export default async function BranchCustomersPage({
     );
   }
   const branchId = user.branchId;
+  const tiersVisible = areTiersVisible(
+    (await prisma.businessMembershipSettings.findUnique({ where: { businessId: user.businessId }, select: { enabled: true } }))?.enabled,
+  );
 
   const customers = await prisma.businessCustomerMembership.findMany({
     where: {
@@ -116,7 +120,7 @@ export default async function BranchCustomersPage({
           <table className="w-full min-w-[820px] border-separate border-spacing-0 text-left text-sm">
             <thead>
               <tr className="text-[#6B7280]">
-                {["Customer", "Tier", "Progress", "Last visit", "Rewards", "Status", "Actions"].map((heading) => (
+                {["Customer", ...(tiersVisible ? ["Tier"] : []), "Progress", "Last visit", "Rewards", "Status", "Actions"].map((heading) => (
                   <th key={heading} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">{heading}</th>
                 ))}
               </tr>
@@ -125,7 +129,7 @@ export default async function BranchCustomersPage({
               {customerRows.map((membership) => (
                 <tr key={membership.id}>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 font-semibold">{membership.customerName}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{membership.currentTier}</td>
+                  {tiersVisible ? <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{membership.currentTier}</td> : null}
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">
                     {membership.primaryProgram ? (
                       <div className="min-w-40">
@@ -176,7 +180,7 @@ export default async function BranchCustomersPage({
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <MobileInfo label="Joined" value={formatDate(membership.joinedAt)} />
-                  <MobileInfo label="Tier" value={membership.currentTier} />
+                  {tiersVisible ? <MobileInfo label="Tier" value={membership.currentTier} /> : null}
                   <MobileInfo label="Progress" value={membership.primaryProgram ? `${membership.primaryProgress} / ${membership.primaryProgram.loyaltyProgram.requiredStamps}` : "-"} />
                   <MobileInfo label="Last visit" value={membership.lastVisit ? formatDate(membership.lastVisit) : "-"} />
                   <MobileInfo label="Rewards" value={membership.rewardReady ? "Reward ready" : `${membership.redeemedRewards} redeemed`} />

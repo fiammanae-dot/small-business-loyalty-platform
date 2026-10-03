@@ -8,6 +8,7 @@ import { businessTracksVehicles, formatPlateDisplay, formatVehicleDescription, p
 import { prisma } from "@/lib/prisma";
 import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
 import { requireRole } from "@/lib/session";
+import { areTiersVisible } from "@/lib/customer-tiers";
 
 export default async function StaffCustomerSearchPage({
   searchParams,
@@ -15,6 +16,9 @@ export default async function StaffCustomerSearchPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const user = await requireRole("STAFF");
+  const tiersVisible = user.businessId
+    ? areTiersVisible((await prisma.businessMembershipSettings.findUnique({ where: { businessId: user.businessId }, select: { enabled: true } }))?.enabled)
+    : true;
   const params = await searchParams;
   const query = params.q?.trim();
   const normalizedQueryPhone = query ? normalizePhone(query) : null;
@@ -138,7 +142,7 @@ export default async function StaffCustomerSearchPage({
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <StatusBadge status={membership.status} />
-                    <span className="rounded-md bg-[#F3F4F6] px-2 py-1 text-xs font-semibold text-[#374151]">{membership.currentTier} member</span>
+                    {tiersVisible ? <span className="rounded-md bg-[#F3F4F6] px-2 py-1 text-xs font-semibold text-[#374151]">{membership.currentTier} member</span> : null}
                   </div>
                 </div>
                 <div className="mt-4 grid gap-2">

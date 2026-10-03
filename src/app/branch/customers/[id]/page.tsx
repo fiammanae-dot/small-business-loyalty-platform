@@ -11,6 +11,7 @@ import { formatDate } from "@/lib/format";
 import { formatUaePhoneDisplay } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
+import { areTiersVisible } from "@/lib/customer-tiers";
 import { getScanQrDataUrl, getScanUrl } from "@/lib/scan";
 import { requireRole } from "@/lib/session";
 
@@ -34,6 +35,9 @@ export default async function BranchCustomerProfilePage({
   }
 
   const membership = await getBusinessCustomerOrRedirect(id, user.businessId, user.branchId);
+  const tiersVisible = areTiersVisible(
+    (await prisma.businessMembershipSettings.findUnique({ where: { businessId: user.businessId }, select: { enabled: true } }))?.enabled,
+  );
   const cardUrl = await getCardUrl(membership.cardToken);
   const customerName = `${membership.firstName} ${membership.lastName ?? ""}`.trim();
   const cardShareMessageType = qs.success?.includes("Customer created") ? "welcome" : "resend";
@@ -90,7 +94,7 @@ export default async function BranchCustomerProfilePage({
           <Info label="Email" value={membership.email ?? "-"} />
           <Info label="Birthday" value={membership.birthday ? formatDate(membership.birthday) : "-"} />
           <Info label="Marketing consent" value={membership.marketingConsent ? "Yes" : "No"} />
-          <Info label="Current tier" value={membership.currentTier} />
+          {tiersVisible ? <Info label="Current tier" value={membership.currentTier} /> : null}
           <Info label="Current progress" value={primaryProgram ? `${primaryProgress} / ${primaryProgram.loyaltyProgram.requiredStamps}` : "-"} />
           <Info label="Last branch visit" value={lastVisit ? formatDate(lastVisit.createdAt) : "-"} />
           <Info label="Rewards ready" value={rewardReady ? "Yes" : "No"} />

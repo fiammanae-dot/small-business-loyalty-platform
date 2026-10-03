@@ -22,6 +22,7 @@ export type GoogleWalletProgramMembership = CustomerProgramMembership & {
       id: number;
       name: string;
       branding: BusinessBranding | null;
+      membershipSettings?: { enabled: boolean } | null;
     };
   };
   loyaltyProgram: LoyaltyProgram & { programRewards?: ProgramReward[] };
@@ -139,7 +140,7 @@ export async function buildGoogleWalletObjectPayload({
           },
         ]
       : []),
-    ...(sections.tierBadge ? [{ id: "tier", header: "Tier", body: customer.currentTier }] : []),
+    ...(sections.tierBadge && !customer.business.membershipSettings?.enabled ? [{ id: "tier", header: "Tier", body: customer.currentTier }] : []),
   ];
 
   // Google Wallet gives an issuer one picture slot, so the business chooses what

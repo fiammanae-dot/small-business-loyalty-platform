@@ -32,6 +32,7 @@ const membershipInclude = {
       business: {
         include: {
           branding: true,
+          membershipSettings: true,
         },
       },
     },

@@ -1,6 +1,7 @@
 import { StatusBadge } from "@/components/StatusBadge";
 import { maskPhoneNumber } from "@/lib/customer-cards";
-import { fromStoredTier } from "@/lib/customer-tiers";
+import { areTiersVisible, fromStoredTier } from "@/lib/customer-tiers";
+import { prisma } from "@/lib/prisma";
 import { lookupActiveReferralReferrers, type ReferralReferrerLookupMatch } from "@/lib/referrals";
 
 export async function ReferralReferrerLookupPreview({
@@ -16,6 +17,9 @@ export async function ReferralReferrerLookupPreview({
   if (!trimmedQuery) return null;
 
   const lookup = await lookupActiveReferralReferrers({ businessId, query: trimmedQuery });
+  const tiersVisible = areTiersVisible(
+    (await prisma.businessMembershipSettings.findUnique({ where: { businessId }, select: { enabled: true } }))?.enabled,
+  );
 
   if (lookup.status === "TOO_SHORT") {
     return (
@@ -34,7 +38,7 @@ export async function ReferralReferrerLookupPreview({
   }
 
   if (lookup.status === "FOUND" && lookup.matches[0]) {
-    return <ConfirmedReferrerCard referrer={lookup.matches[0]} />;
+    return <ConfirmedReferrerCard referrer={lookup.matches[0]} showTier={tiersVisible} />;
   }
 
   if (lookup.status === "MULTIPLE") {
@@ -52,7 +56,7 @@ export async function ReferralReferrerLookupPreview({
                 required
                 className="mt-1 h-4 w-4"
               />
-              <ReferrerSummary referrer={match} />
+              <ReferrerSummary referrer={match} showTier={tiersVisible} />
             </label>
           ))}
         </div>
@@ -63,7 +67,7 @@ export async function ReferralReferrerLookupPreview({
   return null;
 }
 
-function ConfirmedReferrerCard({ referrer }: { referrer: ReferralReferrerLookupMatch }) {
+function ConfirmedReferrerCard({ referrer, showTier }: { referrer: ReferralReferrerLookupMatch; showTier: boolean }) {
   return (
     <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-900">
       <input type="hidden" name="referralCode" value={referrer.referralCode} />
@@ -72,19 +76,19 @@ function ConfirmedReferrerCard({ referrer }: { referrer: ReferralReferrerLookupM
         <StatusBadge status="ACTIVE" />
       </div>
       <p className="mt-1">
-        {maskPhoneNumber(referrer.normalizedPhone)} - {fromStoredTier(referrer.currentTier) ?? "Bronze"}
+        {maskPhoneNumber(referrer.normalizedPhone)}{showTier ? ` - ${fromStoredTier(referrer.currentTier) ?? "Bronze"}` : ""}
       </p>
       <p className="mt-1 font-mono text-xs text-emerald-800">{referrer.referralCode}</p>
     </div>
   );
 }
 
-function ReferrerSummary({ referrer }: { referrer: ReferralReferrerLookupMatch }) {
+function ReferrerSummary({ referrer, showTier }: { referrer: ReferralReferrerLookupMatch; showTier: boolean }) {
   return (
     <span className="min-w-0">
       <span className="block font-semibold text-[#111827]">{referrerName(referrer)}</span>
       <span className="block text-[#6B7280]">
-        {maskPhoneNumber(referrer.normalizedPhone)} - {fromStoredTier(referrer.currentTier) ?? "Bronze"}
+        {maskPhoneNumber(referrer.normalizedPhone)}{showTier ? ` - ${fromStoredTier(referrer.currentTier) ?? "Bronze"}` : ""}
       </span>
       <span className="block break-all font-mono text-xs text-[#6B7280]">{referrer.referralCode}</span>
     </span>
