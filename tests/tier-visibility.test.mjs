@@ -35,6 +35,8 @@ test("dashboard customer surfaces gate tiers on membership", () => {
   const detail = read("src/app/dashboard/customers/[id]/page.tsx");
   assert.match(detail, /const tiersVisible = areTiersVisible\(business\.membershipSettings\?\.enabled\)/);
   assert.match(detail, /tiersVisible \? <StatusBadge tone="business">\{customerTier\.badgeIcon\}/);
+  // The Overview tab's "Tier status" panel is gated too.
+  assert.match(detail, /tiersVisible \? <TierDetailsPanel/);
 });
 
 test("branch and staff customer surfaces gate tiers on membership", () => {
