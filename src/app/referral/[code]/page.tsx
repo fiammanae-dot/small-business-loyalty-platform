@@ -4,7 +4,7 @@ import { BusinessLogoAvatar } from "@/components/BusinessLogoAvatar";
 import { ReferralInviteActions } from "@/components/ReferralInviteActions";
 import { resolveBusinessBranding, type ResolvedBusinessBranding } from "@/lib/business-branding";
 import { getBaseUrl } from "@/lib/customer-cards";
-import { fromStoredTier } from "@/lib/customer-tiers";
+import { areTiersVisible, fromStoredTier } from "@/lib/customer-tiers";
 import { prisma } from "@/lib/prisma";
 import { businessTypeLabels } from "@/lib/roles";
 import { extractReferralCode, resolveReferralLandingReferrer } from "@/lib/referrals";
@@ -44,7 +44,10 @@ export default async function ReferralLandingPage({
   const rewardMessage = referrerName
     ? `Join the loyalty program and complete your first visit. Both you and ${referrerName} will receive referral rewards.`
     : "Join the loyalty program and complete your first visit. Both you and your referrer will receive referral rewards.";
-  const referrerTier = fromStoredTier(referrer.currentTier);
+  const tiersVisible = areTiersVisible(
+    (await prisma.businessMembershipSettings.findUnique({ where: { businessId: referrer.businessId }, select: { enabled: true } }))?.enabled,
+  );
+  const referrerTier = tiersVisible ? fromStoredTier(referrer.currentTier) : null;
   const displayReferralId = friendlyReferralId(referralCode);
   const initials = referrer.business.name
     .split(/\s+/)

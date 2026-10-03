@@ -18,7 +18,7 @@ import { businessOwnerOperationalDefaults, resolveBusinessBranding } from "@/lib
 import { getCardUrl, maskPhoneNumber } from "@/lib/customer-cards";
 import { formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { fromStoredTier } from "@/lib/customer-tiers";
+import { areTiersVisible, fromStoredTier } from "@/lib/customer-tiers";
 import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
 import { membershipSessionSummary } from "@/lib/membership-sessions";
 import { extractReferralCode, resolveReferralLandingReferrer } from "@/lib/referrals";
@@ -147,6 +147,9 @@ export default async function ScanResultPage({
     select: { soundEffectsEnabled: true },
   });
   const scannerSoundEffectsEnabled = scannerSoundSettings?.soundEffectsEnabled ?? true;
+  const tiersVisible = areTiersVisible(
+    (await prisma.businessMembershipSettings.findUnique({ where: { businessId: authUser.businessId }, select: { enabled: true } }))?.enabled,
+  );
 
   const scanTimestamp = new Date();
   const scannerBranch = authUser.branchId
@@ -182,7 +185,7 @@ export default async function ScanResultPage({
         referralCode={referralCode}
         businessName={referrer.business.name}
         referrerName={`${referrer.firstName} ${referrer.lastName ?? ""}`.trim() || "Customer"}
-        referrerTier={fromStoredTier(referrer.currentTier)}
+        referrerTier={tiersVisible ? fromStoredTier(referrer.currentTier) : null}
         soundEffectsEnabled={scannerSoundEffectsEnabled}
       />
     );
@@ -510,7 +513,7 @@ export default async function ScanResultPage({
       <ActionSummarySection
         customerName={customerName}
         phone={businessMembership.normalizedPhone}
-        tier={fromStoredTier(businessMembership.currentTier) ?? "Bronze"}
+        tier={tiersVisible ? (fromStoredTier(businessMembership.currentTier) ?? "Bronze") : null}
         status={businessMembership.status}
         businessName={businessMembership.business.name}
         branchName={scannerBranch?.name ?? businessMembership.createdBranch?.name ?? "Unassigned"}
@@ -595,7 +598,7 @@ function ActionSummarySection({
 }: {
   customerName: string;
   phone: string;
-  tier: string;
+  tier: string | null;
   status: CustomerMembershipStatus;
   businessName: string;
   branchName: string;
@@ -887,7 +890,7 @@ function ReferralInvitationScanScreen({
         <div className="grid gap-4 md:grid-cols-2">
           <Info label="Business" value={businessName} />
           <Info label="Referred by" value={referrerName} />
-          <Info label="Tier" value={referrerTier ? `${referrerTier} member` : "Not assigned"} />
+          {referrerTier ? <Info label="Tier" value={`${referrerTier} member`} /> : null}
           <Info label="Referral ID" value={displayReferralId} />
         </div>
         <div className="mt-5 rounded-md border business-border-soft business-bg-soft p-4 text-sm leading-6 business-text-strong">

@@ -54,6 +54,18 @@ export function isTierSystemEnabledForPlan(_planName?: string | null) {
   return true;
 }
 
+/**
+ * Visit-based loyalty tiers (Bronze/Silver/Gold/VIP) and named membership
+ * packages are two different answers to two different questions, and the word
+ * "member" collides between them ("Bronze White Lily Membership" is nonsense).
+ * So a business that sells memberships hides tiers everywhere; a stamp-card
+ * business keeps them. Tier data is preserved either way - this only controls
+ * whether tiers are shown.
+ */
+export function areTiersVisible(membershipEnabled?: boolean | null): boolean {
+  return !membershipEnabled;
+}
+
 export function normalizeTierConfig(config?: Partial<CustomerTierConfig> | null): CustomerTierConfig {
   const silver = positiveInt(config?.silverVisitRequirement, defaultCustomerTierConfig.silverVisitRequirement);
   const gold = Math.max(positiveInt(config?.goldVisitRequirement, defaultCustomerTierConfig.goldVisitRequirement), silver + 1);

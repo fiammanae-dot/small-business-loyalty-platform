@@ -11,6 +11,7 @@ import { formatPlateDisplay, formatVehicleDescription, vehicleSizeLabels } from 
 import { prisma } from "@/lib/prisma";
 import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
 import { requireRole } from "@/lib/session";
+import { areTiersVisible } from "@/lib/customer-tiers";
 
 export default async function StaffCustomerProfilePage({
   params,
@@ -18,6 +19,9 @@ export default async function StaffCustomerProfilePage({
   params: Promise<{ id: string }>;
 }) {
   const user = await requireRole("STAFF");
+  const tiersVisible = user.businessId
+    ? areTiersVisible((await prisma.businessMembershipSettings.findUnique({ where: { businessId: user.businessId }, select: { enabled: true } }))?.enabled)
+    : true;
   const { id } = await params;
 
   if (!user.businessId) {
@@ -95,7 +99,7 @@ export default async function StaffCustomerProfilePage({
           </Link>
         </div>
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Info label="Customer tier" value={`${membership.currentTier} MEMBER`} />
+          {tiersVisible ? <Info label="Customer tier" value={`${membership.currentTier} MEMBER`} /> : null}
           <Info label="Card status" value={<StatusBadge status={membership.cardStatus} />} />
           <Info label="Membership status" value={<StatusBadge status={membership.status} />} />
           <Info label="Referral code" value={membership.referralCode ?? "-"} />

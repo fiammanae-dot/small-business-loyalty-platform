@@ -40,6 +40,11 @@ export type CardRenderModelInput = {
     code: string | null;
     helperText?: string | null;
   };
+  /**
+   * Businesses that sell memberships hide visit tiers everywhere, including on
+   * the card, regardless of the saved card design. Forces the tier badge off.
+   */
+  tiersHidden?: boolean;
 };
 
 export type CardRenderModel = {
@@ -146,7 +151,7 @@ export function buildCardRenderModel(input: CardRenderModelInput): CardRenderMod
       logo: design.visibleSections.logo,
       businessName: design.visibleSections.businessName,
       customerName: design.visibleSections.customerName,
-      tierBadge: design.visibleSections.tierBadge,
+      tierBadge: design.visibleSections.tierBadge && !input.tiersHidden,
       rewardBox: design.visibleSections.rewardBox && hasProgram,
       progress: design.visibleSections.progress,
       qr: design.visibleSections.qr,

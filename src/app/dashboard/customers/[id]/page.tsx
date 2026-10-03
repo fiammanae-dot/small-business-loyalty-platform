@@ -31,7 +31,7 @@ import { cardRewardsFor, getNextReward, getReadyRewards } from "@/lib/rewards";
 import { activityHref, staffProfileHref } from "@/lib/alert-investigation";
 import { alertTypeLabel } from "@/lib/alert-labels";
 import { getCardUrl, getShortCardToken } from "@/lib/customer-cards";
-import { calculateCustomerTier } from "@/lib/customer-tiers";
+import { areTiersVisible, calculateCustomerTier } from "@/lib/customer-tiers";
 import { customerSourceLabels, getBusinessCustomerOrRedirect } from "@/lib/customers";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { getGoogleWalletStatus } from "@/lib/google-wallet/service";
@@ -241,6 +241,7 @@ export default async function CustomerProfilePage({
       data: { currentTier: customerTier.storedTier, tierUpdatedAt: new Date() },
     });
   }
+  const tiersVisible = areTiersVisible(business.membershipSettings?.enabled);
 
   const timeline: TimelineItem[] = [
     {
@@ -332,10 +333,10 @@ return (
         <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
           <div className="flex min-w-0 items-start gap-4">
             <div className="relative shrink-0">
-              <div className={`rounded-full p-[3px] ${customerTier.isVip ? "bg-[#111827]" : "business-bg-soft"}`}>
+              <div className={`rounded-full p-[3px] ${tiersVisible && customerTier.isVip ? "bg-[#111827]" : "business-bg-soft"}`}>
                 <Avatar name={customerName} className="h-16 w-16 border-2 border-white text-xl" />
               </div>
-              {customerTier.isVip ? (
+              {tiersVisible && customerTier.isVip ? (
                 <span className="absolute -bottom-1 -right-1 flex items-center gap-0.5 rounded-full border-2 border-white bg-[#111827] px-1.5 py-0.5 text-[10px] font-bold text-yellow-300">
                   <Crown className="h-3 w-3" aria-hidden /> VIP
                 </span>
@@ -345,7 +346,7 @@ return (
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="break-words text-2xl font-semibold text-[#111827]">{customerName}</h2>
                 <StatusBadge tone={membership.status === "ACTIVE" ? "success" : "neutral"}>{membership.status.toLowerCase()}</StatusBadge>
-                <StatusBadge tone="business">{customerTier.badgeIcon} {customerTier.badgeLabel}</StatusBadge>
+                {tiersVisible ? <StatusBadge tone="business">{customerTier.badgeIcon} {customerTier.badgeLabel}</StatusBadge> : null}
                 {primaryRewardReady ? <StatusBadge tone="warning">Reward ready</StatusBadge> : null}
               </div>
               <div className="mt-2.5 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-[#6B7280]">

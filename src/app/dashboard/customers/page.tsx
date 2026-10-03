@@ -21,6 +21,7 @@ import { formatUaePhoneDisplay, normalizePhone } from "@/lib/phone";
 import { businessTracksVehicles, formatPlateDisplay, parsePlateQuery } from "@/lib/vehicles";
 import { getNextReward, getReadyRewards, singleCardReward } from "@/lib/rewards";
 import { prisma } from "@/lib/prisma";
+import { areTiersVisible } from "@/lib/customer-tiers";
 
 const tierOptions = ["BRONZE", "SILVER", "GOLD", "VIP"] as const;
 
@@ -43,6 +44,7 @@ export default async function CustomersPage({
   searchParams: Promise<CustomerSearchParams>;
 }) {
   const { user, business } = await getBusinessOwnerContext();
+  const tiersVisible = areTiersVisible(business.membershipSettings?.enabled);
   const params = await searchParams;
   const query = params.q?.trim();
   const normalizedQueryPhone = query ? normalizePhone(query) : null;
@@ -118,7 +120,7 @@ export default async function CustomersPage({
     { key: "all", label: "All customers", count: allRows.length, href: buildSegmentHref(query, {}) },
     { key: "reward", label: "Reward ready", count: allRows.filter((row) => row.rewardReady).length, href: buildSegmentHref(query, { reward: "ready" }), tone: "warning" },
     { key: "near", label: "Near reward", count: allRows.filter((row) => row.nearReward).length, href: buildSegmentHref(query, { reward: "near" }) },
-    { key: "vip", label: "VIP", count: allRows.filter((row) => row.tier === "VIP").length, href: buildSegmentHref(query, { tier: "VIP" }) },
+    ...(tiersVisible ? [{ key: "vip", label: "VIP", count: allRows.filter((row) => row.tier === "VIP").length, href: buildSegmentHref(query, { tier: "VIP" }) }] : []),
     { key: "active", label: "Active", count: allRows.filter((row) => row.status === "ACTIVE").length, href: buildSegmentHref(query, { status: "ACTIVE" }) },
     { key: "inactive", label: "Inactive", count: allRows.filter((row) => row.status === "INACTIVE").length, href: buildSegmentHref(query, { status: "INACTIVE" }) },
     { key: "noconsent", label: "No marketing consent", count: allRows.filter((row) => !row.marketingConsent).length, href: buildSegmentHref(query, { consent: "no" }) },
@@ -181,7 +183,7 @@ export default async function CustomersPage({
             <div className="grid gap-3 border-t border-[#E7E9EE] p-3.5 md:grid-cols-3 xl:grid-cols-6">
               <FilterSelect name="branch" label="All branches" value={params.branch} options={business.branches.map((branch: { id: number; name: string }) => [String(branch.id), branch.name] as [string, string])} />
               <FilterSelect name="program" label="All programs" value={params.program} options={programs.map((program) => [program.uuid, program.name] as [string, string])} />
-              <FilterSelect name="tier" label="All tiers" value={params.tier} options={[["BRONZE", "Bronze"], ["SILVER", "Silver"], ["GOLD", "Gold"], ["VIP", "VIP"]]} />
+              {tiersVisible ? <FilterSelect name="tier" label="All tiers" value={params.tier} options={[["BRONZE", "Bronze"], ["SILVER", "Silver"], ["GOLD", "Gold"], ["VIP", "VIP"]]} /> : null}
               <FilterSelect name="status" label="All statuses" value={params.status} options={[["ACTIVE", "Active"], ["INACTIVE", "Inactive"], ["BLOCKED", "Blocked"]]} />
               <FilterSelect name="reward" label="All reward states" value={params.reward} options={[["ready", "Reward ready"], ["near", "Near reward"]]} />
               <FilterSelect name="consent" label="All consent" value={params.consent} options={[["yes", "Consented"], ["no", "No consent"]]} />
@@ -274,7 +276,7 @@ export default async function CustomersPage({
                     <DataTableHeader>
                       <tr>
                         <DataTableHeadCell className="w-[26%] pl-4">Customer</DataTableHeadCell>
-                        <DataTableHeadCell className="w-[11%]">Tier</DataTableHeadCell>
+                        {tiersVisible ? <DataTableHeadCell className="w-[11%]">Tier</DataTableHeadCell> : null}
                         <DataTableHeadCell className="w-[28%]">Progress</DataTableHeadCell>
                         <DataTableHeadCell className="w-[14%]">Last visit</DataTableHeadCell>
                         <DataTableHeadCell className="w-[13%]">Status</DataTableHeadCell>
@@ -285,14 +287,14 @@ export default async function CustomersPage({
                     </DataTableHeader>
                     <DataTableBody>
                       {customerRows.map((row) => (
-                        <CustomerTableRow key={row.raw.id} row={row} />
+                        <CustomerTableRow key={row.raw.id} row={row} tiersVisible={tiersVisible} />
                       ))}
                     </DataTableBody>
                   </DataTable>
                 </div>
                 <div className="grid gap-3 lg:hidden">
                   {customerRows.map((row) => (
-                    <CustomerMobileCard key={row.raw.id} row={row} />
+                    <CustomerMobileCard key={row.raw.id} row={row} tiersVisible={tiersVisible} />
                   ))}
                 </div>
               </>
@@ -351,7 +353,7 @@ function CustomerPlate({ row }: { row: CustomerRow }) {
   );
 }
 
-function CustomerTableRow({ row }: { row: CustomerRow }) {
+function CustomerTableRow({ row, tiersVisible }: { row: CustomerRow; tiersVisible: boolean }) {
   const customerHref = `/dashboard/customers/${row.raw.uuid}`;
 
   return (
@@ -362,7 +364,7 @@ function CustomerTableRow({ row }: { row: CustomerRow }) {
           aria-label={`Open ${row.customerName} Customer 360`}
           className="flex min-w-0 items-center gap-2.5 focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary,#16A34A)] focus-visible:ring-offset-2"
         >
-          <CustomerAvatar name={row.customerName} tier={row.tier} rewardReady={row.rewardReady} />
+          <CustomerAvatar name={row.customerName} tier={tiersVisible ? row.tier : null} rewardReady={row.rewardReady} />
           <span className="min-w-0">
             <span className="block truncate font-semibold text-[#171A21] transition group-hover:business-text">{row.customerName}</span>
             <span className="block truncate text-xs text-[#7A8091]">{formatUaePhoneDisplay(row.raw.normalizedPhone)}</span>
@@ -370,9 +372,11 @@ function CustomerTableRow({ row }: { row: CustomerRow }) {
           </span>
         </Link>
       </td>
-      <DataTableCell>
-        <TierBadge tier={row.tier} />
-      </DataTableCell>
+      {tiersVisible ? (
+        <DataTableCell>
+          <TierBadge tier={row.tier} />
+        </DataTableCell>
+      ) : null}
       <DataTableCell>
         <CustomerProgress row={row} />
       </DataTableCell>
@@ -389,7 +393,7 @@ function CustomerTableRow({ row }: { row: CustomerRow }) {
   );
 }
 
-function CustomerMobileCard({ row }: { row: CustomerRow }) {
+function CustomerMobileCard({ row, tiersVisible }: { row: CustomerRow; tiersVisible: boolean }) {
   return (
     <Link
       href={`/dashboard/customers/${row.raw.uuid}`}
@@ -400,7 +404,7 @@ function CustomerMobileCard({ row }: { row: CustomerRow }) {
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
-          <CustomerAvatar name={row.customerName} tier={row.tier} rewardReady={row.rewardReady} />
+          <CustomerAvatar name={row.customerName} tier={tiersVisible ? row.tier : null} rewardReady={row.rewardReady} />
           <div className="min-w-0">
             <p className="flex items-center gap-1 truncate font-semibold text-[#171A21]">
               {row.customerName}
@@ -414,9 +418,11 @@ function CustomerMobileCard({ row }: { row: CustomerRow }) {
           {row.status}
         </StatusBadge>
       </div>
-      <div className="mt-2.5 flex flex-wrap gap-1.5">
-        <TierBadge tier={row.tier} />
-      </div>
+      {tiersVisible ? (
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
+          <TierBadge tier={row.tier} />
+        </div>
+      ) : null}
       <div className="mt-3">
         <CustomerProgress row={row} />
       </div>
@@ -425,7 +431,7 @@ function CustomerMobileCard({ row }: { row: CustomerRow }) {
   );
 }
 
-function CustomerAvatar({ name, tier, rewardReady }: { name: string; tier: string; rewardReady: boolean }) {
+function CustomerAvatar({ name, tier, rewardReady }: { name: string; tier?: string | null; rewardReady: boolean }) {
   const ring = rewardReady
     ? "ring-[#F3D9A4] bg-[#FCF0DC] text-[#854F0B]"
     : tier === "VIP" || tier === "GOLD"
