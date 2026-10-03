@@ -150,11 +150,11 @@ test("scan page shows the wallet (gated) with a confirmation on spend", () => {
 
 
 test("cashback balance is shown on the Google Wallet pass and refreshed on every change", () => {
-  // The pass carries a dedicated "Cashback" row, only when the business enabled cashback.
+  // The pass shows the cashback balance in its prominent secondary header slot,
+  // only when the business enabled cashback.
   const mapper = read("src/lib/google-wallet/mapper.ts");
-  assert.match(mapper, /customer\.business\.cashbackSettings\?\.enabled/);
-  assert.match(mapper, /id: "cashback"/);
-  assert.match(mapper, /header: "Cashback"/);
+  assert.match(mapper, /secondaryLoyaltyPoints: customer\.business\.cashbackSettings\?\.enabled/);
+  assert.match(mapper, /label: "Cashback"/);
   assert.match(mapper, /Number\(customer\.cashbackBalance \?\? 0\)\.toFixed\(2\)/);
 
   // The pass loads the cashback settings so it knows the currency + enabled flag.
