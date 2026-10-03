@@ -3,6 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit";
 import { applyCashbackDelta, canSpendCashback, computeCashbackEarn, formatAed } from "@/lib/cashback";
+import { syncGoogleWalletAfterCashbackChange } from "@/lib/google-wallet/service";
 
 /**
  * Shared cashback wallet money movements.
@@ -56,7 +57,7 @@ export async function earnCashback(input: {
   if (amount <= 0) throw new CashbackError("That amount does not earn any cashback.");
 
   try {
-    return await prisma.$transaction(async (tx) => {
+    const walletResult = await prisma.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT id FROM "business_customer_memberships" WHERE id = ${input.membershipId} FOR UPDATE`;
       const locked = await tx.businessCustomerMembership.findUniqueOrThrow({
         where: { id: input.membershipId },
@@ -96,6 +97,9 @@ export async function earnCashback(input: {
       });
       return { amount, balanceAfter };
     });
+    // Refresh the customer's Google Wallet passes so the cashback row updates.
+    await syncGoogleWalletAfterCashbackChange(input.membershipId);
+    return walletResult;
   } catch (error) {
     if (isUniqueViolation(error)) throw new DuplicateCashbackError();
     throw error;
@@ -120,7 +124,7 @@ export async function spendCashback(input: {
   }
 
   try {
-    return await prisma.$transaction(async (tx) => {
+    const walletResult = await prisma.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT id FROM "business_customer_memberships" WHERE id = ${input.membershipId} FOR UPDATE`;
       const locked = await tx.businessCustomerMembership.findUniqueOrThrow({
         where: { id: input.membershipId },
@@ -161,6 +165,9 @@ export async function spendCashback(input: {
       });
       return { balanceAfter };
     });
+    // Refresh the customer's Google Wallet passes so the cashback row updates.
+    await syncGoogleWalletAfterCashbackChange(input.membershipId);
+    return walletResult;
   } catch (error) {
     if (isUniqueViolation(error)) throw new DuplicateCashbackError();
     throw error;

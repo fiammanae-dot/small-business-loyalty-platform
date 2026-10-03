@@ -33,6 +33,7 @@ const membershipInclude = {
         include: {
           branding: true,
           membershipSettings: true,
+          cashbackSettings: true,
         },
       },
     },
@@ -97,6 +98,25 @@ export async function syncGoogleWalletObjectAfterLoyaltyChange(customerProgramMe
     }
   } catch (error) {
     console.warn("[google-wallet] sync failed after loyalty change", error);
+  }
+}
+
+/**
+ * Cashback is one balance per CUSTOMER, but a Google Wallet pass is per loyalty
+ * PROGRAM, so a cashback add/spend has to refresh every pass that customer
+ * holds. Best-effort: a wallet hiccup must never break a money movement.
+ */
+export async function syncGoogleWalletAfterCashbackChange(businessCustomerMembershipId: number) {
+  try {
+    const programMemberships = await prisma.customerProgramMembership.findMany({
+      where: { businessCustomerMembershipId },
+      select: { id: true },
+    });
+    await Promise.all(
+      programMemberships.map((programMembership) => syncGoogleWalletObjectAfterLoyaltyChange(programMembership.id)),
+    );
+  } catch (error) {
+    console.warn("[google-wallet] sync failed after cashback change", error);
   }
 }
 
