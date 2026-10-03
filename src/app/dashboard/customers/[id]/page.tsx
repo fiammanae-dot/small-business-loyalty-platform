@@ -484,7 +484,7 @@ return (
                 </div>
                 <div className="grid min-w-0 gap-5">
                   <ProfileSummaryCard membership={membership} />
-                  <TierDetailsPanel customerTier={customerTier} rewardRedemptionsCount={rewardRedemptions.length} totalBonusStamps={totalBonusStamps} activePrograms={activePrograms} joinedAt={membership.joinedAt} />
+                  {tiersVisible ? <TierDetailsPanel customerTier={customerTier} rewardRedemptionsCount={rewardRedemptions.length} totalBonusStamps={totalBonusStamps} activePrograms={activePrograms} joinedAt={membership.joinedAt} /> : null}
                 </div>
               </div>
             ),
