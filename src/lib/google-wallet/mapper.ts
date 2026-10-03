@@ -142,15 +142,6 @@ export async function buildGoogleWalletObjectPayload({
         ]
       : []),
     ...(sections.tierBadge && !customer.business.membershipSettings?.enabled ? [{ id: "tier", header: "Tier", body: customer.currentTier }] : []),
-    ...(customer.business.cashbackSettings?.enabled
-      ? [
-          {
-            id: "cashback",
-            header: "Cashback",
-            body: `${customer.business.cashbackSettings.currency ?? "AED"} ${Number(customer.cashbackBalance ?? 0).toFixed(2)}`,
-          },
-        ]
-      : []),
   ];
 
   // Google Wallet gives an issuer one picture slot, so the business chooses what
@@ -191,12 +182,21 @@ export async function buildGoogleWalletObjectPayload({
         string: `${Math.min(progress, required)} / ${required}`,
       },
     },
-    secondaryLoyaltyPoints: {
-      label: "Remaining",
-      balance: {
-        string: rewardReady ? "Reward ready" : nextReward ? `${remaining} visit${remaining === 1 ? "" : "s"}` : "Complete",
-      },
-    },
+    secondaryLoyaltyPoints: customer.business.cashbackSettings?.enabled
+      ? {
+          // Cashback-enabled businesses show the wallet balance in the pass's
+          // prominent header slot instead of the reward-countdown.
+          label: "Cashback",
+          balance: {
+            string: `${customer.business.cashbackSettings.currency ?? "AED"} ${Number(customer.cashbackBalance ?? 0).toFixed(2)}`,
+          },
+        }
+      : {
+          label: "Remaining",
+          balance: {
+            string: rewardReady ? "Reward ready" : nextReward ? `${remaining} visit${remaining === 1 ? "" : "s"}` : "Complete",
+          },
+        },
     barcode: {
       type: "QR_CODE",
       value: scanUrl,
