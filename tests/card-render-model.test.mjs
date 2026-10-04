@@ -48,8 +48,8 @@ test("card render model preserves existing fallback display behavior", () => {
   const model = read("src/lib/card-render-model.ts");
 
   assert.match(model, /const hasProgram = Boolean\(input\.program && input\.program\.required > 0\)/);
-  assert.match(model, /const required = hasProgram \? Math\.max\(input\.program\?\.required \?\? 1, 1\) : 1/);
-  assert.match(model, /const statusText = hasProgram \? \(rewardReady \? "Reward Ready" : remainingText\) : "No active program yet"/);
+  assert.match(model, /hasProgram \? Math\.max\(input\.program\?\.required \?\? 1, 1\) : 1/);
+  assert.match(model, /hasProgram \? \(rewardReady \? "Reward Ready" : remainingText\) : "No active program yet"/);
   assert.match(model, /displayProgram = input\.program\?\.name \|\| "Loyalty Card"/);
   assert.match(model, /displayReward = input\.program\?\.rewardName \|\| "Loyalty reward"/);
   assert.match(model, /helperText: input\.qr\.helperText \|\| \(hasProgram \? "Scan this card" : "Show this QR code to staff to find your customer card\."\)/);

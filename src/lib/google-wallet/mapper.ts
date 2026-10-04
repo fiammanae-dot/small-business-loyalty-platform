@@ -11,6 +11,7 @@ import { resolveCardThemeColors } from "@/lib/card-themes";
 import { resolveCardDesign, type CardDesignInput } from "@/lib/card-design";
 import { getCardUrl, resolveBranding } from "@/lib/customer-cards";
 import { progressValue } from "@/lib/programs";
+import { membershipSessionSummary } from "@/lib/membership-sessions";
 import { cardRewardsFor, getNextReward, getReadyRewards, type CardReward } from "@/lib/rewards";
 import { getBaseUrl } from "@/lib/customer-cards";
 import { stampImagePath } from "@/lib/wallet/stamp-image";
@@ -53,13 +54,19 @@ export async function buildGoogleWalletClassPayload({
   });
   const businessName = membership.businessCustomerMembership.business.name;
   const sections = resolveCardDesign(cardDesign).visibleSections;
+  const isMembership = membership.loyaltyProgram.isMembership;
 
   // Honor the card design's section visibility so hidden sections don't reappear on the pass.
   const classTextModules = [
     // The class is shared by every customer on the program, so it can only
     // describe the card itself - the per-customer "next reward" lives on the
-    // object below.
-    ...(sections.rewardBox ? [{ id: "reward", header: "Reward", body: rewardBoxBody(membership) }] : []),
+    // object below. A membership has no reward to earn, so it describes the
+    // package instead.
+    ...(isMembership
+      ? [{ id: "membership", header: "Membership", body: membershipClassBody(membership) }]
+      : sections.rewardBox
+        ? [{ id: "reward", header: "Reward", body: rewardBoxBody(membership) }]
+        : []),
     ...(sections.businessName ? [{ id: "business", header: "Business", body: businessName }] : []),
   ];
 
@@ -102,6 +109,21 @@ export async function buildGoogleWalletObjectPayload({
   const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim();
   const progress = progressValue(membership.earnedStamps, membership.bonusStamps);
   const required = Math.max(1, membership.loyaltyProgram.requiredStamps);
+  // A prepaid membership pass counts DOWN: it is issued full and each visit uses
+  // a session. The "filled" count is the sessions remaining, not collected.
+  const isMembership = membership.loyaltyProgram.isMembership;
+  const membershipSummary = isMembership
+    ? membershipSessionSummary({
+        requiredStamps: membership.loyaltyProgram.requiredStamps,
+        earnedStamps: membership.earnedStamps,
+        bonusStamps: membership.bonusStamps,
+        sessionsForfeited: membership.sessionsForfeited,
+      })
+    : null;
+  const sessionsRemaining = membershipSummary?.remaining ?? 0;
+  const sessionsTotal = membershipSummary?.total ?? required;
+  const walletFilled = isMembership ? sessionsRemaining : Math.min(progress, required);
+  const walletRequired = isMembership ? Math.max(1, sessionsTotal) : required;
   const cardRewards = cardRewardsFor(membership.loyaltyProgram);
   const cardInput = {
     earnedStamps: membership.earnedStamps,
@@ -125,7 +147,7 @@ export async function buildGoogleWalletObjectPayload({
   const objectTextModules = [
     ...(sections.customerName ? [{ id: "customer", header: "Customer", body: customerName }] : []),
     ...(sections.programName ? [{ id: "program", header: "Program", body: membership.loyaltyProgram.name }] : []),
-    ...(sections.rewardBox
+    ...(sections.rewardBox && !isMembership
       ? [
           {
             id: "reward",
@@ -162,11 +184,13 @@ export async function buildGoogleWalletObjectPayload({
     : imageModule(
         `${baseUrl}${stampImagePath(
           membership.loyaltyProgram.uuid,
-          Math.min(progress, required),
-          required,
+          walletFilled,
+          walletRequired,
           membership.loyaltyProgram.stampEmoji,
         )}`,
-        `${Math.min(progress, required)} of ${required} stamps collected`,
+        isMembership
+          ? `${sessionsRemaining} of ${sessionsTotal} sessions remaining`
+          : `${Math.min(progress, required)} of ${required} stamps collected`,
       );
 
   return compactObject({
@@ -176,12 +200,19 @@ export async function buildGoogleWalletObjectPayload({
     state: membership.scanStatus === "ACTIVE" && membership.status === "ACTIVE" ? "ACTIVE" : "INACTIVE",
     accountId,
     accountName: customerName,
-    loyaltyPoints: {
-      label: "Visits",
-      balance: {
-        string: `${Math.min(progress, required)} / ${required}`,
-      },
-    },
+    loyaltyPoints: isMembership
+      ? {
+          label: "Sessions left",
+          balance: {
+            string: `${sessionsRemaining} of ${sessionsTotal}`,
+          },
+        }
+      : {
+          label: "Visits",
+          balance: {
+            string: `${Math.min(progress, required)} / ${required}`,
+          },
+        },
     secondaryLoyaltyPoints: customer.business.cashbackSettings?.enabled
       ? {
           // Cashback-enabled businesses show the wallet balance in the pass's
@@ -191,12 +222,19 @@ export async function buildGoogleWalletObjectPayload({
             string: `${customer.business.cashbackSettings.currency ?? "AED"} ${Number(customer.cashbackBalance ?? 0).toFixed(2)}`,
           },
         }
-      : {
-          label: "Remaining",
-          balance: {
-            string: rewardReady ? "Reward ready" : nextReward ? `${remaining} visit${remaining === 1 ? "" : "s"}` : "Complete",
+      : isMembership
+        ? {
+            label: "Status",
+            balance: {
+              string: sessionsRemaining > 0 ? "Active" : "Used up",
+            },
+          }
+        : {
+            label: "Remaining",
+            balance: {
+              string: rewardReady ? "Reward ready" : nextReward ? `${remaining} visit${remaining === 1 ? "" : "s"}` : "Complete",
+            },
           },
-        },
     barcode: {
       type: "QR_CODE",
       value: scanUrl,
@@ -293,6 +331,20 @@ function compactObject<T extends Record<string, unknown>>(value: T): T {
  * When the card carries more than one it lists them in order, which is how the
  * paper card reads: the badge at slot 5 is visible from day one.
  */
+/**
+ * What the shared class says for a prepaid membership. A membership has no
+ * reward to collect, so it names the package benefits when set, or a plain
+ * description of the prepaid session card.
+ */
+function membershipClassBody(membership: GoogleWalletProgramMembership) {
+  const benefits = (membership.loyaltyProgram.membershipBenefits ?? [])
+    .map((benefit) => benefit.trim())
+    .filter(Boolean);
+  if (benefits.length) return benefits.join(" \u00b7 ");
+  const sessions = Math.max(1, membership.loyaltyProgram.requiredStamps);
+  return `Prepaid package of ${sessions} session${sessions === 1 ? "" : "s"}.`;
+}
+
 function rewardBoxBody(membership: GoogleWalletProgramMembership) {
   const rewards = cardRewardsFor(membership.loyaltyProgram);
   if (rewards.length <= 1) return membership.loyaltyProgram.rewardName;

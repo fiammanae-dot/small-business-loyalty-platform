@@ -25,6 +25,7 @@ export type LoyaltyWalletCardProps = {
   required?: number;
   remaining?: number;
   completion?: number;
+  statusText?: string;
   cardDesign?: CardDesignInput;
 };
 
@@ -59,6 +60,7 @@ export function LoyaltyWalletCard({
   required = 0,
   remaining = 0,
   completion = 0,
+  statusText: statusTextProp,
   cardDesign,
 }: LoyaltyWalletCardProps) {
   const [mode, setMode] = useState<"wallet" | "scan">("wallet");
@@ -69,7 +71,9 @@ export function LoyaltyWalletCard({
   const displayReward = rewardName ?? "Loyalty reward";
   const displayProgram = programName ?? "Loyalty Card";
   const remainingText = remaining === 1 ? "1 visit remaining" : `${remaining} visits remaining`;
-  const statusText = required > 0 ? (rewardReady ? "Reward Ready" : remainingText) : "No active program yet";
+  // The page supplies statusText for memberships ("3 of 10 sessions left" /
+  // "Membership complete"); fall back to the reward-countdown wording otherwise.
+  const statusText = statusTextProp ?? (required > 0 ? (rewardReady ? "Reward Ready" : remainingText) : "No active program yet");
   const showScanView = !exportMode && mode === "scan";
 
   return (
