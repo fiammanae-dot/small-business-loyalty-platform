@@ -25,7 +25,7 @@ import { extractReferralCode, resolveReferralLandingReferrer } from "@/lib/refer
 import { getNextReward, getReadyRewards, singleCardReward, type CardReward } from "@/lib/rewards";
 import { roleHomePath } from "@/lib/roles";
 import { getCurrentUser, hasActiveBusinessAccess } from "@/lib/session";
-import { addCashbackFromScanAction, issueStampAction, redeemRewardAction, undoStampAction, useCashbackFromScanAction } from "@/app/scan/actions";
+import { addCashbackFromScanAction, issueStampAction, redeemRewardAction, renewMembershipAction, undoStampAction, useCashbackFromScanAction } from "@/app/scan/actions";
 import { formatAed } from "@/lib/cashback";
 import { withAlpha } from "@/lib/card-themes";
 import { getReadableForeground } from "@/lib/color-contrast";
@@ -130,7 +130,7 @@ export default async function ScanResultPage({
   searchParams,
 }: {
   params: Promise<{ token: string }>;
-  searchParams: Promise<{ error?: string; issued?: string; redeemed?: string; undone?: string; share?: string; cashback?: string }>;
+  searchParams: Promise<{ error?: string; issued?: string; redeemed?: string; undone?: string; share?: string; cashback?: string; renewed?: string }>;
 }) {
   const user = await getCurrentUser();
   const { token } = await params;
@@ -370,6 +370,17 @@ export default async function ScanResultPage({
   const claimableReward = readyRewards[0] ?? null;
   const rewardHeadline = claimableReward?.rewardName ?? nextReward?.rewardName ?? program.rewardName;
   const remainingToNext = nextReward ? Math.max(0, nextReward.atStamp - progress) : 0;
+  // A prepaid membership counts down; when it hits zero the card is used up and
+  // the counter offers a renewal instead of another "use session".
+  const membershipSummary = program.isMembership
+    ? membershipSessionSummary({
+        requiredStamps: program.requiredStamps,
+        earnedStamps: programMembership.earnedStamps,
+        bonusStamps: programMembership.bonusStamps,
+        sessionsForfeited: programMembership.sessionsForfeited,
+      })
+    : null;
+  const membershipDepleted = membershipSummary ? membershipSummary.remaining <= 0 : false;
   const redemption = redeemedId
     ? await prisma.rewardRedemption.findFirst({
         where: {
@@ -432,18 +443,20 @@ export default async function ScanResultPage({
       <ScannerSoundFeedback event={soundEvent} enabled={scannerSoundEffectsEnabled} />
       <ScanStatusBanner tone="green" title="Valid Customer" description="This loyalty QR belongs to your business and is ready for service." />
 
-      {program.isMembership ? (
-        <MembershipSessionsNote
-          summary={membershipSessionSummary({
-            requiredStamps: program.requiredStamps,
-            earnedStamps: programMembership.earnedStamps,
-            bonusStamps: programMembership.bonusStamps,
-            sessionsForfeited: programMembership.sessionsForfeited,
-          })}
-        />
+      {program.isMembership && membershipSummary ? (
+        <>
+          <MembershipSessionsNote summary={membershipSummary} />
+          {membershipDepleted ? (
+            <MembershipRenewPanel
+              token={scanToken}
+              totalSessions={program.requiredStamps}
+              confirmationTheme={scannerConfirmationTheme}
+            />
+          ) : null}
+        </>
       ) : null}
 
-      {!redemption ? (
+      {!redemption && !membershipDepleted ? (
         <QuickScanActions
           token={scanToken}
           rewardReady={rewardReady}
@@ -462,6 +475,9 @@ export default async function ScanResultPage({
 
       {qs.cashback ? (
         <ScanStatusBanner tone="green" title="Cashback updated" description={qs.cashback} />
+      ) : null}
+      {qs.renewed ? (
+        <ScanStatusBanner tone="green" title="Membership renewed" description="The card has been reset to a full set of sessions." />
       ) : null}
       {qs.error ? (
         <ScanStatusBanner tone="red" title="Action blocked" description={qs.error} />
@@ -565,7 +581,7 @@ export default async function ScanResultPage({
           </div>
         </DetailAccordion>
       </section>
-      {!rewardReady && !redemption ? (
+      {!rewardReady && !redemption && !membershipDepleted ? (
         <AdvancedStampOptions
           token={scanToken}
           progress={progress}
@@ -708,14 +724,14 @@ function QuickScanActions({
             <input type="hidden" name="quantity" value="1" />
             {isMembership ? <MembershipTreatmentFields treatments={treatments} /> : null}
             <ConfirmSubmitButton
-              title="Issue stamp?"
-              message="This will add 1 visit to the customer's selected program."
-              confirmLabel="Issue Stamp"
+              title={isMembership ? "Use one session?" : "Issue stamp?"}
+              message={isMembership ? "This will use one session from the customer's membership." : "This will add 1 visit to the customer's selected program."}
+              confirmLabel={isMembership ? "Use Session" : "Issue Stamp"}
               cancelLabel="Cancel"
               confirmationTheme={confirmationTheme}
               className="business-button min-h-12 w-full rounded-md px-5 text-base font-semibold shadow-sm transition"
             >
-              Issue Stamp
+              {isMembership ? "Use Session" : "Issue Stamp"}
             </ConfirmSubmitButton>
           </form>
           <form action={issueStampAction}>
@@ -726,14 +742,14 @@ function QuickScanActions({
             <input type="hidden" name="shareAfterStamp" value="whatsapp" />
             {isMembership ? <MembershipTreatmentFields treatments={treatments} /> : null}
             <ConfirmSubmitButton
-              title="Issue stamp and share updated card?"
-              message="This will add 1 visit, then prepare a WhatsApp message with the customer's updated loyalty card."
-              confirmLabel="Issue Stamp & Share"
+              title={isMembership ? "Use session and share updated card?" : "Issue stamp and share updated card?"}
+              message={isMembership ? "This will use one session, then prepare a WhatsApp message with the customer's updated loyalty card." : "This will add 1 visit, then prepare a WhatsApp message with the customer's updated loyalty card."}
+              confirmLabel={isMembership ? "Use Session & Share" : "Issue Stamp & Share"}
               cancelLabel="Cancel"
               confirmationTheme={confirmationTheme}
               className="min-h-12 w-full rounded-md border border-[#E5E7EB] bg-white px-5 text-base font-semibold text-[#111827] shadow-sm transition business-hover"
             >
-              Issue Stamp &amp; Share via WhatsApp
+              {isMembership ? "Use Session" : "Issue Stamp"} &amp; Share via WhatsApp
             </ConfirmSubmitButton>
           </form>
         </div>
@@ -1154,11 +1170,11 @@ function StampIssuanceSection({
           />
         </label>
         <ConfirmSubmitButton
-          message="Issue this stamp to this customer and selected program?"
+          message={isMembership ? "Use one session from this customer's membership for the selected treatment?" : "Issue this stamp to this customer and selected program?"}
           confirmationTheme={confirmationTheme}
           className="business-button h-12 rounded-md px-6 text-base font-semibold shadow-sm transition"
         >
-          Add Stamp
+          {isMembership ? "Use Session" : "Add Stamp"}
         </ConfirmSubmitButton>
         {canOverrideCooldown ? (
           <div className="rounded-md border business-border-soft bg-white p-3 md:col-span-3">
@@ -1176,6 +1192,40 @@ function StampIssuanceSection({
             </label>
           </div>
         ) : null}
+      </form>
+    </section>
+  );
+}
+
+function MembershipRenewPanel({
+  token,
+  totalSessions,
+  confirmationTheme,
+}: {
+  token: string;
+  totalSessions: number;
+  confirmationTheme: ConfirmationDialogTheme;
+}) {
+  return (
+    <section className="rounded-md border border-amber-300 bg-amber-50 p-4">
+      <p className="text-sm font-semibold text-amber-900">Membership used up</p>
+      <p className="mt-1 text-xs text-amber-800">
+        All sessions have been used or expired. If the customer has paid for the package again, renew the card to a
+        full set of {totalSessions} session{totalSessions === 1 ? "" : "s"}.
+      </p>
+      <form action={renewMembershipAction} className="mt-3">
+        <CsrfInput scope="scan:membership-renew" />
+        <input type="hidden" name="scanToken" value={token} />
+        <ConfirmSubmitButton
+          title="Renew membership?"
+          message={`This resets the card to a full ${totalSessions}-session membership and restarts the monthly expiry from today. Use this only after the customer has paid for a new package.`}
+          confirmLabel="Renew Membership"
+          cancelLabel="Cancel"
+          confirmationTheme={confirmationTheme}
+          className="min-h-12 w-full rounded-md bg-amber-600 px-5 text-base font-semibold text-white shadow-sm transition hover:bg-amber-700"
+        >
+          Renew Membership
+        </ConfirmSubmitButton>
       </form>
     </section>
   );

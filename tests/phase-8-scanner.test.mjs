@@ -121,10 +121,10 @@ test("scanner reward-ready state hides stamp actions and shows dynamic reset mes
   assert.match(scan, /\{rewardReady \? \(/);
   assert.match(scan, /canRedeem \? \(/);
   assert.match(scan, /\["BUSINESS_OWNER", "BRANCH_MANAGER", "STAFF"\]\.includes\(authUser\.role\)/);
-  assert.match(scan, /Issue Stamp &amp; Share via WhatsApp/);
+  assert.match(scan, /&amp; Share via WhatsApp/);
   assert.match(scan, /shareAfterStamp/);
-  assert.match(scan, /\{!redemption \? \(/);
-  assert.match(scan, /\{!rewardReady && !redemption \? \(\s*<AdvancedStampOptions/);
+  assert.match(scan, /\{!redemption && !membershipDepleted \? \(/);
+  assert.match(scan, /\{!rewardReady && !redemption && !membershipDepleted \? \(\s*<AdvancedStampOptions/);
   assert.doesNotMatch(scan, /Only Branch Managers and Business Owners can redeem rewards/);
 });
 test("staff cannot issue stamps when a scanned program is reward ready", () => {
