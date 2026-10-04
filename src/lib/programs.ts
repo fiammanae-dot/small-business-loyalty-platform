@@ -122,8 +122,8 @@ export const programSchema = z
       .trim()
       .nullish()
       .transform((value) => (value && /^https:\/\//i.test(value) ? value : null)),
-    rewardName: z.string().trim().min(1, "Reward name is required."),
-    rewardDescription: z.string().trim().min(1, "Reward description is required."),
+    rewardName: z.string().trim().default(""),
+    rewardDescription: z.string().trim().default(""),
     active: z.boolean(),
     startDate: z.string().trim().optional(),
     endDate: z.string().trim().optional(),
@@ -143,6 +143,18 @@ export const programSchema = z
   .refine((data) => !data.isMembership || (data.priceAmount != null && data.priceAmount > 0), {
     message: "A membership tier needs a price.",
     path: ["priceAmount"],
+  })
+  .refine((data) => data.isMembership || data.rewardName.length >= 1, {
+    message: "Reward name is required.",
+    path: ["rewardName"],
+  })
+  .refine((data) => data.isMembership || data.rewardDescription.length >= 1, {
+    message: "Reward description is required.",
+    path: ["rewardDescription"],
+  })
+  .refine((data) => !data.isMembership || data.membershipTreatments.length >= 1, {
+    message: "A membership needs at least one included treatment.",
+    path: ["membershipTreatments"],
   });
 
 export function parseProgramDate(value?: string) {
