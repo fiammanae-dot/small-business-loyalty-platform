@@ -151,7 +151,15 @@ export async function createProgramAction(formData: FormData) {
     fail(path, limitReachedMessage("program", maxPrograms));
   }
 
-  const milestones = milestonesFromForm(formData, parsed.data.requiredStamps, path);
+  // Memberships have no reward; store a placeholder so the non-null reward
+  // columns stay valid, and skip milestone rewards entirely.
+  const rewardName = parsed.data.isMembership
+    ? parsed.data.rewardName || "Membership complete"
+    : parsed.data.rewardName;
+  const rewardDescription = parsed.data.isMembership
+    ? parsed.data.rewardDescription || "All prepaid sessions used."
+    : parsed.data.rewardDescription;
+  const milestones = parsed.data.isMembership ? [] : milestonesFromForm(formData, parsed.data.requiredStamps, path);
 
   const program = await prisma.$transaction(async (tx) => {
     const created = await tx.loyaltyProgram.create({
@@ -168,8 +176,8 @@ export async function createProgramAction(formData: FormData) {
       stampEmoji: parsed.data.stampEmoji,
       walletHeroStyle: parsed.data.walletHeroStyle,
       walletPhotoUrl: parsed.data.walletPhotoUrl,
-      rewardName: parsed.data.rewardName,
-      rewardDescription: parsed.data.rewardDescription,
+      rewardName,
+      rewardDescription,
       active: parsed.data.active,
       startDate: parseProgramDate(parsed.data.startDate),
       endDate: parseProgramDate(parsed.data.endDate),
@@ -189,8 +197,8 @@ export async function createProgramAction(formData: FormData) {
       created.id,
       buildProgramRewardRows({
         requiredStamps: parsed.data.requiredStamps,
-        rewardName: parsed.data.rewardName,
-        rewardDescription: parsed.data.rewardDescription,
+        rewardName,
+        rewardDescription,
         milestones,
       }),
     );
@@ -248,7 +256,15 @@ export async function updateProgramAction(formData: FormData) {
   });
   if (!program) fail("/dashboard/programs", "Program not found.");
 
-  const milestones = milestonesFromForm(formData, parsed.data.requiredStamps, path);
+  // Memberships have no reward; store a placeholder so the non-null reward
+  // columns stay valid, and skip milestone rewards entirely.
+  const rewardName = parsed.data.isMembership
+    ? parsed.data.rewardName || "Membership complete"
+    : parsed.data.rewardName;
+  const rewardDescription = parsed.data.isMembership
+    ? parsed.data.rewardDescription || "All prepaid sessions used."
+    : parsed.data.rewardDescription;
+  const milestones = parsed.data.isMembership ? [] : milestonesFromForm(formData, parsed.data.requiredStamps, path);
 
   await prisma.$transaction(async (tx) => {
     await tx.loyaltyProgram.update({
@@ -266,8 +282,8 @@ export async function updateProgramAction(formData: FormData) {
       stampEmoji: parsed.data.stampEmoji,
       walletHeroStyle: parsed.data.walletHeroStyle,
       walletPhotoUrl: parsed.data.walletPhotoUrl,
-      rewardName: parsed.data.rewardName,
-      rewardDescription: parsed.data.rewardDescription,
+      rewardName,
+      rewardDescription,
       active: parsed.data.active,
       startDate: parseProgramDate(parsed.data.startDate),
       endDate: parseProgramDate(parsed.data.endDate),
@@ -281,8 +297,8 @@ export async function updateProgramAction(formData: FormData) {
       program.id,
       buildProgramRewardRows({
         requiredStamps: parsed.data.requiredStamps,
-        rewardName: parsed.data.rewardName,
-        rewardDescription: parsed.data.rewardDescription,
+        rewardName,
+        rewardDescription,
         milestones,
       }),
     );

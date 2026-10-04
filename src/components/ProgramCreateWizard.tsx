@@ -205,6 +205,64 @@ export function ProgramCreateWizard({
           </div>
         </SectionCard>
 
+        {membershipsEnabled ? (
+          <SectionCard title="Program type" description="Choose how this card works.">
+            <div className="grid gap-3 md:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => setIsMembership(false)}
+                data-active={!isMembership}
+                className="rounded-xl border border-[#E5E7EB] bg-white p-4 text-left transition hover:border-[var(--business-primary)] data-[active=true]:border-[var(--business-primary)] data-[active=true]:ring-2 data-[active=true]:ring-[var(--business-primary)]/20"
+              >
+                <span className="block text-sm font-bold text-[#111827]">Collect stamps &rarr; reward</span>
+                <span className="mt-1 block text-sm text-[#6B7280]">Customers earn a stamp each visit and get a reward when the card is full.</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsMembership(true)}
+                data-active={isMembership}
+                className="rounded-xl border border-[#E5E7EB] bg-white p-4 text-left transition hover:border-[var(--business-primary)] data-[active=true]:border-[var(--business-primary)] data-[active=true]:ring-2 data-[active=true]:ring-[var(--business-primary)]/20"
+              >
+                <span className="block text-sm font-bold text-[#111827]">Membership &mdash; prepaid sessions</span>
+                <span className="mt-1 block text-sm text-[#6B7280]">Customer pays once for a card of prepaid services. Each visit uses one session and the card counts down.</span>
+              </button>
+            </div>
+          </SectionCard>
+        ) : null}
+        <input type="hidden" name="isMembership" value={isMembership ? "true" : "false"} />
+
+        <SectionCard
+          title={isMembership ? "Included sessions" : "Stamps"}
+          description={isMembership ? "How many prepaid sessions this membership includes. Each visit uses one." : "How many stamps a customer collects to complete the card."}
+        >
+          <Input
+            name="requiredStamps"
+            label={isMembership ? "Number of included sessions" : "Required stamps"}
+            type="number"
+            min="1"
+            defaultValue={requiredStamps.toString()}
+            required
+          />
+        </SectionCard>
+
+        {isMembership ? (
+          <SectionCard title="Membership details" description="The one-time price, the treatments the customer can choose from, and member perks.">
+            <div className="grid gap-4">
+              <Input name="priceAmount" label="Membership price (AED)" type="number" min="0" defaultValue="" required />
+              <label className="grid gap-2">
+                <span className="text-sm font-medium text-[#111827]">Included treatments<RequiredMark /></span>
+                <span className="text-xs text-[#6B7280]">One treatment per line. Staff pick which one was done at each visit.</span>
+                <textarea name="membershipTreatments" rows={5} placeholder="Hydrafacial&#10;Organic Facial&#10;Forma Skin Tightening" className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none business-ring focus:ring-0" />
+              </label>
+              <label className="grid gap-2">
+                <span className="text-sm font-medium text-[#111827]">Member perks</span>
+                <span className="text-xs text-[#6B7280]">Optional. One perk per line.</span>
+                <textarea name="membershipBenefits" rows={4} placeholder="Priority booking&#10;Exclusive member pricing&#10;Complimentary consultation" className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none business-ring focus:ring-0" />
+              </label>
+            </div>
+          </SectionCard>
+        ) : null}
+
       <SectionCard
         title="Picture on the wallet card"
         description="Google Wallet shows one picture on the card. Choose the stamps or your own photo."
@@ -216,29 +274,32 @@ export function ProgramCreateWizard({
         />
       </SectionCard>
 
-        <SectionCard title="Reward" description="Define the reward customers receive when they complete the program.">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Input name="rewardName" label="Reward Name" defaultValue={rewardName} required />
-            <Input name="requiredStamps" label="Required Stamps" type="number" min="1" defaultValue={requiredStamps.toString()} required />
-            <label className="space-y-2 md:col-span-2">
-              <span className="text-sm font-medium text-[#111827]">
-                Reward Description
-                <RequiredMark />
-              </span>
-              <textarea name="rewardDescription" rows={3} defaultValue={rewardDescription} required className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none business-ring focus:ring-0" />
-            </label>
-          </div>
-        </SectionCard>
+        {!isMembership ? (
+          <>
+            <SectionCard title="Reward" description="Define the reward customers receive when they complete the program.">
+              <div className="grid gap-4 md:grid-cols-2">
+                <Input name="rewardName" label="Reward Name" defaultValue={rewardName} required />
+                <label className="space-y-2 md:col-span-2">
+                  <span className="text-sm font-medium text-[#111827]">
+                    Reward Description
+                    <RequiredMark />
+                  </span>
+                  <textarea name="rewardDescription" rows={3} defaultValue={rewardDescription} required className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none business-ring focus:ring-0" />
+                </label>
+              </div>
+            </SectionCard>
 
-        <SectionCard
-          title="Rewards before the card is full"
-          description="Optional. A reward partway through gives customers a reason to come back before they finish."
-        >
-          <ProgramMilestonesField
-            initialMilestones={defaults.milestones ?? []}
-            requiredStamps={requiredStamps}
-          />
-        </SectionCard>
+            <SectionCard
+              title="Rewards before the card is full"
+              description="Optional. A reward partway through gives customers a reason to come back before they finish."
+            >
+              <ProgramMilestonesField
+                initialMilestones={defaults.milestones ?? []}
+                requiredStamps={requiredStamps}
+              />
+            </SectionCard>
+          </>
+        ) : null}
 
         <SectionCard title="Qualification Rules" description="Control when the program is active and how it appears to customers.">
           <div className="grid gap-4 md:grid-cols-2">
@@ -254,48 +315,21 @@ export function ProgramCreateWizard({
           </div>
         </SectionCard>
 
-        <SectionCard title="Starting Stamps" description="Starting stamps are automatically awarded according to the selected policy.">
-          <div className="grid gap-5">
-            <div className="grid gap-4 md:grid-cols-2">
-              <Input name="startingBonusStamps" label="Starting Stamps" type="number" min="0" defaultValue={startingBonusStamps.toString()} required />
-              <Input name="referralRewardBonusStamps" label="Referral Reward Bonus Stamps" type="number" min="0" defaultValue={referralRewardBonusStamps.toString()} required />
-            </div>
-            <fieldset className="space-y-3">
-              <legend className="text-sm font-semibold text-[#111827]">Apply when</legend>
-              <div className="grid gap-3 md:grid-cols-3">
-                <PolicyOption value="NEVER" current={startingStampPolicy} title="Never" description="Customers start each card with 0 starting stamps." />
-                <PolicyOption value="FIRST_ENROLLMENT_ONLY" current={startingStampPolicy} title="Only on first enrollment" description="Award starting stamps only when the customer first joins this program." recommended />
-                <PolicyOption value="EVERY_COMPLETED_CARD" current={startingStampPolicy} title="Every completed card" description="Award starting stamps after enrollment and after each reward reset." />
+        {!isMembership ? (
+          <SectionCard title="Starting Stamps" description="Starting stamps are automatically awarded according to the selected policy.">
+            <div className="grid gap-5">
+              <div className="grid gap-4 md:grid-cols-2">
+                <Input name="startingBonusStamps" label="Starting Stamps" type="number" min="0" defaultValue={startingBonusStamps.toString()} required />
+                <Input name="referralRewardBonusStamps" label="Referral Reward Bonus Stamps" type="number" min="0" defaultValue={referralRewardBonusStamps.toString()} required />
               </div>
-            </fieldset>
-          </div>
-        </SectionCard>
-
-        {membershipsEnabled ? (
-          <SectionCard title="Membership package" description="Sell this as a paid membership tier with a price, included treatments, and member perks. The Required Stamps above become the number of included sessions.">
-            <div className="grid gap-4">
-              <label className="flex items-center justify-between gap-4 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
-                <span>
-                  <span className="block text-sm font-semibold text-[#111827]">This is a membership package</span>
-                  <span className="mt-1 block text-sm text-[#6B7280]">Turn on to charge a one-time price and list the treatments the customer can choose from.</span>
-                </span>
-                <input type="checkbox" name="isMembership" value="true" checked={isMembership} onChange={(event) => setIsMembership(event.target.checked)} className="h-5 w-5 rounded border-[#E5E7EB] business-primary" aria-label="This is a membership package" />
-              </label>
-              {isMembership ? (
-                <div className="grid gap-4">
-                  <Input name="priceAmount" label="Membership price (AED)" type="number" min="0" defaultValue="" required />
-                  <label className="grid gap-2">
-                    <span className="text-sm font-medium text-[#111827]">Included treatments</span>
-                    <span className="text-xs text-[#6B7280]">One treatment per line.</span>
-                    <textarea name="membershipTreatments" rows={5} placeholder="Hydrafacial&#10;Organic Facial&#10;Forma Skin Tightening" className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none business-ring focus:ring-0" />
-                  </label>
-                  <label className="grid gap-2">
-                    <span className="text-sm font-medium text-[#111827]">Member perks</span>
-                    <span className="text-xs text-[#6B7280]">One perk per line.</span>
-                    <textarea name="membershipBenefits" rows={4} placeholder="Priority booking&#10;Exclusive member pricing&#10;Complimentary consultation" className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none business-ring focus:ring-0" />
-                  </label>
+              <fieldset className="space-y-3">
+                <legend className="text-sm font-semibold text-[#111827]">Apply when</legend>
+                <div className="grid gap-3 md:grid-cols-3">
+                  <PolicyOption value="NEVER" current={startingStampPolicy} title="Never" description="Customers start each card with 0 starting stamps." />
+                  <PolicyOption value="FIRST_ENROLLMENT_ONLY" current={startingStampPolicy} title="Only on first enrollment" description="Award starting stamps only when the customer first joins this program." recommended />
+                  <PolicyOption value="EVERY_COMPLETED_CARD" current={startingStampPolicy} title="Every completed card" description="Award starting stamps after enrollment and after each reward reset." />
                 </div>
-              ) : null}
+              </fieldset>
             </div>
           </SectionCard>
         ) : null}
