@@ -491,6 +491,111 @@ export async function issueStampAction(formData: FormData) {
   success(data.scanToken, transactionId, shareAfterStamp);
 }
 
+/**
+ * Renew a prepaid membership that has been used up.
+ *
+ * A membership is a card of prepaid sessions that counts down; when it reaches
+ * zero the customer can pay for the package again. Renewing resets the card to a
+ * full set of sessions and restarts the monthly use-it-or-lose-it clock from
+ * today (enrolledAt + the forfeit counters), rather than issuing a second card.
+ * The visit history (StampTransactions) is left in place as the audit trail.
+ */
+export async function renewMembershipAction(formData: FormData) {
+  const scanToken = getString(formData, "scanToken");
+  try {
+    validateCsrfForm(formData, "scan:membership-renew");
+  } catch {
+    fail(scanToken, "Security check failed. Please refresh and try again.");
+  }
+
+  const { user } = await requireBusinessScopedUser({
+    requireSubscription: true,
+    requireActiveBranch: true,
+    fail: (message) => fail(scanToken, message),
+  });
+
+  if (!scanToken) fail(scanToken, "Scan token is required.");
+
+  const scannerBranch = user.branchId
+    ? await prisma.branch.findFirst({
+        where: { id: user.branchId, businessId: user.businessId },
+        select: { id: true, name: true },
+      })
+    : null;
+
+  const programMembership = await prisma.customerProgramMembership.findUnique({
+    where: { scanToken },
+    include: {
+      loyaltyProgram: true,
+      businessCustomerMembership: { include: { createdBranch: true } },
+    },
+  });
+
+  if (!programMembership) fail(scanToken, "Invalid or unavailable loyalty QR.");
+
+  const businessMembership = programMembership.businessCustomerMembership;
+  if (businessMembership.businessId !== user.businessId) {
+    fail(scanToken, "This loyalty QR does not belong to your business.");
+  }
+  if (isOutOfAssignedBranch(user, businessMembership)) {
+    fail(scanToken, OUT_OF_BRANCH_ACTION_MESSAGE);
+  }
+  if (!programMembership.loyaltyProgram.isMembership) {
+    fail(scanToken, "This program is not a membership, so it cannot be renewed.");
+  }
+  if (
+    programMembership.scanStatus !== "ACTIVE" ||
+    programMembership.status !== "ACTIVE" ||
+    !programMembership.loyaltyProgram.active ||
+    businessMembership.status !== "ACTIVE"
+  ) {
+    fail(scanToken, "Invalid or unavailable loyalty QR.");
+  }
+
+  const branchId = scannerBranch?.id ?? businessMembership.createdBranchId ?? null;
+  const branchName = scannerBranch?.name ?? businessMembership.createdBranch?.name ?? "Unassigned";
+  const previousSummary = membershipSessionSummary({
+    requiredStamps: programMembership.loyaltyProgram.requiredStamps,
+    earnedStamps: programMembership.earnedStamps,
+    bonusStamps: programMembership.bonusStamps,
+    sessionsForfeited: programMembership.sessionsForfeited,
+  });
+
+  await prisma.$transaction(async (tx) => {
+    await tx.customerProgramMembership.update({
+      where: { id: programMembership.id },
+      data: {
+        earnedStamps: 0,
+        bonusStamps: 0,
+        sessionsForfeited: 0,
+        forfeitCyclesProcessed: 0,
+        claimedRewardStamps: { set: [] },
+        enrolledAt: new Date(),
+        status: "ACTIVE",
+      },
+    });
+
+    await logAuditEvent({
+      tx,
+      actorUserId: user.id,
+      businessId: user.businessId as number,
+      action: "MEMBERSHIP_RENEWED",
+      entityType: "customer_program_membership",
+      entityId: programMembership.id,
+      metadata: {
+        programName: programMembership.loyaltyProgram.name,
+        totalSessions: programMembership.loyaltyProgram.requiredStamps,
+        previousRemaining: previousSummary.remaining,
+        branchId,
+        branchName,
+      },
+    });
+  });
+
+  await syncGoogleWalletObjectAfterLoyaltyChange(programMembership.id);
+  redirect(`/scan/${scanToken}?renewed=1`);
+}
+
 export async function redeemRewardAction(formData: FormData) {
   const scanToken = getString(formData, "scanToken");
   try {

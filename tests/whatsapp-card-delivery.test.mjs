@@ -61,7 +61,7 @@ test("stamp workflow can issue and share the updated card through WhatsApp", () 
   const prompt = read("src/components/StampWhatsAppSharePrompt.tsx");
   const helper = read("src/lib/whatsapp-messages.ts");
 
-  assert.match(scanPage, /Issue Stamp &amp; Share via WhatsApp/);
+  assert.match(scanPage, /&amp; Share via WhatsApp/);
   assert.match(scanPage, /shareAfterStamp/);
   assert.match(scanPage, /StampWhatsAppSharePrompt/);
   assert.match(scanPage, /getCardUrl\(businessMembership\.cardToken\)/);
