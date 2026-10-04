@@ -28,8 +28,8 @@ test("the render model treats a membership as a depleting card with no reward", 
   assert.match(model, /rewardBox: design\.visibleSections\.rewardBox && hasProgram && !isMembership/);
   // The returned design itself carries rewardBox:false for memberships, so the
   // hero wallet card (which re-reads model.design) hides it too.
-  assert.match(model, /const outputDesign = isMembership/);
-  assert.match(model, /visibleSections: \{ \.\.\.design\.visibleSections, rewardBox: false \}/);
+  assert.match(model, /const outputDesign = needsSuppressedDesign/);
+  assert.match(model, /rewardBox: isMembership \? false : design\.visibleSections\.rewardBox/);
 });
 
 test("the public card page feeds membership sessions into the model", () => {
