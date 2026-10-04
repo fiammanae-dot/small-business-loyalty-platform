@@ -9,6 +9,7 @@ import { areTiersVisible, calculateCustomerTier, computeTierMaintenance, tierQua
 import { formatDate, formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { progressValue } from "@/lib/programs";
+import { membershipSessionSummary } from "@/lib/membership-sessions";
 import { getNextReward, getReadyRewards, singleCardReward } from "@/lib/rewards";
 import { getScanQrDataUrl } from "@/lib/scan";
 import { getReferralUrl } from "@/lib/referrals";
@@ -67,6 +68,43 @@ export default async function PublicCustomerCardPage({
   const programCards = await Promise.all(
     membership.programMemberships.map(async (programMembership) => {
       const progress = progressValue(programMembership.earnedStamps, programMembership.bonusStamps);
+      const isMembership = programMembership.loyaltyProgram.isMembership;
+      const programCardDesign = programMembership.loyaltyProgram.cardDesign as CardDesignInput;
+      const theme = resolveCardThemeColors({ cardTheme: programMembership.loyaltyProgram.cardTheme, branding, cardDesign: programCardDesign });
+
+      if (isMembership) {
+        // A prepaid membership is issued full and depletes. The card shows the
+        // sessions the customer has LEFT; there is no reward to work toward.
+        const summary = membershipSessionSummary({
+          requiredStamps: programMembership.loyaltyProgram.requiredStamps,
+          earnedStamps: programMembership.earnedStamps,
+          bonusStamps: programMembership.bonusStamps,
+          sessionsForfeited: programMembership.sessionsForfeited,
+        });
+        const sessionsRemaining = summary.remaining;
+        const sessionsTotal = summary.total;
+        const completion = sessionsTotal > 0 ? Math.round((sessionsRemaining / sessionsTotal) * 100) : 0;
+        const statusText =
+          sessionsRemaining > 0
+            ? `${sessionsRemaining} of ${sessionsTotal} session${sessionsTotal === 1 ? "" : "s"} left`
+            : "Membership complete";
+        return {
+          programMembership,
+          qrCode: await getScanQrDataUrl(programMembership.scanToken),
+          isMembership: true,
+          sessionsTotal,
+          sessionsRemaining,
+          statusText,
+          progress: sessionsRemaining,
+          required: sessionsTotal,
+          remaining: sessionsRemaining,
+          completion,
+          rewardReady: false,
+          rewardName: programMembership.loyaltyProgram.rewardName,
+          theme,
+        };
+      }
+
       const required = programMembership.loyaltyProgram.requiredStamps;
       const cardInput = {
         earnedStamps: programMembership.earnedStamps,
@@ -87,12 +125,14 @@ export default async function PublicCustomerCardPage({
       // The reward to name: what is waiting now, or what is coming next.
       const rewardName =
         readyRewards[0]?.rewardName ?? nextReward?.rewardName ?? programMembership.loyaltyProgram.rewardName;
-      const programCardDesign = programMembership.loyaltyProgram.cardDesign as CardDesignInput;
-      const theme = resolveCardThemeColors({ cardTheme: programMembership.loyaltyProgram.cardTheme, branding, cardDesign: programCardDesign });
 
       return {
         programMembership,
         qrCode: await getScanQrDataUrl(programMembership.scanToken),
+        isMembership: false,
+        sessionsTotal: 0,
+        sessionsRemaining: 0,
+        statusText: null as string | null,
         progress,
         required,
         remaining,
@@ -178,6 +218,10 @@ export default async function PublicCustomerCardPage({
           rewardReady: primaryProgram.rewardReady,
         }
       : null,
+    membership:
+      primaryProgram?.isMembership
+        ? { sessionsRemaining: primaryProgram.sessionsRemaining, totalSessions: primaryProgram.sessionsTotal }
+        : null,
     qr: {
       code: primaryProgram?.qrCode ?? cardQrCode,
       helperText: primaryProgram ? "Scan this card" : "Show this QR code to staff to find your customer card.",
@@ -202,6 +246,7 @@ export default async function PublicCustomerCardPage({
     required: primaryCardModel.progress.hasProgram ? primaryCardModel.progress.required : 0,
     remaining: primaryCardModel.progress.remaining,
     completion: primaryCardModel.progress.completion,
+    statusText: primaryCardModel.progress.statusText,
     cardDesign: primaryCardModel.design,
   };
 
@@ -295,7 +340,7 @@ export default async function PublicCustomerCardPage({
               <h2 className="text-base font-semibold text-[#1E293B]">Additional programs</h2>
             </div>
             <div className="mt-4 grid gap-3">
-              {programCards.slice(1).map(({ programMembership, qrCode, progress, required, remaining, completion, rewardReady, rewardName, theme }) => (
+              {programCards.slice(1).map(({ programMembership, qrCode, progress, required, remaining, completion, rewardReady, rewardName, theme, isMembership }) => (
                 <ProgramRewardCard
                   key={programMembership.id}
                   programName={programMembership.loyaltyProgram.name}
@@ -307,6 +352,7 @@ export default async function PublicCustomerCardPage({
                   completion={completion}
                   rewardReady={rewardReady}
                   theme={theme}
+                  isMembership={isMembership}
                 />
               ))}
             </div>

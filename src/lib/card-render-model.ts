@@ -45,6 +45,12 @@ export type CardRenderModelInput = {
    * the card, regardless of the saved card design. Forces the tier badge off.
    */
   tiersHidden?: boolean;
+  /**
+   * A prepaid membership card counts DOWN: it is issued full and each visit uses
+   * one session. When set, the card shows sessionsRemaining filled slots out of
+   * totalSessions, with no reward.
+   */
+  membership?: { sessionsRemaining: number; totalSessions: number } | null;
 };
 
 export type CardRenderModel = {
@@ -120,19 +126,34 @@ export function buildCardRenderModel(input: CardRenderModelInput): CardRenderMod
     cardDesign: design,
   });
   const hasProgram = Boolean(input.program && input.program.required > 0);
-  const current = hasProgram ? Math.max(input.program?.progress ?? 0, 0) : 0;
-  const required = hasProgram ? Math.max(input.program?.required ?? 1, 1) : 1;
-  const remaining = hasProgram ? Math.max(input.program?.remaining ?? required - current, 0) : 0;
-  const completion = hasProgram ? Math.min(Math.max(input.program?.completion ?? Math.round((current / required) * 100), 0), 100) : 0;
-  const rewardReady = hasProgram ? Boolean(input.program?.rewardReady) : false;
+  const isMembership = Boolean(input.membership);
+  const membershipTotal = Math.max(input.membership?.totalSessions ?? 0, 1);
+  const membershipRemaining = Math.min(Math.max(input.membership?.sessionsRemaining ?? 0, 0), membershipTotal);
+  // A membership card is issued full and depletes: the filled slots represent
+  // the sessions the customer has LEFT, not the ones they have used.
+  const current = isMembership ? membershipRemaining : (hasProgram ? Math.max(input.program?.progress ?? 0, 0) : 0);
+  const required = isMembership ? membershipTotal : (hasProgram ? Math.max(input.program?.required ?? 1, 1) : 1);
+  const remaining = isMembership ? membershipRemaining : (hasProgram ? Math.max(input.program?.remaining ?? required - current, 0) : 0);
+  const completion = isMembership
+    ? Math.round((membershipRemaining / membershipTotal) * 100)
+    : (hasProgram ? Math.min(Math.max(input.program?.completion ?? Math.round((current / required) * 100), 0), 100) : 0);
+  const rewardReady = isMembership ? false : (hasProgram ? Boolean(input.program?.rewardReady) : false);
   const remainingText = remaining === 1 ? "1 visit remaining" : `${remaining} visits remaining`;
-  const statusText = hasProgram ? (rewardReady ? "Reward Ready" : remainingText) : "No active program yet";
+  const statusText = isMembership
+    ? (membershipRemaining > 0 ? `${membershipRemaining} of ${membershipTotal} session${membershipTotal === 1 ? "" : "s"} left` : "Membership complete")
+    : (hasProgram ? (rewardReady ? "Reward Ready" : remainingText) : "No active program yet");
   const displayProgram = input.program?.name || "Loyalty Card";
   const displayReward = input.program?.rewardName || "Loyalty reward";
   const cardUrl = input.business.cardUrl ?? null;
 
+  // The hero wallet card consumes `design` directly and re-reads its
+  // visibleSections, so a membership must carry rewardBox:false on the design
+  // itself, not only on the model's computed visibleSections below.
+  const outputDesign = isMembership
+    ? { ...design, visibleSections: { ...design.visibleSections, rewardBox: false } }
+    : design;
   return {
-    design,
+    design: outputDesign,
     layoutStyle: design.layoutStyle,
     cardStyle: design.cardStyle,
     stampJourneyStyle: design.stampJourneyStyle,
@@ -152,7 +173,7 @@ export function buildCardRenderModel(input: CardRenderModelInput): CardRenderMod
       businessName: design.visibleSections.businessName,
       customerName: design.visibleSections.customerName,
       tierBadge: design.visibleSections.tierBadge && !input.tiersHidden,
-      rewardBox: design.visibleSections.rewardBox && hasProgram,
+      rewardBox: design.visibleSections.rewardBox && hasProgram && !isMembership,
       progress: design.visibleSections.progress,
       qr: design.visibleSections.qr,
       footer: design.visibleSections.footer,
