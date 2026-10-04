@@ -749,7 +749,7 @@ function QuickScanActions({
               confirmationTheme={confirmationTheme}
               className="min-h-12 w-full rounded-md border border-[#E5E7EB] bg-white px-5 text-base font-semibold text-[#111827] shadow-sm transition business-hover"
             >
-              {isMembership ? "Use Session" : "Issue Stamp"} &amp; Share via WhatsApp
+              {isMembership ? "Use Session & Share via WhatsApp" : "Issue Stamp & Share via WhatsApp"}
             </ConfirmSubmitButton>
           </form>
         </div>
