@@ -147,10 +147,20 @@ export function buildCardRenderModel(input: CardRenderModelInput): CardRenderMod
   const cardUrl = input.business.cardUrl ?? null;
 
   // The hero wallet card consumes `design` directly and re-reads its
-  // visibleSections, so a membership must carry rewardBox:false on the design
-  // itself, not only on the model's computed visibleSections below.
-  const outputDesign = isMembership
-    ? { ...design, visibleSections: { ...design.visibleSections, rewardBox: false } }
+  // visibleSections, so any section the model suppresses must be turned off on
+  // the design ITSELF, not only on the model's computed visibleSections below:
+  //   - a membership has no reward box, and
+  //   - a business that sells memberships hides visit tiers everywhere.
+  const needsSuppressedDesign = isMembership || input.tiersHidden;
+  const outputDesign = needsSuppressedDesign
+    ? {
+        ...design,
+        visibleSections: {
+          ...design.visibleSections,
+          rewardBox: isMembership ? false : design.visibleSections.rewardBox,
+          tierBadge: input.tiersHidden ? false : design.visibleSections.tierBadge,
+        },
+      }
     : design;
   return {
     design: outputDesign,

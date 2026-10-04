@@ -57,6 +57,12 @@ test("the customer-facing card hides tiers: wallet badge and tier panel", () => 
   const model = read("src/lib/card-render-model.ts");
   assert.match(model, /tiersHidden\?: boolean;/);
   assert.match(model, /tierBadge: design\.visibleSections\.tierBadge && !input\.tiersHidden/);
+  // The hero wallet card reads the RAW design's visibleSections, so the model
+  // must also suppress tierBadge on the returned design itself - otherwise the
+  // badge leaks onto the card even when tiers are hidden.
+  assert.match(model, /tierBadge: input\.tiersHidden \? false : design\.visibleSections\.tierBadge/);
+  const hero = read("src/components/public-card/LoyaltyWalletCard.tsx");
+  assert.match(hero, /design\.visibleSections\.tierBadge \?/);
   const page = read("src/app/card/[token]/page.tsx");
   assert.match(page, /membershipSettings: true/);
   assert.match(page, /tiersHidden: !tiersVisible/);
