@@ -249,11 +249,7 @@ export function ProgramCreateWizard({
           <SectionCard title="Membership details" description="The one-time price, the treatments the customer can choose from, and member perks.">
             <div className="grid gap-4">
               <Input name="priceAmount" label="Membership price (AED)" type="number" min="0" defaultValue="" required />
-              <label className="grid gap-2">
-                <span className="text-sm font-medium text-[#111827]">Included treatments<RequiredMark /></span>
-                <span className="text-xs text-[#6B7280]">One treatment per line. Staff pick which one was done at each visit.</span>
-                <textarea name="membershipTreatments" rows={5} placeholder="Hydrafacial&#10;Organic Facial&#10;Forma Skin Tightening" className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none business-ring focus:ring-0" />
-              </label>
+              <MembershipServicesField />
               <label className="grid gap-2">
                 <span className="text-sm font-medium text-[#111827]">Member perks</span>
                 <span className="text-xs text-[#6B7280]">Optional. One perk per line.</span>
@@ -843,4 +839,58 @@ function formatInputDate(value?: Date | null) {
 
 function labelize(value: string) {
   return value.toLowerCase().replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+
+/**
+ * Repeatable "add service" list for a membership program. Each row submits as a
+ * `membershipTreatments` field, so the server reads them with
+ * formData.getAll("membershipTreatments"). Staff later pick from these at the
+ * counter, and each visit draws down one session.
+ */
+function MembershipServicesField() {
+  const [services, setServices] = useState<string[]>([""]);
+
+  const updateService = (index: number, value: string) =>
+    setServices((current) => current.map((service, i) => (i === index ? value : service)));
+  const addService = () => setServices((current) => [...current, ""]);
+  const removeService = (index: number) =>
+    setServices((current) => (current.length === 1 ? current : current.filter((_, i) => i !== index)));
+
+  return (
+    <div className="grid gap-2">
+      <span className="text-sm font-medium text-[#111827]">Included treatments<RequiredMark /></span>
+      <span className="text-xs text-[#6B7280]">Add each treatment the customer can choose from. Staff pick which one was done at each visit.</span>
+      <div className="grid gap-2">
+        {services.map((value, index) => (
+          <div key={index} className="flex items-center gap-2">
+            <input
+              name="membershipTreatments"
+              value={value}
+              onChange={(event) => updateService(index, event.target.value)}
+              placeholder={index === 0 ? "e.g. Hydrafacial" : "Add another treatment"}
+              className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring focus:ring-0"
+            />
+            {services.length > 1 ? (
+              <button
+                type="button"
+                onClick={() => removeService(index)}
+                aria-label="Remove treatment"
+                className="h-11 shrink-0 rounded-md border border-[#E5E7EB] px-3 text-sm text-[#6B7280] transition hover:bg-[#F9FAFB]"
+              >
+                Remove
+              </button>
+            ) : null}
+          </div>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={addService}
+        className="w-fit rounded-md border border-dashed border-[var(--business-primary)] px-3 py-2 text-sm font-semibold text-[var(--business-primary)] transition hover:bg-[var(--business-primary-soft)]"
+      >
+        + Add service
+      </button>
+    </div>
+  );
 }

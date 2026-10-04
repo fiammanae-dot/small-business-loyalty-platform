@@ -36,6 +36,15 @@ function splitLines(value: string) {
   return value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
 }
 
+// Repeatable form fields (e.g. the membership "add service" rows) submit the
+// same name multiple times; read every value, trim, and drop the empties.
+function getStringList(formData: FormData, key: string) {
+  return formData
+    .getAll(key)
+    .map((value) => (typeof value === "string" ? value.trim() : ""))
+    .filter(Boolean);
+}
+
 function fail(path: string, message: string): never {
   redirect(`${path}?error=${encodeURIComponent(message)}`);
 }
@@ -69,7 +78,7 @@ function programData(formData: FormData, businessType: string, defaultCardTheme 
     endDate: getString(formData, "endDate"),
     isMembership: getString(formData, "isMembership") === "true",
     priceAmount: getString(formData, "priceAmount") || undefined,
-    membershipTreatments: splitLines(getString(formData, "membershipTreatments")),
+    membershipTreatments: getStringList(formData, "membershipTreatments"),
     membershipBenefits: splitLines(getString(formData, "membershipBenefits")),
   });
 
