@@ -31,6 +31,7 @@ try {
     where: { name: BUSINESS_NAME },
     include: {
       branding: true,
+      cashbackSettings: true,
       branches: { select: { name: true } },
       users: { select: { email: true, role: true } },
       loyaltyPrograms: { select: { name: true, isMembership: true, requiredStamps: true } },
@@ -48,6 +49,12 @@ try {
     console.log(`   - ${p.name}  [${p.isMembership ? "membership" : "stamp"}, ${p.requiredStamps} sessions]`);
   }
   console.log(`Customers : ${b._count.customerMemberships}`);
+  const cb = b.cashbackSettings;
+  console.log(`Cashback  :`, cb ? { enabled: cb.enabled, rate: `${cb.ratePercent}%`, currency: cb.currency } : "(off / no settings row)");
+  const cbAgg = await prisma.businessCustomerMembership.aggregate({ where: { businessId: b.id }, _sum: { cashbackBalance: true } });
+  const cbWith = await prisma.businessCustomerMembership.count({ where: { businessId: b.id, cashbackBalance: { gt: 0 } } });
+  const cbTxns = await prisma.cashbackTransaction.count({ where: { businessId: b.id } });
+  console.log(`   balances: ${cbWith} customers > 0, total ${cb?.currency ?? "AED"} ${Number(cbAgg._sum.cashbackBalance ?? 0).toFixed(2)}, ${cbTxns} ledger rows`);
   console.log(`Logins    :`);
   for (const u of b.users) console.log(`   - ${u.email}  (${u.role})`);
 } finally {
