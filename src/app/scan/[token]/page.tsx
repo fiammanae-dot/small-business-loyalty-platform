@@ -363,7 +363,9 @@ export default async function ScanResultPage({
   };
   const readyRewards = getReadyRewards(cardInput);
   const nextReward = getNextReward(cardInput);
-  const rewardReady = readyRewards.length > 0;
+  // A prepaid membership has no reward to earn or redeem - it only depletes -
+  // so the scanner never shows the reward-ready / redeem path for one.
+  const rewardReady = program.isMembership ? false : readyRewards.length > 0;
   // Redemption always gives the EARLIEST reward still owed, so the scanner has
   // to name that one - telling staff "Free Coffee" while the button hands over
   // the 50% discount is how a counter loses trust in the screen.
@@ -715,6 +717,42 @@ function QuickScanActions({
             Reward ready. Redeem the reward before adding another stamp.
           </p>
         )
+      ) : isMembership ? (
+        // A membership uses a single form with ONE treatment picker shared by
+        // both buttons - no more duplicated "Treatment for this visit" block.
+        // Each button sets shareAfterStamp via submitFieldName before submit.
+        <form action={issueStampAction} className="grid gap-3">
+          <CsrfInput scope="scan:stamp" />
+          <IdempotencyInput scope="stamp" />
+          <input type="hidden" name="scanToken" value={token} />
+          <input type="hidden" name="quantity" value="1" />
+          <input type="hidden" name="shareAfterStamp" value="" />
+          <MembershipTreatmentFields treatments={treatments} />
+          <ConfirmSubmitButton
+            title={isMembership ? "Use one session?" : "Issue stamp?"}
+            message={isMembership ? "This will use one session from the customer's membership." : "This will add 1 visit to the customer's selected program."}
+            confirmLabel={isMembership ? "Use Session" : "Issue Stamp"}
+            cancelLabel="Cancel"
+            confirmationTheme={confirmationTheme}
+            submitFieldName="shareAfterStamp"
+            submitFieldValue=""
+            className="business-button min-h-12 w-full rounded-md px-5 text-base font-semibold shadow-sm transition"
+          >
+            {isMembership ? "Use Session" : "Issue Stamp"}
+          </ConfirmSubmitButton>
+          <ConfirmSubmitButton
+            title={isMembership ? "Use session and share updated card?" : "Issue stamp and share updated card?"}
+            message={isMembership ? "This will use one session, then prepare a WhatsApp message with the customer's updated loyalty card." : "This will add 1 visit, then prepare a WhatsApp message with the customer's updated loyalty card."}
+            confirmLabel={isMembership ? "Use Session & Share" : "Issue Stamp & Share"}
+            cancelLabel="Cancel"
+            confirmationTheme={confirmationTheme}
+            submitFieldName="shareAfterStamp"
+            submitFieldValue="whatsapp"
+            className="min-h-12 w-full rounded-md border border-[#E5E7EB] bg-white px-5 text-base font-semibold text-[#111827] shadow-sm transition business-hover"
+          >
+            {isMembership ? "Use Session & Share via WhatsApp" : "Issue Stamp & Share via WhatsApp"}
+          </ConfirmSubmitButton>
+        </form>
       ) : (
         <div className="grid gap-3">
           <form action={issueStampAction}>

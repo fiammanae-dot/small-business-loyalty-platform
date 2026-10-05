@@ -20,6 +20,7 @@ import { formatDate } from "@/lib/format";
 import { formatUaePhoneDisplay, normalizePhone } from "@/lib/phone";
 import { businessTracksVehicles, formatPlateDisplay, parsePlateQuery } from "@/lib/vehicles";
 import { getNextReward, getReadyRewards, singleCardReward } from "@/lib/rewards";
+import { membershipSessionSummary } from "@/lib/membership-sessions";
 import { prisma } from "@/lib/prisma";
 import { areTiersVisible } from "@/lib/customer-tiers";
 
@@ -45,6 +46,9 @@ export default async function CustomersPage({
 }) {
   const { user, business } = await getBusinessOwnerContext();
   const tiersVisible = areTiersVisible(business.membershipSettings?.enabled);
+  // Membership businesses sell prepaid sessions, not reward cards, so the
+  // reward/near-reward filters don't apply.
+  const membershipMode = Boolean(business.membershipSettings?.enabled);
   const params = await searchParams;
   const query = params.q?.trim();
   const normalizedQueryPhone = query ? normalizePhone(query) : null;
@@ -118,8 +122,12 @@ export default async function CustomersPage({
 
   const segments: Array<{ key: string; label: string; count: number; href: string; tone?: "warning" }> = [
     { key: "all", label: "All customers", count: allRows.length, href: buildSegmentHref(query, {}) },
-    { key: "reward", label: "Reward ready", count: allRows.filter((row) => row.rewardReady).length, href: buildSegmentHref(query, { reward: "ready" }), tone: "warning" },
-    { key: "near", label: "Near reward", count: allRows.filter((row) => row.nearReward).length, href: buildSegmentHref(query, { reward: "near" }) },
+    ...(membershipMode
+      ? []
+      : [
+          { key: "reward", label: "Reward ready", count: allRows.filter((row) => row.rewardReady).length, href: buildSegmentHref(query, { reward: "ready" }), tone: "warning" as const },
+          { key: "near", label: "Near reward", count: allRows.filter((row) => row.nearReward).length, href: buildSegmentHref(query, { reward: "near" }) },
+        ]),
     ...(tiersVisible ? [{ key: "vip", label: "VIP", count: allRows.filter((row) => row.tier === "VIP").length, href: buildSegmentHref(query, { tier: "VIP" }) }] : []),
     { key: "active", label: "Active", count: allRows.filter((row) => row.status === "ACTIVE").length, href: buildSegmentHref(query, { status: "ACTIVE" }) },
     { key: "inactive", label: "Inactive", count: allRows.filter((row) => row.status === "INACTIVE").length, href: buildSegmentHref(query, { status: "INACTIVE" }) },
@@ -185,7 +193,7 @@ export default async function CustomersPage({
               <FilterSelect name="program" label="All programs" value={params.program} options={programs.map((program) => [program.uuid, program.name] as [string, string])} />
               {tiersVisible ? <FilterSelect name="tier" label="All tiers" value={params.tier} options={[["BRONZE", "Bronze"], ["SILVER", "Silver"], ["GOLD", "Gold"], ["VIP", "VIP"]]} /> : null}
               <FilterSelect name="status" label="All statuses" value={params.status} options={[["ACTIVE", "Active"], ["INACTIVE", "Inactive"], ["BLOCKED", "Blocked"]]} />
-              <FilterSelect name="reward" label="All reward states" value={params.reward} options={[["ready", "Reward ready"], ["near", "Near reward"]]} />
+              {membershipMode ? null : <FilterSelect name="reward" label="All reward states" value={params.reward} options={[["ready", "Reward ready"], ["near", "Near reward"]]} />}
               <FilterSelect name="consent" label="All consent" value={params.consent} options={[["yes", "Consented"], ["no", "No consent"]]} />
               <div className="flex gap-2 md:col-span-3 xl:col-span-6">
                 <button
@@ -326,6 +334,7 @@ const customerInclude = {
       loyaltyProgram: {
         select: {
           name: true,
+          isMembership: true,
           requiredStamps: true,
           rewardName: true,
           rewardDescription: true,
@@ -471,7 +480,7 @@ function CustomerProgress({ row }: { row: CustomerRow }) {
     <div className="min-w-0 max-w-44">
       <ProgressBar value={row.progress.current} max={row.progress.required} />
       <p className="mt-1 truncate text-xs font-semibold text-[#7A8091]">
-        {row.progress.current} / {row.progress.required} · {row.progress.programName}
+        {row.progress.current} / {row.progress.required}{row.progress.isMembership ? " sessions" : ""} · {row.progress.programName}
         {extraLabel}
       </p>
     </div>
@@ -533,8 +542,29 @@ function buildSegmentHref(query: string | undefined, overrides: Record<string, s
 
 function toCustomerSummary(membership: CustomerMembershipWithRelations) {
   const progressRows = membership.programMemberships.map((programMembership) => {
-    const current = programMembership.earnedStamps + programMembership.bonusStamps;
     const required = programMembership.loyaltyProgram.requiredStamps;
+    const isMembership = programMembership.loyaltyProgram.isMembership;
+    const lastVisit = programMembership.stampTransactions[0]?.createdAt ?? null;
+    // A prepaid membership counts DOWN (show sessions left) and has no reward,
+    // so it is never "reward ready" or "near reward".
+    if (isMembership) {
+      const sessions = membershipSessionSummary({
+        requiredStamps: required,
+        earnedStamps: programMembership.earnedStamps,
+        bonusStamps: programMembership.bonusStamps,
+        sessionsForfeited: programMembership.sessionsForfeited,
+      });
+      return {
+        current: sessions.remaining,
+        required,
+        programName: programMembership.loyaltyProgram.name,
+        isMembership: true,
+        rewardReady: false,
+        nearReward: false,
+        lastVisit,
+      };
+    }
+    const current = programMembership.earnedStamps + programMembership.bonusStamps;
     const cardInput = {
       earnedStamps: programMembership.earnedStamps,
       bonusStamps: programMembership.bonusStamps,
@@ -553,11 +583,12 @@ function toCustomerSummary(membership: CustomerMembershipWithRelations) {
       current,
       required,
       programName: programMembership.loyaltyProgram.name,
+      isMembership: false,
       rewardReady: readyRewards.length > 0,
       // "Near" now means near the NEXT reward, so someone two visits from the
       // milestone counts, not only someone two visits from finishing.
       nearReward: readyRewards.length === 0 && untilNext !== null && untilNext > 0 && untilNext <= 2,
-      lastVisit: programMembership.stampTransactions[0]?.createdAt ?? null,
+      lastVisit,
     };
   });
   const progress = progressRows.sort((a, b) => b.current / Math.max(1, b.required) - a.current / Math.max(1, a.required))[0] ?? null;

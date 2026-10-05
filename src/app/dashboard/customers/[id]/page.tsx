@@ -70,12 +70,19 @@ function rewardStatusFor(programMembership: {
   status: string;
   claimedRewardStamps: number[];
   loyaltyProgram: {
+    isMembership: boolean;
     requiredStamps: number;
     rewardName: string;
     rewardDescription: string;
     programRewards?: { atStamp: number; rewardName: string; rewardDescription: string; completesCard: boolean }[];
   };
 }) {
+  const progress = progressValue(programMembership.earnedStamps, programMembership.bonusStamps);
+  // A prepaid membership has no reward to earn or redeem - it only depletes -
+  // so every reward-aware surface on this page treats it as "never ready".
+  if (programMembership.loyaltyProgram.isMembership) {
+    return { progress, readyRewards: [], nextReward: null, rewardReady: false, untilNext: 0 };
+  }
   const cardInput = {
     earnedStamps: programMembership.earnedStamps,
     bonusStamps: programMembership.bonusStamps,
@@ -84,7 +91,6 @@ function rewardStatusFor(programMembership: {
   };
   const readyRewards = getReadyRewards(cardInput);
   const nextReward = getNextReward(cardInput);
-  const progress = progressValue(programMembership.earnedStamps, programMembership.bonusStamps);
   return {
     progress,
     readyRewards,
@@ -227,6 +233,18 @@ export default async function CustomerProfilePage({
   const rewardsReady = membership.programMemberships.filter(
     (programMembership) => rewardStatusFor(programMembership).rewardReady,
   ).length;
+  const totalSessionsRemaining = membership.programMemberships.reduce((sum, programMembership) => {
+    if (!programMembership.loyaltyProgram.isMembership) return sum;
+    return (
+      sum +
+      membershipSessionSummary({
+        requiredStamps: programMembership.loyaltyProgram.requiredStamps,
+        earnedStamps: programMembership.earnedStamps,
+        bonusStamps: programMembership.bonusStamps,
+        sessionsForfeited: programMembership.sessionsForfeited,
+      }).remaining
+    );
+  }, 0);
   const lastActivityDate =
     [membership.joinedAt, ...membership.programMemberships.map((programMembership) => programMembership.enrolledAt), ...stampTransactions.map((transaction) => transaction.createdAt), ...generatedAlerts.map((alert) => alert.createdAt)]
       .sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
@@ -324,6 +342,8 @@ export default async function CustomerProfilePage({
   const primaryScanHref = primaryProgram ? `/scan/${primaryProgram.scanToken}` : "/dashboard/scanner";
   const primaryGoogleWalletUrl = primaryProgram ? `/api/wallet/google/save/${primaryProgram.scanToken}` : null;
   const primaryRewardReady = Boolean(primaryProgram && rewardStatusFor(primaryProgram).rewardReady);
+  const primaryIsMembership = Boolean(primaryProgram?.loyaltyProgram.isMembership);
+  const membershipMode = Boolean(business.membershipSettings?.enabled);
   const referralStatus = membership.referralCode ? "ACTIVE" : "NOT_CONFIGURED";
 return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Customer 360">
@@ -376,7 +396,7 @@ return (
               </ButtonLink>
             ) : (
               <ButtonLink href={primaryScanHref} variant="business" size="sm" leftIcon={<TicketCheck className="h-4 w-4" aria-hidden />}>
-                Issue Stamp
+                {primaryIsMembership ? "Use Session" : "Issue Stamp"}
               </ButtonLink>
             )}
             <ButtonLink href={cardUrl} target="_blank" rel="noreferrer" variant="outline" size="sm" leftIcon={<CreditCard className="h-4 w-4" aria-hidden />}>
@@ -436,13 +456,23 @@ return (
             helper={`of ${totalPrograms} enrolled`}
             icon={<CreditCard aria-hidden />}
           />
-          <MetricCard
-            label="Rewards ready"
-            value={rewardsReady}
-            helper={rewardsReady > 0 ? "Ready to redeem now" : "None ready yet"}
-            icon={<Gift aria-hidden />}
-            tone={rewardsReady > 0 ? "warning" : "neutral"}
-          />
+          {membershipMode ? (
+            <MetricCard
+              label="Sessions remaining"
+              value={totalSessionsRemaining}
+              helper={totalSessionsRemaining > 0 ? "Across active memberships" : "All sessions used"}
+              icon={<CreditCard aria-hidden />}
+              tone={totalSessionsRemaining > 0 ? "business" : "neutral"}
+            />
+          ) : (
+            <MetricCard
+              label="Rewards ready"
+              value={rewardsReady}
+              helper={rewardsReady > 0 ? "Ready to redeem now" : "None ready yet"}
+              icon={<Gift aria-hidden />}
+              tone={rewardsReady > 0 ? "warning" : "neutral"}
+            />
+          )}
           <MetricCard
             label="Rewards redeemed"
             value={rewardRedemptions.length}
@@ -494,11 +524,17 @@ return (
             label: "Activity",
             content: <ActivityTabContent items={timeline} />,
           },
-          {
-            id: "rewards",
-            label: "Rewards",
-            content: <RewardsPanel programCards={programCards} rewardRedemptions={rewardRedemptions} />,
-          },
+          // A prepaid membership earns no rewards, so the Rewards tab (ready
+          // rewards + redemption history) has nothing to show - hide it.
+          ...(membershipMode
+            ? []
+            : [
+                {
+                  id: "rewards",
+                  label: "Rewards",
+                  content: <RewardsPanel programCards={programCards} rewardRedemptions={rewardRedemptions} />,
+                },
+              ]),
           {
             id: "referrals",
             label: "Referrals",
@@ -661,47 +697,55 @@ function LoyaltyOverviewPanel({
       </div>
       <div className="mt-5 grid gap-4">
         {programCards.map(({ programMembership, membershipUuid }) => {
+          const isMembership = programMembership.loyaltyProgram.isMembership;
           const { progress, readyRewards, nextReward, rewardReady: isRewardReady, untilNext: remaining } =
             rewardStatusFor(programMembership);
           const required = programMembership.loyaltyProgram.requiredStamps;
-          const progressPercent = required <= 0 ? 0 : Math.min(100, Math.round((progress / required) * 100));
+          const sessions = isMembership
+            ? membershipSessionSummary({
+                requiredStamps: required,
+                earnedStamps: programMembership.earnedStamps,
+                bonusStamps: programMembership.bonusStamps,
+                sessionsForfeited: programMembership.sessionsForfeited,
+              })
+            : null;
+          // A membership counts DOWN: filled slots are sessions LEFT, not used.
+          const displayCurrent = sessions ? sessions.remaining : progress;
+          const unitLabel = isMembership ? "sessions" : "stamps";
+          const progressPercent = required <= 0 ? 0 : Math.min(100, Math.round((displayCurrent / required) * 100));
           const showGrid = required > 0 && required <= STAMP_GRID_CAP;
           return (
             <article key={programMembership.id} className={`rounded-xl border p-4 md:p-5 ${isRewardReady ? "border-[#F3D9A4] bg-[#FFFBF2]" : "border-[#E7E9EE] bg-white"}`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-base font-semibold text-[#111827]">{programMembership.loyaltyProgram.name}</p>
-                  <p className="mt-0.5 flex items-center gap-1.5 text-sm text-[#6B7280]"><Gift className="h-3.5 w-3.5 text-[#94A3B8]" aria-hidden />{(readyRewards[0] ?? nextReward)?.rewardName ?? programMembership.loyaltyProgram.rewardName}</p>
+                  {isMembership ? (
+                    <p className="mt-0.5 flex items-center gap-1.5 text-sm text-[#6B7280]"><CreditCard className="h-3.5 w-3.5 text-[#94A3B8]" aria-hidden />Prepaid membership</p>
+                  ) : (
+                    <p className="mt-0.5 flex items-center gap-1.5 text-sm text-[#6B7280]"><Gift className="h-3.5 w-3.5 text-[#94A3B8]" aria-hidden />{(readyRewards[0] ?? nextReward)?.rewardName ?? programMembership.loyaltyProgram.rewardName}</p>
+                  )}
                 </div>
                 {isRewardReady ? <StatusBadge tone="warning">Reward ready</StatusBadge> : null}
               </div>
               {showGrid ? (
                 <div className="mt-4">
-                  <StampGrid progress={progress} required={required} />
+                  <StampGrid progress={displayCurrent} required={required} />
                 </div>
               ) : null}
               <div className="mt-4 flex items-baseline justify-between">
-                <span className="text-2xl font-bold text-[#111827]">{progress} <span className="text-base font-medium text-[#6B7280]">/ {required} stamps</span></span>
-                <span className={`text-sm font-semibold ${isRewardReady ? "text-emerald-600" : "business-text"}`}>{isRewardReady ? "Ready to redeem" : `${progressPercent}%`}</span>
+                <span className="text-2xl font-bold text-[#111827]">{displayCurrent} <span className="text-base font-medium text-[#6B7280]">/ {required} {unitLabel}</span></span>
+                {isMembership ? null : (
+                  <span className={`text-sm font-semibold ${isRewardReady ? "text-emerald-600" : "business-text"}`}>{isRewardReady ? "Ready to redeem" : `${progressPercent}%`}</span>
+                )}
               </div>
-              <ProgressBar value={progress} max={required} className="mt-3" />
-              {programMembership.loyaltyProgram.isMembership ? (
-                (() => {
-                  const sessions = membershipSessionSummary({
-                    requiredStamps: required,
-                    earnedStamps: programMembership.earnedStamps,
-                    bonusStamps: programMembership.bonusStamps,
-                    sessionsForfeited: programMembership.sessionsForfeited,
-                  });
-                  return (
-                    <p className="mt-2 text-sm font-semibold text-[#111827]">
-                      {sessions.remaining} of {sessions.total} session{sessions.total === 1 ? "" : "s"} remaining
-                      <span className="font-normal text-[#6B7280]">
-                        {" \u00b7 "}{sessions.used} used{sessions.forfeited > 0 ? ` \u00b7 ${sessions.forfeited} forfeited` : ""}
-                      </span>
-                    </p>
-                  );
-                })()
+              <ProgressBar value={displayCurrent} max={required} className="mt-3" />
+              {isMembership && sessions ? (
+                <p className="mt-2 text-sm font-semibold text-[#111827]">
+                  {sessions.remaining} of {sessions.total} session{sessions.total === 1 ? "" : "s"} remaining
+                  <span className="font-normal text-[#6B7280]">
+                    {" \u00b7 "}{sessions.used} used{sessions.forfeited > 0 ? ` \u00b7 ${sessions.forfeited} forfeited` : ""}
+                  </span>
+                </p>
               ) : !isRewardReady ? (
                 <p className="mt-2 text-sm text-[#6B7280]">
                   {remaining} stamp{remaining === 1 ? "" : "s"} remaining until {nextReward ? nextReward.rewardName : "reward"}
