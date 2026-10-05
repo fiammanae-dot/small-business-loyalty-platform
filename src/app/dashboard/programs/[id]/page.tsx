@@ -64,14 +64,18 @@ export default async function ProgramDetailPage({
   if (!program) return <NotFound user={user} />;
 
   const nextActive = !program.active;
+  const isMembership = program.isMembership;
   const safeRequiredStamps = Math.max(program.requiredStamps, 1);
   const enrolledCustomers = program.memberships.length;
   const activeCustomers = program.memberships.filter(
     (membership) => membership.status === "ACTIVE" && progressValue(membership.earnedStamps, membership.bonusStamps) < safeRequiredStamps,
   ).length;
-  const rewardReadyCustomers = program.memberships.filter(
-    (membership) => membership.status !== "COMPLETED" && progressValue(membership.earnedStamps, membership.bonusStamps) >= safeRequiredStamps,
-  ).length;
+  // A prepaid membership has no reward to become ready.
+  const rewardReadyCustomers = isMembership
+    ? 0
+    : program.memberships.filter(
+        (membership) => membership.status !== "COMPLETED" && progressValue(membership.earnedStamps, membership.bonusStamps) >= safeRequiredStamps,
+      ).length;
   const redeemedRewards = program.rewardRedemptions.length;
   const progressTotal = program.memberships.reduce(
     (sum, membership) => sum + Math.min(safeRequiredStamps, progressValue(membership.earnedStamps, membership.bonusStamps)),
@@ -119,8 +123,14 @@ export default async function ProgramDetailPage({
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5" aria-label="Program metrics">
           <MetricCard label="Members" value={enrolledCustomers} />
           <MetricCard label="Active Members" value={activeCustomers} tone="success" />
-          <MetricCard label="Reward Ready" value={rewardReadyCustomers} tone="warning" href={"/dashboard/programs/" + program.uuid + "/customers"} />
-          <MetricCard label="Rewards Redeemed" value={redeemedRewards} />
+          {isMembership ? (
+            <MetricCard label="Sessions Used" value={earnedStamps} tone="business" />
+          ) : (
+            <>
+              <MetricCard label="Reward Ready" value={rewardReadyCustomers} tone="warning" href={"/dashboard/programs/" + program.uuid + "/customers"} />
+              <MetricCard label="Rewards Redeemed" value={redeemedRewards} />
+            </>
+          )}
           <MetricCard label="Completion" value={averageCompletionRate + "%"} tone="business" />
         </section>
 
@@ -234,7 +244,7 @@ export default async function ProgramDetailPage({
               <DataTableBody>
                 {program.memberships.slice(0, 8).map((membership) => {
                   const progress = progressValue(membership.earnedStamps, membership.bonusStamps);
-                  const rewardReady = progress >= safeRequiredStamps && membership.status !== "COMPLETED";
+                  const rewardReady = !isMembership && progress >= safeRequiredStamps && membership.status !== "COMPLETED";
                   return (
                     <tr key={membership.id}>
                       <DataTableCell className="font-semibold text-[#0F172A]">
@@ -245,7 +255,7 @@ export default async function ProgramDetailPage({
                       </DataTableCell>
                       <DataTableCell>
                         <StatusBadge tone={rewardReady ? "warning" : membership.status === "ACTIVE" ? "success" : "neutral"}>
-                          {programCustomerStatusLabel({ status: membership.status, earnedStamps: membership.earnedStamps, bonusStamps: membership.bonusStamps, requiredStamps: safeRequiredStamps })}
+                          {programCustomerStatusLabel({ status: membership.status, earnedStamps: membership.earnedStamps, bonusStamps: membership.bonusStamps, requiredStamps: safeRequiredStamps, isMembership })}
                         </StatusBadge>
                       </DataTableCell>
                       <DataTableCell>{membership.stampTransactions[0] ? formatDate(membership.stampTransactions[0].createdAt) : "-"}</DataTableCell>

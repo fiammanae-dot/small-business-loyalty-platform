@@ -36,7 +36,10 @@ export default async function ProgramsPage({
 }: {
   searchParams: Promise<ProgramSearchParams>;
 }) {
-  const { user } = await getBusinessOwnerContext();
+  const { user, business } = await getBusinessOwnerContext();
+  // Membership businesses sell prepaid sessions, not reward cards, so this page
+  // drops reward-ready language and shows sessions instead.
+  const membershipMode = Boolean(business.membershipSettings?.enabled);
   const params = await searchParams;
   const query = (params.q ?? "").trim().toLowerCase();
   const status = params.status ?? "";
@@ -62,9 +65,12 @@ export default async function ProgramsPage({
   const programRows = allPrograms.map((program) => {
     const requiredStamps = Math.max(program.requiredStamps, 1);
     const memberCount = program._count.memberships;
-    const rewardReadyCount = program.memberships.filter(
-      (membership) => membership.status !== "COMPLETED" && progressValue(membership.earnedStamps, membership.bonusStamps) >= requiredStamps,
-    ).length;
+    // A prepaid membership has no reward to become "ready".
+    const rewardReadyCount = program.isMembership
+      ? 0
+      : program.memberships.filter(
+          (membership) => membership.status !== "COMPLETED" && progressValue(membership.earnedStamps, membership.bonusStamps) >= requiredStamps,
+        ).length;
     const progressTotal = program.memberships.reduce(
       (sum, membership) => sum + Math.min(requiredStamps, progressValue(membership.earnedStamps, membership.bonusStamps)),
       0,
@@ -149,8 +155,12 @@ export default async function ProgramsPage({
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5" aria-label="Program KPI cards">
           <MetricCard label="Active Programs" value={activeCount} icon={<Gift className="h-5 w-5" />} tone="business" href="/dashboard/programs?status=active" />
           <MetricCard label="Total Members" value={totalMembers} icon={<Users className="h-5 w-5" />} href="/dashboard/customers" />
-          <MetricCard label="Rewards Redeemed" value={rewardsRedeemed} icon={<Trophy className="h-5 w-5" />} href="/dashboard/activity?type=reward" />
-          <MetricCard label="Reward Ready Customers" value={rewardReadyCount} icon={<Gift className="h-5 w-5" />} tone="warning" href="/dashboard/customers?reward=ready" />
+          {membershipMode ? null : (
+            <MetricCard label="Rewards Redeemed" value={rewardsRedeemed} icon={<Trophy className="h-5 w-5" />} href="/dashboard/activity?type=reward" />
+          )}
+          {membershipMode ? null : (
+            <MetricCard label="Reward Ready Customers" value={rewardReadyCount} icon={<Gift className="h-5 w-5" />} tone="warning" href="/dashboard/customers?reward=ready" />
+          )}
           <MetricCard label="Average Completion Rate" value={averageCompletionRate + "%"} icon={<BarChart3 className="h-5 w-5" />} />
         </section>
 
@@ -172,7 +182,7 @@ export default async function ProgramsPage({
               }
             >
               <FilterSelect name="status" label="Status" defaultValue={status} options={[{ value: "", label: "All statuses" }, { value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]} />
-              <FilterSelect name="reward" label="Reward Ready" defaultValue={reward} options={[{ value: "", label: "Any reward state" }, { value: "ready", label: "Has reward-ready customers" }, { value: "none", label: "No reward-ready customers" }]} />
+              {membershipMode ? null : <FilterSelect name="reward" label="Reward Ready" defaultValue={reward} options={[{ value: "", label: "Any reward state" }, { value: "ready", label: "Has reward-ready customers" }, { value: "none", label: "No reward-ready customers" }]} />}
               <FilterSelect name="sort" label="Sort" defaultValue={sort} options={[{ value: "created", label: "Newest" }, { value: "members", label: "Most active" }, { value: "completion", label: "Completion" }, { value: "rewards", label: "Rewards redeemed" }, { value: "name", label: "Program name" }]} />
               <FilterSelect name="direction" label="Direction" defaultValue={direction} options={[{ value: "desc", label: "Descending" }, { value: "asc", label: "Ascending" }]} />
             </FilterBar>
@@ -194,10 +204,10 @@ export default async function ProgramsPage({
                   <DataTableHeader>
                     <tr>
                       <DataTableHeadCell>Program</DataTableHeadCell>
-                      <DataTableHeadCell>Reward</DataTableHeadCell>
+                      <DataTableHeadCell>{membershipMode ? "Package" : "Reward"}</DataTableHeadCell>
                       <DataTableHeadCell>Members</DataTableHeadCell>
                       <DataTableHeadCell>Completion</DataTableHeadCell>
-                      <DataTableHeadCell>Rewards</DataTableHeadCell>
+                      <DataTableHeadCell>{membershipMode ? "Sessions" : "Rewards"}</DataTableHeadCell>
                       <DataTableHeadCell>Status</DataTableHeadCell>
                     </tr>
                   </DataTableHeader>
@@ -215,16 +225,31 @@ export default async function ProgramsPage({
                           {row.isMembership ? <div className="mt-1 text-xs font-semibold business-primary-strong">Membership{row.priceLabel ? ` \u00b7 ${row.priceLabel}` : ""}</div> : null}
                         </DataTableCell>
                         <DataTableCell>
-                          <div className="font-medium text-[#0F172A]">{row.program.rewardName}</div>
-                          <div className="mt-1 text-xs text-[#64748B]">{row.requiredStamps} visits required</div>
+                          {row.isMembership ? (
+                            <>
+                              <div className="font-medium text-[#0F172A]">{row.requiredStamps} sessions</div>
+                              <div className="mt-1 text-xs text-[#64748B]">Prepaid package</div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="font-medium text-[#0F172A]">{row.program.rewardName}</div>
+                              <div className="mt-1 text-xs text-[#64748B]">{row.requiredStamps} visits required</div>
+                            </>
+                          )}
                         </DataTableCell>
                         <DataTableCell>{row.memberCount}</DataTableCell>
                         <DataTableCell className="min-w-44">
                           <ProgressBar value={row.completionRate} label={row.completionRate + "% average"} barClassName="business-button" />
                         </DataTableCell>
                         <DataTableCell>
-                          <div>{row.rewardsRedeemed} redeemed</div>
-                          <div className="mt-1 text-xs text-[#64748B]">{row.rewardReadyCount} ready</div>
+                          {row.isMembership ? (
+                            <div>{row.stampsIssued} sessions used</div>
+                          ) : (
+                            <>
+                              <div>{row.rewardsRedeemed} redeemed</div>
+                              <div className="mt-1 text-xs text-[#64748B]">{row.rewardReadyCount} ready</div>
+                            </>
+                          )}
                         </DataTableCell>
                         <DataTableCell><ProgramStatus active={row.program.active} rewardReadyCount={row.rewardReadyCount} /></DataTableCell>
                       </tr>
@@ -292,10 +317,21 @@ function ProgramCard({ row }: { row: ProgramRow }) {
         <ProgramStatus active={row.program.active} rewardReadyCount={row.rewardReadyCount} />
       </div>
       <div className="mt-4 grid gap-3 text-sm text-[#475569]">
-        <InfoLine label="Reward" value={row.program.rewardName} />
-        <InfoLine label="Members" value={row.memberCount.toString()} />
-        <InfoLine label="Reward ready" value={row.rewardReadyCount.toString()} />
-        <InfoLine label="Average visits" value={row.averageVisits.toString()} />
+        {row.isMembership ? (
+          <>
+            <InfoLine label="Package size" value={`${row.requiredStamps} sessions`} />
+            <InfoLine label="Members" value={row.memberCount.toString()} />
+            <InfoLine label="Sessions used" value={row.stampsIssued.toString()} />
+            <InfoLine label="Average visits" value={row.averageVisits.toString()} />
+          </>
+        ) : (
+          <>
+            <InfoLine label="Reward" value={row.program.rewardName} />
+            <InfoLine label="Members" value={row.memberCount.toString()} />
+            <InfoLine label="Reward ready" value={row.rewardReadyCount.toString()} />
+            <InfoLine label="Average visits" value={row.averageVisits.toString()} />
+          </>
+        )}
       </div>
       <div className="mt-4">
         <ProgressBar value={row.completionRate} label={row.completionRate + "% completion"} barClassName="business-button" />
