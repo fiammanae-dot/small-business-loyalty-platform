@@ -174,14 +174,19 @@ export function programCustomerStatusLabel({
   earnedStamps,
   bonusStamps,
   requiredStamps,
+  isMembership = false,
 }: {
   status: string;
   earnedStamps: number;
   bonusStamps: number;
   requiredStamps: number;
+  isMembership?: boolean;
 }) {
-  if (status === "COMPLETED") return "Completed";
-  if (progressValue(earnedStamps, bonusStamps) >= requiredStamps) return "Reward Ready";
+  if (status === "COMPLETED") return isMembership ? "Membership complete" : "Completed";
+  if (progressValue(earnedStamps, bonusStamps) >= requiredStamps) {
+    // A prepaid membership has no reward - a full card just means it is used up.
+    return isMembership ? "Membership complete" : "Reward Ready";
+  }
   return "Active";
 }
 

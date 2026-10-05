@@ -111,6 +111,7 @@ export default async function ProgramCustomersPage({
 type ProgramWithMembers = {
   requiredStamps: number;
   rewardName: string;
+  isMembership: boolean;
   memberships: Array<{
     id: number;
     earnedStamps: number;
@@ -128,6 +129,8 @@ type ProgramWithMembers = {
 };
 
 function ProgramMembersTable({ program }: { program: ProgramWithMembers }) {
+  // A prepaid membership has no reward, so its customers are never reward-ready.
+  const isMembership = program.isMembership;
   return (
     <SectionCard title="Program customers" description="Customer participation, progress and reward readiness for this program.">
       {program.memberships.length > 0 ? (
@@ -141,7 +144,7 @@ function ProgramMembersTable({ program }: { program: ProgramWithMembers }) {
                 <tr>
                   <DataTableHeadCell>Customer</DataTableHeadCell>
                   <DataTableHeadCell>Progress</DataTableHeadCell>
-                  <DataTableHeadCell>Reward Ready</DataTableHeadCell>
+                  {isMembership ? null : <DataTableHeadCell>Reward Ready</DataTableHeadCell>}
                   <DataTableHeadCell>Last Visit</DataTableHeadCell>
                   <DataTableHeadCell>Status</DataTableHeadCell>
                   <DataTableHeadCell className="text-right">Actions</DataTableHeadCell>
@@ -150,7 +153,7 @@ function ProgramMembersTable({ program }: { program: ProgramWithMembers }) {
               <DataTableBody>
                 {program.memberships.map((membership) => {
                   const progress = progressValue(membership.earnedStamps, membership.bonusStamps);
-                  const rewardReady = progress >= program.requiredStamps && membership.status !== "COMPLETED";
+                  const rewardReady = !isMembership && progress >= program.requiredStamps && membership.status !== "COMPLETED";
                   return (
                     <tr key={membership.id}>
                       <DataTableCell className="font-semibold text-[#0F172A]">
@@ -160,11 +163,11 @@ function ProgramMembersTable({ program }: { program: ProgramWithMembers }) {
                       <DataTableCell className="min-w-48">
                         <ProgressBar value={progress} max={program.requiredStamps} label={progress + " / " + program.requiredStamps} barClassName="business-button" />
                       </DataTableCell>
-                      <DataTableCell>{rewardReady ? <StatusBadge tone="warning">Reward Ready</StatusBadge> : <span className="text-[#64748B]">-</span>}</DataTableCell>
+                      {isMembership ? null : <DataTableCell>{rewardReady ? <StatusBadge tone="warning">Reward Ready</StatusBadge> : <span className="text-[#64748B]">-</span>}</DataTableCell>}
                       <DataTableCell>{membership.stampTransactions[0] ? formatDate(membership.stampTransactions[0].createdAt) : "-"}</DataTableCell>
                       <DataTableCell>
                         <StatusBadge tone={rewardReady ? "warning" : membership.status === "ACTIVE" ? "success" : "neutral"}>
-                          {programCustomerStatusLabel({ status: membership.status, earnedStamps: membership.earnedStamps, bonusStamps: membership.bonusStamps, requiredStamps: program.requiredStamps })}
+                          {programCustomerStatusLabel({ status: membership.status, earnedStamps: membership.earnedStamps, bonusStamps: membership.bonusStamps, requiredStamps: program.requiredStamps, isMembership })}
                         </StatusBadge>
                       </DataTableCell>
                       <DataTableCell className="text-right">
@@ -186,7 +189,7 @@ function ProgramMembersTable({ program }: { program: ProgramWithMembers }) {
 
 function ProgramMemberCard({ membership, program }: { membership: ProgramWithMembers["memberships"][number]; program: ProgramWithMembers }) {
   const progress = progressValue(membership.earnedStamps, membership.bonusStamps);
-  const rewardReady = progress >= program.requiredStamps && membership.status !== "COMPLETED";
+  const rewardReady = !program.isMembership && progress >= program.requiredStamps && membership.status !== "COMPLETED";
   return (
     <article className="rounded-md border border-[#E2E8F0] bg-white p-4">
       <div className="flex items-start justify-between gap-3">
@@ -194,7 +197,13 @@ function ProgramMemberCard({ membership, program }: { membership: ProgramWithMem
           <h3 className="font-semibold text-[#0F172A]">{membership.businessCustomerMembership.firstName} {membership.businessCustomerMembership.lastName ?? ""}</h3>
           <p className="mt-1 text-sm text-[#64748B]">{membership.businessCustomerMembership.createdBranch?.name ?? "Business customer"}</p>
         </div>
-        {rewardReady ? <StatusBadge tone="warning">Reward Ready</StatusBadge> : <StatusBadge tone="success">Active</StatusBadge>}
+        {rewardReady ? (
+          <StatusBadge tone="warning">Reward Ready</StatusBadge>
+        ) : (
+          <StatusBadge tone={membership.status === "ACTIVE" ? "success" : "neutral"}>
+            {programCustomerStatusLabel({ status: membership.status, earnedStamps: membership.earnedStamps, bonusStamps: membership.bonusStamps, requiredStamps: program.requiredStamps, isMembership: program.isMembership })}
+          </StatusBadge>
+        )}
       </div>
       <div className="mt-4">
         <ProgressBar value={progress} max={program.requiredStamps} label={progress + " / " + program.requiredStamps} barClassName="business-button" />
