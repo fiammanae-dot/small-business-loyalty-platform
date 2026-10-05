@@ -225,13 +225,13 @@ async function main() {
             data: {
               businessId: business.id,
               logoUrl: LOGO_URL,
-              // The Skin Lab's teal with a soft gold accent - clinical and
-              // premium, so the card reads as a clinic rather than a voucher.
-              primaryColor: "#0D7377",
-              secondaryColor: "#C9A96A",
+              // The Skin Lab's real brand (from theskinlab.ae): navy logo and
+              // wordmark with a periwinkle accent on white.
+              primaryColor: "#000080",
+              secondaryColor: "#7A99F0",
               backgroundColor: "#FFFFFF",
               textColor: "#1A1A1A",
-              buttonColor: "#0D7377",
+              buttonColor: "#000080",
             },
           });
           // Memberships on: this hides visit tiers everywhere and turns on the
