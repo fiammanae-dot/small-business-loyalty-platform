@@ -65,7 +65,7 @@ export default async function BranchProgramsPage() {
             const rewardsRedeemed = program.memberships.reduce((sum, membership) => sum + membership.rewardRedemptions.length, 0);
             const rewardReadyCustomers = program.memberships.filter((membership) => {
               const progress = progressValue(membership.earnedStamps, membership.bonusStamps);
-              return membership.status === "ACTIVE" && progress >= program.requiredStamps;
+              return !program.isMembership && membership.status === "ACTIVE" && progress >= program.requiredStamps;
             }).length;
 
             return (
@@ -73,16 +73,20 @@ export default async function BranchProgramsPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h3 className="break-words font-semibold text-[#111827]">{program.name}</h3>
-                    <p className="mt-2 text-sm text-[#6B7280]">Reward: {program.rewardName}</p>
+                    <p className="mt-2 text-sm text-[#6B7280]">{program.isMembership ? "Prepaid membership" : `Reward: ${program.rewardName}`}</p>
                   </div>
                   <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">Active</span>
                 </div>
 
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <ProgramStat icon={Users} label="Enrolled" value={program.memberships.length.toString()} />
-                  <ProgramStat icon={TicketCheck} label="Stamps" value={stampsIssued.toString()} />
-                  <ProgramStat icon={Gift} label="Rewards" value={rewardsRedeemed.toString()} />
-                  <ProgramStat icon={Trophy} label="Reward-ready" value={rewardReadyCustomers.toString()} />
+                  <ProgramStat icon={TicketCheck} label={program.isMembership ? "Sessions used" : "Stamps"} value={stampsIssued.toString()} />
+                  {program.isMembership ? null : (
+                    <>
+                      <ProgramStat icon={Gift} label="Rewards" value={rewardsRedeemed.toString()} />
+                      <ProgramStat icon={Trophy} label="Reward-ready" value={rewardReadyCustomers.toString()} />
+                    </>
+                  )}
                 </div>
               </Link>
             );

@@ -121,7 +121,7 @@ export default async function StaffCustomerProfilePage({
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <h3 className="font-semibold text-[#111827]">{programMembership.loyaltyProgram.name}</h3>
-                      <p className="mt-1 text-sm text-[#6B7280]">Reward: {programMembership.loyaltyProgram.rewardName}</p>
+                      <p className="mt-1 text-sm text-[#6B7280]">{programMembership.loyaltyProgram.isMembership ? "Prepaid membership" : `Reward: ${programMembership.loyaltyProgram.rewardName}`}</p>
                     </div>
                     <span className="rounded-md bg-[#F3F4F6] px-2 py-1 text-xs font-semibold text-[#374151]">
                       {programCustomerStatusLabel({
@@ -129,6 +129,7 @@ export default async function StaffCustomerProfilePage({
                         earnedStamps: programMembership.earnedStamps,
                         bonusStamps: programMembership.bonusStamps,
                         requiredStamps: programMembership.loyaltyProgram.requiredStamps,
+                        isMembership: programMembership.loyaltyProgram.isMembership,
                       })}
                     </span>
                   </div>
