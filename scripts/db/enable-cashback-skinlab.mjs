@@ -3,10 +3,12 @@
  * balances + ledger history, so cashback shows in the dashboard, the scanner,
  * the customer card AND the Google Wallet pass ("Cashback: AED ...").
  *
- * The demo seed leaves cashback off (it defaults to off), so this is the
- * switch that makes it visible. Prod-guarded exactly like the other demo
- * scripts: it refuses production unless --production is passed, and it refuses
- * to run twice (it stops if cashback is already enabled).
+ * RESUMABLE: it ensures cashback is enabled, then seeds only the customers that
+ * have no cashback history yet - so a half-finished run can be finished by
+ * running it again, and a fully-seeded demo is a no-op.
+ *
+ * Prod-guarded exactly like the other demo scripts: it refuses production
+ * unless --production is passed.
  *
  *   node scripts/db/enable-cashback-skinlab.mjs --name="The Skin Lab Demo"                   -> dry run (demo DB)
  *   node scripts/db/enable-cashback-skinlab.mjs --name="The Skin Lab Demo" --yes             -> apply (demo DB)
@@ -36,8 +38,8 @@ const bare = (url) => host(url).replace("-pooler.", ".");
 const round2 = (n) => Math.round(n * 100) / 100;
 const token = (p) => `${p}_${randomBytes(12).toString("base64url")}`;
 
-// Past bills (AED) per customer, cycled by index - gives a realistic spread:
-// some customers with no cashback yet, others with one or several earns.
+// Past bills (AED) per customer, cycled by index - a realistic spread: some
+// customers with no cashback yet, others with one or several earns.
 const BILL_PATTERNS = [[], [750], [1500, 600], [3000], [900, 1200, 450], [1800]];
 
 if (!DATABASE_URL) { console.error(ALLOW_PRODUCTION ? "PRODUCTION_DATABASE_URL not set." : "No demo DATABASE_URL set."); process.exit(1); }
@@ -61,10 +63,6 @@ try {
     },
   });
   if (!business) { console.error(`No business named "${BUSINESS_NAME}" in this database.`); process.exit(1); }
-  if (business.cashbackSettings?.enabled) {
-    console.log(`Cashback is already enabled for "${business.name}". Nothing changed (run is not repeatable).`);
-    process.exit(0);
-  }
   const branchId = business.branches[0]?.id ?? null;
   const issuedByUserId = business.users[0]?.id ?? null;
 
@@ -74,8 +72,17 @@ try {
     orderBy: { id: "asc" },
   });
 
-  // Plan the earns per customer.
+  // Customers that already have cashback history (from a prior run) are left as-is.
+  const seededRows = await prisma.cashbackTransaction.findMany({
+    where: { businessId: business.id },
+    select: { businessCustomerMembershipId: true },
+    distinct: ["businessCustomerMembershipId"],
+  });
+  const seededIds = new Set(seededRows.map((r) => r.businessCustomerMembershipId));
+
+  // Plan earns only for customers with no cashback history yet.
   const plan = customers.map((c, i) => {
+    if (seededIds.has(c.id)) return { customer: c, earns: [], finalBalance: Number(c.cashbackBalance), skipped: true };
     const bills = BILL_PATTERNS[i % BILL_PATTERNS.length];
     let balance = 0;
     const earns = bills.map((bill, k) => {
@@ -83,26 +90,28 @@ try {
       balance = round2(balance + amount);
       return { bill, amount, balanceAfter: balance, invoiceNumber: `TSL-${1000 + i}-${k + 1}` };
     });
-    return { customer: c, earns, finalBalance: balance };
+    return { customer: c, earns, finalBalance: balance, skipped: false };
   });
 
-  const withBalance = plan.filter((p) => p.finalBalance > 0);
-  const totalCashback = round2(plan.reduce((s, p) => s + p.finalBalance, 0));
-  const totalEarns = plan.reduce((s, p) => s + p.earns.length, 0);
+  const toAdd = plan.filter((p) => !p.skipped && p.earns.length > 0);
+  const totalNew = round2(toAdd.reduce((s, p) => s + p.finalBalance, 0));
+  const totalEarns = toAdd.reduce((s, p) => s + p.earns.length, 0);
 
   console.log(`Business  : ${business.name} (id ${business.id})`);
-  console.log(`Cashback  : enabling at ${RATE}% (${CURRENCY})`);
-  console.log(`Customers : ${customers.length} total, ${withBalance.length} will have a balance`);
-  console.log(`Ledger    : ${totalEarns} EARN rows, total ${CURRENCY} ${totalCashback.toFixed(2)} across the demo`);
+  console.log(`Cashback  : ${business.cashbackSettings?.enabled ? "already enabled" : "will enable"} at ${RATE}% (${CURRENCY})`);
+  console.log(`Already   : ${seededIds.size} customers already have cashback (left untouched)`);
+  console.log(`To add    : ${toAdd.length} customers, ${totalEarns} EARN rows, ${CURRENCY} ${totalNew.toFixed(2)}`);
+
+  if (toAdd.length === 0 && business.cashbackSettings?.enabled) {
+    console.log("\nNothing to do - cashback is on and every customer is already seeded.");
+    process.exit(0);
+  }
 
   if (!WRITE) {
     console.log("\nDRY RUN - nothing written. Re-run with --yes to apply.");
   } else {
-    // Build every ledger row up front and insert them in ONE createMany, so the
-    // transaction is a handful of round trips instead of ~75 (the earlier run
-    // hit Prisma's 5s interactive-transaction timeout over the remote link).
     const earnRows = [];
-    for (const p of plan) {
+    for (const p of toAdd) {
       for (const e of p.earns) {
         earnRows.push({
           businessId: business.id,
@@ -128,8 +137,7 @@ try {
           create: { businessId: business.id, enabled: true, ratePercent: RATE, currency: CURRENCY },
         });
         if (earnRows.length) await tx.cashbackTransaction.createMany({ data: earnRows });
-        for (const p of plan) {
-          if (p.finalBalance <= 0) continue;
+        for (const p of toAdd) {
           await tx.businessCustomerMembership.update({
             where: { id: p.customer.id },
             data: { cashbackBalance: p.finalBalance },
