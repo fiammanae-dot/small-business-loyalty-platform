@@ -16,7 +16,8 @@ const ALLOW_PRODUCTION = process.argv.includes("--production");
 const DATABASE_URL = ALLOW_PRODUCTION
   ? process.env.PRODUCTION_DATABASE_URL
   : process.env.SEED_DEMO_DATABASE_URL || process.env.DATABASE_URL;
-const BUSINESS_NAME = "The Skin Lab";
+const nameArg = process.argv.find((a) => a.startsWith("--name="));
+const BUSINESS_NAME = nameArg ? nameArg.slice(7) : process.env.SEED_DEMO_BUSINESS_NAME || "The Skin Lab";
 const host = (url) => new URL(url).hostname;
 
 if (!DATABASE_URL) { console.error("No DATABASE_URL for this target."); process.exit(1); }

@@ -19,7 +19,8 @@ nextEnv.loadEnvConfig(process.cwd());
 
 const WRITE = process.argv.includes("--yes");
 const DATABASE_URL = process.env.SEED_DEMO_DATABASE_URL || process.env.DATABASE_URL;
-const BUSINESS_NAME = "The Skin Lab";
+const nameArg = process.argv.find((a) => a.startsWith("--name="));
+const BUSINESS_NAME = nameArg ? nameArg.slice(7) : process.env.SEED_DEMO_BUSINESS_NAME || "The Skin Lab";
 
 const BRANDING = {
   logoUrl: "https://theskinlab.ae/wp-content/uploads/2024/12/vectorpaint-5.png",

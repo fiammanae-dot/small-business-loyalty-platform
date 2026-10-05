@@ -38,7 +38,8 @@ const ALLOW_PRODUCTION = process.argv.includes("--production");
 const DATABASE_URL = ALLOW_PRODUCTION
   ? process.env.PRODUCTION_DATABASE_URL
   : process.env.SEED_DEMO_DATABASE_URL || process.env.DATABASE_URL;
-const BUSINESS_NAME = "The Skin Lab";
+const nameArg = process.argv.find((a) => a.startsWith("--name="));
+const BUSINESS_NAME = nameArg ? nameArg.slice(7) : process.env.SEED_DEMO_BUSINESS_NAME || "The Skin Lab";
 const OWNER_EMAIL = (process.env.SEED_DEMO_OWNER_EMAIL || "demo@theskinlab.ae").toLowerCase();
 const REQUIRED_SESSIONS = 6;
 const LOGO_URL = "https://theskinlab.ae/wp-content/uploads/2024/12/vectorpaint-5.png";
