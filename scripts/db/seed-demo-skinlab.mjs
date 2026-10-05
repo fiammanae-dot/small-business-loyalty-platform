@@ -16,8 +16,10 @@
  * the clinic is already there, and writes everything in ONE transaction, so it
  * either all lands or nothing does.
  *
- *   node scripts/db/seed-demo-skinlab.mjs          -> dry run: checks everything, writes nothing
- *   node scripts/db/seed-demo-skinlab.mjs --yes    -> writes the data
+ *   node scripts/db/seed-demo-skinlab.mjs                     -> dry run on the demo DB, writes nothing
+ *   node scripts/db/seed-demo-skinlab.mjs --yes               -> writes to the demo DB
+ *   node scripts/db/seed-demo-skinlab.mjs --production        -> dry run against the LIVE production DB
+ *   node scripts/db/seed-demo-skinlab.mjs --production --yes  -> seed the LIVE site on purpose
  */
 import { randomBytes } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
@@ -29,7 +31,13 @@ import pg from "pg";
 nextEnv.loadEnvConfig(process.cwd());
 
 const WRITE = process.argv.includes("--yes");
-const DATABASE_URL = process.env.SEED_DEMO_DATABASE_URL || process.env.DATABASE_URL;
+// Deliberate, explicit opt-in to seed the LIVE production database, so the demo
+// can be shown on the live site and Google Wallet tested on a real phone.
+// Without this flag the script only ever touches the demo/dev database.
+const ALLOW_PRODUCTION = process.argv.includes("--production");
+const DATABASE_URL = ALLOW_PRODUCTION
+  ? process.env.PRODUCTION_DATABASE_URL
+  : process.env.SEED_DEMO_DATABASE_URL || process.env.DATABASE_URL;
 const BUSINESS_NAME = "The Skin Lab";
 const OWNER_EMAIL = (process.env.SEED_DEMO_OWNER_EMAIL || "demo@theskinlab.ae").toLowerCase();
 const REQUIRED_SESSIONS = 6;
@@ -160,17 +168,26 @@ function guardTarget() {
   if (!DATABASE_URL) {
     throw new Error("DATABASE_URL is not set in .env, so there is no demo database to seed.");
   }
+  if (ALLOW_PRODUCTION && !DATABASE_URL) {
+    throw new Error("--production was passed but PRODUCTION_DATABASE_URL is not set in .env.");
+  }
   const production = process.env.PRODUCTION_DATABASE_URL;
   if (!production) return;
   // Neon's pooled and direct endpoints differ only by "-pooler", so compare
   // with it stripped - otherwise the same database slips through as two hosts.
   const bare = (url) => host(url).replace("-pooler.", ".");
   if (bare(DATABASE_URL) === bare(production)) {
+    if (ALLOW_PRODUCTION) {
+      // Explicitly opted in. The seed is additive and lands as ONE isolated
+      // tenant; it can be removed later with delete-demo-skinlab.mjs.
+      return;
+    }
     throw new Error(
       [
         `Refusing to run: DATABASE_URL points at ${host(DATABASE_URL)}, which is PRODUCTION.`,
         "Demo data must not go into the live database - it would show up in your reports",
-        "and sit alongside real clients. Point SEED_DEMO_DATABASE_URL at the demo branch first.",
+        "and sit alongside real clients. Point SEED_DEMO_DATABASE_URL at the demo branch first,",
+        "or pass --production to seed the live site on purpose.",
       ].join("\n"),
     );
   }
@@ -180,7 +197,11 @@ async function main() {
   guardTarget();
   console.log("");
   console.log(`target      : ${host(DATABASE_URL)}`);
-  console.log(`             (demo database - production is refused by this script)`);
+  console.log(
+    ALLOW_PRODUCTION
+      ? `             (PRODUCTION - seeding the LIVE site on purpose via --production)`
+      : `             (demo database - production is refused without --production)`,
+  );
   console.log(`mode        : ${WRITE ? "WRITE" : "dry run - nothing will be saved"}`);
   console.log("");
 
