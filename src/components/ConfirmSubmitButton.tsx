@@ -13,6 +13,16 @@ type ConfirmSubmitButtonProps = {
   cancelLabel?: string;
   disabled?: boolean;
   confirmationTheme?: ConfirmationDialogTheme;
+  /**
+   * Optional form field to set just before submitting. Lets several confirm
+   * buttons share ONE form (and one set of inputs) while each submits a
+   * different value - e.g. a plain "Use Session" button and a
+   * "Use Session & Share" button that post the same treatment field but set
+   * shareAfterStamp differently. This keeps a single treatment picker instead
+   * of one per button.
+   */
+  submitFieldName?: string;
+  submitFieldValue?: string;
 };
 
 export function ConfirmSubmitButton({
@@ -24,11 +34,19 @@ export function ConfirmSubmitButton({
   cancelLabel = "Cancel",
   disabled = false,
   confirmationTheme,
+  submitFieldName,
+  submitFieldValue = "",
 }: ConfirmSubmitButtonProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   function confirmAction() {
     const form = buttonRef.current?.form;
     if (!form) return;
+    if (submitFieldName) {
+      const field = form.elements.namedItem(submitFieldName);
+      if (field instanceof HTMLInputElement) {
+        field.value = submitFieldValue;
+      }
+    }
     form.requestSubmit();
   }
 

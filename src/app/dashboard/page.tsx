@@ -84,6 +84,7 @@ export default async function BusinessDashboard({
         id: true,
         uuid: true,
         name: true,
+        isMembership: true,
         requiredStamps: true,
         rewardName: true,
         createdAt: true,
@@ -134,9 +135,13 @@ export default async function BusinessDashboard({
         ? 0
         : program.memberships.reduce((sum, membership) => sum + membership.earnedStamps + membership.bonusStamps, 0) /
           memberCount;
-    const rewardReady = program.memberships.filter(
-      (membership) => membership.status !== "COMPLETED" && membership.earnedStamps + membership.bonusStamps >= program.requiredStamps,
-    ).length;
+    // A prepaid membership has no reward to collect, so it never contributes to
+    // the "reward ready" count or the serve-next queue.
+    const rewardReady = program.isMembership
+      ? 0
+      : program.memberships.filter(
+          (membership) => membership.status !== "COMPLETED" && membership.earnedStamps + membership.bonusStamps >= program.requiredStamps,
+        ).length;
     const totalStampsIssued = program.memberships.reduce(
       (sum, membership) =>
         sum + membership.stampTransactions.reduce((stampSum, transaction) => stampSum + transaction.quantity, 0),
@@ -158,7 +163,7 @@ export default async function BusinessDashboard({
   });
   const rewardsReadyTotal = programPerformance.reduce((sum, program) => sum + program.rewardReady, 0);
   const customersCloseToReward = programRows.reduce(
-    (sum, program) => sum + program.memberships.filter((membership) => {
+    (sum, program) => program.isMembership ? sum : sum + program.memberships.filter((membership) => {
       const progress = membership.earnedStamps + membership.bonusStamps;
       return membership.status !== "COMPLETED" && progress < program.requiredStamps && progress >= Math.max(0, program.requiredStamps - 2);
     }).length,
@@ -166,6 +171,9 @@ export default async function BusinessDashboard({
   );
   const serveQueue: ServeQueueItem[] = [];
   for (const program of programRows) {
+    // Memberships deplete, they don't build toward a reward - keep them out of
+    // the reward serve-next queue entirely.
+    if (program.isMembership) continue;
     for (const membership of program.memberships) {
       if (membership.status === "COMPLETED") continue;
       const progress = membership.earnedStamps + membership.bonusStamps;
