@@ -98,38 +98,46 @@ try {
   if (!WRITE) {
     console.log("\nDRY RUN - nothing written. Re-run with --yes to apply.");
   } else {
-    await prisma.$transaction(async (tx) => {
-      await tx.businessCashbackSettings.upsert({
-        where: { businessId: business.id },
-        update: { enabled: true, ratePercent: RATE, currency: CURRENCY },
-        create: { businessId: business.id, enabled: true, ratePercent: RATE, currency: CURRENCY },
-      });
-      for (const p of plan) {
-        if (p.earns.length === 0) continue;
-        for (const e of p.earns) {
-          await tx.cashbackTransaction.create({
-            data: {
-              businessId: business.id,
-              businessCustomerMembershipId: p.customer.id,
-              branchId,
-              type: "EARN",
-              billAmount: e.bill,
-              ratePercent: RATE,
-              amount: e.amount,
-              balanceAfter: e.balanceAfter,
-              currency: CURRENCY,
-              invoiceNumber: e.invoiceNumber,
-              issuedByUserId,
-              idempotencyKey: token("cbk"),
-            },
-          });
-        }
-        await tx.businessCustomerMembership.update({
-          where: { id: p.customer.id },
-          data: { cashbackBalance: p.finalBalance },
+    // Build every ledger row up front and insert them in ONE createMany, so the
+    // transaction is a handful of round trips instead of ~75 (the earlier run
+    // hit Prisma's 5s interactive-transaction timeout over the remote link).
+    const earnRows = [];
+    for (const p of plan) {
+      for (const e of p.earns) {
+        earnRows.push({
+          businessId: business.id,
+          businessCustomerMembershipId: p.customer.id,
+          branchId,
+          type: "EARN",
+          billAmount: e.bill,
+          ratePercent: RATE,
+          amount: e.amount,
+          balanceAfter: e.balanceAfter,
+          currency: CURRENCY,
+          invoiceNumber: e.invoiceNumber,
+          issuedByUserId,
+          idempotencyKey: token("cbk"),
         });
       }
-    });
+    }
+    await prisma.$transaction(
+      async (tx) => {
+        await tx.businessCashbackSettings.upsert({
+          where: { businessId: business.id },
+          update: { enabled: true, ratePercent: RATE, currency: CURRENCY },
+          create: { businessId: business.id, enabled: true, ratePercent: RATE, currency: CURRENCY },
+        });
+        if (earnRows.length) await tx.cashbackTransaction.createMany({ data: earnRows });
+        for (const p of plan) {
+          if (p.finalBalance <= 0) continue;
+          await tx.businessCustomerMembership.update({
+            where: { id: p.customer.id },
+            data: { cashbackBalance: p.finalBalance },
+          });
+        }
+      },
+      { timeout: 120000, maxWait: 20000 },
+    );
     console.log("\nSAVED. Cashback is live for the demo. New Google Wallet adds will show the cashback line.");
   }
 } finally {
