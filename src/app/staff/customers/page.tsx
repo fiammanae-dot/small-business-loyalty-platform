@@ -160,6 +160,7 @@ export default async function StaffCustomerSearchPage({
                             earnedStamps: programMembership.earnedStamps,
                             bonusStamps: programMembership.bonusStamps,
                             requiredStamps: programMembership.loyaltyProgram.requiredStamps,
+                        isMembership: programMembership.loyaltyProgram.isMembership,
                           })}
                         </p>
                       </div>

@@ -57,7 +57,7 @@ export default async function BranchProgramDetailPage({ params }: { params: Prom
   const rewardsRedeemed = program.memberships.reduce((sum, membership) => sum + membership.rewardRedemptions.length, 0);
   const rewardReadyCustomers = program.memberships.filter((membership) => {
     const progress = progressValue(membership.earnedStamps, membership.bonusStamps);
-    return membership.status === "ACTIVE" && progress >= program.requiredStamps;
+    return !program.isMembership && membership.status === "ACTIVE" && progress >= program.requiredStamps;
   }).length;
   const joinUrl = await getProgramJoinUrl(program.joinToken);
   const joinQrCode = await getProgramJoinQrDataUrl(program.joinToken);
@@ -80,14 +80,18 @@ export default async function BranchProgramDetailPage({ params }: { params: Prom
           <Info label="Product/Service" value={program.productOrServiceName} />
           <Info label="Starting stamps" value={program.startingBonusStamps.toString()} />
           <Info label="Apply when" value={startingStampPolicyLabel(program.startingStampPolicy)} />
-          <Info label="Reward" value={program.rewardName} />
+          {program.isMembership ? <Info label="Package" value={`${program.requiredStamps} sessions`} /> : <Info label="Reward" value={program.rewardName} />}
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <PerformanceStat icon={Users} label="Enrolled customers" value={program.memberships.length.toString()} />
-          <PerformanceStat icon={TicketCheck} label="Branch stamps issued" value={stampsIssued.toString()} />
-          <PerformanceStat icon={Gift} label="Branch rewards redeemed" value={rewardsRedeemed.toString()} />
-          <PerformanceStat icon={Trophy} label="Reward-ready customers" value={rewardReadyCustomers.toString()} />
+          <PerformanceStat icon={TicketCheck} label={program.isMembership ? "Sessions used" : "Branch stamps issued"} value={stampsIssued.toString()} />
+          {program.isMembership ? null : (
+            <>
+              <PerformanceStat icon={Gift} label="Branch rewards redeemed" value={rewardsRedeemed.toString()} />
+              <PerformanceStat icon={Trophy} label="Reward-ready customers" value={rewardReadyCustomers.toString()} />
+            </>
+          )}
         </div>
       </section>
 

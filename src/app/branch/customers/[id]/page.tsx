@@ -65,7 +65,7 @@ export default async function BranchCustomerProfilePage({
   const primaryProgram = membership.programMemberships.find((programMembership) => programMembership.status === "ACTIVE") ?? membership.programMemberships[0] ?? null;
   const primaryProgress = primaryProgram ? progressValue(primaryProgram.earnedStamps, primaryProgram.bonusStamps) : 0;
   const rewardReady = membership.programMemberships.some(
-    (programMembership) => progressValue(programMembership.earnedStamps, programMembership.bonusStamps) >= programMembership.loyaltyProgram.requiredStamps,
+    (programMembership) => !programMembership.loyaltyProgram.isMembership && progressValue(programMembership.earnedStamps, programMembership.bonusStamps) >= programMembership.loyaltyProgram.requiredStamps,
   );
   const lastVisit = await prisma.stampTransaction.findFirst({
     where: {
@@ -160,9 +160,10 @@ export default async function BranchCustomerProfilePage({
                   earnedStamps: programMembership.earnedStamps,
                   bonusStamps: programMembership.bonusStamps,
                   requiredStamps: programMembership.loyaltyProgram.requiredStamps,
+                        isMembership: programMembership.loyaltyProgram.isMembership,
                 })}
               </p>
-              <p className="mt-2 text-sm text-[#6B7280]">Reward: {programMembership.loyaltyProgram.rewardName}</p>
+              <p className="mt-2 text-sm text-[#6B7280]">{programMembership.loyaltyProgram.isMembership ? "Prepaid membership" : `Reward: ${programMembership.loyaltyProgram.rewardName}`}</p>
               <div className="mt-4 rounded-md border border-[#E5E7EB] bg-white p-3">
                 <p className="break-all text-xs text-[#6B7280]">{scanUrl}</p>
                 <Image src={qrCode} alt={`${programMembership.loyaltyProgram.name} scan QR`} width={160} height={160} unoptimized className="mt-4 rounded-md border border-[#E5E7EB]" />

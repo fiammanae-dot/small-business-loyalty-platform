@@ -95,7 +95,7 @@ export default async function BranchProgramCustomersPage({
           <table className="w-full min-w-[760px] border-separate border-spacing-0 text-left text-sm">
             <thead>
               <tr className="text-[#6B7280]">
-                {["Customer", "Progress", "Status", "Reward", "Enrolled"].map((heading) => (
+                {["Customer", "Progress", "Status", program.isMembership ? "Package" : "Reward", "Enrolled"].map((heading) => (
                   <th key={heading} className="border-b border-[#E5E7EB] px-3 py-3 font-semibold">{heading}</th>
                 ))}
               </tr>
@@ -113,9 +113,10 @@ export default async function BranchProgramCustomersPage({
                       earnedStamps: membership.earnedStamps,
                       bonusStamps: membership.bonusStamps,
                       requiredStamps: program.requiredStamps,
+                        isMembership: program.isMembership,
                     })}
                   </td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{program.rewardName}</td>
+                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{program.isMembership ? `${program.requiredStamps} sessions` : program.rewardName}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(membership.enrolledAt)}</td>
                 </tr>
               ))}
@@ -131,6 +132,7 @@ export default async function BranchProgramCustomersPage({
               earnedStamps: membership.earnedStamps,
               bonusStamps: membership.bonusStamps,
               requiredStamps: program.requiredStamps,
+                        isMembership: program.isMembership,
             });
             return (
               <Card key={membership.id}>

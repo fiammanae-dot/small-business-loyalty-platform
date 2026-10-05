@@ -78,8 +78,9 @@ export default async function BranchCustomersPage({
       const activePrograms = membership.programMemberships.filter((programMembership) => programMembership.status === "ACTIVE");
       const primaryProgram = activePrograms[0] ?? membership.programMemberships[0] ?? null;
       const primaryProgress = primaryProgram ? progressValue(primaryProgram.earnedStamps, primaryProgram.bonusStamps) : 0;
+      const rowIsMembership = membership.programMemberships.some((pm) => pm.loyaltyProgram.isMembership);
       const rewardReady = membership.programMemberships.some(
-        (programMembership) => programMembership.status === "ACTIVE" && progressValue(programMembership.earnedStamps, programMembership.bonusStamps) >= programMembership.loyaltyProgram.requiredStamps,
+        (programMembership) => !programMembership.loyaltyProgram.isMembership && programMembership.status === "ACTIVE" && progressValue(programMembership.earnedStamps, programMembership.bonusStamps) >= programMembership.loyaltyProgram.requiredStamps,
       );
       const lastVisit = membership.programMemberships
         .map((programMembership) => programMembership.stampTransactions[0]?.createdAt)
@@ -94,6 +95,7 @@ export default async function BranchCustomersPage({
         primaryProgram,
         primaryProgress,
         rewardReady,
+        isMembership: rowIsMembership,
         lastVisit,
         redeemedRewards,
       };
@@ -144,7 +146,7 @@ export default async function BranchCustomersPage({
                     )}
                   </td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{membership.lastVisit ? formatDate(membership.lastVisit) : "-"}</td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{membership.redeemedRewards}</td>
+                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{membership.isMembership ? "—" : membership.redeemedRewards}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4"><StatusBadge status={membership.status} /></td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4">
                     <div className="flex flex-col gap-3">
@@ -183,7 +185,7 @@ export default async function BranchCustomersPage({
                   {tiersVisible ? <MobileInfo label="Tier" value={membership.currentTier} /> : null}
                   <MobileInfo label="Progress" value={membership.primaryProgram ? `${membership.primaryProgress} / ${membership.primaryProgram.loyaltyProgram.requiredStamps}` : "-"} />
                   <MobileInfo label="Last visit" value={membership.lastVisit ? formatDate(membership.lastVisit) : "-"} />
-                  <MobileInfo label="Rewards" value={membership.rewardReady ? "Reward ready" : `${membership.redeemedRewards} redeemed`} />
+                  <MobileInfo label="Rewards" value={membership.isMembership ? "—" : membership.rewardReady ? "Reward ready" : `${membership.redeemedRewards} redeemed`} />
                   <MobileInfo label="Source" value={customerSourceLabels[membership.source]} />
                 </div>
                 <div className="flex flex-col gap-3 border-t border-[#E5E7EB] pt-4">
