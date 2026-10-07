@@ -1,6 +1,6 @@
 /**
- * Phase 1 of the multi-type program creation: a 4-way picker (Stamp,
- * Membership, Cashback, Tier) is the entry point at /dashboard/programs/new.
+ * Multi-type program creation: the picker (Stamp, Membership, Cashback) is
+ * the entry point at /dashboard/programs/new.
  * Stamp/Membership route into the existing wizard, locked to that type;
  * Cashback/Tier point at their Settings sections until their own flows land.
  */
@@ -10,15 +10,17 @@ import { test } from "node:test";
 
 const read = (p) => readFileSync(p, "utf8");
 
-test("the program type picker offers all four program types", () => {
+test("the program type picker offers stamp, membership and cashback (tier is not a program type)", () => {
   const picker = read("src/components/ProgramTypePicker.tsx");
   assert.match(picker, /\/dashboard\/programs\/new\?type=stamp/);
   assert.match(picker, /\/dashboard\/programs\/new\?type=membership/);
   assert.match(picker, /\/dashboard\/programs\/new\?type=cashback/); // cashback
-  assert.match(picker, /\/dashboard\/programs\/new\?type=tier/); // tiers
-  for (const label of ["Stamp card", "Membership", "Cashback", "Tiers"]) {
+  for (const label of ["Stamp card", "Membership", "Cashback"]) {
     assert.ok(picker.includes(label), `missing ${label}`);
   }
+  // Tiers are an option inside stamp programs, not a standalone program type.
+  assert.doesNotMatch(picker, /\?type=tier/);
+  assert.doesNotMatch(picker, /title: "Tiers"/);
 });
 
 test("the new-program page shows the picker by default and locks the wizard to the chosen type", () => {
@@ -58,22 +60,17 @@ test("phase 2: the cashback setup flow is wired to the business-wide cashback se
   assert.match(programs, /FeatureStatusCard[\s\S]*title="Cashback"/);
 });
 
-test("phase 3: the tier setup flow is wired to the business-wide tier settings", () => {
+test("tiers are not a create-program type; they are configured in Settings", () => {
+  // Tier is an option inside stamp programs, not something you "create" here.
   const page = read("src/app/dashboard/programs/new/page.tsx");
-  assert.match(page, /if \(params\.type === "tier"\)/);
-  assert.match(page, /<TierSetupForm/);
+  assert.doesNotMatch(page, /params\.type === "tier"/);
+  assert.doesNotMatch(page, /TierSetupForm/);
 
-  const form = read("src/components/TierSetupForm.tsx");
-  assert.match(form, /saveCustomerTierSettingsAction/);
-  assert.match(form, /name="redirectTo" value="\/dashboard\/programs"/);
-  assert.match(form, /scope="dashboard:customer-tiers"/);
-  for (const n of ["silverVisitRequirement", "goldVisitRequirement", "vipVisitRequirement"]) {
-    assert.ok(form.includes(n), "missing " + n);
-  }
+  // Tiers stay configurable business-wide in Settings.
+  const settings = read("src/app/dashboard/settings/page.tsx");
+  assert.match(settings, /<CustomerTiersSection tierConfig=\{tierConfig\} \/>/);
 
-  const actions = read("src/app/dashboard/actions.ts");
-  assert.match(actions, /export async function saveCustomerTierSettingsAction[\s\S]*const redirectTo = safeDashboardPath\(getString\(formData, "redirectTo"\)\);/);
-
+  // The Programs page still surfaces tier status under business-wide features.
   const programs = read("src/app/dashboard/programs/page.tsx");
   assert.match(programs, /FeatureStatusCard[\s\S]*title="Tiers"/);
 });
