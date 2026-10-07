@@ -7,6 +7,8 @@ import { getScanUrl } from "@/lib/scan";
 import { progressValue } from "@/lib/programs";
 import { membershipSessionSummary } from "@/lib/membership-sessions";
 import { fromStoredTier } from "@/lib/customer-tiers";
+import { resolveCardThemeColors } from "@/lib/card-themes";
+import type { CardTheme, WalletHeroStyle } from "@prisma/client";
 
 function absoluteUrl(url: string | null | undefined, base: string): string | null {
   if (!url) return null;
@@ -122,7 +124,14 @@ export type FeaturePassCustomer = {
   business: {
     name: string;
     branding: Parameters<typeof resolveBranding>[0];
-    cashbackSettings?: { enabled: boolean; currency: string } | null;
+    cashbackSettings?: {
+      enabled: boolean;
+      currency: string;
+      name?: string | null;
+      cardTheme?: CardTheme | null;
+      walletHeroStyle?: WalletHeroStyle | null;
+      walletPhotoUrl?: string | null;
+    } | null;
   };
 };
 
@@ -135,13 +144,29 @@ export async function buildCashbackPassBody(customer: FeaturePassCustomer): Prom
   const branding = resolveBranding(customer.business.branding);
   const businessName = customer.business.name;
   const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim();
-  const currency = customer.business.cashbackSettings?.currency ?? "AED";
+  const cs = customer.business.cashbackSettings;
+  // The cashback program's own identity (phase 2): its name, card theme and
+  // card picture, so the card is branded like a real program rather than the
+  // generic business default.
+  const cardName = cs?.name?.trim() || "Cashback";
+  const currency = cs?.currency ?? "AED";
   const balance = `${currency} ${Number(customer.cashbackBalance ?? 0).toFixed(2)}`;
 
   const baseUrl = await getBaseUrl();
   const cardUrl = await getCardUrl(customer.cardToken);
   const logoUrl = absoluteUrl(branding.logoUrl, baseUrl);
-  const color = hexColor(branding.primaryColor) ?? hexColor(branding.buttonColor);
+  const photoUrl = absoluteUrl(cs?.walletPhotoUrl, baseUrl);
+  const hasBanner = Boolean(photoUrl);
+  const themeColors = resolveCardThemeColors({ cardTheme: cs?.cardTheme ?? "BUSINESS_DEFAULT", branding });
+  const color = hexColor(themeColors.accent) ?? hexColor(branding.primaryColor) ?? hexColor(branding.buttonColor);
+
+  // When a banner photo is present Apple draws primary fields over it, so keep
+  // primary empty and move the balance into the secondary row (mirrors the
+  // program card's banner handling).
+  const secondaryFields: WalletWalletField[] = [];
+  if (hasBanner) secondaryFields.push({ label: "Balance", value: balance, changeMessage: "Balance: %@" });
+  secondaryFields.push({ label: "Program", value: cardName });
+  secondaryFields.push({ label: "Member", value: customerName });
 
   const body: WalletWalletPassBody = {
     barcodeValue: cardUrl,
@@ -149,12 +174,13 @@ export async function buildCashbackPassBody(customer: FeaturePassCustomer): Prom
     barcodeAltText: "Show at checkout",
     logoText: businessName,
     organizationName: businessName,
-    description: `Cashback - ${businessName}`,
-    headerFields: [{ label: "Cashback", value: balance, changeMessage: "Cashback: %@" }] as WalletWalletField[],
-    primaryFields: [{ label: "Balance", value: balance, changeMessage: "Balance: %@" }] as WalletWalletField[],
-    secondaryFields: [{ label: "Member", value: customerName }] as WalletWalletField[],
+    description: `${cardName} - ${businessName}`,
+    headerFields: [{ label: "Balance", value: balance, changeMessage: "Cashback: %@" }] as WalletWalletField[],
+    primaryFields: (hasBanner ? [] : [{ label: "Balance", value: balance, changeMessage: "Balance: %@" }]) as WalletWalletField[],
+    secondaryFields: secondaryFields,
     backFields: [
       { label: "Notifications", value: " ", changeMessage: "%@" },
+      { label: "Program", value: cardName },
       { label: "Business", value: businessName },
       { label: "Member", value: customerName },
     ] as WalletWalletField[],
@@ -164,5 +190,6 @@ export async function buildCashbackPassBody(customer: FeaturePassCustomer): Prom
   };
   if (color) body.color = color; // Pro
   if (logoUrl) body.logoURL = logoUrl; // Pro
+  if (photoUrl) body.stripURL = photoUrl; // Pro - banner at the top of the pass
   return body;
 }
