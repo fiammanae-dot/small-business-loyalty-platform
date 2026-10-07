@@ -181,20 +181,22 @@ export default async function ProgramsPage({
           <MetricCard label="Average Completion Rate" value={averageCompletionRate + "%"} icon={<BarChart3 className="h-5 w-5" />} />
         </section>
 
-        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" aria-label="Business-wide features">
-          <FeatureStatusCard
-            title="Cashback"
-            enabled={cashbackEnabled}
-            detail={cashbackEnabled ? cashbackRate + "% of each payment" : "Not set up yet"}
-            href="/dashboard/programs/new?type=cashback"
-          />
-          <FeatureStatusCard
-            title="Tiers"
-            enabled={tierConfigured}
-            detail={tierConfigured ? "Silver " + tierConfig.silverVisitRequirement + " \u2022 Gold " + tierConfig.goldVisitRequirement + " \u2022 VIP " + tierConfig.vipVisitRequirement + " visits" : "Not set up yet"}
-            href="/dashboard/programs/new?type=tier"
-          />
-        </section>
+        <SectionCard title="Business-wide features" description="Cashback and tiers apply across all your customers and layer on top of any stamp or membership programs.">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <FeatureStatusCard
+              title="Cashback"
+              enabled={cashbackEnabled}
+              detail={cashbackEnabled ? cashbackRate + "% of each payment" : "Not set up yet"}
+              href="/dashboard/programs/new?type=cashback"
+            />
+            <FeatureStatusCard
+              title="Tiers"
+              enabled={tierConfigured}
+              detail={tierConfigured ? "Silver " + tierConfig.silverVisitRequirement + " \u2022 Gold " + tierConfig.goldVisitRequirement + " \u2022 VIP " + tierConfig.vipVisitRequirement + " visits" : "Not set up yet"}
+              href="/dashboard/programs/new?type=tier"
+            />
+          </div>
+        </SectionCard>
 
         <SectionCard title="Find programs" description="Search and filter programs by status, reward readiness, and performance.">
           <form className="grid gap-4">
