@@ -35,7 +35,7 @@ const TYPES: ProgramTypeCard[] = [
   },
   {
     key: "cashback",
-    href: "/dashboard/settings?tab=features",
+    href: "/dashboard/programs/new?type=cashback",
     title: "Cashback",
     description: "Customers earn a percentage of what they spend back as wallet balance to redeem later.",
     Icon: Wallet,
