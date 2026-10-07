@@ -16,6 +16,7 @@ type CardShareActionsProps = {
   showWallet?: boolean;
   googleWalletUrl?: string | null;
   appleWalletUrl?: string | null;
+  cashbackAppleWalletUrl?: string | null;
   buttonColor?: string;
   compact?: boolean;
   messageType?: "welcome" | "resend";
@@ -32,6 +33,7 @@ export function CardShareActions({
   showWallet = true,
   googleWalletUrl,
   appleWalletUrl,
+  cashbackAppleWalletUrl,
   buttonColor,
   compact = false,
   messageType = "welcome",
@@ -117,6 +119,7 @@ export function CardShareActions({
       ) : null}
 
       {showWallet ? (
+        <>
         <div className="grid gap-3 sm:grid-cols-2">
           {appleWalletUrl ? (
             <a
@@ -155,6 +158,17 @@ export function CardShareActions({
             </button>
           )}
         </div>
+        {cashbackAppleWalletUrl ? (
+          <a
+            href={cashbackAppleWalletUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block rounded-md border-2 border-black bg-white px-4 py-3 text-center text-sm font-semibold text-black"
+          >
+            Add Cashback card to Apple Wallet
+          </a>
+        ) : null}
+        </>
       ) : null}
 
       {!compact && message ? <p className="text-center text-sm font-medium business-text">{message}</p> : null}

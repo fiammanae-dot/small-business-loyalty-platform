@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import type { GoogleWalletProgramMembership } from "@/lib/google-wallet/mapper";
 import { getWalletWalletConfig, isWalletWalletConfigured } from "./config";
 import { createPass, updatePass, revokePass } from "./client";
-import { buildWalletWalletPassBody } from "./mapper";
+import { buildWalletWalletPassBody, buildCashbackPassBody, type FeaturePassCustomer } from "./mapper";
 
 const membershipInclude = {
   businessCustomerMembership: {
@@ -97,20 +97,74 @@ export async function syncAppleWalletPassSafe(customerProgramMembershipId: numbe
   }
 }
 
+// What a per-customer feature pass (cashback / tier) needs to render.
+const featureCustomerInclude = {
+  business: { include: { branding: true, cashbackSettings: true } },
+} satisfies Prisma.BusinessCustomerMembershipInclude;
+
 /**
- * Cashback shows on every one of a customer's passes, so a balance change
- * refreshes them all. Keyed by the customer (businessCustomerMembership), it
- * fans out to each active program membership's pass.
+ * Create/PUT the per-customer CASHBACK card. One pass per customer, keyed by
+ * (businessCustomerMembershipId, kind), holding the WalletWallet serial so a
+ * balance change pushes a live update.
  */
+export async function syncAppleCashbackPass(businessCustomerMembershipId: number): Promise<AppleWalletSyncResult> {
+  const config = getWalletWalletConfig();
+  if (!config) return { ok: false, reason: "NOT_CONFIGURED" };
+
+  const customer = await prisma.businessCustomerMembership.findUnique({
+    where: { id: businessCustomerMembershipId },
+    include: featureCustomerInclude,
+  });
+  if (!customer) return { ok: false, reason: "NOT_FOUND" };
+
+  const businessId = customer.businessId;
+  const where = { businessCustomerMembershipId_kind: { businessCustomerMembershipId, kind: "CASHBACK" as const } };
+  const existing = await prisma.appleWalletFeaturePass.findUnique({ where });
+
+  try {
+    const body = await buildCashbackPassBody(customer as unknown as FeaturePassCustomer);
+    let serialNumber: string;
+    let shareUrl: string;
+    if (existing?.serialNumber) {
+      await updatePass(config, existing.serialNumber, body);
+      serialNumber = existing.serialNumber;
+      shareUrl = existing.shareUrl ?? `${config.shareBaseUrl}/p/${serialNumber}`;
+    } else {
+      const created = await createPass(config, body);
+      serialNumber = created.serialNumber;
+      shareUrl = created.shareUrl ?? `${config.shareBaseUrl}/p/${serialNumber}`;
+    }
+
+    await prisma.appleWalletFeaturePass.upsert({
+      where,
+      update: { businessId, serialNumber, shareUrl, status: "ACTIVE", lastSyncedAt: new Date(), lastError: null },
+      create: { businessId, businessCustomerMembershipId, kind: "CASHBACK", serialNumber, shareUrl, status: "ACTIVE", lastSyncedAt: new Date() },
+    });
+    return { ok: true, serialNumber, shareUrl };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Apple Wallet cashback sync failed.";
+    await prisma.appleWalletFeaturePass.upsert({
+      where,
+      update: { businessId, status: "FAILED", lastError: message },
+      create: { businessId, businessCustomerMembershipId, kind: "CASHBACK", serialNumber: existing?.serialNumber ?? null, status: "FAILED", lastError: message },
+    });
+    return { ok: false, reason: "SYNC_FAILED", error: message };
+  }
+}
+
+/** Fire-and-forget cashback card sync. */
+export async function syncAppleCashbackPassSafe(businessCustomerMembershipId: number): Promise<void> {
+  try {
+    await syncAppleCashbackPass(businessCustomerMembershipId);
+  } catch {
+    // swallowed on purpose
+  }
+}
+
+/** A balance change refreshes the customer's dedicated cashback card. */
 export async function syncAppleWalletAfterCashbackChange(businessCustomerMembershipId: number): Promise<void> {
   if (!isWalletWalletConfigured()) return;
-  const memberships = await prisma.customerProgramMembership.findMany({
-    where: { businessCustomerMembershipId, status: "ACTIVE" },
-    select: { id: true },
-  });
-  for (const membership of memberships) {
-    await syncAppleWalletPassSafe(membership.id);
-  }
+  await syncAppleCashbackPassSafe(businessCustomerMembershipId);
 }
 
 export async function revokeAppleWalletPass(customerProgramMembershipId: number): Promise<void> {

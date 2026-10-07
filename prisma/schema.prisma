@@ -556,6 +556,7 @@ model Business {
   walletBroadcasts              WalletBroadcast[]
   googleWalletObjects           GoogleWalletObject[]
   appleWalletPasses             AppleWalletPass[]
+  appleWalletFeaturePasses      AppleWalletFeaturePass[]
   whatsAppChannel               BusinessWhatsAppChannel?
 
   cashbackTransactions CashbackTransaction[]
@@ -848,6 +849,7 @@ model BusinessCustomerMembership {
   createdBranch         Branch?                     @relation(fields: [createdBranchId], references: [id])
   createdByUser         User?                       @relation(fields: [createdByUserId], references: [id])
   programMemberships    CustomerProgramMembership[]
+  appleWalletFeaturePasses AppleWalletFeaturePass[]
   engagementEvents      EngagementEvent[]
   messageDeliveryQueue  MessageDeliveryQueue[]
   customerNotifications CustomerNotification[]
@@ -1813,4 +1815,34 @@ enum AppleWalletSyncStatus {
   ACTIVE
   FAILED
   REVOKED
+}
+
+/// A per-CUSTOMER Apple Wallet pass for a business-wide feature (cashback or
+/// tier), separate from the per-program AppleWalletPass. One row per customer
+/// per kind, holding the WalletWallet serial so changes can push live updates.
+model AppleWalletFeaturePass {
+  id                           Int                    @id @default(autoincrement())
+  businessId                   Int                    @map("business_id")
+  businessCustomerMembershipId Int                    @map("business_customer_membership_id")
+  kind                         AppleWalletFeatureKind
+  serialNumber                 String?                @unique @map("serial_number")
+  shareUrl                     String?                @map("share_url")
+  status                       AppleWalletSyncStatus  @default(PENDING)
+  lastSyncedAt                 DateTime?              @map("last_synced_at")
+  lastError                    String?                @map("last_error")
+  createdAt                    DateTime               @default(now()) @map("created_at")
+  updatedAt                    DateTime               @updatedAt @map("updated_at")
+
+  business                   Business                   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessCustomerMembership BusinessCustomerMembership @relation(fields: [businessCustomerMembershipId], references: [id], onDelete: Cascade)
+
+  @@unique([businessCustomerMembershipId, kind])
+  @@index([businessId])
+  @@index([status])
+  @@map("apple_wallet_feature_passes")
+}
+
+enum AppleWalletFeatureKind {
+  CASHBACK
+  TIER
 }

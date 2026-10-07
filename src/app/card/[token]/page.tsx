@@ -40,6 +40,7 @@ export default async function PublicCustomerCardPage({
           branding: true,
           tierSetting: true,
           membershipSettings: true,
+          cashbackSettings: true,
         },
       },
       programMemberships: {
@@ -146,6 +147,7 @@ export default async function PublicCustomerCardPage({
   const primaryProgram = programCards[0] ?? null;
   const primaryGoogleWalletUrl = primaryProgram ? `/api/wallet/google/save/${primaryProgram.programMembership.scanToken}` : null;
   const primaryAppleWalletUrl = primaryProgram ? `/api/wallet/apple/${primaryProgram.programMembership.scanToken}` : null;
+  const cashbackAppleWalletUrl = membership.business.cashbackSettings?.enabled ? `/api/wallet/apple/cashback/${token}` : null;
   const cardDesign = primaryProgram?.programMembership.loyaltyProgram.cardDesign as CardDesignInput;
   const lastUpdatedAt = [
     membership.updatedAt,
@@ -324,6 +326,7 @@ export default async function PublicCustomerCardPage({
               whatsappLabel="Share via WhatsApp"
               googleWalletUrl={primaryGoogleWalletUrl}
               appleWalletUrl={primaryAppleWalletUrl}
+              cashbackAppleWalletUrl={cashbackAppleWalletUrl}
               buttonColor={branding.buttonColor}
             />
             <SaveCardImageButton
