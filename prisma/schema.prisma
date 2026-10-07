@@ -1474,6 +1474,14 @@ model BusinessCashbackSettings {
   currency    String   @default("AED")
   maxBillAmount Decimal? @map("max_bill_amount") @db.Decimal(12, 2)
   maxRedemption Decimal? @map("max_redemption") @db.Decimal(12, 2)
+  // Program-style identity so cashback is a real program, not just a toggle:
+  // its own name and card design (theme, hero image, design JSON), mirroring
+  // loyalty_programs. All additive and optional, so existing rows are unaffected.
+  name             String?
+  cardTheme        CardTheme       @default(BUSINESS_DEFAULT) @map("card_theme")
+  walletHeroStyle  WalletHeroStyle @default(PHOTO)            @map("wallet_hero_style")
+  walletPhotoUrl   String?         @map("wallet_photo_url")
+  cardDesign       Json?           @map("card_design")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
