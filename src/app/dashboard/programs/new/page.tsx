@@ -23,7 +23,7 @@ export default async function NewProgramPage({
   if (params.type === "cashback") {
     const cb = business.cashbackSettings;
     return (
-      <DashboardShell user={user} eyebrow="Business Owner" title="Set up cashback">
+      <DashboardShell user={user} eyebrow="Business Owner" title="Create cashback program">
         <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
           <Link href="/dashboard/programs/new" className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-[#64748B] hover:text-[#1E293B]">
             <ArrowLeft className="h-4 w-4" aria-hidden /> Choose a different type
