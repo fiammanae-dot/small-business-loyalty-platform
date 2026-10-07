@@ -19,9 +19,13 @@ test("single source of truth: areTiersVisible is the inverse of membership-enabl
   assert.match(lib, /export function areTiersVisible\(membershipEnabled\?: boolean \| null\): boolean \{\s*return !membershipEnabled;/);
 });
 
-test("owner settings hide the tier config section for membership businesses", () => {
+test("owner settings always show the tier config section (tiers now layer with memberships)", () => {
+  // Phase 3 of the program-type work: tiers are configurable even when
+  // memberships are enabled, so the Settings gate was removed. Customer-facing
+  // tier display is still governed separately by areTiersVisible (tested above).
   const settings = read("src/app/dashboard/settings/page.tsx");
-  assert.match(settings, /membershipsEnabled \? null : <CustomerTiersSection/);
+  assert.doesNotMatch(settings, /membershipsEnabled \? null : <CustomerTiersSection/);
+  assert.match(settings, /<CustomerTiersSection tierConfig=\{tierConfig\} \/>/);
 });
 
 test("dashboard customer surfaces gate tiers on membership", () => {

@@ -20,6 +20,7 @@ import {
 } from "@/components/ui";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { progressValue } from "@/lib/programs";
+import { normalizeTierConfig } from "@/lib/customer-tiers";
 import { businessTypeLabels } from "@/lib/roles";
 import { prisma } from "@/lib/prisma";
 
@@ -144,6 +145,8 @@ export default async function ProgramsPage({
   const filtered = Boolean(query || status || reward || sort !== "created" || direction !== "desc");
   const cashbackEnabled = Boolean(business.cashbackSettings?.enabled);
   const cashbackRate = business.cashbackSettings?.ratePercent != null ? business.cashbackSettings.ratePercent.toString() : "5";
+  const tierConfigured = Boolean(business.tierSetting);
+  const tierConfig = normalizeTierConfig(business.tierSetting);
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Loyalty Programs" hideWelcomeMessage>
@@ -184,6 +187,12 @@ export default async function ProgramsPage({
             enabled={cashbackEnabled}
             detail={cashbackEnabled ? cashbackRate + "% of each payment" : "Not set up yet"}
             href="/dashboard/programs/new?type=cashback"
+          />
+          <FeatureStatusCard
+            title="Tiers"
+            enabled={tierConfigured}
+            detail={tierConfigured ? "Silver " + tierConfig.silverVisitRequirement + " \u2022 Gold " + tierConfig.goldVisitRequirement + " \u2022 VIP " + tierConfig.vipVisitRequirement + " visits" : "Not set up yet"}
+            href="/dashboard/programs/new?type=tier"
           />
         </section>
 

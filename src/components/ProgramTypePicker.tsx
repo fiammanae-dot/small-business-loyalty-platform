@@ -42,7 +42,7 @@ const TYPES: ProgramTypeCard[] = [
   },
   {
     key: "tier",
-    href: "/dashboard/settings?tab=loyalty",
+    href: "/dashboard/programs/new?type=tier",
     title: "Tiers",
     description: "Customers climb Bronze, Silver, Gold and VIP by visits, unlocking better perks.",
     Icon: Trophy,

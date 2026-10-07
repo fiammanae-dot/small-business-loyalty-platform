@@ -15,7 +15,7 @@ test("the program type picker offers all four program types", () => {
   assert.match(picker, /\/dashboard\/programs\/new\?type=stamp/);
   assert.match(picker, /\/dashboard\/programs\/new\?type=membership/);
   assert.match(picker, /\/dashboard\/programs\/new\?type=cashback/); // cashback
-  assert.match(picker, /\/dashboard\/settings\?tab=loyalty/); // tiers
+  assert.match(picker, /\/dashboard\/programs\/new\?type=tier/); // tiers
   for (const label of ["Stamp card", "Membership", "Cashback", "Tiers"]) {
     assert.ok(picker.includes(label), `missing ${label}`);
   }
@@ -56,4 +56,30 @@ test("phase 2: the cashback setup flow is wired to the business-wide cashback se
 
   const programs = read("src/app/dashboard/programs/page.tsx");
   assert.match(programs, /FeatureStatusCard[\s\S]*title="Cashback"/);
+});
+
+test("phase 3: the tier setup flow is wired to the business-wide tier settings", () => {
+  const page = read("src/app/dashboard/programs/new/page.tsx");
+  assert.match(page, /if \(params\.type === "tier"\)/);
+  assert.match(page, /<TierSetupForm/);
+
+  const form = read("src/components/TierSetupForm.tsx");
+  assert.match(form, /saveCustomerTierSettingsAction/);
+  assert.match(form, /name="redirectTo" value="\/dashboard\/programs"/);
+  assert.match(form, /scope="dashboard:customer-tiers"/);
+  for (const n of ["silverVisitRequirement", "goldVisitRequirement", "vipVisitRequirement"]) {
+    assert.ok(form.includes(n), "missing " + n);
+  }
+
+  const actions = read("src/app/dashboard/actions.ts");
+  assert.match(actions, /export async function saveCustomerTierSettingsAction[\s\S]*const redirectTo = safeDashboardPath\(getString\(formData, "redirectTo"\)\);/);
+
+  const programs = read("src/app/dashboard/programs/page.tsx");
+  assert.match(programs, /FeatureStatusCard[\s\S]*title="Tiers"/);
+});
+
+test("phase 3: tiers are no longer hidden when memberships are enabled (layered)", () => {
+  const settings = read("src/app/dashboard/settings/page.tsx");
+  assert.doesNotMatch(settings, /membershipsEnabled \? null : <CustomerTiersSection/);
+  assert.match(settings, /<CustomerTiersSection tierConfig=\{tierConfig\} \/>/);
 });
