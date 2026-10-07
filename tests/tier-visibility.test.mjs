@@ -76,11 +76,10 @@ test("the customer-facing card hides tiers: wallet badge and tier panel", () => 
   assert.match(page, /\{tiersVisible \? \(\s*<div[^>]*>\s*<TierStatusPanel/);
 });
 
-test("the Google Wallet pass shows the tier module whenever the card design enables it", () => {
+test("the program Google Wallet pass no longer carries the tier module (it is its own card now)", () => {
+  // Phase 1 of separate cards: tier is no longer merged onto the program pass.
   const mapper = read("src/lib/google-wallet/mapper.ts");
-  // Tier module is gated only on the design's tierBadge now - no membership exclusion.
-  assert.match(mapper, /sections\.tierBadge \? \[\{ id: "tier"/);
-  assert.doesNotMatch(mapper, /sections\.tierBadge && !customer\.business\.membershipSettings\?\.enabled/);
+  assert.doesNotMatch(mapper, /id: "tier"/);
 });
 
 test("scan counter and referral surfaces hide tiers for membership businesses", () => {
