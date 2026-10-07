@@ -61,11 +61,27 @@ export async function buildWalletWalletPassBody(membership: GoogleWalletProgramM
     ? [{ label: "Sessions left", value: `${sessionsRemaining} of ${sessionsTotal}`, changeMessage: "%@ sessions left" }]
     : [{ label: "Visits", value: `${Math.min(progress, required)} / ${required}`, changeMessage: "Progress: %@" }];
 
+  // When the hero photo is a top banner (stripURL), Apple renders primary
+  // fields ON TOP of the photo, which makes the program title unreadable over
+  // the image. Per WalletWallet's own guidance ("use secondary fields for
+  // readable text when using [the banner] option"), keep primary empty when a
+  // banner is present and move the program name into a readable secondary field
+  // below the photo instead.
+  const hasBanner = Boolean(photoUrl);
+  const primaryFields: WalletWalletField[] = hasBanner ? [] : [{ value: program.name }];
+
   const secondaryFields: WalletWalletField[] = [];
+  if (hasBanner) {
+    secondaryFields.push({ label: isMembership ? "Membership" : "Program", value: program.name });
+  }
   if (cashbackEnabled) {
     secondaryFields.push({ label: "Cashback", value: cashbackValue, changeMessage: "Cashback: %@" });
   }
-  secondaryFields.push({ label: "Member", value: customerName });
+  // Keep the member name on the pass face only while there is still room for it
+  // to read cleanly (at most two columns). It is always on the back regardless.
+  if (secondaryFields.length < 2) {
+    secondaryFields.push({ label: "Member", value: customerName });
+  }
 
   // backFields[0] is a stable notification anchor for on-demand banners. Its
   // position must never change between create and update (fields are keyed by
@@ -84,7 +100,7 @@ export async function buildWalletWalletPassBody(membership: GoogleWalletProgramM
     logoText: businessName,
     organizationName: businessName,
     description: `${program.name} - ${businessName}`,
-    primaryFields: [{ value: program.name }],
+    primaryFields,
     headerFields,
     secondaryFields,
     backFields,
