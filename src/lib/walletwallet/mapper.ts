@@ -6,6 +6,7 @@ import { resolveBranding, getBaseUrl } from "@/lib/customer-cards";
 import { getScanUrl } from "@/lib/scan";
 import { progressValue } from "@/lib/programs";
 import { membershipSessionSummary } from "@/lib/membership-sessions";
+import { fromStoredTier } from "@/lib/customer-tiers";
 
 function absoluteUrl(url: string | null | undefined, base: string): string | null {
   if (!url) return null;
@@ -76,6 +77,12 @@ export async function buildWalletWalletPassBody(membership: GoogleWalletProgramM
   }
   if (cashbackEnabled) {
     secondaryFields.push({ label: "Cashback", value: cashbackValue, changeMessage: "Cashback: %@" });
+  }
+  // Show the loyalty tier once the customer has climbed past Bronze, so a
+  // tier-running business sees it on the pass; Bronze/none adds no field.
+  const tierLabel = fromStoredTier(customer.currentTier);
+  if (tierLabel && tierLabel !== "Bronze") {
+    secondaryFields.push({ label: "Tier", value: tierLabel });
   }
   // Keep the member name on the pass face only while there is still room for it
   // to read cleanly (at most two columns). It is always on the back regardless.

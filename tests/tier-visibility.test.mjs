@@ -14,9 +14,12 @@ import { test } from "node:test";
 
 const read = (path) => readFileSync(path, "utf8");
 
-test("single source of truth: areTiersVisible is the inverse of membership-enabled", () => {
+test("areTiersVisible always allows tiers (tiers now layer with memberships)", () => {
+  // Tiers used to be hidden for membership businesses (return !membershipEnabled).
+  // They now show alongside memberships, so the helper always allows them; the
+  // call sites stay in place so the gating is still centralised.
   const lib = read("src/lib/customer-tiers.ts");
-  assert.match(lib, /export function areTiersVisible\(membershipEnabled\?: boolean \| null\): boolean \{\s*return !membershipEnabled;/);
+  assert.match(lib, /export function areTiersVisible\([^)]*\): boolean \{[\s\S]*return true;/);
 });
 
 test("owner settings always show the tier config section (tiers now layer with memberships)", () => {
@@ -73,11 +76,11 @@ test("the customer-facing card hides tiers: wallet badge and tier panel", () => 
   assert.match(page, /\{tiersVisible \? \(\s*<div[^>]*>\s*<TierStatusPanel/);
 });
 
-test("the Google Wallet pass hides the tier module for membership businesses", () => {
-  const svc = read("src/lib/google-wallet/service.ts");
-  assert.match(svc, /membershipSettings: true/);
+test("the Google Wallet pass shows the tier module whenever the card design enables it", () => {
   const mapper = read("src/lib/google-wallet/mapper.ts");
-  assert.match(mapper, /sections\.tierBadge && !customer\.business\.membershipSettings\?\.enabled/);
+  // Tier module is gated only on the design's tierBadge now - no membership exclusion.
+  assert.match(mapper, /sections\.tierBadge \? \[\{ id: "tier"/);
+  assert.doesNotMatch(mapper, /sections\.tierBadge && !customer\.business\.membershipSettings\?\.enabled/);
 });
 
 test("scan counter and referral surfaces hide tiers for membership businesses", () => {
