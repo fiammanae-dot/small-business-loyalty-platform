@@ -10,6 +10,7 @@ import { programTemplates } from "@/lib/programs";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { ProgramTypePicker } from "@/components/ProgramTypePicker";
+import { CashbackSetupForm } from "@/components/CashbackSetupForm";
 
 export default async function NewProgramPage({
   searchParams,
@@ -18,6 +19,28 @@ export default async function NewProgramPage({
 }) {
   const { user, business } = await getBusinessOwnerContext();
   const params = await searchParams;
+
+  if (params.type === "cashback") {
+    const cb = business.cashbackSettings;
+    return (
+      <DashboardShell user={user} eyebrow="Business Owner" title="Set up cashback">
+        <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
+          <Link href="/dashboard/programs/new" className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-[#64748B] hover:text-[#1E293B]">
+            <ArrowLeft className="h-4 w-4" aria-hidden /> Choose a different type
+          </Link>
+          {params.error ? <p className="mb-5 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{params.error}</p> : null}
+          <p className="mb-5 text-sm text-[#6B7280]">Cashback is a business-wide feature: customers earn a percentage of what they pay as a balance to spend on future visits. Set the rate and any limits below.</p>
+          <CashbackSetupForm
+            enabled={cb?.enabled ?? true}
+            rate={cb?.ratePercent != null ? cb.ratePercent.toString() : "5"}
+            maxBill={cb?.maxBillAmount != null ? cb.maxBillAmount.toString() : ""}
+            maxRedemption={cb?.maxRedemption != null ? cb.maxRedemption.toString() : ""}
+          />
+        </section>
+      </DashboardShell>
+    );
+  }
+
   const branding = resolveBranding(business.branding);
   const defaultCardTheme = getIndustryDefaultCardTheme(business.businessType);
   const defaultCardDesign = resolveIndustryCardDesign(business.businessType);

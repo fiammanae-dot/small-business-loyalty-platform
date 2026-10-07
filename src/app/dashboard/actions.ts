@@ -129,6 +129,13 @@ function fail(path: string, message: string): never {
   redirect(`${path}?error=${encodeURIComponent(message)}`);
 }
 
+// A program/feature flow can pass ?redirectTo so a business-wide setting saved
+// from the "create program" flow lands back on Programs instead of Settings.
+// Restricted to query-less internal dashboard paths so `fail` stays well-formed.
+function safeDashboardPath(value: string | null | undefined): string | null {
+  return value && /^\/dashboard\/[A-Za-z0-9/_-]*$/.test(value) ? value : null;
+}
+
 function validateActionSecurity(formData: FormData, scope: string, path: string) {
   try {
     validateCsrfForm(formData, scope);
@@ -655,20 +662,22 @@ function parseOptionalCapAmount(raw: string): number | null | "invalid" {
 export async function saveCashbackSettingsAction(formData: FormData) {
   validateActionSecurity(formData, "dashboard:cashback-settings", "/dashboard/settings");
   const user = await requireBusinessOwnerForWrite();
+  const redirectTo = safeDashboardPath(getString(formData, "redirectTo"));
+  const failPath = redirectTo ?? "/dashboard/settings?tab=features";
   const parsed = cashbackSettingsSchema.safeParse({
     enabled: getCheckbox(formData, "enabled"),
     ratePercent: getString(formData, "ratePercent") || "5",
   });
 
-  if (!parsed.success) fail("/dashboard/settings?tab=features", parsed.error.issues[0]?.message ?? "Validation failed.");
+  if (!parsed.success) fail(failPath, parsed.error.issues[0]?.message ?? "Validation failed.");
 
   const maxBillAmount = parseOptionalCapAmount(getString(formData, "maxBillAmount"));
   if (maxBillAmount === "invalid") {
-    fail("/dashboard/settings?tab=features", "Max amount paid must be a positive number, or left blank for no limit.");
+    fail(failPath, "Max amount paid must be a positive number, or left blank for no limit.");
   }
   const maxRedemption = parseOptionalCapAmount(getString(formData, "maxRedemption"));
   if (maxRedemption === "invalid") {
-    fail("/dashboard/settings?tab=features", "Max redemption must be a positive number, or left blank for no limit.");
+    fail(failPath, "Max redemption must be a positive number, or left blank for no limit.");
   }
 
   const settings = await prisma.businessCashbackSettings.upsert({
@@ -699,6 +708,10 @@ export async function saveCashbackSettingsAction(formData: FormData) {
   });
 
   revalidatePath("/dashboard/settings");
+  revalidatePath("/dashboard/programs");
+  if (redirectTo) {
+    redirect(`${redirectTo}?success=${encodeURIComponent("Cashback saved.")}`);
+  }
   redirect("/dashboard/settings?tab=features&success=Cashback settings saved.");
 }
 

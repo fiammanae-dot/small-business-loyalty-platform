@@ -31,6 +31,18 @@ type ProgramSearchParams = {
   direction?: string;
 };
 
+function FeatureStatusCard({ title, enabled, detail, href }: { title: string; enabled: boolean; detail: string; href: string }) {
+  return (
+    <Link href={href} className="flex items-center justify-between gap-3 rounded-md border border-[#E5E7EB] bg-white p-4 transition hover:border-[var(--business-primary)] hover:shadow-sm">
+      <span className="min-w-0">
+        <span className="block text-sm font-bold text-[#111827]">{title}</span>
+        <span className="mt-0.5 block text-xs text-[#6B7280]">{detail}</span>
+      </span>
+      <StatusBadge tone={enabled ? "success" : "neutral"}>{enabled ? "Enabled" : "Off"}</StatusBadge>
+    </Link>
+  );
+}
+
 export default async function ProgramsPage({
   searchParams,
 }: {
@@ -130,6 +142,8 @@ export default async function ProgramsPage({
   const rewardReadyCount = programRows.reduce((total, row) => total + row.rewardReadyCount, 0);
   const averageCompletionRate = programRows.length > 0 ? Math.round(programRows.reduce((total, row) => total + row.completionRate, 0) / programRows.length) : 0;
   const filtered = Boolean(query || status || reward || sort !== "created" || direction !== "desc");
+  const cashbackEnabled = Boolean(business.cashbackSettings?.enabled);
+  const cashbackRate = business.cashbackSettings?.ratePercent != null ? business.cashbackSettings.ratePercent.toString() : "5";
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Loyalty Programs" hideWelcomeMessage>
@@ -162,6 +176,15 @@ export default async function ProgramsPage({
             <MetricCard label="Reward Ready Customers" value={rewardReadyCount} icon={<Gift className="h-5 w-5" />} tone="warning" href="/dashboard/customers?reward=ready" />
           )}
           <MetricCard label="Average Completion Rate" value={averageCompletionRate + "%"} icon={<BarChart3 className="h-5 w-5" />} />
+        </section>
+
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" aria-label="Business-wide features">
+          <FeatureStatusCard
+            title="Cashback"
+            enabled={cashbackEnabled}
+            detail={cashbackEnabled ? cashbackRate + "% of each payment" : "Not set up yet"}
+            href="/dashboard/programs/new?type=cashback"
+          />
         </section>
 
         <SectionCard title="Find programs" description="Search and filter programs by status, reward readiness, and performance.">

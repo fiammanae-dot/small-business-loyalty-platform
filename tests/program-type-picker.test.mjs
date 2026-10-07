@@ -14,7 +14,7 @@ test("the program type picker offers all four program types", () => {
   const picker = read("src/components/ProgramTypePicker.tsx");
   assert.match(picker, /\/dashboard\/programs\/new\?type=stamp/);
   assert.match(picker, /\/dashboard\/programs\/new\?type=membership/);
-  assert.match(picker, /\/dashboard\/settings\?tab=features/); // cashback
+  assert.match(picker, /\/dashboard\/programs\/new\?type=cashback/); // cashback
   assert.match(picker, /\/dashboard\/settings\?tab=loyalty/); // tiers
   for (const label of ["Stamp card", "Membership", "Cashback", "Tiers"]) {
     assert.ok(picker.includes(label), `missing ${label}`);
@@ -38,4 +38,22 @@ test("the wizard hides its type toggle when the type is locked by the picker", (
 test("creating a membership program enables the membership feature for the business", () => {
   const actions = read("src/app/dashboard/programs/actions.ts");
   assert.match(actions, /if \(parsed\.data\.isMembership\) \{[\s\S]*businessMembershipSettings\.upsert/);
+});
+
+test("phase 2: the cashback setup flow is wired to the business-wide cashback settings", () => {
+  const page = read("src/app/dashboard/programs/new/page.tsx");
+  assert.match(page, /if \(params\.type === "cashback"\)/);
+  assert.match(page, /<CashbackSetupForm/);
+
+  const form = read("src/components/CashbackSetupForm.tsx");
+  assert.match(form, /saveCashbackSettingsAction/);
+  assert.match(form, /name="redirectTo" value="\/dashboard\/programs"/);
+  assert.match(form, /scope="dashboard:cashback-settings"/);
+
+  const actions = read("src/app/dashboard/actions.ts");
+  assert.match(actions, /const redirectTo = safeDashboardPath\(getString\(formData, "redirectTo"\)\);/);
+  assert.match(actions, /if \(redirectTo\) \{\s*redirect\(`\$\{redirectTo\}\?success=/);
+
+  const programs = read("src/app/dashboard/programs/page.tsx");
+  assert.match(programs, /FeatureStatusCard[\s\S]*title="Cashback"/);
 });
