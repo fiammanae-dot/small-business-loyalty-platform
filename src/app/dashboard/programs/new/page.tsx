@@ -7,11 +7,14 @@ import { createCsrfToken, csrfFieldName } from "@/lib/csrf";
 import { getIndustryDefaultCardTheme, getRecommendedStampIconsForBusinessType, resolveIndustryCardDesign, type CardDesignStampIcon } from "@/lib/card-design";
 import { getAllowedStampIconsForBusinessType } from "@/lib/design-studio";
 import { programTemplates } from "@/lib/programs";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { ProgramTypePicker } from "@/components/ProgramTypePicker";
 
 export default async function NewProgramPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; type?: string }>;
 }) {
   const { user, business } = await getBusinessOwnerContext();
   const params = await searchParams;
@@ -26,9 +29,25 @@ export default async function NewProgramPage({
     recommended: recommendedIcons.includes(icon),
   }));
 
+  const lockedType = params.type === "membership" ? "membership" : params.type === "stamp" ? "stamp" : null;
+
+  if (!lockedType) {
+    return (
+      <DashboardShell user={user} eyebrow="Business Owner" title="Create program">
+        <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
+          <p className="mb-5 text-sm text-[#6B7280]">Choose the kind of program you want to create. Each type has its own quick setup.</p>
+          <ProgramTypePicker />
+        </section>
+      </DashboardShell>
+    );
+  }
+
   return (
-    <DashboardShell user={user} eyebrow="Business Owner" title="Create program">
+    <DashboardShell user={user} eyebrow="Business Owner" title={lockedType === "membership" ? "Create membership" : "Create stamp program"}>
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
+        <Link href="/dashboard/programs/new" className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-[#64748B] hover:text-[#1E293B]">
+          <ArrowLeft className="h-4 w-4" aria-hidden /> Choose a different type
+        </Link>
         {params.error ? <p className="mb-5 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{params.error}</p> : null}
         <ProgramCreateWizard
           action={createProgramAction}
@@ -61,6 +80,7 @@ export default async function NewProgramPage({
           }}
           stampIconOptions={stampIconOptions}
           membershipsEnabled={business.membershipSettings?.enabled ?? false}
+          lockedType={lockedType}
         />
       </section>
     </DashboardShell>

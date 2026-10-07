@@ -82,6 +82,7 @@ export function ProgramCreateWizard({
   initialDesign,
   stampIconOptions,
   membershipsEnabled,
+  lockedType,
 }: {
   action: (formData: FormData) => void | Promise<void>;
   defaults: ProgramDefaults;
@@ -103,6 +104,7 @@ export function ProgramCreateWizard({
   };
   stampIconOptions: Array<{ value: CardDesignStampIcon; label: string; recommended: boolean }>;
   membershipsEnabled?: boolean;
+  lockedType?: "stamp" | "membership";
 }) {
   const wizardRef = useRef<HTMLFormElement>(null);
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -117,7 +119,7 @@ export function ProgramCreateWizard({
   const [decorationStyle, setDecorationStyle] = useState(initialDesign.decorationStyle);
   const [visibleSections, setVisibleSections] = useState<CardSectionVisibility>(initialDesign.visibleSections);
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
-  const [isMembership, setIsMembership] = useState(false);
+  const [isMembership, setIsMembership] = useState(lockedType === "membership");
 
   const name = defaults.name ?? "";
   const productOrServiceName = defaults.productOrServiceName ?? "";
@@ -205,7 +207,7 @@ export function ProgramCreateWizard({
           </div>
         </SectionCard>
 
-        {membershipsEnabled ? (
+        {membershipsEnabled && !lockedType ? (
           <SectionCard title="Program type" description="Choose how this card works.">
             <div className="grid gap-3 md:grid-cols-2">
               <button
