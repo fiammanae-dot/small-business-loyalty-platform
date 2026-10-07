@@ -718,6 +718,8 @@ export async function saveCashbackSettingsAction(formData: FormData) {
 export async function saveCustomerTierSettingsAction(formData: FormData) {
   validateActionSecurity(formData, "dashboard:customer-tiers", "/dashboard/settings");
   const user = await requireBusinessOwner();
+  const redirectTo = safeDashboardPath(getString(formData, "redirectTo"));
+  const failPath = redirectTo ?? "/dashboard/settings";
   const parsed = customerTierSettingsSchema.safeParse({
     tierQualificationWindow: getString(formData, "tierQualificationWindow") || "DAYS_90",
     tierMaintenanceMode: getString(formData, "tierMaintenanceMode") || "DYNAMIC",
@@ -726,7 +728,7 @@ export async function saveCustomerTierSettingsAction(formData: FormData) {
     vipVisitRequirement: getString(formData, "vipVisitRequirement") || "30",
   });
 
-  if (!parsed.success) fail("/dashboard/settings", parsed.error.issues[0]?.message ?? "Validation failed.");
+  if (!parsed.success) fail(failPath, parsed.error.issues[0]?.message ?? "Validation failed.");
 
   const tierData = {
     criteria: "VISITS_ONLY" as const,
@@ -758,6 +760,10 @@ export async function saveCustomerTierSettingsAction(formData: FormData) {
 
   revalidatePath("/dashboard/settings");
   revalidatePath("/dashboard/customers");
+  revalidatePath("/dashboard/programs");
+  if (redirectTo) {
+    redirect(`${redirectTo}?success=${encodeURIComponent("Tiers saved.")}`);
+  }
   redirect("/dashboard/settings?success=Customer tier settings saved.");
 }
 

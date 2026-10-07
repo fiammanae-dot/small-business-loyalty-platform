@@ -139,7 +139,7 @@ export default async function BusinessSettingsPage({ searchParams }: { searchPar
         ) : null}
         {activeCategory === "loyalty" ? (
           <div className="grid gap-5">
-            {membershipsEnabled ? null : <CustomerTiersSection tierConfig={tierConfig} />}
+            <CustomerTiersSection tierConfig={tierConfig} />
             <ScannerSection scannerSoundEffectsEnabled={scannerSoundEffectsEnabled} />
             <AlertPoliciesSection abusePolicies={abusePolicies} />
             <CooldownSection cooldownRule={cooldownRule} />
