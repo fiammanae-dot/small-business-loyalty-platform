@@ -341,6 +341,7 @@ export default async function CustomerProfilePage({
   const primaryRequired = primaryProgram?.loyaltyProgram.requiredStamps ?? 0;
   const primaryScanHref = primaryProgram ? `/scan/${primaryProgram.scanToken}` : "/dashboard/scanner";
   const primaryGoogleWalletUrl = primaryProgram ? `/api/wallet/google/save/${primaryProgram.scanToken}` : null;
+  const primaryAppleWalletUrl = primaryProgram ? `/api/wallet/apple/${primaryProgram.scanToken}` : null;
   const primaryRewardReady = Boolean(primaryProgram && rewardStatusFor(primaryProgram).rewardReady);
   const primaryIsMembership = Boolean(primaryProgram?.loyaltyProgram.isMembership);
   const membershipMode = Boolean(business.membershipSettings?.enabled);
@@ -560,6 +561,7 @@ return (
                   nextCardStatus={nextCardStatus}
                   messageType={cardShareMessageType}
                   googleWalletUrl={primaryGoogleWalletUrl}
+                  appleWalletUrl={primaryAppleWalletUrl}
                 />
                 <ProgramQrPanel programCards={programCards} />
               </div>
@@ -997,6 +999,7 @@ function CustomerCardPanel({
   nextCardStatus,
   messageType,
   googleWalletUrl,
+  appleWalletUrl,
   compact = false,
 }: {
   cardUrl: string;
@@ -1011,6 +1014,7 @@ function CustomerCardPanel({
   nextCardStatus: string;
   messageType: "welcome" | "resend";
   googleWalletUrl: string | null;
+  appleWalletUrl: string | null;
   compact?: boolean;
 }) {
   return (
@@ -1072,6 +1076,7 @@ function CustomerCardPanel({
           auditMembershipUuid={membershipUuid}
           messageType={messageType}
           googleWalletUrl={googleWalletUrl}
+          appleWalletUrl={appleWalletUrl}
         />
       </div> : null}
     </section>

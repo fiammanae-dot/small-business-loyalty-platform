@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit";
 import { applyCashbackDelta, canSpendCashback, computeCashbackEarn, formatAed } from "@/lib/cashback";
 import { syncGoogleWalletAfterCashbackChange } from "@/lib/google-wallet/service";
+import { syncAppleWalletAfterCashbackChange } from "@/lib/walletwallet/service";
 
 /**
  * Shared cashback wallet money movements.
@@ -99,6 +100,7 @@ export async function earnCashback(input: {
     });
     // Refresh the customer's Google Wallet passes so the cashback row updates.
     await syncGoogleWalletAfterCashbackChange(input.membershipId);
+    await syncAppleWalletAfterCashbackChange(input.membershipId);
     return walletResult;
   } catch (error) {
     if (isUniqueViolation(error)) throw new DuplicateCashbackError();
@@ -167,6 +169,7 @@ export async function spendCashback(input: {
     });
     // Refresh the customer's Google Wallet passes so the cashback row updates.
     await syncGoogleWalletAfterCashbackChange(input.membershipId);
+    await syncAppleWalletAfterCashbackChange(input.membershipId);
     return walletResult;
   } catch (error) {
     if (isUniqueViolation(error)) throw new DuplicateCashbackError();
