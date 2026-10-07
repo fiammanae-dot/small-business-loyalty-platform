@@ -80,7 +80,7 @@ export default async function BranchProgramsPage() {
 
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <ProgramStat icon={Users} label="Enrolled" value={program.memberships.length.toString()} />
-                  <ProgramStat icon={TicketCheck} label={program.isMembership ? "Sessions used" : "Stamps"} value={stampsIssued.toString()} />
+                  <ProgramStat icon={TicketCheck} label={program.isMembership ? "Visits used" : "Stamps"} value={stampsIssued.toString()} />
                   {program.isMembership ? null : (
                     <>
                       <ProgramStat icon={Gift} label="Rewards" value={rewardsRedeemed.toString()} />

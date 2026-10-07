@@ -15,11 +15,11 @@ test("the create wizard presents an explicit two-mode choice", () => {
   const wiz = read("src/components/ProgramCreateWizard.tsx");
   assert.match(wiz, /Program type/);
   assert.match(wiz, /Collect stamps/);
-  assert.match(wiz, /Membership &mdash; prepaid sessions/);
+  assert.match(wiz, /Membership &mdash; prepaid visits/);
   // One hidden input submits the chosen mode (no more bolted-on checkbox).
   assert.match(wiz, /<input type="hidden" name="isMembership" value=\{isMembership \? "true" : "false"\} \/>/);
   // Required-stamps input is relabelled by mode.
-  assert.match(wiz, /isMembership \? "Number of included sessions" : "Required stamps"/);
+  assert.match(wiz, /isMembership \? "Number of included visits" : "Required stamps"/);
   // Reward + milestones + starting stamps only show for the normal card.
   assert.match(wiz, /\{!isMembership \? \(/);
   // Membership details (price + treatments) only show for membership.

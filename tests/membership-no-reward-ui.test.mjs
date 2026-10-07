@@ -24,10 +24,10 @@ test("customer 360 treats a membership as a depleting card with no reward", () =
   assert.match(page, /isMembership \? \(\s*<p[^>]*>.*Prepaid membership/s);
   assert.match(page, /\{isMembership \? null : \(\s*<span[^>]*>\{isRewardReady \? "Ready to redeem"/s);
   // Header CTA says Use Session, not Issue Stamp.
-  assert.match(page, /\{primaryIsMembership \? "Use Session" : "Issue Stamp"\}/);
+  assert.match(page, /\{primaryIsMembership \? "Use Visit" : "Issue Stamp"\}/);
   // In membership mode the Rewards tab is hidden and the stat tile shows sessions.
   assert.match(page, /\.\.\.\(membershipMode\s*\?\s*\[\]\s*:\s*\[\s*\{\s*id: "rewards"/s);
-  assert.match(page, /label="Sessions remaining"/);
+  assert.match(page, /label="Visits remaining"/);
 });
 
 test("the dashboard serve-next queue and reward counts skip memberships", () => {

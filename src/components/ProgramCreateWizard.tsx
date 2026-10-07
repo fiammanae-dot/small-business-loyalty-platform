@@ -225,8 +225,8 @@ export function ProgramCreateWizard({
                 data-active={isMembership}
                 className="rounded-xl border border-[#E5E7EB] bg-white p-4 text-left transition hover:border-[var(--business-primary)] data-[active=true]:border-[var(--business-primary)] data-[active=true]:ring-2 data-[active=true]:ring-[var(--business-primary)]/20"
               >
-                <span className="block text-sm font-bold text-[#111827]">Membership &mdash; prepaid sessions</span>
-                <span className="mt-1 block text-sm text-[#6B7280]">Customer pays once for a card of prepaid services. Each visit uses one session and the card counts down.</span>
+                <span className="block text-sm font-bold text-[#111827]">Membership &mdash; prepaid visits</span>
+                <span className="mt-1 block text-sm text-[#6B7280]">Customer pays once for a card of prepaid services. Each visit uses one and the card counts down.</span>
               </button>
             </div>
           </SectionCard>
@@ -234,12 +234,12 @@ export function ProgramCreateWizard({
         <input type="hidden" name="isMembership" value={isMembership ? "true" : "false"} />
 
         <SectionCard
-          title={isMembership ? "Included sessions" : "Stamps"}
-          description={isMembership ? "How many prepaid sessions this membership includes. Each visit uses one." : "How many stamps a customer collects to complete the card."}
+          title={isMembership ? "Included visits" : "Stamps"}
+          description={isMembership ? "How many prepaid visits this membership includes. Each visit uses one." : "How many stamps a customer collects to complete the card."}
         >
           <Input
             name="requiredStamps"
-            label={isMembership ? "Number of included sessions" : "Required stamps"}
+            label={isMembership ? "Number of included visits" : "Required stamps"}
             type="number"
             min="1"
             defaultValue={requiredStamps.toString()}

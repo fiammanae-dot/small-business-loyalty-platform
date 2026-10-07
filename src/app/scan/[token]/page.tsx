@@ -479,7 +479,7 @@ export default async function ScanResultPage({
         <ScanStatusBanner tone="green" title="Cashback updated" description={qs.cashback} />
       ) : null}
       {qs.renewed ? (
-        <ScanStatusBanner tone="green" title="Membership renewed" description="The card has been reset to a full set of sessions." />
+        <ScanStatusBanner tone="green" title="Membership renewed" description="The card has been reset to a full set of visits." />
       ) : null}
       {qs.error ? (
         <ScanStatusBanner tone="red" title="Action blocked" description={qs.error} />
@@ -729,28 +729,28 @@ function QuickScanActions({
           <input type="hidden" name="shareAfterStamp" value="" />
           <MembershipTreatmentFields treatments={treatments} />
           <ConfirmSubmitButton
-            title={isMembership ? "Use one session?" : "Issue stamp?"}
-            message={isMembership ? "This will use one session from the customer's membership." : "This will add 1 visit to the customer's selected program."}
-            confirmLabel={isMembership ? "Use Session" : "Issue Stamp"}
+            title={isMembership ? "Use one visit?" : "Issue stamp?"}
+            message={isMembership ? "This will use one visit from the customer's membership." : "This will add 1 visit to the customer's selected program."}
+            confirmLabel={isMembership ? "Use Visit" : "Issue Stamp"}
             cancelLabel="Cancel"
             confirmationTheme={confirmationTheme}
             submitFieldName="shareAfterStamp"
             submitFieldValue=""
             className="business-button min-h-12 w-full rounded-md px-5 text-base font-semibold shadow-sm transition"
           >
-            {isMembership ? "Use Session" : "Issue Stamp"}
+            {isMembership ? "Use Visit" : "Issue Stamp"}
           </ConfirmSubmitButton>
           <ConfirmSubmitButton
-            title={isMembership ? "Use session and share updated card?" : "Issue stamp and share updated card?"}
-            message={isMembership ? "This will use one session, then prepare a WhatsApp message with the customer's updated loyalty card." : "This will add 1 visit, then prepare a WhatsApp message with the customer's updated loyalty card."}
-            confirmLabel={isMembership ? "Use Session & Share" : "Issue Stamp & Share"}
+            title={isMembership ? "Use visit and share updated card?" : "Issue stamp and share updated card?"}
+            message={isMembership ? "This will use one visit, then prepare a WhatsApp message with the customer's updated loyalty card." : "This will add 1 visit, then prepare a WhatsApp message with the customer's updated loyalty card."}
+            confirmLabel={isMembership ? "Use Visit & Share" : "Issue Stamp & Share"}
             cancelLabel="Cancel"
             confirmationTheme={confirmationTheme}
             submitFieldName="shareAfterStamp"
             submitFieldValue="whatsapp"
             className="min-h-12 w-full rounded-md border border-[#E5E7EB] bg-white px-5 text-base font-semibold text-[#111827] shadow-sm transition business-hover"
           >
-            {isMembership ? "Use Session & Share via WhatsApp" : "Issue Stamp & Share via WhatsApp"}
+            {isMembership ? "Use Visit & Share via WhatsApp" : "Issue Stamp & Share via WhatsApp"}
           </ConfirmSubmitButton>
         </form>
       ) : (
@@ -762,14 +762,14 @@ function QuickScanActions({
             <input type="hidden" name="quantity" value="1" />
             {isMembership ? <MembershipTreatmentFields treatments={treatments} /> : null}
             <ConfirmSubmitButton
-              title={isMembership ? "Use one session?" : "Issue stamp?"}
-              message={isMembership ? "This will use one session from the customer's membership." : "This will add 1 visit to the customer's selected program."}
-              confirmLabel={isMembership ? "Use Session" : "Issue Stamp"}
+              title={isMembership ? "Use one visit?" : "Issue stamp?"}
+              message={isMembership ? "This will use one visit from the customer's membership." : "This will add 1 visit to the customer's selected program."}
+              confirmLabel={isMembership ? "Use Visit" : "Issue Stamp"}
               cancelLabel="Cancel"
               confirmationTheme={confirmationTheme}
               className="business-button min-h-12 w-full rounded-md px-5 text-base font-semibold shadow-sm transition"
             >
-              {isMembership ? "Use Session" : "Issue Stamp"}
+              {isMembership ? "Use Visit" : "Issue Stamp"}
             </ConfirmSubmitButton>
           </form>
           <form action={issueStampAction}>
@@ -780,14 +780,14 @@ function QuickScanActions({
             <input type="hidden" name="shareAfterStamp" value="whatsapp" />
             {isMembership ? <MembershipTreatmentFields treatments={treatments} /> : null}
             <ConfirmSubmitButton
-              title={isMembership ? "Use session and share updated card?" : "Issue stamp and share updated card?"}
-              message={isMembership ? "This will use one session, then prepare a WhatsApp message with the customer's updated loyalty card." : "This will add 1 visit, then prepare a WhatsApp message with the customer's updated loyalty card."}
-              confirmLabel={isMembership ? "Use Session & Share" : "Issue Stamp & Share"}
+              title={isMembership ? "Use visit and share updated card?" : "Issue stamp and share updated card?"}
+              message={isMembership ? "This will use one visit, then prepare a WhatsApp message with the customer's updated loyalty card." : "This will add 1 visit, then prepare a WhatsApp message with the customer's updated loyalty card."}
+              confirmLabel={isMembership ? "Use Visit & Share" : "Issue Stamp & Share"}
               cancelLabel="Cancel"
               confirmationTheme={confirmationTheme}
               className="min-h-12 w-full rounded-md border border-[#E5E7EB] bg-white px-5 text-base font-semibold text-[#111827] shadow-sm transition business-hover"
             >
-              {isMembership ? "Use Session & Share via WhatsApp" : "Issue Stamp & Share via WhatsApp"}
+              {isMembership ? "Use Visit & Share via WhatsApp" : "Issue Stamp & Share via WhatsApp"}
             </ConfirmSubmitButton>
           </form>
         </div>
@@ -1208,11 +1208,11 @@ function StampIssuanceSection({
           />
         </label>
         <ConfirmSubmitButton
-          message={isMembership ? "Use one session from this customer's membership for the selected treatment?" : "Issue this stamp to this customer and selected program?"}
+          message={isMembership ? "Use one visit from this customer's membership for the selected treatment?" : "Issue this stamp to this customer and selected program?"}
           confirmationTheme={confirmationTheme}
           className="business-button h-12 rounded-md px-6 text-base font-semibold shadow-sm transition"
         >
-          {isMembership ? "Use Session" : "Add Stamp"}
+          {isMembership ? "Use Visit" : "Add Stamp"}
         </ConfirmSubmitButton>
         {canOverrideCooldown ? (
           <div className="rounded-md border business-border-soft bg-white p-3 md:col-span-3">
@@ -1249,14 +1249,14 @@ function MembershipRenewPanel({
       <p className="text-sm font-semibold text-amber-900">Membership used up</p>
       <p className="mt-1 text-xs text-amber-800">
         All sessions have been used or expired. If the customer has paid for the package again, renew the card to a
-        full set of {totalSessions} session{totalSessions === 1 ? "" : "s"}.
+        full set of {totalSessions} visit{totalSessions === 1 ? "" : "s"}.
       </p>
       <form action={renewMembershipAction} className="mt-3">
         <CsrfInput scope="scan:membership-renew" />
         <input type="hidden" name="scanToken" value={token} />
         <ConfirmSubmitButton
           title="Renew membership?"
-          message={`This resets the card to a full ${totalSessions}-session membership and restarts the monthly expiry from today. Use this only after the customer has paid for a new package.`}
+          message={`This resets the card to a full ${totalSessions}-visit membership and restarts the monthly expiry from today. Use this only after the customer has paid for a new package.`}
           confirmLabel="Renew Membership"
           cancelLabel="Cancel"
           confirmationTheme={confirmationTheme}
@@ -1274,11 +1274,11 @@ function MembershipSessionsNote({ summary }: { summary: ReturnType<typeof member
   return (
     <section className={`rounded-md border p-4 ${depleted ? "border-red-200 bg-red-50 text-red-700" : "business-border-soft business-bg-soft business-text-strong"}`}>
       <p className="text-sm font-semibold">
-        Membership: {summary.remaining} of {summary.total} session{summary.total === 1 ? "" : "s"} remaining
+        Membership: {summary.remaining} of {summary.total} visit{summary.total === 1 ? "" : "s"} remaining
       </p>
       <p className="mt-1 text-xs">
         {summary.used} used{summary.forfeited > 0 ? ` \u00b7 ${summary.forfeited} expired (unused monthly sessions)` : ""}
-        {depleted ? " \u2014 no sessions left to redeem." : ""}
+        {depleted ? " \u2014 no visits left to redeem." : ""}
       </p>
     </section>
   );

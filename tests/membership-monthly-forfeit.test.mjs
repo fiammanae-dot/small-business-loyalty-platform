@@ -49,5 +49,5 @@ test("the schema and a migration carry the session counters", () => {
 test("a prepaid membership with no sessions left cannot be stamped again", () => {
   const scanActions = read("src/app/scan/actions.ts");
   assert.match(scanActions, /membershipSessionSummary/);
-  assert.match(scanActions, /no sessions left/);
+  assert.match(scanActions, /no visits left/);
 });

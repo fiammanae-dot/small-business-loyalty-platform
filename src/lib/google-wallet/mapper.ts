@@ -193,7 +193,7 @@ export async function buildGoogleWalletObjectPayload({
           membership.loyaltyProgram.stampEmoji,
         )}`,
         isMembership
-          ? `${sessionsRemaining} of ${sessionsTotal} sessions remaining`
+          ? `${sessionsRemaining} of ${sessionsTotal} visits remaining`
           : `${Math.min(progress, required)} of ${required} stamps collected`,
       );
 
@@ -206,7 +206,7 @@ export async function buildGoogleWalletObjectPayload({
     accountName: customerName,
     loyaltyPoints: isMembership
       ? {
-          label: "Sessions left",
+          label: "Visits left",
           balance: {
             string: `${sessionsRemaining} of ${sessionsTotal}`,
           },
@@ -338,7 +338,7 @@ function membershipClassBody(membership: GoogleWalletProgramMembership) {
     .filter(Boolean);
   if (benefits.length) return benefits.join(" \u00b7 ");
   const sessions = Math.max(1, membership.loyaltyProgram.requiredStamps);
-  return `Prepaid package of ${sessions} session${sessions === 1 ? "" : "s"}.`;
+  return `Prepaid package of ${sessions} visit${sessions === 1 ? "" : "s"}.`;
 }
 
 function rewardBoxBody(membership: GoogleWalletProgramMembership) {

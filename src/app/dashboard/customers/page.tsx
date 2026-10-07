@@ -480,7 +480,7 @@ function CustomerProgress({ row }: { row: CustomerRow }) {
     <div className="min-w-0 max-w-44">
       <ProgressBar value={row.progress.current} max={row.progress.required} />
       <p className="mt-1 truncate text-xs font-semibold text-[#7A8091]">
-        {row.progress.current} / {row.progress.required}{row.progress.isMembership ? " sessions" : ""} · {row.progress.programName}
+        {row.progress.current} / {row.progress.required}{row.progress.isMembership ? " visits" : ""} · {row.progress.programName}
         {extraLabel}
       </p>
     </div>

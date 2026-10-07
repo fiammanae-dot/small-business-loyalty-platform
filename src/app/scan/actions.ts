@@ -176,7 +176,7 @@ export async function issueStampAction(formData: FormData) {
       sessionsForfeited: programMembership.sessionsForfeited,
     });
     if (sessions.remaining <= 0) {
-      fail(data.scanToken, "This membership has no sessions left \u2014 all sessions have been used or have expired.");
+      fail(data.scanToken, "This membership has no visits left \u2014 all visits have been used or have expired.");
     }
     if (data.quantity !== 1) {
       fail(data.scanToken, "Membership visits are recorded one treatment at a time. Set the quantity to 1.");

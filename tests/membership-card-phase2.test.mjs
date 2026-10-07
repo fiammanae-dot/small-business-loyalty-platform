@@ -22,7 +22,7 @@ test("the render model treats a membership as a depleting card with no reward", 
   // No reward for a membership.
   assert.match(model, /const rewardReady = isMembership \? false/);
   // Status wording counts down and ends at "Membership complete".
-  assert.match(model, /session\$\{membershipTotal === 1 \? "" : "s"\} left/);
+  assert.match(model, /visit\$\{membershipTotal === 1 \? "" : "s"\} left/);
   assert.match(model, /"Membership complete"/);
   // The reward box is suppressed for memberships.
   assert.match(model, /rewardBox: design\.visibleSections\.rewardBox && hasProgram && !isMembership/);
@@ -57,7 +57,7 @@ test("the wallet hero and program cards render the membership wording", () => {
   assert.match(prog, /isMembership\?: boolean/);
   assert.match(prog, /Prepaid membership/);
   assert.match(prog, /"Used up"/);
-  assert.match(prog, /Show to use a session\./);
+  assert.match(prog, /Show to use a visit\./);
 });
 
 test("the Google Wallet pass header depletes for a membership", () => {
@@ -65,7 +65,7 @@ test("the Google Wallet pass header depletes for a membership", () => {
   assert.match(mapper, /import \{ membershipSessionSummary \} from "@\/lib\/membership-sessions"/);
   assert.match(mapper, /const isMembership = membership\.loyaltyProgram\.isMembership/);
   // The pass's main header slot counts sessions left.
-  assert.match(mapper, /label: "Sessions left"/);
+  assert.match(mapper, /label: "Visits left"/);
   assert.match(mapper, /string: `\$\{sessionsRemaining\} of \$\{sessionsTotal\}`/);
   // The filled stamp image uses remaining, not collected.
   assert.match(mapper, /const walletFilled = isMembership \? sessionsRemaining/);

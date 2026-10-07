@@ -255,7 +255,7 @@ export default async function ProgramsPage({
                       <DataTableHeadCell>{membershipMode ? "Package" : "Reward"}</DataTableHeadCell>
                       <DataTableHeadCell>Members</DataTableHeadCell>
                       <DataTableHeadCell>Completion</DataTableHeadCell>
-                      <DataTableHeadCell>{membershipMode ? "Sessions" : "Rewards"}</DataTableHeadCell>
+                      <DataTableHeadCell>{membershipMode ? "Visits" : "Rewards"}</DataTableHeadCell>
                       <DataTableHeadCell>Status</DataTableHeadCell>
                     </tr>
                   </DataTableHeader>
@@ -275,7 +275,7 @@ export default async function ProgramsPage({
                         <DataTableCell>
                           {row.isMembership ? (
                             <>
-                              <div className="font-medium text-[#0F172A]">{row.requiredStamps} sessions</div>
+                              <div className="font-medium text-[#0F172A]">{row.requiredStamps} visits</div>
                               <div className="mt-1 text-xs text-[#64748B]">Prepaid package</div>
                             </>
                           ) : (
@@ -291,7 +291,7 @@ export default async function ProgramsPage({
                         </DataTableCell>
                         <DataTableCell>
                           {row.isMembership ? (
-                            <div>{row.stampsIssued} sessions used</div>
+                            <div>{row.stampsIssued} visits used</div>
                           ) : (
                             <>
                               <div>{row.rewardsRedeemed} redeemed</div>
@@ -367,9 +367,9 @@ function ProgramCard({ row }: { row: ProgramRow }) {
       <div className="mt-4 grid gap-3 text-sm text-[#475569]">
         {row.isMembership ? (
           <>
-            <InfoLine label="Package size" value={`${row.requiredStamps} sessions`} />
+            <InfoLine label="Package size" value={`${row.requiredStamps} visits`} />
             <InfoLine label="Members" value={row.memberCount.toString()} />
-            <InfoLine label="Sessions used" value={row.stampsIssued.toString()} />
+            <InfoLine label="Visits used" value={row.stampsIssued.toString()} />
             <InfoLine label="Average visits" value={row.averageVisits.toString()} />
           </>
         ) : (

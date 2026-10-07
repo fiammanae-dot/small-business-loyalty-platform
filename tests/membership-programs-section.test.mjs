@@ -23,14 +23,14 @@ test("the programs list drops reward tiles/filter and counts for memberships", (
   assert.match(p, /\{membershipMode \? null : \(\s*<MetricCard label="Reward Ready Customers"/s);
   assert.match(p, /\{membershipMode \? null : <FilterSelect name="reward"/);
   assert.match(p, /\{membershipMode \? "Package" : "Reward"\}/);
-  assert.match(p, /\{membershipMode \? "Sessions" : "Rewards"\}/);
+  assert.match(p, /\{membershipMode \? "Visits" : "Rewards"\}/);
 });
 
 test("the program detail page swaps reward tiles for sessions on a membership", () => {
   const p = read("src/app/dashboard/programs/[id]/page.tsx");
   assert.match(p, /const isMembership = program\.isMembership/);
   assert.match(p, /const rewardReadyCustomers = isMembership\s*\?\s*0/);
-  assert.match(p, /isMembership \? \(\s*<MetricCard label="Sessions Used"/s);
+  assert.match(p, /isMembership \? \(\s*<MetricCard label="Visits Used"/s);
   assert.match(p, /requiredStamps: safeRequiredStamps, isMembership \}/);
 });
 

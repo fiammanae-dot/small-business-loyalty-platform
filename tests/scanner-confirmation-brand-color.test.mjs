@@ -37,11 +37,11 @@ test("scanner confirmation theme is built from the same branding record and role
 test("Issue Stamp and Issue Stamp & Share confirm buttons both receive the resolved brand theme", () => {
   const scan = read("src/app/scan/[token]/page.tsx");
 
-  const issueStampIndex = scan.indexOf('confirmLabel={isMembership ? "Use Session" : "Issue Stamp"}');
+  const issueStampIndex = scan.indexOf('confirmLabel={isMembership ? "Use Visit" : "Issue Stamp"}');
   const issueStampBlock = scan.slice(issueStampIndex, issueStampIndex + 250);
   assert.match(issueStampBlock, /confirmationTheme=\{confirmationTheme\}/);
 
-  const shareIndex = scan.indexOf('confirmLabel={isMembership ? "Use Session & Share" : "Issue Stamp & Share"}');
+  const shareIndex = scan.indexOf('confirmLabel={isMembership ? "Use Visit & Share" : "Issue Stamp & Share"}');
   const shareBlock = scan.slice(shareIndex, shareIndex + 250);
   assert.match(shareBlock, /confirmationTheme=\{confirmationTheme\}/);
 });

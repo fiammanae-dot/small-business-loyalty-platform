@@ -38,9 +38,9 @@ test("the scanner says Use Session for memberships and offers renewal when deple
   // Depletion is computed once and gates the UI.
   assert.match(page, /const membershipDepleted = membershipSummary \? membershipSummary\.remaining <= 0 : false/);
   // Membership wording.
-  assert.match(page, /isMembership \? "Use Session" : "Issue Stamp"/);
-  assert.match(page, /isMembership \? "Use one session\?" : "Issue stamp\?"/);
-  assert.match(page, /isMembership \? "Use Session" : "Add Stamp"/);
+  assert.match(page, /isMembership \? "Use Visit" : "Issue Stamp"/);
+  assert.match(page, /isMembership \? "Use one visit\?" : "Issue stamp\?"/);
+  assert.match(page, /isMembership \? "Use Visit" : "Add Stamp"/);
   // Renew panel shows only when depleted; the use-session forms hide then.
   assert.match(page, /\{membershipDepleted \? \(\s*<MembershipRenewPanel/);
   assert.match(page, /!redemption && !membershipDepleted \? \(\s*<QuickScanActions/);

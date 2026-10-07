@@ -70,7 +70,7 @@ export async function buildWalletWalletPassBody(membership: GoogleWalletProgramM
   // Cashback and tier are their own separate wallet cards, not fields here.
   const secondaryFields: WalletWalletField[] = [];
   if (isMembership) {
-    secondaryFields.push({ label: "Sessions left", value: `${sessionsRemaining} of ${sessionsTotal}`, changeMessage: "%@ sessions left" });
+    secondaryFields.push({ label: "Visits left", value: `${sessionsRemaining} of ${sessionsTotal}`, changeMessage: "%@ visits left" });
   } else if (hasBanner) {
     secondaryFields.push({ label: "Program", value: program.name });
   }
