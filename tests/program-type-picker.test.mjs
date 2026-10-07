@@ -50,7 +50,9 @@ test("phase 2: the cashback setup flow is wired to the business-wide cashback se
   const form = read("src/components/CashbackSetupForm.tsx");
   assert.match(form, /saveCashbackSettingsAction/);
   assert.match(form, /name="redirectTo" value="\/dashboard\/programs"/);
-  assert.match(form, /scope="dashboard:cashback-settings"/);
+  // CSRF token is minted on the server (the form is now a client wizard) and the
+  // page passes the cashback-settings-scoped token in.
+  assert.match(page, /createCsrfToken\("dashboard:cashback-settings"\)/);
 
   const actions = read("src/app/dashboard/actions.ts");
   assert.match(actions, /const redirectTo = safeDashboardPath\(getString\(formData, "redirectTo"\)\);/);

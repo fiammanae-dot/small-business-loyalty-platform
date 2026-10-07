@@ -42,3 +42,21 @@ test("the cashback page feeds the design props into the form", () => {
   assert.match(page, /businessName=\{business\.name\}/);
   assert.match(page, /branding=\{resolveBranding\(business\.branding\)\}/);
 });
+
+test("the cashback setup is a two-step wizard like stamp/membership", () => {
+  const form = read("src/components/CashbackSetupForm.tsx");
+  assert.match(form, /^"use client";/);
+  assert.match(form, /function WizardProgress/);
+  assert.match(form, /useState<1 \| 2>\(1\)/);
+  assert.match(form, /Step \{step\} of 2/);
+  assert.match(form, /Continue to card design/);
+  // step 1 = rules, step 2 = design
+  assert.match(form, /step === 1 \? "grid gap-5" : "hidden"/);
+  assert.match(form, /step === 2 \? "grid gap-6" : "hidden"/);
+  // rules live in step 1, theme + picture in step 2
+  const step1 = form.slice(form.indexOf('step === 1 ? "grid gap-5"'), form.indexOf('step === 2 ? "grid gap-6"'));
+  assert.match(step1, /name="ratePercent"/);
+  const step2 = form.slice(form.indexOf('step === 2 ? "grid gap-6"'));
+  assert.match(step2, /CardThemePreviewSelector/);
+  assert.match(step2, /CashbackPhotoField/);
+});

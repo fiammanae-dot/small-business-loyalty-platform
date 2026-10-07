@@ -29,7 +29,6 @@ export default async function NewProgramPage({
             <ArrowLeft className="h-4 w-4" aria-hidden /> Choose a different type
           </Link>
           {params.error ? <p className="mb-5 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{params.error}</p> : null}
-          <p className="mb-5 text-sm text-[#6B7280]">Design the cashback card and set how it pays out. Customers earn a percentage of what they pay as a balance to spend on future visits. Cashback runs business-wide and layers on top of your stamp and membership programs.</p>
           <CashbackSetupForm
             enabled={cb?.enabled ?? true}
             rate={cb?.ratePercent != null ? cb.ratePercent.toString() : "5"}
@@ -40,6 +39,8 @@ export default async function NewProgramPage({
             walletPhotoUrl={cb?.walletPhotoUrl ?? null}
             businessName={business.name}
             branding={resolveBranding(business.branding)}
+            csrfName={csrfFieldName()}
+            csrfToken={createCsrfToken("dashboard:cashback-settings")}
           />
         </section>
       </DashboardShell>
