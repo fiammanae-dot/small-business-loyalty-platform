@@ -222,6 +222,16 @@ export async function createProgramAction(formData: FormData) {
       });
     }
 
+    if (parsed.data.isMembership) {
+      // Creating a membership program turns the feature on for the business so
+      // the membership surfaces stay consistent (the 4-type picker is the entry point).
+      await tx.businessMembershipSettings.upsert({
+        where: { businessId: user.businessId },
+        update: { enabled: true },
+        create: { businessId: user.businessId, enabled: true },
+      });
+    }
+
     return created;
   });
   await logAuditEvent({
