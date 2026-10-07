@@ -11,8 +11,6 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { ProgramTypePicker } from "@/components/ProgramTypePicker";
 import { CashbackSetupForm } from "@/components/CashbackSetupForm";
-import { TierSetupForm } from "@/components/TierSetupForm";
-import { normalizeTierConfig } from "@/lib/customer-tiers";
 
 export default async function NewProgramPage({
   searchParams,
@@ -38,22 +36,6 @@ export default async function NewProgramPage({
             maxBill={cb?.maxBillAmount != null ? cb.maxBillAmount.toString() : ""}
             maxRedemption={cb?.maxRedemption != null ? cb.maxRedemption.toString() : ""}
           />
-        </section>
-      </DashboardShell>
-    );
-  }
-
-  if (params.type === "tier") {
-    const tierConfig = normalizeTierConfig(business.tierSetting);
-    return (
-      <DashboardShell user={user} eyebrow="Business Owner" title="Set up tiers">
-        <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
-          <Link href="/dashboard/programs/new" className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-[#64748B] hover:text-[#1E293B]">
-            <ArrowLeft className="h-4 w-4" aria-hidden /> Choose a different type
-          </Link>
-          {params.error ? <p className="mb-5 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{params.error}</p> : null}
-          <p className="mb-5 text-sm text-[#6B7280]">Tiers reward repeat customers: they climb Bronze, Silver, Gold and VIP by number of visits. Set the thresholds below. Tiers run business-wide alongside your other programs.</p>
-          <TierSetupForm config={tierConfig} />
         </section>
       </DashboardShell>
     );

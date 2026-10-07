@@ -1,14 +1,14 @@
 import Link from "next/link";
-import { ArrowRight, Crown, Stamp, Trophy, Wallet } from "lucide-react";
+import { ArrowRight, Crown, Stamp, Wallet } from "lucide-react";
 
 /**
- * The entry point for creating a program. A business picks one of four program
+ * The entry point for creating a program. A business picks one of three program
  * types, each with its own setup flow:
  *  - Stamp / Membership create a loyalty-program row through ProgramCreateWizard
  *    (reached here with ?type=stamp / ?type=membership).
- *  - Cashback / Tier are business-wide features, configured through their own
- *    setup. Until their dedicated flows land, their cards point at the matching
- *    Settings section so nothing is a dead end.
+ *  - Cashback is a business-wide feature, configured through its own setup.
+ * Tiers are NOT a program type: they are an option inside stamp programs,
+ * configured in Settings, and they ride on the stamp wallet card.
  */
 type ProgramTypeCard = {
   key: string;
@@ -39,13 +39,6 @@ const TYPES: ProgramTypeCard[] = [
     title: "Cashback",
     description: "Customers earn a percentage of what they spend back as wallet balance to redeem later.",
     Icon: Wallet,
-  },
-  {
-    key: "tier",
-    href: "/dashboard/programs/new?type=tier",
-    title: "Tiers",
-    description: "Customers climb Bronze, Silver, Gold and VIP by visits, unlocking better perks.",
-    Icon: Trophy,
   },
 ];
 
