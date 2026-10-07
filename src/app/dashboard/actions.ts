@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { businessTypeValues } from "@/lib/roles";
 import type { BusinessType, RecordStatus, UserRole } from "@prisma/client";
+import { Prisma, CardTheme, WalletHeroStyle } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit";
 import { brandColorSchema, brandLogoUrlSchema } from "@/lib/branding-validation";
@@ -680,6 +681,37 @@ export async function saveCashbackSettingsAction(formData: FormData) {
     fail(failPath, "Max redemption must be a positive number, or left blank for no limit.");
   }
 
+  // Program-style identity (name + card design) rides on the same save. Each
+  // field is applied only when the form actually sends it, so the plain
+  // settings form (which omits them) never wipes a configured cashback card.
+  const optional: {
+    name?: string | null;
+    cardTheme?: CardTheme;
+    walletHeroStyle?: WalletHeroStyle;
+    walletPhotoUrl?: string | null;
+    cardDesign?: Prisma.InputJsonValue;
+  } = {};
+  if (formData.has("name")) optional.name = getString(formData, "name").trim().slice(0, 80) || null;
+  if (formData.has("cardTheme")) {
+    const theme = getString(formData, "cardTheme");
+    if ((Object.values(CardTheme) as string[]).includes(theme)) optional.cardTheme = theme as CardTheme;
+  }
+  if (formData.has("walletHeroStyle")) {
+    const hero = getString(formData, "walletHeroStyle");
+    if (hero === "PHOTO" || hero === "STAMPS") optional.walletHeroStyle = hero;
+  }
+  if (formData.has("walletPhotoUrl")) optional.walletPhotoUrl = getString(formData, "walletPhotoUrl").trim() || null;
+  if (formData.has("cardDesign")) {
+    const rawDesign = getString(formData, "cardDesign").trim();
+    if (rawDesign) {
+      try {
+        optional.cardDesign = JSON.parse(rawDesign) as Prisma.InputJsonValue;
+      } catch {
+        // ignore malformed design JSON; leave the stored design untouched
+      }
+    }
+  }
+
   const settings = await prisma.businessCashbackSettings.upsert({
     where: { businessId: user.businessId },
     create: {
@@ -688,12 +720,14 @@ export async function saveCashbackSettingsAction(formData: FormData) {
       ratePercent: parsed.data.ratePercent,
       maxBillAmount,
       maxRedemption,
+      ...optional,
     },
     update: {
       enabled: parsed.data.enabled,
       ratePercent: parsed.data.ratePercent,
       maxBillAmount,
       maxRedemption,
+      ...optional,
     },
     select: { id: true },
   });
