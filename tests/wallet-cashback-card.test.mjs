@@ -19,11 +19,12 @@ test("schema + migration add the per-customer feature pass table", () => {
   assert.match(mig, /"AppleWalletFeatureKind" AS ENUM \('CASHBACK', 'TIER'\)/);
 });
 
-test("the cashback pass shows only the balance and the member name", () => {
+test("the cashback pass shows the balance, program name and member", () => {
   const mapper = read("src/lib/walletwallet/mapper.ts");
   assert.match(mapper, /export async function buildCashbackPassBody/);
-  assert.match(mapper, /primaryFields: \[\{ label: "Balance"/);
-  assert.match(mapper, /secondaryFields: \[\{ label: "Member", value: customerName \}\]/);
+  assert.match(mapper, /label: "Balance", value: balance/);
+  assert.match(mapper, /secondaryFields\.push\(\{ label: "Program", value: cardName \}\)/);
+  assert.match(mapper, /secondaryFields\.push\(\{ label: "Member", value: customerName \}\)/);
   // barcode is the customer's card URL (per-customer, not per-program)
   assert.match(mapper, /const cardUrl = await getCardUrl\(customer\.cardToken\)/);
 });

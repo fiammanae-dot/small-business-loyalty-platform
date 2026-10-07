@@ -184,6 +184,27 @@ export async function syncAppleWalletAfterCashbackChange(businessCustomerMembers
   await refreshAppleFeaturePassIfPresent(businessCustomerMembershipId, "CASHBACK");
 }
 
+/**
+ * Re-sync every cashback card already added for a business. Used after the
+ * owner edits the cashback program's design (name/theme/picture) so existing
+ * cards pick up the new look, not just newly added ones. Update-only: it never
+ * mints a card nobody added.
+ */
+export async function refreshBusinessCashbackPasses(businessId: number): Promise<void> {
+  if (!isWalletWalletConfigured()) return;
+  try {
+    const passes = await prisma.appleWalletFeaturePass.findMany({
+      where: { businessId, kind: "CASHBACK" },
+      select: { businessCustomerMembershipId: true },
+    });
+    for (const pass of passes) {
+      await syncAppleFeaturePass(pass.businessCustomerMembershipId, "CASHBACK");
+    }
+  } catch {
+    // swallowed on purpose - cards catch up on the next change
+  }
+}
+
 /** Tier rides on the stamp card, so a tier change refreshes the customer's
  *  existing program passes - it never mints a pass nobody added. */
 export async function syncAppleWalletAfterTierChange(businessCustomerMembershipId: number): Promise<void> {
