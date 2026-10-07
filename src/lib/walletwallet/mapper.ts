@@ -2,7 +2,7 @@ import "server-only";
 
 import type { GoogleWalletProgramMembership } from "@/lib/google-wallet/mapper";
 import type { WalletWalletField, WalletWalletPassBody } from "./client";
-import { resolveBranding, getBaseUrl } from "@/lib/customer-cards";
+import { resolveBranding, getBaseUrl, getCardUrl } from "@/lib/customer-cards";
 import { getScanUrl } from "@/lib/scan";
 import { progressValue } from "@/lib/programs";
 import { membershipSessionSummary } from "@/lib/membership-sessions";
@@ -101,5 +101,61 @@ export async function buildWalletWalletPassBody(membership: GoogleWalletProgramM
   if (color) body.color = color; // Pro
   if (logoUrl) body.logoURL = logoUrl; // Pro
   if (photoUrl) body.stripURL = photoUrl; // Pro - banner behind the primary field (top of pass)
+  return body;
+}
+
+
+/** A customer plus the business fields a per-customer feature pass needs. */
+export type FeaturePassCustomer = {
+  firstName: string;
+  lastName: string | null;
+  cardToken: string;
+  cashbackBalance: unknown;
+  currentTier: string | null;
+  business: {
+    name: string;
+    branding: Parameters<typeof resolveBranding>[0];
+    cashbackSettings?: { enabled: boolean; currency: string } | null;
+  };
+};
+
+/**
+ * Build the WalletWallet pass body for the CASHBACK card - a per-customer card
+ * that shows the holder's name and their cashback balance only. The barcode is
+ * the customer's card URL so staff can pull them up to add or spend cashback.
+ */
+export async function buildCashbackPassBody(customer: FeaturePassCustomer): Promise<WalletWalletPassBody> {
+  const branding = resolveBranding(customer.business.branding);
+  const businessName = customer.business.name;
+  const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim();
+  const currency = customer.business.cashbackSettings?.currency ?? "AED";
+  const balance = `${currency} ${Number(customer.cashbackBalance ?? 0).toFixed(2)}`;
+
+  const baseUrl = await getBaseUrl();
+  const cardUrl = await getCardUrl(customer.cardToken);
+  const logoUrl = absoluteUrl(branding.logoUrl, baseUrl);
+  const color = hexColor(branding.primaryColor) ?? hexColor(branding.buttonColor);
+
+  const body: WalletWalletPassBody = {
+    barcodeValue: cardUrl,
+    barcodeFormat: "QR",
+    barcodeAltText: "Show at checkout",
+    logoText: businessName,
+    organizationName: businessName,
+    description: `Cashback - ${businessName}`,
+    headerFields: [{ label: "Cashback", value: balance, changeMessage: "Cashback: %@" }] as WalletWalletField[],
+    primaryFields: [{ label: "Balance", value: balance, changeMessage: "Balance: %@" }] as WalletWalletField[],
+    secondaryFields: [{ label: "Member", value: customerName }] as WalletWalletField[],
+    backFields: [
+      { label: "Notifications", value: " ", changeMessage: "%@" },
+      { label: "Business", value: businessName },
+      { label: "Member", value: customerName },
+    ] as WalletWalletField[],
+    sharingProhibited: true,
+    colorPreset: "dark",
+    expirationDays: 365,
+  };
+  if (color) body.color = color; // Pro
+  if (logoUrl) body.logoURL = logoUrl; // Pro
   return body;
 }
