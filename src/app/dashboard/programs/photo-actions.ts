@@ -56,3 +56,49 @@ export async function uploadWalletPhotoAction(formData: FormData): Promise<Walle
     return { error: "The picture could not be saved. Please try again." };
   }
 }
+
+/**
+ * Same as uploadWalletPhotoAction, but bound to the cashback setup form's CSRF
+ * scope. Cashback is its own program with its own card picture, saved through
+ * saveCashbackSettingsAction ("dashboard:cashback-settings"), so its upload
+ * must carry that scope's token rather than the program form's.
+ */
+export async function uploadCashbackPhotoAction(formData: FormData): Promise<WalletPhotoUploadResult> {
+  const user = await getCurrentUser();
+  if (!user || (user.role !== "BUSINESS_OWNER" && user.role !== "PLATFORM_OWNER")) {
+    return { error: "You do not have permission to upload a card picture." };
+  }
+
+  try {
+    validateCsrfForm(formData, "dashboard:cashback-settings");
+  } catch {
+    return { error: "Security check failed. Please refresh and try again." };
+  }
+
+  const file = formData.get("walletPhotoFile");
+  if (!(file instanceof File)) {
+    return { error: "Choose a picture to upload." };
+  }
+  if (file.size > WALLET_PHOTO_MAX_BYTES) {
+    return { error: "The picture must be 4MB or smaller." };
+  }
+
+  const fileCheck = validateWalletPhotoFile(file);
+  if (!fileCheck.ok) {
+    return { error: fileCheck.error };
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const bytesCheck = validateLogoBytes(buffer, fileCheck.extension);
+  if (!bytesCheck.ok) {
+    return { error: bytesCheck.error };
+  }
+
+  try {
+    const url = await saveWalletPhotoFile(buffer, fileCheck.extension);
+    return { url };
+  } catch (error) {
+    console.warn("[cashback-photo-upload] failed to store picture", error);
+    return { error: "The picture could not be saved. Please try again." };
+  }
+}
