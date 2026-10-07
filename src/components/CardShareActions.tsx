@@ -15,6 +15,7 @@ type CardShareActionsProps = {
   showCopy?: boolean;
   showWallet?: boolean;
   googleWalletUrl?: string | null;
+  appleWalletUrl?: string | null;
   buttonColor?: string;
   compact?: boolean;
   messageType?: "welcome" | "resend";
@@ -30,6 +31,7 @@ export function CardShareActions({
   showCopy = true,
   showWallet = true,
   googleWalletUrl,
+  appleWalletUrl,
   buttonColor,
   compact = false,
   messageType = "welcome",
@@ -116,13 +118,24 @@ export function CardShareActions({
 
       {showWallet ? (
         <div className="grid gap-3 sm:grid-cols-2">
-          <button
-            type="button"
-            onClick={() => setMessage("Apple Wallet pass is not available yet.")}
-            className="rounded-md bg-black px-4 py-3 text-sm font-semibold text-white"
-          >
-            Add to Apple Wallet
-          </button>
+          {appleWalletUrl ? (
+            <a
+              href={appleWalletUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-md bg-black px-4 py-3 text-center text-sm font-semibold text-white"
+            >
+              Add to Apple Wallet
+            </a>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setMessage("Apple Wallet pass is not available yet.")}
+              className="rounded-md bg-black px-4 py-3 text-sm font-semibold text-white"
+            >
+              Add to Apple Wallet
+            </button>
+          )}
           {googleWalletUrl ? (
             <a
               href={googleWalletUrl}

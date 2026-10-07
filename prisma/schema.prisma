@@ -555,6 +555,7 @@ model Business {
   googleWalletClasses           GoogleWalletClass[]
   walletBroadcasts              WalletBroadcast[]
   googleWalletObjects           GoogleWalletObject[]
+  appleWalletPasses             AppleWalletPass[]
   whatsAppChannel               BusinessWhatsAppChannel?
 
   cashbackTransactions CashbackTransaction[]
@@ -1011,6 +1012,7 @@ model CustomerProgramMembership {
   referralRewards            ReferralReward[]
   cooldownEvents             CooldownEvent[]
   googleWalletObject         GoogleWalletObject?
+  appleWalletPass            AppleWalletPass?
 
   @@unique([businessCustomerMembershipId, loyaltyProgramId])
   @@index([businessCustomerMembershipId])
@@ -1784,4 +1786,31 @@ model CashbackTransaction {
   @@index([branchId])
   @@index([issuedByUserId])
   @@map("cashback_transactions")
+}
+
+model AppleWalletPass {
+  id                          Int                   @id @default(autoincrement())
+  businessId                  Int                   @map("business_id")
+  customerProgramMembershipId Int                   @unique @map("customer_program_membership_id")
+  serialNumber                String?               @unique @map("serial_number")
+  shareUrl                    String?               @map("share_url")
+  status                      AppleWalletSyncStatus @default(PENDING)
+  lastSyncedAt                DateTime?             @map("last_synced_at")
+  lastError                   String?               @map("last_error")
+  createdAt                   DateTime              @default(now()) @map("created_at")
+  updatedAt                   DateTime              @updatedAt @map("updated_at")
+
+  business                  Business                  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customerProgramMembership CustomerProgramMembership @relation(fields: [customerProgramMembershipId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([status])
+  @@map("apple_wallet_passes")
+}
+
+enum AppleWalletSyncStatus {
+  PENDING
+  ACTIVE
+  FAILED
+  REVOKED
 }

@@ -17,6 +17,7 @@ import { validateCsrfForm } from "@/lib/csrf";
 import { requireUsableSubscription } from "@/lib/commercial-access";
 import { createFormFailure, isFormActionError, type PreservedFormState } from "@/lib/form-state";
 import { syncGoogleWalletObjectAfterLoyaltyChange } from "@/lib/google-wallet/service";
+import { syncAppleWalletPassSafe } from "@/lib/walletwallet/service";
 import { hasWalletRelevantBrandingChange, hasWalletRelevantBusinessChange } from "@/lib/wallet-sync/change-detection";
 import { enqueueWalletSyncForBusiness } from "@/lib/wallet-sync/enqueue";
 import { commerciallyUsableStatuses, limitReachedMessage } from "@/lib/subscriptions";
@@ -1130,6 +1131,7 @@ export async function manualStampCorrectionAction(formData: FormData) {
   });
 
   await syncGoogleWalletObjectAfterLoyaltyChange(programMembership.id);
+  await syncAppleWalletPassSafe(programMembership.id);
   revalidatePath(`/dashboard/customers/${data.membershipUuid}`);
   redirect(`/dashboard/customers/${data.membershipUuid}?success=Manual stamp correction recorded.`);
 }
