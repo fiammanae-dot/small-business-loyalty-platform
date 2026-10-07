@@ -22,6 +22,8 @@ import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { progressValue } from "@/lib/programs";
 import { normalizeTierConfig } from "@/lib/customer-tiers";
 import { businessTypeLabels } from "@/lib/roles";
+import { resolveCardThemeColors } from "@/lib/card-themes";
+import { resolveBranding } from "@/lib/customer-cards";
 import { prisma } from "@/lib/prisma";
 
 type ProgramSearchParams = {
@@ -147,6 +149,11 @@ export default async function ProgramsPage({
   const cashbackRate = business.cashbackSettings?.ratePercent != null ? business.cashbackSettings.ratePercent.toString() : "5";
   const tierConfigured = Boolean(business.tierSetting);
   const tierConfig = normalizeTierConfig(business.tierSetting);
+  const cashbackName = business.cashbackSettings?.name?.trim() || "Cashback";
+  const cashbackCurrency = business.cashbackSettings?.currency ?? "AED";
+  const cashbackMaxBill = business.cashbackSettings?.maxBillAmount != null ? business.cashbackSettings.maxBillAmount.toString() : "";
+  const cashbackMaxRedemption = business.cashbackSettings?.maxRedemption != null ? business.cashbackSettings.maxRedemption.toString() : "";
+  const cashbackAccent = resolveCardThemeColors({ cardTheme: business.cashbackSettings?.cardTheme ?? "BUSINESS_DEFAULT", branding: resolveBranding(business.branding) }).accent;
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Loyalty Programs" hideWelcomeMessage>
@@ -181,14 +188,8 @@ export default async function ProgramsPage({
           <MetricCard label="Average Completion Rate" value={averageCompletionRate + "%"} icon={<BarChart3 className="h-5 w-5" />} />
         </section>
 
-        <SectionCard title="Business-wide features" description="Cashback and tiers apply across all your customers and layer on top of any stamp or membership programs.">
+        <SectionCard title="Business-wide features" description="Tiers apply across all your customers and layer on top of your stamp and membership programs.">
           <div className="grid gap-3 sm:grid-cols-2">
-            <FeatureStatusCard
-              title="Cashback"
-              enabled={cashbackEnabled}
-              detail={cashbackEnabled ? cashbackRate + "% of each payment" : "Not set up yet"}
-              href="/dashboard/programs/new?type=cashback"
-            />
             <FeatureStatusCard
               title="Tiers"
               enabled={tierConfigured}
@@ -221,6 +222,19 @@ export default async function ProgramsPage({
               <FilterSelect name="direction" label="Direction" defaultValue={direction} options={[{ value: "desc", label: "Descending" }, { value: "asc", label: "Ascending" }]} />
             </FilterBar>
           </form>
+        </SectionCard>
+
+        <SectionCard title="Cashback program" description="Cashback is a business-wide program: every customer earns a percentage of what they pay as a balance for future visits. Edit its card design and rate here.">
+          <CashbackProgramCard
+            name={cashbackName}
+            enabled={cashbackEnabled}
+            rate={cashbackRate}
+            currency={cashbackCurrency}
+            maxBill={cashbackMaxBill}
+            maxRedemption={cashbackMaxRedemption}
+            accent={cashbackAccent}
+            editHref="/dashboard/programs/new?type=cashback"
+          />
         </SectionCard>
 
         <SectionCard
@@ -378,6 +392,57 @@ function ProgramStatus({ active, rewardReadyCount }: { active: boolean; rewardRe
   if (!active) return <StatusBadge tone="neutral">Inactive</StatusBadge>;
   if (rewardReadyCount > 0) return <StatusBadge tone="warning">Reward Ready</StatusBadge>;
   return <StatusBadge tone="success">Active</StatusBadge>;
+}
+
+function CashbackProgramCard({
+  name,
+  enabled,
+  rate,
+  currency,
+  maxBill,
+  maxRedemption,
+  accent,
+  editHref,
+}: {
+  name: string;
+  enabled: boolean;
+  rate: string;
+  currency: string;
+  maxBill: string;
+  maxRedemption: string;
+  accent: string;
+  editHref: string;
+}) {
+  return (
+    <article className="overflow-hidden rounded-md border border-[#E2E8F0] bg-white shadow-sm">
+      <div className="flex items-center justify-between gap-3 px-4 py-3" style={{ backgroundColor: accent }}>
+        <span className="text-xs font-black uppercase tracking-wide text-white">Cashback card</span>
+        <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-semibold text-white">{rate}% back</span>
+      </div>
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-base font-semibold text-[#0F172A]">
+              <Link href={editHref} className="inline-flex max-w-full rounded-sm underline-offset-4 transition hover:text-[var(--business-primary)] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2">
+                <span className="break-words">{name}</span>
+              </Link>
+            </h3>
+            <p className="mt-1 text-sm text-[#64748B]">Cashback program &middot; applies to all customers</p>
+          </div>
+          <StatusBadge tone={enabled ? "success" : "neutral"}>{enabled ? "Active" : "Off"}</StatusBadge>
+        </div>
+        <div className="mt-4 grid gap-3 text-sm text-[#475569]">
+          <InfoLine label="Cashback rate" value={`${rate}% of each payment`} />
+          <InfoLine label="Applies to" value="All customers" />
+          {maxBill ? <InfoLine label="Max bill" value={`${currency} ${maxBill}`} /> : null}
+          {maxRedemption ? <InfoLine label="Max redemption" value={`${currency} ${maxRedemption}`} /> : null}
+        </div>
+        <div className="mt-4">
+          <ButtonLink href={editHref} variant="outline">Edit cashback card</ButtonLink>
+        </div>
+      </div>
+    </article>
+  );
 }
 
 function FilterSelect({
