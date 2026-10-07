@@ -72,6 +72,12 @@ export async function buildWalletWalletPassBody(membership: GoogleWalletProgramM
   } else if (hasBanner) {
     secondaryFields.push({ label: "Program", value: program.name });
   }
+  // Tier is a stamp-program feature, so it rides on the stamp card (never on a
+  // membership card, and not a separate card) when the business runs tiers.
+  if (!isMembership && business.tierSetting) {
+    const tierName = fromStoredTier(customer.currentTier as Parameters<typeof fromStoredTier>[0]) ?? "Bronze";
+    secondaryFields.push({ label: "Tier", value: tierName, changeMessage: "Tier: %@" });
+  }
   secondaryFields.push({ label: "Member", value: customerName });
 
   // backFields[0] is a stable notification anchor for on-demand banners. Its
@@ -146,46 +152,6 @@ export async function buildCashbackPassBody(customer: FeaturePassCustomer): Prom
     description: `Cashback - ${businessName}`,
     headerFields: [{ label: "Cashback", value: balance, changeMessage: "Cashback: %@" }] as WalletWalletField[],
     primaryFields: [{ label: "Balance", value: balance, changeMessage: "Balance: %@" }] as WalletWalletField[],
-    secondaryFields: [{ label: "Member", value: customerName }] as WalletWalletField[],
-    backFields: [
-      { label: "Notifications", value: " ", changeMessage: "%@" },
-      { label: "Business", value: businessName },
-      { label: "Member", value: customerName },
-    ] as WalletWalletField[],
-    sharingProhibited: true,
-    colorPreset: "dark",
-    expirationDays: 365,
-  };
-  if (color) body.color = color; // Pro
-  if (logoUrl) body.logoURL = logoUrl; // Pro
-  return body;
-}
-
-
-/**
- * Build the WalletWallet pass body for the TIER card - a per-customer card that
- * shows the holder's name and their current tier (Silver/Gold/VIP) only.
- */
-export async function buildTierPassBody(customer: FeaturePassCustomer): Promise<WalletWalletPassBody> {
-  const branding = resolveBranding(customer.business.branding);
-  const businessName = customer.business.name;
-  const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim();
-  const tier = fromStoredTier(customer.currentTier as Parameters<typeof fromStoredTier>[0]) ?? "Bronze";
-
-  const baseUrl = await getBaseUrl();
-  const cardUrl = await getCardUrl(customer.cardToken);
-  const logoUrl = absoluteUrl(branding.logoUrl, baseUrl);
-  const color = hexColor(branding.primaryColor) ?? hexColor(branding.buttonColor);
-
-  const body: WalletWalletPassBody = {
-    barcodeValue: cardUrl,
-    barcodeFormat: "QR",
-    barcodeAltText: "Show at checkout",
-    logoText: businessName,
-    organizationName: businessName,
-    description: `Tier - ${businessName}`,
-    headerFields: [{ label: "Tier", value: tier, changeMessage: "Tier: %@" }] as WalletWalletField[],
-    primaryFields: [{ label: "Tier", value: tier, changeMessage: "You are now %@" }] as WalletWalletField[],
     secondaryFields: [{ label: "Member", value: customerName }] as WalletWalletField[],
     backFields: [
       { label: "Notifications", value: " ", changeMessage: "%@" },

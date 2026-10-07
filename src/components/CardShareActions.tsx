@@ -16,8 +16,8 @@ type CardShareActionsProps = {
   showWallet?: boolean;
   googleWalletUrl?: string | null;
   appleWalletUrl?: string | null;
+  walletPrograms?: { name: string; appleWalletUrl: string; googleWalletUrl: string }[];
   cashbackAppleWalletUrl?: string | null;
-  tierAppleWalletUrl?: string | null;
   buttonColor?: string;
   compact?: boolean;
   messageType?: "welcome" | "resend";
@@ -34,8 +34,8 @@ export function CardShareActions({
   showWallet = true,
   googleWalletUrl,
   appleWalletUrl,
+  walletPrograms,
   cashbackAppleWalletUrl,
-  tierAppleWalletUrl,
   buttonColor,
   compact = false,
   messageType = "welcome",
@@ -122,6 +122,31 @@ export function CardShareActions({
 
       {showWallet ? (
         <>
+        {walletPrograms && walletPrograms.length > 0 ? (
+          walletPrograms.map((p) => (
+            <div key={p.name} className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">{p.name}</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <a
+                  href={p.appleWalletUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-md bg-black px-4 py-3 text-center text-sm font-semibold text-white"
+                >
+                  Add to Apple Wallet
+                </a>
+                <a
+                  href={p.googleWalletUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-md border border-[#E5E7EB] bg-white px-4 py-3 text-center text-sm font-semibold text-[#111827] transition business-hover"
+                >
+                  Add to Google Wallet
+                </a>
+              </div>
+            </div>
+          ))
+        ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {appleWalletUrl ? (
             <a
@@ -160,6 +185,7 @@ export function CardShareActions({
             </button>
           )}
         </div>
+        )}
         {cashbackAppleWalletUrl ? (
           <a
             href={cashbackAppleWalletUrl}
@@ -168,16 +194,6 @@ export function CardShareActions({
             className="block rounded-md border-2 border-black bg-white px-4 py-3 text-center text-sm font-semibold text-black"
           >
             Add Cashback card to Apple Wallet
-          </a>
-        ) : null}
-        {tierAppleWalletUrl ? (
-          <a
-            href={tierAppleWalletUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block rounded-md border-2 border-black bg-white px-4 py-3 text-center text-sm font-semibold text-black"
-          >
-            Add Tier card to Apple Wallet
           </a>
         ) : null}
         </>

@@ -16,6 +16,7 @@ import { cardRewardsFor, getNextReward, getReadyRewards, type CardReward } from 
 import { getBaseUrl } from "@/lib/customer-cards";
 import { stampImagePath } from "@/lib/wallet/stamp-image";
 import { getScanUrl } from "@/lib/scan";
+import { fromStoredTier } from "@/lib/customer-tiers";
 
 export type GoogleWalletProgramMembership = CustomerProgramMembership & {
   businessCustomerMembership: BusinessCustomerMembership & {
@@ -25,6 +26,7 @@ export type GoogleWalletProgramMembership = CustomerProgramMembership & {
       branding: BusinessBranding | null;
       membershipSettings?: { enabled: boolean } | null;
       cashbackSettings?: { enabled: boolean; currency: string } | null;
+      tierSetting?: { id: number } | null;
     };
   };
   loyaltyProgram: LoyaltyProgram & { programRewards?: ProgramReward[] };
@@ -147,6 +149,9 @@ export async function buildGoogleWalletObjectPayload({
   const objectTextModules = [
     ...(sections.customerName ? [{ id: "customer", header: "Customer", body: customerName }] : []),
     ...(sections.programName ? [{ id: "program", header: "Program", body: membership.loyaltyProgram.name }] : []),
+    ...(!isMembership && customer.business.tierSetting
+      ? [{ id: "tier", header: "Tier", body: fromStoredTier(customer.currentTier as Parameters<typeof fromStoredTier>[0]) ?? "Bronze" }]
+      : []),
     ...(sections.rewardBox && !isMembership
       ? [
           {

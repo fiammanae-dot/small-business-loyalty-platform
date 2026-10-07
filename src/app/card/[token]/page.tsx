@@ -146,10 +146,13 @@ export default async function PublicCustomerCardPage({
     }),
   );
   const primaryProgram = programCards[0] ?? null;
-  const primaryGoogleWalletUrl = primaryProgram ? `/api/wallet/google/save/${primaryProgram.programMembership.scanToken}` : null;
-  const primaryAppleWalletUrl = primaryProgram ? `/api/wallet/apple/${primaryProgram.programMembership.scanToken}` : null;
+  // One Apple+Google button pair per enrolled program; cashback is separate (below) for everyone.
+  const walletPrograms = programCards.map(({ programMembership }) => ({
+    name: programMembership.loyaltyProgram.name,
+    appleWalletUrl: `/api/wallet/apple/${programMembership.scanToken}`,
+    googleWalletUrl: `/api/wallet/google/save/${programMembership.scanToken}`,
+  }));
   const cashbackAppleWalletUrl = membership.business.cashbackSettings?.enabled ? `/api/wallet/apple/cashback/${token}` : null;
-  const tierAppleWalletUrl = membership.business.tierSetting ? `/api/wallet/apple/tier/${token}` : null;
   const cardDesign = primaryProgram?.programMembership.loyaltyProgram.cardDesign as CardDesignInput;
   const lastUpdatedAt = [
     membership.updatedAt,
@@ -327,10 +330,8 @@ export default async function PublicCustomerCardPage({
               customerName={customerName}
               recipientPhone={membership.normalizedPhone}
               whatsappLabel="Share via WhatsApp"
-              googleWalletUrl={primaryGoogleWalletUrl}
-              appleWalletUrl={primaryAppleWalletUrl}
+              walletPrograms={walletPrograms}
               cashbackAppleWalletUrl={cashbackAppleWalletUrl}
-              tierAppleWalletUrl={tierAppleWalletUrl}
               buttonColor={branding.buttonColor}
             />
             <SaveCardImageButton
