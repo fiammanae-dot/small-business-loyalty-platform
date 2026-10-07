@@ -83,3 +83,10 @@ test("phase 3: tiers are no longer hidden when memberships are enabled (layered)
   assert.doesNotMatch(settings, /membershipsEnabled \? null : <CustomerTiersSection/);
   assert.match(settings, /<CustomerTiersSection tierConfig=\{tierConfig\} \/>/);
 });
+
+test("phase 4: Programs page groups the business-wide features in a titled card", () => {
+  const programs = read("src/app/dashboard/programs/page.tsx");
+  assert.match(programs, /<SectionCard title="Business-wide features"/);
+  // both feature cards live inside that card
+  assert.match(programs, /Business-wide features[\s\S]*title="Cashback"[\s\S]*title="Tiers"[\s\S]*<\/SectionCard>/);
+});
