@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { decideTierMaintenance, getTierWindowStart } from "@/lib/customer-tiers";
 import { prisma } from "@/lib/prisma";
+import { syncAppleWalletAfterTierChange } from "@/lib/walletwallet/service";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -122,6 +123,7 @@ export async function GET(request: NextRequest) {
               where: { id: membership.id },
               data: { currentTier: decision.nextStoredTier, tierUpdatedAt: now },
             });
+            await syncAppleWalletAfterTierChange(membership.id);
             downgraded += 1;
           } catch (error) {
             errors.push({

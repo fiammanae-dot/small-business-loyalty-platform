@@ -11,7 +11,7 @@ import { createCustomerNotification } from "@/lib/customer-notifications";
 import { calculateCustomerTier, isTierUpgrade } from "@/lib/customer-tiers";
 import { createEngagementEventIfAllowed, createProgramEngagementEvents } from "@/lib/engagement";
 import { syncGoogleWalletObjectAfterLoyaltyChange } from "@/lib/google-wallet/service";
-import { syncAppleWalletPassSafe } from "@/lib/walletwallet/service";
+import { syncAppleWalletPassSafe, syncAppleWalletAfterTierChange } from "@/lib/walletwallet/service";
 import { prisma } from "@/lib/prisma";
 import { getStartingBonusStampsForEvent, progressValue } from "@/lib/programs";
 import { membershipSessionSummary } from "@/lib/membership-sessions";
@@ -490,6 +490,7 @@ export async function issueStampAction(formData: FormData) {
 
   await syncGoogleWalletObjectAfterLoyaltyChange(programMembership.id);
   await syncAppleWalletPassSafe(programMembership.id);
+  await syncAppleWalletAfterTierChange(programMembership.businessCustomerMembershipId);
   success(data.scanToken, transactionId, shareAfterStamp);
 }
 
@@ -596,6 +597,7 @@ export async function renewMembershipAction(formData: FormData) {
 
   await syncGoogleWalletObjectAfterLoyaltyChange(programMembership.id);
   await syncAppleWalletPassSafe(programMembership.id);
+  await syncAppleWalletAfterTierChange(programMembership.businessCustomerMembershipId);
   redirect(`/scan/${scanToken}?renewed=1`);
 }
 
@@ -810,6 +812,7 @@ export async function redeemRewardAction(formData: FormData) {
 
   await syncGoogleWalletObjectAfterLoyaltyChange(programMembership.id);
   await syncAppleWalletPassSafe(programMembership.id);
+  await syncAppleWalletAfterTierChange(programMembership.businessCustomerMembershipId);
   redemptionSuccess(scanToken, redemption.id);
 }
 
@@ -960,6 +963,7 @@ export async function undoStampAction(formData: FormData) {
 
   await syncGoogleWalletObjectAfterLoyaltyChange(programMembership.id);
   await syncAppleWalletPassSafe(programMembership.id);
+  await syncAppleWalletAfterTierChange(programMembership.businessCustomerMembershipId);
   undoSuccess(data.scanToken, stampTransaction.id);
 }
 

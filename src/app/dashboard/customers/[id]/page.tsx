@@ -32,6 +32,7 @@ import { activityHref, staffProfileHref } from "@/lib/alert-investigation";
 import { alertTypeLabel } from "@/lib/alert-labels";
 import { getCardUrl, getShortCardToken } from "@/lib/customer-cards";
 import { areTiersVisible, calculateCustomerTier } from "@/lib/customer-tiers";
+import { syncAppleWalletAfterTierChange } from "@/lib/walletwallet/service";
 import { customerSourceLabels, getBusinessCustomerOrRedirect } from "@/lib/customers";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { getGoogleWalletStatus } from "@/lib/google-wallet/service";
@@ -258,6 +259,7 @@ export default async function CustomerProfilePage({
       where: { id: membership.id },
       data: { currentTier: customerTier.storedTier, tierUpdatedAt: new Date() },
     });
+    await syncAppleWalletAfterTierChange(membership.id);
   }
   const tiersVisible = areTiersVisible(business.membershipSettings?.enabled);
 

@@ -32,9 +32,10 @@ test("the service syncs a per-customer cashback pass and a balance change refres
   const svc = read("src/lib/walletwallet/service.ts");
   assert.match(svc, /export async function syncAppleCashbackPass\(businessCustomerMembershipId: number\)/);
   assert.match(svc, /prisma\.appleWalletFeaturePass\.upsert/);
-  assert.match(svc, /businessCustomerMembershipId_kind: \{ businessCustomerMembershipId, kind: "CASHBACK"/);
-  // the cashback-change hook now targets the dedicated card
-  assert.match(svc, /export async function syncAppleWalletAfterCashbackChange[\s\S]*syncAppleCashbackPassSafe\(businessCustomerMembershipId\)/);
+  // kind is a parameter of the shared feature-pass sync
+  assert.match(svc, /businessCustomerMembershipId_kind: \{ businessCustomerMembershipId, kind \}/);
+  // the cashback-change hook only refreshes a card the customer already added
+  assert.match(svc, /export async function syncAppleWalletAfterCashbackChange[\s\S]*refreshAppleFeaturePassIfPresent\(businessCustomerMembershipId, "CASHBACK"\)/);
   // the money path still fires it on earn and spend
   const ledger = read("src/lib/cashback-ledger.ts");
   const calls = ledger.match(/syncAppleWalletAfterCashbackChange\(input\.membershipId\)/g) ?? [];
