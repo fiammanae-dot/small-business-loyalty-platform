@@ -6,7 +6,6 @@ import { resolveBranding, getBaseUrl } from "@/lib/customer-cards";
 import { getScanUrl } from "@/lib/scan";
 import { progressValue } from "@/lib/programs";
 import { membershipSessionSummary } from "@/lib/membership-sessions";
-import { fromStoredTier } from "@/lib/customer-tiers";
 
 function absoluteUrl(url: string | null | undefined, base: string): string | null {
   if (!url) return null;
@@ -48,10 +47,6 @@ export async function buildWalletWalletPassBody(membership: GoogleWalletProgramM
   const sessionsRemaining = summary?.remaining ?? 0;
   const sessionsTotal = summary?.total ?? required;
 
-  const cashbackEnabled = Boolean(business.cashbackSettings?.enabled);
-  const cashbackCurrency = business.cashbackSettings?.currency ?? "AED";
-  const cashbackValue = `${cashbackCurrency} ${Number(customer.cashbackBalance ?? 0).toFixed(2)}`;
-
   const baseUrl = await getBaseUrl();
   const scanUrl = await getScanUrl(membership.scanToken);
   const logoUrl = absoluteUrl(branding.logoUrl, baseUrl);
@@ -68,27 +63,15 @@ export async function buildWalletWalletPassBody(membership: GoogleWalletProgramM
   const hasBanner = Boolean(photoUrl);
   const primaryFields: WalletWalletField[] = hasBanner ? [] : [{ value: program.name }];
 
+  // The program card is single-purpose: its own data plus the holder's name.
+  // Cashback and tier are their own separate wallet cards, not fields here.
   const secondaryFields: WalletWalletField[] = [];
   if (isMembership) {
-    // Sessions remaining is the membership's key balance; show it below the banner.
     secondaryFields.push({ label: "Sessions left", value: `${sessionsRemaining} of ${sessionsTotal}`, changeMessage: "%@ sessions left" });
   } else if (hasBanner) {
     secondaryFields.push({ label: "Program", value: program.name });
   }
-  if (cashbackEnabled) {
-    secondaryFields.push({ label: "Cashback", value: cashbackValue, changeMessage: "Cashback: %@" });
-  }
-  // Show the loyalty tier once the customer has climbed past Bronze, so a
-  // tier-running business sees it on the pass; Bronze/none adds no field.
-  const tierLabel = fromStoredTier(customer.currentTier);
-  if (tierLabel && tierLabel !== "Bronze") {
-    secondaryFields.push({ label: "Tier", value: tierLabel });
-  }
-  // Keep the member name on the pass face only while there is still room for it
-  // to read cleanly (at most two columns). It is always on the back regardless.
-  if (secondaryFields.length < 2) {
-    secondaryFields.push({ label: "Member", value: customerName });
-  }
+  secondaryFields.push({ label: "Member", value: customerName });
 
   // backFields[0] is a stable notification anchor for on-demand banners. Its
   // position must never change between create and update (fields are keyed by

@@ -149,23 +149,17 @@ test("scan page shows the wallet (gated) with a confirmation on spend", () => {
 });
 
 
-test("cashback balance is shown on the Google Wallet pass and refreshed on every change", () => {
-  // The pass shows the cashback balance in its prominent secondary header slot,
-  // only when the business enabled cashback.
+test("the program Google Wallet pass no longer carries cashback (it is its own card now)", () => {
+  // Phase 1 of separate cards: the program pass is single-purpose, so cashback
+  // is no longer merged onto it. It returns as its own pass in a later phase.
   const mapper = read("src/lib/google-wallet/mapper.ts");
-  assert.match(mapper, /secondaryLoyaltyPoints: customer\.business\.cashbackSettings\?\.enabled/);
-  assert.match(mapper, /label: "Cashback"/);
-  assert.match(mapper, /Number\(customer\.cashbackBalance \?\? 0\)\.toFixed\(2\)/);
+  assert.doesNotMatch(mapper, /secondaryLoyaltyPoints: customer\.business\.cashbackSettings\?\.enabled/);
+  assert.doesNotMatch(mapper, /label: "Cashback"/);
 
-  // The pass loads the cashback settings so it knows the currency + enabled flag.
+  // The cashback sync plumbing stays in place for the dedicated cashback card.
   const service = read("src/lib/google-wallet/service.ts");
-  assert.match(service, /cashbackSettings: true/);
-  // A customer-level re-sync fans out to every pass that customer holds.
   assert.match(service, /export async function syncGoogleWalletAfterCashbackChange/);
-  assert.match(service, /businessCustomerMembershipId/);
-
-  // The shared money path refreshes the wallet after both earn and spend.
   const ledger = read("src/lib/cashback-ledger.ts");
   const syncCalls = ledger.match(/syncGoogleWalletAfterCashbackChange\(input\.membershipId\)/g) ?? [];
-  assert.equal(syncCalls.length, 2, "earn and spend both re-sync the wallet");
+  assert.equal(syncCalls.length, 2, "earn and spend both still trigger the cashback re-sync");
 });
