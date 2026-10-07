@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import type { GoogleWalletProgramMembership } from "@/lib/google-wallet/mapper";
 import { getWalletWalletConfig, isWalletWalletConfigured } from "./config";
 import { createPass, updatePass, revokePass } from "./client";
-import { buildWalletWalletPassBody, buildCashbackPassBody, buildTierPassBody, type FeaturePassCustomer } from "./mapper";
+import { buildWalletWalletPassBody, buildCashbackPassBody, type FeaturePassCustomer } from "./mapper";
 
 const membershipInclude = {
   businessCustomerMembership: {
@@ -15,6 +15,7 @@ const membershipInclude = {
           branding: true,
           membershipSettings: true,
           cashbackSettings: true,
+          tierSetting: true,
         },
       },
     },
@@ -102,7 +103,7 @@ const featureCustomerInclude = {
   business: { include: { branding: true, cashbackSettings: true } },
 } satisfies Prisma.BusinessCustomerMembershipInclude;
 
-type FeatureKind = "CASHBACK" | "TIER";
+type FeatureKind = "CASHBACK";
 
 /**
  * Create/PUT a per-customer feature card (cashback or tier). One pass per
@@ -125,7 +126,7 @@ async function syncAppleFeaturePass(businessCustomerMembershipId: number, kind: 
 
   try {
     const typed = customer as unknown as FeaturePassCustomer;
-    const body = kind === "CASHBACK" ? await buildCashbackPassBody(typed) : await buildTierPassBody(typed);
+    const body = await buildCashbackPassBody(typed);
     let serialNumber: string;
     let shareUrl: string;
     if (existing?.serialNumber) {
@@ -160,11 +161,6 @@ export async function syncAppleCashbackPass(businessCustomerMembershipId: number
   return syncAppleFeaturePass(businessCustomerMembershipId, "CASHBACK");
 }
 
-/** Create/PUT the per-customer TIER card (used by the mint route). */
-export async function syncAppleTierPass(businessCustomerMembershipId: number): Promise<AppleWalletSyncResult> {
-  return syncAppleFeaturePass(businessCustomerMembershipId, "TIER");
-}
-
 /**
  * Refresh a feature card ONLY if the customer already added it - a balance or
  * tier change updates an existing card, and never mints one nobody asked for.
@@ -188,9 +184,21 @@ export async function syncAppleWalletAfterCashbackChange(businessCustomerMembers
   await refreshAppleFeaturePassIfPresent(businessCustomerMembershipId, "CASHBACK");
 }
 
-/** A tier change refreshes the customer's tier card, if they added one. */
+/** Tier rides on the stamp card, so a tier change refreshes the customer's
+ *  existing program passes - it never mints a pass nobody added. */
 export async function syncAppleWalletAfterTierChange(businessCustomerMembershipId: number): Promise<void> {
-  await refreshAppleFeaturePassIfPresent(businessCustomerMembershipId, "TIER");
+  if (!isWalletWalletConfigured()) return;
+  try {
+    const memberships = await prisma.customerProgramMembership.findMany({
+      where: { businessCustomerMembershipId, appleWalletPass: { isNot: null } },
+      select: { id: true },
+    });
+    for (const m of memberships) {
+      await syncAppleWalletPassSafe(m.id);
+    }
+  } catch {
+    // swallowed on purpose - the stamp card catches up on the next change
+  }
 }
 
 export async function revokeAppleWalletPass(customerProgramMembershipId: number): Promise<void> {

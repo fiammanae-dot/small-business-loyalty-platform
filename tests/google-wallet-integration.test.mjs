@@ -61,7 +61,7 @@ test("public card and customer 360 expose real google wallet save links", () => 
   const customer360 = read("src/app/dashboard/customers/[id]/page.tsx");
   const shareActions = read("src/components/CardShareActions.tsx");
 
-  assert.match(publicCard, /\/api\/wallet\/google\/save\/\$\{primaryProgram\.programMembership\.scanToken\}/);
+  assert.match(publicCard, /\/api\/wallet\/google\/save\/\$\{programMembership\.scanToken\}/);
   assert.match(customer360, /googleWalletUrl: `\/api\/wallet\/google\/save\/\$\{programMembership\.scanToken\}`/);
   assert.match(customer360, /Google Wallet:/);
   assert.match(customer360, /Regenerate Google Wallet pass/);

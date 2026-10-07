@@ -34,6 +34,7 @@ const membershipInclude = {
           branding: true,
           membershipSettings: true,
           cashbackSettings: true,
+          tierSetting: true,
         },
       },
     },
