@@ -166,7 +166,7 @@ export async function createProgramAction(formData: FormData) {
     ? parsed.data.rewardName || "Membership complete"
     : parsed.data.rewardName;
   const rewardDescription = parsed.data.isMembership
-    ? parsed.data.rewardDescription || "All prepaid sessions used."
+    ? parsed.data.rewardDescription || "All prepaid visits used."
     : parsed.data.rewardDescription;
   const milestones = parsed.data.isMembership ? [] : milestonesFromForm(formData, parsed.data.requiredStamps, path);
 
@@ -281,7 +281,7 @@ export async function updateProgramAction(formData: FormData) {
     ? parsed.data.rewardName || "Membership complete"
     : parsed.data.rewardName;
   const rewardDescription = parsed.data.isMembership
-    ? parsed.data.rewardDescription || "All prepaid sessions used."
+    ? parsed.data.rewardDescription || "All prepaid visits used."
     : parsed.data.rewardDescription;
   const milestones = parsed.data.isMembership ? [] : milestonesFromForm(formData, parsed.data.requiredStamps, path);
 

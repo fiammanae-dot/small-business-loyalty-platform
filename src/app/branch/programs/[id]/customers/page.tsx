@@ -116,7 +116,7 @@ export default async function BranchProgramCustomersPage({
                         isMembership: program.isMembership,
                     })}
                   </td>
-                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{program.isMembership ? `${program.requiredStamps} sessions` : program.rewardName}</td>
+                  <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{program.isMembership ? `${program.requiredStamps} visits` : program.rewardName}</td>
                   <td className="border-b border-[#E5E7EB] px-3 py-4 text-[#6B7280]">{formatDate(membership.enrolledAt)}</td>
                 </tr>
               ))}

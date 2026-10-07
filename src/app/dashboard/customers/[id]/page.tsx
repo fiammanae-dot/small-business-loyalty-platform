@@ -399,7 +399,7 @@ return (
               </ButtonLink>
             ) : (
               <ButtonLink href={primaryScanHref} variant="business" size="sm" leftIcon={<TicketCheck className="h-4 w-4" aria-hidden />}>
-                {primaryIsMembership ? "Use Session" : "Issue Stamp"}
+                {primaryIsMembership ? "Use Visit" : "Issue Stamp"}
               </ButtonLink>
             )}
             <ButtonLink href={cardUrl} target="_blank" rel="noreferrer" variant="outline" size="sm" leftIcon={<CreditCard className="h-4 w-4" aria-hidden />}>
@@ -461,9 +461,9 @@ return (
           />
           {membershipMode ? (
             <MetricCard
-              label="Sessions remaining"
+              label="Visits remaining"
               value={totalSessionsRemaining}
-              helper={totalSessionsRemaining > 0 ? "Across active memberships" : "All sessions used"}
+              helper={totalSessionsRemaining > 0 ? "Across active memberships" : "All visits used"}
               icon={<CreditCard aria-hidden />}
               tone={totalSessionsRemaining > 0 ? "business" : "neutral"}
             />
@@ -715,7 +715,7 @@ function LoyaltyOverviewPanel({
             : null;
           // A membership counts DOWN: filled slots are sessions LEFT, not used.
           const displayCurrent = sessions ? sessions.remaining : progress;
-          const unitLabel = isMembership ? "sessions" : "stamps";
+          const unitLabel = isMembership ? "visits" : "stamps";
           const progressPercent = required <= 0 ? 0 : Math.min(100, Math.round((displayCurrent / required) * 100));
           const showGrid = required > 0 && required <= STAMP_GRID_CAP;
           return (
@@ -745,7 +745,7 @@ function LoyaltyOverviewPanel({
               <ProgressBar value={displayCurrent} max={required} className="mt-3" />
               {isMembership && sessions ? (
                 <p className="mt-2 text-sm font-semibold text-[#111827]">
-                  {sessions.remaining} of {sessions.total} session{sessions.total === 1 ? "" : "s"} remaining
+                  {sessions.remaining} of {sessions.total} visit{sessions.total === 1 ? "" : "s"} remaining
                   <span className="font-normal text-[#6B7280]">
                     {" \u00b7 "}{sessions.used} used{sessions.forfeited > 0 ? ` \u00b7 ${sessions.forfeited} forfeited` : ""}
                   </span>

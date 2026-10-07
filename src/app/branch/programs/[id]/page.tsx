@@ -80,12 +80,12 @@ export default async function BranchProgramDetailPage({ params }: { params: Prom
           <Info label="Product/Service" value={program.productOrServiceName} />
           <Info label="Starting stamps" value={program.startingBonusStamps.toString()} />
           <Info label="Apply when" value={startingStampPolicyLabel(program.startingStampPolicy)} />
-          {program.isMembership ? <Info label="Package" value={`${program.requiredStamps} sessions`} /> : <Info label="Reward" value={program.rewardName} />}
+          {program.isMembership ? <Info label="Package" value={`${program.requiredStamps} visits`} /> : <Info label="Reward" value={program.rewardName} />}
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <PerformanceStat icon={Users} label="Enrolled customers" value={program.memberships.length.toString()} />
-          <PerformanceStat icon={TicketCheck} label={program.isMembership ? "Sessions used" : "Branch stamps issued"} value={stampsIssued.toString()} />
+          <PerformanceStat icon={TicketCheck} label={program.isMembership ? "Visits used" : "Branch stamps issued"} value={stampsIssued.toString()} />
           {program.isMembership ? null : (
             <>
               <PerformanceStat icon={Gift} label="Branch rewards redeemed" value={rewardsRedeemed.toString()} />

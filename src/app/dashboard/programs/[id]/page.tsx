@@ -124,7 +124,7 @@ export default async function ProgramDetailPage({
           <MetricCard label="Members" value={enrolledCustomers} />
           <MetricCard label="Active Members" value={activeCustomers} tone="success" />
           {isMembership ? (
-            <MetricCard label="Sessions Used" value={earnedStamps} tone="business" />
+            <MetricCard label="Visits Used" value={earnedStamps} tone="business" />
           ) : (
             <>
               <MetricCard label="Reward Ready" value={rewardReadyCustomers} tone="warning" href={"/dashboard/programs/" + program.uuid + "/customers"} />

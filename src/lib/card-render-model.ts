@@ -140,7 +140,7 @@ export function buildCardRenderModel(input: CardRenderModelInput): CardRenderMod
   const rewardReady = isMembership ? false : (hasProgram ? Boolean(input.program?.rewardReady) : false);
   const remainingText = remaining === 1 ? "1 visit remaining" : `${remaining} visits remaining`;
   const statusText = isMembership
-    ? (membershipRemaining > 0 ? `${membershipRemaining} of ${membershipTotal} session${membershipTotal === 1 ? "" : "s"} left` : "Membership complete")
+    ? (membershipRemaining > 0 ? `${membershipRemaining} of ${membershipTotal} visit${membershipTotal === 1 ? "" : "s"} left` : "Membership complete")
     : (hasProgram ? (rewardReady ? "Reward Ready" : remainingText) : "No active program yet");
   const displayProgram = input.program?.name || "Loyalty Card";
   const displayReward = input.program?.rewardName || "Loyalty reward";

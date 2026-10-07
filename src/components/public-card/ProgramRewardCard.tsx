@@ -52,8 +52,8 @@ export function ProgramRewardCard({
         <p className="text-sm font-medium text-[#111827]">
           {isMembership
             ? remaining > 0
-              ? "Show to use a session."
-              : "All sessions used \u2014 ask staff to renew."
+              ? "Show to use a visit."
+              : "All visits used \u2014 ask staff to renew."
             : rewardReady
               ? "Show to redeem this reward."
               : "Show to earn stamps for this program."}

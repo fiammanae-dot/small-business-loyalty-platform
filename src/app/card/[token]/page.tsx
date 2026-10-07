@@ -88,7 +88,7 @@ export default async function PublicCustomerCardPage({
         const completion = sessionsTotal > 0 ? Math.round((sessionsRemaining / sessionsTotal) * 100) : 0;
         const statusText =
           sessionsRemaining > 0
-            ? `${sessionsRemaining} of ${sessionsTotal} session${sessionsTotal === 1 ? "" : "s"} left`
+            ? `${sessionsRemaining} of ${sessionsTotal} visit${sessionsTotal === 1 ? "" : "s"} left`
             : "Membership complete";
         return {
           programMembership,
