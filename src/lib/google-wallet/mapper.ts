@@ -163,7 +163,7 @@ export async function buildGoogleWalletObjectPayload({
           },
         ]
       : []),
-    ...(sections.tierBadge && !customer.business.membershipSettings?.enabled ? [{ id: "tier", header: "Tier", body: customer.currentTier }] : []),
+    ...(sections.tierBadge ? [{ id: "tier", header: "Tier", body: customer.currentTier }] : []),
   ];
 
   // Google Wallet gives an issuer one picture slot, so the business chooses what

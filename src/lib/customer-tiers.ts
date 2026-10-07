@@ -62,8 +62,11 @@ export function isTierSystemEnabledForPlan(_planName?: string | null) {
  * business keeps them. Tier data is preserved either way - this only controls
  * whether tiers are shown.
  */
-export function areTiersVisible(membershipEnabled?: boolean | null): boolean {
-  return !membershipEnabled;
+export function areTiersVisible(_membershipEnabled?: boolean | null): boolean {
+  // Tiers now layer with memberships: a business running memberships can also
+  // run visit-tiers, and the tier badge shows on its customer surfaces. (This
+  // used to return !membershipEnabled to hide tiers for membership clinics.)
+  return true;
 }
 
 export function normalizeTierConfig(config?: Partial<CustomerTierConfig> | null): CustomerTierConfig {
