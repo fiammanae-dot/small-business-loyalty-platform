@@ -55,24 +55,24 @@ export async function buildWalletWalletPassBody(membership: GoogleWalletProgramM
   const scanUrl = await getScanUrl(membership.scanToken);
   const logoUrl = absoluteUrl(branding.logoUrl, baseUrl);
   const photoUrl = program.walletHeroStyle === "PHOTO" ? absoluteUrl(program.walletPhotoUrl, baseUrl) : null;
-  const color = hexColor(branding.buttonColor) ?? hexColor(branding.primaryColor);
+  const color = hexColor(branding.primaryColor) ?? hexColor(branding.buttonColor);
 
   const headerFields: WalletWalletField[] = isMembership
-    ? [{ label: "Sessions left", value: `${sessionsRemaining} of ${sessionsTotal}`, changeMessage: "%@ sessions left" }]
+    ? [{ label: "Membership", value: program.name }]
     : [{ label: "Visits", value: `${Math.min(progress, required)} / ${required}`, changeMessage: "Progress: %@" }];
 
   // When the hero photo is a top banner (stripURL), Apple renders primary
-  // fields ON TOP of the photo, which makes the program title unreadable over
-  // the image. Per WalletWallet's own guidance ("use secondary fields for
-  // readable text when using [the banner] option"), keep primary empty when a
-  // banner is present and move the program name into a readable secondary field
-  // below the photo instead.
+  // fields ON TOP of the photo, so keep primary empty when a banner is present
+  // and put the readable text in the header and secondary fields instead.
   const hasBanner = Boolean(photoUrl);
   const primaryFields: WalletWalletField[] = hasBanner ? [] : [{ value: program.name }];
 
   const secondaryFields: WalletWalletField[] = [];
-  if (hasBanner) {
-    secondaryFields.push({ label: isMembership ? "Membership" : "Program", value: program.name });
+  if (isMembership) {
+    // Sessions remaining is the membership's key balance; show it below the banner.
+    secondaryFields.push({ label: "Sessions left", value: `${sessionsRemaining} of ${sessionsTotal}`, changeMessage: "%@ sessions left" });
+  } else if (hasBanner) {
+    secondaryFields.push({ label: "Program", value: program.name });
   }
   if (cashbackEnabled) {
     secondaryFields.push({ label: "Cashback", value: cashbackValue, changeMessage: "Cashback: %@" });
