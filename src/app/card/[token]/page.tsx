@@ -1,4 +1,5 @@
 import { CardShareActions } from "@/components/CardShareActions";
+import { syncAppleWalletAfterTierChange } from "@/lib/walletwallet/service";
 import { SaveCardImageButton } from "@/components/SaveCardImageButton";
 import { Gift, QrCode } from "lucide-react";
 import { getCardQrDataUrl, getCardUrl, resolveBranding } from "@/lib/customer-cards";
@@ -148,6 +149,7 @@ export default async function PublicCustomerCardPage({
   const primaryGoogleWalletUrl = primaryProgram ? `/api/wallet/google/save/${primaryProgram.programMembership.scanToken}` : null;
   const primaryAppleWalletUrl = primaryProgram ? `/api/wallet/apple/${primaryProgram.programMembership.scanToken}` : null;
   const cashbackAppleWalletUrl = membership.business.cashbackSettings?.enabled ? `/api/wallet/apple/cashback/${token}` : null;
+  const tierAppleWalletUrl = membership.business.tierSetting ? `/api/wallet/apple/tier/${token}` : null;
   const cardDesign = primaryProgram?.programMembership.loyaltyProgram.cardDesign as CardDesignInput;
   const lastUpdatedAt = [
     membership.updatedAt,
@@ -193,6 +195,7 @@ export default async function PublicCustomerCardPage({
       where: { id: membership.id },
       data: { currentTier: tier.storedTier, tierUpdatedAt: new Date() },
     });
+    await syncAppleWalletAfterTierChange(membership.id);
   }
   const tiersVisible = areTiersVisible(membership.business.membershipSettings?.enabled);
   const primaryCardModel = buildCardRenderModel({
@@ -327,6 +330,7 @@ export default async function PublicCustomerCardPage({
               googleWalletUrl={primaryGoogleWalletUrl}
               appleWalletUrl={primaryAppleWalletUrl}
               cashbackAppleWalletUrl={cashbackAppleWalletUrl}
+              tierAppleWalletUrl={tierAppleWalletUrl}
               buttonColor={branding.buttonColor}
             />
             <SaveCardImageButton

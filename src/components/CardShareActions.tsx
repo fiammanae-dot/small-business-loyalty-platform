@@ -17,6 +17,7 @@ type CardShareActionsProps = {
   googleWalletUrl?: string | null;
   appleWalletUrl?: string | null;
   cashbackAppleWalletUrl?: string | null;
+  tierAppleWalletUrl?: string | null;
   buttonColor?: string;
   compact?: boolean;
   messageType?: "welcome" | "resend";
@@ -34,6 +35,7 @@ export function CardShareActions({
   googleWalletUrl,
   appleWalletUrl,
   cashbackAppleWalletUrl,
+  tierAppleWalletUrl,
   buttonColor,
   compact = false,
   messageType = "welcome",
@@ -166,6 +168,16 @@ export function CardShareActions({
             className="block rounded-md border-2 border-black bg-white px-4 py-3 text-center text-sm font-semibold text-black"
           >
             Add Cashback card to Apple Wallet
+          </a>
+        ) : null}
+        {tierAppleWalletUrl ? (
+          <a
+            href={tierAppleWalletUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block rounded-md border-2 border-black bg-white px-4 py-3 text-center text-sm font-semibold text-black"
+          >
+            Add Tier card to Apple Wallet
           </a>
         ) : null}
         </>

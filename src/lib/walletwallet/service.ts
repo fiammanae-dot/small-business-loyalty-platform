@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import type { GoogleWalletProgramMembership } from "@/lib/google-wallet/mapper";
 import { getWalletWalletConfig, isWalletWalletConfigured } from "./config";
 import { createPass, updatePass, revokePass } from "./client";
-import { buildWalletWalletPassBody, buildCashbackPassBody, type FeaturePassCustomer } from "./mapper";
+import { buildWalletWalletPassBody, buildCashbackPassBody, buildTierPassBody, type FeaturePassCustomer } from "./mapper";
 
 const membershipInclude = {
   businessCustomerMembership: {
@@ -102,12 +102,14 @@ const featureCustomerInclude = {
   business: { include: { branding: true, cashbackSettings: true } },
 } satisfies Prisma.BusinessCustomerMembershipInclude;
 
+type FeatureKind = "CASHBACK" | "TIER";
+
 /**
- * Create/PUT the per-customer CASHBACK card. One pass per customer, keyed by
- * (businessCustomerMembershipId, kind), holding the WalletWallet serial so a
- * balance change pushes a live update.
+ * Create/PUT a per-customer feature card (cashback or tier). One pass per
+ * customer per kind, keyed by (businessCustomerMembershipId, kind), holding the
+ * WalletWallet serial so a later change pushes a live update.
  */
-export async function syncAppleCashbackPass(businessCustomerMembershipId: number): Promise<AppleWalletSyncResult> {
+async function syncAppleFeaturePass(businessCustomerMembershipId: number, kind: FeatureKind): Promise<AppleWalletSyncResult> {
   const config = getWalletWalletConfig();
   if (!config) return { ok: false, reason: "NOT_CONFIGURED" };
 
@@ -118,11 +120,12 @@ export async function syncAppleCashbackPass(businessCustomerMembershipId: number
   if (!customer) return { ok: false, reason: "NOT_FOUND" };
 
   const businessId = customer.businessId;
-  const where = { businessCustomerMembershipId_kind: { businessCustomerMembershipId, kind: "CASHBACK" as const } };
+  const where = { businessCustomerMembershipId_kind: { businessCustomerMembershipId, kind } };
   const existing = await prisma.appleWalletFeaturePass.findUnique({ where });
 
   try {
-    const body = await buildCashbackPassBody(customer as unknown as FeaturePassCustomer);
+    const typed = customer as unknown as FeaturePassCustomer;
+    const body = kind === "CASHBACK" ? await buildCashbackPassBody(typed) : await buildTierPassBody(typed);
     let serialNumber: string;
     let shareUrl: string;
     if (existing?.serialNumber) {
@@ -138,33 +141,56 @@ export async function syncAppleCashbackPass(businessCustomerMembershipId: number
     await prisma.appleWalletFeaturePass.upsert({
       where,
       update: { businessId, serialNumber, shareUrl, status: "ACTIVE", lastSyncedAt: new Date(), lastError: null },
-      create: { businessId, businessCustomerMembershipId, kind: "CASHBACK", serialNumber, shareUrl, status: "ACTIVE", lastSyncedAt: new Date() },
+      create: { businessId, businessCustomerMembershipId, kind, serialNumber, shareUrl, status: "ACTIVE", lastSyncedAt: new Date() },
     });
     return { ok: true, serialNumber, shareUrl };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Apple Wallet cashback sync failed.";
+    const message = error instanceof Error ? error.message : "Apple Wallet feature card sync failed.";
     await prisma.appleWalletFeaturePass.upsert({
       where,
       update: { businessId, status: "FAILED", lastError: message },
-      create: { businessId, businessCustomerMembershipId, kind: "CASHBACK", serialNumber: existing?.serialNumber ?? null, status: "FAILED", lastError: message },
+      create: { businessId, businessCustomerMembershipId, kind, serialNumber: existing?.serialNumber ?? null, status: "FAILED", lastError: message },
     });
     return { ok: false, reason: "SYNC_FAILED", error: message };
   }
 }
 
-/** Fire-and-forget cashback card sync. */
-export async function syncAppleCashbackPassSafe(businessCustomerMembershipId: number): Promise<void> {
+/** Create/PUT the per-customer CASHBACK card (used by the mint route). */
+export async function syncAppleCashbackPass(businessCustomerMembershipId: number): Promise<AppleWalletSyncResult> {
+  return syncAppleFeaturePass(businessCustomerMembershipId, "CASHBACK");
+}
+
+/** Create/PUT the per-customer TIER card (used by the mint route). */
+export async function syncAppleTierPass(businessCustomerMembershipId: number): Promise<AppleWalletSyncResult> {
+  return syncAppleFeaturePass(businessCustomerMembershipId, "TIER");
+}
+
+/**
+ * Refresh a feature card ONLY if the customer already added it - a balance or
+ * tier change updates an existing card, and never mints one nobody asked for.
+ */
+async function refreshAppleFeaturePassIfPresent(businessCustomerMembershipId: number, kind: FeatureKind): Promise<void> {
+  if (!isWalletWalletConfigured()) return;
   try {
-    await syncAppleCashbackPass(businessCustomerMembershipId);
+    const existing = await prisma.appleWalletFeaturePass.findUnique({
+      where: { businessCustomerMembershipId_kind: { businessCustomerMembershipId, kind } },
+      select: { id: true },
+    });
+    if (!existing) return;
+    await syncAppleFeaturePass(businessCustomerMembershipId, kind);
   } catch {
-    // swallowed on purpose
+    // swallowed on purpose - the card catches up on the next change
   }
 }
 
-/** A balance change refreshes the customer's dedicated cashback card. */
+/** A balance change refreshes the customer's cashback card, if they added one. */
 export async function syncAppleWalletAfterCashbackChange(businessCustomerMembershipId: number): Promise<void> {
-  if (!isWalletWalletConfigured()) return;
-  await syncAppleCashbackPassSafe(businessCustomerMembershipId);
+  await refreshAppleFeaturePassIfPresent(businessCustomerMembershipId, "CASHBACK");
+}
+
+/** A tier change refreshes the customer's tier card, if they added one. */
+export async function syncAppleWalletAfterTierChange(businessCustomerMembershipId: number): Promise<void> {
+  await refreshAppleFeaturePassIfPresent(businessCustomerMembershipId, "TIER");
 }
 
 export async function revokeAppleWalletPass(customerProgramMembershipId: number): Promise<void> {
