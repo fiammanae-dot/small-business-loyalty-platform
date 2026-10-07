@@ -57,7 +57,7 @@ test("phase 2: the cashback setup flow is wired to the business-wide cashback se
   assert.match(actions, /if \(redirectTo\) \{\s*redirect\(`\$\{redirectTo\}\?success=/);
 
   const programs = read("src/app/dashboard/programs/page.tsx");
-  assert.match(programs, /FeatureStatusCard[\s\S]*title="Cashback"/);
+  assert.match(programs, /<CashbackProgramCard/);
 });
 
 test("tiers are not a create-program type; they are configured in Settings", () => {
@@ -81,9 +81,13 @@ test("phase 3: tiers are no longer hidden when memberships are enabled (layered)
   assert.match(settings, /<CustomerTiersSection tierConfig=\{tierConfig\} \/>/);
 });
 
-test("phase 4: Programs page groups the business-wide features in a titled card", () => {
+test("phase 4: cashback is a program card; business-wide features holds tiers only", () => {
   const programs = read("src/app/dashboard/programs/page.tsx");
-  assert.match(programs, /<SectionCard title="Business-wide features"/);
-  // both feature cards live inside that card
-  assert.match(programs, /Business-wide features[\s\S]*title="Cashback"[\s\S]*title="Tiers"[\s\S]*<\/SectionCard>/);
+  // cashback is promoted to its own program-style card
+  assert.match(programs, /<SectionCard title="Cashback program"/);
+  assert.match(programs, /<CashbackProgramCard/);
+  // and is no longer a business-wide feature tile
+  assert.doesNotMatch(programs, /FeatureStatusCard[\s\S]*title="Cashback"/);
+  // tiers stays under business-wide features
+  assert.match(programs, /<SectionCard title="Business-wide features"[\s\S]*title="Tiers"/);
 });
