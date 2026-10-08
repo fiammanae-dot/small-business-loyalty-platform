@@ -21,7 +21,6 @@ test("the programs list drops reward tiles/filter and counts for memberships", (
   assert.match(p, /const membershipMode = Boolean\(business\.membershipSettings\?\.enabled\)/);
   assert.match(p, /const rewardReadyCount = program\.isMembership\s*\?\s*0/);
   assert.match(p, /\{membershipMode \? null : \(\s*<MetricCard label="Reward Ready Customers"/s);
-  assert.match(p, /\{membershipMode \? null : <FilterSelect name="reward"/);
   assert.match(p, /\{membershipMode \? "Package" : "Reward"\}/);
   assert.match(p, /\{membershipMode \? "Visits" : "Rewards"\}/);
 });

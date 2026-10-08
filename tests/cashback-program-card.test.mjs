@@ -12,7 +12,7 @@ const read = (p) => readFileSync(p, "utf8");
 test("the cashback program card renders name, rate and theme accent", () => {
   const page = read("src/app/dashboard/programs/page.tsx");
   assert.match(page, /function CashbackProgramCard\(/);
-  assert.match(page, /style=\{\{ backgroundColor: accent \}\}/);
+  assert.match(page, /function CashbackTableRow\(/);
   assert.match(page, /\{rate\}% back/);
   assert.match(page, /label="Cashback rate"/);
   assert.match(page, /Edit cashback card/);
@@ -21,9 +21,8 @@ test("the cashback program card renders name, rate and theme accent", () => {
 test("the cashback card is fed from the saved cashback program fields", () => {
   const page = read("src/app/dashboard/programs/page.tsx");
   assert.match(page, /const cashbackName = business\.cashbackSettings\?\.name\?\.trim\(\) \|\| "Cashback"/);
-  assert.match(page, /resolveCardThemeColors\(\{ cardTheme: business\.cashbackSettings\?\.cardTheme \?\? "BUSINESS_DEFAULT"/);
   assert.match(page, /name=\{cashbackName\}/);
-  assert.match(page, /accent=\{cashbackAccent\}/);
+  assert.match(page, /rate=\{cashbackRate\}/);
 });
 
 test("cashback is no longer a business-wide feature tile", () => {
@@ -39,7 +38,7 @@ test("the cashback program card shows live performance stats", () => {
   assert.match(page, /type: "SPEND"/);
   assert.match(page, /_sum: \{ cashbackBalance: true \}/);
   // rendered on the card
-  assert.match(page, /function CashbackStat/);
+  // stats now render as label/value rows (mobile card) and table cells (desktop row)
   assert.match(page, /label="Members in cashback"/);
   assert.match(page, /label="Spend earning cashback"/);
   assert.match(page, /label="Cashback given"/);

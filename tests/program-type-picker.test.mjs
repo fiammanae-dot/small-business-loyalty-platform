@@ -85,9 +85,10 @@ test("phase 3: tiers are no longer hidden when memberships are enabled (layered)
 
 test("phase 4: cashback is a program card; business-wide features holds tiers only", () => {
   const programs = read("src/app/dashboard/programs/page.tsx");
-  // cashback is promoted to its own program-style card
-  assert.match(programs, /<SectionCard title="Cashback program"/);
+  // cashback is shown among the programs (mobile card + desktop table row), not a separate section
+  assert.doesNotMatch(programs, /<SectionCard title="Cashback program"/);
   assert.match(programs, /<CashbackProgramCard/);
+  assert.match(programs, /<CashbackTableRow/);
   // and is no longer a business-wide feature tile
   assert.doesNotMatch(programs, /FeatureStatusCard[\s\S]*title="Cashback"/);
   // tiers stays under business-wide features
