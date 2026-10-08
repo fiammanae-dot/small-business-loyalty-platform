@@ -18,7 +18,6 @@ import {
 } from "@/components/ui";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { progressValue } from "@/lib/programs";
-import { normalizeTierConfig } from "@/lib/customer-tiers";
 import { businessTypeLabels } from "@/lib/roles";
 import { formatAed } from "@/lib/cashback";
 import { prisma } from "@/lib/prisma";
@@ -30,18 +29,6 @@ type ProgramSearchParams = {
   sort?: string;
   direction?: string;
 };
-
-function FeatureStatusCard({ title, enabled, detail, href }: { title: string; enabled: boolean; detail: string; href: string }) {
-  return (
-    <Link href={href} className="flex items-center justify-between gap-3 rounded-md border border-[#E5E7EB] bg-white p-4 transition hover:border-[var(--business-primary)] hover:shadow-sm">
-      <span className="min-w-0">
-        <span className="block text-sm font-bold text-[#111827]">{title}</span>
-        <span className="mt-0.5 block text-xs text-[#6B7280]">{detail}</span>
-      </span>
-      <StatusBadge tone={enabled ? "success" : "neutral"}>{enabled ? "Enabled" : "Off"}</StatusBadge>
-    </Link>
-  );
-}
 
 export default async function ProgramsPage({
   searchParams,
@@ -143,9 +130,10 @@ export default async function ProgramsPage({
   const averageCompletionRate = programRows.length > 0 ? Math.round(programRows.reduce((total, row) => total + row.completionRate, 0) / programRows.length) : 0;
   const filtered = Boolean(query || status || reward || sort !== "created" || direction !== "desc");
   const cashbackEnabled = Boolean(business.cashbackSettings?.enabled);
+  // Cashback is a business-wide program, so it counts toward the program totals.
+  const activeProgramCount = activeCount + (cashbackEnabled ? 1 : 0);
+  const shownProgramCount = programs.length + 1;
   const cashbackRate = business.cashbackSettings?.ratePercent != null ? business.cashbackSettings.ratePercent.toString() : "5";
-  const tierConfigured = Boolean(business.tierSetting);
-  const tierConfig = normalizeTierConfig(business.tierSetting);
   const cashbackName = business.cashbackSettings?.name?.trim() || "Cashback";
   const cashbackCurrency = business.cashbackSettings?.currency ?? "AED";
   // Live cashback performance for the program card.
@@ -182,7 +170,7 @@ export default async function ProgramsPage({
         />
 
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5" aria-label="Program KPI cards">
-          <MetricCard label="Active Programs" value={activeCount} icon={<Gift className="h-5 w-5" />} tone="business" href="/dashboard/programs?status=active" />
+          <MetricCard label="Active Programs" value={activeProgramCount} icon={<Gift className="h-5 w-5" />} tone="business" href="/dashboard/programs?status=active" />
           <MetricCard label="Total Members" value={totalMembers} icon={<Users className="h-5 w-5" />} href="/dashboard/customers" />
           {membershipMode ? null : (
             <MetricCard label="Rewards Redeemed" value={rewardsRedeemed} icon={<Trophy className="h-5 w-5" />} href="/dashboard/activity?type=reward" />
@@ -193,20 +181,9 @@ export default async function ProgramsPage({
           <MetricCard label="Average Completion Rate" value={averageCompletionRate + "%"} icon={<BarChart3 className="h-5 w-5" />} />
         </section>
 
-        <SectionCard title="Business-wide features" description="Tiers apply across all your customers and layer on top of your stamp and membership programs.">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <FeatureStatusCard
-              title="Tiers"
-              enabled={tierConfigured}
-              detail={tierConfigured ? "Silver " + tierConfig.silverVisitRequirement + " \u2022 Gold " + tierConfig.goldVisitRequirement + " \u2022 VIP " + tierConfig.vipVisitRequirement + " visits" : "Not set up yet"}
-              href="/dashboard/programs/new?type=tier"
-            />
-          </div>
-        </SectionCard>
-
         <SectionCard
           title="Program Performance"
-          description={programs.length + " program" + (programs.length === 1 ? "" : "s") + " shown, plus your business-wide cashback program. Cards summarize members, completion and activity."}
+          description={shownProgramCount + " program" + (shownProgramCount === 1 ? "" : "s") + " shown, including your business-wide cashback program. Cards summarize members, completion and activity."}
         >
           <div className="grid gap-4 lg:hidden">
             <CashbackProgramCard
