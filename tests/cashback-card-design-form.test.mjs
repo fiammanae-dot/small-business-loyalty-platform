@@ -62,3 +62,22 @@ test("the cashback setup is a two-step wizard like stamp/membership", () => {
   assert.match(step2, /CardThemePreviewSelector/);
   assert.match(step2, /CashbackPhotoField/);
 });
+
+test("the cashback wizard cannot save when advancing from step 1 to step 2", () => {
+  // Regression: both footer steps rendered a <Button> at the same position, so
+  // React reused the "Continue" node (type=button) as the "Save" node
+  // (type=submit) during the click's synchronous re-render; the browser then
+  // treated the in-flight click as a submit and saved + redirected on Continue.
+  const form = read("src/components/CashbackSetupForm.tsx");
+  // Distinct keys force a remount instead of reusing the Continue node as Save.
+  assert.match(form, /key="cashback-continue"/, "Continue button has a distinct key");
+  assert.match(form, /key="cashback-save"/, "Save button has a distinct key");
+  // Continue also cancels the (reused-node) default submit as a backstop.
+  assert.match(
+    form,
+    /key="cashback-continue"[^>]*onClick=\{\(event\) => \{ event\.preventDefault\(\); goToStep\(2\); \}\}/,
+    "Continue preventDefaults then advances",
+  );
+  // The guard that only step 2 may submit stays in place.
+  assert.match(form, /if \(step !== 2\) event\.preventDefault\(\);/);
+});
