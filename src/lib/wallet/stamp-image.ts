@@ -19,16 +19,11 @@ const MAX_PER_ROW = 6;
 const MAX_ICON = 150;
 
 /**
- * Stamps still to earn are drawn as an empty circle, not a faded copy of the
- * icon. Flattening arbitrary emoji to a silhouette works for a car but turns a
- * coffee cup into a blob, and which ones survive is not something we control -
- * a business can pick any of them. An open circle is also the language of the
- * paper stamp card it replaces, and gives the strongest contrast against a
- * full-colour earned stamp on a phone at arm's length.
- *
- * This grey sits between a white card and a dark one, so it reads on both.
+ * Stamps/visits still to earn are drawn as a faded copy of the same icon (not an
+ * empty ring), so the card reads "x of y" at a glance and matches the in-app
+ * card preview the business designs.
  */
-const RING = "#C3CAD4";
+const REMAINING_OPACITY = "0.3";
 
 /** Ten stamps on one line would be too small to read, so wrap past six. */
 function rowsFor(total: number): number[] {
@@ -62,10 +57,8 @@ export function drawStampStripSvg(earned: number, total: number, emoji?: string 
           `<svg x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${size}" height="${size}" viewBox="0 0 36 36">${body}</svg>`,
         );
       } else {
-        const cx = x + size / 2;
-        const cy = y + size / 2;
         stamps.push(
-          `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(size * 0.46).toFixed(1)}" fill="none" stroke="${RING}" stroke-width="${(size * 0.055).toFixed(1)}"/>`,
+          `<svg x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${size}" height="${size}" viewBox="0 0 36 36" opacity="${REMAINING_OPACITY}">${body}</svg>`,
         );
       }
       placed += 1;

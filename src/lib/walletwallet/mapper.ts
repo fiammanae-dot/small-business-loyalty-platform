@@ -6,6 +6,7 @@ import { resolveBranding, getBaseUrl, getCardUrl } from "@/lib/customer-cards";
 import { getScanUrl } from "@/lib/scan";
 import { progressValue } from "@/lib/programs";
 import { membershipSessionSummary } from "@/lib/membership-sessions";
+import { stampImagePath } from "@/lib/wallet/stamp-image";
 import { fromStoredTier } from "@/lib/customer-tiers";
 import { resolveCardThemeColors } from "@/lib/card-themes";
 import type { CardTheme, WalletHeroStyle } from "@prisma/client";
@@ -56,6 +57,15 @@ export async function buildWalletWalletPassBody(membership: GoogleWalletProgramM
   const photoUrl = program.walletHeroStyle === "PHOTO" ? absoluteUrl(program.walletPhotoUrl, baseUrl) : null;
   const color = hexColor(branding.primaryColor) ?? hexColor(branding.buttonColor);
 
+  // The visit/stamp grid drawn as a picture, the same image the Google card uses.
+  // Memberships count down (filled = visits left); stamp cards count up.
+  const gridFilled = isMembership ? sessionsRemaining : Math.min(progress, required);
+  const gridTotal = isMembership ? Math.max(1, sessionsTotal) : required;
+  const gridUrl = `${baseUrl}${stampImagePath(program.uuid, gridFilled, gridTotal, program.stampEmoji)}`;
+  // A top banner is always present now: the uploaded hero photo if the business
+  // set one, otherwise the live visit grid.
+  const bannerUrl = photoUrl ?? gridUrl;
+
   const headerFields: WalletWalletField[] = isMembership
     ? [{ label: "Membership", value: program.name }]
     : [{ label: "Visits", value: `${Math.min(progress, required)} / ${required}`, changeMessage: "Progress: %@" }];
@@ -63,7 +73,7 @@ export async function buildWalletWalletPassBody(membership: GoogleWalletProgramM
   // When the hero photo is a top banner (stripURL), Apple renders primary
   // fields ON TOP of the photo, so keep primary empty when a banner is present
   // and put the readable text in the header and secondary fields instead.
-  const hasBanner = Boolean(photoUrl);
+  const hasBanner = Boolean(bannerUrl);
   const primaryFields: WalletWalletField[] = hasBanner ? [] : [{ value: program.name }];
 
   // The program card is single-purpose: its own data plus the holder's name.
@@ -109,7 +119,7 @@ export async function buildWalletWalletPassBody(membership: GoogleWalletProgramM
   };
   if (color) body.color = color; // Pro
   if (logoUrl) body.logoURL = logoUrl; // Pro
-  if (photoUrl) body.stripURL = photoUrl; // Pro - banner behind the primary field (top of pass)
+  if (bannerUrl) body.stripURL = bannerUrl; // Pro - banner at the top of the pass (photo, or the live visit grid)
   return body;
 }
 

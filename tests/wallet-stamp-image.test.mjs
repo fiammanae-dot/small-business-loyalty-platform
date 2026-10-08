@@ -42,15 +42,24 @@ test("an unknown or missing icon falls back instead of drawing nothing", () => {
   assert.equal(icons.findStampIcon("☕").emoji, "☕");
 });
 
-test("earned stamps show the icon, the rest show an empty ring", () => {
+test("earned stamps show the icon in full, the rest show a faded copy", () => {
   const svg = image.drawStampStripSvg(3, 10, "☕");
-  const icons = (svg.match(/<svg x=/g) ?? []).length;
-  const rings = (svg.match(/<circle /g) ?? []).length;
-  assert.equal(icons, 3, "three earned");
-  assert.equal(rings, 7, "seven still to earn");
-  // A faded copy of the icon was tried first and rejected: flattening arbitrary
-  // emoji turns some of them (a coffee cup) into an unreadable blob.
-  assert.doesNotMatch(svg, /ghost/, "no ghosted icons");
+  const stamps = (svg.match(/<svg x=/g) ?? []).length;
+  const faded = (svg.match(/opacity="0.3"/g) ?? []).length;
+  assert.equal(stamps, 10, "ten stamps drawn");
+  assert.equal(faded, 7, "seven faded (still to earn)");
+  assert.equal(stamps - faded, 3, "three earned at full strength");
+  // Remaining stamps are the same icon faded, not empty rings.
+  assert.doesNotMatch(svg, /<circle /, "no empty rings");
+});
+
+test("the Apple wallet pass shows the live visit grid as its banner", () => {
+  const mapper = read("src/lib/walletwallet/mapper.ts");
+  // Memberships count down (filled = visits left); stamp cards count up.
+  assert.match(mapper, /const gridFilled = isMembership \? sessionsRemaining : Math\.min\(progress, required\)/);
+  assert.match(mapper, /stampImagePath\(program\.uuid, gridFilled, gridTotal, program\.stampEmoji\)/);
+  // The grid (or the uploaded photo) is the strip banner.
+  assert.match(mapper, /if \(bannerUrl\) body\.stripURL = bannerUrl/);
 });
 
 test("ten stamps wrap onto two rows so they stay readable", () => {
