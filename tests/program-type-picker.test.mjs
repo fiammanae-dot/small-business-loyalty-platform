@@ -72,9 +72,9 @@ test("tiers are not a create-program type; they are configured in Settings", () 
   const settings = read("src/app/dashboard/settings/page.tsx");
   assert.match(settings, /<CustomerTiersSection tierConfig=\{tierConfig\} \/>/);
 
-  // The Programs page still surfaces tier status under business-wide features.
+  // Tiers are configured in Settings only; the Programs page no longer carries a tier tile.
   const programs = read("src/app/dashboard/programs/page.tsx");
-  assert.match(programs, /FeatureStatusCard[\s\S]*title="Tiers"/);
+  assert.doesNotMatch(programs, /title="Tiers"/);
 });
 
 test("phase 3: tiers are no longer hidden when memberships are enabled (layered)", () => {
@@ -83,7 +83,7 @@ test("phase 3: tiers are no longer hidden when memberships are enabled (layered)
   assert.match(settings, /<CustomerTiersSection tierConfig=\{tierConfig\} \/>/);
 });
 
-test("phase 4: cashback is a program card; business-wide features holds tiers only", () => {
+test("phase 4: cashback is a program card; tiers tile removed from Programs", () => {
   const programs = read("src/app/dashboard/programs/page.tsx");
   // cashback is shown among the programs (mobile card + desktop table row), not a separate section
   assert.doesNotMatch(programs, /<SectionCard title="Cashback program"/);
@@ -91,6 +91,6 @@ test("phase 4: cashback is a program card; business-wide features holds tiers on
   assert.match(programs, /<CashbackTableRow/);
   // and is no longer a business-wide feature tile
   assert.doesNotMatch(programs, /FeatureStatusCard[\s\S]*title="Cashback"/);
-  // tiers stays under business-wide features
-  assert.match(programs, /<SectionCard title="Business-wide features"[\s\S]*title="Tiers"/);
+  // the business-wide features box (tiers tile) has been removed from this page
+  assert.doesNotMatch(programs, /Business-wide features/);
 });
