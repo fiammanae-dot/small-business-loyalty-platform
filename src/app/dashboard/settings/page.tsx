@@ -10,6 +10,7 @@ import { RequiredMark } from "@/components/ui/RequiredMark";
 import { saveSupportAccessPolicyAction } from "@/app/platform/businesses/support-actions";
 import { sendWhatsAppTestMessageAction } from "@/app/dashboard/settings/whatsapp-actions";
 import { getBusinessOwnerContext, getCurrentPlan, getCurrentSubscription } from "@/lib/business-owner";
+import { BillingCenter } from "@/components/billing/BillingCenter";
 import { normalizeTierConfig, tierMaintenanceModeLabels, tierQualificationWindowLabels } from "@/lib/customer-tiers";
 import { formatDate } from "@/lib/format";
 import { messageChannelLabels } from "@/lib/messages";
@@ -155,7 +156,7 @@ export default async function BusinessSettingsPage({ searchParams }: { searchPar
         ) : null}
         {activeCategory === "billing" ? (
           <div className="grid gap-5">
-            <SubscriptionSection plan={plan} subscription={subscription} expiryDate={expiryDate} remainingDays={remainingDays} trialDays={trialDays} business={business} />
+            <BillingCenter />
           </div>
         ) : null}
       </div>

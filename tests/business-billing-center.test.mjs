@@ -9,10 +9,9 @@ function read(file) {
 }
 
 test("business owner billing page uses Billing & Plan Center structure", () => {
-  const page = read("src/app/dashboard/billing/page.tsx");
+  const page = read("src/components/billing/BillingCenter.tsx");
 
   for (const expected of [
-    "Billing & Plan",
     "Manage your subscription, plan usage and billing history.",
     "Upgrade Plan / Manage Plan",
     "Current Plan Summary",
@@ -27,7 +26,7 @@ test("business owner billing page uses Billing & Plan Center structure", () => {
 });
 
 test("business owner billing page uses design system billing components", () => {
-  const page = read("src/app/dashboard/billing/page.tsx");
+  const page = read("src/components/billing/BillingCenter.tsx");
 
   for (const component of ["PageIntro", "MetricCard", "SectionCard", "ProgressBar", "StatusBadge", "DataTable", "EmptyState", "ButtonLink"]) {
     assert.match(page, new RegExp(component), `Billing page should use ${component}`);
@@ -41,7 +40,7 @@ test("business owner billing page uses design system billing components", () => 
 });
 
 test("business owner billing page remains UI-only and mobile safe", () => {
-  const page = read("src/app/dashboard/billing/page.tsx");
+  const page = read("src/components/billing/BillingCenter.tsx");
 
   assert.match(page, /lg:hidden/);
   assert.match(page, /hidden lg:block/);
@@ -51,3 +50,11 @@ test("business owner billing page remains UI-only and mobile safe", () => {
   assert.doesNotMatch(page, /prisma\.[a-zA-Z0-9_]+\.(create|update|delete|upsert|deleteMany|updateMany)\(/, "Billing redesign should not add Prisma mutation calls");
 });
 
+test("the old billing route redirects into Settings and the sidebar item is gone", () => {
+  const page = read("src/app/dashboard/billing/page.tsx");
+  assert.match(page, /redirect\("\/dashboard\/settings\?tab=billing"\)/);
+  const settings = read("src/app/dashboard/settings/page.tsx");
+  assert.match(settings, /<BillingCenter \/>/);
+  const nav = read("src/components/RoleNavigation.tsx");
+  assert.doesNotMatch(nav, /href: "\/dashboard\/billing"/);
+});

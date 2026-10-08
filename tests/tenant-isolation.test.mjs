@@ -31,7 +31,7 @@ test("Branch Manager cannot enroll customers into another business program", () 
 test("Business Owner alerts, billing, and activity are tenant filtered", () => {
   assert.match(read("src/app/dashboard/notifications/[id]/page.tsx"), /id:\s*alertId,\s*businessId:\s*user\.businessId/);
   assert.match(read("src/app/dashboard/notifications/actions.ts"), /id:\s*parsed\.data\.alertId,[\s\S]*businessId:\s*user\.businessId/);
-  assert.match(read("src/app/dashboard/billing/page.tsx"), /where:\s*{\s*businessId:\s*user\.businessId\s*}/);
+  assert.match(read("src/components/billing/BillingCenter.tsx"), /where:\s*{\s*businessId:\s*user\.businessId\s*}/);
   assert.match(read("src/app/dashboard/activity/[id]/page.tsx"), /id:\s*transactionId,\s*businessId:\s*user\.businessId/);
 });
 

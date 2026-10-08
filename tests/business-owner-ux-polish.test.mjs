@@ -54,7 +54,7 @@ test("referral cards use compact responsive row layout", () => {
 });
 
 test("business billing history does not expose broken download action", () => {
-  const page = read("src/app/dashboard/billing/page.tsx");
+  const page = read("src/components/billing/BillingCenter.tsx");
 
   assert.doesNotMatch(page, /Download unavailable/);
   assert.doesNotMatch(page, /ActionMenu label="Actions"/);
