@@ -166,7 +166,7 @@ export async function buildCashbackPassBody(customer: FeaturePassCustomer): Prom
   const cardUrl = await getCardUrl(customer.cardToken);
   const logoUrl = absoluteUrl(branding.logoUrl, baseUrl);
   const photoUrl = absoluteUrl(cs?.walletPhotoUrl, baseUrl);
-  const hasBanner = Boolean(bannerUrl);
+  const hasBanner = Boolean(photoUrl);
   const themeColors = resolveCardThemeColors({ cardTheme: cs?.cardTheme ?? "BUSINESS_DEFAULT", branding });
   const color = hexColor(themeColors.accent) ?? hexColor(branding.primaryColor) ?? hexColor(branding.buttonColor);
 
