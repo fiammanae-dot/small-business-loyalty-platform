@@ -75,7 +75,6 @@ const businessOwnerNavigationGroups: Array<{ label: string; items: NavigationIte
       { href: "/dashboard/branches", label: "Branches", icon: Building2 },
       { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
       { href: "/dashboard/support-history", label: "Support History", icon: ShieldCheck },
-      { href: "/dashboard/profile", label: "Profile", icon: Store },
       { href: "/dashboard/settings", label: "Settings", icon: Settings },
     ],
   },
@@ -99,7 +98,6 @@ const mobileMoreItems: NavigationItem[] = [
   { href: "/dashboard/notifications", label: "Alerts", icon: Bell },
   { href: "/dashboard/messages", label: "Messages", icon: MessageSquare },
   { href: "/dashboard/wallet-broadcast", label: "Wallet message", icon: Megaphone },
-  { href: "/dashboard/profile", label: "Profile", icon: Store },
 ];
 
 const platformMobilePrimaryItems: NavigationItem[] = [
