@@ -6,6 +6,7 @@ import type { GoogleWalletProgramMembership } from "@/lib/google-wallet/mapper";
 import { getWalletWalletConfig, isWalletWalletConfigured } from "./config";
 import { createPass, updatePass, revokePass } from "./client";
 import { buildWalletWalletPassBody, buildCashbackPassBody, type FeaturePassCustomer } from "./mapper";
+import type { GoogleWalletBusinessBroadcastResult, WalletBroadcastMessage } from "@/lib/google-wallet/broadcast";
 
 const membershipInclude = {
   businessCustomerMembership: {
@@ -237,4 +238,66 @@ export async function revokeAppleWalletPass(customerProgramMembershipId: number)
     const message = error instanceof Error ? error.message : "Apple Wallet revoke failed.";
     await prisma.appleWalletPass.update({ where: { customerProgramMembershipId }, data: { lastError: message } });
   }
+}
+
+
+/**
+ * Wallet broadcast - Apple side. Pushes the message as a lock-screen banner to
+ * every Apple pass the business has out (program cards and cashback cards) by
+ * rebuilding each pass with the message in its "Notifications" field, whose
+ * "%@" change message is what makes Apple surface it. Mirrors the Google
+ * sender's result shape so the broadcast policy treats both the same.
+ */
+export async function sendAppleWalletBroadcastForBusiness(
+  businessId: number,
+  message: WalletBroadcastMessage,
+): Promise<GoogleWalletBusinessBroadcastResult> {
+  const summary: GoogleWalletBusinessBroadcastResult = { reached: 0, skipped: 0, failed: 0, notConfigured: false, errors: [], programs: [] };
+  const config = getWalletWalletConfig();
+  if (!config) {
+    summary.notConfigured = true;
+    return summary;
+  }
+
+  const notification = `${message.header}\n${message.body}`.trim();
+
+  const programPasses = await prisma.appleWalletPass.findMany({
+    where: { businessId, status: "ACTIVE", serialNumber: { not: null } },
+    include: { customerProgramMembership: { include: membershipInclude } },
+  });
+  for (const pass of programPasses) {
+    if (!pass.serialNumber) {
+      summary.skipped += 1;
+      continue;
+    }
+    try {
+      const body = await buildWalletWalletPassBody(pass.customerProgramMembership as unknown as GoogleWalletProgramMembership, { notification });
+      await updatePass(config, pass.serialNumber, body);
+      summary.reached += 1;
+    } catch (error) {
+      summary.failed += 1;
+      summary.errors.push(error instanceof Error ? error.message : "Apple pass push failed.");
+    }
+  }
+
+  const featurePasses = await prisma.appleWalletFeaturePass.findMany({
+    where: { businessId, status: "ACTIVE", kind: "CASHBACK", serialNumber: { not: null } },
+    include: { businessCustomerMembership: { include: featureCustomerInclude } },
+  });
+  for (const pass of featurePasses) {
+    if (!pass.serialNumber) {
+      summary.skipped += 1;
+      continue;
+    }
+    try {
+      const body = await buildCashbackPassBody(pass.businessCustomerMembership as unknown as FeaturePassCustomer, { notification });
+      await updatePass(config, pass.serialNumber, body);
+      summary.reached += 1;
+    } catch (error) {
+      summary.failed += 1;
+      summary.errors.push(error instanceof Error ? error.message : "Apple cashback push failed.");
+    }
+  }
+
+  return summary;
 }

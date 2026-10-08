@@ -56,7 +56,7 @@ export function walletBroadcastStatusFor(result: GoogleWalletBusinessBroadcastRe
 
 export type WalletBroadcastRecord = {
   businessId: number;
-  channel: "GOOGLE_WALLET";
+  channel: "GOOGLE_WALLET" | "APPLE_WALLET";
   header: string;
   body: string;
   status: WalletBroadcastStatusValue;
@@ -72,6 +72,8 @@ export type WalletBroadcastDeps = {
   /** When this business last sent a broadcast that reached someone (SENT or PARTIAL). */
   findLastCountedBroadcastAt: (businessId: number) => Promise<Date | null>;
   sendForBusiness: (businessId: number, message: WalletBroadcastMessage) => Promise<GoogleWalletBusinessBroadcastResult>;
+  /** Optional Apple Wallet sender; when present the broadcast reaches Apple passes too. */
+  sendAppleForBusiness?: (businessId: number, message: WalletBroadcastMessage) => Promise<GoogleWalletBusinessBroadcastResult>;
   recordBroadcast: (record: WalletBroadcastRecord) => Promise<unknown>;
   now: () => Date;
 };
@@ -115,14 +117,13 @@ export async function runWalletBroadcast(
   }
 
   const result = await deps.sendForBusiness(businessId, validation.message);
-  const status = walletBroadcastStatusFor(result);
 
   await deps.recordBroadcast({
     businessId,
     channel: "GOOGLE_WALLET",
     header: validation.message.header,
     body: validation.message.body,
-    status,
+    status: walletBroadcastStatusFor(result),
     programsReached: result.reached,
     programsSkipped: result.skipped,
     programsFailed: result.failed,
@@ -130,19 +131,46 @@ export async function runWalletBroadcast(
     sentByUserId: user.id,
   });
 
-  // TODO: Apple Wallet broadcast (post-enrollment)
+  let reached = result.reached;
+  let skipped = result.skipped;
+  let failed = result.failed;
+  let allNotConfigured = result.notConfigured;
+
+  // Apple Wallet broadcast: push the same message to the business's Apple passes
+  // and log its own row, so the overall outcome covers both platforms.
+  if (deps.sendAppleForBusiness) {
+    const apple = await deps.sendAppleForBusiness(businessId, validation.message);
+    await deps.recordBroadcast({
+      businessId,
+      channel: "APPLE_WALLET",
+      header: validation.message.header,
+      body: validation.message.body,
+      status: walletBroadcastStatusFor(apple),
+      programsReached: apple.reached,
+      programsSkipped: apple.skipped,
+      programsFailed: apple.failed,
+      error: apple.errors.length ? apple.errors.join(" | ").slice(0, 1000) : apple.notConfigured ? "NOT_CONFIGURED" : null,
+      sentByUserId: user.id,
+    });
+    reached += apple.reached;
+    skipped += apple.skipped;
+    failed += apple.failed;
+    allNotConfigured = allNotConfigured && apple.notConfigured;
+  }
+
+  const status: WalletBroadcastStatusValue = reached > 0 ? (failed > 0 ? "PARTIAL" : "SENT") : failed > 0 ? "FAILED" : "SKIPPED";
 
   if (status === "SENT" || status === "PARTIAL") {
-    return { ok: true, status, reached: result.reached, skipped: result.skipped, failed: result.failed };
+    return { ok: true, status, reached, skipped, failed };
   }
   if (status === "FAILED") {
-    return { ok: false, code: "FAILED", error: "Google Wallet did not accept the message. Please try again later." };
+    return { ok: false, code: "FAILED", error: "Wallet did not accept the message. Please try again later." };
   }
   return {
     ok: false,
     code: "NOTHING_TO_SEND",
-    error: result.notConfigured
-      ? "Google Wallet is not set up yet, so there is no one to send to."
-      : "None of your customers has added your card to Google Wallet yet.",
+    error: allNotConfigured
+      ? "Wallet notifications are not set up yet, so there is no one to send to."
+      : "None of your customers has added your card to Apple or Google Wallet yet.",
   };
 }

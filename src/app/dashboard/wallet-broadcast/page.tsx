@@ -1,5 +1,6 @@
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
+import { MessagesTabs } from "@/components/MessagesTabs";
 import { WalletBroadcastFields } from "@/components/WalletBroadcastFields";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
@@ -69,16 +70,17 @@ export default async function WalletBroadcastPage({
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Send a message to your Wallet customers">
+      <MessagesTabs active="wallet" />
       {qs.error ? <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{qs.error}</p> : null}
       {qs.success ? <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{qs.success}</p> : null}
 
       <SectionCard
         title="New Wallet message"
-        description="Free. It appears as a notification on the phones of customers who added your loyalty card to Google Wallet. Customers without the card in Google Wallet won't get it - use WhatsApp for them."
+        description="Free. It appears as a notification on the phones of customers who added your loyalty card to Apple or Google Wallet. Customers without the card in a wallet won't get it - use WhatsApp for them."
       >
         <ul className="mb-4 list-disc space-y-1 pl-5 text-[13px] leading-5 text-[#4B5263]">
           <li>No cost per message.</li>
-          <li>Reaches only customers who already saved your card in Google Wallet (Apple Wallet coming later).</li>
+          <li>Reaches customers who saved your card in Apple or Google Wallet.</li>
           <li>One message every 12 hours, so customers don't get too many.</li>
         </ul>
         {blockedReason ? (
