@@ -30,3 +30,18 @@ test("cashback is no longer a business-wide feature tile", () => {
   const page = read("src/app/dashboard/programs/page.tsx");
   assert.doesNotMatch(page, /title="Cashback"\s*\n\s*enabled=\{cashbackEnabled\}/);
 });
+
+test("the cashback program card shows live performance stats", () => {
+  const page = read("src/app/dashboard/programs/page.tsx");
+  // aggregates computed on the page
+  assert.match(page, /cashbackTransactions: \{ some: \{\} \}/);
+  assert.match(page, /type: "EARN".*_sum: \{ amount: true, billAmount: true \}/s);
+  assert.match(page, /type: "SPEND"/);
+  assert.match(page, /_sum: \{ cashbackBalance: true \}/);
+  // rendered on the card
+  assert.match(page, /function CashbackStat/);
+  assert.match(page, /label="Members in cashback"/);
+  assert.match(page, /label="Spend earning cashback"/);
+  assert.match(page, /label="Cashback given"/);
+  assert.match(page, /label="Outstanding balance"/);
+});
