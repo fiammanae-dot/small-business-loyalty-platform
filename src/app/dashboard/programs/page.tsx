@@ -22,6 +22,7 @@ import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { progressValue } from "@/lib/programs";
 import { normalizeTierConfig } from "@/lib/customer-tiers";
 import { businessTypeLabels } from "@/lib/roles";
+import { formatAed } from "@/lib/cashback";
 import { resolveCardThemeColors } from "@/lib/card-themes";
 import { resolveBranding } from "@/lib/customer-cards";
 import { prisma } from "@/lib/prisma";
@@ -154,6 +155,17 @@ export default async function ProgramsPage({
   const cashbackMaxBill = business.cashbackSettings?.maxBillAmount != null ? business.cashbackSettings.maxBillAmount.toString() : "";
   const cashbackMaxRedemption = business.cashbackSettings?.maxRedemption != null ? business.cashbackSettings.maxRedemption.toString() : "";
   const cashbackAccent = resolveCardThemeColors({ cardTheme: business.cashbackSettings?.cardTheme ?? "BUSINESS_DEFAULT", branding: resolveBranding(business.branding) }).accent;
+  // Live cashback performance for the program card.
+  const [cashbackMembers, cashbackEarnAgg, cashbackSpendAgg, cashbackBalanceAgg] = await Promise.all([
+    prisma.businessCustomerMembership.count({ where: { businessId: business.id, cashbackTransactions: { some: {} } } }),
+    prisma.cashbackTransaction.aggregate({ where: { businessId: business.id, type: "EARN" }, _sum: { amount: true, billAmount: true } }),
+    prisma.cashbackTransaction.aggregate({ where: { businessId: business.id, type: "SPEND" }, _sum: { amount: true } }),
+    prisma.businessCustomerMembership.aggregate({ where: { businessId: business.id }, _sum: { cashbackBalance: true } }),
+  ]);
+  const cashbackSpendBase = Number(cashbackEarnAgg._sum.billAmount ?? 0);
+  const cashbackGiven = Number(cashbackEarnAgg._sum.amount ?? 0);
+  const cashbackRedeemed = Number(cashbackSpendAgg._sum.amount ?? 0);
+  const cashbackOutstanding = Number(cashbackBalanceAgg._sum.cashbackBalance ?? 0);
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Loyalty Programs" hideWelcomeMessage>
@@ -234,6 +246,11 @@ export default async function ProgramsPage({
             maxRedemption={cashbackMaxRedemption}
             accent={cashbackAccent}
             editHref="/dashboard/programs/new?type=cashback"
+            members={cashbackMembers}
+            spendBase={cashbackSpendBase}
+            given={cashbackGiven}
+            redeemed={cashbackRedeemed}
+            outstanding={cashbackOutstanding}
           />
         </SectionCard>
 
@@ -403,6 +420,11 @@ function CashbackProgramCard({
   maxRedemption,
   accent,
   editHref,
+  members,
+  spendBase,
+  given,
+  redeemed,
+  outstanding,
 }: {
   name: string;
   enabled: boolean;
@@ -412,6 +434,11 @@ function CashbackProgramCard({
   maxRedemption: string;
   accent: string;
   editHref: string;
+  members: number;
+  spendBase: number;
+  given: number;
+  redeemed: number;
+  outstanding: number;
 }) {
   return (
     <article className="overflow-hidden rounded-md border border-[#E2E8F0] bg-white shadow-sm">
@@ -437,11 +464,27 @@ function CashbackProgramCard({
           {maxBill ? <InfoLine label="Max bill" value={`${currency} ${maxBill}`} /> : null}
           {maxRedemption ? <InfoLine label="Max redemption" value={`${currency} ${maxRedemption}`} /> : null}
         </div>
+        <div className="mt-4 grid grid-cols-2 gap-2 border-t border-[#EEF1F4] pt-4 sm:grid-cols-3">
+          <CashbackStat label="Members in cashback" value={members.toLocaleString()} />
+          <CashbackStat label="Spend earning cashback" value={formatAed(spendBase, currency)} />
+          <CashbackStat label="Cashback given" value={formatAed(given, currency)} />
+          <CashbackStat label="Redeemed" value={formatAed(redeemed, currency)} />
+          <CashbackStat label="Outstanding balance" value={formatAed(outstanding, currency)} />
+        </div>
         <div className="mt-4">
           <ButtonLink href={editHref} variant="outline">Edit cashback card</ButtonLink>
         </div>
       </div>
     </article>
+  );
+}
+
+function CashbackStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-[#EEF1F4] bg-[#F8FAFC] p-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">{label}</p>
+      <p className="mt-1 text-base font-bold tabular-nums text-[#0F172A]">{value}</p>
+    </div>
   );
 }
 
