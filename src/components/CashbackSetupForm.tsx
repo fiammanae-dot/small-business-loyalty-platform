@@ -63,9 +63,11 @@ export function CashbackSetupForm({
     <form
       action={saveCashbackSettingsAction}
       onSubmit={(event) => {
-        // Multi-step wizard: only the final "Save cashback" button (step 2) may
-        // submit. Guard against any accidental submission from step 1 (e.g. the
-        // "Continue" button or Enter) so continuing never saves prematurely.
+        // Multi-step wizard: only step 2 may submit. The buttons carry distinct
+        // keys (cashback-continue / cashback-save) so React remounts rather than
+        // reusing the "Continue" node as the "Save" submit button mid-click, and
+        // "Continue" also calls preventDefault. This guard is a final backstop
+        // (e.g. Enter in a step-1 field) so continuing never saves prematurely.
         if (step !== 2) event.preventDefault();
       }}
       className="grid gap-6"
@@ -113,16 +115,16 @@ export function CashbackSetupForm({
         {step === 1 ? (
           <>
             <span className="hidden text-xs text-[#9CA3AF] sm:block">Nothing is saved until you finish card design.</span>
-            <Button type="button" variant="business" onClick={() => goToStep(2)} rightIcon={<ArrowRight className="h-4 w-4" aria-hidden />} className="ml-auto">
+            <Button key="cashback-continue" type="button" variant="business" onClick={(event) => { event.preventDefault(); goToStep(2); }} rightIcon={<ArrowRight className="h-4 w-4" aria-hidden />} className="ml-auto">
               Continue to card design
             </Button>
           </>
         ) : (
           <>
-            <Button type="button" variant="outline" onClick={() => goToStep(1)} leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden />}>
+            <Button key="cashback-back" type="button" variant="outline" onClick={() => goToStep(1)} leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden />}>
               Back
             </Button>
-            <Button type="submit" variant="business" leftIcon={<Check className="h-4 w-4" aria-hidden />}>
+            <Button key="cashback-save" type="submit" variant="business" leftIcon={<Check className="h-4 w-4" aria-hidden />}>
               Save cashback
             </Button>
           </>
