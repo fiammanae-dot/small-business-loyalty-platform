@@ -62,6 +62,17 @@ test("the Apple wallet pass shows the live visit grid as its banner", () => {
   assert.match(mapper, /if \(bannerUrl\) body\.stripURL = bannerUrl/);
 });
 
+test("the picture stays narrow enough that Apple's strip shows every stamp", () => {
+  // Apple centre-crops the strip banner to roughly 2.6:1; a wider picture loses
+  // the outer stamps (a "4 of 6" card that only shows 4 ticks). Keep it <= ~2.5:1.
+  const svg = image.drawStampStripSvg(4, 6, "⭐");
+  const [, w, h] = svg.match(/width="(\d+)" height="(\d+)" viewBox/);
+  assert.ok(Number(w) / Number(h) <= 2.5, `ratio ${(w / h).toFixed(2)} must be <= 2.5:1`);
+  // All six visits are drawn: four filled (visits left) and two faded.
+  assert.equal((svg.match(/<svg x=/g) ?? []).length, 6, "all six stamps drawn");
+  assert.equal((svg.match(/opacity="0.3"/g) ?? []).length, 2, "two faded");
+});
+
 test("ten stamps wrap onto two rows so they stay readable", () => {
   // Measured on a full card so every stamp is drawn as an icon with x/y.
   const ys = [...image.drawStampStripSvg(10, 10, "☕").matchAll(/<svg x="[\d.]+" y="([\d.]+)"/g)].map((m) => m[1]);
