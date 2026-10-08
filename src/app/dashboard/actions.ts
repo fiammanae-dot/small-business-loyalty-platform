@@ -21,7 +21,7 @@ import { syncGoogleWalletObjectAfterLoyaltyChange } from "@/lib/google-wallet/se
 import { refreshBusinessCashbackPasses, syncAppleWalletPassSafe } from "@/lib/walletwallet/service";
 import { hasWalletRelevantBrandingChange, hasWalletRelevantBusinessChange } from "@/lib/wallet-sync/change-detection";
 import { enqueueWalletSyncForBusiness } from "@/lib/wallet-sync/enqueue";
-import { commerciallyUsableStatuses, limitReachedMessage } from "@/lib/subscriptions";
+import { commerciallyUsableStatuses, limitReachedMessage, programsUsedTowardLimit } from "@/lib/subscriptions";
 import {
   customerIdentityInputSchema,
   customerMembershipSchema,
@@ -708,6 +708,28 @@ export async function saveCashbackSettingsAction(formData: FormData) {
         optional.cardDesign = JSON.parse(rawDesign) as Prisma.InputJsonValue;
       } catch {
         // ignore malformed design JSON; leave the stored design untouched
+      }
+    }
+  }
+
+  // Enabling cashback consumes a program slot, so block turning it on when the
+  // plan's program limit is already full. Editing an already-enabled cashback
+  // program (or turning it off) is never blocked.
+  if (parsed.data.enabled) {
+    const existing = await prisma.businessCashbackSettings.findUnique({
+      where: { businessId: user.businessId },
+      select: { enabled: true },
+    });
+    if (!existing?.enabled) {
+      const subscription = await prisma.businessSubscription.findFirst({
+        where: { businessId: user.businessId, status: { in: commerciallyUsableStatuses } },
+        orderBy: { createdAt: "desc" },
+        include: { subscriptionPlan: true },
+      });
+      const maxPrograms = subscription?.subscriptionPlan.maxLoyaltyPrograms ?? 1;
+      const loyaltyProgramCount = await prisma.loyaltyProgram.count({ where: { businessId: user.businessId } });
+      if (programsUsedTowardLimit(loyaltyProgramCount, true) > maxPrograms) {
+        fail(failPath, limitReachedMessage("program", maxPrograms));
       }
     }
   }

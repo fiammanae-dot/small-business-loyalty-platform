@@ -6,6 +6,7 @@ import { DashboardPageLayout } from "@/components/layouts";
 import { ButtonLink, MetricCard, ProgressBar, SectionCard as UiSectionCard, StatusBadge as UiStatusBadge, Timeline, TimelineItem } from "@/components/ui";
 import { getBusinessDisplayName, getBusinessTypeDisplayName } from "@/lib/business-display";
 import { getBusinessOwnerContext, getCurrentPlan } from "@/lib/business-owner";
+import { programsUsedTowardLimit } from "@/lib/subscriptions";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { getPlanComplianceSummary, type PlanComplianceSummary } from "@/lib/plan-compliance";
 import { requireSupportBusinessContext } from "@/lib/support-sessions";
@@ -314,7 +315,7 @@ export default async function BusinessDashboard({
               customerGrowth={newCustomersToday > 0 ? "Growing today" : "Needs activity"}
               staffCount={staffCount}
               branchCount={branchCount}
-              activePrograms={loyaltyPrograms}
+              activePrograms={programsUsedTowardLimit(loyaltyPrograms, Boolean(business.cashbackSettings?.enabled))}
               branchLimit={plan?.maxBranches ?? null}
               programLimit={plan?.maxLoyaltyPrograms ?? null}
               planCompliance={planCompliance}

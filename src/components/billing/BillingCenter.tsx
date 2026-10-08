@@ -19,7 +19,7 @@ import { getBusinessOwnerContext, getCurrentPlan, getCurrentSubscription } from 
 import { formatDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { formatBillingCycle, formatPlanPrice } from "@/lib/subscription-plans";
-import { getSubscriptionRemainingDays, subscriptionDisplayDate, subscriptionStatusLabels } from "@/lib/subscriptions";
+import { getSubscriptionRemainingDays, programsUsedTowardLimit, subscriptionDisplayDate, subscriptionStatusLabels } from "@/lib/subscriptions";
 import { AlertTriangle, ArrowUpRight, Download, FileText, ReceiptText } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -42,7 +42,7 @@ export async function BillingCenter() {
   const overdueInvoices = invoices.filter((invoice) => getInvoiceDisplayStatus(invoice) === "OVERDUE").length;
   const issuedInvoices = invoices.filter((invoice) => getInvoiceDisplayStatus(invoice) === "ISSUED").length;
   const branchesUsed = business._count.branches;
-  const programsUsed = business._count.loyaltyPrograms;
+  const programsUsed = programsUsedTowardLimit(business._count.loyaltyPrograms, Boolean(business.cashbackSettings?.enabled));
   const branchLimit = currentPlan?.maxBranches ?? 0;
   const programLimit = currentPlan?.maxLoyaltyPrograms ?? 0;
   const branchTone = usageTone(branchesUsed, branchLimit);

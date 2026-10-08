@@ -36,6 +36,7 @@ type TenantRecord = Prisma.BusinessGetPayload<{
     users: { select: { id: true; name: true; email: true; role: true; status: true } };
     customerMemberships: { select: { id: true } };
     loyaltyPrograms: { select: { id: true; active: true } };
+    cashbackSettings: { select: { enabled: true } };
     scanEvents: { select: { id: true } };
     activityAlerts: { select: { id: true; status: true } };
     subscriptions: { include: { subscriptionPlan: true } };
@@ -69,6 +70,7 @@ export default async function PlatformTenantCenterPage({
         users: { select: { id: true, name: true, email: true, role: true, status: true }, orderBy: { createdAt: "asc" } },
         customerMemberships: { select: { id: true } },
         loyaltyPrograms: { select: { id: true, active: true } },
+        cashbackSettings: { select: { enabled: true } },
         scanEvents: { select: { id: true } },
         activityAlerts: { where: { status: { in: activeAlertStatuses } }, select: { id: true, status: true } },
         subscriptions: { orderBy: { createdAt: "desc" }, take: 1, include: { subscriptionPlan: true } },
@@ -295,7 +297,7 @@ function TenantCard({ tenant }: { tenant: DecoratedTenant }) {
 
       <div className="mt-3 grid grid-cols-3 gap-2">
         <StatTile value={tenant.branches.length} label="Branches" />
-        <StatTile value={tenant.loyaltyPrograms.length} label="Programs" />
+        <StatTile value={tenant.loyaltyPrograms.length + (tenant.cashbackSettings?.enabled ? 1 : 0)} label="Programs" />
         <StatTile value={tenant.customerMemberships.length} label="Customers" />
       </div>
 
