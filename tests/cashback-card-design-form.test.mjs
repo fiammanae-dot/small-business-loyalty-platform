@@ -50,6 +50,8 @@ test("the cashback setup is a two-step wizard like stamp/membership", () => {
   assert.match(form, /useState<1 \| 2>\(1\)/);
   assert.match(form, /Step \{step\} of 2/);
   assert.match(form, /Continue to card design/);
+  // step 1 can never submit the form; only the final step saves
+  assert.match(form, /if \(step !== 2\) event\.preventDefault\(\)/);
   // step 1 = rules, step 2 = design
   assert.match(form, /step === 1 \? "grid gap-5" : "hidden"/);
   assert.match(form, /step === 2 \? "grid gap-6" : "hidden"/);
