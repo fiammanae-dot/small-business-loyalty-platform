@@ -1014,7 +1014,7 @@ async function resolveScanCashback(
     where: { scanToken },
     select: {
       businessCustomerMembership: {
-        select: { id: true, businessId: true, createdBranchId: true },
+        select: { id: true, businessId: true, createdBranchId: true, cashbackRateOverride: true },
       },
     },
   });
@@ -1070,7 +1070,7 @@ export async function addCashbackFromScanAction(formData: FormData) {
       actorUserId: user.id,
       billAmount: data.billAmount,
       invoiceNumber: data.invoiceNumber,
-      ratePercent: Number(settings.ratePercent),
+      ratePercent: membership.cashbackRateOverride != null ? Number(membership.cashbackRateOverride) : Number(settings.ratePercent),
       currency: settings.currency,
       maxBillAmount: settings.maxBillAmount != null ? Number(settings.maxBillAmount) : null,
       idempotencyKey: data.idempotencyKey,
