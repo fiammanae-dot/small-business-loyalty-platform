@@ -373,7 +373,7 @@ function CustomerTableRow({ row, tiersVisible }: { row: CustomerRow; tiersVisibl
           aria-label={`Open ${row.customerName} Customer 360`}
           className="flex min-w-0 items-center gap-2.5 focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary,#16A34A)] focus-visible:ring-offset-2"
         >
-          <CustomerAvatar name={row.customerName} tier={tiersVisible ? row.tier : null} rewardReady={row.rewardReady} />
+          <CustomerAvatar name={row.customerName} tier={tiersVisible && !row.progress?.isMembership ? row.tier : null} rewardReady={row.rewardReady} />
           <span className="min-w-0">
             <span className="block truncate font-semibold text-[#171A21] transition group-hover:business-text">{row.customerName}</span>
             <span className="block truncate text-xs text-[#7A8091]">{formatUaePhoneDisplay(row.raw.normalizedPhone)}</span>
@@ -383,7 +383,7 @@ function CustomerTableRow({ row, tiersVisible }: { row: CustomerRow; tiersVisibl
       </td>
       {tiersVisible ? (
         <DataTableCell>
-          <TierBadge tier={row.tier} />
+          {row.progress?.isMembership ? <span className="text-sm text-[#9AA0AD]">—</span> : <TierBadge tier={row.tier} />}
         </DataTableCell>
       ) : null}
       <DataTableCell>
@@ -413,7 +413,7 @@ function CustomerMobileCard({ row, tiersVisible }: { row: CustomerRow; tiersVisi
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
-          <CustomerAvatar name={row.customerName} tier={tiersVisible ? row.tier : null} rewardReady={row.rewardReady} />
+          <CustomerAvatar name={row.customerName} tier={tiersVisible && !row.progress?.isMembership ? row.tier : null} rewardReady={row.rewardReady} />
           <div className="min-w-0">
             <p className="flex items-center gap-1 truncate font-semibold text-[#171A21]">
               {row.customerName}
@@ -427,7 +427,7 @@ function CustomerMobileCard({ row, tiersVisible }: { row: CustomerRow; tiersVisi
           {row.status}
         </StatusBadge>
       </div>
-      {tiersVisible ? (
+      {tiersVisible && !row.progress?.isMembership ? (
         <div className="mt-2.5 flex flex-wrap gap-1.5">
           <TierBadge tier={row.tier} />
         </div>
