@@ -38,12 +38,14 @@ test("dashboard customer surfaces gate tiers on membership", () => {
   assert.match(list, /tiersVisible \? \[\{ key: "vip"/);
   assert.match(list, /tiersVisible \? <FilterSelect name="tier"/);
   assert.match(list, /tiersVisible \? <DataTableHeadCell[^>]*>Tier<\/DataTableHeadCell>/);
-  assert.match(list, /tiersVisible \? \(\s*<DataTableCell>\s*<TierBadge/);
+  // Within the tier column, a membership customer's row shows no tier badge (em dash instead).
+  assert.match(list, /row\.progress\?\.isMembership \? <span[^>]*>—<\/span> : <TierBadge tier=\{row\.tier\}/);
   const detail = read("src/app/dashboard/customers/[id]/page.tsx");
   assert.match(detail, /const tiersVisible = areTiersVisible\(business\.membershipSettings\?\.enabled\)/);
-  assert.match(detail, /tiersVisible \? <StatusBadge tone="business">\{customerTier\.badgeIcon\}/);
+  assert.match(detail, /const showTier = tiersVisible && !primaryIsMembership/);
+  assert.match(detail, /showTier \? <StatusBadge tone="business">\{customerTier\.badgeIcon\}/);
   // The Overview tab's "Tier status" panel is gated too.
-  assert.match(detail, /tiersVisible \? <TierDetailsPanel/);
+  assert.match(detail, /showTier \? <TierDetailsPanel/);
 });
 
 test("branch and staff customer surfaces gate tiers on membership", () => {

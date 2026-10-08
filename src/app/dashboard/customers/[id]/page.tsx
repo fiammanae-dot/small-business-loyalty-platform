@@ -346,6 +346,8 @@ export default async function CustomerProfilePage({
   const primaryAppleWalletUrl = primaryProgram ? `/api/wallet/apple/${primaryProgram.scanToken}` : null;
   const primaryRewardReady = Boolean(primaryProgram && rewardStatusFor(primaryProgram).rewardReady);
   const primaryIsMembership = Boolean(primaryProgram?.loyaltyProgram.isMembership);
+  // Tiers are hidden for a customer whose primary program is a membership package.
+  const showTier = tiersVisible && !primaryIsMembership;
   const membershipMode = Boolean(business.membershipSettings?.enabled);
   const referralStatus = membership.referralCode ? "ACTIVE" : "NOT_CONFIGURED";
 return (
@@ -356,10 +358,10 @@ return (
         <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
           <div className="flex min-w-0 items-start gap-4">
             <div className="relative shrink-0">
-              <div className={`rounded-full p-[3px] ${tiersVisible && customerTier.isVip ? "bg-[#111827]" : "business-bg-soft"}`}>
+              <div className={`rounded-full p-[3px] ${showTier && customerTier.isVip ? "bg-[#111827]" : "business-bg-soft"}`}>
                 <Avatar name={customerName} className="h-16 w-16 border-2 border-white text-xl" />
               </div>
-              {tiersVisible && customerTier.isVip ? (
+              {showTier && customerTier.isVip ? (
                 <span className="absolute -bottom-1 -right-1 flex items-center gap-0.5 rounded-full border-2 border-white bg-[#111827] px-1.5 py-0.5 text-[10px] font-bold text-yellow-300">
                   <Crown className="h-3 w-3" aria-hidden /> VIP
                 </span>
@@ -369,7 +371,7 @@ return (
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="break-words text-2xl font-semibold text-[#111827]">{customerName}</h2>
                 <StatusBadge tone={membership.status === "ACTIVE" ? "success" : "neutral"}>{membership.status.toLowerCase()}</StatusBadge>
-                {tiersVisible ? <StatusBadge tone="business">{customerTier.badgeIcon} {customerTier.badgeLabel}</StatusBadge> : null}
+                {showTier ? <StatusBadge tone="business">{customerTier.badgeIcon} {customerTier.badgeLabel}</StatusBadge> : null}
                 {primaryRewardReady ? <StatusBadge tone="warning">Reward ready</StatusBadge> : null}
               </div>
               <div className="mt-2.5 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-[#6B7280]">
@@ -518,7 +520,7 @@ return (
                 </div>
                 <div className="grid min-w-0 gap-5">
                   <ProfileSummaryCard membership={membership} />
-                  {tiersVisible ? <TierDetailsPanel customerTier={customerTier} rewardRedemptionsCount={rewardRedemptions.length} totalBonusStamps={totalBonusStamps} activePrograms={activePrograms} joinedAt={membership.joinedAt} /> : null}
+                  {showTier ? <TierDetailsPanel customerTier={customerTier} rewardRedemptionsCount={rewardRedemptions.length} totalBonusStamps={totalBonusStamps} activePrograms={activePrograms} joinedAt={membership.joinedAt} /> : null}
                 </div>
               </div>
             ),
