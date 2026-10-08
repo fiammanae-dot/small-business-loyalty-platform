@@ -93,8 +93,14 @@ export async function drawStampStripPng(earned: number, total: number, emoji?: s
  * forever-cache key AND it changes the moment a stamp is added - which is what
  * makes Google fetch the new one instead of serving the old from its cache.
  */
+// Bump when the drawing changes so the immutable, year-long cache (CDN, Apple
+// and Google) is bypassed and every pass refetches the new picture. Hex-safe so
+// it fits the route's slug pattern.
+const STRIP_LAYOUT_VERSION = "a2";
+
 export function stampImagePath(programUuid: string, earned: number, total: number, emoji?: string | null): string {
   const { emoji: resolved } = findStampIcon(emoji);
-  const tag = [...resolved].map((ch) => ch.codePointAt(0)!.toString(16)).join("-");
+  const icon = [...resolved].map((ch) => ch.codePointAt(0)!.toString(16)).join("-");
+  const tag = `${STRIP_LAYOUT_VERSION}-${icon}`;
   return `/api/wallet/stamps/${programUuid}/${earned}-of-${total}-${tag}.png`;
 }

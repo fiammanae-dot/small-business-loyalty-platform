@@ -15,7 +15,7 @@ import { prisma } from "@/lib/prisma";
  */
 export const dynamic = "force-dynamic";
 
-const SLUG = /^(\d{1,2})-of-(\d{1,2})-([0-9a-f-]{1,24})\.png$/;
+const SLUG = /^(\d{1,2})-of-(\d{1,2})-([0-9a-f-]{1,32})\.png$/;
 
 export async function GET(
   _request: NextRequest,
