@@ -38,6 +38,16 @@ export function limitReachedMessage(kind: "branch" | "program", max: number) {
   return `Your current plan allows up to ${max} ${label}${max === 1 ? "" : "s"}. Upgrade your plan to add more.`;
 }
 
+/**
+ * Cashback is a business-wide program that occupies one slot in a plan's
+ * program limit, counted alongside each stamp/membership loyalty program.
+ * Use this everywhere program usage is shown or enforced so the platform
+ * counts cashback consistently.
+ */
+export function programsUsedTowardLimit(loyaltyProgramCount: number, cashbackEnabled: boolean) {
+  return loyaltyProgramCount + (cashbackEnabled ? 1 : 0);
+}
+
 export function subscriptionDisplayDate(subscription?: Pick<BusinessSubscription, "expiryDate" | "endDate"> | null) {
   return subscription?.expiryDate ?? subscription?.endDate ?? null;
 }

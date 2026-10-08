@@ -22,7 +22,7 @@ import {
   type ProgramRewardRow,
 } from "@/lib/program-rewards";
 import { generateScanToken } from "@/lib/scan";
-import { commerciallyUsableStatuses, limitReachedMessage } from "@/lib/subscriptions";
+import { commerciallyUsableStatuses, limitReachedMessage, programsUsedTowardLimit } from "@/lib/subscriptions";
 import { summarizeWalletSyncForUser, syncWalletProvidersForProgram } from "@/lib/wallet-sync";
 import { hasWalletRelevantProgramChange } from "@/lib/wallet-sync/change-detection";
 import { enqueueWalletSync } from "@/lib/wallet-sync/enqueue";
@@ -155,7 +155,12 @@ export async function createProgramAction(formData: FormData) {
     include: { subscriptionPlan: true },
   });
   const maxPrograms = subscription?.subscriptionPlan.maxLoyaltyPrograms ?? 1;
-  const programCount = await prisma.loyaltyProgram.count({ where: { businessId: user.businessId } });
+  const [loyaltyProgramCount, cashback] = await Promise.all([
+    prisma.loyaltyProgram.count({ where: { businessId: user.businessId } }),
+    prisma.businessCashbackSettings.findUnique({ where: { businessId: user.businessId }, select: { enabled: true } }),
+  ]);
+  // Cashback occupies a program slot, so it counts against the plan limit.
+  const programCount = programsUsedTowardLimit(loyaltyProgramCount, Boolean(cashback?.enabled));
   if (programCount >= maxPrograms) {
     fail(path, limitReachedMessage("program", maxPrograms));
   }
