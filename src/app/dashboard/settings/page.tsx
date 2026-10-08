@@ -4,7 +4,9 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { BusinessLogoAvatar } from "@/components/BusinessLogoAvatar";
 import { BrandAssetsCenter } from "@/components/BrandAssetsCenter";
 import { ButtonLink, EmptyState, MetricCard, PageIntro, SectionCard, StatusBadge } from "@/components/ui";
-import { saveAbusePolicyAction, saveCashbackSettingsAction, saveCooldownRuleAction, saveCustomerTierSettingsAction, saveMembershipSettingsAction, saveScannerSettingsAction } from "@/app/dashboard/actions";
+import { saveAbusePolicyAction, saveCashbackSettingsAction, saveCooldownRuleAction, saveCustomerTierSettingsAction, saveMembershipSettingsAction, saveScannerSettingsAction, updateBusinessProfileAction } from "@/app/dashboard/actions";
+import { businessTypeOptions } from "@/lib/platform-options";
+import { RequiredMark } from "@/components/ui/RequiredMark";
 import { saveSupportAccessPolicyAction } from "@/app/platform/businesses/support-actions";
 import { sendWhatsAppTestMessageAction } from "@/app/dashboard/settings/whatsapp-actions";
 import { getBusinessOwnerContext, getCurrentPlan, getCurrentSubscription } from "@/lib/business-owner";
@@ -163,7 +165,35 @@ export default async function BusinessSettingsPage({ searchParams }: { searchPar
 
 function BusinessProfileSection({ business, user }: { business: Awaited<ReturnType<typeof getBusinessOwnerContext>>["business"]; user: Awaited<ReturnType<typeof getBusinessOwnerContext>>["user"] }) {
   const primaryBranch = business.branches[0];
-  return <SectionCard title="Business Profile" description="Core identity and public-facing business information."><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3"><Item label="Business Name" value={business.name} /><Item label="Business Type" value={businessTypeLabels[business.businessType]} /><Item label="Owner Name" value={user.name} /><Item label="Owner Email" value={user.email} /><Item label="Phone" value="Not configured" /><Item label="Address" value={primaryBranch ? `${primaryBranch.address}, ${primaryBranch.city}, ${primaryBranch.country}` : "No branch address configured"} /><Item label="Timezone" value="Business default" /><Item label="Language" value="English" /><Item label="Logo" value={business.branding?.logoUrl ? "Configured" : "Not configured"} /></div></SectionCard>;
+  return (
+    <SectionCard title="Business Profile" description="Core identity and public-facing business information.">
+      <form action={updateBusinessProfileAction} className="grid gap-4">
+        <CsrfInput scope="dashboard:business-profile" />
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="min-w-0 space-y-2">
+            <span className="text-sm font-medium text-[#111827]">Business Name<RequiredMark /></span>
+            <input name="name" defaultValue={business.name} required className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring business-border" />
+          </label>
+          <label className="min-w-0 space-y-2">
+            <span className="text-sm font-medium text-[#111827]">Business Type</span>
+            <select name="businessType" defaultValue={business.businessType} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring business-border">
+              {businessTypeOptions.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
+            </select>
+          </label>
+        </div>
+        <button type="submit" className="h-11 w-fit rounded-md business-button px-4 text-sm font-semibold text-white">Save business profile</button>
+      </form>
+      <div className="mt-5 grid gap-3 border-t border-[#EEF1F4] pt-5 md:grid-cols-2 xl:grid-cols-3">
+        <Item label="Owner Name" value={user.name} />
+        <Item label="Owner Email" value={user.email} />
+        <Item label="Phone" value="Not configured" />
+        <Item label="Address" value={primaryBranch ? `${primaryBranch.address}, ${primaryBranch.city}, ${primaryBranch.country}` : "No branch address configured"} />
+        <Item label="Timezone" value="Business default" />
+        <Item label="Language" value="English" />
+        <Item label="Logo" value={business.branding?.logoUrl ? "Configured" : "Not configured"} />
+      </div>
+    </SectionCard>
+  );
 }
 function SecuritySection({ user, twoFactorEnabled, twoFactorRequired, unusedBackupCodes }: { user: Awaited<ReturnType<typeof getBusinessOwnerContext>>["user"] & { passwordChangedAt?: Date | null }; twoFactorEnabled: boolean; twoFactorRequired: boolean; unusedBackupCodes: number }) { return <SectionCard title="Security" description="Account access and session-related information for the Business Owner."><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4"><Item label="Password" value="Managed through secure account flow" /><Item label="Two-factor status" value={twoFactorEnabled ? `Enabled (${unusedBackupCodes} backup codes left)` : twoFactorRequired ? "Required - setup pending" : "Not enabled"} /><Item label="Recent password change" value={user.passwordChangedAt ? formatDate(user.passwordChangedAt) : "Not recorded"} /><Item label="Active sessions" value="Current session managed automatically" /></div><div className="mt-4 flex flex-wrap gap-2"><ButtonLink href="/change-password" variant="outline">Reset Password</ButtonLink><ButtonLink href="/account/two-factor/setup" variant="outline">{twoFactorEnabled ? "Manage Two-Factor Authentication" : "Set Up Two-Factor Authentication"}</ButtonLink></div></SectionCard>; }
 function WhatsAppAutomationSection({ channel }: { channel: { connectionStatus: string; welcomeTemplateName: string; welcomeTemplateStatus: string; lastErrorMessage: string | null; lastCheckedAt: Date | null } | null }) {

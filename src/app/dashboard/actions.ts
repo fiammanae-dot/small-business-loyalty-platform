@@ -193,14 +193,14 @@ function generateTemporaryPassword() {
 }
 
 export async function updateBusinessProfileAction(formData: FormData) {
-  validateActionSecurity(formData, "dashboard:business-profile", "/dashboard/profile");
+  validateActionSecurity(formData, "dashboard:business-profile", "/dashboard/settings");
   const user = await requireBusinessOwner();
   const parsed = profileSchema.safeParse({
     name: getString(formData, "name"),
     businessType: getString(formData, "businessType"),
   });
 
-  if (!parsed.success) fail("/dashboard/profile", parsed.error.issues[0]?.message ?? "Validation failed.");
+  if (!parsed.success) fail("/dashboard/settings", parsed.error.issues[0]?.message ?? "Validation failed.");
 
   const businessBeforeUpdate = await prisma.business.findUnique({
     where: { id: user.businessId },
@@ -226,8 +226,8 @@ export async function updateBusinessProfileAction(formData: FormData) {
   }
 
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/profile");
-  redirect("/dashboard/profile?success=Business profile updated.");
+  revalidatePath("/dashboard/settings");
+  redirect("/dashboard/settings?success=Business profile updated.");
 }
 
 export async function saveBranchAction(formData: FormData) {
