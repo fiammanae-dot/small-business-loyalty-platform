@@ -39,15 +39,22 @@ export function drawStampStripSvg(earned: number, total: number, emoji?: string 
 
   const rows = rowsFor(safeTotal);
   const perRow = Math.max(...rows);
-  const size = Math.min(MAX_ICON, Math.floor((WIDTH - 120) / (perRow * 1.45)));
+  // Leave a wide horizontal margin: Apple centre-crops the strip image to its
+  // own banner ratio, so the stamps must sit well inside the edges to survive.
+  const size = Math.min(MAX_ICON, Math.floor((WIDTH - 220) / (perRow * 1.45)));
   const gap = size * 1.45;
   const rowGap = size * 1.35;
-  const height = Math.round(rows.length * size + (rows.length - 1) * (rowGap - size) + 120);
+  const blockHeight = rows.length * size + (rows.length - 1) * (rowGap - size);
+  // Keep the whole picture no wider than ~2.4:1 so Apple's strip banner (which
+  // is the taller variant when the pass has no primary field) shows every stamp
+  // instead of cropping the outer ones. The stamps are centred in the height.
+  const height = Math.max(Math.round(blockHeight + 120), Math.round(WIDTH / 2.4));
+  const yStart = Math.round((height - blockHeight) / 2);
 
   let placed = 0;
   const stamps: string[] = [];
   rows.forEach((count, rowIndex) => {
-    const y = 60 + rowIndex * rowGap;
+    const y = yStart + rowIndex * rowGap;
     const startX = (WIDTH - ((count - 1) * gap + size)) / 2;
     for (let i = 0; i < count; i += 1) {
       const x = startX + i * gap;
