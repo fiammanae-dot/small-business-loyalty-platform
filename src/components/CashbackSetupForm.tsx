@@ -60,7 +60,16 @@ export function CashbackSetupForm({
   }
 
   return (
-    <form action={saveCashbackSettingsAction} className="grid gap-6">
+    <form
+      action={saveCashbackSettingsAction}
+      onSubmit={(event) => {
+        // Multi-step wizard: only the final "Save cashback" button (step 2) may
+        // submit. Guard against any accidental submission from step 1 (e.g. the
+        // "Continue" button or Enter) so continuing never saves prematurely.
+        if (step !== 2) event.preventDefault();
+      }}
+      className="grid gap-6"
+    >
       <input type="hidden" name={csrfName} value={csrfToken} />
       <input type="hidden" name="redirectTo" value="/dashboard/programs" />
 
