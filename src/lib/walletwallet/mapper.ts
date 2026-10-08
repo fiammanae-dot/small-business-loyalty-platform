@@ -29,7 +29,7 @@ function hexColor(value: string | null | undefined): string | undefined {
  * and logo brand the card, and the uploaded hero photo becomes the top banner
  * (stripURL) - the banner-at-top look the client's mockup wanted.
  */
-export async function buildWalletWalletPassBody(membership: GoogleWalletProgramMembership): Promise<WalletWalletPassBody> {
+export async function buildWalletWalletPassBody(membership: GoogleWalletProgramMembership, options?: { notification?: string }): Promise<WalletWalletPassBody> {
   const customer = membership.businessCustomerMembership;
   const business = customer.business;
   const program = membership.loyaltyProgram;
@@ -96,7 +96,7 @@ export async function buildWalletWalletPassBody(membership: GoogleWalletProgramM
   // position must never change between create and update (fields are keyed by
   // order), so it stays first.
   const backFields: WalletWalletField[] = [
-    { label: "Notifications", value: " ", changeMessage: "%@" },
+    { label: "Notifications", value: options?.notification?.trim() || " ", changeMessage: "%@" },
     { label: "Program", value: program.name },
     { label: "Business", value: businessName },
     { label: "Member", value: customerName },
@@ -150,7 +150,7 @@ export type FeaturePassCustomer = {
  * that shows the holder's name and their cashback balance only. The barcode is
  * the customer's card URL so staff can pull them up to add or spend cashback.
  */
-export async function buildCashbackPassBody(customer: FeaturePassCustomer): Promise<WalletWalletPassBody> {
+export async function buildCashbackPassBody(customer: FeaturePassCustomer, options?: { notification?: string }): Promise<WalletWalletPassBody> {
   const branding = resolveBranding(customer.business.branding);
   const businessName = customer.business.name;
   const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim();
@@ -188,7 +188,7 @@ export async function buildCashbackPassBody(customer: FeaturePassCustomer): Prom
     primaryFields: (hasBanner ? [] : [{ label: "Balance", value: balance, changeMessage: "Balance: %@" }]) as WalletWalletField[],
     secondaryFields: secondaryFields,
     backFields: [
-      { label: "Notifications", value: " ", changeMessage: "%@" },
+      { label: "Notifications", value: options?.notification?.trim() || " ", changeMessage: "%@" },
       { label: "Program", value: cardName },
       { label: "Business", value: businessName },
       { label: "Member", value: customerName },

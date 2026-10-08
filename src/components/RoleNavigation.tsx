@@ -30,8 +30,7 @@ import {
   Gift,
   UserPlus,
   Users,
-  Megaphone,
-} from "lucide-react";
+  } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { AuthUser } from "@/lib/session";
 
@@ -46,6 +45,8 @@ type NavigationItem = {
   icon: LucideIcon;
   description?: string;
   accent?: boolean;
+  /** Extra routes that should also highlight this item (e.g. a sibling tab). */
+  activePaths?: string[];
 };
 
 const businessOwnerNavigationGroups: Array<{ label: string; items: NavigationItem[] }> = [
@@ -64,8 +65,7 @@ const businessOwnerNavigationGroups: Array<{ label: string; items: NavigationIte
     items: [
       { href: "/dashboard/programs", label: "Programs", icon: Sparkles },
       { href: "/dashboard/referrals", label: "Referrals", icon: Share2 },
-      { href: "/dashboard/messages", label: "Messages", icon: MessageSquare },
-      { href: "/dashboard/wallet-broadcast", label: "Wallet message", icon: Megaphone },
+      { href: "/dashboard/wallet-broadcast", label: "Messages", icon: MessageSquare, activePaths: ["/dashboard/messages"] },
     ],
   },
   {
@@ -96,8 +96,7 @@ const mobileMoreItems: NavigationItem[] = [
   { href: "/dashboard/support-history", label: "Support History", icon: ShieldCheck },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
   { href: "/dashboard/notifications", label: "Alerts", icon: Bell },
-  { href: "/dashboard/messages", label: "Messages", icon: MessageSquare },
-  { href: "/dashboard/wallet-broadcast", label: "Wallet message", icon: Megaphone },
+  { href: "/dashboard/wallet-broadcast", label: "Messages", icon: MessageSquare, activePaths: ["/dashboard/messages"] },
 ];
 
 const platformMobilePrimaryItems: NavigationItem[] = [
@@ -145,7 +144,7 @@ export function PlatformSidebarNav() {
   return (
     <nav className="grid gap-1" aria-label="Platform navigation">
       {platformSidebarItems.map((item) => {
-        const active = isActivePath(pathname, item.href);
+        const active = isActivePath(pathname, item.href, item.activePaths);
 
         return (
           <Link
@@ -229,7 +228,7 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
     return null;
   }
 
-  const activeMoreItem = mobileMoreItems.find((item) => isActivePath(pathname, item.href));
+  const activeMoreItem = mobileMoreItems.find((item) => isActivePath(pathname, item.href, item.activePaths));
   const moreActive = Boolean(activeMoreItem);
 
   return (
@@ -255,7 +254,7 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
             </div>
             <div className="grid max-h-[calc(72vh-56px)] grid-cols-2 gap-2 overflow-y-auto px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3">
               {mobileMoreItems.map((item) => {
-                const active = isActivePath(pathname, item.href);
+                const active = isActivePath(pathname, item.href, item.activePaths);
 
                 return (
                   <Link
@@ -293,7 +292,7 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
       >
         <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
           {mobilePrimaryItems.map((item) => {
-            const active = isActivePath(pathname, item.href);
+            const active = isActivePath(pathname, item.href, item.activePaths);
 
             return (
               <Link
@@ -364,7 +363,7 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
             </div>
             <div className="grid max-h-[calc(72vh-56px)] grid-cols-2 gap-2 overflow-y-auto px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3">
               {platformMobileMoreItems.map((item) => {
-                const active = isActivePath(pathname, item.href);
+                const active = isActivePath(pathname, item.href, item.activePaths);
 
                 return (
                   <Link
@@ -402,7 +401,7 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
       >
         <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
           {platformMobilePrimaryItems.map((item) => {
-            const active = isActivePath(pathname, item.href);
+            const active = isActivePath(pathname, item.href, item.activePaths);
 
             return (
               <Link
@@ -450,7 +449,7 @@ export function MobileBranchNavigation({ role }: RoleNavigationProps) {
     >
       <div className="mx-auto grid max-w-sm grid-cols-3 gap-2">
         {branchMobileItems.map((item) => {
-          const active = isActivePath(pathname, item.href);
+          const active = isActivePath(pathname, item.href, item.activePaths);
           return (
             <Link
               key={item.href}
@@ -487,7 +486,7 @@ export function MobileStaffNavigation({ role }: RoleNavigationProps) {
     >
       <div className="mx-auto grid max-w-sm grid-cols-3 gap-2">
         {staffMobileItems.map((item) => {
-          const active = isActivePath(pathname, item.href);
+          const active = isActivePath(pathname, item.href, item.activePaths);
           return (
             <Link
               key={item.href}
@@ -519,7 +518,7 @@ function NavigationLink({
   pathname: string;
   compact?: boolean;
 }) {
-  const active = isActivePath(pathname, item.href);
+  const active = isActivePath(pathname, item.href, item.activePaths);
 
   return (
     <Link
@@ -552,14 +551,11 @@ function NavigationLink({
   );
 }
 
-function isActivePath(pathname: string, href: string) {
-  if (href === "/platform") {
+function isActivePath(pathname: string, href: string, activePaths?: string[]) {
+  const matches = (base: string) => pathname === base || pathname.startsWith(`${base}/`);
+  if (href === "/platform" || href === "/dashboard") {
     return pathname === href;
   }
-
-  if (href === "/dashboard") {
-    return pathname === href;
-  }
-
-  return pathname === href || pathname.startsWith(`${href}/`);
+  if (matches(href)) return true;
+  return (activePaths ?? []).some(matches);
 }

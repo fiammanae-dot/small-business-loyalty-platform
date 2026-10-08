@@ -322,3 +322,38 @@ test("schema and migration add WalletBroadcast with APPLE_WALLET reserved", () =
   assert.match(migration, /'GOOGLE_WALLET', 'APPLE_WALLET'/);
   assert.doesNotMatch(migration, /DROP|ALTER TABLE "(?!wallet_broadcasts)/);
 });
+
+test("with Apple enabled the broadcast reaches both platforms and records a row for each", async () => {
+  const d = actionDeps({
+    sendAppleForBusiness: async () => ({ reached: 3, skipped: 0, failed: 0, notConfigured: false, errors: [], programs: [] }),
+  });
+  const outcome = await policy.runWalletBroadcast(d, { header: "H", body: "B" });
+  assert.equal(outcome.ok, true);
+  assert.equal(outcome.status, "SENT");
+  assert.equal(outcome.reached, 5); // google 2 + apple 3
+  assert.deepEqual(d.recorded.map((r) => r.channel), ["GOOGLE_WALLET", "APPLE_WALLET"]);
+  assert.equal(d.recorded[1].programsReached, 3);
+});
+
+test("Apple alone can carry the broadcast when no one has a Google card", async () => {
+  const d = actionDeps({
+    sendForBusiness: async () => ({ reached: 0, skipped: 0, failed: 0, notConfigured: true, errors: [], programs: [] }),
+    sendAppleForBusiness: async () => ({ reached: 4, skipped: 0, failed: 0, notConfigured: false, errors: [], programs: [] }),
+  });
+  const outcome = await policy.runWalletBroadcast(d, { header: "H", body: "B" });
+  assert.equal(outcome.ok, true);
+  assert.equal(outcome.status, "SENT");
+  assert.equal(outcome.reached, 4);
+});
+
+test("the server action wires the Apple sender, and the Apple sender pushes via the notification field", () => {
+  const action = read("src/app/dashboard/wallet-broadcast/actions.ts");
+  assert.match(action, /sendAppleForBusiness: sendAppleWalletBroadcastForBusiness/);
+  const svc = read("src/lib/walletwallet/service.ts");
+  assert.match(svc, /export async function sendAppleWalletBroadcastForBusiness/);
+  assert.match(svc, /appleWalletPass\.findMany/);
+  assert.match(svc, /appleWalletFeaturePass\.findMany/);
+  assert.match(svc, /\{ notification \}/);
+  const mapper = read("src/lib/walletwallet/mapper.ts");
+  assert.match(mapper, /value: options\?\.notification\?\.trim\(\) \|\| " "/);
+});

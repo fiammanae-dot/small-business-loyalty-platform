@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireBusinessScopedUserOrRedirect } from "@/lib/authz";
 import { validateCsrfForm } from "@/lib/csrf";
 import { sendGoogleWalletBroadcastForBusiness } from "@/lib/google-wallet/service";
+import { sendAppleWalletBroadcastForBusiness } from "@/lib/walletwallet/service";
 import { blockDemoModeExternalAction } from "@/lib/platform-settings";
 import { prisma } from "@/lib/prisma";
 import { runWalletBroadcast, WALLET_BROADCAST_COOLDOWN_STATUSES } from "@/lib/wallet-broadcast/policy";
@@ -61,6 +62,7 @@ export async function sendWalletBroadcastAction(formData: FormData) {
         return last?.sentAt ?? null;
       },
       sendForBusiness: sendGoogleWalletBroadcastForBusiness,
+      sendAppleForBusiness: sendAppleWalletBroadcastForBusiness,
       recordBroadcast: (record) => prisma.walletBroadcast.create({ data: record }),
       now: () => new Date(),
     },
@@ -79,7 +81,7 @@ export async function sendWalletBroadcastAction(formData: FormData) {
   go(
     "success",
     outcome.status === "SENT"
-      ? "Sent. Customers with your card in Google Wallet will see it on their phone shortly."
-      : "Sent to some of your programs. One program could not be reached - see the history below.",
+      ? "Sent. Customers with your card in Apple or Google Wallet will see it on their phone shortly."
+      : "Sent, but some passes could not be reached - see the history below.",
   );
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { CheckCircle2, MessageSquare, Search, XCircle } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
+import { MessagesTabs } from "@/components/MessagesTabs";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { MetricCard } from "@/components/ui/MetricCard";
 import { SectionCard } from "@/components/ui/SectionCard";
@@ -53,6 +54,7 @@ export default async function MessageOutboxPage({
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Message outbox">
+      <MessagesTabs active="outbox" />
       <SectionCard>
         <p className="mb-5 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-800">
           Messages are prepared only and are not sent automatically.
