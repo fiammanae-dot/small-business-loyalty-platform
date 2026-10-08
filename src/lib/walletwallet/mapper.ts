@@ -170,13 +170,12 @@ export async function buildCashbackPassBody(customer: FeaturePassCustomer): Prom
   const themeColors = resolveCardThemeColors({ cardTheme: cs?.cardTheme ?? "BUSINESS_DEFAULT", branding });
   const color = hexColor(themeColors.accent) ?? hexColor(branding.primaryColor) ?? hexColor(branding.buttonColor);
 
-  // When a banner photo is present Apple draws primary fields over it, so keep
-  // primary empty and move the balance into the secondary row (mirrors the
-  // program card's banner handling).
+  // The program name is the top header. The middle row reads Member (left) then
+  // Balance (right); with a banner the balance sits here, and without one it is
+  // the big primary field instead (Apple draws primary fields over a banner).
   const secondaryFields: WalletWalletField[] = [];
-  if (hasBanner) secondaryFields.push({ label: "Balance", value: balance, changeMessage: "Balance: %@" });
-  secondaryFields.push({ label: "Program", value: cardName });
   secondaryFields.push({ label: "Member", value: customerName });
+  if (hasBanner) secondaryFields.push({ label: "Balance", value: balance, changeMessage: "Balance: %@" });
 
   const body: WalletWalletPassBody = {
     barcodeValue: cardUrl,
@@ -185,7 +184,7 @@ export async function buildCashbackPassBody(customer: FeaturePassCustomer): Prom
     logoText: businessName,
     organizationName: businessName,
     description: `${cardName} - ${businessName}`,
-    headerFields: [{ label: "Balance", value: balance, changeMessage: "Cashback: %@" }] as WalletWalletField[],
+    headerFields: [{ label: "Program", value: cardName }] as WalletWalletField[],
     primaryFields: (hasBanner ? [] : [{ label: "Balance", value: balance, changeMessage: "Balance: %@" }]) as WalletWalletField[],
     secondaryFields: secondaryFields,
     backFields: [
