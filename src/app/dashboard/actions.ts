@@ -1254,7 +1254,7 @@ export async function addCashbackAction(formData: FormData) {
 
   const membership = await prisma.businessCustomerMembership.findFirst({
     where: { uuid: data.membershipUuid, businessId: user.businessId },
-    select: { id: true, createdBranchId: true },
+    select: { id: true, createdBranchId: true, cashbackRateOverride: true },
   });
   if (!membership) fail(redirectPath, "Customer not found.");
 
@@ -1267,7 +1267,7 @@ export async function addCashbackAction(formData: FormData) {
       actorUserId: user.id,
       billAmount: data.billAmount,
       invoiceNumber: data.invoiceNumber,
-      ratePercent: Number(settings.ratePercent),
+      ratePercent: membership.cashbackRateOverride != null ? Number(membership.cashbackRateOverride) : Number(settings.ratePercent),
       currency: settings.currency,
       maxBillAmount: settings.maxBillAmount != null ? Number(settings.maxBillAmount) : null,
       idempotencyKey: data.idempotencyKey ?? null,
@@ -1307,7 +1307,7 @@ export async function useCashbackAction(formData: FormData) {
 
   const membership = await prisma.businessCustomerMembership.findFirst({
     where: { uuid: data.membershipUuid, businessId: user.businessId },
-    select: { id: true, createdBranchId: true },
+    select: { id: true, createdBranchId: true, cashbackRateOverride: true },
   });
   if (!membership) fail(redirectPath, "Customer not found.");
 
@@ -1333,4 +1333,51 @@ export async function useCashbackAction(formData: FormData) {
 
   revalidatePath(redirectPath);
   redirect(`${redirectPath}?tab=cashback&success=${encodeURIComponent(`Used ${formatAed(data.amount, settings.currency)} cashback.`)}`);
+}
+
+/**
+ * Set or clear a single customer's cashback rate. A blank value clears the
+ * override so the customer falls back to the business-wide default rate; a
+ * value (0-100) overrides it for that customer only. Owner-only.
+ */
+export async function saveCustomerCashbackRateAction(formData: FormData) {
+  validateActionSecurity(formData, "dashboard:customer-cashback-rate", "/dashboard/customers");
+  const user = await requireBusinessOwnerForWrite();
+  const membershipUuid = getString(formData, "membershipUuid");
+  const redirectPath = membershipUuid ? `/dashboard/customers/${membershipUuid}` : "/dashboard/customers";
+
+  const membership = await prisma.businessCustomerMembership.findFirst({
+    where: { uuid: membershipUuid, businessId: user.businessId },
+    select: { id: true },
+  });
+  if (!membership) fail(redirectPath, "Customer not found.");
+
+  const raw = getString(formData, "ratePercent").trim();
+  let override: number | null;
+  if (raw === "") {
+    override = null;
+  } else {
+    const parsedRate = Number(raw);
+    if (!Number.isFinite(parsedRate) || parsedRate < 0 || parsedRate > 100) {
+      fail(redirectPath, "Cashback rate must be between 0 and 100, or blank to use the default.");
+    }
+    override = Math.round(parsedRate * 100) / 100;
+  }
+
+  await prisma.businessCustomerMembership.update({
+    where: { id: membership.id },
+    data: { cashbackRateOverride: override },
+  });
+
+  await logAuditEvent({
+    actorUserId: user.id,
+    businessId: user.businessId,
+    action: "CUSTOMER_CASHBACK_RATE_UPDATED",
+    entityType: "business_customer_membership",
+    entityId: membership.id,
+    metadata: { cashbackRateOverride: override },
+  });
+
+  revalidatePath(redirectPath);
+  redirect(`${redirectPath}?tab=cashback&success=${encodeURIComponent(override == null ? "Cashback rate reset to the business default." : `Cashback rate set to ${override}% for this customer.`)}`);
 }

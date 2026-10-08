@@ -857,6 +857,8 @@ model BusinessCustomerMembership {
   referralsReceived     Referral[]                  @relation("ReferralReferredMembership")
 
   cashbackBalance      Decimal                  @default(0) @map("cashback_balance") @db.Decimal(12, 2)
+  // Per-customer cashback rate override. NULL = earn the business-wide default.
+  cashbackRateOverride Decimal?                 @map("cashback_rate_override") @db.Decimal(5, 2)
   cashbackTransactions CashbackTransaction[]
   @@unique([businessId, globalCustomerId])
   @@unique([businessId, normalizedPhone])

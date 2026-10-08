@@ -43,7 +43,7 @@ import { progressValue } from "@/lib/programs";
 import { membershipSessionSummary } from "@/lib/membership-sessions";
 import { getScanQrDataUrl, getScanUrl, scanStatusLabel } from "@/lib/scan";
 import { RequiredMark } from "@/components/ui/RequiredMark";
-import { addCashbackAction, manualStampCorrectionAction, toggleCustomerCardAction, toggleProgramScanTokenAction, useCashbackAction } from "@/app/dashboard/actions";
+import { addCashbackAction, manualStampCorrectionAction, saveCustomerCashbackRateAction, toggleCustomerCardAction, toggleProgramScanTokenAction, useCashbackAction } from "@/app/dashboard/actions";
 import { formatAed } from "@/lib/cashback";
 import { randomUUID } from "node:crypto";
 
@@ -499,7 +499,8 @@ return (
                       membershipUuid={membership.uuid}
                       balance={cashbackBalance}
                       currency={cashbackCurrency}
-                      ratePercent={cashbackRate}
+                      defaultRate={cashbackRate}
+                      overrideRate={membership.cashbackRateOverride != null ? Number(membership.cashbackRateOverride) : null}
                       transactions={cashbackLedger}
                     />
                   ),
@@ -1218,13 +1219,15 @@ function CashbackPanel({
   membershipUuid,
   balance,
   currency,
-  ratePercent,
+  defaultRate,
+  overrideRate,
   transactions,
 }: {
   membershipUuid: string;
   balance: number;
   currency: string;
-  ratePercent: number;
+  defaultRate: number;
+  overrideRate: number | null;
   transactions: Array<{
     id: number;
     type: "EARN" | "SPEND" | "REVERSAL";
@@ -1241,6 +1244,7 @@ function CashbackPanel({
   const addKey = randomUUID();
   const spendKey = randomUUID();
   const canSpend = balance > 0;
+  const effectiveRate = overrideRate ?? defaultRate;
   return (
     <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(320px,1.1fr)]">
       <section className="rounded-xl border border-[#E7E9EE] bg-white p-5 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
@@ -1250,6 +1254,17 @@ function CashbackPanel({
           <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">Current balance</p>
           <p className="mt-1 text-3xl font-bold tabular-nums text-[#111827]">{formatAed(balance, currency)}</p>
         </div>
+        <form action={saveCustomerCashbackRateAction} className="mt-4 grid gap-2 rounded-lg border border-[#E7E9EE] bg-[#F8FAFC] p-4">
+          <CsrfInput scope="dashboard:customer-cashback-rate" />
+          <input type="hidden" name="membershipUuid" value={membershipUuid} />
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">Cashback rate for this customer</p>
+          <p className="text-xs text-[#6B7280]">{overrideRate != null ? `Custom rate: ${overrideRate}%.` : `Using the business default (${defaultRate}%).`} Leave blank to use the default.</p>
+          <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-[#475569]">
+            Rate (%)
+            <input name="ratePercent" type="number" min="0" max="100" step="0.01" inputMode="decimal" defaultValue={overrideRate != null ? String(overrideRate) : ""} placeholder={`Default ${defaultRate}%`} className="min-h-10 rounded-md border border-[#D1D5DB] bg-white px-3 text-sm font-semibold text-[#111827]" />
+          </label>
+          <button type="submit" className="min-h-10 rounded-md border border-[#0f766e] px-4 text-sm font-bold text-[#0b544e] transition hover:bg-[#d8ede9]">Save rate</button>
+        </form>
         <form action={addCashbackAction} className="mt-5 grid gap-2">
           <CsrfInput scope="dashboard:cashback-add" />
           <input type="hidden" name="membershipUuid" value={membershipUuid} />
@@ -1262,7 +1277,7 @@ function CashbackPanel({
             Invoice number<RequiredMark />
             <input name="invoiceNumber" type="text" required maxLength={64} placeholder="e.g. INV-1042" className="min-h-10 rounded-md border border-[#D1D5DB] bg-white px-3 text-sm font-semibold text-[#111827]" />
           </label>
-          <p className="text-xs text-[#6B7280]">Adds {ratePercent}% of the amount paid as cashback.</p>
+          <p className="text-xs text-[#6B7280]">Adds {effectiveRate}% of the amount paid as cashback.</p>
           <button type="submit" className="min-h-10 rounded-md bg-[#0f766e] px-4 text-sm font-bold text-white transition hover:bg-[#0b544e]">Add cashback</button>
         </form>
         <form action={useCashbackAction} className="mt-4 grid gap-2 border-t border-[#EEF1F4] pt-4">
