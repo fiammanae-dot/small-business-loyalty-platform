@@ -403,7 +403,7 @@ function CashbackProgramCard({ name, enabled, rate, currency, editHref, members,
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="text-base font-semibold text-[#0F172A]">
-            <Link href={editHref} className="inline-flex max-w-full rounded-sm underline-offset-4 transition hover:text-[var(--business-primary)] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2">
+            <Link href="/dashboard/programs/cashback" className="inline-flex max-w-full rounded-sm underline-offset-4 transition hover:text-[var(--business-primary)] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2">
               <span className="break-words">{name}</span>
             </Link>
           </h3>
@@ -429,12 +429,12 @@ function CashbackProgramCard({ name, enabled, rate, currency, editHref, members,
 
 // Desktop view: cashback rendered as a row in the Program Performance table,
 // mapping its figures onto the same columns the other programs use.
-function CashbackTableRow({ name, enabled, rate, currency, editHref, members, spendBase, given, redeemed, outstanding }: CashbackCardProps) {
+function CashbackTableRow({ name, enabled, rate, currency, members, spendBase, given, redeemed, outstanding }: CashbackCardProps) {
   return (
     <tr>
       <DataTableCell className="font-semibold text-[#0F172A]">
         <Link
-          href={editHref}
+          href="/dashboard/programs/cashback"
           className="inline-flex max-w-full rounded-sm font-semibold text-[#0F172A] underline-offset-4 transition hover:text-[var(--business-primary)] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
         >
           <span className="break-words">{name}</span>
