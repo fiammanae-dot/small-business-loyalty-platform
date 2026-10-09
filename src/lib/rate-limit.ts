@@ -27,7 +27,7 @@ export function isOverThreshold(count: number, maxAttempts: number) {
 const DEFAULT_WINDOW_MINUTES = 15;
 const DEFAULT_MAX_ATTEMPTS = 5;
 
-export type PublicRateLimitScope = "public_join_program";
+export type PublicRateLimitScope = "public_join_program" | "public_join_cashback";
 
 export async function isPublicActionRateLimited({
   scope,

@@ -278,7 +278,7 @@ function CashbackSection({ cashbackEnabled, cashbackRate, maxBill, maxRedemption
   return (
     <SectionCard
       title="Cashback wallet"
-      description="Give customers a cashback balance they can spend on future visits. Staff add a percentage of each bill; the customer spends it later."
+      description="Customers who join the cashback program build a balance they can spend on future visits. Staff add a percentage of each bill; the customer spends it later."
       actions={<StatusBadge tone={cashbackEnabled ? "success" : "neutral"}>{cashbackEnabled ? "Enabled" : "Off"}</StatusBadge>}
     >
       <form action={saveCashbackSettingsAction} className="grid gap-4">

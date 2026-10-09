@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { CopyButton } from "@/components/CopyButton";
 import { DashboardShell } from "@/components/DashboardShell";
 import {
   ButtonLink,
@@ -15,6 +17,7 @@ import {
 } from "@/components/ui";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { formatAed } from "@/lib/cashback";
+import { getCashbackJoinQrDataUrl, getCashbackJoinUrl } from "@/lib/cashback-enrollment";
 import { formatDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
@@ -29,9 +32,10 @@ function cardThemeLabel(theme: string): string {
     .join(" ");
 }
 
-// Cashback is a business-wide program (one BusinessCashbackSettings row), not a
-// LoyaltyProgram with a uuid, so it has its own fixed detail route rather than
-// going through /dashboard/programs/[id]. The programs list links its name here.
+// Cashback is stored as one BusinessCashbackSettings row per business rather
+// than a LoyaltyProgram with a uuid, so it has its own fixed detail route. It
+// behaves like any other program: customers join it (staff enrol them or they
+// use the join QR below) and only members earn or spend cashback.
 export default async function CashbackProgramDetailPage({ searchParams }: { searchParams: Promise<{ success?: string }> }) {
   const { user, business } = await getBusinessOwnerContext();
   const qs = await searchParams;
@@ -41,8 +45,9 @@ export default async function CashbackProgramDetailPage({ searchParams }: { sear
   const enabled = Boolean(settings?.enabled);
   const rate = settings?.ratePercent != null ? settings.ratePercent.toString() : "5";
 
-  const [members, earnAgg, spendAgg, balanceAgg, recent] = await Promise.all([
-    prisma.businessCustomerMembership.count({ where: { businessId: business.id, cashbackTransactions: { some: {} } } }),
+  const memberWhere = { businessId: business.id, cashbackJoinedAt: { not: null } };
+  const [members, earnAgg, spendAgg, balanceAgg, recent, latestMembers] = await Promise.all([
+    prisma.businessCustomerMembership.count({ where: memberWhere }),
     prisma.cashbackTransaction.aggregate({ where: { businessId: business.id, type: "EARN" }, _sum: { amount: true, billAmount: true } }),
     prisma.cashbackTransaction.aggregate({ where: { businessId: business.id, type: "SPEND" }, _sum: { amount: true } }),
     prisma.businessCustomerMembership.aggregate({ where: { businessId: business.id }, _sum: { cashbackBalance: true } }),
@@ -52,7 +57,15 @@ export default async function CashbackProgramDetailPage({ searchParams }: { sear
       take: 10,
       include: { businessCustomerMembership: { select: { firstName: true, lastName: true } } },
     }),
+    prisma.businessCustomerMembership.findMany({
+      where: memberWhere,
+      orderBy: { cashbackJoinedAt: "desc" },
+      take: 10,
+      select: { uuid: true, firstName: true, lastName: true, cashbackJoinedAt: true, cashbackBalance: true },
+    }),
   ]);
+  const joinUrl = settings ? await getCashbackJoinUrl(settings.joinToken) : null;
+  const joinQrCode = settings ? await getCashbackJoinQrDataUrl(settings.joinToken) : null;
   const spendBase = Number(earnAgg._sum.billAmount ?? 0);
   const given = Number(earnAgg._sum.amount ?? 0);
   const redeemed = Number(spendAgg._sum.amount ?? 0);
@@ -64,7 +77,7 @@ export default async function CashbackProgramDetailPage({ searchParams }: { sear
         {qs.success ? <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{qs.success}</p> : null}
         <PageIntro
           eyebrow="Cashback program"
-          description="Cashback is a business-wide program: every customer earns a percentage of what they pay as a balance for future visits."
+          description="Customers who join this program earn a percentage of what they pay as a balance for future visits."
           actions={
             <PageActions>
               <ButtonLink href="/dashboard/programs" variant="outline">Back to Programs</ButtonLink>
@@ -83,10 +96,10 @@ export default async function CashbackProgramDetailPage({ searchParams }: { sear
 
         <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
           <div className="grid gap-5">
-            <SectionCard title="Program Information" description="How cashback is earned and who it applies to.">
+            <SectionCard title="Program Information" description="How cashback is earned and who can earn it.">
               <div className="grid gap-3 md:grid-cols-2">
                 <Info label="Cashback rate" value={rate + "% of each payment"} />
-                <Info label="Applies to" value="All customers" />
+                <Info label="Who earns" value={`Members only (${members.toLocaleString()})`} />
                 <Info label="Status" value={enabled ? "Active" : "Off"} />
                 <Info label="Currency" value={currency} />
                 <Info label="Max bill per transaction" value={settings?.maxBillAmount != null ? formatAed(Number(settings.maxBillAmount), currency) : "No limit"} />
@@ -98,6 +111,29 @@ export default async function CashbackProgramDetailPage({ searchParams }: { sear
           </div>
 
           <div className="grid gap-5">
+            {joinUrl && joinQrCode ? (
+              <SectionCard title="Program Join QR" description="Print or share this QR so customers can join cashback themselves. Staff can also enrol a customer from their profile or the scanner.">
+                <div className="grid gap-4">
+                  <div className="rounded-2xl border border-[#E2E8F0] bg-white p-4 text-center">
+                    <img src={joinQrCode} alt={`${name} join QR code`} className="mx-auto h-52 w-52 rounded-xl bg-white p-2" />
+                    <p className="mt-3 text-sm font-semibold text-[#0F172A]">Scan to join {name}</p>
+                    <p className="mt-1 text-xs text-[#64748B]">{business.name}</p>
+                  </div>
+                  <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">Join link</p>
+                    <p className="mt-2 break-all text-sm font-semibold text-[#0F172A]">{joinUrl}</p>
+                  </div>
+                  <div className="flex flex-wrap items-start gap-2">
+                    <CopyButton value={joinUrl} label="Copy join link" copiedLabel="Join link copied." />
+                    <ButtonLink href={joinUrl} variant="outline" target="_blank" rel="noopener noreferrer">
+                      Open Join Page
+                    </ButtonLink>
+                  </div>
+                  {!enabled ? <p className="text-xs text-[#B45309]">Cashback is off, so this link shows &quot;not available&quot; until you switch it on.</p> : null}
+                </div>
+              </SectionCard>
+            ) : null}
+
             <SectionCard title="Card design" description="Customize the cashback card customers see in their wallet.">
               <div className="grid gap-3">
                 <p className="text-sm text-[#64748B]">Edit the cashback rate, per-transaction caps, card theme and picture in the cashback setup.</p>
@@ -114,6 +150,35 @@ export default async function CashbackProgramDetailPage({ searchParams }: { sear
             </SectionCard>
           </div>
         </div>
+
+        <SectionCard title="Latest members" description="Customers who most recently joined the cashback program.">
+          {latestMembers.length > 0 ? (
+            <DataTable>
+              <DataTableHeader>
+                <tr>
+                  <DataTableHeadCell>Customer</DataTableHeadCell>
+                  <DataTableHeadCell>Joined</DataTableHeadCell>
+                  <DataTableHeadCell>Balance</DataTableHeadCell>
+                </tr>
+              </DataTableHeader>
+              <DataTableBody>
+                {latestMembers.map((member) => (
+                  <tr key={member.uuid}>
+                    <DataTableCell className="font-semibold text-[#0F172A]">
+                      <Link href={`/dashboard/customers/${member.uuid}?tab=cashback`} className="underline-offset-4 hover:underline">
+                        {member.firstName} {member.lastName ?? ""}
+                      </Link>
+                    </DataTableCell>
+                    <DataTableCell>{member.cashbackJoinedAt ? formatDate(member.cashbackJoinedAt) : "-"}</DataTableCell>
+                    <DataTableCell>{formatAed(Number(member.cashbackBalance), currency)}</DataTableCell>
+                  </tr>
+                ))}
+              </DataTableBody>
+            </DataTable>
+          ) : (
+            <EmptyState title="No members yet" description="Enrol customers from their profile or the scanner, or share the join QR." />
+          )}
+        </SectionCard>
 
         <SectionCard title="Recent cashback activity" description="The latest cashback earned and redeemed across your customers.">
           {recent.length > 0 ? (

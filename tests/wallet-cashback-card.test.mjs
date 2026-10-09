@@ -59,6 +59,8 @@ test("the mint route and card button expose the cashback card", () => {
   assert.match(share, /Add Cashback card to Apple Wallet/);
 
   const page = read("src/app/card/[token]/page.tsx");
-  assert.match(page, /const cashbackAppleWalletUrl = membership\.business\.cashbackSettings\?\.enabled \? `\/api\/wallet\/apple\/cashback\/\$\{token\}`/);
+  // Only cashback members get the cashback wallet card.
+  assert.match(page, /membership\.business\.cashbackSettings\?\.enabled && isCashbackMember\(membership\) \? `\/api\/wallet\/apple\/cashback\/\$\{token\}`/);
+  assert.match(route, /if \(!customer\.cashbackJoinedAt\)/);
   assert.match(page, /cashbackAppleWalletUrl=\{cashbackAppleWalletUrl\}/);
 });

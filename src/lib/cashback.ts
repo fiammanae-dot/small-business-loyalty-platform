@@ -49,3 +49,27 @@ export function formatAed(value: number, currency = "AED"): string {
   });
   return `${currency} ${amount}`;
 }
+
+/**
+ * Cashback is a program customers JOIN, like a stamp or membership program.
+ * A customer is a member once `cashbackJoinedAt` is set - by staff at the
+ * counter, by ticking it when the customer is created, or by the customer
+ * joining with the cashback join link. Non-members cannot earn or spend.
+ */
+export function isCashbackMember(customer: { cashbackJoinedAt?: Date | string | null } | null | undefined): boolean {
+  return Boolean(customer?.cashbackJoinedAt);
+}
+
+/** The message staff see when they try to move cashback for a non-member. */
+export const CASHBACK_NOT_JOINED_MESSAGE = "This customer has not joined the cashback program yet. Enrol them first.";
+
+/** The cashback program as a joinable choice on enrolment forms, or null when it is off. */
+export function cashbackProgramOption(
+  settings: { enabled: boolean; name?: string | null; ratePercent?: { toString(): string } | number | null } | null | undefined,
+): { name: string; ratePercent: string } | null {
+  if (!settings?.enabled) return null;
+  return {
+    name: settings.name?.trim() || "Cashback",
+    ratePercent: settings.ratePercent != null ? Number(settings.ratePercent.toString()).toString() : "5",
+  };
+}

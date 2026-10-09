@@ -859,6 +859,10 @@ model BusinessCustomerMembership {
   cashbackBalance      Decimal                  @default(0) @map("cashback_balance") @db.Decimal(12, 2)
   // Per-customer cashback rate override. NULL = earn the business-wide default.
   cashbackRateOverride Decimal?                 @map("cashback_rate_override") @db.Decimal(5, 2)
+  /// When the customer joined the cashback program. NULL = not a member: they
+  /// cannot earn or spend cashback until staff enrol them or they join with the
+  /// cashback join link, exactly like a stamp or membership program.
+  cashbackJoinedAt     DateTime?                @map("cashback_joined_at")
   cashbackTransactions CashbackTransaction[]
   @@unique([businessId, globalCustomerId])
   @@unique([businessId, normalizedPhone])
@@ -1476,6 +1480,8 @@ model BusinessCashbackSettings {
   currency    String   @default("AED")
   maxBillAmount Decimal? @map("max_bill_amount") @db.Decimal(12, 2)
   maxRedemption Decimal? @map("max_redemption") @db.Decimal(12, 2)
+  /// Public self-join link token (/join/cashback/<token>), like loyalty_programs.join_token.
+  joinToken     String   @unique @default(uuid()) @map("join_token") @db.Uuid
   // Program-style identity so cashback is a real program, not just a toggle:
   // its own name and card design (theme, hero image, design JSON), mirroring
   // loyalty_programs. All additive and optional, so existing rows are unaffected.

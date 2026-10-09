@@ -43,8 +43,8 @@ import { progressValue } from "@/lib/programs";
 import { membershipSessionSummary } from "@/lib/membership-sessions";
 import { getScanQrDataUrl, getScanUrl, scanStatusLabel } from "@/lib/scan";
 import { RequiredMark } from "@/components/ui/RequiredMark";
-import { addCashbackAction, manualStampCorrectionAction, saveCustomerCashbackRateAction, toggleCustomerCardAction, toggleProgramScanTokenAction, useCashbackAction } from "@/app/dashboard/actions";
-import { formatAed } from "@/lib/cashback";
+import { addCashbackAction, joinCashbackAction, manualStampCorrectionAction, saveCustomerCashbackRateAction, toggleCustomerCardAction, toggleProgramScanTokenAction, useCashbackAction } from "@/app/dashboard/actions";
+import { formatAed, isCashbackMember } from "@/lib/cashback";
 import { randomUUID } from "node:crypto";
 
 type TimelineItem = {
@@ -499,6 +499,8 @@ return (
                   content: (
                     <CashbackPanel
                       membershipUuid={membership.uuid}
+                      joined={isCashbackMember(membership)}
+                      joinedAt={membership.cashbackJoinedAt}
                       balance={cashbackBalance}
                       currency={cashbackCurrency}
                       defaultRate={cashbackRate}
@@ -1219,6 +1221,8 @@ function startOfDay(value: Date) {
 
 function CashbackPanel({
   membershipUuid,
+  joined,
+  joinedAt,
   balance,
   currency,
   defaultRate,
@@ -1226,6 +1230,8 @@ function CashbackPanel({
   transactions,
 }: {
   membershipUuid: string;
+  joined: boolean;
+  joinedAt: Date | null;
   balance: number;
   currency: string;
   defaultRate: number;
@@ -1243,6 +1249,23 @@ function CashbackPanel({
     branchName: string | null;
   }>;
 }) {
+  if (!joined) {
+    // Cashback is a program customers join, like a stamp program: offer the
+    // enrolment instead of the add/spend forms until they are a member.
+    return (
+      <section className="rounded-xl border border-[#E7E9EE] bg-white p-5 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
+        <h2 className="text-base font-bold tracking-tight text-[#171A21]">Not in the cashback program</h2>
+        <p className="mt-1 text-sm text-[#6B7280]">
+          This customer has not joined the cashback program, so they can&apos;t earn or spend cashback yet. Enrol them to start earning {defaultRate}% back on every payment.
+        </p>
+        <form action={joinCashbackAction} className="mt-4">
+          <CsrfInput scope="dashboard:cashback-join" />
+          <input type="hidden" name="membershipUuid" value={membershipUuid} />
+          <button type="submit" className="min-h-10 rounded-md bg-[#0f766e] px-4 text-sm font-bold text-white transition hover:bg-[#0b544e]">Enrol in cashback</button>
+        </form>
+      </section>
+    );
+  }
   const addKey = randomUUID();
   const spendKey = randomUUID();
   const canSpend = balance > 0;
@@ -1251,7 +1274,7 @@ function CashbackPanel({
     <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(320px,1.1fr)]">
       <section className="rounded-xl border border-[#E7E9EE] bg-white p-5 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
         <h2 className="text-base font-bold tracking-tight text-[#171A21]">Cashback wallet</h2>
-        <p className="mt-1 text-sm text-[#6B7280]">Store credit the customer can spend on future visits.</p>
+        <p className="mt-1 text-sm text-[#6B7280]">Store credit the customer can spend on future visits.{joinedAt ? ` Member since ${formatDate(joinedAt)}.` : ""}</p>
         <div className="mt-4 rounded-lg border border-[#E7E9EE] bg-[#F8FAFC] p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">Current balance</p>
           <p className="mt-1 text-3xl font-bold tabular-nums text-[#111827]">{formatAed(balance, currency)}</p>

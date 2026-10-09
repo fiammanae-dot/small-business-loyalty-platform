@@ -25,8 +25,8 @@ import { extractReferralCode, resolveReferralLandingReferrer } from "@/lib/refer
 import { getNextReward, getReadyRewards, singleCardReward, type CardReward } from "@/lib/rewards";
 import { roleHomePath } from "@/lib/roles";
 import { getCurrentUser, hasActiveBusinessAccess } from "@/lib/session";
-import { addCashbackFromScanAction, issueStampAction, redeemRewardAction, renewMembershipAction, undoStampAction, useCashbackFromScanAction } from "@/app/scan/actions";
-import { formatAed } from "@/lib/cashback";
+import { addCashbackFromScanAction, issueStampAction, joinCashbackFromScanAction, redeemRewardAction, renewMembershipAction, undoStampAction, useCashbackFromScanAction } from "@/app/scan/actions";
+import { formatAed, isCashbackMember } from "@/lib/cashback";
 import { withAlpha } from "@/lib/card-themes";
 import { getReadableForeground } from "@/lib/color-contrast";
 import type { ConfirmationDialogTheme } from "@/components/ui";
@@ -472,7 +472,7 @@ export default async function ScanResultPage({
       ) : null}
 
       {cashbackEnabled ? (
-        <CashbackScanSection token={scanToken} balance={cashbackBalance} currency={cashbackCurrency} ratePercent={cashbackRate} />
+        <CashbackScanSection token={scanToken} joined={isCashbackMember(businessMembership)} balance={cashbackBalance} currency={cashbackCurrency} ratePercent={cashbackRate} />
       ) : null}
 
       {qs.cashback ? (
@@ -1351,15 +1351,32 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
 
 function CashbackScanSection({
   token,
+  joined,
   balance,
   currency,
   ratePercent,
 }: {
   token: string;
+  joined: boolean;
   balance: number;
   currency: string;
   ratePercent: number;
 }) {
+  if (!joined) {
+    // Cashback is a program customers join: enrol first, then add or spend.
+    return (
+      <SectionCard
+        title="Cashback program"
+        description={`This customer is not in the cashback program yet. Enrol them to earn ${ratePercent}% back on every payment.`}
+      >
+        <form action={joinCashbackFromScanAction}>
+          <CsrfInput scope="scan:cashback-join" />
+          <input type="hidden" name="scanToken" value={token} />
+          <button type="submit" className="min-h-11 rounded-md business-button px-4 text-sm font-bold text-white">Enrol in cashback</button>
+        </form>
+      </SectionCard>
+    );
+  }
   const canSpend = balance > 0;
   return (
     <SectionCard

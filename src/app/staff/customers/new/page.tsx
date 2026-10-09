@@ -2,6 +2,7 @@ import { CustomerCreateForm } from "@/components/CustomerCreateForm";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { ReferralReferrerLookupPreview } from "@/components/ReferralReferrerLookupPreview";
+import { cashbackProgramOption } from "@/lib/cashback";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 import { businessTracksVehicles } from "@/lib/vehicles";
@@ -24,7 +25,7 @@ export default async function NewStaffCustomerPage({
       })
     : [];
   const business = user.businessId
-    ? await prisma.business.findUnique({ where: { id: user.businessId }, select: { businessType: true } })
+    ? await prisma.business.findUnique({ where: { id: user.businessId }, select: { businessType: true, cashbackSettings: { select: { enabled: true, name: true, ratePercent: true } } } })
     : null;
 
   return (
@@ -36,6 +37,7 @@ export default async function NewStaffCustomerPage({
           cancelHref="/staff"
           lookupPath="/staff/customers/new"
           activePrograms={activePrograms}
+          cashbackProgram={cashbackProgramOption(business?.cashbackSettings)}
           showVehicleFields={businessTracksVehicles(business?.businessType)}
           initialValues={{
             referralCode: selectedReferralCode,

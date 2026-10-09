@@ -15,6 +15,8 @@ type CustomerCreateFormProps = {
   cancelHref: string;
   lookupPath: string;
   activePrograms: Array<{ uuid: string; name: string; rewardName: string; requiredStamps: number }>;
+  /** The business's cashback program when it is switched on; customers join it like any program. */
+  cashbackProgram?: { name: string; ratePercent: string } | null;
   branchOptions?: ComboboxOption[];
   referralPreview?: ReactNode;
   initialValues?: Record<string, string>;
@@ -32,6 +34,7 @@ export function CustomerCreateForm({
   cancelHref,
   lookupPath,
   activePrograms,
+  cashbackProgram = null,
   branchOptions,
   referralPreview,
   initialValues = {},
@@ -119,6 +122,21 @@ export function CustomerCreateForm({
         Marketing consent
       </label>
       <ProgramEnrollmentField activePrograms={activePrograms} selectedProgramUuid={value("selectedProgramUuid")} error={fieldErrors.selectedProgramUuid} />
+      {cashbackProgram ? (
+        <label className="flex items-start gap-3 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4 text-sm text-[#111827]">
+          <input
+            type="checkbox"
+            name="joinCashback"
+            // A business whose only program is cashback enrols into it by default.
+            defaultChecked={"joinCashback" in values ? checked("joinCashback") : activePrograms.length === 0}
+            className="mt-0.5 h-4 w-4 rounded border-[#E5E7EB]"
+          />
+          <span>
+            <span className="block font-semibold">Join {cashbackProgram.name}</span>
+            <span className="mt-1 block text-[#6B7280]">Earns {cashbackProgram.ratePercent}% cashback on every payment.</span>
+          </span>
+        </label>
+      ) : null}
       <div className="grid gap-3 rounded-md border border-[#E5E7EB] bg-[#FAFAFA] p-4">
         <div>
           <p className="text-sm font-semibold text-[#111827]">Referred by</p>

@@ -18,6 +18,7 @@ import {
   normalizeVehicleModel,
   normalizeVehicleNumber,
 } from "@/lib/vehicles";
+import { enrollInCashback } from "@/lib/cashback-enrollment";
 import { generateCardToken } from "@/lib/customer-cards";
 import { createEngagementEventIfAllowed } from "@/lib/engagement";
 import { scheduleWelcomeCardMessage } from "@/lib/whatsapp/send-welcome-card";
@@ -517,6 +518,25 @@ export async function enrollCustomerForBusiness({
           enrollmentSource: programEnrollmentSource ?? "OWNER",
         });
         programEnrollmentStatus = "ENROLLED";
+      }
+
+      // Cashback is a program customers join; staff tick it on the form.
+      if (getCheckbox(formData, "joinCashback")) {
+        const cashbackSettings = await tx.businessCashbackSettings.findUnique({
+          where: { businessId: user.businessId },
+          select: { enabled: true },
+        });
+        if (cashbackSettings?.enabled) {
+          await enrollInCashback({
+            tx,
+            businessId: user.businessId,
+            membershipId: created.id,
+            actorUserId: user.id,
+            branchId: membership.data.createdBranchId ?? null,
+            source: forcedSource === "STAFF" ? "STAFF" : "OWNER",
+          });
+          programEnrollmentStatus = "ENROLLED";
+        }
       }
 
       return { duplicate: false, uuid: created.uuid, cardToken: created.cardToken, programEnrollmentStatus };

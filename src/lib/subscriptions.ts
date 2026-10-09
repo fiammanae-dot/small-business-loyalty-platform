@@ -39,7 +39,7 @@ export function limitReachedMessage(kind: "branch" | "program", max: number) {
 }
 
 /**
- * Cashback is a business-wide program that occupies one slot in a plan's
+ * Cashback is a program (customers join it) that occupies one slot in a plan's
  * program limit, counted alongside each stamp/membership loyalty program.
  * Use this everywhere program usage is shown or enforced so the platform
  * counts cashback consistently.

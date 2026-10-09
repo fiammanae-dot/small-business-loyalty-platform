@@ -2,7 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit";
-import { applyCashbackDelta, canSpendCashback, computeCashbackEarn, formatAed } from "@/lib/cashback";
+import { applyCashbackDelta, CASHBACK_NOT_JOINED_MESSAGE, canSpendCashback, computeCashbackEarn, formatAed } from "@/lib/cashback";
 import { syncGoogleWalletAfterCashbackChange } from "@/lib/google-wallet/service";
 import { syncAppleWalletAfterCashbackChange } from "@/lib/walletwallet/service";
 
@@ -15,6 +15,9 @@ import { syncAppleWalletAfterCashbackChange } from "@/lib/walletwallet/service";
  * lock, the balance can never go negative, a replay of the same idempotency key
  * is a no-op, every movement writes an audit event, and the optional
  * per-transaction caps are enforced here rather than in each caller.
+ *
+ * Only customers who joined the cashback program (cashbackJoinedAt set) can
+ * earn or spend; that check also lives here so no caller can skip it.
  *
  * The caller is responsible only for authorization (who may act) and for
  * resolving which customer is being acted on; these functions trust the
@@ -62,8 +65,10 @@ export async function earnCashback(input: {
       await tx.$queryRaw`SELECT id FROM "business_customer_memberships" WHERE id = ${input.membershipId} FOR UPDATE`;
       const locked = await tx.businessCustomerMembership.findUniqueOrThrow({
         where: { id: input.membershipId },
-        select: { id: true, cashbackBalance: true },
+        select: { id: true, cashbackBalance: true, cashbackJoinedAt: true },
       });
+      // Cashback is a program customers join; non-members cannot earn or spend.
+      if (!locked.cashbackJoinedAt) throw new CashbackError(CASHBACK_NOT_JOINED_MESSAGE);
       const balanceAfter = applyCashbackDelta(Number(locked.cashbackBalance), amount);
       await tx.businessCustomerMembership.update({
         where: { id: locked.id },
@@ -130,8 +135,10 @@ export async function spendCashback(input: {
       await tx.$queryRaw`SELECT id FROM "business_customer_memberships" WHERE id = ${input.membershipId} FOR UPDATE`;
       const locked = await tx.businessCustomerMembership.findUniqueOrThrow({
         where: { id: input.membershipId },
-        select: { id: true, cashbackBalance: true },
+        select: { id: true, cashbackBalance: true, cashbackJoinedAt: true },
       });
+      // Cashback is a program customers join; non-members cannot earn or spend.
+      if (!locked.cashbackJoinedAt) throw new CashbackError(CASHBACK_NOT_JOINED_MESSAGE);
       const current = Number(locked.cashbackBalance);
       if (!canSpendCashback(current, input.amount)) {
         throw new CashbackError("Not enough cashback balance.");

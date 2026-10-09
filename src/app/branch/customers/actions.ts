@@ -16,6 +16,7 @@ const customerCreateFormFields = [
   "birthday",
   "marketingConsent",
   "selectedProgramUuid",
+  "joinCashback",
   "referredBySearch",
   "referredByPhoneNumber",
   "referralCode",
@@ -27,7 +28,7 @@ function customerCreateFailure(formData: FormData, message: string, fieldErrors?
   return createFormFailure({
     formData,
     fields: customerCreateFormFields,
-    checkboxFields: ["marketingConsent"],
+    checkboxFields: ["marketingConsent", "joinCashback"],
     message,
     fieldErrors,
   });

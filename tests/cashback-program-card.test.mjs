@@ -33,7 +33,9 @@ test("cashback is no longer a business-wide feature tile", () => {
 test("the cashback program card shows live performance stats", () => {
   const page = read("src/app/dashboard/programs/page.tsx");
   // aggregates computed on the page
-  assert.match(page, /cashbackTransactions: \{ some: \{\} \}/);
+  // members = customers who JOINED cashback, like any other program
+  assert.match(page, /cashbackJoinedAt: \{ not: null \}/);
+  assert.doesNotMatch(page, /cashbackTransactions: \{ some: \{\} \}/);
   assert.match(page, /type: "EARN".*_sum: \{ amount: true, billAmount: true \}/s);
   assert.match(page, /type: "SPEND"/);
   assert.match(page, /_sum: \{ cashbackBalance: true \}/);
