@@ -2,7 +2,6 @@
 
 import { useRef, useState } from "react";
 import { uploadWalletPhotoAction } from "@/app/dashboard/programs/photo-actions";
-import { StampIconPicker } from "@/components/StampIconPicker";
 
 const MAX_BYTES = 4 * 1024 * 1024;
 const ACCEPTED_EXTENSIONS = ["png", "jpg", "jpeg", "webp"];
@@ -21,11 +20,9 @@ type HeroStyle = "STAMPS" | "PHOTO";
 export function WalletCardPictureField({
   defaultHeroStyle,
   defaultPhotoUrl,
-  defaultEmoji,
 }: {
   defaultHeroStyle?: HeroStyle | null;
   defaultPhotoUrl?: string | null;
-  defaultEmoji?: string | null;
 }) {
   const [heroStyle, setHeroStyle] = useState<HeroStyle>(defaultHeroStyle === "PHOTO" ? "PHOTO" : "STAMPS");
   const [photoUrl, setPhotoUrl] = useState(defaultPhotoUrl?.trim() ?? "");
@@ -93,7 +90,11 @@ export function WalletCardPictureField({
       </div>
 
       <div className={heroStyle === "STAMPS" ? "grid gap-3" : "hidden"}>
-        <StampIconPicker defaultEmoji={defaultEmoji} />
+        {/* No second icon picker here: the stamps use the icon chosen in the card
+            design, so the wallet card always matches the web card. */}
+        <p className="text-sm text-[#6B7280]">
+          The stamps use the icon you chose in the card design, so the wallet card matches the card customers open on the web.
+        </p>
       </div>
 
       <div className={heroStyle === "PHOTO" ? "grid gap-3" : "hidden"}>

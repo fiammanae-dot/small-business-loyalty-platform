@@ -26,10 +26,13 @@ test("the choice reaches the database from both the create and the edit form", (
   const create = actions.slice(actions.indexOf("createProgramAction"), actions.indexOf("updateProgramAction"));
   const update = actions.slice(actions.indexOf("updateProgramAction"));
   for (const [name, body] of [["create", create], ["update", update]]) {
-    for (const field of ["stampEmoji", "walletHeroStyle", "walletPhotoUrl"]) {
+    for (const field of ["walletHeroStyle", "walletPhotoUrl"]) {
       assert.match(body, new RegExp(`${field}: parsed\\.data\\.${field}`), `${name} must save ${field}`);
     }
   }
+  // The stamp icon is chosen once, in the card design; the legacy column follows it.
+  assert.match(create, /stampEmoji: stampEmojiForDesign\(cardDesign\)/);
+  assert.doesNotMatch(update, /stampEmoji: parsed\.data\.stampEmoji/);
 });
 
 test("changing the picture resyncs cards that are already in customers' wallets", () => {

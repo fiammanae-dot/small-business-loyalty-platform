@@ -57,7 +57,7 @@ test("the Apple wallet pass shows the live visit grid as its banner", () => {
   const mapper = read("src/lib/walletwallet/mapper.ts");
   // Memberships count down (filled = visits left); stamp cards count up.
   assert.match(mapper, /const gridFilled = isMembership \? sessionsRemaining : Math\.min\(progress, required\)/);
-  assert.match(mapper, /stampImagePath\(program\.uuid, gridFilled, gridTotal, program\.stampEmoji\)/);
+  assert.match(mapper, /stampImagePath\(program\.uuid, gridFilled, gridTotal, stampEmojiForDesign\(program\.cardDesign\)\)/);
   // The grid (or the uploaded photo) is the strip banner.
   assert.match(mapper, /if \(bannerUrl\) body\.stripURL = bannerUrl/);
 });
