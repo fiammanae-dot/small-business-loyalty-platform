@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { drawStampStripSvg } from "@/lib/wallet/stamp-strip-svg";
+import { findStampIcon, stampIconUrl } from "@/lib/wallet/stamp-icons";
 import type { WalletPassBanner, WalletPassField, WalletPassView } from "@/lib/wallet-pass-view";
 import { applePrimaryFields } from "@/lib/wallet-pass-view";
 import { BusinessLogoAvatar } from "@/components/BusinessLogoAvatar";
@@ -164,22 +165,19 @@ function PassLogo({ url, name, shape }: { url: string | null; name: string; shap
 }
 
 function BannerImage({ banner, alt }: { banner: WalletPassBanner; alt: string }) {
-  if (banner.kind === "stamps" && banner.customIconUrl) {
-    // An uploaded icon is an external image, which an <img>-loaded SVG may not
-    // fetch, so this strip is drawn inline instead - same function, same layout.
-    const svg = drawStampStripSvg(banner.filled, banner.total, banner.emoji, banner.customIconUrl).replace(
+  if (banner.kind === "stamps") {
+    // Drawn inline (an <img>-loaded SVG may not fetch the icon picture) with
+    // the same function and layout as the wallet's stamp picture.
+    const iconHref = banner.customIconUrl ?? stampIconUrl(findStampIcon(banner.emoji));
+    const svg = drawStampStripSvg(banner.filled, banner.total, iconHref).replace(
       /<svg ([^>]*?)width="\d+" height="\d+"/,
       '<svg $1width="100%" height="100%" preserveAspectRatio="xMidYMid slice"',
     );
     return <div role="img" aria-label={alt} className="h-full w-full" dangerouslySetInnerHTML={{ __html: svg }} />;
   }
-  const src =
-    banner.kind === "photo"
-      ? banner.url
-      : `data:image/svg+xml;charset=utf-8,${encodeURIComponent(drawStampStripSvg(banner.filled, banner.total, banner.emoji))}`;
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt={alt} className="h-full w-full object-cover" crossOrigin={banner.kind === "photo" ? "anonymous" : undefined} />
+    <img src={banner.url} alt={alt} className="h-full w-full object-cover" crossOrigin="anonymous" />
   );
 }
 

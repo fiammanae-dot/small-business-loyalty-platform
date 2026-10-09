@@ -14,24 +14,21 @@ const strip = await loadTs("src/lib/wallet/stamp-strip-svg.ts");
 const image = await loadTs("src/lib/wallet/stamp-image.ts");
 const marks = await loadTs("src/lib/stamp-icon-marks.ts");
 
-test("the built-in icons are Google Noto artwork", () => {
-  assert.match(read("src/lib/wallet/stamp-icons.ts"), /Noto Color Emoji \(Apache License 2\.0/);
+test("the built-in icons are Fluent Emoji 3D artwork, licensed and shipped", () => {
+  assert.match(read("src/lib/wallet/stamp-icons.ts"), /Fluent Emoji in its 3D style \(MIT licence/);
+  assert.match(read("public/stamp-icons/3d/LICENSE.txt"), /Copyright \(c\) Microsoft Corporation\./);
   for (const icon of icons.STAMP_ICONS) {
-    assert.equal(icon.viewBox, "0 0 128 128", `${icon.label} uses the Noto grid`);
+    assert.equal(icons.stampIconUrl(icon), `/stamp-icons/3d/${icon.file}.webp`);
   }
-  // Gradient ids are prefixed per icon so side-by-side icons never clash.
-  const ids = icons.STAMP_ICONS.flatMap((icon) => [...icon.body.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]));
-  assert.equal(new Set(ids).size, ids.length, "no duplicate ids across icons");
-  assert.ok(ids.every((id) => id.startsWith("noto-")));
 });
 
 test("an uploaded icon is drawn in every slot, faded for visits to go", () => {
-  const svg = strip.drawStampStripSvg(2, 5, "⭐", "https://cdn.example/stamp-icons/a.png?x=1&y=2");
+  const svg = strip.drawStampStripSvg(2, 5, "https://cdn.example/stamp-icons/a.png?x=1&y=2");
   assert.equal((svg.match(/<image href=/g) ?? []).length, 5);
   assert.equal((svg.match(/opacity="0.3"/g) ?? []).length, 3);
   assert.match(svg, /href="https:\/\/cdn\.example\/stamp-icons\/a\.png\?x=1&amp;y=2"/, "the URL is XML-escaped");
-  // Without an upload, the built-in artwork is drawn.
-  assert.doesNotMatch(strip.drawStampStripSvg(2, 5, "⭐"), /<image /);
+  // Without an upload, the wallet picture embeds the built-in icon instead.
+  assert.match(read("src/lib/wallet/stamp-image.ts"), /drawStampStripSvg\(earned, total, customIconHref \?\? stampIconDataUrl\(emoji\)\)/);
 });
 
 test("an uploaded icon changes the wallet picture's address", () => {
@@ -73,5 +70,5 @@ test("Design Studio offers the upload and every surface draws it", () => {
   assert.match(form, /<CustomStampIconField value=\{customStampIconUrl\} onChange=\{setCustomStampIconUrl\} \/>/);
   assert.match(form, /name="customStampIconUrl"/);
   assert.match(read("src/lib/wallet-pass-view.ts"), /customIconUrl: customStampIconForDesign\(program\.cardDesign\)/);
-  assert.match(read("src/components/wallet-pass/WalletPassCard.tsx"), /drawStampStripSvg\(banner\.filled, banner\.total, banner\.emoji, banner\.customIconUrl\)/);
+  assert.match(read("src/components/wallet-pass/WalletPassCard.tsx"), /const iconHref = banner\.customIconUrl \?\? stampIconUrl\(findStampIcon\(banner\.emoji\)\)/);
 });

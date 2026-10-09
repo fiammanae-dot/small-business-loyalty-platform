@@ -1,5 +1,6 @@
 import { findStampIcon } from "@/lib/wallet/stamp-icons";
 import { drawStampStripSvg } from "@/lib/wallet/stamp-strip-svg";
+import { stampIconDataUrl } from "@/lib/wallet/stamp-icon-art";
 
 export { drawStampStripSvg };
 
@@ -12,7 +13,8 @@ export async function drawStampStripPng(earned: number, total: number, emoji?: s
   // Loaded here rather than at the top so the SVG and URL helpers - and their
   // tests - do not drag a native image library in behind them.
   const { default: sharp } = await import("sharp");
-  return sharp(Buffer.from(drawStampStripSvg(earned, total, emoji, customIconHref)))
+  // An uploaded icon arrives as a data: URL; otherwise embed the built-in icon.
+  return sharp(Buffer.from(drawStampStripSvg(earned, total, customIconHref ?? stampIconDataUrl(emoji))))
     .png({ compressionLevel: 9 })
     .toBuffer();
 }
@@ -27,8 +29,8 @@ export async function drawStampStripPng(earned: number, total: number, emoji?: s
 // Bump when the drawing changes so the immutable, year-long cache (CDN, Apple
 // and Google) is bypassed and every pass refetches the new picture. Hex-safe so
 // it fits the route's slug pattern.
-// a3: Google Noto artwork.
-const STRIP_LAYOUT_VERSION = "a3";
+// a3: Google Noto artwork. a4: Fluent Emoji 3D artwork.
+const STRIP_LAYOUT_VERSION = "a4";
 
 /** A short, stable fingerprint of an uploaded icon's URL, for the cache key. */
 function iconFingerprint(value: string): string {
