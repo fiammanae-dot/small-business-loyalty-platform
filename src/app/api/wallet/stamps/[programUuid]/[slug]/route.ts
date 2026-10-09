@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { drawStampStripPng } from "@/lib/wallet/stamp-image";
 import { prisma } from "@/lib/prisma";
-import { stampEmojiForDesign } from "@/lib/stamp-icon-marks";
+import { customStampIconForDesign, stampEmojiForDesign } from "@/lib/stamp-icon-marks";
 
 /**
  * Serves the stamp picture that a wallet card points at.
@@ -39,7 +39,8 @@ export async function GET(
   });
   if (!program) return new NextResponse("Not found", { status: 404 });
 
-  const png = await drawStampStripPng(earned, total || program.requiredStamps, stampEmojiForDesign(program.cardDesign));
+  const customIcon = await loadCustomStampIcon(customStampIconForDesign(program.cardDesign));
+  const png = await drawStampStripPng(earned, total || program.requiredStamps, stampEmojiForDesign(program.cardDesign), customIcon);
 
   return new NextResponse(new Uint8Array(png), {
     headers: {
@@ -48,4 +49,28 @@ export async function GET(
       "Cache-Control": "public, max-age=31536000, immutable",
     },
   });
+}
+
+const CUSTOM_ICON_MAX_BYTES = 1024 * 1024;
+
+/**
+ * An uploaded stamp icon, as a data: URL the PNG renderer can embed (it does
+ * not fetch). Only images in the platform's own storage are fetched - never an
+ * arbitrary address - and any failure falls back to the built-in icon.
+ */
+async function loadCustomStampIcon(url: string | null): Promise<string | null> {
+  if (!url) return null;
+  const storageBase = process.env.R2_PUBLIC_BASE_URL?.trim().replace(/\/+$/, "");
+  if (!storageBase || !url.startsWith(`${storageBase}/stamp-icons/`)) return null;
+  try {
+    const response = await fetch(url, { cache: "force-cache" });
+    if (!response.ok) return null;
+    const type = response.headers.get("content-type") ?? "";
+    if (!/^image\/(png|webp)$/.test(type.split(";")[0].trim())) return null;
+    const bytes = Buffer.from(await response.arrayBuffer());
+    if (bytes.length === 0 || bytes.length > CUSTOM_ICON_MAX_BYTES) return null;
+    return `data:${type.split(";")[0].trim()};base64,${bytes.toString("base64")}`;
+  } catch {
+    return null;
+  }
 }

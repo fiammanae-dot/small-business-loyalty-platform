@@ -7,6 +7,7 @@ import {
   getRecommendedStampIconsForBusinessType,
   industryDesignPacks,
   resolveCardDesign,
+  resolveCustomStampIconUrl,
   stampIcons,
   type CardDesign,
   type CardDesignBackgroundPattern,
@@ -434,6 +435,8 @@ export const designStudioIndustryStyleOptions = [
 export const designStudioSchema = z.object({
   layoutStyle: z.enum(["CLASSIC", "MODERN", "PREMIUM", "LUXURY"]),
   stampIcon: z.enum(stampIcons),
+  /** The business's own uploaded stamp icon; null = use the built-in stampIcon. */
+  customStampIconUrl: z.string().nullable(),
 });
 
 /** The fixed values for the design fields a wallet cannot show. */
@@ -460,6 +463,7 @@ export function buildProgramCardDesign(input: z.infer<typeof designStudioSchema>
     layoutStyle: input.layoutStyle,
     cardStyle: getCardStyleForLayoutStyle(input.layoutStyle),
     stampIcon: input.stampIcon,
+    customStampIconUrl: input.customStampIconUrl,
   });
 }
 
@@ -477,6 +481,7 @@ export function parseDesignStudioForm(formData: FormData, businessType: Paramete
   const parsed = designStudioSchema.safeParse({
     layoutStyle: rawLayout === "MINIMAL" ? "CLASSIC" : rawLayout,
     stampIcon: String(formData.get("stampIcon") ?? ""),
+    customStampIconUrl: parseCustomStampIconUrl(formData.get("customStampIconUrl")),
   });
   if (!parsed.success) return parsed;
 
@@ -486,6 +491,17 @@ export function parseDesignStudioForm(formData: FormData, businessType: Paramete
   }
 
   return parsed;
+}
+
+/**
+ * An uploaded stamp icon is only accepted from the platform's own icon storage,
+ * so a design can never point the wallets at an arbitrary address.
+ */
+function parseCustomStampIconUrl(value: FormDataEntryValue | null): string | null {
+  const url = resolveCustomStampIconUrl(typeof value === "string" ? value : null);
+  if (!url) return null;
+  const storageBase = process.env.R2_PUBLIC_BASE_URL?.trim().replace(/\/+$/, "");
+  return storageBase && url.startsWith(`${storageBase}/stamp-icons/`) ? url : null;
 }
 
 export function getCardThemeForDesignStudioTemplate(layoutStyle: z.infer<typeof designStudioSchema>["layoutStyle"]) {

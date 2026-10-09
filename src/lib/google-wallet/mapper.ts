@@ -196,7 +196,7 @@ export async function buildGoogleWalletObjectPayload({
       ? imageModule(view.banner.url, `${program.name} card picture`)
       : view.banner?.kind === "stamps"
         ? imageModule(
-            `${baseUrl}${stampImagePath(program.uuid, view.banner.filled, view.banner.total, view.banner.emoji)}`,
+            `${baseUrl}${stampImagePath(program.uuid, view.banner.filled, view.banner.total, view.banner.emoji, view.banner.customIconUrl)}`,
             isMembership
               ? `${sessionsRemaining} of ${sessionsTotal} visits remaining`
               : `${Math.min(progress, required)} of ${required} stamps collected`,

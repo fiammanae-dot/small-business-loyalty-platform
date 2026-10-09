@@ -83,7 +83,7 @@ test("saved stamp icons are applied to live customer card progress markers", () 
   assert.match(wallet, /StampSlot stampIcon=\{design\.stampIcon\} filled=\{filled\}/);
   // The design previews show the real pass, whose stamp picture is drawn with
   // the chosen icon (see wallet-pass-view.test).
-  assert.match(designStudioForm, /cardDesign: walletPreviewDesign\(layoutStyle, stampIcon\)/);
+  assert.match(designStudioForm, /cardDesign: walletPreviewDesign\(layoutStyle, stampIcon, customStampIconUrl\)/);
   assert.match(createWizard, /cardDesign: walletPreviewDesign\(layoutStyle, stampIcon\)/);
   assert.match(stampIconGraphic, /mode\?: "selector" \| "customer"/);
   assert.match(stampIconGraphic, /export function StampSlot/);

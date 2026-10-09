@@ -164,6 +164,15 @@ function PassLogo({ url, name, shape }: { url: string | null; name: string; shap
 }
 
 function BannerImage({ banner, alt }: { banner: WalletPassBanner; alt: string }) {
+  if (banner.kind === "stamps" && banner.customIconUrl) {
+    // An uploaded icon is an external image, which an <img>-loaded SVG may not
+    // fetch, so this strip is drawn inline instead - same function, same layout.
+    const svg = drawStampStripSvg(banner.filled, banner.total, banner.emoji, banner.customIconUrl).replace(
+      /<svg ([^>]*?)width="\d+" height="\d+"/,
+      '<svg $1width="100%" height="100%" preserveAspectRatio="xMidYMid slice"',
+    );
+    return <div role="img" aria-label={alt} className="h-full w-full" dangerouslySetInnerHTML={{ __html: svg }} />;
+  }
   const src =
     banner.kind === "photo"
       ? banner.url

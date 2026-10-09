@@ -93,6 +93,8 @@ export type CardDesign = {
   animationStyle: CardDesignAnimationStyle;
   visibleSections: CardSectionVisibility;
   templateId: string | null;
+  /** A stamp icon the business uploaded (https URL), drawn instead of stampIcon. */
+  customStampIconUrl: string | null;
 };
 
 export const defaultCardDesign: CardDesign = {
@@ -111,6 +113,7 @@ export const defaultCardDesign: CardDesign = {
   animationStyle: "subtle",
   visibleSections: defaultVisibleCardSections,
   templateId: null,
+  customStampIconUrl: null,
 };
 
 export type CardDesignInput =
@@ -340,7 +343,15 @@ export function resolveCardDesign(input?: CardDesignInput): CardDesign {
     animationStyle: resolveValue("animationStyle", input?.animationStyle),
     visibleSections: resolveVisibleSections(input?.visibleSections),
     templateId: typeof input?.templateId === "string" && input.templateId.trim() ? input.templateId.trim() : null,
+    customStampIconUrl: resolveCustomStampIconUrl(input?.customStampIconUrl),
   };
+}
+
+/** Only an https address is kept; anything else means "use the built-in icon". */
+export function resolveCustomStampIconUrl(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return /^https:\/\/\S+$/i.test(trimmed) && trimmed.length <= 500 ? trimmed : null;
 }
 
 export function getIndustryDesignPackId(businessType?: BusinessType | null): IndustryDesignPackId {

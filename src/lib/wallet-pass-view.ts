@@ -2,7 +2,7 @@ import type { CardTheme } from "@prisma/client";
 import { getCardStyleForLayoutStyle, type CardDesignInput, type CardDesignLayoutStyle, type CardDesignStampIcon } from "@/lib/card-design";
 import { resolveWalletCardColors } from "@/lib/card-themes";
 import { DARK_FOREGROUND } from "@/lib/color-contrast";
-import { stampEmojiForDesign } from "@/lib/stamp-icon-marks";
+import { customStampIconForDesign, stampEmojiForDesign } from "@/lib/stamp-icon-marks";
 
 /**
  * What a customer's wallet pass shows, decided once.
@@ -24,7 +24,7 @@ export type WalletPassField = { label?: string; value: string; changeMessage?: s
 
 export type WalletPassBanner =
   | { kind: "photo"; url: string }
-  | { kind: "stamps"; filled: number; total: number; emoji: string };
+  | { kind: "stamps"; filled: number; total: number; emoji: string; customIconUrl: string | null };
 
 export type WalletPassColors = { background: string; foreground: string; muted: string };
 
@@ -109,6 +109,7 @@ export function buildProgramPassView(input: ProgramPassInput): WalletPassView {
         filled: isMembership ? membershipRemaining : collected,
         total: isMembership ? membershipTotal : required,
         emoji: stampEmojiForDesign(program.cardDesign),
+        customIconUrl: customStampIconForDesign(program.cardDesign),
       };
 
   const header: WalletPassField = isMembership
@@ -228,6 +229,10 @@ export function walletColourLayoutStyle(layoutStyle: CardDesignLayoutStyle): Car
  * from layoutStyle - a preview must do the same or it would show the wrong
  * colour.
  */
-export function walletPreviewDesign(layoutStyle: CardDesignLayoutStyle, stampIcon: CardDesignStampIcon): CardDesignInput {
-  return { layoutStyle, cardStyle: getCardStyleForLayoutStyle(layoutStyle), stampIcon };
+export function walletPreviewDesign(
+  layoutStyle: CardDesignLayoutStyle,
+  stampIcon: CardDesignStampIcon,
+  customStampIconUrl: string | null = null,
+): CardDesignInput {
+  return { layoutStyle, cardStyle: getCardStyleForLayoutStyle(layoutStyle), stampIcon, customStampIconUrl };
 }

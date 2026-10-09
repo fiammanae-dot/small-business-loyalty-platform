@@ -14,7 +14,8 @@ export function StampIconChooser({
   onChange,
 }: {
   options: Array<{ value: CardDesignStampIcon; label: string; recommended: boolean }>;
-  value: CardDesignStampIcon;
+  /** null when no built-in icon is in use (the business uploaded its own). */
+  value: CardDesignStampIcon | null;
   onChange: (value: CardDesignStampIcon) => void;
 }) {
   const sorted = [...options].sort((a, b) => Number(b.recommended) - Number(a.recommended));
