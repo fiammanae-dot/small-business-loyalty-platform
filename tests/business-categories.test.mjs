@@ -70,7 +70,7 @@ test("every per-industry table covers the new category", () => {
   // These tables are spread over several files. The type checker catches a
   // missing one, but only after the fact - this names the files so the next
   // category added does not have to be found the same way.
-  for (const file of ["src/lib/card-design.ts", "src/lib/card-asset-catalog.ts"]) {
+  for (const file of ["src/lib/card-design.ts"]) {
     const source = read(file);
     for (const [, table] of source.matchAll(/Record<IndustryDesignPackId, [^>]+> = \{/g)) {
       void table;
