@@ -1,5 +1,3 @@
-import { findStampIcon } from "@/lib/wallet/stamp-icons";
-
 /**
  * Draws the row of stamps shown on a customer's wallet card - the picture the
  * Apple strip banner and the Google hero image both show.
@@ -37,20 +35,16 @@ function escapeAttribute(value: string) {
 }
 
 /**
- * @param customIconHref A business's own uploaded stamp icon, drawn instead of
- *   the built-in artwork. On the server this is a data: URL (the wallet PNG is
- *   rendered offline); in the browser it can be the image's public URL.
+ * @param iconHref The stamp icon picture, drawn once per slot. On the server
+ *   it must be a data: URL (the wallet PNG renderer does not fetch); in the
+ *   browser it can be an ordinary image URL.
  */
-export function drawStampStripSvg(earned: number, total: number, emoji?: string | null, customIconHref?: string | null): string {
+export function drawStampStripSvg(earned: number, total: number, iconHref: string | null | undefined): string {
   const safeTotal = Math.max(1, Math.min(30, Math.floor(total)));
   const safeEarned = Math.max(0, Math.min(safeTotal, Math.floor(earned)));
-  const { body, viewBox } = findStampIcon(emoji);
-  // Each stamp is a nested <svg> box; its contents are either the built-in
-  // artwork or the uploaded image scaled to fit the same box.
-  const content = customIconHref
-    ? `<image href="${escapeAttribute(customIconHref)}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"/>`
-    : body;
-  const box = customIconHref ? "0 0 100 100" : viewBox;
+  // Each stamp is a nested <svg> box holding the icon picture scaled to fit.
+  const content = `<image href="${escapeAttribute(iconHref ?? "")}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"/>`;
+  const box = "0 0 100 100";
 
   const rows = rowsFor(safeTotal);
   const perRow = Math.max(...rows);

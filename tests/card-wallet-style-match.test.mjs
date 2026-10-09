@@ -64,9 +64,9 @@ test("every surface draws the stamp icon chosen in the card design", () => {
 
 test("the web card draws the same artwork as the wallet picture", () => {
   const graphic = read("src/components/design-studio/StampIconGraphic.tsx");
-  assert.match(graphic, /findStampIcon\(getStampEmoji\(stampIcon\)\)/);
-  assert.match(graphic, /const \{ body, viewBox \} = findStampIcon\(getStampEmoji\(stampIcon\)\)/);
-  assert.match(graphic, /viewBox=\{viewBox\}/);
+  assert.match(graphic, /src=\{stampIconUrl\(findStampIcon\(getStampEmoji\(stampIcon\)\)\)\}/);
+  // The wallet picture embeds a PNG copy of the very same artwork.
+  assert.match(read("src/lib/wallet/stamp-image.ts"), /customIconHref \?\? stampIconDataUrl\(emoji\)/);
   // Not the phone's emoji font, which differs between iPhone, Android and Windows.
   assert.doesNotMatch(graphic, /Apple Color Emoji/);
 });

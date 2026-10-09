@@ -1,6 +1,6 @@
 import type { CardDesignStampIcon } from "@/lib/card-design";
 import { getStampEmoji, stampEmojiMarks } from "@/lib/stamp-icon-marks";
-import { findStampIcon } from "@/lib/wallet/stamp-icons";
+import { findStampIcon, stampIconUrl } from "@/lib/wallet/stamp-icons";
 
 // Re-exported so existing imports keep working; the map lives in the shared lib.
 export { getStampEmoji, stampEmojiMarks };
@@ -44,16 +44,16 @@ export function StampSlot({
 }
 
 function StampEmoji({ stampIcon, className }: { stampIcon: CardDesignStampIcon; className: string }) {
-  // Drawn from the same bundled Twemoji artwork as the wallet stamp picture, not
-  // the phone's emoji font, so the web card and the wallet card match exactly.
-  const { body, viewBox } = findStampIcon(getStampEmoji(stampIcon));
+  // The same 3D artwork as the wallet stamp picture, not the phone's emoji
+  // font, so the web card and the wallet card match exactly.
   return (
-    <svg
-      viewBox={viewBox}
-      className={`inline-block ${className}`}
-      aria-hidden="true"
-      focusable="false"
-      dangerouslySetInnerHTML={{ __html: `<title>${getStampAriaLabel(stampIcon)}</title>${body}` }}
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={stampIconUrl(findStampIcon(getStampEmoji(stampIcon)))}
+      alt=""
+      title={getStampAriaLabel(stampIcon)}
+      className={`inline-block object-contain ${className}`}
+      draggable={false}
     />
   );
 }

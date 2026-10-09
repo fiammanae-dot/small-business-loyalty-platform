@@ -139,6 +139,6 @@ test("the web card and every preview render the same view", () => {
   assert.match(cashback, /buildCashbackPassView\(/);
   assert.match(cashback, /<WalletPassPreview view=\{previewView\} \/>/);
   // The stamp picture on the web is drawn by the same function as the wallet PNG.
-  assert.match(read("src/components/wallet-pass/WalletPassCard.tsx"), /drawStampStripSvg\(banner\.filled, banner\.total, banner\.emoji\)/);
-  assert.match(read("src/lib/wallet/stamp-image.ts"), /sharp\(Buffer\.from\(drawStampStripSvg\(earned, total, emoji, customIconHref\)\)\)/);
+  assert.match(read("src/components/wallet-pass/WalletPassCard.tsx"), /drawStampStripSvg\(banner\.filled, banner\.total, iconHref\)/);
+  assert.match(read("src/lib/wallet/stamp-image.ts"), /sharp\(Buffer\.from\(drawStampStripSvg\(earned, total, customIconHref \?\? stampIconDataUrl\(emoji\)\)\)\)/);
 });
