@@ -18,7 +18,7 @@ import { enrollInCashback } from "@/lib/cashback-enrollment";
 import { validateCsrfForm } from "@/lib/csrf";
 import { requireUsableSubscription } from "@/lib/commercial-access";
 import { createFormFailure, isFormActionError, type PreservedFormState } from "@/lib/form-state";
-import { syncGoogleWalletObjectAfterLoyaltyChange } from "@/lib/google-wallet/service";
+import { refreshBusinessGoogleCashbackPasses, syncGoogleWalletObjectAfterLoyaltyChange } from "@/lib/google-wallet/service";
 import { refreshBusinessCashbackPasses, syncAppleWalletPassSafe } from "@/lib/walletwallet/service";
 import { hasWalletRelevantBrandingChange, hasWalletRelevantBusinessChange } from "@/lib/wallet-sync/change-detection";
 import { enqueueWalletSyncForBusiness } from "@/lib/wallet-sync/enqueue";
@@ -765,8 +765,9 @@ export async function saveCashbackSettingsAction(formData: FormData) {
     metadata: { enabled: parsed.data.enabled, ratePercent: parsed.data.ratePercent, maxBillAmount, maxRedemption },
   });
 
-  // Push the refreshed design onto cashback cards customers already added.
+  // Push the refreshed design onto cashback cards customers already added (Apple and Google).
   await refreshBusinessCashbackPasses(user.businessId);
+  await refreshBusinessGoogleCashbackPasses(user.businessId);
 
   revalidatePath("/dashboard/settings");
   revalidatePath("/dashboard/programs");

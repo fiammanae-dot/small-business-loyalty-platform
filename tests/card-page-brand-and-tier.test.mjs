@@ -11,7 +11,7 @@ const read = (path) => readFileSync(path, "utf8");
 const page = read("src/app/card/[token]/page.tsx");
 
 test("a membership-package customer sees no tier", () => {
-  assert.match(page, /const tiersVisible = areTiersVisible\(membership\.business\.membershipSettings\?\.enabled\) && !primaryProgram\?\.isMembership;/);
+  assert.match(page, /const tiersVisible = areTiersVisible\(membership\.business\.membershipSettings\?\.enabled\) && Boolean\(primaryProgram\) && !primaryProgram\?\.isMembership;/);
   assert.match(page, /tiersHidden: !tiersVisible/);
   assert.match(page, /\{tiersVisible \? \(\s*<div className="mx-auto w-full max-w-\[360px\]">\s*<TierStatusPanel/);
   // Same rule as the dashboard's customer page.
