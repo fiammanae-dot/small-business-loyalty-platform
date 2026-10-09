@@ -9,7 +9,7 @@ import { customerIdentitySchema, getCheckbox, parseBirthday, readVehicleFormFiel
 import { normalizePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { isPublicActionRateLimited, recordPublicActionAttempt } from "@/lib/rate-limit";
-import { generateReferralCode } from "@/lib/referrals";
+import { createPendingReferralForEnrollment, extractReferralCode, findActiveReferralReferrerByPhone, generateReferralCode } from "@/lib/referrals";
 import { getRequestInfo } from "@/lib/request-info";
 import { scheduleWelcomeCardMessage } from "@/lib/whatsapp/send-welcome-card";
 
@@ -72,6 +72,18 @@ export async function joinCashbackProgramAction(formData: FormData) {
     identifier: parsed.data.token,
     outcome: "ATTEMPTED",
   });
+
+  // Same referral rules as the program join page: a referral code / link, or a
+  // referrer's phone number. Resolved before the transaction so a bad referrer
+  // redirects with its real message.
+  const referralLookupInput = getString(formData, "referralCode") || getString(formData, "referredBySearch");
+  let referralCodeForEnrollment = extractReferralCode(referralLookupInput);
+  if (!referralCodeForEnrollment && referralLookupInput.trim()) {
+    const phoneLookup = await findActiveReferralReferrerByPhone({ tx: prisma, businessId, phone: referralLookupInput });
+    if (phoneLookup.status === "INVALID_PHONE") fail(parsed.data.token, "Check the referrer and select a matching customer before submitting.");
+    if (phoneLookup.status === "NOT_FOUND" || !phoneLookup.referrer?.referralCode) fail(parsed.data.token, "No matching referrer found.");
+    referralCodeForEnrollment = phoneLookup.referrer.referralCode;
+  }
 
   let result: { cardToken: string; welcomeMembershipId: number | null };
   try {
@@ -139,6 +151,14 @@ export async function joinCashbackProgramAction(formData: FormData) {
         select: { id: true, cardToken: true },
       });
       await enrollInCashback({ tx, businessId, membershipId: created.id, actorUserId: null, source: "SELF_SIGNUP" });
+      // The referral qualifies on this customer's first cashback purchase.
+      await createPendingReferralForEnrollment({
+        tx,
+        businessId,
+        referredGlobalCustomerId: globalCustomer.id,
+        referredMembershipId: created.id,
+        referralCode: referralCodeForEnrollment,
+      });
       return { cardToken: created.cardToken, welcomeMembershipId: created.id };
     });
   } catch (error) {

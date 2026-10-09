@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { joinCashbackProgramAction } from "@/app/join/cashback/[token]/actions";
 import { BusinessBrandingProvider } from "@/components/BusinessBrandingProvider";
+import { ReferralReferrerLookupPreview } from "@/components/ReferralReferrerLookupPreview";
 import { RequiredMark } from "@/components/ui/RequiredMark";
 import { resolveBusinessBranding } from "@/lib/business-branding";
 import { getCardUrl } from "@/lib/customer-cards";
@@ -21,10 +22,16 @@ export default async function CashbackJoinPage({
     phone?: string;
     email?: string;
     birthday?: string;
+    marketingConsent?: string;
+    ref?: string;
+    referralCode?: string;
+    referredBySearch?: string;
   }>;
 }) {
   const { token } = await params;
   const qs = await searchParams;
+  const referredBySearch = qs.referredBySearch ?? qs.ref ?? "";
+  const selectedReferralCode = qs.referralCode ?? qs.ref ?? "";
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(token);
   const settings = isUuid
     ? await prisma.businessCashbackSettings.findUnique({
@@ -97,9 +104,25 @@ export default async function CashbackJoinPage({
                 <Input label="Email" name="email" type="email" autoComplete="email" defaultValue={qs.email} />
                 <Input label="Birthday" name="birthday" type="date" autoComplete="bday" defaultValue={qs.birthday} />
                 <label className="flex items-center gap-2 text-sm font-semibold text-[#111827]">
-                  <input type="checkbox" name="marketingConsent" className="h-4 w-4 rounded border-[#E5E7EB]" />
+                  <input type="checkbox" name="marketingConsent" defaultChecked={qs.marketingConsent === "on"} className="h-4 w-4 rounded border-[#E5E7EB]" />
                   I agree to receive offers and updates from this business
                 </label>
+                <div className="grid gap-3 rounded-xl border border-[#E5E7EB] bg-[#F8FAFC] p-4">
+                  <div>
+                    <p className="text-sm font-semibold text-[#111827]">Referred by a friend?</p>
+                    <p className="mt-1 text-xs leading-5 text-[#64748B]">Optional. Enter their phone, name, referral code, or referral link.</p>
+                  </div>
+                  <Input label="Referrer" name="referredBySearch" placeholder="Phone, name, referral code, or referral link" defaultValue={referredBySearch} />
+                  <ReferralReferrerLookupPreview businessId={settings.businessId} query={referredBySearch} selectedReferralCode={selectedReferralCode} />
+                  <button
+                    type="submit"
+                    formAction={`/join/cashback/${token}`}
+                    formMethod="get"
+                    className="w-fit rounded-xl border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-semibold text-[#111827]"
+                  >
+                    Check referrer
+                  </button>
+                </div>
                 <button type="submit" className="min-h-12 rounded-xl business-button px-5 text-sm font-bold transition hover:brightness-95">
                   Join Cashback
                 </button>

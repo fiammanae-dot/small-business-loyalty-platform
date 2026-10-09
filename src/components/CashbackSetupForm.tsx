@@ -33,6 +33,7 @@ export function CashbackSetupForm({
   rate,
   maxBill,
   maxRedemption,
+  referralReward = "",
   name,
   cardTheme,
   walletPhotoUrl,
@@ -45,6 +46,8 @@ export function CashbackSetupForm({
   rate: string;
   maxBill: string;
   maxRedemption: string;
+  /** Cashback a referrer earns when a friend they referred makes a first cashback purchase. Blank = none. */
+  referralReward?: string;
   name: string;
   cardTheme: CardTheme;
   walletPhotoUrl: string | null;
@@ -124,6 +127,8 @@ export function CashbackSetupForm({
               <Field name="maxRedemption" label="Max redemption per transaction (blank = no limit)" type="number" min="0" defaultValue={maxRedemption} />
             </div>
             <p className="text-xs text-[#6B7280]">Per-transaction limits apply to staff at the counter. Leave blank for no limit. Customers join cashback like any program, alongside any stamp or membership programs.</p>
+            <Field name="referralRewardAmount" label="Referral reward (cashback for the referrer, blank = none)" type="number" min="0" defaultValue={referralReward} />
+            <p className="text-xs text-[#6B7280]">When a customer joins cashback with a friend&apos;s referral, the friend gets this amount added to their cashback balance once the new customer makes their first cashback purchase.</p>
           </div>
         </SectionCard>
       </div>

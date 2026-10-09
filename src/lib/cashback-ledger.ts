@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit";
 import { applyCashbackDelta, CASHBACK_NOT_JOINED_MESSAGE, canSpendCashback, computeCashbackEarn, formatAed } from "@/lib/cashback";
 import { syncGoogleWalletAfterCashbackChange } from "@/lib/google-wallet/service";
+import { qualifyReferralFromFirstCashback } from "@/lib/referrals";
 import { syncAppleWalletAfterCashbackChange } from "@/lib/walletwallet/service";
 
 /**
@@ -101,12 +102,26 @@ export async function earnCashback(input: {
         entityId: row.id,
         metadata: { billAmount: input.billAmount, ratePercent: input.ratePercent, amount, balanceAfter, invoiceNumber: input.invoiceNumber },
       });
-      return { amount, balanceAfter };
+      // A friend's first cashback purchase qualifies their referral and pays the referrer.
+      const referral = await qualifyReferralFromFirstCashback({
+        tx,
+        businessId: input.businessId,
+        referredMembershipId: locked.id,
+        cashbackTransactionId: row.id,
+        branchId: input.branchId,
+        currency: input.currency,
+        now: new Date(),
+      });
+      return { amount, balanceAfter, rewardedMembershipId: referral?.rewardedMembershipId ?? null };
     });
-    // Refresh the customer's Google Wallet passes so the cashback row updates.
+    // Refresh the wallet cashback cards so the balance updates (the referrer's too, if paid).
     await syncGoogleWalletAfterCashbackChange(input.membershipId);
     await syncAppleWalletAfterCashbackChange(input.membershipId);
-    return walletResult;
+    if (walletResult.rewardedMembershipId) {
+      await syncGoogleWalletAfterCashbackChange(walletResult.rewardedMembershipId);
+      await syncAppleWalletAfterCashbackChange(walletResult.rewardedMembershipId);
+    }
+    return { amount: walletResult.amount, balanceAfter: walletResult.balanceAfter };
   } catch (error) {
     if (isUniqueViolation(error)) throw new DuplicateCashbackError();
     throw error;

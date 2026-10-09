@@ -692,7 +692,13 @@ export async function saveCashbackSettingsAction(formData: FormData) {
     walletHeroStyle?: WalletHeroStyle;
     walletPhotoUrl?: string | null;
     cardDesign?: Prisma.InputJsonValue;
+    referralRewardAmount?: number | null;
   } = {};
+  if (formData.has("referralRewardAmount")) {
+    const reward = parseOptionalCapAmount(getString(formData, "referralRewardAmount"));
+    if (reward === "invalid") fail(failPath, "Referral reward must be a positive amount, or left blank for no reward.");
+    optional.referralRewardAmount = reward;
+  }
   if (formData.has("name")) optional.name = getString(formData, "name").trim().slice(0, 80) || null;
   if (formData.has("cardTheme")) {
     const theme = getString(formData, "cardTheme");

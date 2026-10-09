@@ -104,6 +104,7 @@ export default async function CashbackProgramDetailPage({ searchParams }: { sear
                 <Info label="Currency" value={currency} />
                 <Info label="Max bill per transaction" value={settings?.maxBillAmount != null ? formatAed(Number(settings.maxBillAmount), currency) : "No limit"} />
                 <Info label="Max redemption per transaction" value={settings?.maxRedemption != null ? formatAed(Number(settings.maxRedemption), currency) : "No limit"} />
+                <Info label="Referral reward" value={settings?.referralRewardAmount != null && Number(settings.referralRewardAmount) > 0 ? `${formatAed(Number(settings.referralRewardAmount), currency)} to the referrer` : "None"} />
                 <Info label="Card style" value={cardThemeLabel(settings?.cardTheme ?? "BUSINESS_DEFAULT")} />
                 <Info label="Created" value={settings?.createdAt ? formatDate(settings.createdAt) : "-"} />
               </div>

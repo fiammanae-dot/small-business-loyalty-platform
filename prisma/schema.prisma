@@ -1484,6 +1484,9 @@ model BusinessCashbackSettings {
   maxRedemption Decimal? @map("max_redemption") @db.Decimal(12, 2)
   /// Public self-join link token (/join/cashback/<token>), like loyalty_programs.join_token.
   joinToken     String   @unique @default(uuid()) @map("join_token") @db.Uuid
+  /// Referral reward: cashback added to the referrer's balance when a friend they
+  /// referred makes their first cashback purchase. NULL / 0 = no reward.
+  referralRewardAmount Decimal? @map("referral_reward_amount") @db.Decimal(12, 2)
   // Program-style identity so cashback is a real program, not just a toggle:
   // its own name and card design (theme, hero image, design JSON), mirroring
   // loyalty_programs. All additive and optional, so existing rows are unaffected.
