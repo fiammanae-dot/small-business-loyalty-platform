@@ -1,5 +1,7 @@
 import { headers } from "next/headers";
 import { CardShareActions } from "@/components/CardShareActions";
+import { BusinessBrandingProvider } from "@/components/BusinessBrandingProvider";
+import { resolveBusinessBranding } from "@/lib/business-branding";
 import { WalletPassCard } from "@/components/wallet-pass/WalletPassCard";
 import { buildProgramPassView } from "@/lib/wallet-pass-view";
 import { detectWalletPlatform } from "@/lib/wallet-platform";
@@ -206,7 +208,9 @@ export default async function PublicCustomerCardPage({
     });
     await syncAppleWalletAfterTierChange(membership.id);
   }
-  const tiersVisible = areTiersVisible(membership.business.membershipSettings?.enabled);
+  // A customer on a membership package does not see visit tiers: the package
+  // is their status. Same rule as the dashboard's customer page.
+  const tiersVisible = areTiersVisible(membership.business.membershipSettings?.enabled) && !primaryProgram?.isMembership;
   const primaryCardModel = buildCardRenderModel({
     branding,
     cardDesign,
@@ -243,7 +247,9 @@ export default async function PublicCustomerCardPage({
     },
     tiersHidden: !tiersVisible,
   });
-  const primaryCardTheme = primaryCardModel.resolvedColors;
+  // The page around the pass (panels, icons, buttons) follows the brand colours
+  // from Brand Assets, whichever colour the pass itself uses.
+  const primaryCardTheme = { ...primaryCardModel.resolvedColors, accent: branding.primaryColor };
   // The card itself is the wallet pass, built from the same view as the Apple
   // pass and the Design Studio preview, so the web card matches the wallet.
   // Android visitors see the Google Wallet layout, everyone else Apple's.
@@ -300,6 +306,7 @@ export default async function PublicCustomerCardPage({
   };
 
   return (
+    <BusinessBrandingProvider branding={resolveBusinessBranding(membership.business.branding)}>
     <main
       className="min-h-screen px-4 py-5 text-[#1E293B]"
       style={{ backgroundColor: primaryCardTheme.pageBackground, color: branding.textColor }}
@@ -434,6 +441,7 @@ export default async function PublicCustomerCardPage({
         ) : null}
       </div>
     </main>
+    </BusinessBrandingProvider>
   );
 }
 

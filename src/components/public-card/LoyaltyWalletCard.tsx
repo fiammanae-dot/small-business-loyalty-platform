@@ -370,7 +370,7 @@ function CardFlipFooterButton({
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] px-5 text-[15px] font-bold shadow-sm transition duration-[180ms] hover:translate-y-[-1px] focus:outline-none focus:ring-4 focus:ring-orange-200 active:translate-y-0 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+      className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] px-5 text-[15px] font-bold shadow-sm transition duration-[180ms] hover:translate-y-[-1px] focus:outline-none focus:ring-4 focus:ring-black/10 active:translate-y-0 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
       style={{ background: theme.ctaBackground, color: theme.ctaForeground }}
     >
       {content}
@@ -565,7 +565,7 @@ function QrBlock({
           <Image src={qrCode} alt={`${businessName} customer card QR code`} width={232} height={232} unoptimized priority className="h-full w-full" />
         )
       ) : (
-        <div className="flex h-full w-full items-center justify-center rounded-md text-sm font-bold text-[#F97316]">
+        <div className="flex h-full w-full items-center justify-center rounded-md text-sm font-bold text-[#64748B]">
           QR pending
         </div>
       )}

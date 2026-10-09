@@ -47,7 +47,7 @@ export function LoyaltyCardBackExport({ wallet }: { wallet: Omit<LoyaltyWalletCa
                   style={{ backgroundImage: `url("${wallet.qrCode}")` }}
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center rounded-md text-sm font-bold text-[#F97316]">
+                <div className="flex h-full w-full items-center justify-center rounded-md text-sm font-bold text-[#64748B]">
                   QR pending
                 </div>
               )}
