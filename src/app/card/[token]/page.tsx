@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { CardShareActions } from "@/components/CardShareActions";
 import { WalletPassCard } from "@/components/wallet-pass/WalletPassCard";
 import { buildProgramPassView } from "@/lib/wallet-pass-view";
+import { detectWalletPlatform } from "@/lib/wallet-platform";
 import { syncAppleWalletAfterTierChange } from "@/lib/walletwallet/service";
 import { SaveCardImageButton } from "@/components/SaveCardImageButton";
 import { Gift, QrCode } from "lucide-react";
@@ -272,7 +273,11 @@ export default async function PublicCustomerCardPage({
         reward: { ready: primaryProgram.rewardReady, visitsToNext: primaryProgram.hasNextReward ? primaryProgram.remaining : null },
       })
     : null;
-  const passPlatform = /android/i.test((await headers()).get("user-agent") ?? "") ? "google" : "apple";
+  // The device decides: Android sees the Google Wallet layout and button, an
+  // iPhone the Apple ones, and a computer the Apple layout with a QR code to
+  // switch to the phone.
+  const walletPlatform = detectWalletPlatform((await headers()).get("user-agent"));
+  const passPlatform = walletPlatform === "google" ? "google" : "apple";
   const walletCardProps = {
     businessName: primaryCardModel.business.name,
     businessLogoUrl: primaryCardModel.business.logoUrl,
@@ -388,6 +393,9 @@ export default async function PublicCustomerCardPage({
               whatsappLabel="Share via WhatsApp"
               walletPrograms={walletPrograms}
               cashbackAppleWalletUrl={cashbackAppleWalletUrl}
+              walletPlatform={walletPlatform}
+              cardQrCode={cardQrCode}
+              hideUnavailableWhatsApp
               buttonColor={branding.buttonColor}
             />
             <SaveCardImageButton

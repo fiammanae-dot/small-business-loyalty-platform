@@ -1,7 +1,8 @@
 "use client";
 
 import { AlertTriangle } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { refineWalletPlatformInBrowser, type WalletPlatform } from "@/lib/wallet-platform";
 import { auditLoyaltyCardWhatsAppShare } from "@/app/card-share-actions";
 import { buildResendCardWhatsAppMessage, buildWelcomeCardWhatsAppMessage, getWhatsAppManualLink } from "@/lib/whatsapp-messages";
 
@@ -18,6 +19,16 @@ type CardShareActionsProps = {
   appleWalletUrl?: string | null;
   walletPrograms?: { name: string; appleWalletUrl: string; googleWalletUrl: string }[];
   cashbackAppleWalletUrl?: string | null;
+  /**
+   * The customer's own card page passes the device's wallet: only the button
+   * that device can open is shown (a QR code on computers). Staff screens leave
+   * it unset and keep both buttons, since they may send a card to either phone.
+   */
+  walletPlatform?: WalletPlatform;
+  /** QR code of the card link, shown on computers so the customer can switch to their phone. */
+  cardQrCode?: string | null;
+  /** On the customer's own page an unusable WhatsApp button is hidden rather than shown as an error. */
+  hideUnavailableWhatsApp?: boolean;
   buttonColor?: string;
   compact?: boolean;
   messageType?: "welcome" | "resend";
@@ -36,11 +47,20 @@ export function CardShareActions({
   appleWalletUrl,
   walletPrograms,
   cashbackAppleWalletUrl,
+  walletPlatform,
+  cardQrCode,
+  hideUnavailableWhatsApp = false,
   buttonColor,
   compact = false,
   messageType = "welcome",
 }: CardShareActionsProps) {
   const [message, setMessage] = useState("");
+  const [platform, setPlatform] = useState<WalletPlatform | undefined>(walletPlatform);
+  useEffect(() => {
+    if (walletPlatform) setPlatform(refineWalletPlatformInBrowser(walletPlatform, navigator.userAgent, navigator.maxTouchPoints ?? 0));
+  }, [walletPlatform]);
+  const showApple = platform !== "google" && platform !== "desktop";
+  const showGoogle = platform !== "apple" && platform !== "desktop";
   const [sharing, setSharing] = useState(false);
   const shareText = useMemo(
     () => {
@@ -50,6 +70,7 @@ export function CardShareActions({
     [businessName, cardUrl, customerName, messageType],
   );
   const whatsappUrl = useMemo(() => getWhatsAppManualLink(recipientPhone, shareText), [recipientPhone, shareText]);
+  const showWhatsApp = Boolean(whatsappUrl) || !hideUnavailableWhatsApp;
   const disabledWhatsappLabel = recipientPhone ? "Invalid phone" : "No phone";
 
   async function copyLink() {
@@ -83,7 +104,7 @@ export function CardShareActions({
 
   return (
     <div className={compact ? "" : "space-y-3"}>
-      <div className={compact ? "flex items-center gap-2" : `grid gap-3 ${showCopy ? "sm:grid-cols-2" : ""}`}>
+      <div className={compact ? "flex items-center gap-2" : `grid gap-3 ${showCopy && showWhatsApp ? "sm:grid-cols-2" : ""}`}>
         {showCopy ? (
           <button
             type="button"
@@ -93,7 +114,7 @@ export function CardShareActions({
             Copy card link
           </button>
         ) : null}
-        {compact && !whatsappUrl ? (
+        {!showWhatsApp ? null : compact && !whatsappUrl ? (
           <span
             title={disabledWhatsappLabel}
             className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-amber-200 bg-amber-50 text-amber-700"
@@ -114,7 +135,7 @@ export function CardShareActions({
           </button>
         )}
       </div>
-      {!compact && !whatsappUrl ? (
+      {!compact && showWhatsApp && !whatsappUrl ? (
         <p className="text-center text-sm font-medium text-[#9A3412]">
           {recipientPhone ? "Customer phone number is invalid." : "Customer phone number required."}
         </p>
@@ -122,27 +143,44 @@ export function CardShareActions({
 
       {showWallet ? (
         <>
-        {walletPrograms && walletPrograms.length > 0 ? (
+        {platform === "desktop" ? (
+          // A computer cannot hold a wallet pass: send the customer to their phone,
+          // where the card page shows the one button that phone can open.
+          <div className="flex items-center gap-4 rounded-md border border-[#E5E7EB] bg-[#F8FAFC] p-4">
+            {cardQrCode ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={cardQrCode} alt="QR code to open this card on your phone" className="h-28 w-28 shrink-0 rounded bg-white" />
+            ) : null}
+            <div>
+              <p className="text-sm font-semibold text-[#111827]">Add this card to your phone&apos;s wallet</p>
+              <p className="mt-1 text-sm text-[#64748B]">Scan with your phone&apos;s camera, then tap the Add to Wallet button that appears.</p>
+            </div>
+          </div>
+        ) : walletPrograms && walletPrograms.length > 0 ? (
           walletPrograms.map((p) => (
             <div key={p.name} className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">{p.name}</p>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <a
-                  href={p.appleWalletUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-md bg-black px-4 py-3 text-center text-sm font-semibold text-white"
-                >
-                  Add to Apple Wallet
-                </a>
-                <a
-                  href={p.googleWalletUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-md border border-[#E5E7EB] bg-white px-4 py-3 text-center text-sm font-semibold text-[#111827] transition business-hover"
-                >
-                  Add to Google Wallet
-                </a>
+              <div className={`grid gap-3 ${showApple && showGoogle ? "sm:grid-cols-2" : ""}`}>
+                {showApple ? (
+                  <a
+                    href={p.appleWalletUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-md bg-black px-4 py-3 text-center text-sm font-semibold text-white"
+                  >
+                    Add to Apple Wallet
+                  </a>
+                ) : null}
+                {showGoogle ? (
+                  <a
+                    href={p.googleWalletUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-md border border-[#E5E7EB] bg-white px-4 py-3 text-center text-sm font-semibold text-[#111827] transition business-hover"
+                  >
+                    Add to Google Wallet
+                  </a>
+                ) : null}
               </div>
             </div>
           ))
@@ -186,7 +224,8 @@ export function CardShareActions({
           )}
         </div>
         )}
-        {cashbackAppleWalletUrl ? (
+        {/* The cashback card is an Apple pass only, so it is offered only where Apple Wallet exists. */}
+        {cashbackAppleWalletUrl && showApple ? (
           <a
             href={cashbackAppleWalletUrl}
             target="_blank"
