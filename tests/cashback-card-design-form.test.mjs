@@ -25,12 +25,15 @@ test("the cashback photo field is photo-only and posts hero + url", () => {
   assert.doesNotMatch(field, /StampIconPicker/);
 });
 
-test("the cashback form has a name, the theme selector and the photo field", () => {
+test("the cashback form has a name, the colour picker, the photo field and a live pass preview", () => {
   const form = read("src/components/CashbackSetupForm.tsx");
   assert.match(form, /saveCashbackSettingsAction/);
   assert.match(form, /name="redirectTo" value="\/dashboard\/programs"/);
-  assert.match(form, /<CardThemePreviewSelector selectedTheme=\{cardTheme\} businessName=\{businessName\} branding=\{branding\} \/>/);
-  assert.match(form, /<CashbackPhotoField defaultPhotoUrl=\{walletPhotoUrl\} \/>/);
+  assert.match(form, /<CardColourPicker value=\{theme\} onChange=\{setTheme\} branding=\{branding\} mode="cardTheme" \/>/);
+  assert.match(form, /<input type="hidden" name="cardTheme" value=\{theme\} \/>/);
+  assert.match(form, /<CashbackPhotoField defaultPhotoUrl=\{walletPhotoUrl\} onPhotoChange=\{setPhoto\} \/>/);
+  // The live preview is the real cashback pass.
+  assert.match(form, /<WalletPassPreview view=\{previewView\} \/>/);
   assert.match(form, /name="name"/);
 });
 
@@ -54,12 +57,12 @@ test("the cashback setup is a two-step wizard like stamp/membership", () => {
   assert.match(form, /if \(step !== 2\) event\.preventDefault\(\)/);
   // step 1 = rules, step 2 = design
   assert.match(form, /step === 1 \? "grid gap-5" : "hidden"/);
-  assert.match(form, /step === 2 \? "grid gap-6" : "hidden"/);
+  assert.match(form, /step === 2 \? "grid gap-6/);
   // rules live in step 1, theme + picture in step 2
-  const step1 = form.slice(form.indexOf('step === 1 ? "grid gap-5"'), form.indexOf('step === 2 ? "grid gap-6"'));
+  const step1 = form.slice(form.indexOf('step === 1 ? "grid gap-5"'), form.indexOf('step === 2 ? "grid gap-6'));
   assert.match(step1, /name="ratePercent"/);
-  const step2 = form.slice(form.indexOf('step === 2 ? "grid gap-6"'));
-  assert.match(step2, /CardThemePreviewSelector/);
+  const step2 = form.slice(form.indexOf('step === 2 ? "grid gap-6'));
+  assert.match(step2, /CardColourPicker/);
   assert.match(step2, /CashbackPhotoField/);
 });
 

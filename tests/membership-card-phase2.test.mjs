@@ -64,11 +64,12 @@ test("the Google Wallet pass header depletes for a membership", () => {
   const mapper = read("src/lib/google-wallet/mapper.ts");
   assert.match(mapper, /import \{ membershipSessionSummary \} from "@\/lib\/membership-sessions"/);
   assert.match(mapper, /const isMembership = membership\.loyaltyProgram\.isMembership/);
-  // The pass's main header slot counts sessions left.
-  assert.match(mapper, /label: "Visits left"/);
-  assert.match(mapper, /string: `\$\{sessionsRemaining\} of \$\{sessionsTotal\}`/);
-  // The filled stamp image uses remaining, not collected.
-  assert.match(mapper, /const walletFilled = isMembership \? sessionsRemaining/);
+  // The pass's main header slot counts sessions left, and the filled stamp
+  // image uses remaining, not collected - both decided by the shared view.
+  assert.match(mapper, /membership: isMembership \? \{ remaining: sessionsRemaining, total: sessionsTotal \} : null/);
+  const view = read("src/lib/wallet-pass-view.ts");
+  assert.match(view, /primary: \{ label: "Visits left", value: `\$\{membershipRemaining\} of \$\{membershipTotal\}` \}/);
+  assert.match(view, /filled: isMembership \? membershipRemaining : collected/);
   // The class describes the package, not a reward.
   assert.match(mapper, /membershipClassBody\(membership\)/);
 });

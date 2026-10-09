@@ -56,8 +56,10 @@ test("a photo choice with no photo falls back to the stamps", () => {
   const mapper = read("src/lib/google-wallet/mapper.ts");
   // Google fetches whatever URL we hand it. An empty or non-https value would
   // leave the card with a broken image where the stamps used to be.
-  assert.match(mapper, /const photoUrl =\s*\n\s*membership\.loyaltyProgram\.walletHeroStyle === "PHOTO"/);
-  assert.match(mapper, /const stampImage = photoUrl\s*\n\s*\? imageModule\(photoUrl/);
+  assert.match(mapper, /photoUrl: absoluteUrl\(program\.walletPhotoUrl, baseUrl\)/);
+  assert.match(mapper, /view\.banner\?\.kind === "photo"\s*\n\s*\? imageModule\(view\.banner\.url/);
+  // The shared view only uses the photo when there is one.
+  assert.match(read("src/lib/wallet-pass-view.ts"), /program\.walletHeroStyle === "PHOTO" && program\.photoUrl \? program\.photoUrl : null/);
 
   const programs = read("src/lib/programs.ts");
   // Stored only if it is an https address; anything else becomes null, which

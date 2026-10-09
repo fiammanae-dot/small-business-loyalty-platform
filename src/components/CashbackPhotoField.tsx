@@ -12,8 +12,19 @@ const ACCEPTED_EXTENSIONS = ["png", "jpg", "jpeg", "webp"];
  * walletHeroStyle is pinned to PHOTO; an empty walletPhotoUrl means a clean
  * card that just shows the balance.
  */
-export function CashbackPhotoField({ defaultPhotoUrl }: { defaultPhotoUrl?: string | null }) {
-  const [photoUrl, setPhotoUrl] = useState(defaultPhotoUrl?.trim() ?? "");
+export function CashbackPhotoField({
+  defaultPhotoUrl,
+  onPhotoChange,
+}: {
+  defaultPhotoUrl?: string | null;
+  /** Lets the live card preview follow an upload or removal. */
+  onPhotoChange?: (url: string) => void;
+}) {
+  const [photoUrl, setPhotoUrlState] = useState(defaultPhotoUrl?.trim() ?? "");
+  const setPhotoUrl = (url: string) => {
+    setPhotoUrlState(url);
+    onPhotoChange?.(url);
+  };
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);

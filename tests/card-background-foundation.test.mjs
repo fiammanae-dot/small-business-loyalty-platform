@@ -46,7 +46,7 @@ test("industry design packs carry future background defaults without applying th
   const wallet = read("src/components/public-card/LoyaltyWalletCard.tsx");
   const frontExport = read("src/components/public-card/LoyaltyCardFrontExport.tsx");
   const backExport = read("src/components/public-card/LoyaltyCardBackExport.tsx");
-  const preview = read("src/components/CardThemePreviewSelector.tsx");
+  const preview = read("src/components/wallet-pass/WalletPassCard.tsx");
 
   assert.match(design, /backgroundPattern: "SCISSORS"/);
   assert.match(design, /backgroundPattern: "BEAUTY_PATTERN"/);

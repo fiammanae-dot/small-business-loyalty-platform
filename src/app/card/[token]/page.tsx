@@ -1,4 +1,7 @@
+import { headers } from "next/headers";
 import { CardShareActions } from "@/components/CardShareActions";
+import { WalletPassCard } from "@/components/wallet-pass/WalletPassCard";
+import { buildProgramPassView } from "@/lib/wallet-pass-view";
 import { syncAppleWalletAfterTierChange } from "@/lib/walletwallet/service";
 import { SaveCardImageButton } from "@/components/SaveCardImageButton";
 import { Gift, QrCode } from "lucide-react";
@@ -6,7 +9,7 @@ import { getCardQrDataUrl, getCardUrl, resolveBranding } from "@/lib/customer-ca
 import { resolveCardThemeColors } from "@/lib/card-themes";
 import type { CardDesignInput } from "@/lib/card-design";
 import { buildCardRenderModel } from "@/lib/card-render-model";
-import { areTiersVisible, calculateCustomerTier, computeTierMaintenance, tierQualificationWindowLabels } from "@/lib/customer-tiers";
+import { areTiersVisible, calculateCustomerTier, computeTierMaintenance, fromStoredTier, tierQualificationWindowLabels } from "@/lib/customer-tiers";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { progressValue } from "@/lib/programs";
@@ -102,6 +105,7 @@ export default async function PublicCustomerCardPage({
           remaining: sessionsRemaining,
           completion,
           rewardReady: false,
+          hasNextReward: false,
           rewardName: programMembership.loyaltyProgram.rewardName,
           theme,
         };
@@ -140,6 +144,7 @@ export default async function PublicCustomerCardPage({
         remaining,
         completion,
         rewardReady,
+        hasNextReward: Boolean(nextReward),
         rewardName,
         theme,
       };
@@ -238,6 +243,36 @@ export default async function PublicCustomerCardPage({
     tiersHidden: !tiersVisible,
   });
   const primaryCardTheme = primaryCardModel.resolvedColors;
+  // The card itself is the wallet pass, built from the same view as the Apple
+  // pass and the Design Studio preview, so the web card matches the wallet.
+  // Android visitors see the Google Wallet layout, everyone else Apple's.
+  const primaryPassView = primaryProgram
+    ? buildProgramPassView({
+        businessName: membership.business.name,
+        logoUrl: branding.logoUrl,
+        branding,
+        program: {
+          name: primaryProgram.programMembership.loyaltyProgram.name,
+          isMembership: primaryProgram.isMembership,
+          requiredStamps: primaryProgram.programMembership.loyaltyProgram.requiredStamps,
+          cardTheme: primaryProgram.programMembership.loyaltyProgram.cardTheme,
+          cardDesign: primaryProgram.programMembership.loyaltyProgram.cardDesign,
+          walletHeroStyle: primaryProgram.programMembership.loyaltyProgram.walletHeroStyle,
+          photoUrl: primaryProgram.programMembership.loyaltyProgram.walletPhotoUrl,
+        },
+        customerName,
+        progress: primaryProgram.progress,
+        membership: primaryProgram.isMembership
+          ? { remaining: primaryProgram.sessionsRemaining, total: primaryProgram.sessionsTotal }
+          : null,
+        tierName:
+          !primaryProgram.isMembership && membership.business.tierSetting
+            ? fromStoredTier(tier.storedTier) ?? "Bronze"
+            : null,
+        reward: { ready: primaryProgram.rewardReady, visitsToNext: primaryProgram.hasNextReward ? primaryProgram.remaining : null },
+      })
+    : null;
+  const passPlatform = /android/i.test((await headers()).get("user-agent") ?? "") ? "google" : "apple";
   const walletCardProps = {
     businessName: primaryCardModel.business.name,
     businessLogoUrl: primaryCardModel.business.logoUrl,
@@ -267,16 +302,37 @@ export default async function PublicCustomerCardPage({
       <div className="mx-auto flex w-full max-w-lg flex-col gap-4 md:max-w-2xl">
         <div className="pointer-events-none fixed left-[-10000px] top-0" aria-hidden="true">
           <div data-loyalty-card-front-export>
-            <LoyaltyCardFrontExport wallet={walletCardProps} />
+            {primaryPassView ? (
+              <div className="w-[360px] p-3">
+                <WalletPassCard view={primaryPassView} platform={passPlatform} qrCode={primaryProgram?.qrCode} />
+              </div>
+            ) : (
+              <LoyaltyCardFrontExport wallet={walletCardProps} />
+            )}
           </div>
           <div data-loyalty-card-back-export>
             <LoyaltyCardBackExport wallet={walletCardProps} />
           </div>
         </div>
 
-        <div className="mx-auto flex w-full max-w-[360px] flex-col gap-4 rounded-[34px] bg-white">
-          <LoyaltyWalletCard {...walletCardProps} />
-        </div>
+        {primaryPassView && primaryProgram ? (
+          <div className="mx-auto grid w-full max-w-[360px] justify-items-center gap-3">
+            <WalletPassCard view={primaryPassView} platform={passPlatform} qrCode={primaryProgram.qrCode} />
+            {!primaryProgram.isMembership ? (
+              <section className="w-full rounded-[22px] border border-[#E5E7EB] bg-white p-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
+                  {primaryProgram.rewardReady ? "Reward ready" : "Next reward"}
+                </p>
+                <p className="mt-1 text-base font-semibold text-[#1E293B]">{primaryProgram.rewardName}</p>
+                <p className="mt-1 text-sm text-[#64748B]">{primaryCardModel.progress.statusText}</p>
+              </section>
+            ) : null}
+          </div>
+        ) : (
+          <div className="mx-auto flex w-full max-w-[360px] flex-col gap-4 rounded-[34px] bg-white">
+            <LoyaltyWalletCard {...walletCardProps} />
+          </div>
+        )}
 
         {tiersVisible ? (
           <div className="mx-auto w-full max-w-[360px]">

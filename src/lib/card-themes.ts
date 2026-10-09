@@ -326,8 +326,13 @@ export function resolveWalletCardColors({
   cardDesign?: CardDesignInput;
 }) {
   const theme = resolveCardThemeColors({ cardTheme, branding, cardDesign });
+  // "Brand colour" is the brand primary colour, full stop. The web theme above
+  // swaps to the page background when white text is unreadable on its
+  // primary-to-secondary GRADIENT; a pass has no gradient and picks its own
+  // readable text colour (below), so that swap would only turn a brand-coloured
+  // pass white.
   const background =
-    firstHexColor(theme.cardBackground) ??
+    (theme.value === "BUSINESS_DEFAULT" ? firstHexColor(branding.primaryColor) : firstHexColor(theme.cardBackground)) ??
     firstHexColor(branding.primaryColor) ??
     firstHexColor(branding.backgroundColor) ??
     "#1F2937";

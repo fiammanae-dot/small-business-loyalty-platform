@@ -22,11 +22,14 @@ test("schema + migration add the per-customer feature pass table", () => {
 test("the cashback pass shows the balance, program name and member", () => {
   const mapper = read("src/lib/walletwallet/mapper.ts");
   assert.match(mapper, /export async function buildCashbackPassBody/);
-  assert.match(mapper, /label: "Balance", value: balance/);
-  // program name is the top header; the middle row is Member (left) then Balance (right)
-  assert.match(mapper, /headerFields: \[\{ label: "Program", value: cardName \}\]/);
-  assert.match(mapper, /secondaryFields\.push\(\{ label: "Member", value: customerName \}\)/);
-  assert.match(mapper, /secondaryFields\.push\(\{ label: "Balance", value: balance, changeMessage: "Balance: %@" \}\)/);
+  // program name is the top header; the middle row is Member (left) then
+  // Balance (right) - laid out by the shared view (see wallet-pass-view.test)
+  assert.match(mapper, /const view = buildCashbackPassView\(/);
+  assert.match(mapper, /headerFields: \[view\.header\]/);
+  const view = read("src/lib/wallet-pass-view.ts");
+  assert.match(view, /header: \{ label: "Program", value: title \}/);
+  assert.match(view, /const secondaryFields: WalletPassField\[\] = \[\{ label: "Member", value: input\.customerName \}\];/);
+  assert.match(view, /if \(photo\) secondaryFields\.push\(balanceField\)/);
   // barcode is the customer's card URL (per-customer, not per-program)
   assert.match(mapper, /const cardUrl = await getCardUrl\(customer\.cardToken\)/);
 });

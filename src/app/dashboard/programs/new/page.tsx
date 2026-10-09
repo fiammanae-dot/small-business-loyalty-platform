@@ -96,17 +96,7 @@ export default async function NewProgramPage({
           branding={branding}
           csrfName={csrfFieldName()}
           csrfToken={createCsrfToken("dashboard:programs")}
-          initialDesign={{
-            layoutStyle: defaultCardDesign.layoutStyle,
-            stampJourneyStyle: defaultCardDesign.stampJourneyStyle,
-            stampIcon: defaultCardDesign.stampIcon,
-            backgroundStyle: toCreateBackgroundStyle(defaultCardDesign.backgroundStyle),
-            backgroundPattern: defaultCardDesign.backgroundPattern,
-            rewardStyle: defaultCardDesign.rewardStyle,
-            typographyPreset: defaultCardDesign.typographyPreset,
-            decorationStyle: defaultCardDesign.decorationStyle,
-            visibleSections: defaultCardDesign.visibleSections,
-          }}
+          initialDesign={{ layoutStyle: defaultCardDesign.layoutStyle, stampIcon: defaultCardDesign.stampIcon }}
           stampIconOptions={stampIconOptions}
           membershipsEnabled={business.membershipSettings?.enabled ?? false}
           lockedType={lockedType}
@@ -122,10 +112,4 @@ function labelize(value: string) {
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
-}
-
-function toCreateBackgroundStyle(value: string): "SOLID" | "GRADIENT" | "PATTERN" {
-  if (value === "GRADIENT") return "GRADIENT";
-  if (value === "PATTERN" || value === "INDUSTRY_PATTERN") return "PATTERN";
-  return "SOLID";
 }

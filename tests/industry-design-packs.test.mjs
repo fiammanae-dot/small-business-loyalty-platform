@@ -60,7 +60,7 @@ test("industry design packs map existing BusinessType values to future-facing pa
 
 test("industry design packs are applied to live cards only through saved program design", () => {
   const publicCard = read("src/app/card/[token]/page.tsx");
-  const preview = read("src/components/CardThemePreviewSelector.tsx");
+  const preview = read("src/components/wallet-pass/WalletPassCard.tsx");
   const themes = read("src/lib/card-themes.ts");
 
   assert.doesNotMatch(publicCard, /resolveIndustryCardDesign|getIndustryDesignPack/);

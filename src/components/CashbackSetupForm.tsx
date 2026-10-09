@@ -1,11 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { CardTheme } from "@prisma/client";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { Button, SectionCard } from "@/components/ui";
 import { saveCashbackSettingsAction } from "@/app/dashboard/actions";
-import { CardThemePreviewSelector } from "@/components/CardThemePreviewSelector";
+import { CardColourPicker } from "@/components/wallet-pass/CardColourPicker";
+import { WalletPassPreview } from "@/components/wallet-pass/WalletPassPreview";
+import { buildCashbackPassView } from "@/lib/wallet-pass-view";
 import { CashbackPhotoField } from "@/components/CashbackPhotoField";
 
 type PreviewBranding = {
@@ -52,15 +54,36 @@ export function CashbackSetupForm({
   csrfToken: string;
 }) {
   const [step, setStep] = useState<1 | 2>(1);
+  const [theme, setTheme] = useState<CardTheme>(cardTheme);
+  const [photo, setPhoto] = useState(walletPhotoUrl?.trim() ?? "");
+  const [programName, setProgramName] = useState(name);
+  const formRef = useRef<HTMLFormElement>(null);
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
 
+  // The cashback card exactly as Apple and Google Wallet show it, from the same
+  // view the real cashback pass is built from.
+  const previewView = useMemo(
+    () =>
+      buildCashbackPassView({
+        businessName,
+        logoUrl: branding.logoUrl,
+        branding,
+        cashback: { name: programName, cardTheme: theme, photoUrl: photo || null },
+        customerName: "Mina Hanna",
+        balance: "AED 25.00",
+      }),
+    [branding, businessName, photo, programName, theme],
+  );
+
   function goToStep(next: 1 | 2) {
+    if (next === 2 && formRef.current) setProgramName(String(new FormData(formRef.current).get("name") ?? ""));
     setStep(next);
     requestAnimationFrame(() => stepHeadingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   }
 
   return (
     <form
+      ref={formRef}
       action={saveCashbackSettingsAction}
       onSubmit={(event) => {
         // Multi-step wizard: only step 2 may submit. The buttons carry distinct
@@ -74,6 +97,7 @@ export function CashbackSetupForm({
     >
       <input type="hidden" name={csrfName} value={csrfToken} />
       <input type="hidden" name="redirectTo" value="/dashboard/programs" />
+      <input type="hidden" name="cardTheme" value={theme} />
 
       <WizardProgress step={step} />
       <div className="scroll-mt-24 outline-none" tabIndex={-1}>
@@ -104,11 +128,20 @@ export function CashbackSetupForm({
         </SectionCard>
       </div>
 
-      <div className={step === 2 ? "grid gap-6" : "hidden"}>
-        <CardThemePreviewSelector selectedTheme={cardTheme} businessName={businessName} branding={branding} />
-        <SectionCard title="Card picture" description="An optional photo at the top of the cashback card. Leave blank for a clean card that just shows the balance.">
-          <CashbackPhotoField defaultPhotoUrl={walletPhotoUrl} />
+      <div className={step === 2 ? "grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px] xl:items-start" : "hidden"}>
+        <div className="grid gap-5">
+        <SectionCard title="Card colour" description="Apple and Google Wallet paint the pass with one colour. Brand colour follows your Business Branding settings.">
+          <CardColourPicker value={theme} onChange={setTheme} branding={branding} mode="cardTheme" />
         </SectionCard>
+        <SectionCard title="Card picture" description="An optional photo at the top of the cashback card. Leave blank for a clean card that just shows the balance.">
+          <CashbackPhotoField defaultPhotoUrl={walletPhotoUrl} onPhotoChange={setPhoto} />
+        </SectionCard>
+        </div>
+        <aside className="xl:sticky xl:top-6">
+          <SectionCard title="Live Preview" description="A sample customer with a cashback balance.">
+            <WalletPassPreview view={previewView} />
+          </SectionCard>
+        </aside>
       </div>
 
       <div className="sticky bottom-0 z-10 -mx-5 flex items-center justify-between gap-3 border-t border-[#E5E7EB] bg-white/95 px-5 py-3 backdrop-blur supports-[backdrop-filter]:bg-white/80">

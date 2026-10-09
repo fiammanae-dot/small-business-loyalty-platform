@@ -39,14 +39,13 @@ test("card design foundation defines future Design Studio fields without persist
 test("card theme resolver prefers saved program design while preserving legacy theme previews", () => {
   const themes = read("src/lib/card-themes.ts");
   const publicCard = read("src/app/card/[token]/page.tsx");
-  const preview = read("src/components/CardThemePreviewSelector.tsx");
+  const preview = read("src/components/wallet-pass/WalletPassCard.tsx");
 
   assert.match(themes, /cardDesign\?: CardDesignInput/);
   assert.match(themes, /const design = resolveCardDesign\(cardDesign\)/);
   assert.match(themes, /cardDesign \? getCardThemeForCardDesign\(design\) : cardTheme/);
   assert.match(publicCard, /programMembership\.loyaltyProgram\.cardDesign as CardDesignInput/);
   assert.match(publicCard, /resolveCardThemeColors\(\{ cardTheme: programMembership\.loyaltyProgram\.cardTheme, branding, cardDesign: programCardDesign \}\)/);
-  assert.match(preview, /resolveCardThemeColors\(\{ cardTheme: previewTheme, branding \}\)/);
   assert.doesNotMatch(preview, /resolveCardDesign\(\)/);
 });
 

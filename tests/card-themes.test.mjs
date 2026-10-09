@@ -29,10 +29,9 @@ test("loyalty programs store a selected card theme with business default support
   }
 });
 
-test("program edit exposes wallet visual style previews while create uses the create wizard default", () => {
+test("the card colour is chosen in Design Studio, not on the program edit form", () => {
   const themes = read("src/lib/card-themes.ts");
   const form = read("src/components/ProgramForm.tsx");
-  const preview = read("src/components/CardThemePreviewSelector.tsx");
   const programs = read("src/lib/programs.ts");
   const actions = read("src/app/dashboard/programs/actions.ts");
   const editPage = read("src/app/dashboard/programs/[id]/edit/page.tsx");
@@ -45,25 +44,10 @@ test("program edit exposes wallet visual style previews while create uses the cr
   assert.match(themes, /image-background/);
   assert.match(themes, /Business Default/);
   assert.match(themes, /Uses your business brand colors with the Modern Clean wallet style/);
-  assert.match(form, /CardThemePreviewSelector/);
-  assert.match(form, /showCardThemeSelector = true/);
+  // The edit form no longer offers a wallet style of its own (its choice was
+  // ignored whenever the program had a saved design); Design Studio decides.
+  assert.doesNotMatch(form, /CardThemePreviewSelector|Wallet Card Style/);
   assert.match(form, /name="cardTheme" value=\{cardTheme\}/);
-  assert.match(form, /businessName={businessName}/);
-  assert.match(form, /branding={branding}/);
-  assert.match(form, /Wallet Card Style/);
-  assert.match(form, /Business category and wallet style are separate/);
-  assert.match(preview, /Wallet card style/);
-  assert.match(preview, /Choose one of four wallet styles/);
-  assert.match(preview, /aria-label=.*wallet card style/);
-  assert.match(preview, /View card style/);
-  assert.match(preview, /type="button"/);
-  assert.match(preview, /role="dialog"/);
-  assert.match(preview, /aria-modal="true"/);
-  assert.match(preview, /LoyaltyWalletCard/);
-  assert.match(preview, /programName="Coffee Club"/);
-  assert.match(preview, /rewardName="Free Coffee"/);
-  assert.match(preview, /This card style uses illustrative card content/);
-  assert.match(preview, /cardThemeOptions\.map/);
   assert.match(programs, /cardTheme: z\.enum/);
   assert.match(actions, /cardTheme: getString\(formData, "cardTheme"\) \|\| defaultCardTheme/);
   assert.match(actions, /getIndustryDefaultCardTheme\(businessType\)/);

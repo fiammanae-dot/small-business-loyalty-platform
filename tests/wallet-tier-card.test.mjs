@@ -11,9 +11,9 @@ const read = (p) => readFileSync(p, "utf8");
 
 test("the stamp program pass carries the tier (Apple), gated on stamp programs + tiers", () => {
   const mapper = read("src/lib/walletwallet/mapper.ts");
-  assert.match(mapper, /if \(!isMembership && business\.tierSetting\)/);
-  assert.match(mapper, /const tierName = fromStoredTier\(/);
-  assert.match(mapper, /secondaryFields\.push\(\{ label: "Tier", value: tierName/);
+  assert.match(mapper, /tierName: !isMembership && business\.tierSetting\s*\n\s*\? fromStoredTier\(/);
+  const view = read("src/lib/wallet-pass-view.ts");
+  assert.match(view, /if \(input\.tierName\) secondaryFields\.push\(\{ label: "Tier", value: input\.tierName/);
 });
 
 test("the stamp program pass carries the tier (Google), gated on stamp programs + tiers", () => {

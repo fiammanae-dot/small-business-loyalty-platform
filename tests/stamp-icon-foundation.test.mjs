@@ -76,13 +76,15 @@ test("saved stamp icons are applied to live customer card progress markers", () 
   const stampIconMarks = read("src/lib/stamp-icon-marks.ts");
   const designStudioForm = read("src/components/ProgramDesignStudioForm.tsx");
   const createWizard = read("src/components/ProgramCreateWizard.tsx");
-  const preview = read("src/components/CardThemePreviewSelector.tsx");
+  const preview = read("src/components/wallet-pass/WalletPassCard.tsx");
   const publicCard = read("src/app/card/[token]/page.tsx");
 
   assert.match(publicCard, /cardDesign: primaryCardModel\.design/);
   assert.match(wallet, /StampSlot stampIcon=\{design\.stampIcon\} filled=\{filled\}/);
-  assert.match(designStudioForm, /StampSlot key=\{index\} stampIcon=\{stampIcon\} filled=\{filled\}/);
-  assert.match(createWizard, /StampSlot key=\{index\} stampIcon=\{icon\} filled=\{filled\}/);
+  // The design previews show the real pass, whose stamp picture is drawn with
+  // the chosen icon (see wallet-pass-view.test).
+  assert.match(designStudioForm, /cardDesign: walletPreviewDesign\(layoutStyle, stampIcon\)/);
+  assert.match(createWizard, /cardDesign: walletPreviewDesign\(layoutStyle, stampIcon\)/);
   assert.match(stampIconGraphic, /mode\?: "selector" \| "customer"/);
   assert.match(stampIconGraphic, /export function StampSlot/);
   assert.match(stampIconGraphic, /rounded-full border border-\[#E5E7EB\] bg-white/);
