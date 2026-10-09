@@ -1329,7 +1329,7 @@ function CashbackPanel({
               return (
                 <li key={entry.id} className="flex items-center justify-between gap-3 rounded-lg border border-[#EEF1F4] px-3 py-2">
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-[#111827]">{label}{entry.invoiceNumber ? ` \u00b7 Invoice ${entry.invoiceNumber}` : ""}</p>
+                    <p className="text-sm font-semibold text-[#111827]">{entry.note ?? label}{entry.invoiceNumber ? ` \u00b7 Invoice ${entry.invoiceNumber}` : ""}</p>
                     <p className="text-xs text-[#6B7280]">{formatDateTime(entry.createdAt)}{entry.staffName ? ` \u00b7 by ${entry.staffName}` : ""}</p>
                   </div>
                   <div className="text-right">

@@ -15,10 +15,15 @@ import type { GoogleWalletConfig } from "@/lib/google-wallet/config";
 import { buildSaveToGoogleWalletUrl, signSaveToGoogleWalletJwt } from "@/lib/google-wallet/jwt";
 import {
   buildGoogleWalletAccountId,
+  buildGoogleWalletCashbackClassId,
+  buildGoogleWalletCashbackClassPayload,
+  buildGoogleWalletCashbackObjectId,
+  buildGoogleWalletCashbackObjectPayload,
   buildGoogleWalletClassId,
   buildGoogleWalletClassPayload,
   buildGoogleWalletObjectId,
   buildGoogleWalletObjectPayload,
+  type GoogleWalletCashbackCustomer,
   type GoogleWalletProgramMembership,
 } from "@/lib/google-wallet/mapper";
 
@@ -103,21 +108,131 @@ export async function syncGoogleWalletObjectAfterLoyaltyChange(customerProgramMe
 }
 
 /**
- * Cashback is one balance per CUSTOMER, but a Google Wallet pass is per loyalty
- * PROGRAM, so a cashback add/spend has to refresh every pass that customer
- * holds. Best-effort: a wallet hiccup must never break a money movement.
+ * A cashback add/spend refreshes the customer's Google Wallet CASHBACK card, if
+ * they added one. Program cards no longer carry cashback, so nothing else
+ * changes. Best-effort: a wallet hiccup must never break a money movement.
  */
 export async function syncGoogleWalletAfterCashbackChange(businessCustomerMembershipId: number) {
   try {
-    const programMemberships = await prisma.customerProgramMembership.findMany({
+    const existing = await prisma.googleWalletCashbackPass.findUnique({
       where: { businessCustomerMembershipId },
       select: { id: true },
     });
-    await Promise.all(
-      programMemberships.map((programMembership) => syncGoogleWalletObjectAfterLoyaltyChange(programMembership.id)),
-    );
+    if (!existing) return;
+    const result = await syncGoogleCashbackPass(businessCustomerMembershipId);
+    if (!result.ok) console.warn("[google-wallet] cashback card sync skipped or failed", result);
   } catch (error) {
     console.warn("[google-wallet] sync failed after cashback change", error);
+  }
+}
+
+const cashbackCustomerInclude = {
+  business: { include: { branding: true, cashbackSettings: true } },
+} satisfies Prisma.BusinessCustomerMembershipInclude;
+
+/**
+ * Create/patch the customer's Google Wallet CASHBACK card: the business's
+ * shared cashback class, then the customer's object with their balance.
+ */
+export async function syncGoogleCashbackPass(
+  businessCustomerMembershipId: number,
+  options: { includeSaveUrl?: boolean } = {},
+): Promise<SyncResult> {
+  const config = getGoogleWalletConfig();
+  if (!config) return { ok: false, reason: "NOT_CONFIGURED", error: "Google Wallet is not configured." };
+
+  const customer = await prisma.businessCustomerMembership.findUnique({
+    where: { id: businessCustomerMembershipId },
+    include: cashbackCustomerInclude,
+  });
+  if (!customer) return { ok: false, reason: "NOT_FOUND", error: "Customer was not found." };
+
+  const typed = customer as unknown as GoogleWalletCashbackCustomer;
+  const api = createGoogleWalletApiClient(config);
+  const classId = buildGoogleWalletCashbackClassId(config.issuerId, typed.business.uuid);
+  const objectId = buildGoogleWalletCashbackObjectId(config.issuerId, typed.uuid);
+  const now = new Date();
+
+  try {
+    const classPayload = await buildGoogleWalletCashbackClassPayload({ issuerId: config.issuerId, classId, customer: typed, appUrl: config.appUrl });
+    if (await api.get("loyaltyClass", classId)) {
+      await api.patch("loyaltyClass", classId, classPayload);
+    } else {
+      await api.insert("loyaltyClass", classPayload);
+    }
+
+    const objectPayload = await buildGoogleWalletCashbackObjectPayload({ classId, objectId, customer: typed, appUrl: config.appUrl });
+    if (await api.get("loyaltyObject", objectId)) {
+      await api.patch("loyaltyObject", objectId, objectPayload);
+    } else {
+      await api.insert("loyaltyObject", objectPayload);
+    }
+
+    await prisma.googleWalletCashbackPass.upsert({
+      where: { businessCustomerMembershipId },
+      update: {
+        businessId: customer.businessId,
+        classId,
+        objectId,
+        status: "ACTIVE",
+        lastSyncedAt: now,
+        lastError: null,
+        ...(options.includeSaveUrl ? { saveUrlLastGeneratedAt: now } : {}),
+      },
+      create: {
+        businessId: customer.businessId,
+        businessCustomerMembershipId,
+        classId,
+        objectId,
+        status: "ACTIVE",
+        lastSyncedAt: now,
+        ...(options.includeSaveUrl ? { saveUrlLastGeneratedAt: now } : {}),
+      },
+    });
+
+    const saveUrl = options.includeSaveUrl
+      ? buildSaveToGoogleWalletUrl(signSaveToGoogleWalletJwt({ config, loyaltyObject: objectPayload }))
+      : undefined;
+    return { ok: true, objectId, classId, saveUrl };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Google Wallet cashback card sync failed.";
+    await prisma.googleWalletCashbackPass
+      .upsert({
+        where: { businessCustomerMembershipId },
+        update: { status: "FAILED", lastError: message },
+        create: { businessId: customer.businessId, businessCustomerMembershipId, classId, objectId, status: "FAILED", lastError: message },
+      })
+      .catch(() => undefined);
+    return { ok: false, reason: "SYNC_FAILED", error: message };
+  }
+}
+
+/** The "Save to Google Wallet" link for the customer's cashback card (used by the mint route). */
+export async function createGoogleCashbackSaveLink(businessCustomerMembershipId: number) {
+  const result = await syncGoogleCashbackPass(businessCustomerMembershipId, { includeSaveUrl: true });
+  if (!result.ok || !result.saveUrl) {
+    throw new Error(result.ok ? "Unable to generate Google Wallet save link." : result.error);
+  }
+  return { saveUrl: result.saveUrl };
+}
+
+/**
+ * Re-sync every Google cashback card a business has out, after the owner edits
+ * the cashback program's name, colour or picture. Update-only: never mints a
+ * card nobody added. Never throws.
+ */
+export async function refreshBusinessGoogleCashbackPasses(businessId: number): Promise<void> {
+  if (!getGoogleWalletConfig()) return;
+  try {
+    const passes = await prisma.googleWalletCashbackPass.findMany({
+      where: { businessId },
+      select: { businessCustomerMembershipId: true },
+    });
+    for (const pass of passes) {
+      await syncGoogleCashbackPass(pass.businessCustomerMembershipId);
+    }
+  } catch (error) {
+    console.warn("[google-wallet] cashback card refresh failed", error);
   }
 }
 

@@ -19,6 +19,7 @@ type CardShareActionsProps = {
   appleWalletUrl?: string | null;
   walletPrograms?: { name: string; appleWalletUrl: string; googleWalletUrl: string }[];
   cashbackAppleWalletUrl?: string | null;
+  cashbackGoogleWalletUrl?: string | null;
   /**
    * The customer's own card page passes the device's wallet: only the button
    * that device can open is shown (a QR code on computers). Staff screens leave
@@ -47,6 +48,7 @@ export function CardShareActions({
   appleWalletUrl,
   walletPrograms,
   cashbackAppleWalletUrl,
+  cashbackGoogleWalletUrl,
   walletPlatform,
   cardQrCode,
   hideUnavailableWhatsApp = false,
@@ -156,7 +158,7 @@ export function CardShareActions({
               <p className="mt-1 text-sm text-[#64748B]">Scan with your phone&apos;s camera, then tap the Add to Wallet button that appears.</p>
             </div>
           </div>
-        ) : walletPrograms && walletPrograms.length > 0 ? (
+        ) : walletPrograms ? (
           walletPrograms.map((p) => (
             <div key={p.name} className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">{p.name}</p>
@@ -224,7 +226,10 @@ export function CardShareActions({
           )}
         </div>
         )}
-        {/* The cashback card is an Apple pass only, so it is offered only where Apple Wallet exists. */}
+        {/* The cashback card is its own pass; each phone gets the button for its own wallet. */}
+        {platform !== "desktop" && (cashbackAppleWalletUrl || cashbackGoogleWalletUrl) && walletPrograms && walletPrograms.length > 0 ? (
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">Cashback</p>
+        ) : null}
         {cashbackAppleWalletUrl && showApple ? (
           <a
             href={cashbackAppleWalletUrl}
@@ -233,6 +238,16 @@ export function CardShareActions({
             className="block rounded-md border-2 border-black bg-white px-4 py-3 text-center text-sm font-semibold text-black"
           >
             Add Cashback card to Apple Wallet
+          </a>
+        ) : null}
+        {cashbackGoogleWalletUrl && showGoogle ? (
+          <a
+            href={cashbackGoogleWalletUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block rounded-md border-2 border-[#111827] bg-white px-4 py-3 text-center text-sm font-semibold text-[#111827] transition business-hover"
+          >
+            Add Cashback card to Google Wallet
           </a>
         ) : null}
         </>

@@ -4,7 +4,7 @@ import { BusinessBrandingProvider } from "@/components/BusinessBrandingProvider"
 import { resolveBusinessBranding } from "@/lib/business-branding";
 import { isCashbackMember } from "@/lib/cashback";
 import { WalletPassCard } from "@/components/wallet-pass/WalletPassCard";
-import { buildProgramPassView } from "@/lib/wallet-pass-view";
+import { buildCashbackPassView, buildProgramPassView } from "@/lib/wallet-pass-view";
 import { detectWalletPlatform } from "@/lib/wallet-platform";
 import { syncAppleWalletAfterTierChange } from "@/lib/walletwallet/service";
 import { SaveCardImageButton } from "@/components/SaveCardImageButton";
@@ -162,8 +162,9 @@ export default async function PublicCustomerCardPage({
     googleWalletUrl: `/api/wallet/google/save/${programMembership.scanToken}`,
   }));
   // Only customers who joined the cashback program get its wallet card.
-  const cashbackAppleWalletUrl =
-    membership.business.cashbackSettings?.enabled && isCashbackMember(membership) ? `/api/wallet/apple/cashback/${token}` : null;
+  const cashbackMember = Boolean(membership.business.cashbackSettings?.enabled) && isCashbackMember(membership);
+  const cashbackAppleWalletUrl = cashbackMember ? `/api/wallet/apple/cashback/${token}` : null;
+  const cashbackGoogleWalletUrl = cashbackMember ? `/api/wallet/google/cashback/${token}` : null;
   const cardDesign = primaryProgram?.programMembership.loyaltyProgram.cardDesign as CardDesignInput;
   const lastUpdatedAt = [
     membership.updatedAt,
@@ -213,7 +214,8 @@ export default async function PublicCustomerCardPage({
   }
   // A customer on a membership package does not see visit tiers: the package
   // is their status. Same rule as the dashboard's customer page.
-  const tiersVisible = areTiersVisible(membership.business.membershipSettings?.enabled) && !primaryProgram?.isMembership;
+  // Tiers count stamp visits, so a cashback-only customer (no program card) has none to show.
+  const tiersVisible = areTiersVisible(membership.business.membershipSettings?.enabled) && Boolean(primaryProgram) && !primaryProgram?.isMembership;
   const primaryCardModel = buildCardRenderModel({
     branding,
     cardDesign,
@@ -282,6 +284,26 @@ export default async function PublicCustomerCardPage({
         reward: { ready: primaryProgram.rewardReady, visitsToNext: primaryProgram.hasNextReward ? primaryProgram.remaining : null },
       })
     : null;
+  // The cashback card, exactly as the Apple / Google cashback pass shows it.
+  // It is the main card for a customer who joined only cashback, and sits under
+  // the program card for a customer in both.
+  const cashbackSettings = membership.business.cashbackSettings;
+  const cashbackPassView =
+    cashbackMember && cashbackSettings
+      ? buildCashbackPassView({
+          businessName: membership.business.name,
+          logoUrl: branding.logoUrl,
+          branding,
+          cashback: {
+            name: cashbackSettings.name,
+            cardTheme: cashbackSettings.cardTheme,
+            cardDesign: cashbackSettings.cardDesign,
+            photoUrl: cashbackSettings.walletPhotoUrl,
+          },
+          customerName,
+          balance: `${cashbackSettings.currency} ${Number(membership.cashbackBalance ?? 0).toFixed(2)}`,
+        })
+      : null;
   // The device decides: Android sees the Google Wallet layout and button, an
   // iPhone the Apple ones, and a computer the Apple layout with a QR code to
   // switch to the phone.
@@ -321,6 +343,10 @@ export default async function PublicCustomerCardPage({
               <div className="w-[360px] p-3">
                 <WalletPassCard view={primaryPassView} platform={passPlatform} qrCode={primaryProgram?.qrCode} />
               </div>
+            ) : cashbackPassView ? (
+              <div className="w-[360px] p-3">
+                <WalletPassCard view={cashbackPassView} platform={passPlatform} qrCode={cardQrCode} />
+              </div>
             ) : (
               <LoyaltyCardFrontExport wallet={walletCardProps} />
             )}
@@ -342,6 +368,13 @@ export default async function PublicCustomerCardPage({
                 <p className="mt-1 text-sm text-[#64748B]">{primaryCardModel.progress.statusText}</p>
               </section>
             ) : null}
+            {cashbackPassView ? (
+              <WalletPassCard view={cashbackPassView} platform={passPlatform} qrCode={cardQrCode} className="mt-2" />
+            ) : null}
+          </div>
+        ) : cashbackPassView ? (
+          <div className="mx-auto grid w-full max-w-[360px] justify-items-center gap-3">
+            <WalletPassCard view={cashbackPassView} platform={passPlatform} qrCode={cardQrCode} />
           </div>
         ) : (
           <div className="mx-auto flex w-full max-w-[360px] flex-col gap-4 rounded-[34px] bg-white">
@@ -403,6 +436,7 @@ export default async function PublicCustomerCardPage({
               whatsappLabel="Share via WhatsApp"
               walletPrograms={walletPrograms}
               cashbackAppleWalletUrl={cashbackAppleWalletUrl}
+              cashbackGoogleWalletUrl={cashbackGoogleWalletUrl}
               walletPlatform={walletPlatform}
               cardQrCode={cardQrCode}
               hideUnavailableWhatsApp

@@ -2,6 +2,8 @@ import "server-only";
 
 import type {
   BusinessBranding,
+  CardTheme,
+  Prisma,
   BusinessCustomerMembership,
   CustomerProgramMembership,
   LoyaltyProgram,
@@ -15,7 +17,7 @@ import { membershipSessionSummary } from "@/lib/membership-sessions";
 import { cardRewardsFor, getNextReward, getReadyRewards, type CardReward } from "@/lib/rewards";
 import { getBaseUrl } from "@/lib/customer-cards";
 import { stampImagePath } from "@/lib/wallet/stamp-image";
-import { buildProgramPassView } from "@/lib/wallet-pass-view";
+import { buildCashbackPassView, buildProgramPassView } from "@/lib/wallet-pass-view";
 import { getScanUrl } from "@/lib/scan";
 import { fromStoredTier } from "@/lib/customer-tiers";
 
@@ -230,6 +232,119 @@ export async function buildGoogleWalletObjectPayload({
       ],
     },
   });
+}
+
+/** A customer plus what their Google Wallet CASHBACK card needs. */
+export type GoogleWalletCashbackCustomer = BusinessCustomerMembership & {
+  business: {
+    id: number;
+    uuid: string;
+    name: string;
+    branding: BusinessBranding | null;
+    cashbackSettings: {
+      enabled: boolean;
+      currency: string;
+      name?: string | null;
+      cardTheme?: CardTheme | null;
+      cardDesign?: Prisma.JsonValue | null;
+      walletPhotoUrl?: string | null;
+    } | null;
+  };
+};
+
+/**
+ * The cashback card for Google Wallet, built from the SAME shared view as the
+ * Apple cashback card (buildCashbackPassView), so both phones show the same
+ * name, colour, picture, member and balance. The class is shared by every
+ * customer of the business; the object carries the customer's own balance.
+ */
+async function cashbackView(customer: GoogleWalletCashbackCustomer, appUrl: string) {
+  const branding = resolveBranding(customer.business.branding);
+  const cs = customer.business.cashbackSettings;
+  const currency = cs?.currency ?? "AED";
+  return buildCashbackPassView({
+    businessName: customer.business.name,
+    logoUrl: absoluteUrl(branding.logoUrl, appUrl),
+    branding,
+    cashback: {
+      name: cs?.name,
+      cardTheme: cs?.cardTheme,
+      cardDesign: cs?.cardDesign,
+      photoUrl: absoluteUrl(cs?.walletPhotoUrl, appUrl),
+    },
+    customerName: `${customer.firstName} ${customer.lastName ?? ""}`.trim(),
+    balance: `${currency} ${Number(customer.cashbackBalance ?? 0).toFixed(2)}`,
+  });
+}
+
+export async function buildGoogleWalletCashbackClassPayload({
+  issuerId,
+  classId,
+  customer,
+  appUrl,
+}: {
+  issuerId: string;
+  classId: string;
+  customer: GoogleWalletCashbackCustomer;
+  appUrl: string;
+}) {
+  const view = await cashbackView(customer, appUrl);
+  const businessName = customer.business.name;
+  return compactObject({
+    id: classId,
+    issuerName: businessName,
+    programName: view.title,
+    reviewStatus: "UNDER_REVIEW",
+    hexBackgroundColor: view.colors.background,
+    programLogo: imageModule(view.logoUrl ?? `${appUrl}/logo.png`, `${businessName} logo`),
+    localizedIssuerName: localizedString(businessName),
+    localizedProgramName: localizedString(view.title),
+    linksModuleData: { uris: [{ uri: `${appUrl}/support`, description: "Get support" }] },
+    textModulesData: [{ id: "business", header: "Business", body: businessName }],
+    issuerId,
+  });
+}
+
+export async function buildGoogleWalletCashbackObjectPayload({
+  classId,
+  objectId,
+  customer,
+  appUrl,
+}: {
+  classId: string;
+  objectId: string;
+  customer: GoogleWalletCashbackCustomer;
+  appUrl: string;
+}) {
+  const view = await cashbackView(customer, appUrl);
+  const cardUrl = await getCardUrl(customer.cardToken);
+  const active = customer.status === "ACTIVE" && customer.cardStatus === "ACTIVE" && Boolean(customer.cashbackJoinedAt);
+  return compactObject({
+    id: objectId,
+    classId,
+    heroImage: view.banner?.kind === "photo" ? imageModule(view.banner.url, `${view.title} card picture`) : undefined,
+    state: active ? "ACTIVE" : "INACTIVE",
+    accountId: customer.uuid,
+    accountName: view.customerName,
+    loyaltyPoints: { label: view.google.primary.label, balance: { string: view.google.primary.value } },
+    // The barcode opens the customer's card for staff, same as the Apple cashback card.
+    barcode: { type: "QR_CODE", value: cardUrl, alternateText: view.barcodeAltText },
+    textModulesData: [
+      { id: "member", header: "Member", body: view.customerName },
+      { id: "program", header: "Program", body: view.title },
+    ],
+    linksModuleData: { uris: [{ uri: cardUrl, description: "Open loyalty card" }] },
+  });
+}
+
+/** One cashback class per business. */
+export function buildGoogleWalletCashbackClassId(issuerId: string, businessUuid: string) {
+  return `${issuerId}.${safeIdPart(`cashback_${businessUuid}`)}`;
+}
+
+/** One cashback object per customer. */
+export function buildGoogleWalletCashbackObjectId(issuerId: string, membershipUuid: string) {
+  return `${issuerId}.${safeIdPart(`cashback_member_${membershipUuid}`)}`;
 }
 
 export function buildGoogleWalletClassId(issuerId: string, loyaltyProgramUuid: string) {

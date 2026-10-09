@@ -551,3 +551,117 @@ export async function qualifyReferralFromFirstStamp({
     });
   }
 }
+
+/**
+ * Cashback referrals: a friend who joined (with a referral) qualifies the
+ * referral on their FIRST cashback purchase, and the referrer is paid the
+ * business's cashback referral reward into their cashback balance. Runs inside
+ * the earn transaction, so the referral and both balances move together.
+ *
+ * Returns the referrer's membership id when a reward was paid, so the caller
+ * can refresh the referrer's wallet cards after the transaction commits.
+ */
+export async function qualifyReferralFromFirstCashback({
+  tx,
+  businessId,
+  referredMembershipId,
+  cashbackTransactionId,
+  branchId,
+  currency,
+  now,
+}: {
+  tx: TxClient;
+  businessId: number;
+  referredMembershipId: number;
+  cashbackTransactionId: number;
+  branchId: number | null;
+  currency: string;
+  now: Date;
+}): Promise<{ rewardedMembershipId: number } | null> {
+  const referral = await tx.referral.findFirst({
+    where: { businessId, referredMembershipId, status: "PENDING" },
+    select: { id: true, referrerMembershipId: true },
+  });
+  if (!referral) return null;
+
+  // Only the friend's first cashback purchase qualifies the referral.
+  const earlierEarns = await tx.cashbackTransaction.count({
+    where: { businessId, businessCustomerMembershipId: referredMembershipId, type: "EARN", id: { not: cashbackTransactionId } },
+  });
+  if (earlierEarns > 0) return null;
+
+  await tx.referral.update({
+    where: { id: referral.id },
+    data: { status: "QUALIFIED", qualifiedAt: now },
+  });
+  await tx.referralEvent.create({
+    data: {
+      businessId,
+      referralId: referral.id,
+      eventType: "REFERRAL_QUALIFIED",
+      metadata: { via: "CASHBACK", cashbackTransactionId, branchId },
+    },
+  });
+  await logAuditEvent({
+    tx,
+    businessId,
+    branchId,
+    action: "REFERRAL_QUALIFIED",
+    entityType: "referral",
+    entityId: referral.id,
+    metadata: { via: "CASHBACK", cashbackTransactionId, referredMembershipId },
+  });
+
+  const settings = await tx.businessCashbackSettings.findUnique({
+    where: { businessId },
+    select: { enabled: true, referralRewardAmount: true },
+  });
+  const reward = Math.round(Number(settings?.referralRewardAmount ?? 0) * 100) / 100;
+  if (!settings?.enabled || !(reward > 0)) return null;
+
+  // Pay the referrer under their own row lock. Receiving cashback makes them a
+  // cashback member if they were not one already.
+  await tx.$queryRaw`SELECT id FROM "business_customer_memberships" WHERE id = ${referral.referrerMembershipId} FOR UPDATE`;
+  const referrer = await tx.businessCustomerMembership.findUnique({
+    where: { id: referral.referrerMembershipId },
+    select: { id: true, businessId: true, status: true, cashbackBalance: true, cashbackJoinedAt: true },
+  });
+  if (!referrer || referrer.businessId !== businessId || referrer.status !== "ACTIVE") return null;
+
+  const balanceAfter = Math.round((Number(referrer.cashbackBalance) + reward) * 100) / 100;
+  await tx.businessCustomerMembership.update({
+    where: { id: referrer.id },
+    data: { cashbackBalance: balanceAfter, ...(referrer.cashbackJoinedAt ? {} : { cashbackJoinedAt: now }) },
+  });
+  const row = await tx.cashbackTransaction.create({
+    data: {
+      businessId,
+      businessCustomerMembershipId: referrer.id,
+      branchId,
+      type: "EARN",
+      amount: reward,
+      balanceAfter,
+      currency,
+      note: "Referral reward",
+    },
+    select: { id: true },
+  });
+  await tx.referralEvent.create({
+    data: {
+      businessId,
+      referralId: referral.id,
+      eventType: "REWARD_GRANTED",
+      metadata: { via: "CASHBACK", cashbackAmount: reward, currency, cashbackTransactionId: row.id },
+    },
+  });
+  await logAuditEvent({
+    tx,
+    businessId,
+    branchId,
+    action: "REFERRAL_REWARD_GRANTED",
+    entityType: "cashback_transaction",
+    entityId: row.id,
+    metadata: { referralId: referral.id, cashbackAmount: reward, balanceAfter },
+  });
+  return { rewardedMembershipId: referrer.id };
+}

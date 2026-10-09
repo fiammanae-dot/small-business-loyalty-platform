@@ -557,6 +557,7 @@ model Business {
   googleWalletObjects           GoogleWalletObject[]
   appleWalletPasses             AppleWalletPass[]
   appleWalletFeaturePasses      AppleWalletFeaturePass[]
+  googleWalletCashbackPasses    GoogleWalletCashbackPass[]
   whatsAppChannel               BusinessWhatsAppChannel?
 
   cashbackTransactions CashbackTransaction[]
@@ -850,6 +851,7 @@ model BusinessCustomerMembership {
   createdByUser         User?                       @relation(fields: [createdByUserId], references: [id])
   programMemberships    CustomerProgramMembership[]
   appleWalletFeaturePasses AppleWalletFeaturePass[]
+  googleWalletCashbackPass GoogleWalletCashbackPass?
   engagementEvents      EngagementEvent[]
   messageDeliveryQueue  MessageDeliveryQueue[]
   customerNotifications CustomerNotification[]
@@ -1482,6 +1484,9 @@ model BusinessCashbackSettings {
   maxRedemption Decimal? @map("max_redemption") @db.Decimal(12, 2)
   /// Public self-join link token (/join/cashback/<token>), like loyalty_programs.join_token.
   joinToken     String   @unique @default(uuid()) @map("join_token") @db.Uuid
+  /// Referral reward: cashback added to the referrer's balance when a friend they
+  /// referred makes their first cashback purchase. NULL / 0 = no reward.
+  referralRewardAmount Decimal? @map("referral_reward_amount") @db.Decimal(12, 2)
   // Program-style identity so cashback is a real program, not just a toggle:
   // its own name and card design (theme, hero image, design JSON), mirroring
   // loyalty_programs. All additive and optional, so existing rows are unaffected.
@@ -1861,4 +1866,29 @@ model AppleWalletFeaturePass {
 enum AppleWalletFeatureKind {
   CASHBACK
   TIER
+}
+
+/// A customer's cashback card in Google Wallet - the Android twin of the Apple
+/// CASHBACK feature pass. One per customer; every card of a business shares one
+/// Google loyalty class (classId) holding the cashback program's name, colour
+/// and logo, and each customer's object carries their own balance.
+model GoogleWalletCashbackPass {
+  id                           Int                    @id @default(autoincrement())
+  businessId                   Int                    @map("business_id")
+  businessCustomerMembershipId Int                    @unique @map("business_customer_membership_id")
+  classId                      String                 @map("class_id")
+  objectId                     String                 @unique @map("object_id")
+  status                       GoogleWalletSyncStatus @default(PENDING)
+  saveUrlLastGeneratedAt       DateTime?              @map("save_url_last_generated_at")
+  lastSyncedAt                 DateTime?              @map("last_synced_at")
+  lastError                    String?                @map("last_error")
+  createdAt                    DateTime               @default(now()) @map("created_at")
+  updatedAt                    DateTime               @updatedAt @map("updated_at")
+
+  business                   Business                   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessCustomerMembership BusinessCustomerMembership @relation(fields: [businessCustomerMembershipId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([status])
+  @@map("google_wallet_cashback_passes")
 }

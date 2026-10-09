@@ -18,7 +18,7 @@ import { enrollInCashback } from "@/lib/cashback-enrollment";
 import { validateCsrfForm } from "@/lib/csrf";
 import { requireUsableSubscription } from "@/lib/commercial-access";
 import { createFormFailure, isFormActionError, type PreservedFormState } from "@/lib/form-state";
-import { syncGoogleWalletObjectAfterLoyaltyChange } from "@/lib/google-wallet/service";
+import { refreshBusinessGoogleCashbackPasses, syncGoogleWalletObjectAfterLoyaltyChange } from "@/lib/google-wallet/service";
 import { refreshBusinessCashbackPasses, syncAppleWalletPassSafe } from "@/lib/walletwallet/service";
 import { hasWalletRelevantBrandingChange, hasWalletRelevantBusinessChange } from "@/lib/wallet-sync/change-detection";
 import { enqueueWalletSyncForBusiness } from "@/lib/wallet-sync/enqueue";
@@ -692,7 +692,13 @@ export async function saveCashbackSettingsAction(formData: FormData) {
     walletHeroStyle?: WalletHeroStyle;
     walletPhotoUrl?: string | null;
     cardDesign?: Prisma.InputJsonValue;
+    referralRewardAmount?: number | null;
   } = {};
+  if (formData.has("referralRewardAmount")) {
+    const reward = parseOptionalCapAmount(getString(formData, "referralRewardAmount"));
+    if (reward === "invalid") fail(failPath, "Referral reward must be a positive amount, or left blank for no reward.");
+    optional.referralRewardAmount = reward;
+  }
   if (formData.has("name")) optional.name = getString(formData, "name").trim().slice(0, 80) || null;
   if (formData.has("cardTheme")) {
     const theme = getString(formData, "cardTheme");
@@ -765,8 +771,9 @@ export async function saveCashbackSettingsAction(formData: FormData) {
     metadata: { enabled: parsed.data.enabled, ratePercent: parsed.data.ratePercent, maxBillAmount, maxRedemption },
   });
 
-  // Push the refreshed design onto cashback cards customers already added.
+  // Push the refreshed design onto cashback cards customers already added (Apple and Google).
   await refreshBusinessCashbackPasses(user.businessId);
+  await refreshBusinessGoogleCashbackPasses(user.businessId);
 
   revalidatePath("/dashboard/settings");
   revalidatePath("/dashboard/programs");
