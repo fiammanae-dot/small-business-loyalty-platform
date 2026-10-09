@@ -1,2 +1,5 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Auto detect text files and perform LF normalization.
+# eol=lf: always check text files out with LF line endings, on every OS. Without
+# it, Git for Windows (core.autocrlf=true) writes CRLF to the working copy, and
+# tests that read source files with LF-only patterns fail locally but pass in CI.
+* text=auto eol=lf
