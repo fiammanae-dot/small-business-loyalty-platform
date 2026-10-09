@@ -1,29 +1,16 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import ts from "typescript";
+import { loadTs } from "./helpers/load-ts.mjs";
 
 function read(path) {
   return readFileSync(path, "utf8");
 }
 
-async function importTs(path, subs = {}) {
-  let source = read(path);
-  for (const [from, to] of Object.entries(subs)) source = source.replace(from, to);
-  const js = ts.transpileModule(source, {
-    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
-  }).outputText;
-  return import(`data:text/javascript;base64,${Buffer.from(js).toString("base64")}`);
-}
-
-const icons = await importTs("src/lib/wallet/stamp-icons.ts");
-const image = await importTs("src/lib/wallet/stamp-image.ts", {
-  'from "@/lib/wallet/stamp-icons"': `from "data:text/javascript;base64,${Buffer.from(
-    ts.transpileModule(read("src/lib/wallet/stamp-icons.ts"), {
-      compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
-    }).outputText,
-  ).toString("base64")}"`,
-});
+const icons = await loadTs("src/lib/wallet/stamp-icons.ts");
+// stamp-image.ts pulls in sharp lazily (only inside drawStampStripPng), so the
+// drawing and URL helpers load without it.
+const image = await loadTs("src/lib/wallet/stamp-image.ts");
 
 test("every shipped icon has artwork to draw", () => {
   assert.ok(icons.STAMP_ICONS.length >= 10);
@@ -56,10 +43,10 @@ test("earned stamps show the icon in full, the rest show a faded copy", () => {
 test("the Apple wallet pass shows the live visit grid as its banner", () => {
   const mapper = read("src/lib/walletwallet/mapper.ts");
   // Memberships count down (filled = visits left); stamp cards count up.
-  assert.match(mapper, /const gridFilled = isMembership \? sessionsRemaining : Math\.min\(progress, required\)/);
-  assert.match(mapper, /stampImagePath\(program\.uuid, gridFilled, gridTotal, stampEmojiForDesign\(program\.cardDesign\)\)/);
+  assert.match(read("src/lib/wallet-pass-view.ts"), /filled: isMembership \? membershipRemaining : collected/);
   // The grid (or the uploaded photo) is the strip banner.
-  assert.match(mapper, /if \(bannerUrl\) body\.stripURL = bannerUrl/);
+  assert.match(mapper, /body\.stripURL = `\$\{baseUrl\}\$\{stampImagePath\(programUuid, banner\.filled, banner\.total, banner\.emoji\)\}`/);
+  assert.match(mapper, /if \(banner\?\.kind === "photo"\) body\.stripURL = banner\.url/);
 });
 
 test("the picture stays narrow enough that Apple's strip shows every stamp", () => {

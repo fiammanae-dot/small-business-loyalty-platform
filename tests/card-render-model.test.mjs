@@ -60,7 +60,7 @@ test("public card passes render model design into wallet card renderers", () => 
   const wallet = read("src/components/public-card/LoyaltyWalletCard.tsx");
   const frontExport = read("src/components/public-card/LoyaltyCardFrontExport.tsx");
   const backExport = read("src/components/public-card/LoyaltyCardBackExport.tsx");
-  const preview = read("src/components/CardThemePreviewSelector.tsx");
+  const preview = read("src/components/wallet-pass/WalletPassCard.tsx");
 
   assert.match(publicCard, /buildCardRenderModel/);
   assert.match(publicCard, /const primaryCardModel = buildCardRenderModel/);

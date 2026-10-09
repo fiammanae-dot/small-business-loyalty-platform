@@ -39,13 +39,15 @@ test("new program creation includes the create-time Design Studio wizard", () =>
   assert.match(wizard, /WizardProgress/);
   assert.match(wizard, /Program Setup/);
   assert.match(wizard, /Design Studio/);
-  assert.match(wizard, /Professional Templates/);
   assert.match(wizard, /Live Preview/);
+  // A wallet pass can show a colour and a stamp icon - that is the design.
   assert.match(wizard, /name="layoutStyle"/);
-  assert.match(wizard, /name="stampJourneyStyle"/);
   assert.match(wizard, /name="stampIcon"/);
-  assert.match(wizard, /name="rewardStyle"/);
-  assert.match(wizard, /name=\{`visibleSections\.\$\{option\.value\}`\}/);
+  assert.match(wizard, /<CardColourPicker /);
+  assert.match(wizard, /<StampIconChooser /);
+  for (const removed of ["stampJourneyStyle", "rewardStyle", "typographyPreset", "backgroundStyle", "decorationStyle", "visibleSections", "Professional Templates"]) {
+    assert.doesNotMatch(wizard, new RegExp(removed), `the create wizard no longer offers ${removed}`);
+  }
   assert.match(actions, /parseDesignStudioForm\(formData, businessType\)/);
   assert.match(actions, /cardDesign: cardDesign as unknown as Prisma\.InputJsonValue/);
   assert.match(actions, /redirect\(`\/dashboard\/programs\/\$\{program\.uuid\}\?success=Program created with card design\.`\)/);
@@ -76,253 +78,31 @@ test("Design Studio navigation stays Business Owner-only", () => {
   assert.doesNotMatch(staffPrograms, /design-studio|Design Studio/);
 });
 
-test("Design Studio MVP exposes only approved controls and live preview", () => {
+test("Design Studio offers only what a wallet pass can show", () => {
   const helper = read("src/lib/design-studio.ts");
   const form = read("src/components/ProgramDesignStudioForm.tsx");
-  const createWizard = read("src/components/ProgramCreateWizard.tsx");
-  const stampIconGraphic = read("src/components/design-studio/StampIconGraphic.tsx");
   const page = read("src/app/dashboard/programs/[id]/design-studio/page.tsx");
 
-  assert.match(helper, /designStudioTemplateOptions/);
-  assert.match(helper, /designStudioProfessionalPresetGroups/);
-  assert.match(helper, /designStudioProfessionalPresets/);
-  assert.match(helper, /DesignStudioProfessionalPreset/);
-  assert.match(helper, /getDefaultAssetsForIndustry/);
-  for (const label of ["Barbershop", "Beauty Salon", "Car Wash", "Café", "Restaurant", "General"]) {
-    assert.match(helper, new RegExp(label));
-  }
-  for (const label of ["Modern Barber", "Luxury Barber", "Vintage Barber", "Classic Barber", "Rose Gold", "Luxury Beauty", "Elegant Spa", "Minimal Studio", "Warm Espresso", "Modern Coffee", "Organic Café", "Dark Roast", "Fine Dining", "Casual Kitchen", "Street Food", "Chef's Choice", "Aqua Clean", "Bubble Wash", "Premium Detailing", "Express Wash", "Modern Business", "Professional"]) {
-    assert.match(helper, new RegExp(label));
-  }
-  assert.match(helper, /CLASSIC/);
-  assert.match(helper, /MODERN/);
-  assert.match(helper, /PREMIUM/);
-  assert.match(helper, /LUXURY/);
-  assert.match(helper, /Balanced design suitable for any business\./);
-  assert.match(helper, /Clean layout with generous spacing and a contemporary feel\./);
-  assert.match(helper, /High-contrast style that stands out and feels professional\./);
-  assert.match(helper, /Elegant dark treatment with refined visual emphasis\./);
-  assert.match(helper, /designStudioStampJourneyOptions/);
-  assert.match(helper, /CIRCLES/);
-  assert.match(helper, /CONNECTED_DOTS/);
-  assert.match(helper, /PROGRESS_BAR/);
-  assert.match(helper, /designStudioBackgroundStyleOptions/);
-  assert.match(helper, /designStudioBackgroundPatternOptions/);
-  assert.match(helper, /designStudioBackgroundGalleryOptions/);
-  assert.match(helper, /resolveDesignStudioBackgroundGalleryOption/);
-  assert.match(helper, /designStudioRewardStyleOptions/);
-  assert.match(helper, /designStudioTypographyOptions/);
-  assert.match(helper, /designStudioCardContentOptions/);
-  assert.match(helper, /designStudioCardLayoutOptions/);
-  assert.match(helper, /resolveDesignStudioCardLayoutOption/);
-  for (const label of ["Solid", "Gradient", "Pattern", "Subtle Dots", "Diagonal Lines", "Waves", "Coffee Beans", "Scissors", "Water Bubbles", "Food Pattern", "Beauty Pattern"]) {
-    assert.match(helper, new RegExp(label));
-  }
-  for (const label of ["Minimal White", "Soft Gradient", "Dark Premium", "Luxury Gold", "Glass", "Coffee Pattern", "Salon Marble", "Restaurant Texture", "Modern Mesh", "Car Wash Bubbles"]) {
-    assert.match(helper, new RegExp(label));
-  }
-  for (const label of ["Filled", "Outline", "Glass", "Premium", "Ticket"]) {
-    assert.match(helper, new RegExp(label));
-  }
-  assert.match(helper, /resolveDesignStudioTypographyOption/);
-  for (const label of ["Modern", "Elegant", "Friendly", "Minimal"]) {
-    assert.match(helper, new RegExp(label));
-  }
-  assert.match(helper, /typographyPreset === "CLASSIC" \|\| typographyPreset === "PREMIUM" \|\| typographyPreset === "LUXURY"/);
-  for (const label of ["Business Logo", "Business Name", "Program Name", "Customer Name", "Tier Badge", "Reward Box", "Reward Progress", "Visits Remaining", "QR Code", "Footer Message", "Referral Section"]) {
-    assert.match(helper, new RegExp(label));
-  }
-  for (const label of ["Compact", "Standard", "Detailed", "Premium"]) {
-    assert.match(helper, new RegExp(label));
-  }
-  assert.match(helper, /getAllowedStampIconsForBusinessType/);
-  assert.match(page, /Design Your Loyalty Card/);
-  assert.match(page, /Customize the appearance of your customer's digital loyalty card\./);
-  assert.match(form, /Preview on phone/);
-  assert.match(form, /Card Style/);
-  assert.match(form, /Professional Templates/);
-  assert.match(form, /Professional Template/);
-  assert.match(form, /Build From Scratch/);
-  assert.match(form, /Duplicate Existing Design/);
-  assert.match(form, /My Business Presets/);
-  assert.match(form, /Duplicate From Another Program/);
-  assert.match(form, /Copy a design from one of your existing loyalty programs\./);
-  assert.match(form, /Save Current Design/);
-  assert.match(form, /Apply Preset/);
-  assert.match(form, /Rename preset/);
-  assert.match(form, /Delete/);
-  assert.match(form, /Choose a business type, then browse professional starting points\./);
-  assert.match(form, /professionalPresetCategoryOptions/);
-  assert.match(form, /professionalPresetSearch/);
-  assert.match(form, /filteredProfessionalPresets/);
-  assert.match(form, /Search Templates/);
-  assert.match(form, /Search templates by name or business/);
-  assert.match(form, /Clear/);
-  assert.match(form, /Business Category/);
-  assert.match(form, /getDefaultProfessionalPresetCategory/);
-  assert.match(form, /Showing \{selectedProfessionalCategoryLabel\} Templates/);
-  assert.match(form, /Use Template/);
-  assert.match(form, /Choose Another Template/);
-  assert.match(form, /No templates found/);
-  assert.match(form, /Clear search/);
-  assert.match(form, /No templates found for this category/);
-  assert.match(form, /applyProfessionalPreset/);
-  assert.match(form, /applyBusinessPreset/);
-  assert.match(form, /applySourceProgramDesign/);
-  assert.match(form, /copiedSourceProgramUuid/);
-  assert.match(form, /Design copied into the preview/);
-  assert.match(form, /Continue through the wizard, then Save on the last step/);
-  assert.match(form, /Design only/);
-  assert.match(form, /Applied to Preview/);
-  assert.match(form, /Apply Design/);
-  assert.match(form, /sourceProgramToThumbnailPreset/);
-  assert.match(form, /designSummary/);
-  assert.match(form, /commitDesignChange\(presetToDesignSnapshot\(preset\)\)/);
-  assert.match(form, /commitDesignChange\(preset\.cardDesign\)/);
-  assert.match(form, /commitDesignChange\(sourceProgram\.cardDesign\)/);
-  assert.match(form, /aria-pressed=\{active\}/);
-  assert.match(form, /PresetThumbnail/);
-  assert.match(form, /Choose the overall personality of your loyalty card\./);
-  assert.match(form, /TemplateThumbnail/);
-  assert.match(form, /Selected/);
-  assert.match(form, /sr-only/);
-  assert.match(form, /Reward Progress/);
-  assert.match(form, /Stamp Design/);
-  assert.match(form, /Background/);
-  assert.match(form, /Choose the visual background for this loyalty card\./);
-  assert.match(form, /designStudioBackgroundGalleryOptions\.map/);
-  assert.match(form, /BackgroundGalleryThumbnail option=\{option\}/);
-  assert.match(form, /backgroundStyle: option\.backgroundStyle/);
-  assert.match(form, /backgroundPattern: option\.backgroundPattern/);
-  assert.doesNotMatch(form, /designStudioBackgroundStyleOptions\.map/);
-  assert.doesNotMatch(form, /designStudioBackgroundPatternOptions\.map/);
-  assert.match(form, /name="backgroundStyle"/);
-  assert.match(form, /name="backgroundPattern"/);
-  assert.match(createWizard, /designStudioBackgroundGalleryOptions\.map/);
-  assert.match(createWizard, /BackgroundGalleryThumbnail option=\{option\}/);
-  assert.match(form, /Reward Box/);
-  assert.match(form, /Choose how rewards are presented to your customers\./);
-  assert.match(form, /RewardStyleThumbnail/);
-  assert.match(form, /rewardStyle: option\.value/);
-  assert.match(form, /name="rewardStyle"/);
-  assert.match(form, /Typography/);
-  assert.match(form, /Choose the personality of your loyalty card\./);
-  assert.match(form, /TypographyThumbnail/);
-  assert.match(form, /typographyPreset: option\.value/);
-  assert.match(form, /selectedTypographyOption/);
-  assert.match(form, /name="typographyPreset"/);
-  assert.match(form, /typographyPreviewStyles/);
-  assert.match(createWizard, /selectedTypographyOption/);
-  assert.doesNotMatch(form, /Card Finish/);
-  assert.doesNotMatch(form, /Choose the visual finish that best matches your brand\./);
-  assert.doesNotMatch(form, /CardFinishThumbnail/);
-  assert.doesNotMatch(form, /decorationStyle: option\.value/);
-  assert.match(form, /name="decorationStyle"/);
-  assert.match(form, /cardFinishStyles/);
-  assert.match(form, /WizardStepper/);
-  assert.match(form, /wizardSteps/);
-  assert.match(form, /wizardStep === 2/);
-  assert.match(form, /wizardStep === 3/);
-  assert.match(form, /wizardStep === 4/);
-  assert.match(form, /wizardStep === 5/);
-  assert.match(createWizard, /DesignWizardGroup title="Theme"/);
-  assert.match(createWizard, /DesignWizardGroup title="Rewards"/);
-  assert.match(createWizard, /DesignWizardGroup title="Layout"/);
-  assert.match(form, /Card Layout/);
-  assert.match(form, /Choose how much information appears on the loyalty card\./);
-  assert.match(form, /designStudioCardLayoutOptions\.map/);
-  assert.match(form, /CardLayoutThumbnail visibleSections=\{option\.visibleSections\}/);
-  assert.match(form, /Advanced section visibility/);
-  assert.match(form, /<details className="mt-4/);
-  assert.doesNotMatch(form, /<details[^>]*open/);
-  assert.match(createWizard, /designStudioCardLayoutOptions\.map/);
-  assert.match(createWizard, /CardLayoutThumbnail visibleSections=\{option\.visibleSections\}/);
-  assert.match(createWizard, /Advanced section visibility/);
-  assert.match(form, /VisibleCardPreview/);
-  assert.match(form, /stampJourneyStyle=\{stampJourneyStyle\}/);
-  assert.match(form, /stampIcon=\{stampIcon\}/);
-  assert.match(form, /rewardStyle=\{rewardStyle\}/);
-  assert.match(form, /typographyPreset=\{typographyPreset\}/);
-  assert.match(form, /backgroundStyle=\{backgroundStyle\}/);
-  assert.match(form, /backgroundPattern=\{backgroundPattern\}/);
-  assert.match(form, /PreviewProgress/);
-  assert.match(form, /StampSlot key=\{index\} stampIcon=\{stampIcon\}/);
-  assert.match(form, /StampIconGraphic stampIcon=\{option\.value\}/);
-  assert.match(form, /StampIconGraphic stampIcon=\{preset\.stampIcon\}/);
-  assert.match(form, /rewardBoxStyles\[rewardStyle\]/);
-  assert.match(form, /liveTypographyStyles\[typographyPreset\]/);
-  assert.match(form, /getLivePreviewBackground\(theme\.cardBackground, backgroundStyle, backgroundPattern\)/);
-  assert.match(form, /liveBackgroundPatterns/);
-  assert.match(form, /visibleSections: \{/);
-  assert.match(form, /visibleSections\.\$\{option\.value\}/);
-  assert.match(form, /MobileCardPreviewFrame/);
-  assert.match(form, /Live Mobile Preview/);
-  assert.match(form, /designHistoryPast/);
-  assert.match(form, /designHistoryFuture/);
-  assert.match(form, /commitDesignChange/);
-  assert.match(form, /undoDesignChange/);
-  assert.match(form, /redoDesignChange/);
-  assert.match(form, /cloneDesignSnapshot/);
-  assert.match(form, /designSnapshotsMatch/);
-  assert.match(form, /isEditableKeyboardTarget/);
-  assert.match(form, /Undo last design change/);
-  assert.match(form, /Redo design change/);
-  assert.match(form, /Ctrl\/Cmd\+Z/);
-  assert.match(form, /Ctrl\/Cmd\+Shift\+Z or Ctrl\/Cmd\+Y/);
-  assert.doesNotMatch(form, /Apple Wallet/, "Design Studio no longer offers separate wallet preview modes");
-  assert.doesNotMatch(form, /Google Wallet/, "Design Studio no longer offers separate wallet preview modes");
-  assert.match(form, /previewZoomOptions/);
-  assert.match(form, /previewZoomScales/);
-  assert.match(form, /Zoom out/);
-  assert.match(form, /Zoom in/);
-  assert.match(form, /toPng/);
-  assert.match(form, /previewExportRef/);
-  assert.match(form, /Download PNG/);
-  assert.match(form, /Download PDF/);
-  assert.match(form, /Preview on phone/);
-  assert.match(form, /buildPreviewPdfHtml/);
-  assert.match(form, /navigator\.clipboard\.writeText/);
-  assert.match(form, /design-studio\?preview=true/);
-  assert.match(form, /PNG downloaded/);
-  assert.match(form, /PDF opened for download/);
-  assert.match(form, /Link copied/);
-  assert.match(form, /Review Your Design/);
-  assert.match(form, /Card Style: \$\{selectedStyleLabel\}/);
-  assert.match(form, /Typography: \$\{selectedTypographyLabel\}/);
-  assert.match(form, /Reward Progress: \$\{selectedJourneyLabel\}/);
-  assert.match(form, /Stamp Style: \$\{selectedStampIconLabel\}/);
-  assert.match(form, /Reward Style: \$\{selectedRewardStyleLabel\}/);
-  assert.match(form, /Background: \$\{selectedBackgroundLabel\}/);
-  assert.doesNotMatch(form, /Finish: \$\{selectedFinishLabel\}/);
-  assert.match(form, /Visibility: \$\{visibleSectionCount\}/);
-  assert.match(form, /7 \/ 10 Visits/);
-  assert.match(form, /3 visits until reward/);
-  assert.match(form, /PreviewChip/);
-  assert.doesNotMatch(form, /Typography Preview/);
-  assert.match(stampIconGraphic, /stampEmojiMarks/);
-  assert.match(stampIconGraphic, /getStampEmoji/);
-  assert.doesNotMatch(stampIconGraphic, /lucide-react/);
-  assert.match(form, /Recommended emoji appear first\./);
-  assert.match(form, /Selected:/);
-  assert.match(createWizard, /StampIconGraphic stampIcon=\{option\.value\}/);
-  assert.match(createWizard, /StampSlot key=\{index\} stampIcon=\{icon\}/);
-  assert.doesNotMatch(form, /getStampIconMark|stampIconMarks/);
-  assert.match(form, /lg:grid-cols-\[minmax\(0,52fr\)_minmax\(380px,48fr\)\]/);
-  assert.match(form, /xl:grid-cols-\[minmax\(0,48fr\)_minmax\(440px,52fr\)\]/);
-  assert.match(form, /order-first[\s\S]*lg:order-last/);
-  assert.match(form, /lg:sticky lg:top-20/, "preview panel must only be sticky on desktop, not mobile, so it can't end up hidden behind the fixed mobile bottom nav");
-  assert.doesNotMatch(form, /sticky bottom-3/);
-  assert.doesNotMatch(form, /LoyaltyWalletCard/);
+  // The saved design is a colour and a stamp icon; everything else is fixed.
+  assert.match(helper, /designStudioSchema = z\.object\(\{\s*layoutStyle: z\.enum\(\["CLASSIC", "MODERN", "PREMIUM", "LUXURY"\]\),\s*stampIcon: z\.enum\(stampIcons\),\s*\}\)/);
+  assert.match(helper, /export const walletCanonicalDesign = \{/);
+  assert.match(helper, /\.\.\.walletCanonicalDesign,/);
+
   assert.match(form, /name="layoutStyle"/);
-  assert.match(form, /name="stampJourneyStyle"/);
   assert.match(form, /name="stampIcon"/);
-  assert.match(page, /where: \{ businessId: user\.businessId, uuid: \{ not: program\.uuid \} \}/);
+  assert.match(form, /title="Card colour"/);
+  assert.match(form, /title="Stamp icon"/);
+  assert.match(form, /<WalletPassPreview view=\{view\} cardRef=\{previewRef\} \/>/);
+  for (const removed of ["Background", "Typography", "Reward Progress", "Reward Box", "Card Layout", "Professional Templates", "stampJourneyStyle", "typographyPreset", "decorationStyle", "visibleSections", "Undo", "Zoom"]) {
+    assert.doesNotMatch(form, new RegExp(removed), `Design Studio no longer offers ${removed}`);
+  }
+  // Presets and copying a design from another program still work.
+  assert.match(form, /formAction=\{savePresetAction\}/);
+  assert.match(form, /formAction=\{renamePresetAction\}/);
+  assert.match(form, /formAction=\{deletePresetAction\}/);
   assert.match(page, /const sourceDesign = resolveCardDesign\(asCardDesignInput\(sourceProgram\.cardDesign\)\)/);
   assert.match(page, /select: \{\s*uuid: true,\s*name: true,\s*cardDesign: true,\s*\}/);
-  assert.doesNotMatch(form, /title="Card Template"/);
-  assert.doesNotMatch(form, /title="Stamp Journey"/);
-  assert.doesNotMatch(form, /title="Stamp Icon"/);
-  assert.doesNotMatch(form, /\b(upload|marketplace|artificial intelligence|drag-and-drop)\b/i);
+  assert.doesNotMatch(page, /About Apple &amp; Google Wallet passes/);
 });
 
 test("public card reads saved program card design with fallback behavior", () => {

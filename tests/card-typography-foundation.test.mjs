@@ -57,7 +57,7 @@ test("typography presets are not applied to live card renderers yet", () => {
   const wallet = read("src/components/public-card/LoyaltyWalletCard.tsx");
   const frontExport = read("src/components/public-card/LoyaltyCardFrontExport.tsx");
   const backExport = read("src/components/public-card/LoyaltyCardBackExport.tsx");
-  const preview = read("src/components/CardThemePreviewSelector.tsx");
+  const preview = read("src/components/wallet-pass/WalletPassCard.tsx");
 
   for (const source of [publicCard, wallet, frontExport, backExport, preview]) {
     assert.doesNotMatch(source, /typography\.|headingStyle|bodyStyle|captionStyle|emphasisStyle|resolveTypographyPreset/);

@@ -7,10 +7,8 @@ import { getScanUrl } from "@/lib/scan";
 import { progressValue } from "@/lib/programs";
 import { membershipSessionSummary } from "@/lib/membership-sessions";
 import { stampImagePath } from "@/lib/wallet/stamp-image";
-import { stampEmojiForDesign } from "@/lib/stamp-icon-marks";
 import { fromStoredTier } from "@/lib/customer-tiers";
-import { resolveWalletCardColors } from "@/lib/card-themes";
-import type { CardDesignInput } from "@/lib/card-design";
+import { applePrimaryFields, buildCashbackPassView, buildProgramPassView, type WalletPassView } from "@/lib/wallet-pass-view";
 import type { CardTheme, Prisma, WalletHeroStyle } from "@prisma/client";
 
 function absoluteUrl(url: string | null | undefined, base: string): string | null {
@@ -56,47 +54,32 @@ export async function buildWalletWalletPassBody(membership: GoogleWalletProgramM
   const baseUrl = await getBaseUrl();
   const scanUrl = await getScanUrl(membership.scanToken);
   const logoUrl = absoluteUrl(branding.logoUrl, baseUrl);
-  const photoUrl = program.walletHeroStyle === "PHOTO" ? absoluteUrl(program.walletPhotoUrl, baseUrl) : null;
-  // The same solid colour the Google pass and the web card use, from the
-  // program's own theme and design (not the raw brand primary colour).
-  const color = hexColor(
-    resolveWalletCardColors({ cardTheme: program.cardTheme, branding, cardDesign: program.cardDesign as CardDesignInput }).background,
-  );
 
-  // The visit/stamp grid drawn as a picture, the same image the Google card uses.
-  // Memberships count down (filled = visits left); stamp cards count up.
-  const gridFilled = isMembership ? sessionsRemaining : Math.min(progress, required);
-  const gridTotal = isMembership ? Math.max(1, sessionsTotal) : required;
-  const gridUrl = `${baseUrl}${stampImagePath(program.uuid, gridFilled, gridTotal, stampEmojiForDesign(program.cardDesign))}`;
-  // A top banner is always present now: the uploaded hero photo if the business
-  // set one, otherwise the live visit grid.
-  const bannerUrl = photoUrl ?? gridUrl;
-
-  const headerFields: WalletWalletField[] = isMembership
-    ? [{ label: "Membership", value: program.name }]
-    : [{ label: "Visits", value: `${Math.min(progress, required)} / ${required}`, changeMessage: "Progress: %@" }];
-
-  // When the hero photo is a top banner (stripURL), Apple renders primary
-  // fields ON TOP of the photo, so keep primary empty when a banner is present
-  // and put the readable text in the header and secondary fields instead.
-  const hasBanner = Boolean(bannerUrl);
-  const primaryFields: WalletWalletField[] = hasBanner ? [] : [{ value: program.name }];
-
-  // The program card is single-purpose: its own data plus the holder's name.
-  // Cashback and tier are their own separate wallet cards, not fields here.
-  const secondaryFields: WalletWalletField[] = [];
-  if (isMembership) {
-    secondaryFields.push({ label: "Visits left", value: `${sessionsRemaining} of ${sessionsTotal}`, changeMessage: "%@ visits left" });
-  } else if (hasBanner) {
-    secondaryFields.push({ label: "Program", value: program.name });
-  }
-  // Tier is a stamp-program feature, so it rides on the stamp card (never on a
-  // membership card, and not a separate card) when the business runs tiers.
-  if (!isMembership && business.tierSetting) {
-    const tierName = fromStoredTier(customer.currentTier as Parameters<typeof fromStoredTier>[0]) ?? "Bronze";
-    secondaryFields.push({ label: "Tier", value: tierName, changeMessage: "Tier: %@" });
-  }
-  secondaryFields.push({ label: "Member", value: customerName });
+  // Every visible slot of the pass (colour, banner, header and field rows) comes
+  // from the shared pass view - the same one the web card and the Design Studio
+  // preview render - so all three always show the same card.
+  const view = buildProgramPassView({
+    businessName,
+    logoUrl,
+    branding,
+    program: {
+      name: program.name,
+      isMembership,
+      requiredStamps: program.requiredStamps,
+      cardTheme: program.cardTheme,
+      cardDesign: program.cardDesign,
+      walletHeroStyle: program.walletHeroStyle,
+      photoUrl: absoluteUrl(program.walletPhotoUrl, baseUrl),
+    },
+    customerName,
+    progress,
+    membership: isMembership ? { remaining: sessionsRemaining, total: sessionsTotal } : null,
+    // Tier is a stamp-program feature: it rides on the stamp card (never on a
+    // membership card, and not a separate card) when the business runs tiers.
+    tierName: !isMembership && business.tierSetting
+      ? fromStoredTier(customer.currentTier as Parameters<typeof fromStoredTier>[0]) ?? "Bronze"
+      : null,
+  });
 
   // backFields[0] is a stable notification anchor for on-demand banners. Its
   // position must never change between create and update (fields are keyed by
@@ -111,24 +94,37 @@ export async function buildWalletWalletPassBody(membership: GoogleWalletProgramM
   const body: WalletWalletPassBody = {
     barcodeValue: scanUrl,
     barcodeFormat: "QR",
-    barcodeAltText: "Scan at checkout",
+    barcodeAltText: view.barcodeAltText,
     logoText: businessName,
     organizationName: businessName,
     description: `${program.name} - ${businessName}`,
-    primaryFields,
-    headerFields,
-    secondaryFields,
+    primaryFields: applePrimaryFields(view) as WalletWalletField[],
+    headerFields: [view.header] as WalletWalletField[],
+    secondaryFields: view.secondaryFields as WalletWalletField[],
     backFields,
     sharingProhibited: true,
     colorPreset: "dark",
     expirationDays: 365,
   };
-  if (color) body.color = color; // Pro
-  if (logoUrl) body.logoURL = logoUrl; // Pro
-  if (bannerUrl) body.stripURL = bannerUrl; // Pro - banner at the top of the pass (photo, or the live visit grid)
+  applyPassLook(body, view, baseUrl, program.uuid);
   return body;
 }
 
+/**
+ * The pass colour, logo and banner, all from the shared view. Stamp banners are
+ * served as a PNG by /api/wallet/stamps - drawn from the same SVG the web card
+ * draws inline.
+ */
+function applyPassLook(body: WalletWalletPassBody, view: WalletPassView, baseUrl: string, programUuid?: string) {
+  const color = hexColor(view.colors.background);
+  if (color) body.color = color; // Pro
+  if (view.logoUrl) body.logoURL = view.logoUrl; // Pro
+  const banner = view.banner;
+  if (banner?.kind === "photo") body.stripURL = banner.url; // Pro - banner at the top of the pass
+  if (banner?.kind === "stamps" && programUuid) {
+    body.stripURL = `${baseUrl}${stampImagePath(programUuid, banner.filled, banner.total, banner.emoji)}`; // the live visit grid
+  }
+}
 
 /** A customer plus the business fields a per-customer feature pass needs. */
 export type FeaturePassCustomer = {
@@ -171,35 +167,33 @@ export async function buildCashbackPassBody(customer: FeaturePassCustomer, optio
 
   const baseUrl = await getBaseUrl();
   const cardUrl = await getCardUrl(customer.cardToken);
-  const logoUrl = absoluteUrl(branding.logoUrl, baseUrl);
-  const photoUrl = absoluteUrl(cs?.walletPhotoUrl, baseUrl);
-  const hasBanner = Boolean(photoUrl);
-  // Same resolver as every other card, fed the cashback program's own theme and design.
-  const color = hexColor(
-    resolveWalletCardColors({
-      cardTheme: cs?.cardTheme ?? "BUSINESS_DEFAULT",
-      branding,
-      cardDesign: (cs?.cardDesign ?? undefined) as CardDesignInput,
-    }).background,
-  );
-
-  // The program name is the top header. The middle row reads Member (left) then
-  // Balance (right); with a banner the balance sits here, and without one it is
-  // the big primary field instead (Apple draws primary fields over a banner).
-  const secondaryFields: WalletWalletField[] = [];
-  secondaryFields.push({ label: "Member", value: customerName });
-  if (hasBanner) secondaryFields.push({ label: "Balance", value: balance, changeMessage: "Balance: %@" });
+  // Same shared view as the program card and the cashback preview: the program
+  // name is the header, the row under the banner is Member then Balance, and
+  // without a banner the balance is the big primary field instead.
+  const view = buildCashbackPassView({
+    businessName,
+    logoUrl: absoluteUrl(branding.logoUrl, baseUrl),
+    branding,
+    cashback: {
+      name: cs?.name,
+      cardTheme: cs?.cardTheme,
+      cardDesign: cs?.cardDesign,
+      photoUrl: absoluteUrl(cs?.walletPhotoUrl, baseUrl),
+    },
+    customerName,
+    balance,
+  });
 
   const body: WalletWalletPassBody = {
     barcodeValue: cardUrl,
     barcodeFormat: "QR",
-    barcodeAltText: "Show at checkout",
+    barcodeAltText: view.barcodeAltText,
     logoText: businessName,
     organizationName: businessName,
     description: `${cardName} - ${businessName}`,
-    headerFields: [{ label: "Program", value: cardName }] as WalletWalletField[],
-    primaryFields: (hasBanner ? [] : [{ label: "Balance", value: balance, changeMessage: "Balance: %@" }]) as WalletWalletField[],
-    secondaryFields: secondaryFields,
+    headerFields: [view.header] as WalletWalletField[],
+    primaryFields: applePrimaryFields(view) as WalletWalletField[],
+    secondaryFields: view.secondaryFields as WalletWalletField[],
     backFields: [
       { label: "Notifications", value: options?.notification?.trim() || " ", changeMessage: "%@" },
       { label: "Program", value: cardName },
@@ -210,8 +204,6 @@ export async function buildCashbackPassBody(customer: FeaturePassCustomer, optio
     colorPreset: "dark",
     expirationDays: 365,
   };
-  if (color) body.color = color; // Pro
-  if (logoUrl) body.logoURL = logoUrl; // Pro
-  if (photoUrl) body.stripURL = photoUrl; // Pro - banner at the top of the pass
+  applyPassLook(body, view, baseUrl);
   return body;
 }

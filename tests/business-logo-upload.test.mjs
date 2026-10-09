@@ -91,8 +91,8 @@ test("the shared logo avatar falls back to initials on missing or broken images 
 
   for (const consumer of [
     "src/components/public-card/LoyaltyWalletCard.tsx",
-    "src/components/ProgramDesignStudioForm.tsx",
-    "src/components/ProgramCreateWizard.tsx",
+    // The pass card the web card and the design previews render.
+    "src/components/wallet-pass/WalletPassCard.tsx",
     "src/components/BusinessForm.tsx",
     "src/components/BusinessLogoUploadField.tsx",
     "src/app/dashboard/page.tsx",

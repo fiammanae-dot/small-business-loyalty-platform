@@ -424,29 +424,29 @@ export const designStudioIndustryStyleOptions = [
   assetDefaults: ReturnType<typeof getDefaultAssetsForIndustry>;
 }>;
 
+/**
+ * What a business designs for a card: the parts a wallet pass can show. Apple
+ * and Google Wallet paint a pass with one solid colour and a stamp picture, so
+ * the design is a colour (layoutStyle) and a stamp icon. Older designs may hold
+ * other fields (backgrounds, fonts, reward-box styles...) that no wallet could
+ * render; a save writes them back to fixed values (walletCanonicalDesign).
+ */
 export const designStudioSchema = z.object({
   layoutStyle: z.enum(["CLASSIC", "MODERN", "PREMIUM", "LUXURY"]),
-  stampJourneyStyle: z.enum(["CIRCLES", "CONNECTED_DOTS", "PROGRESS_BAR"]),
   stampIcon: z.enum(stampIcons),
-  backgroundStyle: z.enum(["SOLID", "GRADIENT", "PATTERN"]),
-  backgroundPattern: z.enum(["NONE", "SUBTLE_DOTS", "DIAGONAL_LINES", "WAVES", "COFFEE_BEANS", "SCISSORS", "WATER_BUBBLES", "FOOD_PATTERN", "BEAUTY_PATTERN"]),
-  rewardStyle: z.enum(["FILLED", "OUTLINE", "GLASS", "PREMIUM", "TICKET"]),
-  typographyPreset: z.enum(["CLASSIC", "MODERN", "PREMIUM", "LUXURY", "PLAYFUL", "MINIMAL"]),
-  decorationStyle: z.enum(["FLAT", "SOFT", "GLASS", "PREMIUM", "LUXURY"]),
-  visibleSections: z.object({
-    logo: z.boolean(),
-    businessName: z.boolean(),
-    customerName: z.boolean(),
-    tierBadge: z.boolean(),
-    rewardBox: z.boolean(),
-    progress: z.boolean(),
-    qr: z.boolean(),
-    footer: z.boolean(),
-    referral: z.boolean(),
-    visits: z.boolean(),
-    programName: z.boolean(),
-  }),
 });
+
+/** The fixed values for the design fields a wallet cannot show. */
+export const walletCanonicalDesign = {
+  stampJourneyStyle: "ICON_GRID",
+  progressStyle: "linear",
+  typographyPreset: "MODERN",
+  backgroundStyle: "SOLID",
+  backgroundPattern: "NONE",
+  decorationStyle: "FLAT",
+  rewardStyle: "FILLED",
+  visibleSections: defaultVisibleCardSections,
+} as const satisfies Partial<CardDesign>;
 
 export function resolveProgramCardDesign(input?: CardDesignInput): CardDesign {
   return resolveCardDesign(input);
@@ -455,16 +455,11 @@ export function resolveProgramCardDesign(input?: CardDesignInput): CardDesign {
 export function buildProgramCardDesign(input: z.infer<typeof designStudioSchema>, existingDesign?: CardDesignInput): CardDesign {
   return resolveCardDesign({
     ...resolveProgramCardDesign(existingDesign),
+    ...walletCanonicalDesign,
+    visibleSections: { ...defaultVisibleCardSections },
     layoutStyle: input.layoutStyle,
     cardStyle: getCardStyleForLayoutStyle(input.layoutStyle),
-    stampJourneyStyle: input.stampJourneyStyle,
     stampIcon: input.stampIcon,
-    backgroundStyle: input.backgroundStyle,
-    backgroundPattern: input.backgroundPattern,
-    rewardStyle: input.rewardStyle,
-    typographyPreset: input.typographyPreset,
-    decorationStyle: input.decorationStyle,
-    visibleSections: input.visibleSections,
   });
 }
 
@@ -477,33 +472,11 @@ export function getAllowedStampIconsForBusinessType(businessType: Parameters<typ
 }
 
 export function parseDesignStudioForm(formData: FormData, businessType: Parameters<typeof getRecommendedStampIconsForBusinessType>[0]) {
-  const getVisibleSectionValue = (section: CardSection) => {
-    const value = formData.get(`visibleSections.${section}`);
-    return value === null ? defaultVisibleCardSections[section] : value === "true";
-  };
-
+  // MINIMAL is a legacy layout that renders exactly like CLASSIC (brand colour).
+  const rawLayout = String(formData.get("layoutStyle") ?? "");
   const parsed = designStudioSchema.safeParse({
-    layoutStyle: String(formData.get("layoutStyle") ?? ""),
-    stampJourneyStyle: String(formData.get("stampJourneyStyle") ?? ""),
+    layoutStyle: rawLayout === "MINIMAL" ? "CLASSIC" : rawLayout,
     stampIcon: String(formData.get("stampIcon") ?? ""),
-    backgroundStyle: String(formData.get("backgroundStyle") ?? "SOLID"),
-    backgroundPattern: String(formData.get("backgroundPattern") ?? "NONE"),
-    rewardStyle: String(formData.get("rewardStyle") ?? "FILLED"),
-    typographyPreset: String(formData.get("typographyPreset") ?? "MODERN"),
-    decorationStyle: String(formData.get("decorationStyle") ?? "FLAT"),
-    visibleSections: {
-      logo: getVisibleSectionValue("logo"),
-      businessName: getVisibleSectionValue("businessName"),
-      customerName: getVisibleSectionValue("customerName"),
-      tierBadge: getVisibleSectionValue("tierBadge"),
-      rewardBox: getVisibleSectionValue("rewardBox"),
-      progress: getVisibleSectionValue("progress"),
-      qr: getVisibleSectionValue("qr"),
-      footer: getVisibleSectionValue("footer"),
-      referral: getVisibleSectionValue("referral"),
-      visits: getVisibleSectionValue("visits"),
-      programName: getVisibleSectionValue("programName"),
-    },
   });
   if (!parsed.success) return parsed;
 

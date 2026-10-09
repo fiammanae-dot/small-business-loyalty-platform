@@ -32,7 +32,7 @@ test("saved stamp journey styles are applied to live customer card progress", ()
   const wallet = read("src/components/public-card/LoyaltyWalletCard.tsx");
   const frontExport = read("src/components/public-card/LoyaltyCardFrontExport.tsx");
   const backExport = read("src/components/public-card/LoyaltyCardBackExport.tsx");
-  const preview = read("src/components/CardThemePreviewSelector.tsx");
+  const preview = read("src/components/wallet-pass/WalletPassCard.tsx");
   const publicCard = read("src/app/card/[token]/page.tsx");
 
   assert.match(publicCard, /cardDesign: primaryCardModel\.design/);

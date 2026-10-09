@@ -8,14 +8,14 @@ import type {
   ProgramReward,
 } from "@prisma/client";
 import { resolveWalletCardColors } from "@/lib/card-themes";
-import { resolveCardDesign, type CardDesignInput } from "@/lib/card-design";
+import type { CardDesignInput } from "@/lib/card-design";
 import { getCardUrl, resolveBranding } from "@/lib/customer-cards";
 import { progressValue } from "@/lib/programs";
 import { membershipSessionSummary } from "@/lib/membership-sessions";
 import { cardRewardsFor, getNextReward, getReadyRewards, type CardReward } from "@/lib/rewards";
 import { getBaseUrl } from "@/lib/customer-cards";
 import { stampImagePath } from "@/lib/wallet/stamp-image";
-import { stampEmojiForDesign } from "@/lib/stamp-icon-marks";
+import { buildProgramPassView } from "@/lib/wallet-pass-view";
 import { getScanUrl } from "@/lib/scan";
 import { fromStoredTier } from "@/lib/customer-tiers";
 
@@ -57,10 +57,10 @@ export async function buildGoogleWalletClassPayload({
     cardDesign,
   });
   const businessName = membership.businessCustomerMembership.business.name;
-  const sections = resolveCardDesign(cardDesign).visibleSections;
   const isMembership = membership.loyaltyProgram.isMembership;
 
-  // Honor the card design's section visibility so hidden sections don't reappear on the pass.
+  // The wallet always shows the same fields (the Design Studio no longer offers
+  // per-section toggles: Apple has no equivalent, so they could not match).
   const classTextModules = [
     // The class is shared by every customer on the program, so it can only
     // describe the card itself - the per-customer "next reward" lives on the
@@ -68,10 +68,8 @@ export async function buildGoogleWalletClassPayload({
     // package instead.
     ...(isMembership
       ? [{ id: "membership", header: "Membership", body: membershipClassBody(membership) }]
-      : sections.rewardBox
-        ? [{ id: "reward", header: "Reward", body: rewardBoxBody(membership) }]
-        : []),
-    ...(sections.businessName ? [{ id: "business", header: "Business", body: businessName }] : []),
+      : [{ id: "reward", header: "Reward", body: rewardBoxBody(membership) }]),
+    { id: "business", header: "Business", body: businessName },
   ];
 
   return compactObject({
@@ -126,8 +124,6 @@ export async function buildGoogleWalletObjectPayload({
     : null;
   const sessionsRemaining = membershipSummary?.remaining ?? 0;
   const sessionsTotal = membershipSummary?.total ?? required;
-  const walletFilled = isMembership ? sessionsRemaining : Math.min(progress, required);
-  const walletRequired = isMembership ? Math.max(1, sessionsTotal) : required;
   const cardRewards = cardRewardsFor(membership.loyaltyProgram);
   const cardInput = {
     earnedStamps: membership.earnedStamps,
@@ -145,16 +141,13 @@ export async function buildGoogleWalletObjectPayload({
   const remaining = nextReward ? Math.max(0, nextReward.atStamp - progress) : 0;
   const cardUrl = await getCardUrl(customer.cardToken);
   const scanUrl = await getScanUrl(membership.scanToken);
-  const sections = resolveCardDesign(membership.loyaltyProgram.cardDesign as CardDesignInput).visibleSections;
-
-  // Honor the card design's section visibility so hidden sections don't reappear on the pass.
   const objectTextModules = [
-    ...(sections.customerName ? [{ id: "customer", header: "Customer", body: customerName }] : []),
-    ...(sections.programName ? [{ id: "program", header: "Program", body: membership.loyaltyProgram.name }] : []),
+    { id: "customer", header: "Customer", body: customerName },
+    { id: "program", header: "Program", body: membership.loyaltyProgram.name },
     ...(!isMembership && customer.business.tierSetting
       ? [{ id: "tier", header: "Tier", body: fromStoredTier(customer.currentTier as Parameters<typeof fromStoredTier>[0]) ?? "Bronze" }]
       : []),
-    ...(sections.rewardBox && !isMembership
+    ...(!isMembership
       ? [
           {
             id: "reward",
@@ -172,32 +165,43 @@ export async function buildGoogleWalletObjectPayload({
       : []),
   ];
 
-  // Google Wallet gives an issuer one picture slot, so the business chooses what
-  // goes in it. A photo looks better; the stamps tell the customer where they
-  // are without reading anything. PHOTO falls back to the stamps when no photo
-  // has been uploaded, so the slot is never left empty.
+  // The picture, the point rows and the colour come from the shared pass view -
+  // the same one the Apple pass, the web card and the Design Studio preview use.
+  // PHOTO falls back to the stamps when no photo has been uploaded, so the slot
+  // is never left empty. The hero belongs on the object, not the class: a class
+  // is shared by every customer, so a hero there would show one person's
+  // progress to all of them.
   const baseUrl = await getBaseUrl();
-  const photoUrl =
-    membership.loyaltyProgram.walletHeroStyle === "PHOTO"
-      ? absoluteUrl(membership.loyaltyProgram.walletPhotoUrl, baseUrl)
-      : null;
-
-  // Either way this belongs on the object rather than the class. A class is
-  // shared by every customer on the program, so a hero image set there would
-  // show one person's progress to all of them.
-  const stampImage = photoUrl
-    ? imageModule(photoUrl, `${membership.loyaltyProgram.name} card picture`)
-    : imageModule(
-        `${baseUrl}${stampImagePath(
-          membership.loyaltyProgram.uuid,
-          walletFilled,
-          walletRequired,
-          stampEmojiForDesign(membership.loyaltyProgram.cardDesign),
-        )}`,
-        isMembership
-          ? `${sessionsRemaining} of ${sessionsTotal} visits remaining`
-          : `${Math.min(progress, required)} of ${required} stamps collected`,
-      );
+  const program = membership.loyaltyProgram;
+  const view = buildProgramPassView({
+    businessName: customer.business.name,
+    logoUrl: null,
+    branding: resolveBranding(customer.business.branding),
+    program: {
+      name: program.name,
+      isMembership,
+      requiredStamps: program.requiredStamps,
+      cardTheme: program.cardTheme,
+      cardDesign: program.cardDesign,
+      walletHeroStyle: program.walletHeroStyle,
+      photoUrl: absoluteUrl(program.walletPhotoUrl, baseUrl),
+    },
+    customerName,
+    progress,
+    membership: isMembership ? { remaining: sessionsRemaining, total: sessionsTotal } : null,
+    reward: { ready: rewardReady, visitsToNext: nextReward ? remaining : null },
+  });
+  const stampImage =
+    view.banner?.kind === "photo"
+      ? imageModule(view.banner.url, `${program.name} card picture`)
+      : view.banner?.kind === "stamps"
+        ? imageModule(
+            `${baseUrl}${stampImagePath(program.uuid, view.banner.filled, view.banner.total, view.banner.emoji)}`,
+            isMembership
+              ? `${sessionsRemaining} of ${sessionsTotal} visits remaining`
+              : `${Math.min(progress, required)} of ${required} stamps collected`,
+          )
+        : undefined;
 
   return compactObject({
     id: objectId,
@@ -206,37 +210,15 @@ export async function buildGoogleWalletObjectPayload({
     state: membership.scanStatus === "ACTIVE" && membership.status === "ACTIVE" ? "ACTIVE" : "INACTIVE",
     accountId,
     accountName: customerName,
-    loyaltyPoints: isMembership
-      ? {
-          label: "Visits left",
-          balance: {
-            string: `${sessionsRemaining} of ${sessionsTotal}`,
-          },
-        }
-      : {
-          label: "Visits",
-          balance: {
-            string: `${Math.min(progress, required)} / ${required}`,
-          },
-        },
+    loyaltyPoints: { label: view.google.primary.label, balance: { string: view.google.primary.value } },
     // The program card is single-purpose now; cashback is its own wallet card.
-    secondaryLoyaltyPoints: isMembership
-      ? {
-          label: "Status",
-          balance: {
-            string: sessionsRemaining > 0 ? "Active" : "Used up",
-          },
-        }
-      : {
-          label: "Remaining",
-          balance: {
-            string: rewardReady ? "Reward ready" : nextReward ? `${remaining} visit${remaining === 1 ? "" : "s"}` : "Complete",
-          },
-        },
+    secondaryLoyaltyPoints: view.google.secondary
+      ? { label: view.google.secondary.label, balance: { string: view.google.secondary.value } }
+      : undefined,
     barcode: {
       type: "QR_CODE",
       value: scanUrl,
-      alternateText: "Scan at checkout",
+      alternateText: view.barcodeAltText,
     },
     textModulesData: objectTextModules.length ? objectTextModules : undefined,
     linksModuleData: {

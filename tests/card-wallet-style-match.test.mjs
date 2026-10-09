@@ -24,9 +24,12 @@ async function importTs(path) {
 test("one resolver decides the wallet card colour", () => {
   const themes = read("src/lib/card-themes.ts");
   assert.match(themes, /export function resolveWalletCardColors\(/);
-  // Built on the same theme the web card renders.
+  // Built on the same theme the web card renders...
   assert.match(themes, /const theme = resolveCardThemeColors\(\{ cardTheme, branding, cardDesign \}\);/);
-  assert.match(themes, /firstHexColor\(theme\.cardBackground\) \?\?/);
+  // ...but "Brand colour" is always the brand primary: a pass has no gradient,
+  // so the web theme's white fallback for an unreadable gradient must not apply.
+  assert.match(themes, /theme\.value === "BUSINESS_DEFAULT" \? firstHexColor\(branding\.primaryColor\) : firstHexColor\(theme\.cardBackground\)/);
+  assert.match(read("src/lib/wallet-pass-view.ts"), /resolveWalletCardColors\(input\)/);
 });
 
 test("Google and Apple both paint the colour from that resolver", () => {
@@ -35,9 +38,9 @@ test("Google and Apple both paint the colour from that resolver", () => {
   assert.doesNotMatch(google, /function resolveHexBackgroundColor/);
 
   const apple = read("src/lib/walletwallet/mapper.ts");
-  assert.match(apple, /resolveWalletCardColors\(\{ cardTheme: program\.cardTheme, branding, cardDesign: program\.cardDesign as CardDesignInput \}\)\.background/);
+  assert.match(apple, /const color = hexColor\(view\.colors\.background\)/);
   // The old rule ignored the program's theme and design entirely.
-  assert.doesNotMatch(apple, /const color = hexColor\(branding\.primaryColor\)/);
+  assert.doesNotMatch(apple, /hexColor\(branding\.primaryColor\)/);
   assert.doesNotMatch(apple, /resolveCardThemeColors/);
 });
 
@@ -46,9 +49,11 @@ test("every surface draws the stamp icon chosen in the card design", () => {
   assert.match(route, /stampEmojiForDesign\(program\.cardDesign\)/);
   assert.doesNotMatch(route, /program\.stampEmoji/);
 
+  // Both passes take the icon from the shared view, which reads the design.
+  assert.match(read("src/lib/wallet-pass-view.ts"), /emoji: stampEmojiForDesign\(program\.cardDesign\)/);
   for (const mapper of ["src/lib/google-wallet/mapper.ts", "src/lib/walletwallet/mapper.ts"]) {
     const source = read(mapper);
-    assert.match(source, /stampEmojiForDesign\(/, `${mapper} must use the design icon`);
+    assert.match(source, /banner\.emoji\)/, `${mapper} must draw the view's icon`);
     assert.doesNotMatch(source, /\.stampEmoji[,)]/, `${mapper} must not read the old icon column`);
   }
 

@@ -30,6 +30,10 @@ export default async function ProgramDesignStudioPage({
       businessType: true,
       cardDesign: true,
       updatedAt: true,
+      isMembership: true,
+      requiredStamps: true,
+      walletHeroStyle: true,
+      walletPhotoUrl: true,
     },
   });
 
@@ -76,7 +80,7 @@ export default async function ProgramDesignStudioPage({
       <div className="mx-auto grid w-full max-w-screen-2xl gap-6">
         <PageIntro
           eyebrow={program.name}
-          description="Customize the appearance of your customer's digital loyalty card."
+          description="Choose the colour and stamp icon of the card customers add to Apple and Google Wallet."
           className="rounded-3xl border border-[#E2E8F0] bg-gradient-to-br from-white to-[#F8FAFC] p-5 shadow-sm md:p-6"
           actions={
             <PageActions>
@@ -85,16 +89,6 @@ export default async function ProgramDesignStudioPage({
             </PageActions>
           }
         />
-
-        <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 text-sm text-[#475569]">
-          <p className="font-semibold text-[#171A21]">About Apple &amp; Google Wallet passes</p>
-          <p className="mt-1">
-            When customers add this card to Apple or Google Wallet, the pass shows your brand color, logo,
-            program name, reward, and QR code — but Wallet uses its own fixed layout, so the stamp style,
-            background pattern, and fonts you pick here won&apos;t appear on the Wallet pass itself. The web
-            card link always shows your full design.
-          </p>
-        </div>
 
         <ProgramDesignStudioForm
           action={updateProgramDesignStudioAction}
@@ -106,38 +100,23 @@ export default async function ProgramDesignStudioPage({
           programUuid={program.uuid}
           businessName={business.name}
           programName={program.name}
-          rewardName={program.rewardName}
-          businessType={program.businessType}
           lastSavedAt={program.updatedAt.toISOString()}
           branding={branding}
-          initialDesign={{
-            layoutStyle: cardDesign.layoutStyle,
-            stampJourneyStyle: cardDesign.stampJourneyStyle,
-            stampIcon: cardDesign.stampIcon,
-            backgroundStyle: cardDesign.backgroundStyle,
-            backgroundPattern: cardDesign.backgroundPattern,
-            rewardStyle: cardDesign.rewardStyle,
-            typographyPreset: cardDesign.typographyPreset,
-            decorationStyle: cardDesign.decorationStyle,
-            visibleSections: cardDesign.visibleSections,
+          program={{
+            isMembership: program.isMembership,
+            requiredStamps: program.requiredStamps,
+            walletHeroStyle: program.walletHeroStyle,
+            walletPhotoUrl: program.walletPhotoUrl,
           }}
+          tiersEnabled={Boolean(business.tierSetting)}
+          initialDesign={{ layoutStyle: cardDesign.layoutStyle, stampIcon: cardDesign.stampIcon }}
           businessPresets={businessPresets.map((preset) => {
             const presetDesign = resolveCardDesign(asCardDesignInput(preset.cardDesign));
             return {
               uuid: preset.uuid,
               name: preset.name,
               createdAt: preset.createdAt.toISOString(),
-              cardDesign: {
-                layoutStyle: presetDesign.layoutStyle,
-                stampJourneyStyle: presetDesign.stampJourneyStyle,
-                stampIcon: presetDesign.stampIcon,
-                backgroundStyle: toDesignStudioBackgroundStyle(presetDesign.backgroundStyle),
-                backgroundPattern: presetDesign.backgroundPattern,
-                rewardStyle: presetDesign.rewardStyle,
-                typographyPreset: presetDesign.typographyPreset,
-                decorationStyle: presetDesign.decorationStyle,
-                visibleSections: presetDesign.visibleSections,
-              },
+              cardDesign: { layoutStyle: presetDesign.layoutStyle, stampIcon: presetDesign.stampIcon },
             };
           })}
           sourcePrograms={sourcePrograms.map((sourceProgram) => {
@@ -145,17 +124,7 @@ export default async function ProgramDesignStudioPage({
             return {
               uuid: sourceProgram.uuid,
               name: sourceProgram.name,
-              cardDesign: {
-                layoutStyle: toDesignStudioLayoutStyle(sourceDesign.layoutStyle),
-                stampJourneyStyle: toDesignStudioStampJourneyStyle(sourceDesign.stampJourneyStyle),
-                stampIcon: sourceDesign.stampIcon,
-                backgroundStyle: toDesignStudioBackgroundStyle(sourceDesign.backgroundStyle),
-                backgroundPattern: sourceDesign.backgroundPattern,
-                rewardStyle: sourceDesign.rewardStyle,
-                typographyPreset: sourceDesign.typographyPreset,
-                decorationStyle: sourceDesign.decorationStyle,
-                visibleSections: sourceDesign.visibleSections,
-              },
+              cardDesign: { layoutStyle: sourceDesign.layoutStyle, stampIcon: sourceDesign.stampIcon },
             };
           })}
           stampIconOptions={stampIconOptions}
@@ -171,23 +140,4 @@ function labelize(value: string) {
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
-}
-
-function toDesignStudioBackgroundStyle(value: string): "SOLID" | "GRADIENT" | "PATTERN" {
-  if (value === "GRADIENT") return "GRADIENT";
-  if (value === "PATTERN" || value === "INDUSTRY_PATTERN") return "PATTERN";
-  return "SOLID";
-}
-
-function toDesignStudioLayoutStyle(value: string): "CLASSIC" | "MODERN" | "PREMIUM" | "LUXURY" {
-  if (value === "MODERN") return "MODERN";
-  if (value === "PREMIUM") return "PREMIUM";
-  if (value === "LUXURY") return "LUXURY";
-  return "CLASSIC";
-}
-
-function toDesignStudioStampJourneyStyle(value: string): "CIRCLES" | "CONNECTED_DOTS" | "PROGRESS_BAR" {
-  if (value === "CONNECTED_DOTS") return "CONNECTED_DOTS";
-  if (value === "PROGRESS_BAR") return "PROGRESS_BAR";
-  return "CIRCLES";
 }

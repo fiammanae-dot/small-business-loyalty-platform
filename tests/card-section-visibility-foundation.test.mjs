@@ -65,7 +65,7 @@ test("card render model section visibility is applied by customer-facing rendere
   const wallet = read("src/components/public-card/LoyaltyWalletCard.tsx");
   const frontExport = read("src/components/public-card/LoyaltyCardFrontExport.tsx");
   const backExport = read("src/components/public-card/LoyaltyCardBackExport.tsx");
-  const preview = read("src/components/CardThemePreviewSelector.tsx");
+  const preview = read("src/components/wallet-pass/WalletPassCard.tsx");
 
   assert.match(model, /sectionVisibility: CardSectionVisibility/);
   assert.match(model, /visibleSections: CardSectionVisibility/);
