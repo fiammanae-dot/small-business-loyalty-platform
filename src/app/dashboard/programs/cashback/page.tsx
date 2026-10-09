@@ -128,6 +128,9 @@ export default async function CashbackProgramDetailPage({ searchParams }: { sear
                     <ButtonLink href={joinUrl} variant="outline" target="_blank" rel="noopener noreferrer">
                       Open Join Page
                     </ButtonLink>
+                    <ButtonLink href="/dashboard/programs/cashback/join-poster" variant="business">
+                      Printable Poster
+                    </ButtonLink>
                   </div>
                   {!enabled ? <p className="text-xs text-[#B45309]">Cashback is off, so this link shows &quot;not available&quot; until you switch it on.</p> : null}
                 </div>

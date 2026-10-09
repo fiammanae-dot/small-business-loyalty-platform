@@ -104,3 +104,11 @@ test("no more 'applies to all customers' wording", () => {
   assert.match(detail, /count\(\{ where: memberWhere \}\)/);
   assert.match(detail, /const memberWhere = \{ businessId: business\.id, cashbackJoinedAt: \{ not: null \} \};/);
 });
+
+test("the cashback join QR has a printable poster", () => {
+  const poster = read("src/app/dashboard/programs/cashback/join-poster/page.tsx");
+  assert.match(poster, /getCashbackJoinQrDataUrl\(settings\.joinToken\)/);
+  assert.match(poster, /<PrintPageButton \/>/);
+  assert.match(poster, /Join our cashback program/);
+  assert.match(read("src/app/dashboard/programs/cashback/page.tsx"), /href="\/dashboard\/programs\/cashback\/join-poster"/);
+});
