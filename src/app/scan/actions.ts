@@ -19,6 +19,7 @@ import { qualifyReferralFromFirstStamp } from "@/lib/referrals";
 import { cardRewardsFor, getReadyRewards, isRewardReady } from "@/lib/rewards";
 import { formatAed } from "@/lib/cashback";
 import { CashbackError, DuplicateCashbackError, earnCashback, spendCashback } from "@/lib/cashback-ledger";
+import { enrollInCashback } from "@/lib/cashback-enrollment";
 
 /**
  * The rewards on a program's card, read from program_rewards.
@@ -1034,6 +1035,34 @@ async function resolveScanCashback(
   if (!settings?.enabled) fail(scanToken, "Cashback is not enabled for this business.");
 
   return { membership, settings };
+}
+
+/** Enrol the scanned customer in the cashback program at the counter. */
+export async function joinCashbackFromScanAction(formData: FormData) {
+  const token = getString(formData, "scanToken");
+  try {
+    validateCsrfForm(formData, "scan:cashback-join");
+  } catch {
+    fail(token, "Security check failed. Please refresh and try again.");
+  }
+
+  const { user } = await requireBusinessScopedUser({
+    requireSubscription: true,
+    requireActiveBranch: true,
+    fail: (message) => fail(token, message),
+  });
+  if (!token.trim()) fail(token, "Scan token is required.");
+
+  const { membership } = await resolveScanCashback(token, user);
+  const joined = await enrollInCashback({
+    businessId: user.businessId,
+    membershipId: membership.id,
+    actorUserId: user.id,
+    branchId: user.branchId ?? membership.createdBranchId,
+    source: user.role === "BUSINESS_OWNER" ? "OWNER" : "STAFF",
+  });
+
+  cashbackSuccess(token, joined ? "Customer joined the cashback program." : "Customer is already in the cashback program.");
 }
 
 export async function addCashbackFromScanAction(formData: FormData) {

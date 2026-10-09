@@ -29,6 +29,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       id: true,
       status: true,
       cardStatus: true,
+      cashbackJoinedAt: true,
       business: { select: { status: true, cashbackSettings: { select: { enabled: true } } } },
     },
   });
@@ -43,6 +44,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
   if (!customer.business.cashbackSettings?.enabled) {
     return unavailable("Cashback is not enabled for this business.", 404);
+  }
+  if (!customer.cashbackJoinedAt) {
+    return unavailable("Join the cashback program first to get the cashback card.", 404);
   }
 
   const result = await syncAppleCashbackPass(customer.id);

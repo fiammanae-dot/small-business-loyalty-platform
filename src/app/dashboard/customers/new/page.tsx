@@ -3,6 +3,7 @@ import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { ReferralReferrerLookupPreview } from "@/components/ReferralReferrerLookupPreview";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
+import { cashbackProgramOption } from "@/lib/cashback";
 import { prisma } from "@/lib/prisma";
 import { businessTracksVehicles } from "@/lib/vehicles";
 import { createCustomerAction } from "@/app/dashboard/actions";
@@ -31,6 +32,7 @@ export default async function NewCustomerPage({
           cancelHref="/dashboard/customers"
           lookupPath="/dashboard/customers/new"
           activePrograms={activePrograms}
+          cashbackProgram={cashbackProgramOption(business.cashbackSettings)}
           showVehicleFields={businessTracksVehicles(business.businessType)}
           branchOptions={[
             { value: "", label: "No branch selected", description: "Enroll without branch attribution" },

@@ -14,6 +14,7 @@ import { brandColorSchema, brandLogoUrlSchema } from "@/lib/branding-validation"
 import { requireBusinessOwner, requireBusinessOwnerForWrite } from "@/lib/business-owner";
 import { formatAed } from "@/lib/cashback";
 import { CashbackError, DuplicateCashbackError, earnCashback, spendCashback } from "@/lib/cashback-ledger";
+import { enrollInCashback } from "@/lib/cashback-enrollment";
 import { validateCsrfForm } from "@/lib/csrf";
 import { requireUsableSubscription } from "@/lib/commercial-access";
 import { createFormFailure, isFormActionError, type PreservedFormState } from "@/lib/form-state";
@@ -154,6 +155,7 @@ const customerCreateFormFields = [
   "createdBranchId",
   "marketingConsent",
   "selectedProgramUuid",
+  "joinCashback",
   "referredBySearch",
   "referredByPhoneNumber",
   "referralCode",
@@ -165,7 +167,7 @@ function customerCreateFailure(formData: FormData, message: string, fieldErrors?
   return createFormFailure({
     formData,
     fields: customerCreateFormFields,
-    checkboxFields: ["marketingConsent"],
+    checkboxFields: ["marketingConsent", "joinCashback"],
     message,
     fieldErrors,
   });
@@ -1252,6 +1254,38 @@ async function loadEnabledCashbackSettings(businessId: number) {
     select: { enabled: true, ratePercent: true, currency: true, maxBillAmount: true, maxRedemption: true },
   });
   return settings?.enabled ? settings : null;
+}
+
+/** Enrol an existing customer in the cashback program (like enrolling in a stamp program). */
+export async function joinCashbackAction(formData: FormData) {
+  validateActionSecurity(formData, "dashboard:cashback-join", "/dashboard/customers");
+  const user = await requireBusinessOwnerForWrite();
+  const membershipUuid = getString(formData, "membershipUuid");
+  const redirectPath = membershipUuid ? `/dashboard/customers/${membershipUuid}` : "/dashboard/customers";
+  if (!z.string().uuid().safeParse(membershipUuid).success) fail(redirectPath, "Customer reference is invalid.");
+
+  await requireUsableSubscription(user.businessId).catch((error) => fail(redirectPath, error.message));
+
+  const settings = await loadEnabledCashbackSettings(user.businessId);
+  if (!settings) fail(redirectPath, "Cashback is not enabled for this business.");
+
+  const membership = await prisma.businessCustomerMembership.findFirst({
+    where: { uuid: membershipUuid, businessId: user.businessId, status: "ACTIVE" },
+    select: { id: true, createdBranchId: true },
+  });
+  if (!membership) fail(redirectPath, "Customer not found.");
+
+  const joined = await enrollInCashback({
+    businessId: user.businessId,
+    membershipId: membership.id,
+    actorUserId: user.id,
+    branchId: membership.createdBranchId,
+    source: "OWNER",
+  });
+
+  revalidatePath(redirectPath);
+  revalidatePath("/dashboard/programs");
+  redirect(`${redirectPath}?tab=cashback&success=${encodeURIComponent(joined ? "Customer joined the cashback program." : "Customer is already in the cashback program.")}`);
 }
 
 export async function addCashbackAction(formData: FormData) {

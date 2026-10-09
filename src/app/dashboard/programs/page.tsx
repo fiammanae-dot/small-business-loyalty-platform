@@ -130,7 +130,7 @@ export default async function ProgramsPage({
   const averageCompletionRate = programRows.length > 0 ? Math.round(programRows.reduce((total, row) => total + row.completionRate, 0) / programRows.length) : 0;
   const filtered = Boolean(query || status || reward || sort !== "created" || direction !== "desc");
   const cashbackEnabled = Boolean(business.cashbackSettings?.enabled);
-  // Cashback is a business-wide program, so it counts toward the program totals.
+  // Cashback is a program like any other, so it counts toward the program totals.
   const activeProgramCount = activeCount + (cashbackEnabled ? 1 : 0);
   const shownProgramCount = programs.length + 1;
   const cashbackRate = business.cashbackSettings?.ratePercent != null ? business.cashbackSettings.ratePercent.toString() : "5";
@@ -138,7 +138,7 @@ export default async function ProgramsPage({
   const cashbackCurrency = business.cashbackSettings?.currency ?? "AED";
   // Live cashback performance for the program card.
   const [cashbackMembers, cashbackEarnAgg, cashbackSpendAgg, cashbackBalanceAgg] = await Promise.all([
-    prisma.businessCustomerMembership.count({ where: { businessId: business.id, cashbackTransactions: { some: {} } } }),
+    prisma.businessCustomerMembership.count({ where: { businessId: business.id, cashbackJoinedAt: { not: null } } }),
     prisma.cashbackTransaction.aggregate({ where: { businessId: business.id, type: "EARN" }, _sum: { amount: true, billAmount: true } }),
     prisma.cashbackTransaction.aggregate({ where: { businessId: business.id, type: "SPEND" }, _sum: { amount: true } }),
     prisma.businessCustomerMembership.aggregate({ where: { businessId: business.id }, _sum: { cashbackBalance: true } }),
@@ -171,7 +171,7 @@ export default async function ProgramsPage({
 
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5" aria-label="Program KPI cards">
           <MetricCard label="Active Programs" value={activeProgramCount} icon={<Gift className="h-5 w-5" />} tone="business" href="/dashboard/programs?status=active" />
-          <MetricCard label="Total Members" value={totalMembers} icon={<Users className="h-5 w-5" />} href="/dashboard/customers" />
+          <MetricCard label="Total Members" value={totalMembers + (cashbackEnabled ? cashbackMembers : 0)} icon={<Users className="h-5 w-5" />} href="/dashboard/customers" />
           {membershipMode ? null : (
             <MetricCard label="Rewards Redeemed" value={rewardsRedeemed} icon={<Trophy className="h-5 w-5" />} href="/dashboard/activity?type=reward" />
           )}
@@ -183,7 +183,7 @@ export default async function ProgramsPage({
 
         <SectionCard
           title="Program Performance"
-          description={shownProgramCount + " program" + (shownProgramCount === 1 ? "" : "s") + " shown, including your business-wide cashback program. Cards summarize members, completion and activity."}
+          description={shownProgramCount + " program" + (shownProgramCount === 1 ? "" : "s") + " shown, including your cashback program. Cards summarize members, completion and activity."}
         >
           <div className="grid gap-4 lg:hidden">
             <CashbackProgramCard
@@ -384,7 +384,7 @@ function CashbackProgramCard({ name, enabled, rate, currency, editHref, members,
               <span className="break-words">{name}</span>
             </Link>
           </h3>
-          <p className="mt-1 text-sm text-[#64748B]">Cashback program &middot; applies to all customers</p>
+          <p className="mt-1 text-sm text-[#64748B]">Cashback program &middot; customers join to earn</p>
           <p className="mt-2 inline-block rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-0.5 text-xs font-semibold text-[#0F172A]">Cashback &middot; {rate}% back</p>
         </div>
         <StatusBadge tone={enabled ? "success" : "neutral"}>{enabled ? "Active" : "Off"}</StatusBadge>
@@ -416,12 +416,12 @@ function CashbackTableRow({ name, enabled, rate, currency, members, spendBase, g
         >
           <span className="break-words">{name}</span>
         </Link>
-        <div className="mt-1 text-xs font-normal text-[#64748B]">Cashback program &middot; applies to all customers</div>
+        <div className="mt-1 text-xs font-normal text-[#64748B]">Cashback program &middot; customers join to earn</div>
         <div className="mt-1 text-xs font-semibold business-primary-strong">Cashback &middot; {rate}% back</div>
       </DataTableCell>
       <DataTableCell>
         <div className="font-medium text-[#0F172A]">{rate}% of each payment</div>
-        <div className="mt-1 text-xs text-[#64748B]">Business-wide</div>
+        <div className="mt-1 text-xs text-[#64748B]">Members only</div>
       </DataTableCell>
       <DataTableCell>
         <div>{members.toLocaleString()}</div>

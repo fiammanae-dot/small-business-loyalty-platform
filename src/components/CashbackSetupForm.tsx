@@ -23,7 +23,7 @@ type PreviewBranding = {
  * Cashback presented as a real program, with the same two-step flow stamp and
  * membership programs use: step 1 is the rules (rate and caps), step 2 is the
  * card design (wallet style + picture). Both steps stay mounted so every field
- * is submitted together. Cashback is still a business-wide feature, so this
+ * is submitted together. Cashback is stored per business (one row), so this
  * writes the same BusinessCashbackSettings via saveCashbackSettingsAction; the
  * CSRF token is minted on the server and passed in. The card-design fields only
  * post from here, so the plain Settings cashback form never overwrites them.
@@ -123,7 +123,7 @@ export function CashbackSetupForm({
               <Field name="maxBillAmount" label="Max amount paid per transaction (blank = no limit)" type="number" min="0" defaultValue={maxBill} />
               <Field name="maxRedemption" label="Max redemption per transaction (blank = no limit)" type="number" min="0" defaultValue={maxRedemption} />
             </div>
-            <p className="text-xs text-[#6B7280]">Per-transaction limits apply to staff at the counter. Leave blank for no limit. Cashback runs business-wide and layers on top of any stamp or membership programs.</p>
+            <p className="text-xs text-[#6B7280]">Per-transaction limits apply to staff at the counter. Leave blank for no limit. Customers join cashback like any program, alongside any stamp or membership programs.</p>
           </div>
         </SectionCard>
       </div>

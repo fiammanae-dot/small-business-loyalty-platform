@@ -6,7 +6,7 @@ import { ArrowRight, Crown, Stamp, Wallet } from "lucide-react";
  * types, each with its own setup flow:
  *  - Stamp / Membership create a loyalty-program row through ProgramCreateWizard
  *    (reached here with ?type=stamp / ?type=membership).
- *  - Cashback is a business-wide feature, configured through its own setup.
+ *  - Cashback is a program customers join, configured through its own setup.
  * Tiers are NOT a program type: they are an option inside stamp programs,
  * configured in Settings, and they ride on the stamp wallet card.
  */

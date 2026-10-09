@@ -163,12 +163,12 @@ test("scanner actions keep tenant ownership and branch scope checks on every cod
   assert.match(scanActions, /isOutOfAssignedBranch\(user, businessMembership\)/);
   assert.match(scanActions, /isOutOfAssignedBranch\(user, lockedMembership\.businessCustomerMembership\)/);
 
-  // The shared cashback resolver enforces tenant + branch for both scan cashback actions.
+  // The shared cashback resolver enforces tenant + branch for every scan cashback action (join, add, spend).
   assert.match(scanActions, /membership\.businessId !== user\.businessId/);
   assert.match(scanActions, /isOutOfAssignedBranch\(user, membership\)/);
 
   const occurrences = scanActions.match(/requireBusinessScopedUser\(\{/g) ?? [];
-  assert.equal(occurrences.length, 6, "issue, redeem, undo, renew, and cashback add/spend must each call the shared guard exactly once");
+  assert.equal(occurrences.length, 7, "issue, redeem, undo, renew, and cashback join/add/spend must each call the shared guard exactly once");
 });
 
 test("alert review is role-limited, tenant-scoped, and now blocks inactive businesses", () => {

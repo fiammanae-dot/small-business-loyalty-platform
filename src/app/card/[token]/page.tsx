@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { CardShareActions } from "@/components/CardShareActions";
 import { BusinessBrandingProvider } from "@/components/BusinessBrandingProvider";
 import { resolveBusinessBranding } from "@/lib/business-branding";
+import { isCashbackMember } from "@/lib/cashback";
 import { WalletPassCard } from "@/components/wallet-pass/WalletPassCard";
 import { buildProgramPassView } from "@/lib/wallet-pass-view";
 import { detectWalletPlatform } from "@/lib/wallet-platform";
@@ -154,13 +155,15 @@ export default async function PublicCustomerCardPage({
     }),
   );
   const primaryProgram = programCards[0] ?? null;
-  // One Apple+Google button pair per enrolled program; cashback is separate (below) for everyone.
+  // One Apple+Google button pair per enrolled program; cashback is separate (below) for its members.
   const walletPrograms = programCards.map(({ programMembership }) => ({
     name: programMembership.loyaltyProgram.name,
     appleWalletUrl: `/api/wallet/apple/${programMembership.scanToken}`,
     googleWalletUrl: `/api/wallet/google/save/${programMembership.scanToken}`,
   }));
-  const cashbackAppleWalletUrl = membership.business.cashbackSettings?.enabled ? `/api/wallet/apple/cashback/${token}` : null;
+  // Only customers who joined the cashback program get its wallet card.
+  const cashbackAppleWalletUrl =
+    membership.business.cashbackSettings?.enabled && isCashbackMember(membership) ? `/api/wallet/apple/cashback/${token}` : null;
   const cardDesign = primaryProgram?.programMembership.loyaltyProgram.cardDesign as CardDesignInput;
   const lastUpdatedAt = [
     membership.updatedAt,
