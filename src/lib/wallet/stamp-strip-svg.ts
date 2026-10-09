@@ -31,10 +31,26 @@ function rowsFor(total: number): number[] {
   return [half, total - half];
 }
 
-export function drawStampStripSvg(earned: number, total: number, emoji?: string | null): string {
+/** XML-escape a URL for an attribute. */
+function escapeAttribute(value: string) {
+  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/**
+ * @param customIconHref A business's own uploaded stamp icon, drawn instead of
+ *   the built-in artwork. On the server this is a data: URL (the wallet PNG is
+ *   rendered offline); in the browser it can be the image's public URL.
+ */
+export function drawStampStripSvg(earned: number, total: number, emoji?: string | null, customIconHref?: string | null): string {
   const safeTotal = Math.max(1, Math.min(30, Math.floor(total)));
   const safeEarned = Math.max(0, Math.min(safeTotal, Math.floor(earned)));
-  const { body } = findStampIcon(emoji);
+  const { body, viewBox } = findStampIcon(emoji);
+  // Each stamp is a nested <svg> box; its contents are either the built-in
+  // artwork or the uploaded image scaled to fit the same box.
+  const content = customIconHref
+    ? `<image href="${escapeAttribute(customIconHref)}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"/>`
+    : body;
+  const box = customIconHref ? "0 0 100 100" : viewBox;
 
   const rows = rowsFor(safeTotal);
   const perRow = Math.max(...rows);
@@ -60,18 +76,18 @@ export function drawStampStripSvg(earned: number, total: number, emoji?: string 
       const earnedHere = placed < safeEarned;
       if (earnedHere) {
         stamps.push(
-          `<svg x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${size}" height="${size}" viewBox="0 0 36 36">${body}</svg>`,
+          `<svg x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${size}" height="${size}" viewBox="${box}">${content}</svg>`,
         );
       } else {
         stamps.push(
-          `<svg x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${size}" height="${size}" viewBox="0 0 36 36" opacity="${REMAINING_OPACITY}">${body}</svg>`,
+          `<svg x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${size}" height="${size}" viewBox="${box}" opacity="${REMAINING_OPACITY}">${content}</svg>`,
         );
       }
       placed += 1;
     }
   });
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${height}" viewBox="0 0 ${WIDTH} ${height}">
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${WIDTH}" height="${height}" viewBox="0 0 ${WIDTH} ${height}">
 ${stamps.join("")}
 </svg>`;
 }

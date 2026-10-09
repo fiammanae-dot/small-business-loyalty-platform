@@ -94,7 +94,7 @@ export function validateLogoBytes(buffer: Buffer, extension: string): LogoValida
  * a normal upload failure the caller can report, rather than breaking any route
  * that happens to import this module.
  */
-export async function saveImageFile(buffer: Buffer, extension: string, folder: "logos" | "wallet-photos") {
+export async function saveImageFile(buffer: Buffer, extension: string, folder: "logos" | "wallet-photos" | "stamp-icons") {
   const endpoint = process.env.R2_ENDPOINT;
   const bucket = process.env.R2_BUCKET;
   const accessKeyId = process.env.R2_ACCESS_KEY_ID;
@@ -149,6 +149,11 @@ export function saveLogoFile(buffer: Buffer, extension: string) {
 
 export function saveWalletPhotoFile(buffer: Buffer, extension: string) {
   return saveImageFile(buffer, extension, "wallet-photos");
+}
+
+/** A business's own stamp icon, already normalised to a square PNG. */
+export function saveStampIconFile(buffer: Buffer) {
+  return saveImageFile(buffer, "png", "stamp-icons");
 }
 
 /**

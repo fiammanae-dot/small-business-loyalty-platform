@@ -46,10 +46,10 @@ export function StampSlot({
 function StampEmoji({ stampIcon, className }: { stampIcon: CardDesignStampIcon; className: string }) {
   // Drawn from the same bundled Twemoji artwork as the wallet stamp picture, not
   // the phone's emoji font, so the web card and the wallet card match exactly.
-  const { body } = findStampIcon(getStampEmoji(stampIcon));
+  const { body, viewBox } = findStampIcon(getStampEmoji(stampIcon));
   return (
     <svg
-      viewBox="0 0 36 36"
+      viewBox={viewBox}
       className={`inline-block ${className}`}
       aria-hidden="true"
       focusable="false"

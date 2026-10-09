@@ -84,7 +84,7 @@ test("Design Studio offers only what a wallet pass can show", () => {
   const page = read("src/app/dashboard/programs/[id]/design-studio/page.tsx");
 
   // The saved design is a colour and a stamp icon; everything else is fixed.
-  assert.match(helper, /designStudioSchema = z\.object\(\{\s*layoutStyle: z\.enum\(\["CLASSIC", "MODERN", "PREMIUM", "LUXURY"\]\),\s*stampIcon: z\.enum\(stampIcons\),\s*\}\)/);
+  assert.match(helper, /designStudioSchema = z\.object\(\{\s*layoutStyle: z\.enum\(\["CLASSIC", "MODERN", "PREMIUM", "LUXURY"\]\),\s*stampIcon: z\.enum\(stampIcons\),[\s\S]*?customStampIconUrl: z\.string\(\)\.nullable\(\),\s*\}\)/);
   assert.match(helper, /export const walletCanonicalDesign = \{/);
   assert.match(helper, /\.\.\.walletCanonicalDesign,/);
 

@@ -53,7 +53,7 @@ test("every surface draws the stamp icon chosen in the card design", () => {
   assert.match(read("src/lib/wallet-pass-view.ts"), /emoji: stampEmojiForDesign\(program\.cardDesign\)/);
   for (const mapper of ["src/lib/google-wallet/mapper.ts", "src/lib/walletwallet/mapper.ts"]) {
     const source = read(mapper);
-    assert.match(source, /banner\.emoji\)/, `${mapper} must draw the view's icon`);
+    assert.match(source, /banner\.emoji, (view\.)?banner\.customIconUrl\)/, `${mapper} must draw the view's icon`);
     assert.doesNotMatch(source, /\.stampEmoji[,)]/, `${mapper} must not read the old icon column`);
   }
 
@@ -65,7 +65,8 @@ test("every surface draws the stamp icon chosen in the card design", () => {
 test("the web card draws the same artwork as the wallet picture", () => {
   const graphic = read("src/components/design-studio/StampIconGraphic.tsx");
   assert.match(graphic, /findStampIcon\(getStampEmoji\(stampIcon\)\)/);
-  assert.match(graphic, /viewBox="0 0 36 36"/);
+  assert.match(graphic, /const \{ body, viewBox \} = findStampIcon\(getStampEmoji\(stampIcon\)\)/);
+  assert.match(graphic, /viewBox=\{viewBox\}/);
   // Not the phone's emoji font, which differs between iPhone, Android and Windows.
   assert.doesNotMatch(graphic, /Apple Color Emoji/);
 });

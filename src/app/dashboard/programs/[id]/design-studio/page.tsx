@@ -109,14 +109,14 @@ export default async function ProgramDesignStudioPage({
             walletPhotoUrl: program.walletPhotoUrl,
           }}
           tiersEnabled={Boolean(business.tierSetting)}
-          initialDesign={{ layoutStyle: cardDesign.layoutStyle, stampIcon: cardDesign.stampIcon }}
+          initialDesign={{ layoutStyle: cardDesign.layoutStyle, stampIcon: cardDesign.stampIcon, customStampIconUrl: cardDesign.customStampIconUrl }}
           businessPresets={businessPresets.map((preset) => {
             const presetDesign = resolveCardDesign(asCardDesignInput(preset.cardDesign));
             return {
               uuid: preset.uuid,
               name: preset.name,
               createdAt: preset.createdAt.toISOString(),
-              cardDesign: { layoutStyle: presetDesign.layoutStyle, stampIcon: presetDesign.stampIcon },
+              cardDesign: { layoutStyle: presetDesign.layoutStyle, stampIcon: presetDesign.stampIcon, customStampIconUrl: presetDesign.customStampIconUrl },
             };
           })}
           sourcePrograms={sourcePrograms.map((sourceProgram) => {
@@ -124,7 +124,7 @@ export default async function ProgramDesignStudioPage({
             return {
               uuid: sourceProgram.uuid,
               name: sourceProgram.name,
-              cardDesign: { layoutStyle: sourceDesign.layoutStyle, stampIcon: sourceDesign.stampIcon },
+              cardDesign: { layoutStyle: sourceDesign.layoutStyle, stampIcon: sourceDesign.stampIcon, customStampIconUrl: sourceDesign.customStampIconUrl },
             };
           })}
           stampIconOptions={stampIconOptions}

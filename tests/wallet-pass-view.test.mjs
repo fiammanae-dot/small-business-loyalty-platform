@@ -34,7 +34,7 @@ test("a stamp card: visits header, program/tier/member row, live stamp picture",
   const pass = view.buildProgramPassView(stampProgram({ tierName: "Silver", reward: { ready: false, visitsToNext: 7 } }));
   assert.deepEqual(pass.header, { label: "Visits", value: "3 / 10", changeMessage: "Progress: %@" });
   assert.deepEqual(pass.secondaryFields.map((field) => field.label), ["Program", "Tier", "Member"]);
-  assert.deepEqual(pass.banner, { kind: "stamps", filled: 3, total: 10, emoji: "✨" });
+  assert.deepEqual(pass.banner, { kind: "stamps", filled: 3, total: 10, emoji: "✨", customIconUrl: null });
   assert.deepEqual(pass.google.primary, { label: "Visits", value: "3 / 10" });
   assert.deepEqual(pass.google.secondary, { label: "Remaining", value: "7 visits" });
   // With a banner, Apple's big primary field stays empty (it would sit on the picture).
@@ -122,7 +122,7 @@ test("the Apple and Google passes are built from this view", () => {
 
   const google = read("src/lib/google-wallet/mapper.ts");
   assert.match(google, /const view = buildProgramPassView\(/);
-  assert.match(google, /stampImagePath\(program\.uuid, view\.banner\.filled, view\.banner\.total, view\.banner\.emoji\)/);
+  assert.match(google, /stampImagePath\(program\.uuid, view\.banner\.filled, view\.banner\.total, view\.banner\.emoji, view\.banner\.customIconUrl\)/);
   assert.match(google, /loyaltyPoints: \{ label: view\.google\.primary\.label/);
   assert.match(google, /hexBackgroundColor: walletColors\.background/);
 });
@@ -140,5 +140,5 @@ test("the web card and every preview render the same view", () => {
   assert.match(cashback, /<WalletPassPreview view=\{previewView\} \/>/);
   // The stamp picture on the web is drawn by the same function as the wallet PNG.
   assert.match(read("src/components/wallet-pass/WalletPassCard.tsx"), /drawStampStripSvg\(banner\.filled, banner\.total, banner\.emoji\)/);
-  assert.match(read("src/lib/wallet/stamp-image.ts"), /sharp\(Buffer\.from\(drawStampStripSvg\(earned, total, emoji\)\)\)/);
+  assert.match(read("src/lib/wallet/stamp-image.ts"), /sharp\(Buffer\.from\(drawStampStripSvg\(earned, total, emoji, customIconHref\)\)\)/);
 });

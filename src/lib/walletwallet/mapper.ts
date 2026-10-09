@@ -122,7 +122,7 @@ function applyPassLook(body: WalletWalletPassBody, view: WalletPassView, baseUrl
   const banner = view.banner;
   if (banner?.kind === "photo") body.stripURL = banner.url; // Pro - banner at the top of the pass
   if (banner?.kind === "stamps" && programUuid) {
-    body.stripURL = `${baseUrl}${stampImagePath(programUuid, banner.filled, banner.total, banner.emoji)}`; // the live visit grid
+    body.stripURL = `${baseUrl}${stampImagePath(programUuid, banner.filled, banner.total, banner.emoji, banner.customIconUrl)}`; // the live visit grid
   }
 }
 

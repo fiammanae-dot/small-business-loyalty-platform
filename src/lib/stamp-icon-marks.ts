@@ -1,4 +1,4 @@
-import { resolveCardDesign, type CardDesignInput, type CardDesignStampIcon } from "@/lib/card-design";
+import { resolveCardDesign, resolveCustomStampIconUrl, type CardDesignInput, type CardDesignStampIcon } from "@/lib/card-design";
 
 /**
  * The one stamp icon a card shows, everywhere.
@@ -55,4 +55,10 @@ export function getStampEmoji(stampIcon: CardDesignStampIcon) {
 /** The emoji for a saved card design (defaults included), as every surface draws it. */
 export function stampEmojiForDesign(cardDesign: CardDesignInput | unknown): string {
   return getStampEmoji(resolveCardDesign(cardDesign as CardDesignInput).stampIcon);
+}
+
+/** The stamp icon the business uploaded for this design, if any. */
+export function customStampIconForDesign(cardDesign: CardDesignInput | unknown): string | null {
+  if (!cardDesign || typeof cardDesign !== "object") return null;
+  return resolveCustomStampIconUrl((cardDesign as { customStampIconUrl?: unknown }).customStampIconUrl);
 }

@@ -9,6 +9,7 @@ import { buildProgramPassView, walletColourLayoutStyle, walletPreviewDesign, typ
 import { Button, SectionCard } from "@/components/ui";
 import { CardColourPicker } from "@/components/wallet-pass/CardColourPicker";
 import { StampIconChooser } from "@/components/wallet-pass/StampIconChooser";
+import { CustomStampIconField } from "@/components/wallet-pass/CustomStampIconField";
 import { WalletPassPreview } from "@/components/wallet-pass/WalletPassPreview";
 import { StampIconGraphic } from "@/components/design-studio/StampIconGraphic";
 
@@ -18,6 +19,8 @@ type PreviewBranding = WalletPassBranding & { logoUrl: string | null };
 export type WalletCardDesignChoice = {
   layoutStyle: CardDesignLayoutStyle;
   stampIcon: CardDesignStampIcon;
+  /** The business's own uploaded stamp icon; null = the built-in stampIcon. */
+  customStampIconUrl: string | null;
 };
 
 type SavedDesignOption = { uuid: string; name: string; cardDesign: WalletCardDesignChoice };
@@ -73,10 +76,12 @@ export function ProgramDesignStudioForm({
   const initialLayout = walletColourLayoutStyle(initialDesign.layoutStyle);
   const [layoutStyle, setLayoutStyle] = useState<CardDesignLayoutStyle>(initialLayout);
   const [stampIcon, setStampIcon] = useState<CardDesignStampIcon>(initialDesign.stampIcon);
+  const [customStampIconUrl, setCustomStampIconUrl] = useState<string | null>(initialDesign.customStampIconUrl);
   const [appliedFrom, setAppliedFrom] = useState<string | null>(null);
   const [exportMessage, setExportMessage] = useState("");
   const previewRef = useRef<HTMLDivElement | null>(null);
-  const hasUnsavedChanges = layoutStyle !== initialLayout || stampIcon !== initialDesign.stampIcon;
+  const hasUnsavedChanges =
+    layoutStyle !== initialLayout || stampIcon !== initialDesign.stampIcon || customStampIconUrl !== initialDesign.customStampIconUrl;
 
   const view = useMemo(() => {
     const total = Math.max(1, program.requiredStamps);
@@ -90,7 +95,7 @@ export function ProgramDesignStudioForm({
         name: programName,
         isMembership: program.isMembership,
         requiredStamps: total,
-        cardDesign: walletPreviewDesign(layoutStyle, stampIcon),
+        cardDesign: walletPreviewDesign(layoutStyle, stampIcon, customStampIconUrl),
         walletHeroStyle: program.walletHeroStyle,
         photoUrl: program.walletPhotoUrl,
       },
@@ -100,11 +105,12 @@ export function ProgramDesignStudioForm({
       tierName: tiersEnabled && !program.isMembership ? "Silver" : null,
       reward: { ready: false, visitsToNext: Math.max(0, total - sampleProgress) },
     });
-  }, [branding, businessName, layoutStyle, program, programName, stampIcon, tiersEnabled]);
+  }, [branding, businessName, customStampIconUrl, layoutStyle, program, programName, stampIcon, tiersEnabled]);
 
   const applySavedDesign = (option: SavedDesignOption) => {
     setLayoutStyle(walletColourLayoutStyle(option.cardDesign.layoutStyle));
     setStampIcon(option.cardDesign.stampIcon);
+    setCustomStampIconUrl(option.cardDesign.customStampIconUrl);
     setAppliedFrom(option.name);
   };
 
@@ -134,6 +140,7 @@ export function ProgramDesignStudioForm({
       <input type="hidden" name="programUuid" value={programUuid} />
       <input type="hidden" name="layoutStyle" value={layoutStyle} />
       <input type="hidden" name="stampIcon" value={stampIcon} />
+      <input type="hidden" name="customStampIconUrl" value={customStampIconUrl ?? ""} />
 
       <div className="grid min-w-0 gap-5">
         <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 text-sm text-[#475569]">
@@ -170,7 +177,18 @@ export function ProgramDesignStudioForm({
               : "Drawn once per visit in the picture on the card. Filled for visits made, faded for visits to go."
           }
         >
-          <StampIconChooser options={stampIconOptions} value={stampIcon} onChange={setStampIcon} />
+          <div className="grid gap-4">
+            <CustomStampIconField value={customStampIconUrl} onChange={setCustomStampIconUrl} />
+            <StampIconChooser
+              options={stampIconOptions}
+              value={customStampIconUrl ? null : stampIcon}
+              onChange={(icon) => {
+                // Picking a built-in icon switches back from an uploaded one.
+                setStampIcon(icon);
+                setCustomStampIconUrl(null);
+              }}
+            />
+          </div>
         </SectionCard>
 
         <SectionCard
@@ -309,7 +327,12 @@ function SavedDesigns({
 function DesignChip({ design, name, detail }: { design: WalletCardDesignChoice; name: string; detail: string }) {
   return (
     <span className="flex min-w-0 items-center gap-3">
-      <StampIconGraphic stampIcon={design.stampIcon} className="h-7 w-7 shrink-0" />
+      {design.customStampIconUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={design.customStampIconUrl} alt="" className="h-7 w-7 shrink-0 object-contain" />
+      ) : (
+        <StampIconGraphic stampIcon={design.stampIcon} className="h-7 w-7 shrink-0" />
+      )}
       <span className="min-w-0">
         <span className="block truncate text-sm font-semibold text-[#111827]">{name}</span>
         <span className="block text-xs text-[#6B7280]">{detail}</span>
