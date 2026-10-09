@@ -309,6 +309,38 @@ export function resolveCardThemeColors({
   };
 }
 
+/**
+ * The colours a wallet pass carries. Apple and Google Wallet both accept ONE
+ * solid background colour (no gradients or patterns), so every wallet surface
+ * must take it from here rather than inventing its own rule. It is derived from
+ * the same resolved theme the web card renders, so the web card's background
+ * always starts with this exact colour and Apple, Google and the web agree.
+ */
+export function resolveWalletCardColors({
+  cardTheme,
+  branding,
+  cardDesign,
+}: {
+  cardTheme?: CardTheme | null;
+  branding: BrandingInput;
+  cardDesign?: CardDesignInput;
+}) {
+  const theme = resolveCardThemeColors({ cardTheme, branding, cardDesign });
+  const background =
+    firstHexColor(theme.cardBackground) ??
+    firstHexColor(branding.primaryColor) ??
+    firstHexColor(branding.backgroundColor) ??
+    "#1F2937";
+  return { background, foreground: getReadableForeground(background) };
+}
+
+/** The first 6-digit hex colour in a CSS colour or gradient string. */
+export function firstHexColor(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const match = value.trim().match(/#[0-9a-f]{6}/i);
+  return match ? match[0].toUpperCase() : null;
+}
+
 export function withAlpha(hexColor: string, alpha: number) {
   const normalized = hexColor.replace("#", "");
   if (!/^[0-9A-Fa-f]{6}$/.test(normalized)) return hexColor;

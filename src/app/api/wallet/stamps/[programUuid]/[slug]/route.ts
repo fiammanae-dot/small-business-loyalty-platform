@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { drawStampStripPng } from "@/lib/wallet/stamp-image";
 import { prisma } from "@/lib/prisma";
+import { stampEmojiForDesign } from "@/lib/stamp-icon-marks";
 
 /**
  * Serves the stamp picture that a wallet card points at.
@@ -28,16 +29,17 @@ export async function GET(
   const earned = Number(match[1]);
   const total = Number(match[2]);
 
-  // The emoji comes from the program, never from the URL - the tag in the path
-  // only exists to change the address when a business picks a new icon, so that
-  // Google refetches instead of serving what it cached.
+  // The icon comes from the program's card design (the same one the web card
+  // shows), never from the URL - the tag in the path only exists to change the
+  // address when a business picks a new icon, so the wallet refetches instead of
+  // serving what it cached.
   const program = await prisma.loyaltyProgram.findUnique({
     where: { uuid: programUuid },
-    select: { stampEmoji: true, requiredStamps: true },
+    select: { cardDesign: true, requiredStamps: true },
   });
   if (!program) return new NextResponse("Not found", { status: 404 });
 
-  const png = await drawStampStripPng(earned, total || program.requiredStamps, program.stampEmoji);
+  const png = await drawStampStripPng(earned, total || program.requiredStamps, stampEmojiForDesign(program.cardDesign));
 
   return new NextResponse(new Uint8Array(png), {
     headers: {

@@ -268,7 +268,6 @@ export function ProgramCreateWizard({
         <WalletCardPictureField
           defaultHeroStyle={defaults.walletHeroStyle}
           defaultPhotoUrl={defaults.walletPhotoUrl}
-          defaultEmoji={defaults.stampEmoji}
         />
       </SectionCard>
 

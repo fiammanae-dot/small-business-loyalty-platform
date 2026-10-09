@@ -89,7 +89,6 @@ export function ProgramForm({
         <WalletCardPictureField
           defaultHeroStyle={defaults.walletHeroStyle}
           defaultPhotoUrl={defaults.walletPhotoUrl}
-          defaultEmoji={defaults.stampEmoji}
         />
       </SectionCard>
 

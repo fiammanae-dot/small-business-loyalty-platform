@@ -7,7 +7,7 @@ import type {
   LoyaltyProgram,
   ProgramReward,
 } from "@prisma/client";
-import { resolveCardThemeColors } from "@/lib/card-themes";
+import { resolveWalletCardColors } from "@/lib/card-themes";
 import { resolveCardDesign, type CardDesignInput } from "@/lib/card-design";
 import { getCardUrl, resolveBranding } from "@/lib/customer-cards";
 import { progressValue } from "@/lib/programs";
@@ -15,6 +15,7 @@ import { membershipSessionSummary } from "@/lib/membership-sessions";
 import { cardRewardsFor, getNextReward, getReadyRewards, type CardReward } from "@/lib/rewards";
 import { getBaseUrl } from "@/lib/customer-cards";
 import { stampImagePath } from "@/lib/wallet/stamp-image";
+import { stampEmojiForDesign } from "@/lib/stamp-icon-marks";
 import { getScanUrl } from "@/lib/scan";
 import { fromStoredTier } from "@/lib/customer-tiers";
 
@@ -49,7 +50,8 @@ export async function buildGoogleWalletClassPayload({
 }) {
   const branding = resolveBranding(membership.businessCustomerMembership.business.branding);
   const cardDesign = membership.loyaltyProgram.cardDesign as CardDesignInput;
-  const theme = resolveCardThemeColors({
+  // Same solid colour the Apple pass and the web card use (see resolveWalletCardColors).
+  const walletColors = resolveWalletCardColors({
     cardTheme: membership.loyaltyProgram.cardTheme,
     branding,
     cardDesign,
@@ -77,7 +79,7 @@ export async function buildGoogleWalletClassPayload({
     issuerName: businessName,
     programName: membership.loyaltyProgram.name,
     reviewStatus: "UNDER_REVIEW",
-    hexBackgroundColor: resolveHexBackgroundColor(theme.cardBackground, branding),
+    hexBackgroundColor: walletColors.background,
     programLogo: imageModule(absoluteUrl(branding.logoUrl, appUrl) ?? `${appUrl}/logo.png`, `${businessName} logo`),
     // No heroImage on the class. The per-customer stamp picture is set on the
     // object instead, and a class hero would show through for anyone missing one.
@@ -190,7 +192,7 @@ export async function buildGoogleWalletObjectPayload({
           membership.loyaltyProgram.uuid,
           walletFilled,
           walletRequired,
-          membership.loyaltyProgram.stampEmoji,
+          stampEmojiForDesign(membership.loyaltyProgram.cardDesign),
         )}`,
         isMembership
           ? `${sessionsRemaining} of ${sessionsTotal} visits remaining`
@@ -285,31 +287,6 @@ function absoluteUrl(value: string | null | undefined, appUrl: string) {
   if (/^http:\/\//i.test(value)) return null;
   if (value.startsWith("/")) return `${appUrl}${value}`;
   return `${appUrl}/${value}`;
-}
-
-function firstHexColor(value: string | null | undefined): string | null {
-  if (!value) return null;
-  const trimmed = value.trim();
-  if (/^#[0-9a-f]{6}$/i.test(trimmed)) return trimmed;
-  const match = trimmed.match(/#[0-9a-f]{6}/i);
-  return match ? match[0] : null;
-}
-
-// Google Wallet only accepts a single solid `hexBackgroundColor`. Card themes often express
-// the card background as a CSS gradient string, so pull the first real hex out of it (the
-// card's dominant colour) and then fall back through the brand colours. The previous
-// implementation rejected any non-hex string and fell back to a generic orange (#F97316),
-// which made most passes orange regardless of the business's brand.
-function resolveHexBackgroundColor(
-  cardBackground: string | null | undefined,
-  branding: { primaryColor: string; backgroundColor: string },
-): string {
-  return (
-    firstHexColor(cardBackground) ??
-    firstHexColor(branding.primaryColor) ??
-    firstHexColor(branding.backgroundColor) ??
-    "#1F2937"
-  );
 }
 
 function safeIdPart(value: string) {

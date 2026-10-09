@@ -1,47 +1,9 @@
 import type { CardDesignStampIcon } from "@/lib/card-design";
+import { getStampEmoji, stampEmojiMarks } from "@/lib/stamp-icon-marks";
+import { findStampIcon } from "@/lib/wallet/stamp-icons";
 
-export const stampEmojiMarks: Record<CardDesignStampIcon, string> = {
-  STAR: "\u2B50",
-  HEART: "\u2764\uFE0F",
-  CHECK: "\u2705",
-  CIRCLE: "\u{1F535}",
-  DIAMOND: "\u{1F48E}",
-  GIFT: "\u{1F381}",
-  TROPHY: "\u{1F3C6}",
-  CROWN: "\u{1F451}",
-  THUMBS_UP: "\u{1F44D}",
-  FLAME: "\u{1F525}",
-  SCISSORS: "\u2702\uFE0F",
-  RAZOR: "\u{1FA92}",
-  COMB: "\u{1F487}",
-  BARBER_POLE: "\u{1F488}",
-  COFFEE_CUP: "\u2615",
-  COFFEE_BEAN: "\u{1FAD8}",
-  ESPRESSO: "\u2615",
-  CROISSANT: "\u{1F950}",
-  COOKIE: "\u{1F36A}",
-  PLATE: "\u{1F37D}\uFE0F",
-  BURGER: "\u{1F354}",
-  PIZZA: "\u{1F355}",
-  CHEF_HAT: "\u{1F9D1}\u200D\u{1F373}",
-  SANDWICH: "\u{1F96A}",
-  CAKE: "\u{1F370}",
-  CAR: "\u{1F697}",
-  WATER_DROP: "\u{1F4A7}",
-  BUBBLES: "\u2728",
-  WHEEL: "\u{1F6DE}",
-  SPRAY: "\u{1F4A6}",
-  LIPSTICK: "\u{1F484}",
-  MIRROR: "\u{1FA9E}",
-  MAKEUP_BRUSH: "\u{1F58C}\uFE0F",
-  NAIL_POLISH: "\u{1F485}",
-  SPARKLE: "\u2728",
-  GEM: "\u{1F48E}",
-};
-
-export function getStampEmoji(stampIcon: CardDesignStampIcon) {
-  return stampEmojiMarks[stampIcon] ?? stampEmojiMarks.STAR;
-}
+// Re-exported so existing imports keep working; the map lives in the shared lib.
+export { getStampEmoji, stampEmojiMarks };
 
 export function getStampAriaLabel(stampIcon: CardDesignStampIcon) {
   return `${stampIcon.toLowerCase().replace(/_/g, " ")} stamp`;
@@ -82,18 +44,16 @@ export function StampSlot({
 }
 
 function StampEmoji({ stampIcon, className }: { stampIcon: CardDesignStampIcon; className: string }) {
+  // Drawn from the same bundled Twemoji artwork as the wallet stamp picture, not
+  // the phone's emoji font, so the web card and the wallet card match exactly.
+  const { body } = findStampIcon(getStampEmoji(stampIcon));
   return (
-    <span className={`relative inline-block ${className}`} aria-hidden="true" title={getStampAriaLabel(stampIcon)}>
-      <span
-        className="absolute left-1/2 top-1/2 select-none whitespace-nowrap leading-none"
-        style={{
-          transform: "translate(-50%, -50%)",
-          fontFamily: "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Twemoji Mozilla', sans-serif",
-          fontSize: "1.35em",
-        }}
-      >
-        {getStampEmoji(stampIcon)}
-      </span>
-    </span>
+    <svg
+      viewBox="0 0 36 36"
+      className={`inline-block ${className}`}
+      aria-hidden="true"
+      focusable="false"
+      dangerouslySetInnerHTML={{ __html: `<title>${getStampAriaLabel(stampIcon)}</title>${body}` }}
+    />
   );
 }

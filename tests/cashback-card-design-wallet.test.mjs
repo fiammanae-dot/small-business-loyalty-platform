@@ -14,9 +14,9 @@ test("the cashback pass uses the program's name, theme and picture", () => {
   // name
   assert.match(mapper, /const cardName = cs\?\.name\?\.trim\(\) \|\| "Cashback"/);
   assert.match(mapper, /description: `\$\{cardName\} - \$\{businessName\}`/);
-  // theme-driven colour
-  assert.match(mapper, /resolveCardThemeColors\(\{ cardTheme: cs\?\.cardTheme \?\? "BUSINESS_DEFAULT", branding \}\)/);
-  assert.match(mapper, /hexColor\(themeColors\.accent\)/);
+  // theme-driven colour, from the same resolver every other wallet card uses
+  assert.match(mapper, /resolveWalletCardColors\(\{\s*cardTheme: cs\?\.cardTheme \?\? "BUSINESS_DEFAULT",\s*branding,\s*cardDesign: \(cs\?\.cardDesign \?\? undefined\) as CardDesignInput,\s*\}\)\.background/);
+  assert.doesNotMatch(mapper, /hexColor\(themeColors\.accent\)/);
   // hero picture as a top banner
   assert.match(mapper, /const photoUrl = absoluteUrl\(cs\?\.walletPhotoUrl, baseUrl\)/);
   assert.match(mapper, /if \(photoUrl\) body\.stripURL = photoUrl/);

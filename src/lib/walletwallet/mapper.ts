@@ -7,9 +7,11 @@ import { getScanUrl } from "@/lib/scan";
 import { progressValue } from "@/lib/programs";
 import { membershipSessionSummary } from "@/lib/membership-sessions";
 import { stampImagePath } from "@/lib/wallet/stamp-image";
+import { stampEmojiForDesign } from "@/lib/stamp-icon-marks";
 import { fromStoredTier } from "@/lib/customer-tiers";
-import { resolveCardThemeColors } from "@/lib/card-themes";
-import type { CardTheme, WalletHeroStyle } from "@prisma/client";
+import { resolveWalletCardColors } from "@/lib/card-themes";
+import type { CardDesignInput } from "@/lib/card-design";
+import type { CardTheme, Prisma, WalletHeroStyle } from "@prisma/client";
 
 function absoluteUrl(url: string | null | undefined, base: string): string | null {
   if (!url) return null;
@@ -55,13 +57,17 @@ export async function buildWalletWalletPassBody(membership: GoogleWalletProgramM
   const scanUrl = await getScanUrl(membership.scanToken);
   const logoUrl = absoluteUrl(branding.logoUrl, baseUrl);
   const photoUrl = program.walletHeroStyle === "PHOTO" ? absoluteUrl(program.walletPhotoUrl, baseUrl) : null;
-  const color = hexColor(branding.primaryColor) ?? hexColor(branding.buttonColor);
+  // The same solid colour the Google pass and the web card use, from the
+  // program's own theme and design (not the raw brand primary colour).
+  const color = hexColor(
+    resolveWalletCardColors({ cardTheme: program.cardTheme, branding, cardDesign: program.cardDesign as CardDesignInput }).background,
+  );
 
   // The visit/stamp grid drawn as a picture, the same image the Google card uses.
   // Memberships count down (filled = visits left); stamp cards count up.
   const gridFilled = isMembership ? sessionsRemaining : Math.min(progress, required);
   const gridTotal = isMembership ? Math.max(1, sessionsTotal) : required;
-  const gridUrl = `${baseUrl}${stampImagePath(program.uuid, gridFilled, gridTotal, program.stampEmoji)}`;
+  const gridUrl = `${baseUrl}${stampImagePath(program.uuid, gridFilled, gridTotal, stampEmojiForDesign(program.cardDesign))}`;
   // A top banner is always present now: the uploaded hero photo if the business
   // set one, otherwise the live visit grid.
   const bannerUrl = photoUrl ?? gridUrl;
@@ -139,6 +145,7 @@ export type FeaturePassCustomer = {
       currency: string;
       name?: string | null;
       cardTheme?: CardTheme | null;
+      cardDesign?: Prisma.JsonValue | null;
       walletHeroStyle?: WalletHeroStyle | null;
       walletPhotoUrl?: string | null;
     } | null;
@@ -167,8 +174,14 @@ export async function buildCashbackPassBody(customer: FeaturePassCustomer, optio
   const logoUrl = absoluteUrl(branding.logoUrl, baseUrl);
   const photoUrl = absoluteUrl(cs?.walletPhotoUrl, baseUrl);
   const hasBanner = Boolean(photoUrl);
-  const themeColors = resolveCardThemeColors({ cardTheme: cs?.cardTheme ?? "BUSINESS_DEFAULT", branding });
-  const color = hexColor(themeColors.accent) ?? hexColor(branding.primaryColor) ?? hexColor(branding.buttonColor);
+  // Same resolver as every other card, fed the cashback program's own theme and design.
+  const color = hexColor(
+    resolveWalletCardColors({
+      cardTheme: cs?.cardTheme ?? "BUSINESS_DEFAULT",
+      branding,
+      cardDesign: (cs?.cardDesign ?? undefined) as CardDesignInput,
+    }).background,
+  );
 
   // The program name is the top header. The middle row reads Member (left) then
   // Balance (right); with a banner the balance sits here, and without one it is

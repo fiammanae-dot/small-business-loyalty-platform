@@ -72,6 +72,8 @@ test("saved stamp icons are applied to live customer card progress markers", () 
   const frontExport = read("src/components/public-card/LoyaltyCardFrontExport.tsx");
   const backExport = read("src/components/public-card/LoyaltyCardBackExport.tsx");
   const stampIconGraphic = read("src/components/design-studio/StampIconGraphic.tsx");
+  // The icon -> emoji map lives in a shared lib so the wallet picture uses it too.
+  const stampIconMarks = read("src/lib/stamp-icon-marks.ts");
   const designStudioForm = read("src/components/ProgramDesignStudioForm.tsx");
   const createWizard = read("src/components/ProgramCreateWizard.tsx");
   const preview = read("src/components/CardThemePreviewSelector.tsx");
@@ -88,9 +90,9 @@ test("saved stamp icons are applied to live customer card progress markers", () 
   assert.match(stampIconGraphic, /stampEmojiMarks/);
   assert.match(stampIconGraphic, /getStampEmoji/);
   assert.doesNotMatch(stampIconGraphic, /lucide-react/);
-  assert.match(stampIconGraphic, /COFFEE_CUP/);
-  assert.match(stampIconGraphic, /SCISSORS/);
-  assert.match(stampIconGraphic, /WATER_DROP/);
+  assert.match(stampIconMarks, /COFFEE_CUP/);
+  assert.match(stampIconMarks, /SCISSORS/);
+  assert.match(stampIconMarks, /WATER_DROP/);
   assert.match(frontExport, /resolveCardDesign\(wallet\.cardDesign\)/);
   assert.match(backExport, /resolveCardDesign\(wallet\.cardDesign\)/);
   assert.doesNotMatch(preview, /resolveStampIcon/);

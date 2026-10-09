@@ -23,6 +23,7 @@ import {
 } from "@/lib/program-rewards";
 import { generateScanToken } from "@/lib/scan";
 import { commerciallyUsableStatuses, limitReachedMessage, programsUsedTowardLimit } from "@/lib/subscriptions";
+import { stampEmojiForDesign } from "@/lib/stamp-icon-marks";
 import { summarizeWalletSyncForUser, syncWalletProvidersForProgram } from "@/lib/wallet-sync";
 import { hasWalletRelevantProgramChange } from "@/lib/wallet-sync/change-detection";
 import { enqueueWalletSync } from "@/lib/wallet-sync/enqueue";
@@ -187,7 +188,8 @@ export async function createProgramAction(formData: FormData) {
       startingBonusStamps: parsed.data.startingBonusStamps,
       startingStampPolicy: parsed.data.startingStampPolicy,
       referralRewardBonusStamps: parsed.data.referralRewardBonusStamps,
-      stampEmoji: parsed.data.stampEmoji,
+      // Kept in step with the card design's icon (the one every surface draws).
+      stampEmoji: stampEmojiForDesign(cardDesign),
       walletHeroStyle: parsed.data.walletHeroStyle,
       walletPhotoUrl: parsed.data.walletPhotoUrl,
       rewardName,
@@ -303,7 +305,6 @@ export async function updateProgramAction(formData: FormData) {
       startingStampPolicy: parsed.data.startingStampPolicy,
       referralRewardBonusStamps: parsed.data.referralRewardBonusStamps,
       cardTheme: parsed.data.cardTheme,
-      stampEmoji: parsed.data.stampEmoji,
       walletHeroStyle: parsed.data.walletHeroStyle,
       walletPhotoUrl: parsed.data.walletPhotoUrl,
       rewardName,
@@ -341,7 +342,8 @@ export async function updateProgramAction(formData: FormData) {
       name: parsed.data.name,
       rewardName: parsed.data.rewardName,
       cardTheme: parsed.data.cardTheme,
-      stampEmoji: parsed.data.stampEmoji,
+      // The icon is set in the card designer, not on this form.
+      stampEmoji: program.stampEmoji,
       walletHeroStyle: parsed.data.walletHeroStyle,
       walletPhotoUrl: parsed.data.walletPhotoUrl,
       active: parsed.data.active,
@@ -411,6 +413,7 @@ export async function updateProgramDesignStudioAction(formData: FormData) {
     data: {
       cardDesign: cardDesign as unknown as Prisma.InputJsonValue,
       cardTheme: getCardThemeForDesignStudioTemplate(parsed.data.layoutStyle),
+      stampEmoji: stampEmojiForDesign(cardDesign),
     },
   });
   await logAuditEvent({
