@@ -223,6 +223,46 @@ export const STAMP_ICONS: StampIcon[] = [
     "emoji": "🖌️",
     "label": "Makeup brush",
     "file": "1f58c-fe0f"
+  },
+  {
+    "emoji": "🌷",
+    "label": "Tulip",
+    "file": "1f337"
+  },
+  {
+    "emoji": "🌹",
+    "label": "Rose",
+    "file": "1f339"
+  },
+  {
+    "emoji": "🪷",
+    "label": "Water lily",
+    "file": "1fab7"
+  },
+  {
+    "emoji": "🌺",
+    "label": "Hibiscus",
+    "file": "1f33a"
+  },
+  {
+    "emoji": "🌸",
+    "label": "Cherry blossom",
+    "file": "1f338"
+  },
+  {
+    "emoji": "🌻",
+    "label": "Sunflower",
+    "file": "1f33b"
+  },
+  {
+    "emoji": "🌼",
+    "label": "Daisy",
+    "file": "1f33c"
+  },
+  {
+    "emoji": "🪻",
+    "label": "Hyacinth",
+    "file": "1fabb"
   }
 ];
 
