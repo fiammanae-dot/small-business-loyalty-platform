@@ -46,6 +46,15 @@ export const stampEmojiMarks: Record<CardDesignStampIcon, string> = {
   NAIL_POLISH: "\u{1F485}",
   SPARKLE: "\u2728",
   GEM: "\u{1F48E}",
+  TULIP: "\u{1F337}",
+  ROSE: "\u{1F339}",
+  WATER_LILY: "\u{1FAB7}",
+  HIBISCUS: "\u{1F33A}",
+  CHERRY_BLOSSOM: "\u{1F338}",
+  SUNFLOWER: "\u{1F33B}",
+  DAISY: "\u{1F33C}",
+  HYACINTH: "\u{1FABB}",
+  BOUQUET: "\u{1F490}",
 };
 
 export function getStampEmoji(stampIcon: CardDesignStampIcon) {

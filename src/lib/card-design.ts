@@ -14,6 +14,8 @@ export const carWashStampIcons = ["CAR", "WATER_DROP", "BUBBLES", "WHEEL", "SPRA
 export const beautySalonStampIcons = ["LIPSTICK", "MIRROR", "MAKEUP_BRUSH", "NAIL_POLISH", "SPARKLE", "GEM"] as const;
 // Clinics reuse icons that already exist rather than adding artwork: a card on a
 // customer's phone should say "a session happened", not name a treatment.
+// Flowers, for florists, spas and any business whose packages are named after a flower.
+export const flowerStampIcons = ["TULIP", "ROSE", "WATER_LILY", "HIBISCUS", "CHERRY_BLOSSOM", "SUNFLOWER", "DAISY", "HYACINTH", "BOUQUET"] as const;
 export const clinicStampIcons = ["SPARKLE", "GEM", "STAR", "CHECK", "HEART"] as const;
 export const stampIcons = [
   ...generalStampIcons,
@@ -22,6 +24,7 @@ export const stampIcons = [
   ...restaurantStampIcons,
   ...carWashStampIcons,
   ...beautySalonStampIcons,
+  ...flowerStampIcons,
 ] as const;
 export type CardDesignStampIcon = (typeof stampIcons)[number];
 export type CardDesignProgressStyle = "linear";

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   defaultVisibleCardSections,
+  flowerStampIcons,
   generalStampIcons,
   getCardStyleForLayoutStyle,
   getCardThemeForLayoutStyle,
@@ -63,7 +64,7 @@ const crossIndustryStampIcons: readonly CardDesignStampIcon[] = [
 ];
 
 export function getAllowedStampIconsForBusinessType(businessType: Parameters<typeof getRecommendedStampIconsForBusinessType>[0]) {
-  return Array.from(new Set([...getRecommendedStampIconsForBusinessType(businessType), ...crossIndustryStampIcons, ...generalStampIcons])).filter(
+  return Array.from(new Set([...getRecommendedStampIconsForBusinessType(businessType), ...crossIndustryStampIcons, ...generalStampIcons, ...flowerStampIcons])).filter(
     (icon): icon is CardDesignStampIcon => (stampIcons as readonly string[]).includes(icon),
   );
 }
