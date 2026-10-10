@@ -19,12 +19,14 @@ import { getBaseUrl } from "@/lib/customer-cards";
 import { stampImagePath } from "@/lib/wallet/stamp-image";
 import { buildCashbackPassView, buildProgramPassView } from "@/lib/wallet-pass-view";
 import { getScanUrl } from "@/lib/scan";
+import { passLogoUrl } from "@/lib/wallet/pass-logo";
 import { fromStoredTier } from "@/lib/customer-tiers";
 
 export type GoogleWalletProgramMembership = CustomerProgramMembership & {
   businessCustomerMembership: BusinessCustomerMembership & {
     business: {
       id: number;
+      uuid: string;
       name: string;
       branding: BusinessBranding | null;
       membershipSettings?: { enabled: boolean } | null;
@@ -80,7 +82,13 @@ export async function buildGoogleWalletClassPayload({
     programName: membership.loyaltyProgram.name,
     reviewStatus: "UNDER_REVIEW",
     hexBackgroundColor: walletColors.background,
-    programLogo: imageModule(absoluteUrl(branding.logoUrl, appUrl) ?? `${appUrl}/logo.png`, `${businessName} logo`),
+    // Trimmed and squared for Google's circle (see pass-logo.ts); a logo the platform did not store is used as uploaded.
+    programLogo: imageModule(
+      passLogoUrl({ businessUuid: membership.businessCustomerMembership.business.uuid, logoUrl: branding.logoUrl, baseUrl: appUrl, shape: "square" }) ??
+        absoluteUrl(branding.logoUrl, appUrl) ??
+        `${appUrl}/logo.png`,
+      `${businessName} logo`,
+    ),
     // No heroImage on the class. The per-customer stamp picture is set on the
     // object instead, and a class hero would show through for anyone missing one.
     localizedIssuerName: localizedString(businessName),
@@ -264,7 +272,9 @@ async function cashbackView(customer: GoogleWalletCashbackCustomer, appUrl: stri
   const currency = cs?.currency ?? "AED";
   return buildCashbackPassView({
     businessName: customer.business.name,
-    logoUrl: absoluteUrl(branding.logoUrl, appUrl),
+    logoUrl:
+      passLogoUrl({ businessUuid: customer.business.uuid, logoUrl: branding.logoUrl, baseUrl: appUrl, shape: "square" }) ??
+      absoluteUrl(branding.logoUrl, appUrl),
     branding,
     cashback: {
       name: cs?.name,

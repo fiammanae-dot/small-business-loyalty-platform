@@ -154,13 +154,12 @@ function PassField({
 function PassLogo({ url, name, shape }: { url: string | null; name: string; shape: "square" | "circle" }) {
   // The shared avatar falls back to initials when the logo is missing or fails
   // to load, so a pass never shows a broken image where the logo goes.
-  return (
-    <BusinessLogoAvatar
-      logoUrl={url}
-      businessName={name}
-      size="xs"
-      className={`bg-white text-[#111827] ${shape === "circle" ? "rounded-full" : "rounded-md"}`}
-    />
+  // Apple draws the logo in its own shape (up to 160 x 50 pt) straight on the
+  // pass colour; Google crops it into a circle.
+  return shape === "square" ? (
+    <BusinessLogoAvatar logoUrl={url} businessName={name} size="md" wide className="rounded-lg bg-white text-[#111827]" />
+  ) : (
+    <BusinessLogoAvatar logoUrl={url} businessName={name} size="md" className="rounded-full bg-white text-[#111827]" />
   );
 }
 
