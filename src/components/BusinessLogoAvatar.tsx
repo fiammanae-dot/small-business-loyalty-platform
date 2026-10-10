@@ -28,6 +28,8 @@ export function BusinessLogoAvatar({
   className = "",
   style,
   fallback,
+  wide = false,
+  wideClassName = "",
 }: {
   logoUrl?: string | null;
   businessName: string;
@@ -35,6 +37,14 @@ export function BusinessLogoAvatar({
   className?: string;
   style?: CSSProperties;
   fallback?: string;
+  /**
+   * Keep the logo's own shape (a wide wordmark stays wide) instead of fitting
+   * it into a square: the box takes the size variant's height and grows to the
+   * logo's width up to its max. Only while the image shows; the initials
+   * fallback stays square. `wideClassName` replaces `className` in that case.
+   */
+  wide?: boolean;
+  wideClassName?: string;
 }) {
   const [failed, setFailed] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -49,6 +59,15 @@ export function BusinessLogoAvatar({
 
   const showImage = Boolean(logoUrl) && !failed;
   const initials = fallback ?? businessName.slice(0, 1).toUpperCase();
+
+  if (wide && showImage) {
+    return (
+      <span className={`flex shrink-0 items-center ${sizeClasses[size].split(" ")[0]} max-w-[150px] ${wideClassName}`} style={style} aria-label={`${businessName} logo`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img ref={imgRef} src={logoUrl as string} alt="" className="h-full w-auto max-w-full object-contain" onError={() => setFailed(true)} />
+      </span>
+    );
+  }
 
   return (
     <span

@@ -8,6 +8,7 @@ import { progressValue } from "@/lib/programs";
 import { membershipSessionSummary } from "@/lib/membership-sessions";
 import { stampImagePath } from "@/lib/wallet/stamp-image";
 import { fromStoredTier } from "@/lib/customer-tiers";
+import { passLogoUrl } from "@/lib/wallet/pass-logo";
 import { applePrimaryFields, buildCashbackPassView, buildProgramPassView, type WalletPassView } from "@/lib/wallet-pass-view";
 import type { CardTheme, Prisma, WalletHeroStyle } from "@prisma/client";
 
@@ -53,7 +54,9 @@ export async function buildWalletWalletPassBody(membership: GoogleWalletProgramM
 
   const baseUrl = await getBaseUrl();
   const scanUrl = await getScanUrl(membership.scanToken);
-  const logoUrl = absoluteUrl(branding.logoUrl, baseUrl);
+  // Trimmed and fitted to Apple's 160 x 50 pt logo box (see pass-logo.ts).
+  const logoUrl =
+    passLogoUrl({ businessUuid: business.uuid, logoUrl: branding.logoUrl, baseUrl, shape: "wide" }) ?? absoluteUrl(branding.logoUrl, baseUrl);
 
   // Every visible slot of the pass (colour, banner, header and field rows) comes
   // from the shared pass view - the same one the web card and the Design Studio
@@ -134,6 +137,7 @@ export type FeaturePassCustomer = {
   cashbackBalance: unknown;
   currentTier: string | null;
   business: {
+    uuid: string;
     name: string;
     branding: Parameters<typeof resolveBranding>[0];
     cashbackSettings?: {
@@ -172,7 +176,9 @@ export async function buildCashbackPassBody(customer: FeaturePassCustomer, optio
   // without a banner the balance is the big primary field instead.
   const view = buildCashbackPassView({
     businessName,
-    logoUrl: absoluteUrl(branding.logoUrl, baseUrl),
+    logoUrl:
+      passLogoUrl({ businessUuid: customer.business.uuid, logoUrl: branding.logoUrl, baseUrl, shape: "wide" }) ??
+      absoluteUrl(branding.logoUrl, baseUrl),
     branding,
     cashback: {
       name: cs?.name,

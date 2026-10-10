@@ -6,10 +6,11 @@ import { isCashbackMember } from "@/lib/cashback";
 import { WalletPassCard } from "@/components/wallet-pass/WalletPassCard";
 import { buildCashbackPassView, buildProgramPassView } from "@/lib/wallet-pass-view";
 import { detectWalletPlatform } from "@/lib/wallet-platform";
+import { passLogoUrl } from "@/lib/wallet/pass-logo";
 import { syncAppleWalletAfterTierChange } from "@/lib/walletwallet/service";
 import { SaveCardImageButton } from "@/components/SaveCardImageButton";
 import { Gift, QrCode } from "lucide-react";
-import { getCardQrDataUrl, getCardUrl, resolveBranding } from "@/lib/customer-cards";
+import { getBaseUrl, getCardQrDataUrl, getCardUrl, resolveBranding } from "@/lib/customer-cards";
 import { resolveCardThemeColors } from "@/lib/card-themes";
 import type { CardDesignInput } from "@/lib/card-design";
 import { buildCardRenderModel } from "@/lib/card-render-model";
@@ -258,10 +259,19 @@ export default async function PublicCustomerCardPage({
   // The card itself is the wallet pass, built from the same view as the Apple
   // pass and the Design Studio preview, so the web card matches the wallet.
   // Android visitors see the Google Wallet layout, everyone else Apple's.
+  // The device decides: Android sees the Google Wallet layout and button, an
+  // iPhone the Apple ones, and a computer the Apple layout with a QR code to
+  // switch to the phone.
+  const walletPlatform = detectWalletPlatform((await headers()).get("user-agent"));
+  const passPlatform = walletPlatform === "google" ? "google" : "apple";
+  // The same trimmed logo the wallets get (see pass-logo.ts), so the web card matches the phone.
+  const passLogo =
+    passLogoUrl({ businessUuid: membership.business.uuid, logoUrl: branding.logoUrl, baseUrl: await getBaseUrl(), shape: passPlatform === "google" ? "square" : "wide" }) ??
+    branding.logoUrl;
   const primaryPassView = primaryProgram
     ? buildProgramPassView({
         businessName: membership.business.name,
-        logoUrl: branding.logoUrl,
+        logoUrl: passLogo,
         branding,
         program: {
           name: primaryProgram.programMembership.loyaltyProgram.name,
@@ -292,7 +302,7 @@ export default async function PublicCustomerCardPage({
     cashbackMember && cashbackSettings
       ? buildCashbackPassView({
           businessName: membership.business.name,
-          logoUrl: branding.logoUrl,
+          logoUrl: passLogo,
           branding,
           cashback: {
             name: cashbackSettings.name,
@@ -304,11 +314,6 @@ export default async function PublicCustomerCardPage({
           balance: `${cashbackSettings.currency} ${Number(membership.cashbackBalance ?? 0).toFixed(2)}`,
         })
       : null;
-  // The device decides: Android sees the Google Wallet layout and button, an
-  // iPhone the Apple ones, and a computer the Apple layout with a QR code to
-  // switch to the phone.
-  const walletPlatform = detectWalletPlatform((await headers()).get("user-agent"));
-  const passPlatform = walletPlatform === "google" ? "google" : "apple";
   const walletCardProps = {
     businessName: primaryCardModel.business.name,
     businessLogoUrl: primaryCardModel.business.logoUrl,
