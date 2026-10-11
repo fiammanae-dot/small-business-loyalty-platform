@@ -58,3 +58,10 @@ test("customer page and scanner describe each customer correctly", () => {
   assert.match(scan, /isMembership \? "Visit recorded" : "Stamp added successfully"/);
   assert.match(scan, /isMembership \? "Undo Visit" : "Undo Stamp"/);
 });
+
+test("the Renew Membership panel uses the business's colours, not hard-coded amber", () => {
+  const page = read("src/app/scan/[token]/page.tsx");
+  const panel = page.slice(page.indexOf("function MembershipRenewPanel"), page.indexOf("function MembershipSessionsNote"));
+  assert.doesNotMatch(panel, /amber-/);
+  assert.match(panel, /className="business-button min-h-12 w-full/);
+});
