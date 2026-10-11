@@ -86,3 +86,10 @@ test("owners are emailed about new high-risk alerts, after the response", () => 
   assert.match(email, /\/dashboard\/notifications\/\$\{/);
   assert.doesNotMatch(email, /RESEND_API_KEY\s*=\s*["']/);
 });
+
+test("the alert card does not clip its Actions menu", () => {
+  const page = read("src/app/dashboard/notifications/page.tsx");
+  assert.match(page, /<details className=\{`group min-w-0 rounded-xl border/);
+  assert.doesNotMatch(page, /<details className=\{`group min-w-0 overflow-hidden/);
+  assert.match(page, /absolute left-0 z-40 mt-2 w-72/);
+});
