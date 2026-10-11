@@ -41,6 +41,15 @@ export default async function ProgramJoinPage({
   if (!program || !program.active || program.business.status !== "ACTIVE") {
     return <JoinUnavailable />;
   }
+  // A paid package is never self-service: the business adds it after payment.
+  if (program.isMembership) {
+    return (
+      <JoinUnavailable
+        title="Ask us at the counter"
+        message={`${program.name} is a paid package from ${program.business.name}. Our team will add it to your card after payment.`}
+      />
+    );
+  }
 
   const successMembership = qs.card
     ? await prisma.businessCustomerMembership.findFirst({
@@ -196,17 +205,18 @@ function Input({
   );
 }
 
-function JoinUnavailable() {
+function JoinUnavailable({
+  title = "Program not available",
+  message = "This loyalty program link is unavailable or has been disabled.",
+}: { title?: string; message?: string } = {}) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-white px-4">
       <section className="w-full max-w-sm rounded-2xl border border-[#E5E7EB] bg-white p-6 text-center shadow-sm">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[#F8FAFC] text-sm font-bold text-[#111827]">
           LC
         </div>
-        <h1 className="mt-5 text-2xl font-semibold text-[#111827]">Program not available</h1>
-        <p className="mt-3 text-sm leading-6 text-[#6B7280]">
-          This loyalty program link is unavailable or has been disabled.
-        </p>
+        <h1 className="mt-5 text-2xl font-semibold text-[#111827]">{title}</h1>
+        <p className="mt-3 text-sm leading-6 text-[#6B7280]">{message}</p>
       </section>
     </main>
   );

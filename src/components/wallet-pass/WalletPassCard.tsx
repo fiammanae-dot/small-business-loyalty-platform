@@ -176,7 +176,7 @@ function BannerImage({ banner, alt }: { banner: WalletPassBanner; alt: string })
   }
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={banner.url} alt={alt} className="h-full w-full object-cover" crossOrigin="anonymous" />
+    <img src={sameOriginImage(banner.url)} alt={alt} className="h-full w-full object-cover" />
   );
 }
 
@@ -215,4 +215,15 @@ function SampleQr() {
       <path d={finderPath(0, 0) + finderPath(cells - 7, 0) + finderPath(0, cells - 7)} fill="#111827" fillRule="evenodd" />
     </svg>
   );
+}
+
+/**
+ * Photos stored on the platform's R2 storage are drawn through /api/media, a
+ * same-origin copy, so the browser never needs CORS from storage: the photo
+ * shows, and the card's "Download" image includes it. The route itself only
+ * serves the platform's own storage folders; anything else is left as is.
+ */
+function sameOriginImage(url: string): string {
+  if (!/^https:\/\/[^/]+\/(wallet-photos|logos|stamp-icons)\//.test(url)) return url;
+  return `/api/media?u=${encodeURIComponent(url)}`;
 }

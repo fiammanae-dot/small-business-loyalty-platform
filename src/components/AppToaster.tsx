@@ -32,6 +32,9 @@ function RouteToastMessages() {
     const error = searchParams.get("error");
 
     if (!success && !error) return;
+    // The scanner shows its own result banners (and stays on screen for the
+    // cashier), so a corner toast that also wipes ?error= would hide them.
+    if (pathname.startsWith("/scan/")) return;
 
     if (success) {
       toast.success(success);

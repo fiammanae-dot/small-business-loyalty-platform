@@ -81,6 +81,10 @@ export async function joinProgramAction(formData: FormData) {
   if (!program || !program.active || program.business.status !== "ACTIVE") {
     fail(parsed.data.token, "This program is not available for public enrollment.");
   }
+  // Paid packages are added by staff after payment, never by the public link.
+  if (program.isMembership) {
+    fail(parsed.data.token, "This package is added by our team after payment. Please ask at the counter.");
+  }
 
   const { ipAddress } = await getRequestInfo();
   const rateLimited = await isPublicActionRateLimited({

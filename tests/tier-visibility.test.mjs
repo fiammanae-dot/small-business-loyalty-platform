@@ -42,7 +42,7 @@ test("dashboard customer surfaces gate tiers on membership", () => {
   assert.match(list, /row\.progress\?\.isMembership \? <span[^>]*>—<\/span> : <TierBadge tier=\{row\.tier\}/);
   const detail = read("src/app/dashboard/customers/[id]/page.tsx");
   assert.match(detail, /const tiersVisible = areTiersVisible\(business\.membershipSettings\?\.enabled\)/);
-  assert.match(detail, /const showTier = tiersVisible && !primaryIsMembership/);
+  assert.match(detail, /const showTier = tiersVisible && Boolean\(primaryProgram\) && !primaryIsMembership/);
   assert.match(detail, /showTier \? <StatusBadge tone="business">\{customerTier\.badgeIcon\}/);
   // The Overview tab's "Tier status" panel is gated too.
   assert.match(detail, /showTier \? <TierDetailsPanel/);
@@ -88,7 +88,8 @@ test("the program Google Wallet pass carries the tier for stamp programs only", 
 test("scan counter and referral surfaces hide tiers for membership businesses", () => {
   const scan = read("src/app/scan/[token]/page.tsx");
   assert.match(scan, /areTiersVisible\(/);
-  assert.match(scan, /tier=\{tiersVisible \? \(fromStoredTier/);
+  // ...and never for a package customer.
+  assert.match(scan, /tier=\{tiersVisible && !program\.isMembership \? \(fromStoredTier/);
   assert.match(scan, /referrerTier=\{tiersVisible \? fromStoredTier/);
   const referral = read("src/app/referral/[code]/page.tsx");
   assert.match(referral, /const referrerTier = tiersVisible \? fromStoredTier/);

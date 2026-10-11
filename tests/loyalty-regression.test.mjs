@@ -22,7 +22,8 @@ test("multiple stamp issuance requires a reason and quantity is database bounded
 test("repeated single-stamp issuance requires a reason and creates abuse alert context", () => {
   assert.match(scanActions, /REPEATED_STAMP_WINDOW_MINUTES\s*=\s*10/);
   assert.match(scanActions, /REPEATED_STAMP_REASON_THRESHOLD\s*=\s*3/);
-  assert.match(scanActions, /Multiple stamps were issued to this customer in a short time\. Please provide a reason\./);
+  // The message tells staff exactly where to give the reason.
+  assert.match(scanActions, /This customer was just stamped\. To add another one now, write a reason under Advanced stamp options below/);
   assert.match(scanActions, /issuedByUserId:\s*user\.id/);
   assert.match(scanActions, /customerProgramMembershipId:\s*programMembership\.id/);
   assert.match(scanActions, /REPEATED_STAMPS_SHORT_WINDOW/);

@@ -84,8 +84,8 @@ export default async function ProgramDetailPage({
   const averageCompletionRate = enrolledCustomers > 0 ? Math.min(100, Math.round((progressTotal / (enrolledCustomers * safeRequiredStamps)) * 100)) : 0;
   const bonusStampsIssued = program.memberships.reduce((sum, membership) => sum + membership.bonusStamps, 0);
   const earnedStamps = program.memberships.reduce((sum, membership) => sum + membership.earnedStamps, 0);
-  const joinUrl = await getProgramJoinUrl(program.joinToken);
-  const joinQrCode = await getProgramJoinQrDataUrl(program.joinToken);
+  const joinUrl = isMembership ? "" : await getProgramJoinUrl(program.joinToken);
+  const joinQrCode = isMembership ? "" : await getProgramJoinQrDataUrl(program.joinToken);
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title={program.name} hideWelcomeMessage>
@@ -176,28 +176,41 @@ export default async function ProgramDetailPage({
               </div>
             </SectionCard>
 
-            <SectionCard title="Program Join QR" description="Print or share this QR so customers can join this program themselves. No stamps are added during signup.">
-              <div className="grid gap-4">
-                <div className="rounded-2xl border border-[#E2E8F0] bg-white p-4 text-center">
-                  <img src={joinQrCode} alt={`${program.name} join QR code`} className="mx-auto h-52 w-52 rounded-xl bg-white p-2" />
-                  <p className="mt-3 text-sm font-semibold text-[#0F172A]">Scan to join {program.name}</p>
-                  <p className="mt-1 text-xs text-[#64748B]">{business.name}</p>
-                </div>
-                <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">Join link</p>
-                  <p className="mt-2 break-all text-sm font-semibold text-[#0F172A]">{joinUrl}</p>
-                </div>
-                <div className="flex flex-wrap items-start gap-2">
-                  <CopyButton value={joinUrl} label="Copy join link" copiedLabel="Join link copied." />
-                  <ButtonLink href={joinUrl} variant="outline" target="_blank" rel="noopener noreferrer">
-                    Open Join Page
-                  </ButtonLink>
-                  <ButtonLink href={"/dashboard/programs/" + program.uuid + "/join-poster"} variant="business">
-                    Printable Poster
+            {isMembership ? (
+              // A paid package has no public join link: anyone could otherwise
+              // give themselves a full set of prepaid visits without paying.
+              <SectionCard title="Selling this package" description="Packages are paid for at your business, so they have no public join QR.">
+                <div className="grid gap-3 text-sm leading-6 text-[#475569]">
+                  <p>After the customer pays, add the package to them from <span className="font-semibold text-[#0F172A]">Enroll Customers</span> on this program, or pick it when you create a new customer.</p>
+                  <ButtonLink href={"/dashboard/programs/" + program.uuid + "/customers"} variant="business">
+                    Enroll Customers
                   </ButtonLink>
                 </div>
-              </div>
-            </SectionCard>
+              </SectionCard>
+            ) : (
+              <SectionCard title="Program Join QR" description="Print or share this QR so customers can join this program themselves. No stamps are added during signup.">
+                <div className="grid gap-4">
+                  <div className="rounded-2xl border border-[#E2E8F0] bg-white p-4 text-center">
+                    <img src={joinQrCode} alt={`${program.name} join QR code`} className="mx-auto h-52 w-52 rounded-xl bg-white p-2" />
+                    <p className="mt-3 text-sm font-semibold text-[#0F172A]">Scan to join {program.name}</p>
+                    <p className="mt-1 text-xs text-[#64748B]">{business.name}</p>
+                  </div>
+                  <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">Join link</p>
+                    <p className="mt-2 break-all text-sm font-semibold text-[#0F172A]">{joinUrl}</p>
+                  </div>
+                  <div className="flex flex-wrap items-start gap-2">
+                    <CopyButton value={joinUrl} label="Copy join link" copiedLabel="Join link copied." />
+                    <ButtonLink href={joinUrl} variant="outline" target="_blank" rel="noopener noreferrer">
+                      Open Join Page
+                    </ButtonLink>
+                    <ButtonLink href={"/dashboard/programs/" + program.uuid + "/join-poster"} variant="business">
+                      Printable Poster
+                    </ButtonLink>
+                  </div>
+                </div>
+              </SectionCard>
+            )}
 
             <SectionCard title="Program Performance" description="Existing activity summarized from program memberships and redemptions.">
               <div className="grid gap-4">
