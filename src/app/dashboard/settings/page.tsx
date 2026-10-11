@@ -5,7 +5,6 @@ import { BusinessLogoAvatar } from "@/components/BusinessLogoAvatar";
 import { BrandAssetsCenter } from "@/components/BrandAssetsCenter";
 import { ButtonLink, EmptyState, MetricCard, PageIntro, SectionCard, StatusBadge } from "@/components/ui";
 import { saveAbusePolicyAction, saveCashbackSettingsAction, saveCooldownRuleAction, saveCustomerTierSettingsAction, saveMembershipSettingsAction, saveScannerSettingsAction, updateBusinessProfileAction } from "@/app/dashboard/actions";
-import { businessTypeOptions } from "@/lib/platform-options";
 import { RequiredMark } from "@/components/ui/RequiredMark";
 import { saveSupportAccessPolicyAction } from "@/app/platform/businesses/support-actions";
 import { sendWhatsAppTestMessageAction } from "@/app/dashboard/settings/whatsapp-actions";
@@ -178,9 +177,11 @@ function BusinessProfileSection({ business, user }: { business: Awaited<ReturnTy
           </label>
           <label className="min-w-0 space-y-2">
             <span className="text-sm font-medium text-[#111827]">Business Type</span>
-            <select name="businessType" defaultValue={business.businessType} className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring business-border">
-              {businessTypeOptions.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
-            </select>
+            {/* Set by the platform when the business is created; owners cannot change it. */}
+            <div className="flex h-11 w-full items-center rounded-md border border-[#E5E7EB] bg-[#F9FAFB] px-3 text-sm text-[#374151]" aria-readonly="true">
+              {businessTypeLabels[business.businessType]}
+            </div>
+            <span className="block text-xs text-[#6B7280]">To change your business type, contact Loyalty Card UAE support.</span>
           </label>
         </div>
         <button type="submit" className="h-11 w-fit rounded-md business-button px-4 text-sm font-semibold text-white">Save business profile</button>

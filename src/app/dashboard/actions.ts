@@ -5,8 +5,7 @@ import { randomInt } from "crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { businessTypeValues } from "@/lib/roles";
-import type { BusinessType, RecordStatus, UserRole } from "@prisma/client";
+import type { RecordStatus, UserRole } from "@prisma/client";
 import { Prisma, CardTheme, WalletHeroStyle } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit";
@@ -36,9 +35,9 @@ import {
 } from "@/lib/customers";
 import { normalizePhone } from "@/lib/phone";
 
+// Business type is set by the platform, so the owner form only changes the name.
 const profileSchema = z.object({
   name: z.string().trim().min(1, "Business name is required."),
-  businessType: z.enum(businessTypeValues),
 });
 
 const branchSchema = z.object({
@@ -199,7 +198,6 @@ export async function updateBusinessProfileAction(formData: FormData) {
   const user = await requireBusinessOwner();
   const parsed = profileSchema.safeParse({
     name: getString(formData, "name"),
-    businessType: getString(formData, "businessType"),
   });
 
   if (!parsed.success) fail("/dashboard/settings", parsed.error.issues[0]?.message ?? "Validation failed.");
@@ -213,7 +211,6 @@ export async function updateBusinessProfileAction(formData: FormData) {
     where: { id: user.businessId },
     data: {
       name: parsed.data.name,
-      businessType: parsed.data.businessType as BusinessType,
     },
   });
 
