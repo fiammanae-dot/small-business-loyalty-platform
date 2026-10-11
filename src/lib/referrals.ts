@@ -5,6 +5,7 @@ import type { CustomerTierName, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getBaseUrl } from "@/lib/customer-cards";
 import { logAuditEvent } from "@/lib/audit";
+import { createAbuseAlert, getAlertRule } from "@/lib/alert-engine";
 import { createCustomerNotification } from "@/lib/customer-notifications";
 import { normalizePhone } from "@/lib/phone";
 
@@ -368,6 +369,30 @@ export async function createPendingReferralForEnrollment({
       },
     },
   });
+
+  // Referral volume alert: one customer bringing in many new customers in 24 hours.
+  const volumeRule = await getAlertRule(tx, businessId, "REFERRAL_ABUSE_THRESHOLD");
+  if (volumeRule.enabled) {
+    const referralsIn24h = await tx.referral.count({
+      where: { businessId, referrerMembershipId: referrer.id, createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } },
+    });
+    if (referralsIn24h >= volumeRule.threshold) {
+      const referrerName = await tx.businessCustomerMembership.findUnique({
+        where: { id: referrer.id },
+        select: { firstName: true, lastName: true },
+      });
+      const name = referrerName ? `${referrerName.firstName} ${referrerName.lastName ?? ""}`.trim() : "A customer";
+      await createAbuseAlert({
+        tx,
+        businessId,
+        alertType: "REFERRAL_HIGH_VOLUME",
+        severity: volumeRule.severity,
+        description: `${name} referred ${referralsIn24h} new customers in 24 hours (your limit is ${volumeRule.threshold}). Check they are real people before rewards are given.`,
+        dedupeScope: `referrer:${referrer.id}`,
+        metadata: { referrerMembershipId: referrer.id, referralsIn24h, threshold: volumeRule.threshold },
+      });
+    }
+  }
 }
 
 export async function qualifyReferralFromFirstStamp({

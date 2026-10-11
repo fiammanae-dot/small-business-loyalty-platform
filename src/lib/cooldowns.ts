@@ -3,7 +3,7 @@ import "server-only";
 import type { Prisma, UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit";
-import { createAbuseAlert } from "@/lib/alert-engine";
+import { createAbuseAlert, getAlertRule } from "@/lib/alert-engine";
 
 type CooldownClient = Prisma.TransactionClient | typeof prisma;
 
@@ -149,7 +149,21 @@ export async function enforceStampCooldown({
     })),
   });
 
-  if (rule?.generateAlert !== false) {
+  // Alert once the same staff member and customer reach the owner's
+  // "Loyalty rule breaks" threshold within 24 hours (this attempt included).
+  const breaksRule = await getAlertRule(tx, businessId, "COOLDOWN_VIOLATION_THRESHOLD");
+  const breaksIn24h = breaksRule.enabled
+    ? await tx.cooldownEvent.count({
+        where: {
+          businessId,
+          customerProgramMembershipId,
+          staffUserId,
+          createdAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
+        },
+      })
+    : 0;
+
+  if (rule?.generateAlert !== false && breaksRule.enabled && breaksIn24h >= breaksRule.threshold) {
     for (const violation of violations) {
       await createAbuseAlert({
         tx,
@@ -159,7 +173,7 @@ export async function enforceStampCooldown({
         customerProgramMembershipId,
         alertType: `COOLDOWN_${violation.type}`,
         severity: overrideUsed ? "MEDIUM" : "HIGH",
-        description: violation.message,
+        description: `${violation.message} (${breaksIn24h} rule breaks by this staff member for this customer in 24 hours${overrideUsed ? ", overridden by a manager" : ""}).`,
         dedupeScope: `${customerProgramMembershipId}:${staffUserId}:${violation.type}`,
         metadata: violation.metadata,
       });

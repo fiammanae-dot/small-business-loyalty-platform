@@ -12,6 +12,11 @@
  *   node scripts/db/migrate-production.mjs            shows what WOULD run
  *   node scripts/db/migrate-production.mjs --apply    actually applies it
  *
+ * If a migration FAILED part-way (P3018), fix it, then mark the failed attempt
+ * as rolled back so it can be applied again:
+ *   node scripts/db/migrate-production.mjs --rolled-back <migration_name>
+ * Only do that when the failed migration wrote nothing (or was undone).
+ *
  * Add --direct if a run fails with P1001 on a "-pooler" host: `migrate deploy`
  * takes a session advisory lock, and a transaction-mode pooler cannot hold one.
  * --direct strips "-pooler" from the hostname to use Neon's direct endpoint.
@@ -47,6 +52,12 @@ if (devHost && devHost === host) {
 }
 
 const apply = process.argv.includes("--apply");
+const rolledBackIndex = process.argv.indexOf("--rolled-back");
+const rolledBack = rolledBackIndex > -1 ? process.argv[rolledBackIndex + 1] : null;
+if (rolledBackIndex > -1 && !/^\d{4}_[a-z0-9_]+$/.test(rolledBack ?? "")) {
+  console.error("--rolled-back needs the migration folder name, e.g. --rolled-back 0067_alert_policies_connected");
+  process.exit(1);
+}
 const direct = process.argv.includes("--direct");
 
 // Neon's direct endpoint is the same host without "-pooler".
@@ -62,15 +73,23 @@ console.log("");
 console.log(`target      : ${targetHost}`);
 console.log(`             (PRODUCTION_DATABASE_URL${direct ? ", direct endpoint" : ""})`);
 if (devHost) console.log(`local dev   : ${devHost}  - not touched`);
-console.log(`mode        : ${apply ? "APPLY - this writes to production" : "dry run - nothing will be written"}`);
+console.log(`mode        : ${rolledBack ? `MARK ${rolledBack} AS ROLLED BACK - production migration history only` : apply ? "APPLY - this writes to production" : "dry run - nothing will be written"}`);
 console.log("");
 
 const env = { ...process.env, DATABASE_URL: targetUrl, PRISMA_HIDE_UPDATE_MESSAGE: "1" };
-const args = apply ? ["prisma", "migrate", "deploy"] : ["prisma", "migrate", "status"];
+const args = rolledBack
+  ? ["prisma", "migrate", "resolve", "--rolled-back", rolledBack]
+  : apply
+    ? ["prisma", "migrate", "deploy"]
+    : ["prisma", "migrate", "status"];
 
 const result = spawnSync("npx", args, { env, stdio: "inherit", shell: process.platform === "win32" });
 
-if (!apply) {
+if (rolledBack && result.status === 0) {
+  console.log("");
+  console.log(`${rolledBack} is marked as rolled back. Check what will run next:`);
+  console.log("   node scripts/db/migrate-production.mjs");
+} else if (!apply && !rolledBack) {
   console.log("");
   console.log("Nothing was written. To apply the migrations listed above, run:");
   console.log("   node scripts/db/migrate-production.mjs --apply");
