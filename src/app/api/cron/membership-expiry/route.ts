@@ -3,6 +3,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { logAuditEvent } from "@/lib/audit";
 import { computeMembershipForfeit } from "@/lib/membership-sessions";
 import { prisma } from "@/lib/prisma";
+import { syncGoogleWalletObjectAfterLoyaltyChange } from "@/lib/google-wallet/service";
+import { syncAppleWalletPassSafe } from "@/lib/walletwallet/service";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -95,10 +97,23 @@ export async function GET(request: NextRequest) {
         // once every cycle has already been evaluated.
         if (enrollment.forfeitCyclesProcessed >= requiredStamps) continue;
 
-        const visits = await prisma.stampTransaction.findMany({
-          where: { customerProgramMembershipId: enrollment.id },
-          select: { createdAt: true },
-        });
+        const [allVisits, undoEvents] = await Promise.all([
+          prisma.stampTransaction.findMany({
+            where: { customerProgramMembershipId: enrollment.id },
+            select: { id: true, createdAt: true },
+          }),
+          prisma.auditEvent.findMany({
+            where: { action: "STAMP_UNDONE", entityType: "customer_program_membership", entityId: String(enrollment.id) },
+            select: { metadata: true },
+          }),
+        ]);
+        // An undone visit never happened: it must not keep a month "visited".
+        const undoneIds = new Set(
+          undoEvents
+            .map((event) => Number((event.metadata as { originalStampTransactionId?: unknown } | null)?.originalStampTransactionId))
+            .filter((id) => Number.isFinite(id)),
+        );
+        const visits = allVisits.filter((visit) => !undoneIds.has(visit.id));
 
         const result = computeMembershipForfeit({
           enrolledAt: enrollment.enrolledAt,
@@ -146,6 +161,12 @@ export async function GET(request: NextRequest) {
 
         membershipsUpdated += 1;
         sessionsForfeited += result.forfeitedThisRun;
+
+        // The customer's wallet card shows visits left, so refresh it after a forfeit.
+        if (result.forfeitedThisRun > 0) {
+          await syncGoogleWalletObjectAfterLoyaltyChange(enrollment.id);
+          await syncAppleWalletPassSafe(enrollment.id);
+        }
       } catch (error) {
         errors.push({ programMembershipId: enrollment.id, message: describeError(error) });
       }
