@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { MetricCard } from "@/components/ui/MetricCard";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { reviewActivityAlertAction } from "@/app/dashboard/notifications/actions";
-import { alertCategory, defaultAbusePolicies } from "@/lib/alert-engine";
+import { alertCategory, alertTypeFilterForRule, defaultAbusePolicies } from "@/lib/alert-engine";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { activityHref, customerProfileHref, findRelatedStampTransaction, staffProfileHref } from "@/lib/alert-investigation";
 import { alertTypeLabel } from "@/lib/alert-labels";
@@ -52,6 +52,8 @@ export default async function NotificationsPage({
   const search = params.search?.trim();
   const numericSearch = search && /^\d+$/.test(search) ? Number(search) : undefined;
   const ruleTypes = defaultAbusePolicies.map((policy) => policy.ruleType);
+  // A rule can produce several alert types (e.g. every Loyalty rule break), so filter by all of them.
+  const ruleFilter = params.ruleType && ruleTypes.includes(params.ruleType as (typeof ruleTypes)[number]) ? alertTypeFilterForRule(params.ruleType) : null;
   const baseWhere: Prisma.ActivityAlertWhereInput = { businessId: user.businessId };
   const where: Prisma.ActivityAlertWhereInput = {
     ...baseWhere,
@@ -63,7 +65,7 @@ export default async function NotificationsPage({
       ? { priority: params.priority as ActivityAlertSeverity }
       : {}),
     ...(branchId ? { branchId } : {}),
-    ...(params.ruleType && ruleTypes.includes(params.ruleType as (typeof ruleTypes)[number]) ? { alertType: params.ruleType } : {}),
+    ...(ruleFilter ? { AND: [ruleFilter] } : {}),
     ...(dateRange ? { createdAt: { gte: dateRange.from, lte: dateRange.to } } : {}),
     ...(Number.isFinite(riskMin) || Number.isFinite(riskMax)
       ? { riskScore: { ...(Number.isFinite(riskMin) ? { gte: riskMin } : {}), ...(Number.isFinite(riskMax) ? { lte: riskMax } : {}) } }

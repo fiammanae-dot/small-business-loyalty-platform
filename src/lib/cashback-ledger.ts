@@ -2,6 +2,8 @@ import "server-only";
 
 import { prisma } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit";
+import { createAbuseAlert, getAlertRule } from "@/lib/alert-engine";
+import type { Prisma } from "@prisma/client";
 import { applyCashbackDelta, CASHBACK_NOT_JOINED_MESSAGE, canSpendCashback, computeCashbackEarn, formatAed } from "@/lib/cashback";
 import { syncGoogleWalletAfterCashbackChange } from "@/lib/google-wallet/service";
 import { qualifyReferralFromFirstCashback } from "@/lib/referrals";
@@ -36,6 +38,92 @@ function isUniqueViolation(error: unknown): boolean {
     error !== null &&
     (error as { code?: string }).code === "P2002"
   );
+}
+
+type LedgerTx = Prisma.TransactionClient;
+
+async function cashbackNames(tx: LedgerTx, membershipId: number, actorUserId: number | null) {
+  const [customer, actor] = await Promise.all([
+    tx.businessCustomerMembership.findUnique({ where: { id: membershipId }, select: { firstName: true, lastName: true } }),
+    actorUserId ? tx.user.findUnique({ where: { id: actorUserId }, select: { name: true } }) : null,
+  ]);
+  return {
+    customerName: customer ? `${customer.firstName} ${customer.lastName ?? ""}`.trim() : "A customer",
+    staffName: actor?.name ?? "A staff member",
+  };
+}
+
+/** Cashback alerts after an earn: a large bill, or cashback added to the same customer often. */
+async function checkCashbackEarnAlerts(
+  tx: LedgerTx,
+  input: { businessId: number; membershipId: number; branchId: number | null; actorUserId: number | null; billAmount: number; amount: number; currency: string; transactionId: number },
+) {
+  const [largeBill, frequent] = await Promise.all([
+    getAlertRule(tx, input.businessId, "CASHBACK_LARGE_BILL"),
+    getAlertRule(tx, input.businessId, "CASHBACK_FREQUENT_EARN"),
+  ]);
+  if (!largeBill.enabled && !frequent.enabled) return;
+  const names = await cashbackNames(tx, input.membershipId, input.actorUserId);
+
+  if (largeBill.enabled && input.billAmount >= largeBill.threshold) {
+    await createAbuseAlert({
+      tx,
+      businessId: input.businessId,
+      branchId: input.branchId,
+      userId: input.actorUserId,
+      alertType: "CASHBACK_LARGE_BILL",
+      severity: largeBill.severity,
+      description: `${names.staffName} added ${formatAed(input.amount, input.currency)} cashback to ${names.customerName} on a bill of ${formatAed(input.billAmount, input.currency)} (your limit is ${formatAed(largeBill.threshold, input.currency)}).`,
+      dedupeScope: `cashback-bill:${input.transactionId}`,
+      metadata: { cashbackTransactionId: input.transactionId, billAmount: input.billAmount, threshold: largeBill.threshold },
+    });
+  }
+
+  if (frequent.enabled) {
+    const earnsIn24h = await tx.cashbackTransaction.count({
+      where: {
+        businessId: input.businessId,
+        businessCustomerMembershipId: input.membershipId,
+        type: "EARN",
+        billAmount: { not: null },
+        createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+      },
+    });
+    if (earnsIn24h >= frequent.threshold) {
+      await createAbuseAlert({
+        tx,
+        businessId: input.businessId,
+        branchId: input.branchId,
+        userId: input.actorUserId,
+        alertType: "CASHBACK_FREQUENT_EARN",
+        severity: frequent.severity,
+        description: `Cashback was added to ${names.customerName} ${earnsIn24h} times in 24 hours (your limit is ${frequent.threshold}). Latest by ${names.staffName}.`,
+        dedupeScope: `cashback:${input.membershipId}`,
+        metadata: { earnsIn24h, threshold: frequent.threshold, cashbackTransactionId: input.transactionId },
+      });
+    }
+  }
+}
+
+/** Cashback alert after a spend: a large amount used in one go. */
+async function checkCashbackSpendAlert(
+  tx: LedgerTx,
+  input: { businessId: number; membershipId: number; branchId: number | null; actorUserId: number | null; amount: number; currency: string; transactionId: number },
+) {
+  const rule = await getAlertRule(tx, input.businessId, "CASHBACK_LARGE_REDEMPTION");
+  if (!rule.enabled || input.amount < rule.threshold) return;
+  const names = await cashbackNames(tx, input.membershipId, input.actorUserId);
+  await createAbuseAlert({
+    tx,
+    businessId: input.businessId,
+    branchId: input.branchId,
+    userId: input.actorUserId,
+    alertType: "CASHBACK_LARGE_REDEMPTION",
+    severity: rule.severity,
+    description: `${names.customerName} used ${formatAed(input.amount, input.currency)} of cashback in one go, processed by ${names.staffName} (your limit is ${formatAed(rule.threshold, input.currency)}).`,
+    dedupeScope: `cashback-spend:${input.transactionId}`,
+    metadata: { cashbackTransactionId: input.transactionId, amount: input.amount, threshold: rule.threshold },
+  });
 }
 
 export async function earnCashback(input: {
@@ -102,6 +190,7 @@ export async function earnCashback(input: {
         entityId: row.id,
         metadata: { billAmount: input.billAmount, ratePercent: input.ratePercent, amount, balanceAfter, invoiceNumber: input.invoiceNumber },
       });
+      await checkCashbackEarnAlerts(tx, { ...input, amount, transactionId: row.id });
       // A friend's first cashback purchase qualifies their referral and pays the referrer.
       const referral = await qualifyReferralFromFirstCashback({
         tx,
@@ -187,6 +276,7 @@ export async function spendCashback(input: {
         entityId: row.id,
         metadata: { amount: input.amount, balanceAfter },
       });
+      await checkCashbackSpendAlert(tx, { ...input, transactionId: row.id });
       return { balanceAfter };
     });
     // Refresh the customer's Google Wallet passes so the cashback row updates.

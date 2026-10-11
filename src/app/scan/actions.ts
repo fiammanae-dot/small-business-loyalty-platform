@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { logAuditEvent } from "@/lib/audit";
 import { isOutOfAssignedBranch, requireBusinessScopedUser } from "@/lib/authz";
-import { createAbuseAlert } from "@/lib/alert-engine";
+import { createAbuseAlert, getAlertRule } from "@/lib/alert-engine";
 import { enforceStampCooldown } from "@/lib/cooldowns";
 import { validateCsrfForm } from "@/lib/csrf";
 import { createCustomerNotification } from "@/lib/customer-notifications";
@@ -306,27 +306,40 @@ export async function issueStampAction(formData: FormData) {
       metadata?: Record<string, string | number | null>;
     }> = [];
 
-    if (data.quantity >= 3) {
+    // Thresholds come from the owner's Alert policies (Settings), not fixed numbers.
+    const businessIdForRules = user.businessId as number;
+    const [multiRule, repeatedRule, customerDailyRule, staffDailyRule, fastRewardRule] = await Promise.all([
+      getAlertRule(tx, businessIdForRules, "MULTI_STAMP_THRESHOLD"),
+      getAlertRule(tx, businessIdForRules, "REPEATED_STAMPS_SHORT_WINDOW"),
+      getAlertRule(tx, businessIdForRules, "CUSTOMER_DAILY_STAMP_LIMIT"),
+      getAlertRule(tx, businessIdForRules, "STAFF_DAILY_STAMP_LIMIT"),
+      getAlertRule(tx, businessIdForRules, "FAST_REWARD_PROGRESS"),
+    ]);
+    const isPackage = programMembership.loyaltyProgram.isMembership;
+    const unit = (count: number) => (isPackage ? `visit${count === 1 ? "" : "s"}` : `stamp${count === 1 ? "" : "s"}`);
+    const programName = programMembership.loyaltyProgram.name;
+
+    if (multiRule.enabled && data.quantity >= multiRule.threshold) {
       alerts.push({
         alertType: "MULTIPLE_STAMPS_QUANTITY_3",
         severity: "LOW",
-        description: `${issuedByName} issued ${data.quantity} stamps to ${customerName} for ${programMembership.loyaltyProgram.name}.`,
+        description: `${issuedByName} ${isPackage ? "used" : "issued"} ${data.quantity} ${unit(data.quantity)} for ${customerName} on ${programName} in one go.`,
       });
     }
 
-    if (data.quantity >= 5) {
+    if (multiRule.enabled && data.quantity >= 5) {
       alerts.push({
         alertType: "MULTIPLE_STAMPS_QUANTITY_5",
         severity: "MEDIUM",
-        description: `${issuedByName} issued the maximum ${data.quantity} stamps to ${customerName} for ${programMembership.loyaltyProgram.name}.`,
+        description: `${issuedByName} ${isPackage ? "used" : "issued"} the maximum ${data.quantity} ${unit(data.quantity)} for ${customerName} on ${programName} in one go.`,
       });
     }
 
-    if (repeatedStampThresholdReached) {
+    if (repeatedRule.enabled && repeatedStampWindowTotal >= repeatedRule.threshold) {
       alerts.push({
         alertType: "REPEATED_STAMPS_SHORT_WINDOW",
         severity: "MEDIUM",
-        description: `${issuedByName} issued ${repeatedStampWindowTotal} stamps to ${customerName} for ${programMembership.loyaltyProgram.name} within ${REPEATED_STAMP_WINDOW_MINUTES} minutes. Reason: ${data.reason ?? "Not provided"}.`,
+        description: `${issuedByName} gave ${customerName} ${repeatedStampWindowTotal} ${unit(repeatedStampWindowTotal)} on ${programName} within ${REPEATED_STAMP_WINDOW_MINUTES} minutes. Reason: ${data.reason ?? "Not provided"}.`,
         metadata: {
           staffUserId: user.id,
           staffName: issuedByName,
@@ -340,20 +353,20 @@ export async function issueStampAction(formData: FormData) {
     }
 
     const customer24hTotal = customer24h._sum.quantity ?? 0;
-    if (customer24hTotal > 8) {
+    if (customerDailyRule.enabled && customer24hTotal > customerDailyRule.threshold) {
       alerts.push({
         alertType: "CUSTOMER_24H_HIGH_VOLUME",
         severity: "HIGH",
-        description: `${customerName} received ${customer24hTotal} earned stamps within 24 hours.`,
+        description: `${customerName} got ${customer24hTotal} ${unit(customer24hTotal)} on ${programName} within 24 hours (your limit is ${customerDailyRule.threshold}).`,
       });
     }
 
     const staff24hTotal = staff24h._sum.quantity ?? 0;
-    if (staff24hTotal > 50) {
+    if (staffDailyRule.enabled && staff24hTotal > staffDailyRule.threshold) {
       alerts.push({
         alertType: "STAFF_24H_HIGH_VOLUME",
         severity: "HIGH",
-        description: `${issuedByName} issued ${staff24hTotal} earned stamps within 24 hours.`,
+        description: `${issuedByName} gave ${staff24hTotal} stamps and visits within 24 hours (your limit is ${staffDailyRule.threshold}).`,
       });
     }
 
@@ -451,12 +464,14 @@ export async function issueStampAction(formData: FormData) {
       requiredStamps: updatedMembership.loyaltyProgram.requiredStamps,
     });
 
-    const firstDayEnd = new Date(updatedMembership.enrolledAt.getTime() + 24 * 60 * 60 * 1000);
-    if (updatedProgress >= updatedMembership.loyaltyProgram.requiredStamps && now <= firstDayEnd) {
+    const fastWindowEnd = new Date(updatedMembership.enrolledAt.getTime() + fastRewardRule.threshold * 60 * 60 * 1000);
+    if (fastRewardRule.enabled && updatedProgress >= updatedMembership.loyaltyProgram.requiredStamps && now <= fastWindowEnd) {
       alerts.push({
         alertType: "FAST_REWARD_PROGRESS",
         severity: "MEDIUM",
-        description: `${customerName} reached full progress for ${updatedMembership.loyaltyProgram.name} within the first day of enrollment.`,
+        description: isPackage
+          ? `${customerName} used the whole ${programName} package within ${fastRewardRule.threshold} hours of joining.`
+          : `${customerName} filled the ${programName} card within ${fastRewardRule.threshold} hours of joining.`,
       });
     }
 
@@ -799,6 +814,31 @@ export async function redeemRewardAction(formData: FormData) {
       },
     });
 
+    // Many rewards given out by one staff member in 24 hours.
+    const rewardRule = await getAlertRule(tx, user.businessId as number, "HIGH_REWARD_ACTIVITY_THRESHOLD");
+    if (rewardRule.enabled) {
+      const staffRedemptions = await tx.rewardRedemption.count({
+        where: {
+          businessId: user.businessId as number,
+          redeemedByUserId: user.id,
+          redeemedAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
+        },
+      });
+      if (staffRedemptions >= rewardRule.threshold) {
+        await createAbuseAlert({
+          tx,
+          businessId: user.businessId as number,
+          branchId,
+          userId: user.id,
+          alertType: "HIGH_REWARD_REDEMPTIONS",
+          severity: rewardRule.severity,
+          description: `${user.name} gave out ${staffRedemptions} rewards in 24 hours (your limit is ${rewardRule.threshold}). Latest: ${claimed.rewardName}.`,
+          dedupeScope: `rewards:${user.id}`,
+          metadata: { staffRedemptions, threshold: rewardRule.threshold, redemptionId: created.id },
+        });
+      }
+    }
+
     return created;
     });
   } catch (error) {
@@ -949,7 +989,8 @@ export async function undoStampAction(formData: FormData) {
       createdAt: { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
     },
   });
-  if (recentUndoCount >= 3) {
+  const undoRule = await getAlertRule(prisma, user.businessId, "HIGH_STAMP_UNDO_COUNT");
+  if (undoRule.enabled && recentUndoCount >= undoRule.threshold) {
     await createAbuseAlert({
       businessId: user.businessId,
       branchId: stampTransaction.branchId,
@@ -957,7 +998,7 @@ export async function undoStampAction(formData: FormData) {
       customerProgramMembershipId: programMembership.id,
       alertType: "HIGH_STAMP_UNDO_COUNT",
       severity: "MEDIUM",
-      description: `${user.name} recorded ${recentUndoCount} stamp undo corrections within 24 hours.`,
+      description: `${user.name} undid ${recentUndoCount} stamps or visits within 24 hours (your limit is ${undoRule.threshold}).`,
       dedupeScope: `stamp-undo:${user.id}`,
       metadata: { undoCount24h: recentUndoCount, latestReason: data.reason },
     });

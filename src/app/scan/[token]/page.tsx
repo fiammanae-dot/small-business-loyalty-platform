@@ -19,6 +19,7 @@ import { getCardUrl, maskPhoneNumber } from "@/lib/customer-cards";
 import { formatDateTime } from "@/lib/format";
 import { formatUaePhoneDisplay } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
+import { checkScanVolumeAlert } from "@/lib/alert-engine";
 import { areTiersVisible, fromStoredTier } from "@/lib/customer-tiers";
 import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
 import { membershipSessionSummary } from "@/lib/membership-sessions";
@@ -224,6 +225,19 @@ export default async function ScanResultPage({
         createdAt: scanTimestamp,
       },
     });
+    if (result !== "VALID") {
+      try {
+        await checkScanVolumeAlert({
+          businessId: authUser.businessId,
+          branchId: scannerBranch?.id ?? null,
+          userId: authUser.id,
+          userName: authUser.name,
+          result,
+        });
+      } catch (error) {
+        console.error("Scan alert check failed", error);
+      }
+    }
   }
 
   if (!programMembership) {
