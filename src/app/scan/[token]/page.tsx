@@ -1321,9 +1321,10 @@ function MembershipRenewPanel({
   confirmationTheme: ConfirmationDialogTheme;
 }) {
   return (
-    <section className="rounded-md border border-amber-300 bg-amber-50 p-4">
-      <p className="text-sm font-semibold text-amber-900">Membership used up</p>
-      <p className="mt-1 text-xs text-amber-800">
+    // Neutral card + the business's own button colour (no hard-coded orange/amber).
+    <section className="rounded-md border border-[#E5E7EB] bg-white p-4">
+      <p className="text-sm font-semibold text-[#111827]">Membership used up</p>
+      <p className="mt-1 text-xs text-[#6B7280]">
         All sessions have been used or expired. If the customer has paid for the package again, renew the card to a
         full set of {totalSessions} visit{totalSessions === 1 ? "" : "s"}.
       </p>
@@ -1336,7 +1337,7 @@ function MembershipRenewPanel({
           confirmLabel="Renew Membership"
           cancelLabel="Cancel"
           confirmationTheme={confirmationTheme}
-          className="min-h-12 w-full rounded-md bg-amber-600 px-5 text-base font-semibold text-white shadow-sm transition hover:bg-amber-700"
+          className="business-button min-h-12 w-full rounded-md px-5 text-base font-semibold shadow-sm transition"
         >
           Renew Membership
         </ConfirmSubmitButton>
