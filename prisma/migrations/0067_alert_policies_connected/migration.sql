@@ -1,73 +1,73 @@
 -- Connect Settings > Alert policies to the real alert rules.
 -- 1) Every business gets a row for each rule (existing rows and owner changes are kept).
 
-INSERT INTO "abuse_policies" ("business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
-SELECT b."id", 'Several stamps at once', 'MULTI_STAMP_THRESHOLD', 3, 'LOW'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
+INSERT INTO "abuse_policies" ("uuid", "business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
+SELECT gen_random_uuid(), b."id", 'Several stamps at once', 'MULTI_STAMP_THRESHOLD', 3, 'LOW'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
 FROM "businesses" b
 ON CONFLICT ("business_id", "rule_type") DO NOTHING;
 
-INSERT INTO "abuse_policies" ("business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
-SELECT b."id", 'Repeated stamps within 10 minutes', 'REPEATED_STAMPS_SHORT_WINDOW', 3, 'MEDIUM'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
+INSERT INTO "abuse_policies" ("uuid", "business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
+SELECT gen_random_uuid(), b."id", 'Repeated stamps within 10 minutes', 'REPEATED_STAMPS_SHORT_WINDOW', 3, 'MEDIUM'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
 FROM "businesses" b
 ON CONFLICT ("business_id", "rule_type") DO NOTHING;
 
-INSERT INTO "abuse_policies" ("business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
-SELECT b."id", 'Customer stamps in 24 hours', 'CUSTOMER_DAILY_STAMP_LIMIT', 8, 'HIGH'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
+INSERT INTO "abuse_policies" ("uuid", "business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
+SELECT gen_random_uuid(), b."id", 'Customer stamps in 24 hours', 'CUSTOMER_DAILY_STAMP_LIMIT', 8, 'HIGH'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
 FROM "businesses" b
 ON CONFLICT ("business_id", "rule_type") DO NOTHING;
 
-INSERT INTO "abuse_policies" ("business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
-SELECT b."id", 'Staff stamps in 24 hours', 'STAFF_DAILY_STAMP_LIMIT', 50, 'HIGH'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
+INSERT INTO "abuse_policies" ("uuid", "business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
+SELECT gen_random_uuid(), b."id", 'Staff stamps in 24 hours', 'STAFF_DAILY_STAMP_LIMIT', 50, 'HIGH'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
 FROM "businesses" b
 ON CONFLICT ("business_id", "rule_type") DO NOTHING;
 
-INSERT INTO "abuse_policies" ("business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
-SELECT b."id", 'Card filled on the first day', 'FAST_REWARD_PROGRESS', 24, 'MEDIUM'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
+INSERT INTO "abuse_policies" ("uuid", "business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
+SELECT gen_random_uuid(), b."id", 'Card filled on the first day', 'FAST_REWARD_PROGRESS', 24, 'MEDIUM'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
 FROM "businesses" b
 ON CONFLICT ("business_id", "rule_type") DO NOTHING;
 
-INSERT INTO "abuse_policies" ("business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
-SELECT b."id", 'Undone stamps', 'HIGH_STAMP_UNDO_COUNT', 3, 'MEDIUM'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
+INSERT INTO "abuse_policies" ("uuid", "business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
+SELECT gen_random_uuid(), b."id", 'Undone stamps', 'HIGH_STAMP_UNDO_COUNT', 3, 'MEDIUM'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
 FROM "businesses" b
 ON CONFLICT ("business_id", "rule_type") DO NOTHING;
 
-INSERT INTO "abuse_policies" ("business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
-SELECT b."id", 'Loyalty rule breaks', 'COOLDOWN_VIOLATION_THRESHOLD', 3, 'HIGH'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
+INSERT INTO "abuse_policies" ("uuid", "business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
+SELECT gen_random_uuid(), b."id", 'Loyalty rule breaks', 'COOLDOWN_VIOLATION_THRESHOLD', 3, 'HIGH'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
 FROM "businesses" b
 ON CONFLICT ("business_id", "rule_type") DO NOTHING;
 
-INSERT INTO "abuse_policies" ("business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
-SELECT b."id", 'Invalid scans', 'INVALID_SCAN_THRESHOLD', 10, 'MEDIUM'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
+INSERT INTO "abuse_policies" ("uuid", "business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
+SELECT gen_random_uuid(), b."id", 'Invalid scans', 'INVALID_SCAN_THRESHOLD', 10, 'MEDIUM'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
 FROM "businesses" b
 ON CONFLICT ("business_id", "rule_type") DO NOTHING;
 
-INSERT INTO "abuse_policies" ("business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
-SELECT b."id", 'Other businesses'' cards', 'WRONG_BUSINESS_SCAN_THRESHOLD', 3, 'MEDIUM'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
+INSERT INTO "abuse_policies" ("uuid", "business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
+SELECT gen_random_uuid(), b."id", 'Other businesses'' cards', 'WRONG_BUSINESS_SCAN_THRESHOLD', 3, 'MEDIUM'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
 FROM "businesses" b
 ON CONFLICT ("business_id", "rule_type") DO NOTHING;
 
-INSERT INTO "abuse_policies" ("business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
-SELECT b."id", 'Referral volume', 'REFERRAL_ABUSE_THRESHOLD', 5, 'HIGH'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
+INSERT INTO "abuse_policies" ("uuid", "business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
+SELECT gen_random_uuid(), b."id", 'Referral volume', 'REFERRAL_ABUSE_THRESHOLD', 5, 'HIGH'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
 FROM "businesses" b
 ON CONFLICT ("business_id", "rule_type") DO NOTHING;
 
-INSERT INTO "abuse_policies" ("business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
-SELECT b."id", 'Rewards redeemed by one staff member', 'HIGH_REWARD_ACTIVITY_THRESHOLD', 5, 'HIGH'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
+INSERT INTO "abuse_policies" ("uuid", "business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
+SELECT gen_random_uuid(), b."id", 'Rewards redeemed by one staff member', 'HIGH_REWARD_ACTIVITY_THRESHOLD', 5, 'HIGH'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
 FROM "businesses" b
 ON CONFLICT ("business_id", "rule_type") DO NOTHING;
 
-INSERT INTO "abuse_policies" ("business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
-SELECT b."id", 'Cashback on a large bill', 'CASHBACK_LARGE_BILL', 5000, 'MEDIUM'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
+INSERT INTO "abuse_policies" ("uuid", "business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
+SELECT gen_random_uuid(), b."id", 'Cashback on a large bill', 'CASHBACK_LARGE_BILL', 5000, 'MEDIUM'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
 FROM "businesses" b
 ON CONFLICT ("business_id", "rule_type") DO NOTHING;
 
-INSERT INTO "abuse_policies" ("business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
-SELECT b."id", 'Cashback added often', 'CASHBACK_FREQUENT_EARN', 3, 'HIGH'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
+INSERT INTO "abuse_policies" ("uuid", "business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
+SELECT gen_random_uuid(), b."id", 'Cashback added often', 'CASHBACK_FREQUENT_EARN', 3, 'HIGH'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
 FROM "businesses" b
 ON CONFLICT ("business_id", "rule_type") DO NOTHING;
 
-INSERT INTO "abuse_policies" ("business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
-SELECT b."id", 'Large cashback redemption', 'CASHBACK_LARGE_REDEMPTION', 500, 'MEDIUM'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
+INSERT INTO "abuse_policies" ("uuid", "business_id", "policy_name", "rule_type", "threshold_value", "severity", "enabled", "dedupe_window_hours", "updated_at")
+SELECT gen_random_uuid(), b."id", 'Large cashback redemption', 'CASHBACK_LARGE_REDEMPTION', 500, 'MEDIUM'::"ActivityAlertSeverity", true, 24, CURRENT_TIMESTAMP
 FROM "businesses" b
 ON CONFLICT ("business_id", "rule_type") DO NOTHING;
 
