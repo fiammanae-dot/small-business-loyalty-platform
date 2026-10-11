@@ -15,7 +15,7 @@ test("a membership-package customer sees no tier", () => {
   assert.match(page, /tiersHidden: !tiersVisible/);
   assert.match(page, /\{tiersVisible \? \(\s*<div className="mx-auto w-full max-w-\[360px\]">\s*<TierStatusPanel/);
   // Same rule as the dashboard's customer page.
-  assert.match(read("src/app/dashboard/customers/[id]/page.tsx"), /const showTier = tiersVisible && !primaryIsMembership;/);
+  assert.match(read("src/app/dashboard/customers/[id]/page.tsx"), /const showTier = tiersVisible && Boolean\(primaryProgram\) && !primaryIsMembership;/);
 });
 
 test("the page around the pass uses the brand colours", () => {

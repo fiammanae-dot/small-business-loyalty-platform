@@ -346,8 +346,12 @@ export default async function CustomerProfilePage({
   const primaryAppleWalletUrl = primaryProgram ? `/api/wallet/apple/${primaryProgram.scanToken}` : null;
   const primaryRewardReady = Boolean(primaryProgram && rewardStatusFor(primaryProgram).rewardReady);
   const primaryIsMembership = Boolean(primaryProgram?.loyaltyProgram.isMembership);
-  // Tiers are hidden for a customer whose primary program is a membership package.
-  const showTier = tiersVisible && !primaryIsMembership;
+  // Tiers count stamp-card visits: hidden for a package customer, and for a
+  // customer with no stamp or package program (e.g. cashback only).
+  const showTier = tiersVisible && Boolean(primaryProgram) && !primaryIsMembership;
+  // Cashback is a program like any other, so a member counts in the totals.
+  const inCashback = cashbackEnabled && isCashbackMember(membership);
+  const hasPackage = membership.programMemberships.some((programMembership) => programMembership.loyaltyProgram.isMembership);
   const membershipMode = Boolean(business.membershipSettings?.enabled);
   const referralStatus = membership.referralCode ? "ACTIVE" : "NOT_CONFIGURED";
 return (
@@ -399,9 +403,17 @@ return (
               <ButtonLink href={primaryScanHref} variant="success" size="sm" leftIcon={<Gift className="h-4 w-4" aria-hidden />}>
                 Redeem Reward
               </ButtonLink>
-            ) : (
+            ) : primaryProgram ? (
               <ButtonLink href={primaryScanHref} variant="business" size="sm" leftIcon={<TicketCheck className="h-4 w-4" aria-hidden />}>
                 {primaryIsMembership ? "Use Visit" : "Issue Stamp"}
+              </ButtonLink>
+            ) : inCashback ? (
+              <ButtonLink href={`/dashboard/customers/${membership.uuid}?tab=cashback`} variant="business" size="sm" leftIcon={<TicketCheck className="h-4 w-4" aria-hidden />}>
+                Add Cashback
+              </ButtonLink>
+            ) : (
+              <ButtonLink href={"/dashboard/programs?customer=" + membership.uuid} variant="business" size="sm" leftIcon={<TicketCheck className="h-4 w-4" aria-hidden />}>
+                Enroll in a Program
               </ButtonLink>
             )}
             <ButtonLink href={cardUrl} target="_blank" rel="noreferrer" variant="outline" size="sm" leftIcon={<CreditCard className="h-4 w-4" aria-hidden />}>
@@ -457,11 +469,11 @@ return (
           />
           <MetricCard
             label="Active programs"
-            value={activePrograms}
-            helper={`of ${totalPrograms} enrolled`}
+            value={activePrograms + (inCashback ? 1 : 0)}
+            helper={`of ${totalPrograms + (inCashback ? 1 : 0)} enrolled`}
             icon={<CreditCard aria-hidden />}
           />
-          {membershipMode ? (
+          {membershipMode && hasPackage ? (
             <MetricCard
               label="Visits remaining"
               value={totalSessionsRemaining}

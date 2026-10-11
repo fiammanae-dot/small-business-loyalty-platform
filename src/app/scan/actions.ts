@@ -46,7 +46,8 @@ const stampIssueSchema = z
 
 const REPEATED_STAMP_WINDOW_MINUTES = 10;
 const REPEATED_STAMP_REASON_THRESHOLD = 3;
-const REPEATED_STAMP_REASON_MESSAGE = "Multiple stamps were issued to this customer in a short time. Please provide a reason.";
+const REPEATED_STAMP_REASON_MESSAGE =
+  "This customer was just stamped. To add another one now, write a reason under Advanced stamp options below and submit from there.";
 const STAFF_REWARD_READY_STAMP_BLOCK_MESSAGE = "Reward ready. Redeem the reward before adding another stamp.";
 const OUT_OF_BRANCH_ACTION_MESSAGE = "This customer is outside your assigned branch scope.";
 const STAMP_UNDO_WINDOW_MINUTES = 3;
@@ -1011,16 +1012,21 @@ async function resolveScanCashback(
   scanToken: string,
   user: { businessId: number; role: string; branchId?: number | null },
 ) {
+  const memberSelect = { id: true, businessId: true, createdBranchId: true, cashbackRateOverride: true } as const;
   const programMembership = await prisma.customerProgramMembership.findUnique({
     where: { scanToken },
-    select: {
-      businessCustomerMembership: {
-        select: { id: true, businessId: true, createdBranchId: true, cashbackRateOverride: true },
-      },
-    },
+    select: { businessCustomerMembership: { select: memberSelect } },
   });
-  if (!programMembership) fail(scanToken, "Invalid or unavailable loyalty QR.");
-  const membership = programMembership.businessCustomerMembership;
+  // A cashback-only customer has no program QR: their cashback card carries
+  // the customer card link instead, so accept an active card token too.
+  const cardMembership = programMembership
+    ? null
+    : await prisma.businessCustomerMembership.findFirst({
+        where: { cardToken: scanToken, status: "ACTIVE", cardStatus: "ACTIVE" },
+        select: memberSelect,
+      });
+  const membership = programMembership?.businessCustomerMembership ?? cardMembership;
+  if (!membership) fail(scanToken, "Invalid or unavailable loyalty QR.");
   if (membership.businessId !== user.businessId) {
     fail(scanToken, "This loyalty QR does not belong to your business.");
   }

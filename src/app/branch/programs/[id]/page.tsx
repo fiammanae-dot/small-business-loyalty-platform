@@ -59,8 +59,8 @@ export default async function BranchProgramDetailPage({ params }: { params: Prom
     const progress = progressValue(membership.earnedStamps, membership.bonusStamps);
     return !program.isMembership && membership.status === "ACTIVE" && progress >= program.requiredStamps;
   }).length;
-  const joinUrl = await getProgramJoinUrl(program.joinToken);
-  const joinQrCode = await getProgramJoinQrDataUrl(program.joinToken);
+  const joinUrl = program.isMembership ? "" : await getProgramJoinUrl(program.joinToken);
+  const joinQrCode = program.isMembership ? "" : await getProgramJoinQrDataUrl(program.joinToken);
 
   return (
     <DashboardShell user={user} eyebrow="Branch Manager" title={program.name} hideWelcomeMessage>
@@ -95,35 +95,45 @@ export default async function BranchProgramDetailPage({ params }: { params: Prom
         </div>
       </section>
 
-      <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold business-text">Printable materials</p>
-            <h2 className="mt-2 text-lg font-semibold text-[#111827]">Program Join QR</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6B7280]">
-              Share or print this QR so customers can join the program. This is read-only for Branch Managers and does not change program settings.
-            </p>
+      {program.isMembership ? (
+        // Paid packages have no public join QR (see the owner's program page).
+        <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5">
+          <p className="text-sm font-semibold business-text">Selling this package</p>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6B7280]">
+            Packages are paid for at the counter, so there is no public join QR. After the customer pays, pick this package when you enroll them.
+          </p>
+        </section>
+      ) : (
+        <section className="rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold business-text">Printable materials</p>
+              <h2 className="mt-2 text-lg font-semibold text-[#111827]">Program Join QR</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6B7280]">
+                Share or print this QR so customers can join the program. This is read-only for Branch Managers and does not change program settings.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-start gap-2">
+              <CopyButton value={joinUrl} label="Copy join link" copiedLabel="Join link copied." />
+              <Link href={joinUrl} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">
+                Open join page
+              </Link>
+              <Link href={`/branch/programs/${program.uuid}/join-poster`} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center justify-center rounded-md business-button px-4 text-sm font-semibold text-white">
+                Print poster
+              </Link>
+            </div>
           </div>
-          <div className="flex flex-wrap items-start gap-2">
-            <CopyButton value={joinUrl} label="Copy join link" copiedLabel="Join link copied." />
-            <Link href={joinUrl} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">
-              Open join page
-            </Link>
-            <Link href={`/branch/programs/${program.uuid}/join-poster`} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center justify-center rounded-md business-button px-4 text-sm font-semibold text-white">
-              Print poster
-            </Link>
+          <div className="mt-5 grid gap-4 md:grid-cols-[auto_1fr] md:items-center">
+            <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
+              <img src={joinQrCode} alt={`${program.name} join QR code`} className="h-44 w-44 rounded-xl bg-white" />
+            </div>
+            <div className="rounded-md border border-[#E5E7EB] bg-[#F8FAFC] p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">Join link</p>
+              <p className="mt-2 break-all text-sm font-semibold text-[#111827]">{joinUrl}</p>
+            </div>
           </div>
-        </div>
-        <div className="mt-5 grid gap-4 md:grid-cols-[auto_1fr] md:items-center">
-          <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
-            <img src={joinQrCode} alt={`${program.name} join QR code`} className="h-44 w-44 rounded-xl bg-white" />
-          </div>
-          <div className="rounded-md border border-[#E5E7EB] bg-[#F8FAFC] p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">Join link</p>
-            <p className="mt-2 break-all text-sm font-semibold text-[#111827]">{joinUrl}</p>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
     </DashboardShell>
   );
 }

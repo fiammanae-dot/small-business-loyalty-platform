@@ -17,6 +17,7 @@ import { BRANCH_INACTIVE_MESSAGE, hasUsableSubscription, SUBSCRIPTION_REQUIRED_M
 import { businessOwnerOperationalDefaults, resolveBusinessBranding } from "@/lib/business-branding";
 import { getCardUrl, maskPhoneNumber } from "@/lib/customer-cards";
 import { formatDateTime } from "@/lib/format";
+import { formatUaePhoneDisplay } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { areTiersVisible, fromStoredTier } from "@/lib/customer-tiers";
 import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
@@ -279,6 +280,39 @@ export default async function ScanResultPage({
       );
     }
 
+    // No stamp or package program - but the card may be a cashback card (its
+    // wallet QR is the card link). Cashback is a program too, so staff can
+    // enrol, add and use cashback right here.
+    const cashbackOnlySettings = await prisma.businessCashbackSettings.findUnique({
+      where: { businessId: authUser.businessId },
+      select: { enabled: true, ratePercent: true, currency: true, name: true },
+    });
+    if (cashbackOnlySettings?.enabled) {
+      await logScan("VALID");
+      return (
+        <DashboardShell user={authUser} eyebrow={roleEyebrow(authUser.role)} title="Scan result" hideWelcomeMessage>
+          <ScannerSoundFeedback event={qs.error ? "invalid" : "valid"} enabled={scannerSoundEffectsEnabled} />
+          <ScanStatusBanner
+            tone="green"
+            title="Valid Customer"
+            description={`${`${cardMembership.firstName} ${cardMembership.lastName ?? ""}`.trim()} · ${formatUaePhoneDisplay(cardMembership.normalizedPhone)} · ${cashbackOnlySettings.name?.trim() || "Cashback"}`}
+          />
+          {qs.cashback ? <ScanStatusBanner tone="green" title="Cashback updated" description={qs.cashback} /> : null}
+          {qs.error ? <ScanStatusBanner tone="red" title="Action blocked" description={qs.error} /> : null}
+          <CashbackScanSection
+            token={token}
+            joined={isCashbackMember(cardMembership)}
+            balance={Number(cardMembership.cashbackBalance ?? 0)}
+            currency={cashbackOnlySettings.currency}
+            ratePercent={Number(cashbackOnlySettings.ratePercent)}
+          />
+          <ButtonLink href={scannerPathForRole(authUser.role)} variant="outline" className="w-full sm:w-auto">
+            Back to Scanner
+          </ButtonLink>
+        </DashboardShell>
+      );
+    }
+
     await logScan("INVALID");
     return <ScanMessage user={user} title="No Active Program" description="This customer is not enrolled in an active loyalty program." soundEffectsEnabled={scannerSoundEffectsEnabled} />;
   }
@@ -458,6 +492,10 @@ export default async function ScanResultPage({
         </>
       ) : null}
 
+      {/* Right under "Valid Customer", where the cashier is looking. */}
+      {qs.error ? (
+        <ScanStatusBanner tone="red" title="Action blocked" description={qs.error} />
+      ) : null}
       {!redemption && !membershipDepleted ? (
         <QuickScanActions
           token={scanToken}
@@ -481,12 +519,10 @@ export default async function ScanResultPage({
       {qs.renewed ? (
         <ScanStatusBanner tone="green" title="Membership renewed" description="The card has been reset to a full set of visits." />
       ) : null}
-      {qs.error ? (
-        <ScanStatusBanner tone="red" title="Action blocked" description={qs.error} />
-      ) : null}
 
       {issuedTransaction ? (
         <StampUndoPanel
+          isMembership={program.isMembership}
           token={scanToken}
           transactionId={issuedTransaction.id}
           quantity={issuedTransaction.quantity}
@@ -531,7 +567,9 @@ export default async function ScanResultPage({
       <ActionSummarySection
         customerName={customerName}
         phone={businessMembership.normalizedPhone}
-        tier={tiersVisible ? (fromStoredTier(businessMembership.currentTier) ?? "Bronze") : null}
+        // A package customer has no visit tier (same rule as the card and the customer page).
+        tier={tiersVisible && !program.isMembership ? (fromStoredTier(businessMembership.currentTier) ?? "Bronze") : null}
+        isMembership={program.isMembership}
         status={businessMembership.status}
         businessName={businessMembership.business.name}
         branchName={scannerBranch?.name ?? businessMembership.createdBranch?.name ?? "Unassigned"}
@@ -592,6 +630,7 @@ export default async function ScanResultPage({
           isMembership={program.isMembership}
           treatments={membershipTreatmentOptions}
           confirmationTheme={scannerConfirmationTheme}
+          defaultOpen={Boolean(qs.error)}
         />
       ) : null}
       </DetailPageLayout>
@@ -613,10 +652,13 @@ function ActionSummarySection({
   rewardName,
   remainingToNext,
   completesCard,
+  isMembership = false,
 }: {
   customerName: string;
   phone: string;
   tier: string | null;
+  /** A prepaid package: show visits used / left instead of a reward to collect. */
+  isMembership?: boolean;
   status: CustomerMembershipStatus;
   businessName: string;
   branchName: string;
@@ -647,17 +689,26 @@ function ActionSummarySection({
         <MetricCard label="Phone" value={maskPhoneNumber(phone)} />
         <MetricCard label="Workspace" value={businessName} helper={branchName} />
         <MetricCard label="Status" value={<StatusBadge status={status} />} />
-        <MetricCard
-          label={rewardReady && !completesCard ? "Reward ready (card continues)" : "Reward"}
-          value={rewardName}
-          helper={rewardReady ? "Reward Ready" : remaining + " visits remaining"}
-          tone={rewardReady ? "success" : "neutral"}
-        />
+        {isMembership ? (
+          <MetricCard
+            label="Package"
+            value={`${remaining} of ${requiredStamps} visits left`}
+            helper={`${progress} used`}
+            tone={remaining > 0 ? "neutral" : "warning"}
+          />
+        ) : (
+          <MetricCard
+            label={rewardReady && !completesCard ? "Reward ready (card continues)" : "Reward"}
+            value={rewardName}
+            helper={rewardReady ? "Reward Ready" : remaining + " visits remaining"}
+            tone={rewardReady ? "success" : "neutral"}
+          />
+        )}
       </div>
       <div className="mt-4 rounded-md border border-[#E2E8F0] bg-white p-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-semibold text-[#0F172A]">{progress} / {requiredStamps} Visits</p>
+            <p className="text-sm font-semibold text-[#0F172A]">{progress} / {requiredStamps} {isMembership ? "Visits used" : "Visits"}</p>
             <p className="mt-1 text-sm text-[#64748B]">{rewardReady ? "Reward Ready" : remaining + " Visits Remaining"}</p>
           </div>
           <span className="rounded-md px-2 py-1 text-xs font-semibold business-bg-soft business-text">{programName}</span>
@@ -797,6 +848,7 @@ function QuickScanActions({
 }
 
 function StampUndoPanel({
+  isMembership = false,
   token,
   transactionId,
   quantity,
@@ -805,6 +857,7 @@ function StampUndoPanel({
   unavailableReason,
   sharePrompt,
 }: {
+  isMembership?: boolean;
   token: string;
   transactionId: number;
   quantity: number;
@@ -817,11 +870,13 @@ function StampUndoPanel({
     <section className={`rounded-md border p-5 ${quantity >= 3 ? "business-border-soft business-bg-soft business-text-strong" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h2 className="text-xl font-semibold">Stamp added successfully</h2>
+          <h2 className="text-xl font-semibold">{isMembership ? "Visit recorded" : "Stamp added successfully"}</h2>
           <p className="mt-2 text-sm leading-6">
             {quantity >= 3
               ? "Multiple stamps were issued in one transaction. This may create an alert for Business Owner review."
-              : "The customer stamp progress was updated."}
+              : isMembership
+                ? "One visit was used from the customer's package."
+                : "The customer stamp progress was updated."}
           </p>
           {treatmentName ? <p className="mt-2 text-sm font-semibold">Treatment recorded: {treatmentName}</p> : null}
           {!canUndo && unavailableReason ? <p className="mt-2 text-xs font-semibold opacity-80">Undo unavailable: {unavailableReason}</p> : null}
@@ -838,13 +893,17 @@ function StampUndoPanel({
                 {stampUndoReasons.map((reason) => <option key={reason} value={reason}>{reason}</option>)}
               </select>
               <ConfirmSubmitButton
-                title="Undo last stamp?"
-                message="This will remove the last loyalty stamp issued to this customer and will be permanently recorded in the audit history."
-                confirmLabel="Undo Stamp"
+                title={isMembership ? "Undo this visit?" : "Undo last stamp?"}
+                message={
+                  isMembership
+                    ? "This gives the visit back to the customer's package and is permanently recorded in the audit history."
+                    : "This will remove the last loyalty stamp issued to this customer and will be permanently recorded in the audit history."
+                }
+                confirmLabel={isMembership ? "Undo Visit" : "Undo Stamp"}
                 cancelLabel="Cancel"
                 className="min-h-10 rounded-md border business-border-soft bg-white px-4 text-sm font-bold business-text-strong transition business-hover"
               >
-                Undo Stamp
+                {isMembership ? "Undo Visit" : "Undo Stamp"}
               </ConfirmSubmitButton>
             </form>
           ) : null}
@@ -880,17 +939,20 @@ function AdvancedStampOptions({
   isMembership,
   treatments,
   confirmationTheme,
+  defaultOpen = false,
 }: {
   token: string;
   progress: number;
   requiredStamps: number;
   canOverrideCooldown: boolean;
+  /** Open when a stamp was just blocked, so the reason / override fields are in view. */
+  defaultOpen?: boolean;
   isMembership: boolean;
   treatments: { id: number; name: string }[];
   confirmationTheme: ConfirmationDialogTheme;
 }) {
   return (
-    <details className="rounded-md border business-border-soft bg-white shadow-sm">
+    <details open={defaultOpen} className="rounded-md border business-border-soft bg-white shadow-sm">
       <summary className="cursor-pointer list-none px-4 py-4 text-sm font-semibold text-[#111827] marker:hidden">
         <span className="flex items-center justify-between gap-3">
           Advanced stamp options

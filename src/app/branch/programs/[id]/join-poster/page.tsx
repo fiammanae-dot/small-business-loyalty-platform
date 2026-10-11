@@ -29,11 +29,12 @@ export default async function BranchProgramJoinPosterPage({ params }: { params: 
       rewardDescription: true,
       requiredStamps: true,
       joinToken: true,
+      isMembership: true,
       business: { select: { name: true, status: true, branding: true } },
     },
   });
 
-  if (!program) {
+  if (!program || program.isMembership) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-white px-4 text-[#111827]">
         <section className="w-full max-w-md rounded-2xl border border-[#E5E7EB] bg-white p-6 text-center shadow-sm">
