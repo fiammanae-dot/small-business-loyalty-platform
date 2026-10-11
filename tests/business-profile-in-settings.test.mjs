@@ -8,13 +8,17 @@ import { test } from "node:test";
 
 const read = (p) => readFileSync(p, "utf8");
 
-test("the Settings Business Profile section is editable", () => {
+test("the Settings Business Profile section edits the name; business type is read-only", () => {
   const settings = read("src/app/dashboard/settings/page.tsx");
   assert.match(settings, /<form action=\{updateBusinessProfileAction\}/);
   assert.match(settings, /<CsrfInput scope="dashboard:business-profile" \/>/);
   assert.match(settings, /name="name" defaultValue=\{business\.name\}/);
-  assert.match(settings, /name="businessType" defaultValue=\{business\.businessType\}/);
-  assert.match(settings, /businessTypeOptions\.map/);
+  // Owners cannot change their business type (only the platform can).
+  assert.doesNotMatch(settings, /name="businessType"/);
+  assert.match(settings, /To change your business type, contact Loyalty Card UAE support\./);
+  const actions = read("src/app/dashboard/actions.ts");
+  const profileAction = actions.slice(actions.indexOf("export async function updateBusinessProfileAction"), actions.indexOf("export async function saveBranchAction"));
+  assert.doesNotMatch(profileAction, /businessType/);
 });
 
 test("the standalone Business profile page and nav link are gone", () => {

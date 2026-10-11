@@ -25,8 +25,8 @@ test("there is one list of business categories, and every form validates against
   }
 
   // No form may carry its own copy of the list.
+  // (The owner dashboard no longer edits business type - only the platform does.)
   for (const file of [
-    "src/app/dashboard/actions.ts",
     "src/app/platform/businesses/actions.ts",
     "src/lib/programs.ts",
   ]) {
