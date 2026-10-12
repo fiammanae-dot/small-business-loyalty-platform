@@ -21,6 +21,7 @@ import { progressValue, businessSellsPackages } from "@/lib/programs";
 import { businessTypeLabels } from "@/lib/roles";
 import { formatAed } from "@/lib/cashback";
 import { prisma } from "@/lib/prisma";
+import { getProgramActivityTotals } from "@/lib/program-stats";
 
 type ProgramSearchParams = {
   q?: string;
@@ -46,20 +47,18 @@ export default async function ProgramsPage({
   const sort = params.sort ?? "created";
   const direction = params.direction === "asc" ? "asc" : "desc";
 
-  const allPrograms = await prisma.loyaltyProgram.findMany({
-    where: { businessId: user.businessId },
-    include: {
-      memberships: {
-        include: {
-          stampTransactions: { select: { quantity: true } },
-          rewardRedemptions: { select: { id: true } },
-        },
+  const [allPrograms, activityTotals] = await Promise.all([
+    prisma.loyaltyProgram.findMany({
+      where: { businessId: user.businessId },
+      include: {
+        // Only what the progress figures need; totals come from the database.
+        memberships: { select: { status: true, earnedStamps: true, bonusStamps: true } },
+        _count: { select: { memberships: true, membershipTreatments: true } },
       },
-      rewardRedemptions: { select: { id: true } },
-      _count: { select: { memberships: true, membershipTreatments: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+      orderBy: { createdAt: "desc" },
+    }),
+    getProgramActivityTotals(user.businessId),
+  ]);
 
   const programRows = allPrograms.map((program) => {
     const requiredStamps = Math.max(program.requiredStamps, 1);
@@ -75,11 +74,8 @@ export default async function ProgramsPage({
       0,
     );
     const completionRate = memberCount > 0 ? Math.round((progressTotal / (memberCount * requiredStamps)) * 100) : 0;
-    const stampsIssued = program.memberships.reduce(
-      (sum, membership) => sum + membership.stampTransactions.reduce((stampSum, stamp) => stampSum + stamp.quantity, 0),
-      0,
-    );
-    const rewardsRedeemed = program.rewardRedemptions.length;
+    const stampsIssued = activityTotals.stampsIssued(program.id);
+    const rewardsRedeemed = activityTotals.rewardsRedeemed(program.id);
     const averageVisits = memberCount > 0 ? Math.round(stampsIssued / memberCount) : 0;
 
     return {

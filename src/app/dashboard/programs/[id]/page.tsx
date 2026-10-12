@@ -40,27 +40,19 @@ export default async function ProgramDetailPage({
   let program = await prisma.loyaltyProgram.findFirst({
     where: { uuid: id, businessId: user.businessId },
     include: {
-      memberships: {
-        include: {
-          businessCustomerMembership: true,
-          stampTransactions: { select: { quantity: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 1 },
-        },
-      },
-      rewardRedemptions: true,
+      // Figures only need the stamp counts; the member table loads its own 8 rows.
+      memberships: { select: { status: true, earnedStamps: true, bonusStamps: true } },
+      _count: { select: { rewardRedemptions: true } },
     },
   });
   if (!program && /^\d+$/.test(id)) {
     program = await prisma.loyaltyProgram.findFirst({
       where: { id: Number(id), businessId: user.businessId },
       include: {
-        memberships: {
-          include: {
-            businessCustomerMembership: true,
-            stampTransactions: { select: { quantity: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 1 },
-          },
-        },
-        rewardRedemptions: true,
-      },
+      // Figures only need the stamp counts; the member table loads its own 8 rows.
+      memberships: { select: { status: true, earnedStamps: true, bonusStamps: true } },
+      _count: { select: { rewardRedemptions: true } },
+    },
     });
   }
   if (!program) return <NotFound user={user} />;
@@ -78,7 +70,16 @@ export default async function ProgramDetailPage({
     : program.memberships.filter(
         (membership) => membership.status !== "COMPLETED" && progressValue(membership.earnedStamps, membership.bonusStamps) >= safeRequiredStamps,
       ).length;
-  const redeemedRewards = program.rewardRedemptions.length;
+  const redeemedRewards = program._count.rewardRedemptions;
+  const recentMembers = await prisma.customerProgramMembership.findMany({
+    where: { loyaltyProgramId: program.id },
+    include: {
+      businessCustomerMembership: { select: { firstName: true, lastName: true } },
+      stampTransactions: { select: { createdAt: true }, orderBy: { createdAt: "desc" }, take: 1 },
+    },
+    orderBy: { enrolledAt: "desc" },
+    take: 8,
+  });
   const progressTotal = program.memberships.reduce(
     (sum, membership) => sum + Math.min(safeRequiredStamps, progressValue(membership.earnedStamps, membership.bonusStamps)),
     0,
@@ -273,7 +274,7 @@ export default async function ProgramDetailPage({
         </div>
 
         <SectionCard title="Members" description="Recent customer participation for this program." actions={<ButtonLink href={"/dashboard/programs/" + program.uuid + "/customers"} variant="outline">View Customers</ButtonLink>}>
-          {program.memberships.length > 0 ? (
+          {recentMembers.length > 0 ? (
             <DataTable>
               <DataTableHeader>
                 <tr>
@@ -284,7 +285,7 @@ export default async function ProgramDetailPage({
                 </tr>
               </DataTableHeader>
               <DataTableBody>
-                {program.memberships.slice(0, 8).map((membership) => {
+                {recentMembers.map((membership) => {
                   const progress = progressValue(membership.earnedStamps, membership.bonusStamps);
                   const rewardReady = !isMembership && progress >= safeRequiredStamps && membership.status !== "COMPLETED";
                   return (

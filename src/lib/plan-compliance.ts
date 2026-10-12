@@ -26,35 +26,46 @@ export async function getPlanComplianceSummary({
   recordAuditEvent = false,
 }: PlanComplianceOptions): Promise<PlanComplianceSummary> {
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-  const [branches, staffUsers, enrollments, stamps, redemptions, scans] = await Promise.all([
+  // Counts per branch, grouped by the database: the check only needs which
+  // branches were active and how much happened, not every row of 30 days.
+  const [branches, staffUsers, enrollmentGroups, stampGroups, redemptionGroups, scanGroups] = await Promise.all([
     prisma.branch.findMany({ where: { businessId }, select: { id: true, name: true } }),
     prisma.user.findMany({
       where: { businessId, role: { in: ["STAFF", "BRANCH_MANAGER"] }, status: "ACTIVE" },
       select: { id: true, role: true, branchId: true },
     }),
-    prisma.businessCustomerMembership.findMany({
+    prisma.businessCustomerMembership.groupBy({
+      by: ["createdBranchId"],
       where: { businessId, createdAt: { gte: since }, createdBranchId: { not: null } },
-      select: { createdBranchId: true },
+      _count: { _all: true },
     }),
-    prisma.stampTransaction.findMany({
+    prisma.stampTransaction.groupBy({
+      by: ["branchId"],
       where: { businessId, createdAt: { gte: since }, branchId: { not: null } },
-      select: { branchId: true },
+      _count: { _all: true },
     }),
-    prisma.rewardRedemption.findMany({
+    prisma.rewardRedemption.groupBy({
+      by: ["branchId"],
       where: { businessId, redeemedAt: { gte: since }, branchId: { not: null } },
-      select: { branchId: true },
+      _count: { _all: true },
     }),
-    prisma.scanEvent.findMany({
+    prisma.scanEvent.groupBy({
+      by: ["branchId"],
       where: { businessId, createdAt: { gte: since }, branchId: { not: null } },
-      select: { branchId: true },
+      _count: { _all: true },
     }),
   ]);
+  const total = (groups: Array<{ _count: { _all: number } }>) => groups.reduce((sum, group) => sum + group._count._all, 0);
+  const enrollments = { length: total(enrollmentGroups) };
+  const stamps = { length: total(stampGroups) };
+  const redemptions = { length: total(redemptionGroups) };
+  const scans = { length: total(scanGroups) };
 
   const activityBranchIds = new Set<number>();
-  for (const enrollment of enrollments) if (enrollment.createdBranchId) activityBranchIds.add(enrollment.createdBranchId);
-  for (const stamp of stamps) if (stamp.branchId) activityBranchIds.add(stamp.branchId);
-  for (const redemption of redemptions) if (redemption.branchId) activityBranchIds.add(redemption.branchId);
-  for (const scan of scans) if (scan.branchId) activityBranchIds.add(scan.branchId);
+  for (const group of enrollmentGroups) if (group.createdBranchId) activityBranchIds.add(group.createdBranchId);
+  for (const group of stampGroups) if (group.branchId) activityBranchIds.add(group.branchId);
+  for (const group of redemptionGroups) if (group.branchId) activityBranchIds.add(group.branchId);
+  for (const group of scanGroups) if (group.branchId) activityBranchIds.add(group.branchId);
 
   const assignedBranchIds = new Set<number>();
   let missingAssignmentCount = 0;

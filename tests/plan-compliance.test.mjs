@@ -10,10 +10,11 @@ test("plan compliance uses existing branch-linked operational activity without s
   const compliance = read("src/lib/plan-compliance.ts");
 
   for (const expected of [
-    "businessCustomerMembership.findMany",
-    "stampTransaction.findMany",
-    "rewardRedemption.findMany",
-    "scanEvent.findMany",
+    // Grouped per branch by the database instead of loading every row.
+    "businessCustomerMembership.groupBy",
+    "stampTransaction.groupBy",
+    "rewardRedemption.groupBy",
+    "scanEvent.groupBy",
     "createdBranchId",
     "branchId",
     "role: { in: [\"STAFF\", \"BRANCH_MANAGER\"] }",
@@ -42,7 +43,9 @@ test("starter multi-branch detection creates internal audit warning only", () =>
 test("dashboard wires computed plan compliance into the account status card", () => {
   const dashboard = read("src/app/dashboard/page.tsx");
 
-  assert.match(dashboard, /const planCompliance = await getPlanComplianceSummary/);
+  // Started alongside the other dashboard queries, then awaited.
+  assert.match(dashboard, /const planCompliancePromise = getPlanComplianceSummary\(/);
+  assert.match(dashboard, /const planCompliance = await planCompliancePromise;/);
   assert.match(dashboard, /planCompliance=\{planCompliance\}/);
   assert.match(dashboard, /function AccountCard\(\{[\s\S]*planCompliance[\s\S]*PlanComplianceSummary/);
   assert.match(dashboard, /score \{planCompliance\.score\}\/100/);

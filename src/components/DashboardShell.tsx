@@ -17,7 +17,6 @@ import { SupportEndSessionButton } from "@/components/SupportEndSessionButton";
 import { SupportModeBanner } from "@/components/SupportModeBanner";
 import { endSupportSessionAction } from "@/app/platform/businesses/support-actions";
 import { getOperationalBusinessBranding } from "@/lib/business-branding";
-import { isDemoModeEnabled } from "@/lib/platform-settings";
 import { getActiveSupportSessionForCurrentAdmin } from "@/lib/support-sessions";
 import type { AuthUser } from "@/lib/session";
 import { roleHomePath, roleLabels } from "@/lib/roles";
@@ -60,7 +59,6 @@ const navItems = [
 ] as const;
 
 export async function DashboardShell({ user, title, eyebrow, children, headerAside, hideWelcomeMessage = false, supportSession }: DashboardShellProps) {
-  await isDemoModeEnabled();
   const supportContext = supportSession === undefined && user.role === "BUSINESS_OWNER" ? await getActiveSupportSessionForCurrentAdmin() : null;
   const activeSupportSession = supportSession ?? supportContext?.supportSession ?? null;
   const businessBranding = await getOperationalBusinessBranding(user);
