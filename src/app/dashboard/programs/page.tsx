@@ -128,7 +128,12 @@ export default async function ProgramsPage({
   const cashbackEnabled = Boolean(business.cashbackSettings?.enabled);
   // Cashback is a program like any other, so it counts toward the program totals.
   const activeProgramCount = activeCount + (cashbackEnabled ? 1 : 0);
-  const shownProgramCount = programs.length + 1;
+  // Cashback only appears as a program once the owner has set it up (saved the
+  // cashback form at least once). Before that it is an offer, not a program, so
+  // a new business is never shown a "Cashback - Off" row it did not create.
+  const cashbackSetUp = Boolean(business.cashbackSettings);
+  const shownProgramCount = programs.length + (cashbackSetUp ? 1 : 0);
+  const showProgramTable = cashbackSetUp || programs.length > 0;
   const cashbackRate = business.cashbackSettings?.ratePercent != null ? business.cashbackSettings.ratePercent.toString() : "5";
   const cashbackName = business.cashbackSettings?.name?.trim() || "Cashback";
   const cashbackCurrency = business.cashbackSettings?.currency ?? "AED";
@@ -179,94 +184,102 @@ export default async function ProgramsPage({
 
         <SectionCard
           title="Program Performance"
-          description={shownProgramCount + " program" + (shownProgramCount === 1 ? "" : "s") + " shown, including your cashback program. Cards summarize members, completion and activity."}
+          description={
+            shownProgramCount + " program" + (shownProgramCount === 1 ? "" : "s") + " shown" + (cashbackSetUp ? ", including your cashback program" : "") + ". Cards summarize members, completion and activity."
+          }
         >
           <div className="grid gap-4 lg:hidden">
-            <CashbackProgramCard
-              name={cashbackName}
-              enabled={cashbackEnabled}
-              rate={cashbackRate}
-              currency={cashbackCurrency}
-              editHref="/dashboard/programs/new?type=cashback"
-              members={cashbackMembers}
-              spendBase={cashbackSpendBase}
-              given={cashbackGiven}
-              redeemed={cashbackRedeemed}
-              outstanding={cashbackOutstanding}
-            />
+            {cashbackSetUp ? (
+              <CashbackProgramCard
+                name={cashbackName}
+                enabled={cashbackEnabled}
+                rate={cashbackRate}
+                currency={cashbackCurrency}
+                editHref="/dashboard/programs/new?type=cashback"
+                members={cashbackMembers}
+                spendBase={cashbackSpendBase}
+                given={cashbackGiven}
+                redeemed={cashbackRedeemed}
+                outstanding={cashbackOutstanding}
+              />
+            ) : null}
             {programs.map((row) => <ProgramCard key={row.program.id} row={row} />)}
           </div>
 
-          <div className="hidden lg:block">
-            <DataTable>
-              <DataTableHeader>
-                <tr>
-                  <DataTableHeadCell>Program</DataTableHeadCell>
-                  <DataTableHeadCell>{membershipMode ? "Package" : "Reward"}</DataTableHeadCell>
-                  <DataTableHeadCell>Members</DataTableHeadCell>
-                  <DataTableHeadCell>Completion</DataTableHeadCell>
-                  <DataTableHeadCell>{membershipMode ? "Visits" : "Rewards"}</DataTableHeadCell>
-                  <DataTableHeadCell>Status</DataTableHeadCell>
-                </tr>
-              </DataTableHeader>
-              <DataTableBody>
-                <CashbackTableRow
-                  name={cashbackName}
-                  enabled={cashbackEnabled}
-                  rate={cashbackRate}
-                  currency={cashbackCurrency}
-                  editHref="/dashboard/programs/new?type=cashback"
-                  members={cashbackMembers}
-                  spendBase={cashbackSpendBase}
-                  given={cashbackGiven}
-                  redeemed={cashbackRedeemed}
-                  outstanding={cashbackOutstanding}
-                />
-                {programs.map((row) => (
-                      <tr key={row.program.id}>
-                        <DataTableCell className="font-semibold text-[#0F172A]">
-                          <Link
-                            href={"/dashboard/programs/" + row.program.uuid}
-                            className="inline-flex max-w-full rounded-sm font-semibold text-[#0F172A] underline-offset-4 transition hover:text-[var(--business-primary)] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
-                          >
-                            <span className="break-words">{row.program.name}</span>
-                          </Link>
-                          <div className="mt-1 text-xs font-normal text-[#64748B]">{businessTypeLabels[row.program.businessType]} - {row.program.productOrServiceName}</div>
-                          {row.isMembership ? <div className="mt-1 text-xs font-semibold business-primary-strong">Membership{row.priceLabel ? ` \u00b7 ${row.priceLabel}` : ""}</div> : null}
-                        </DataTableCell>
-                        <DataTableCell>
-                          {row.isMembership ? (
-                            <>
-                              <div className="font-medium text-[#0F172A]">{row.requiredStamps} visits</div>
-                              <div className="mt-1 text-xs text-[#64748B]">Prepaid package</div>
-                            </>
-                          ) : (
-                            <>
-                              <div className="font-medium text-[#0F172A]">{row.program.rewardName}</div>
-                              <div className="mt-1 text-xs text-[#64748B]">{row.requiredStamps} visits required</div>
-                            </>
-                          )}
-                        </DataTableCell>
-                        <DataTableCell>{row.memberCount}</DataTableCell>
-                        <DataTableCell className="min-w-44">
-                          <ProgressBar value={row.completionRate} label={row.completionRate + "% average"} barClassName="business-button" />
-                        </DataTableCell>
-                        <DataTableCell>
-                          {row.isMembership ? (
-                            <div>{row.stampsIssued} visits used</div>
-                          ) : (
-                            <>
-                              <div>{row.rewardsRedeemed} redeemed</div>
-                              <div className="mt-1 text-xs text-[#64748B]">{row.rewardReadyCount} ready</div>
-                            </>
-                          )}
-                        </DataTableCell>
-                        <DataTableCell><ProgramStatus active={row.program.active} rewardReadyCount={row.rewardReadyCount} /></DataTableCell>
-                      </tr>
-                ))}
-              </DataTableBody>
-            </DataTable>
-          </div>
+          {showProgramTable ? (
+            <div className="hidden lg:block">
+              <DataTable>
+                <DataTableHeader>
+                  <tr>
+                    <DataTableHeadCell>Program</DataTableHeadCell>
+                    <DataTableHeadCell>{membershipMode ? "Package" : "Reward"}</DataTableHeadCell>
+                    <DataTableHeadCell>Members</DataTableHeadCell>
+                    <DataTableHeadCell>Completion</DataTableHeadCell>
+                    <DataTableHeadCell>{membershipMode ? "Visits" : "Rewards"}</DataTableHeadCell>
+                    <DataTableHeadCell>Status</DataTableHeadCell>
+                  </tr>
+                </DataTableHeader>
+                <DataTableBody>
+                  {cashbackSetUp ? (
+                    <CashbackTableRow
+                      name={cashbackName}
+                      enabled={cashbackEnabled}
+                      rate={cashbackRate}
+                      currency={cashbackCurrency}
+                      editHref="/dashboard/programs/new?type=cashback"
+                      members={cashbackMembers}
+                      spendBase={cashbackSpendBase}
+                      given={cashbackGiven}
+                      redeemed={cashbackRedeemed}
+                      outstanding={cashbackOutstanding}
+                    />
+                  ) : null}
+                  {programs.map((row) => (
+                        <tr key={row.program.id}>
+                          <DataTableCell className="font-semibold text-[#0F172A]">
+                            <Link
+                              href={"/dashboard/programs/" + row.program.uuid}
+                              className="inline-flex max-w-full rounded-sm font-semibold text-[#0F172A] underline-offset-4 transition hover:text-[var(--business-primary)] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary)] focus-visible:ring-offset-2"
+                            >
+                              <span className="break-words">{row.program.name}</span>
+                            </Link>
+                            <div className="mt-1 text-xs font-normal text-[#64748B]">{businessTypeLabels[row.program.businessType]} - {row.program.productOrServiceName}</div>
+                            {row.isMembership ? <div className="mt-1 text-xs font-semibold business-primary-strong">Membership{row.priceLabel ? ` \u00b7 ${row.priceLabel}` : ""}</div> : null}
+                          </DataTableCell>
+                          <DataTableCell>
+                            {row.isMembership ? (
+                              <>
+                                <div className="font-medium text-[#0F172A]">{row.requiredStamps} visits</div>
+                                <div className="mt-1 text-xs text-[#64748B]">Prepaid package</div>
+                              </>
+                            ) : (
+                              <>
+                                <div className="font-medium text-[#0F172A]">{row.program.rewardName}</div>
+                                <div className="mt-1 text-xs text-[#64748B]">{row.requiredStamps} visits required</div>
+                              </>
+                            )}
+                          </DataTableCell>
+                          <DataTableCell>{row.memberCount}</DataTableCell>
+                          <DataTableCell className="min-w-44">
+                            <ProgressBar value={row.completionRate} label={row.completionRate + "% average"} barClassName="business-button" />
+                          </DataTableCell>
+                          <DataTableCell>
+                            {row.isMembership ? (
+                              <div>{row.stampsIssued} visits used</div>
+                            ) : (
+                              <>
+                                <div>{row.rewardsRedeemed} redeemed</div>
+                                <div className="mt-1 text-xs text-[#64748B]">{row.rewardReadyCount} ready</div>
+                              </>
+                            )}
+                          </DataTableCell>
+                          <DataTableCell><ProgramStatus active={row.program.active} rewardReadyCount={row.rewardReadyCount} /></DataTableCell>
+                        </tr>
+                  ))}
+                </DataTableBody>
+              </DataTable>
+            </div>
+          ) : null}
 
           {programs.length === 0 ? (
             <EmptyState
@@ -275,9 +288,26 @@ export default async function ProgramsPage({
               action={<ButtonLink href={filtered ? "/dashboard/programs" : "/dashboard/programs/new"} variant="business">{filtered ? "Clear Filters" : "Create Program"}</ButtonLink>}
             />
           ) : null}
+
+          {cashbackSetUp ? null : <CashbackSetupPrompt />}
         </SectionCard>
       </div>
     </DashboardShell>
+  );
+}
+
+/** Shown until the owner sets up cashback: an offer to add it, not a program row. */
+function CashbackSetupPrompt() {
+  return (
+    <div className="mt-4 flex flex-col gap-3 rounded-lg border border-dashed border-[#E5E7EB] bg-[#F9FAFB] p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p className="text-sm font-semibold text-[#0F172A]">Want to offer cashback?</p>
+        <p className="mt-1 text-sm text-[#64748B]">Customers get a percentage of every bill back to spend on their next visit.</p>
+      </div>
+      <ButtonLink href="/dashboard/programs/new?type=cashback" variant="outline">
+        Set up cashback
+      </ButtonLink>
+    </div>
   );
 }
 
