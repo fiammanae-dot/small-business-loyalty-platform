@@ -9,6 +9,7 @@ import { getBusinessOwnerContext, getCurrentPlan } from "@/lib/business-owner";
 import { programsUsedTowardLimit } from "@/lib/subscriptions";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { getPlanComplianceSummary, type PlanComplianceSummary } from "@/lib/plan-compliance";
+import { complianceStatusLabel } from "@/lib/plan-compliance-rules";
 import { requireSupportBusinessContext } from "@/lib/support-sessions";
 import { prisma } from "@/lib/prisma";
 import { getProgramActivityTotals } from "@/lib/program-stats";
@@ -318,6 +319,7 @@ export default async function BusinessDashboard({
               activePrograms={programsUsedTowardLimit(loyaltyPrograms, Boolean(business.cashbackSettings?.enabled))}
               branchLimit={plan?.maxBranches ?? null}
               programLimit={plan?.maxLoyaltyPrograms ?? null}
+              staffLimit={plan?.maxStaff ?? null}
               planCompliance={planCompliance}
               lastSupportSession={latestSupportSession}
             />
@@ -488,6 +490,7 @@ function AccountCard({
   activePrograms,
   branchLimit,
   programLimit,
+  staffLimit,
   planCompliance,
   lastSupportSession,
 }: {
@@ -500,11 +503,12 @@ function AccountCard({
   activePrograms: number;
   branchLimit: number | null;
   programLimit: number | null;
+  staffLimit: number | null;
   planCompliance: PlanComplianceSummary;
   lastSupportSession: { startedAt: Date; status: string; reason: string } | null;
 }) {
   const subscriptionHealthy = subscriptionStatus === "ACTIVE" || subscriptionStatus === "TRIAL";
-  const complianceWarning = planCompliance.status === "POTENTIAL_MULTI_BRANCH";
+  const complianceWarning = planCompliance.status !== "COMPLIANT";
   const programsAtLimit = programLimit !== null && activePrograms >= programLimit;
   const branchesAtLimit = branchLimit !== null && branchCount >= branchLimit;
 
@@ -524,7 +528,7 @@ function AccountCard({
           tone={complianceWarning ? "warning" : "ok"}
           text={
             <>
-              {complianceWarning ? "Potential multi-branch activity" : "Compliant"} · score {planCompliance.score}/100
+              {complianceStatusLabel(planCompliance.status)} · score {planCompliance.score}/100
               {planCompliance.lastDetectedIssue ? ` · ${planCompliance.lastDetectedIssue}` : ""}
             </>
           }
@@ -543,6 +547,12 @@ function AccountCard({
       <div className="mt-4 grid gap-3">
         <UsageBar label="Branches" used={branchCount} limit={branchLimit} atLimit={branchesAtLimit} />
         <UsageBar label="Programs" used={activePrograms} limit={programLimit} atLimit={programsAtLimit} />
+        <UsageBar
+          label="Active staff logins"
+          used={planCompliance.facts.activeStaffCount}
+          limit={staffLimit}
+          atLimit={staffLimit !== null && planCompliance.facts.activeStaffCount >= staffLimit}
+        />
       </div>
 
       {lastSupportSession ? (

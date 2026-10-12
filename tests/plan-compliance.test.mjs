@@ -17,26 +17,28 @@ test("plan compliance uses existing branch-linked operational activity without s
     "scanEvent.groupBy",
     "createdBranchId",
     "branchId",
-    "role: { in: [\"STAFF\", \"BRANCH_MANAGER\"] }",
+    "role: { in: [...STAFF_LIMIT_ROLES] }",
     "missingAssignmentCount",
   ]) {
     assert.match(compliance, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }
 });
 
-test("starter multi-branch detection creates internal audit warning only", () => {
+test("multi-branch detection follows each plan's limits and creates an internal audit warning only", () => {
   const compliance = read("src/lib/plan-compliance.ts");
   const dashboard = read("src/app/dashboard/page.tsx");
   const auditCenter = read("src/app/platform/audit-center/page.tsx");
 
-  assert.match(compliance, /planCode === "STARTER"/);
+  // Every plan is checked against its own limits, not only Starter.
+  assert.doesNotMatch(compliance, /planCode === "STARTER"/);
+  assert.match(compliance, /maxBranches: plan\?\.maxBranches \?\? DEFAULT_PLAN_LIMITS\.maxBranches/);
   assert.match(compliance, /POSSIBLE_MULTI_BRANCH_USAGE/);
   assert.match(compliance, /logAuditEvent/);
   assert.match(compliance, /recordAuditEvent/);
   assert.doesNotMatch(compliance, /suspend/i);
   assert.doesNotMatch(compliance, /block scanner/i);
-  assert.match(dashboard, /planCompliance\.status === "POTENTIAL_MULTI_BRANCH"/);
-  assert.match(dashboard, /Potential multi-branch activity/);
+  assert.match(dashboard, /const complianceWarning = planCompliance\.status !== "COMPLIANT";/);
+  assert.match(dashboard, /\{complianceStatusLabel\(planCompliance\.status\)\}/);
   assert.match(auditCenter, /label="compliance"/);
   assert.match(auditCenter, /Compliance Events/);
 });

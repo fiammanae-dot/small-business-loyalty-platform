@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Building2, CreditCard, Package, Search, Sparkles, Star, TrendingUp, X } from "lucide-react";
+import { Building2, CreditCard, Package, Search, Sparkles, Star, TrendingUp, Users, X } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
 import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
 import { PlatformKpiGrid } from "@/components/PlatformKpiGrid";
@@ -30,6 +30,7 @@ type PlanMetric = {
   name: string;
   maxBranches: number;
   maxLoyaltyPrograms: number;
+  maxStaff: number;
   monthlyPrice: number;
   annualPrice: number;
   cycles: PlanCycle[];
@@ -112,6 +113,7 @@ export default async function PlatformPlansPage({
       name: plan.name,
       maxBranches: plan.maxBranches,
       maxLoyaltyPrograms: plan.maxLoyaltyPrograms,
+      maxStaff: plan.maxStaff,
       monthlyPrice: Number(plan.monthlyPrice),
       annualPrice: Number(plan.annualPrice),
       cycles,
@@ -328,6 +330,10 @@ function PlanCard({ plan, popular }: { plan: PlanMetric; popular: boolean }) {
           <Sparkles className="h-4 w-4 text-[var(--accent-deep)]" aria-hidden="true" />
           Up to {plan.maxLoyaltyPrograms} {plan.maxLoyaltyPrograms === 1 ? "loyalty program" : "loyalty programs"}
         </span>
+        <span className="flex items-center gap-2">
+          <Users className="h-4 w-4 text-[var(--accent-deep)]" aria-hidden="true" />
+          Up to {plan.maxStaff} active staff {plan.maxStaff === 1 ? "login" : "logins"}
+        </span>
       </div>
 
       <div className="mt-4 border-t border-[var(--medium-gray)] pt-4">
@@ -358,6 +364,7 @@ function PlanAnalysisCard({ plan, popular }: { plan: PlanMetric; popular: boolea
       <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
         <AnalysisRow label="Branch limit" value={plan.maxBranches.toString()} />
         <AnalysisRow label="Program limit" value={plan.maxLoyaltyPrograms.toString()} />
+        <AnalysisRow label="Staff login limit" value={plan.maxStaff.toString()} />
         <AnalysisRow label="Businesses" value={plan.businessesUsingPlan.toString()} />
         <AnalysisRow label="Revenue" value={formatMoney(plan.totalRevenue)} />
         <AnalysisRow label="Billing" value={plan.billingCycles.join(", ")} />

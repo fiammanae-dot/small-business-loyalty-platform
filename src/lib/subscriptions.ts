@@ -33,9 +33,10 @@ export function isSubscriptionUsable(subscription?: Pick<BusinessSubscription, "
   return !!subscription && commerciallyUsableStatuses.includes(subscription.status);
 }
 
-export function limitReachedMessage(kind: "branch" | "program", max: number) {
-  const label = kind === "branch" ? "branch" : "loyalty program";
-  return `Your current plan allows up to ${max} ${label}${max === 1 ? "" : "s"}. Upgrade your plan to add more.`;
+export function limitReachedMessage(kind: "branch" | "program" | "staff", max: number) {
+  const label = kind === "branch" ? "branch" : kind === "staff" ? "active staff login" : "loyalty program";
+  const plural = max === 1 ? label : kind === "branch" ? "branches" : `${label}s`;
+  return `Your current plan allows up to ${max} ${plural}. Upgrade your plan to add more.`;
 }
 
 /**

@@ -24,6 +24,7 @@ import { prisma } from "@/lib/prisma";
 import { roleLabels } from "@/lib/roles";
 import { AlertTriangle, Ban, Building2, CheckCircle2, Download, KeyRound, Plus, Search, ShieldCheck, UserPlus, Users } from "lucide-react";
 import Link from "next/link";
+import { getBusinessPlanLimits } from "@/lib/plan-limits";
 import type { ReactNode } from "react";
 
 type StaffSearchParams = { error?: string; success?: string; q?: string; branch?: string; role?: string; status?: string; sort?: string; add?: string };
@@ -56,6 +57,7 @@ export default async function StaffUsersPage({ searchParams }: { searchParams: P
     .sort((a, b) => (params.sort === "oldest" ? a.createdAt.getTime() - b.createdAt.getTime() : b.createdAt.getTime() - a.createdAt.getTime()));
 
   const activeStaff = staffUsers.filter((staffUser) => staffUser.status === "ACTIVE").length;
+  const { maxStaff } = await getBusinessPlanLimits(business.id);
   const branchManagers = staffUsers.filter((staffUser) => staffUser.role === "BRANCH_MANAGER").length;
   const disabledAccounts = staffUsers.filter((staffUser) => staffUser.status !== "ACTIVE").length;
   const newThisMonth = staffUsers.filter((staffUser) => staffUser.createdAt >= monthStart).length;
@@ -88,7 +90,7 @@ export default async function StaffUsersPage({ searchParams }: { searchParams: P
 
         <section aria-label="Team summary" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           <MetricCard label="Total staff" value={staffUsers.length} helper="All team accounts" icon={<Users className="h-5 w-5" />} tone="business" />
-          <MetricCard label="Active" value={activeStaff} helper="Can access workspace" icon={<CheckCircle2 className="h-5 w-5" />} tone="success" />
+          <MetricCard label="Active" value={activeStaff} helper={`${activeStaff} of ${maxStaff} allowed on your plan`} icon={<CheckCircle2 className="h-5 w-5" />} tone={activeStaff >= maxStaff ? "warning" : "success"} />
           <MetricCard label="Branch managers" value={branchManagers} helper="Elevated access" icon={<ShieldCheck className="h-5 w-5" />} tone="info" />
           <MetricCard label="Disabled" value={disabledAccounts} helper="Access blocked" icon={<Ban className="h-5 w-5" />} tone={disabledAccounts ? "danger" : "neutral"} />
           <MetricCard label="New this month" value={newThisMonth} helper="Created this month" icon={<UserPlus className="h-5 w-5" />} tone="neutral" />

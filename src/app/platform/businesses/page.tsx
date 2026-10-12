@@ -7,7 +7,9 @@ import { MobileFilterDrawer } from "@/components/MobileFilterDrawer";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { StatusBadge } from "@/components/StatusBadge";
 import { DataTable, DataTableBody, DataTableCell, DataTableHeadCell, DataTableHeader, EmptyState, MetricCard, SortableHeadCell } from "@/components/ui";
+import { PlanCheckBadge } from "@/components/PlanCheckBadge";
 import { formatDate } from "@/lib/format";
+import { getPlanCompliance, type BusinessCompliance } from "@/lib/plan-compliance";
 import { prisma } from "@/lib/prisma";
 import { businessTypeLabels } from "@/lib/roles";
 import { requireRole } from "@/lib/session";
@@ -24,6 +26,7 @@ type BusinessesSearchParams = {
   sort?: string;
   direction?: string;
   suspect?: string;
+  check?: string;
 };
 
 const sortableFields = {
@@ -112,6 +115,7 @@ export default async function BusinessesPage({
   const sort = Object.keys(sortableFields).includes(params.sort ?? "") ? (params.sort as keyof typeof sortableFields) : "createdAt";
   const direction = params.direction === "asc" ? "asc" : "desc";
   const suspectOnly = params.suspect === "1";
+  const planCheckOnly = params.check === "1";
 
   const createdAt: Prisma.DateTimeFilter = {};
   if (createdFrom) {
@@ -157,7 +161,12 @@ export default async function BusinessesPage({
     }),
   ]);
 
+  // Plan check (branches, staff and multi-location signals) for every listed business, in one set of grouped queries.
+  const compliance = await getPlanCompliance(allBusinesses.map((business) => business.id));
+  const planIssueCount = allBusinesses.filter((business) => (compliance.get(business.id)?.status ?? "COMPLIANT") !== "COMPLIANT").length;
+
   const businesses = allBusinesses
+    .filter((business) => (planCheckOnly ? (compliance.get(business.id)?.status ?? "COMPLIANT") !== "COMPLIANT" : true))
     .filter((business) => (minBranches === null ? true : business._count.branches >= minBranches))
     .filter((business) => (maxBranches === null ? true : business._count.branches <= maxBranches))
     .filter((business) => (suspectOnly ? isSuspiciousBusinessName(business.name) : true))
@@ -212,7 +221,7 @@ export default async function BusinessesPage({
 
   const quickChips = (
     <div className="flex flex-wrap gap-2">
-      <QuickChip href="/platform/businesses" label="All" active={!selectedStatus && !selectedPlanId && !suspectOnly} />
+      <QuickChip href="/platform/businesses" label="All" active={!selectedStatus && !selectedPlanId && !suspectOnly && !planCheckOnly} />
       <QuickChip href={buildQuickFilterHref({ status: "ACTIVE" })} label="Active" active={selectedStatus === "ACTIVE"} />
       <QuickChip href={buildQuickFilterHref({ status: "INACTIVE" })} label="Inactive" active={selectedStatus === "INACTIVE"} />
       <QuickChip href={buildQuickFilterHref({ status: "ARCHIVED" })} label="Archived" active={selectedStatus === "ARCHIVED"} />
@@ -223,6 +232,7 @@ export default async function BusinessesPage({
         <QuickChip href={buildQuickFilterHref({ plan: starterPlan.id.toString() })} label="Starter Plan" active={selectedPlanId === starterPlan.id} />
       ) : null}
       <QuickChip href={buildQuickFilterHref({ suspect: "1" })} label="Review flagged" active={suspectOnly} />
+      <QuickChip href={buildQuickFilterHref({ check: "1" })} label="Plan check issues" active={planCheckOnly} />
     </div>
   );
 
@@ -239,11 +249,12 @@ export default async function BusinessesPage({
         </Link>
       </section>
 
-      <section aria-label="Business summary" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <section aria-label="Business summary" className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <MetricCard label="Total businesses" value={businessSummary.total} href="/platform/businesses" />
         <MetricCard label="Active" value={businessSummary.active} href="/platform/businesses?status=ACTIVE" tone="success" />
         <MetricCard label="Inactive" value={businessSummary.inactive} href="/platform/businesses?status=INACTIVE" tone={businessSummary.inactive > 0 ? "warning" : "neutral"} />
         <MetricCard label="Review flagged" value={businessSummary.flagged} href="/platform/businesses?suspect=1" tone={businessSummary.flagged > 0 ? "warning" : "neutral"} />
+        <MetricCard label="Plan check issues" value={planIssueCount} href="/platform/businesses?check=1" tone={planIssueCount > 0 ? "warning" : "neutral"} />
       </section>
 
       <MobileFilterDrawer activeCount={activeFilterCount}>
@@ -360,7 +371,7 @@ export default async function BusinessesPage({
         </div>
 
         <div className="hidden lg:block">
-          <DataTable className="min-w-[860px]">
+          <DataTable className="min-w-[980px]">
             <DataTableHeader>
               <tr>
                 <SortableHeadCell href={buildSortHref(params, "name", sort, direction)} active={sort === "name"} direction={direction} className="pl-4">Business name</SortableHeadCell>
@@ -368,12 +379,13 @@ export default async function BusinessesPage({
                 <SortableHeadCell href={buildSortHref(params, "status", sort, direction)} active={sort === "status"} direction={direction}>Status</SortableHeadCell>
                 <SortableHeadCell href={buildSortHref(params, "branches", sort, direction)} active={sort === "branches"} direction={direction} align="right">Branches</SortableHeadCell>
                 <SortableHeadCell href={buildSortHref(params, "plan", sort, direction)} active={sort === "plan"} direction={direction}>Plan</SortableHeadCell>
+                <DataTableHeadCell>Plan check</DataTableHeadCell>
                 <SortableHeadCell href={buildSortHref(params, "createdAt", sort, direction)} active={sort === "createdAt"} direction={direction} className="pr-4">Created</SortableHeadCell>
               </tr>
             </DataTableHeader>
             <DataTableBody>
               {businesses.map((business) => (
-                <BusinessRow key={business.id} business={business} />
+                <BusinessRow key={business.id} business={business} compliance={compliance.get(business.id)} />
               ))}
             </DataTableBody>
           </DataTable>
@@ -381,7 +393,7 @@ export default async function BusinessesPage({
 
         <div className="grid gap-3 lg:hidden">
           {businesses.map((business) => (
-            <BusinessMobileCard key={business.id} business={business} />
+            <BusinessMobileCard key={business.id} business={business} compliance={compliance.get(business.id)} />
           ))}
         </div>
 
@@ -482,7 +494,7 @@ type BusinessWithListData = Prisma.BusinessGetPayload<{
   };
 }>;
 
-function BusinessRow({ business }: { business: BusinessWithListData }) {
+function BusinessRow({ business, compliance }: { business: BusinessWithListData; compliance?: BusinessCompliance }) {
   const planName = business.subscriptions[0]?.subscriptionPlan.name ?? "Unassigned";
 
   return (
@@ -505,12 +517,15 @@ function BusinessRow({ business }: { business: BusinessWithListData }) {
       </DataTableCell>
       <DataTableCell className="text-right font-semibold tabular-nums text-[#171A21]">{business._count.branches}</DataTableCell>
       <DataTableCell>{planName}</DataTableCell>
+      <DataTableCell>
+        <PlanCheckBadge status={compliance?.status ?? "COMPLIANT"} issues={compliance?.issues} />
+      </DataTableCell>
       <DataTableCell className="whitespace-nowrap pr-4 text-[#7A8091]">{formatDate(business.createdAt)}</DataTableCell>
     </tr>
   );
 }
 
-function BusinessMobileCard({ business }: { business: BusinessWithListData }) {
+function BusinessMobileCard({ business, compliance }: { business: BusinessWithListData; compliance?: BusinessCompliance }) {
   const planName = business.subscriptions[0]?.subscriptionPlan.name ?? "Unassigned";
   const branchLabel = `${business._count.branches} ${business._count.branches === 1 ? "branch" : "branches"}`;
 
@@ -530,11 +545,10 @@ function BusinessMobileCard({ business }: { business: BusinessWithListData }) {
       <p className="mt-1.5 text-sm text-[#7A8091]">
         {businessTypeLabels[business.businessType]} · {branchLabel} · {planName} · {formatDate(business.createdAt)}
       </p>
-      {isSuspiciousBusinessName(business.name) ? (
-        <div className="mt-2.5">
-          <SuspiciousBadge />
-        </div>
-      ) : null}
+      <div className="mt-2.5 flex flex-wrap gap-2">
+        {isSuspiciousBusinessName(business.name) ? <SuspiciousBadge /> : null}
+        {compliance && compliance.status !== "COMPLIANT" ? <PlanCheckBadge status={compliance.status} issues={compliance.issues} /> : null}
+      </div>
     </Link>
   );
 }

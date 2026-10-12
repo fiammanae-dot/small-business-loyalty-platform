@@ -16,6 +16,7 @@ import { CashbackError, DuplicateCashbackError, earnCashback, spendCashback } fr
 import { enrollInCashback } from "@/lib/cashback-enrollment";
 import { validateCsrfForm } from "@/lib/csrf";
 import { requireUsableSubscription } from "@/lib/commercial-access";
+import { countActiveStaff, getBusinessPlanLimits, lockBusinessLimit } from "@/lib/plan-limits";
 import { createFormFailure, isFormActionError, type PreservedFormState } from "@/lib/form-state";
 import { refreshBusinessGoogleCashbackPasses, syncGoogleWalletObjectAfterLoyaltyChange } from "@/lib/google-wallet/service";
 import { refreshBusinessCashbackPasses, syncAppleWalletPassSafe } from "@/lib/walletwallet/service";
@@ -245,12 +246,7 @@ export async function saveBranchAction(formData: FormData) {
   if (!parsed.success) fail("/dashboard/branches", parsed.error.issues[0]?.message ?? "Validation failed.");
 
   const data = parsed.data;
-  const activePlan = await prisma.businessSubscription.findFirst({
-    where: { businessId: user.businessId, status: { in: commerciallyUsableStatuses } },
-    orderBy: { createdAt: "desc" },
-    include: { subscriptionPlan: true },
-  });
-  const maxBranches = activePlan?.subscriptionPlan.maxBranches ?? 1;
+  const { maxBranches } = await getBusinessPlanLimits(user.businessId);
 
   if (data.branchId) {
     const branch = await prisma.branch.findFirst({
@@ -279,22 +275,25 @@ export async function saveBranchAction(formData: FormData) {
       metadata: { status: data.status },
     });
   } else {
-    const branchCount = await prisma.branch.count({ where: { businessId: user.businessId } });
-    if (branchCount >= maxBranches) {
-      fail("/dashboard/branches", limitReachedMessage("branch", maxBranches));
-    }
-
-    const createdBranch = await prisma.branch.create({
-      data: {
-        businessId: user.businessId,
-        name: data.name,
-        country: data.country,
-        city: data.city,
-        address: data.address,
-        status: data.status as RecordStatus,
-      },
-      select: { id: true },
+    // Count and create under a per-business lock, so two quick submissions
+    // cannot both pass the check. Disabled branches count too.
+    const createdBranch = await prisma.$transaction(async (tx) => {
+      await lockBusinessLimit(tx, user.businessId, "branch");
+      const branchCount = await tx.branch.count({ where: { businessId: user.businessId } });
+      if (branchCount >= maxBranches) return null;
+      return tx.branch.create({
+        data: {
+          businessId: user.businessId,
+          name: data.name,
+          country: data.country,
+          city: data.city,
+          address: data.address,
+          status: data.status as RecordStatus,
+        },
+        select: { id: true },
+      });
     });
+    if (!createdBranch) fail("/dashboard/branches", limitReachedMessage("branch", maxBranches));
     await logAuditEvent({
       actorUserId: user.id,
       businessId: user.businessId,
@@ -348,6 +347,7 @@ export async function toggleBranchStatusAction(formData: FormData) {
 export async function createStaffUserAction(formData: FormData) {
   validateActionSecurity(formData, "dashboard:staff", "/dashboard/staff");
   const user = await requireBusinessOwner();
+  await requireUsableSubscription(user.businessId).catch((error) => fail("/dashboard/staff", error.message));
   const parsed = staffSchema.safeParse({
     name: getString(formData, "name"),
     email: getString(formData, "email").toLowerCase(),
@@ -374,19 +374,27 @@ export async function createStaffUserAction(formData: FormData) {
   if (existingUser) fail("/dashboard/staff", "Staff email is already in use.");
 
   const passwordHash = await bcrypt.hash(data.password, 12);
+  const { maxStaff } = await getBusinessPlanLimits(user.businessId);
 
-  const createdStaff = await prisma.user.create({
-    data: {
-      name: data.name,
-      email: data.email,
-      passwordHash,
-      role: data.role as UserRole,
-      businessId: user.businessId,
-      branchId: data.branchId,
-      status: "ACTIVE",
-    },
-    select: { id: true },
+  // The plan's staff limit counts active Staff and Branch Manager logins; the
+  // check and the insert share a per-business lock.
+  const createdStaff = await prisma.$transaction(async (tx) => {
+    await lockBusinessLimit(tx, user.businessId, "staff");
+    if ((await countActiveStaff(user.businessId, tx)) >= maxStaff) return null;
+    return tx.user.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        passwordHash,
+        role: data.role as UserRole,
+        businessId: user.businessId,
+        branchId: data.branchId,
+        status: "ACTIVE",
+      },
+      select: { id: true },
+    });
   });
+  if (!createdStaff) fail("/dashboard/staff", limitReachedMessage("staff", maxStaff));
   await logAuditEvent({
     actorUserId: user.id,
     businessId: user.businessId,
@@ -422,10 +430,24 @@ export async function toggleStaffStatusAction(formData: FormData) {
   });
   if (!staffUser) fail("/dashboard/staff", "Staff user not found.");
 
-  await prisma.user.update({
-    where: { id: staffUserId },
-    data: { status: nextStatus },
-  });
+  if (nextStatus === "ACTIVE") {
+    // Turning a login back on uses a staff slot, like creating one.
+    await requireUsableSubscription(user.businessId).catch((error) => fail("/dashboard/staff", error.message));
+    const { maxStaff } = await getBusinessPlanLimits(user.businessId);
+    const enabled = await prisma.$transaction(async (tx) => {
+      await lockBusinessLimit(tx, user.businessId, "staff");
+      const current = await tx.user.findUnique({ where: { id: staffUserId }, select: { status: true } });
+      if (current?.status !== "ACTIVE" && (await countActiveStaff(user.businessId, tx)) >= maxStaff) return false;
+      await tx.user.update({ where: { id: staffUserId }, data: { status: nextStatus } });
+      return true;
+    });
+    if (!enabled) fail("/dashboard/staff", limitReachedMessage("staff", maxStaff));
+  } else {
+    await prisma.user.update({
+      where: { id: staffUserId },
+      data: { status: nextStatus },
+    });
+  }
   await logAuditEvent({
     actorUserId: user.id,
     businessId: user.businessId,

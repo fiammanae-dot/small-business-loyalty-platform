@@ -5,11 +5,13 @@ import { Archive, ChevronRight, Pencil, Power, RotateCcw } from "lucide-react";
 import { ConfirmSubmitButton } from "@/components/ConfirmSubmitButton";
 import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
+import { PlanCheckBadge } from "@/components/PlanCheckBadge";
 import { StatusBadge } from "@/components/StatusBadge";
 import { RequiredMark } from "@/components/ui/RequiredMark";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { formatMoney, getInvoiceDisplayStatus } from "@/lib/billing";
 import { formatBillingCycle } from "@/lib/subscription-plans";
+import { getPlanCompliance, type BusinessCompliance } from "@/lib/plan-compliance";
 import { prisma } from "@/lib/prisma";
 import { businessTypeLabels, roleLabels } from "@/lib/roles";
 import { requireRole } from "@/lib/session";
@@ -72,6 +74,26 @@ export default async function BusinessDetailPage({ params, searchParams }: { par
   const planName = currentSubscription?.subscriptionPlan.name ?? "Unassigned Plan";
   const remainingDays = currentSubscription ? getSubscriptionRemainingDays(currentSubscription) : null;
   const trialDays = currentSubscription ? getTrialRemainingDays(currentSubscription) : null;
+  const accessSince = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const [complianceMap, recentSignIns, scanDevices] = await Promise.all([
+    getPlanCompliance([business.id]),
+    prisma.loginEvent.findMany({
+      where: { businessId: business.id },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      select: { id: true, createdAt: true, deviceId: true, ipCity: true, ipCountry: true, ipAddress: true, user: { select: { name: true, email: true, role: true } } },
+    }),
+    prisma.scanEvent.groupBy({
+      by: ["deviceId", "ipCity", "branchId"],
+      where: { businessId: business.id, createdAt: { gte: accessSince }, deviceId: { not: null } },
+      _count: { _all: true },
+      _max: { createdAt: true },
+      orderBy: { _max: { createdAt: "desc" } },
+      take: 12,
+    }),
+  ]);
+  const compliance = complianceMap.get(business.id)!;
+  const branchNames = new Map(business.branches.map((branch) => [branch.id, branch.name]));
 
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title={business.name}>
@@ -182,6 +204,26 @@ export default async function BusinessDetailPage({ params, searchParams }: { par
           </details>
         )}
       </section>
+
+      <PlanCheckPanel
+        compliance={compliance}
+        recentSignIns={recentSignIns.map((event) => ({
+          id: event.id,
+          when: formatDateTime(event.createdAt),
+          who: `${event.user.name} (${roleLabels[event.user.role]})`,
+          device: shortDevice(event.deviceId),
+          place: [event.ipCity, event.ipCountry].filter(Boolean).join(", ") || "Unknown",
+          network: event.ipAddress ?? "Unknown",
+        }))}
+        scanDevices={scanDevices.map((row) => ({
+          key: `${row.deviceId}-${row.ipCity}-${row.branchId}`,
+          device: shortDevice(row.deviceId),
+          branch: row.branchId ? branchNames.get(row.branchId) ?? "Unknown branch" : "Owner (no branch)",
+          place: row.ipCity ?? "Unknown",
+          scans: row._count._all,
+          lastSeen: row._max.createdAt ? formatDateTime(row._max.createdAt) : "",
+        }))}
+      />
 
       <section className="grid gap-4 lg:grid-cols-3">
         <InfoCard title="Business profile">
@@ -352,6 +394,113 @@ export default async function BusinessDetailPage({ params, searchParams }: { par
         </div>
       </section>
     </DashboardShell>
+  );
+}
+
+function shortDevice(deviceId: string | null) {
+  return deviceId ? `Device ${deviceId.slice(0, 8)}` : "Unknown device";
+}
+
+/**
+ * Plan check for the System Administrator: usage against the plan, the reasons
+ * for any flag, and where sign-ins and scans came from (device, city) - the
+ * evidence for one branch being used in more than one shop.
+ */
+function PlanCheckPanel({
+  compliance,
+  recentSignIns,
+  scanDevices,
+}: {
+  compliance: BusinessCompliance;
+  recentSignIns: Array<{ id: number; when: string; who: string; device: string; place: string; network: string }>;
+  scanDevices: Array<{ key: string; device: string; branch: string; place: string; scans: number; lastSeen: string }>;
+}) {
+  return (
+    <section className="min-w-0 rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5" aria-label="Plan check">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold text-[#111827]">Plan check</h2>
+        <PlanCheckBadge status={compliance.status} issues={compliance.issues} />
+      </div>
+      <p className="mt-1 text-sm text-[#6B7280]">
+        Last 30 days. Cities come from the network and are approximate; treat them as a reason to look, not proof.
+      </p>
+      <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-5">
+        <InfoMetric label="Branches" value={`${compliance.branchCount} / ${compliance.maxBranches}`} />
+        <InfoMetric label="Active staff logins" value={`${compliance.activeStaffCount} / ${compliance.maxStaff}`} />
+        <InfoMetric label="Branches with activity" value={compliance.activityBranchCount.toString()} />
+        <InfoMetric label="Scanner devices" value={compliance.scannerDeviceCount.toString()} />
+        <InfoMetric label="Scan cities" value={compliance.scanCities.length ? compliance.scanCities.join(", ") : "None recorded"} />
+      </div>
+      {compliance.issues.length ? (
+        <ul className="mt-4 grid gap-1.5 rounded-md border border-[#F3D9A4] bg-[#FFFBF2] p-3 text-sm text-[#7A4A06]">
+          {compliance.issues.map((issue) => (
+            <li key={issue}>{issue}</li>
+          ))}
+        </ul>
+      ) : null}
+      <div className="mt-5 grid gap-5 lg:grid-cols-2">
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-[#111827]">Scanner devices</h3>
+          {scanDevices.length ? (
+            <div className="mt-2 overflow-x-auto">
+              <table className="w-full min-w-[420px] text-left text-sm">
+                <thead className="text-xs uppercase tracking-wide text-[#6B7280]">
+                  <tr>
+                    <th className="py-2 pr-3 font-semibold">Device</th>
+                    <th className="py-2 pr-3 font-semibold">Branch</th>
+                    <th className="py-2 pr-3 font-semibold">City</th>
+                    <th className="py-2 pr-3 text-right font-semibold">Scans</th>
+                    <th className="py-2 font-semibold">Last scan</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#F1F2F4]">
+                  {scanDevices.map((row) => (
+                    <tr key={row.key}>
+                      <td className="py-2 pr-3 font-mono text-xs">{row.device}</td>
+                      <td className="py-2 pr-3">{row.branch}</td>
+                      <td className="py-2 pr-3">{row.place}</td>
+                      <td className="py-2 pr-3 text-right tabular-nums">{row.scans}</td>
+                      <td className="py-2 text-[#6B7280]">{row.lastSeen}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="mt-2 text-sm text-[#6B7280]">No scans with device details yet.</p>
+          )}
+        </div>
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-[#111827]">Recent sign-ins</h3>
+          {recentSignIns.length ? (
+            <div className="mt-2 overflow-x-auto">
+              <table className="w-full min-w-[420px] text-left text-sm">
+                <thead className="text-xs uppercase tracking-wide text-[#6B7280]">
+                  <tr>
+                    <th className="py-2 pr-3 font-semibold">When</th>
+                    <th className="py-2 pr-3 font-semibold">Who</th>
+                    <th className="py-2 pr-3 font-semibold">Device</th>
+                    <th className="py-2 font-semibold">From</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#F1F2F4]">
+                  {recentSignIns.map((row) => (
+                    <tr key={row.id}>
+                      <td className="py-2 pr-3 whitespace-nowrap text-[#6B7280]">{row.when}</td>
+                      <td className="py-2 pr-3">{row.who}</td>
+                      <td className="py-2 pr-3 font-mono text-xs">{row.device}</td>
+                      <td className="py-2" title={row.network}>{row.place}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="mt-2 text-sm text-[#6B7280]">No sign-ins recorded yet.</p>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }
 

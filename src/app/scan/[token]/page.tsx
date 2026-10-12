@@ -18,6 +18,7 @@ import { businessOwnerOperationalDefaults, resolveBusinessBranding } from "@/lib
 import { getCardUrl, maskPhoneNumber } from "@/lib/customer-cards";
 import { formatUaePhoneDisplay } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
+import { scanAccessFields } from "@/lib/access-trail";
 import { checkScanVolumeAlert } from "@/lib/alert-engine";
 import { areTiersVisible, fromStoredTier } from "@/lib/customer-tiers";
 import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
@@ -224,6 +225,7 @@ export default async function ScanResultPage({
         scanToken: token,
         result,
         createdAt: scanTimestamp,
+        ...(await scanAccessFields()),
       },
     });
     if (result !== "VALID") {
@@ -358,6 +360,7 @@ export default async function ScanResultPage({
     return <ScanMessage user={user} title="Invalid Customer" description="Invalid or unavailable loyalty QR." soundEffectsEnabled={scannerSoundEffectsEnabled} />;
   }
 
+  const scanAccess = await scanAccessFields();
   await prisma.$transaction([
     prisma.customerProgramMembership.update({
       where: { id: programMembership.id },
@@ -372,6 +375,7 @@ export default async function ScanResultPage({
         scanToken: token,
         result: "VALID",
         createdAt: scanTimestamp,
+        ...scanAccess,
       },
     }),
   ]);
