@@ -1,5 +1,6 @@
 import Link from "next/link";
 import HeroShowcase from "./_components/HeroShowcase";
+import { BrandLockup } from "@/components/BrandLogo";
 
 const stats = [
   { icon: "Secure", value: "Protected", label: "Role-based access" },
@@ -53,12 +54,8 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-white font-sans text-slate-800">
       <header className="flex min-w-0 items-center justify-between gap-3 border-b border-slate-100 px-4 py-4 sm:px-6 md:px-[52px]">
-        <Link href="/" className="flex min-w-0 items-center gap-3" aria-label="Loyalty Card UAE home">
-          <span className="relative flex h-[30px] w-[30px] shrink-0 items-center justify-center">
-            <span className="h-[26px] w-[26px] rotate-45 rounded-[7px] bg-orange-500" />
-            <span className="absolute h-2 w-2 rotate-45 rounded-[2px] bg-white" />
-          </span>
-          <span className="truncate text-[18px] font-extrabold tracking-tight sm:text-[23px]">Loyalty Card UAE</span>
+        <Link href="/" className="flex min-w-0 items-center" aria-label="Loyalty Card UAE home">
+          <BrandLockup className="h-10 w-auto sm:h-12" priority />
         </Link>
 
         <nav className="hidden gap-8 text-[15px] font-medium text-slate-700 lg:flex" aria-label="Primary navigation">
@@ -236,9 +233,8 @@ export default function HomePage() {
       <footer className="bg-slate-900 px-6 pb-10 pt-14 text-slate-300 md:px-[52px]">
         <div className="mb-10 grid gap-8 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
           <div>
-            <div className="mb-4 flex items-center gap-2.5">
-              <span className="h-[26px] w-[26px] rotate-45 rounded-[7px] bg-orange-500" />
-              <span className="text-xl font-extrabold text-white">Loyalty Card UAE</span>
+            <div className="mb-4">
+              <BrandLockup tone="light" className="h-12 w-auto" />
             </div>
             <p className="max-w-xs text-sm leading-relaxed text-slate-400">Digital loyalty cards, QR scanning, referrals, tiers, and operations tools for UAE and GCC local businesses.</p>
           </div>

@@ -10,6 +10,7 @@ import { roleHomePath } from "@/lib/roles";
 import { getCurrentUser } from "@/lib/session";
 import { canUseTwoFactor, countUnusedBackupCodes, createTwoFactorEnrollmentOffer, isTwoFactorConfigured } from "@/lib/two-factor";
 import { isTwoFactorRequiredForRole } from "@/lib/two-factor-policy";
+import { BrandLockup } from "@/components/BrandLogo";
 
 export default async function TwoFactorSetupPage() {
   // Uses getCurrentUser() rather than requireRole() for the same reason
@@ -43,9 +44,8 @@ export default async function TwoFactorSetupPage() {
   return (
     <main className="flex min-h-screen items-start justify-center bg-gradient-to-b from-orange-50/60 via-white to-white px-4 py-10 text-[#111827]">
       <section className="w-full max-w-2xl rounded-2xl border border-orange-100 bg-white p-6 shadow-xl shadow-orange-100/50">
-        <Link href="/" className="flex items-center gap-2" aria-label="Loyalty Card UAE homepage">
-          <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[#F97316] text-sm font-bold text-white">LC</span>
-          <span className="text-sm font-semibold">Loyalty Card UAE</span>
+        <Link href="/" className="inline-flex" aria-label="Loyalty Card UAE homepage">
+          <BrandLockup className="h-10 w-auto" priority />
         </Link>
 
         <div className="mt-8">

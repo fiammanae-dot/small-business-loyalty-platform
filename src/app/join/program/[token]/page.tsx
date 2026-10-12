@@ -6,6 +6,7 @@ import { RequiredMark } from "@/components/ui/RequiredMark";
 import { resolveBusinessBranding } from "@/lib/business-branding";
 import { getCardUrl } from "@/lib/customer-cards";
 import { prisma } from "@/lib/prisma";
+import { BrandMark } from "@/components/BrandLogo";
 
 export default async function ProgramJoinPage({
   params,
@@ -212,8 +213,8 @@ function JoinUnavailable({
   return (
     <main className="flex min-h-screen items-center justify-center bg-white px-4">
       <section className="w-full max-w-sm rounded-2xl border border-[#E5E7EB] bg-white p-6 text-center shadow-sm">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[#F8FAFC] text-sm font-bold text-[#111827]">
-          LC
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[#FAF7F2] text-[#141210]">
+          <BrandMark className="h-7 w-7" />
         </div>
         <h1 className="mt-5 text-2xl font-semibold text-[#111827]">{title}</h1>
         <p className="mt-3 text-sm leading-6 text-[#6B7280]">{message}</p>
