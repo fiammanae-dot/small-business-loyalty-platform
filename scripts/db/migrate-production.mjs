@@ -17,9 +17,9 @@
  *   node scripts/db/migrate-production.mjs --rolled-back <migration_name>
  * Only do that when the failed migration wrote nothing (or was undone).
  *
- * Add --direct if a run fails with P1001 on a "-pooler" host: `migrate deploy`
- * takes a session advisory lock, and a transaction-mode pooler cannot hold one.
- * --direct strips "-pooler" from the hostname to use Neon's direct endpoint.
+ * --apply always uses Neon's direct endpoint ("-pooler" stripped from the host):
+ * `migrate deploy` takes a session advisory lock, and a transaction-mode pooler
+ * cannot hold one (P1001 / P1002). --direct does the same for the dry run.
  *
  * Additive migrations should be applied BEFORE merging the code that needs
  * them: new nullable columns are invisible to the running app, so production
@@ -58,13 +58,17 @@ if (rolledBackIndex > -1 && !/^\d{4}_[a-z0-9_]+$/.test(rolledBack ?? "")) {
   console.error("--rolled-back needs the migration folder name, e.g. --rolled-back 0067_alert_policies_connected");
   process.exit(1);
 }
-const direct = process.argv.includes("--direct");
+// Applying always goes through Neon's direct endpoint: `migrate deploy` takes a
+// session advisory lock, which a transaction-mode pooler cannot hold (P1001 /
+// P1002 "timed out trying to acquire a postgres advisory lock"). The dry run
+// and --rolled-back keep the pooled host unless --direct is passed.
+const direct = process.argv.includes("--direct") || (apply && url.includes("-pooler."));
 
 // Neon's direct endpoint is the same host without "-pooler".
 const targetUrl = direct ? url.replace("-pooler.", ".") : url;
 const targetHost = new URL(targetUrl).hostname;
 
-if (direct && targetHost === host) {
+if (process.argv.includes("--direct") && targetHost === host) {
   console.error("--direct was passed but the host has no \"-pooler\" in it, so there is nothing to strip.");
   process.exit(1);
 }
@@ -98,6 +102,12 @@ if (rolledBack && result.status === 0) {
 // P1001 means the connection never opened, so nothing was written and a retry
 // is always safe. On Neon that is usually a suspended compute; if a retry does
 // not fix it, the pooled endpoint cannot hold the advisory lock deploy needs.
+if (result.status !== 0 && direct) {
+  console.log("");
+  console.log("If that failed with P1001 or P1002, nothing was written. Retry once - a");
+  console.log("suspended Neon compute usually answers on the second attempt.");
+}
+
 if (result.status !== 0 && !direct && targetHost.includes("-pooler.")) {
   console.log("");
   console.log("If that failed with P1001, nothing was written. Retry once - a suspended");
