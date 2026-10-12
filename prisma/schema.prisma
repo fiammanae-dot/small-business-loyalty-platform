@@ -413,6 +413,7 @@ model User {
   branch                     Branch?                      @relation(fields: [branchId], references: [id])
   createdCustomerMemberships BusinessCustomerMembership[]
   scanEvents                 ScanEvent[]
+  loginEvents                LoginEvent[]
   stampTransactions          StampTransaction[]
   rewardRedemptions          RewardRedemption[]
   activityAlerts             ActivityAlert[]              @relation("ActivityAlertUser")
@@ -476,6 +477,29 @@ model TwoFactorBackupCode {
   @@unique([userId, codeHash])
   @@index([userId, usedAt])
   @@map("two_factor_backup_codes")
+}
+
+/// One row per successful sign-in: who, which device and where from. Used for
+/// plan compliance (the same login used in two places) and account security.
+model LoginEvent {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  businessId  Int?     @map("business_id")
+  branchId    Int?     @map("branch_id")
+  deviceId    String?  @map("device_id")
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  ipCity      String?  @map("ip_city")
+  ipCountry   String?  @map("ip_country")
+  ipLatitude  Float?   @map("ip_latitude")
+  ipLongitude Float?   @map("ip_longitude")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([businessId, createdAt])
+  @@map("login_events")
 }
 
 model FailedLoginAudit {
@@ -661,6 +685,8 @@ model SubscriptionPlan {
   annualPrice         Decimal  @map("annual_price") @db.Decimal(10, 2)
   maxBranches         Int      @map("max_branches")
   maxLoyaltyPrograms  Int      @map("max_loyalty_programs")
+  /// Active Staff + Branch Manager logins a business may have (the owner is not counted).
+  maxStaff            Int      @default(3) @map("max_staff")
   billingCycleSupport Json     @map("billing_cycle_support")
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @updatedAt @map("updated_at")
@@ -1340,6 +1366,15 @@ model ScanEvent {
   scanToken                   String          @map("scan_token")
   result                      ScanEventResult
   createdAt                   DateTime        @default(now()) @map("created_at")
+  /// Where the scan came from, for plan compliance (one branch used in two shops):
+  /// the browser's device id cookie, its network and the city its IP maps to.
+  deviceId                    String?         @map("device_id")
+  ipAddress                   String?         @map("ip_address")
+  userAgent                   String?         @map("user_agent")
+  ipCity                      String?         @map("ip_city")
+  ipCountry                   String?         @map("ip_country")
+  ipLatitude                  Float?          @map("ip_latitude")
+  ipLongitude                 Float?          @map("ip_longitude")
 
   business                  Business                   @relation(fields: [businessId], references: [id], onDelete: Cascade)
   branch                    Branch?                    @relation(fields: [branchId], references: [id])
@@ -1352,6 +1387,7 @@ model ScanEvent {
   @@index([customerProgramMembershipId])
   @@index([scanToken])
   @@index([businessId, createdAt])
+  @@index([businessId, deviceId])
   @@map("scan_events")
 }
 

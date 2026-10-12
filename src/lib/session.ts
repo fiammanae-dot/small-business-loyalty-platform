@@ -5,6 +5,7 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { RecordStatus, UserRole } from "@prisma/client";
+import { recordLoginEvent } from "@/lib/access-trail";
 import { devFallbackUser, isDevAuthFallbackEnabled } from "@/lib/dev-auth";
 import { attachMonitoringContext } from "@/lib/monitoring";
 import { getTwoFactorRequirement } from "@/lib/platform-settings";
@@ -114,6 +115,8 @@ export async function createSession(user: { id: number; role: UserRole }) {
     path: "/",
     maxAge: SESSION_TTL_SECONDS,
   });
+  // Which device, network and city this sign-in came from (plan compliance).
+  await recordLoginEvent(user.id);
 }
 
 export async function destroySession() {
