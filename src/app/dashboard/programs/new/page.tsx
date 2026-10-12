@@ -99,7 +99,7 @@ export default async function NewProgramPage({
           csrfToken={createCsrfToken("dashboard:programs")}
           initialDesign={{ layoutStyle: defaultCardDesign.layoutStyle, stampIcon: defaultCardDesign.stampIcon }}
           stampIconOptions={stampIconOptions}
-          membershipsEnabled={business.membershipSettings?.enabled ?? false}
+          membershipsEnabled
           lockedType={lockedType}
         />
       </section>

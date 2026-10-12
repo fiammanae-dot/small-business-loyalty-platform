@@ -163,7 +163,9 @@ export async function enforceStampCooldown({
       })
     : 0;
 
-  if (rule?.generateAlert !== false && breaksRule.enabled && breaksIn24h >= breaksRule.threshold) {
+  // On/off lives in Settings > Alert policies ("Loyalty rule breaks"); the old
+  // per-cooldown "Generate alerts" checkbox duplicated it and is gone.
+  if (breaksRule.enabled && breaksIn24h >= breaksRule.threshold) {
     for (const violation of violations) {
       await createAbuseAlert({
         tx,

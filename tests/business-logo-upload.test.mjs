@@ -96,7 +96,6 @@ test("the shared logo avatar falls back to initials on missing or broken images 
     "src/components/BusinessForm.tsx",
     "src/components/BusinessLogoUploadField.tsx",
     "src/app/dashboard/page.tsx",
-    "src/app/dashboard/settings/page.tsx",
     "src/app/referral/[code]/page.tsx",
   ]) {
     assert.match(read(consumer), /BusinessLogoAvatar/, `${consumer} must use the shared logo fallback component`);

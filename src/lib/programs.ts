@@ -1,4 +1,5 @@
 import "server-only";
+import { prisma } from "@/lib/prisma";
 import { STAMP_ICONS } from "@/lib/wallet/stamp-icons";
 import { businessTypeValues } from "@/lib/roles";
 
@@ -190,3 +191,13 @@ export function programCustomerStatusLabel({
   return "Active";
 }
 
+
+/**
+ * A business "sells packages" once it has a package (membership) program.
+ * This replaces the old Settings switch: the package wording on the programs
+ * and customer pages now follows what the business actually offers.
+ */
+export async function businessSellsPackages(businessId: number) {
+  const count = await prisma.loyaltyProgram.count({ where: { businessId, isMembership: true } });
+  return count > 0;
+}

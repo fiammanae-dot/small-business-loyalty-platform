@@ -15,15 +15,31 @@ test("business owner settings page uses Business Control Center structure", () =
     "Business Settings",
     "Manage your business configuration, preferences and security.",
     "Business Profile",
-    "Security",
-    "Notifications",
-    "Branding",
-    "Preferences",
-    "Integrations",
-    "Advanced",
-    "Danger Zone",
+    "Login security",
+    "Support Access Policy",
+    "Channels",
+    "Stamp limits",
+    "Alert policies",
+    "Packages",
+    "Cashback",
   ]) {
     assert.ok(page.includes(expected), `Missing settings center text: ${expected}`);
+  }
+  // The clean-up removed repeated and placeholder-only sections.
+  for (const removed of [
+    "function BrandingSection",
+    "function PreferencesSection",
+    "function NotificationsSection",
+    "function CommunicationsSection",
+    "function IntegrationsSection",
+    "function AdvancedSection",
+    "function MembershipsSection",
+    "Not available in this pilot",
+    "No login recorded",
+    "Tier calculation method",
+    'name="generateAlert"',
+  ]) {
+    assert.ok(!page.includes(removed), `Removed settings item is back: ${removed}`);
   }
 });
 

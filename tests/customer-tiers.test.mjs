@@ -83,15 +83,15 @@ test("business owner settings expose visit-only window and maintenance settings 
   const actions = read("src/app/dashboard/actions.ts");
 
   assert.match(settings, /Customer tiers/);
-  assert.match(settings, /visit-based Bronze, Silver, Gold, and VIP/);
-  assert.match(settings, /Tier calculation method/);
+  assert.match(settings, /Bronze to Silver, Gold and VIP by number of visits/);
+  // The greyed-out one-option "Tier calculation method" dropdown is gone (visits only).
+  assert.doesNotMatch(settings, /Tier calculation method/);
   assert.match(settings, /Qualification window/);
   assert.match(settings, /Maintenance mode/);
   assert.match(settings, /Silver visit requirement/);
   assert.match(settings, /Gold visit requirement/);
   assert.match(settings, /VIP visit requirement/);
   assert.match(settings, /Silver: \{tierConfig\.silverVisitRequirement\} visits/);
-  assert.match(settings, /Tiers are available on every plan/);
   assert.doesNotMatch(settings, /spend threshold/);
   assert.doesNotMatch(settings, /Tier system disabled on Starter/);
   assert.match(actions, /saveCustomerTierSettingsAction/);

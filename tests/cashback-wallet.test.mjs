@@ -131,9 +131,13 @@ test("owner settings manage the rate and the caps (blank = no limit)", () => {
   const actions = read("src/app/dashboard/actions.ts");
   assert.match(actions, /parseOptionalCapAmount/);
   assert.match(actions, /blank clears the cap/);
+  // One place to edit cashback: the cashback program. Settings links to it.
+  const form = read("src/components/CashbackSetupForm.tsx");
+  assert.match(form, /name="maxBillAmount"/);
+  assert.match(form, /name="maxRedemption"/);
   const settings = read("src/app/dashboard/settings/page.tsx");
-  assert.match(settings, /name="maxBillAmount"/);
-  assert.match(settings, /name="maxRedemption"/);
+  assert.match(settings, /href="\/dashboard\/programs\/new\?type=cashback"/);
+  assert.doesNotMatch(settings, /name="maxBillAmount"/);
 });
 
 test("scan page shows the wallet (gated) with a confirmation on spend", () => {

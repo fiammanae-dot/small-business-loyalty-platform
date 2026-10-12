@@ -39,7 +39,7 @@ import { getGoogleWalletStatus } from "@/lib/google-wallet/service";
 import { formatUaePhoneDisplay } from "@/lib/phone";
 import { formatPlateDisplay, formatVehicleDescription, vehicleSizeLabels } from "@/lib/vehicles";
 import { prisma } from "@/lib/prisma";
-import { progressValue } from "@/lib/programs";
+import { progressValue, businessSellsPackages } from "@/lib/programs";
 import { membershipSessionSummary } from "@/lib/membership-sessions";
 import { getScanQrDataUrl, getScanUrl, scanStatusLabel } from "@/lib/scan";
 import { RequiredMark } from "@/components/ui/RequiredMark";
@@ -352,7 +352,7 @@ export default async function CustomerProfilePage({
   // Cashback is a program like any other, so a member counts in the totals.
   const inCashback = cashbackEnabled && isCashbackMember(membership);
   const hasPackage = membership.programMemberships.some((programMembership) => programMembership.loyaltyProgram.isMembership);
-  const membershipMode = Boolean(business.membershipSettings?.enabled);
+  const membershipMode = await businessSellsPackages(business.id);
   const referralStatus = membership.referralCode ? "ACTIVE" : "NOT_CONFIGURED";
 return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Customer 360">

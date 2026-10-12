@@ -45,7 +45,7 @@ test("highest-risk business owner actions require confirmation", () => {
   assert.match(programPage, /Disable this loyalty program\? Customers will no longer earn stamps for it\./);
   assert.match(branchesPage, /Disable this branch\? Branch staff and scanner activity may be restricted\./);
   assert.match(staffPage, /Disable this user\? They will lose access to the business workspace\./);
-  assert.match(settingsPage, /Save cooldown policy\? This affects future stamp issuance limits\./);
+  assert.match(settingsPage, /Save stamp limits\? They apply to the next stamp staff add\./);
 });
 
 test("highest-risk System Administrator actions require confirmation", () => {

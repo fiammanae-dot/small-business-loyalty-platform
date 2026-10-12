@@ -18,7 +18,8 @@ test("programCustomerStatusLabel never says Reward Ready for a membership", () =
 
 test("the programs list drops reward tiles/filter and counts for memberships", () => {
   const p = read("src/app/dashboard/programs/page.tsx");
-  assert.match(p, /const membershipMode = Boolean\(business\.membershipSettings\?\.enabled\)/);
+  // Package wording follows whether the business has a package (no settings switch).
+  assert.match(p, /const membershipMode = await businessSellsPackages\(business\.id\)/);
   assert.match(p, /const rewardReadyCount = program\.isMembership\s*\?\s*0/);
   assert.match(p, /\{membershipMode \? null : \(\s*<MetricCard label="Reward Ready Customers"/s);
   assert.match(p, /\{membershipMode \? "Package" : "Reward"\}/);

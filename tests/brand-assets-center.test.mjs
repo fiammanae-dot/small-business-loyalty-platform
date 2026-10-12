@@ -14,7 +14,8 @@ test("brand assets center lives under business settings with its own category", 
   assert.match(page, /<BrandAssetsCenter/);
   assert.match(page, /CsrfInput scope="dashboard:brand-assets"/);
   assert.match(page, /branding: "brand"/, "the old ?tab=branding deep link must land on the Brand Assets tab");
-  assert.match(page, /Open Brand Assets/, "the General tab points to Brand Assets instead of duplicating the settings");
+  // The General tab no longer repeats the logo and colours; they live only in Brand Assets.
+  assert.doesNotMatch(page, /function BrandingSection/);
   assert.doesNotMatch(page, /function ColorItem/, "the read-only color list is replaced by the editable center");
 });
 
@@ -27,10 +28,8 @@ test("brand assets center reuses the existing logo upload and avatar systems", (
   assert.match(center, /type="color"/, "real color pickers");
   assert.match(center, /pattern="\^#\[0-9A-Fa-f\]\{6\}\$"/, "hex value inputs");
   assert.match(center, /lg:sticky lg:top-6/, "live preview panel is sticky on desktop");
-  assert.match(center, /Coming Soon/);
-  for (const asset of ["Light Logo", "Dark Logo", "Email Logo", "Website Favicon", "Business Cover Image"]) {
-    assert.match(center, new RegExp(asset), `future asset placeholder: ${asset}`);
-  }
+  // "Coming soon" placeholders were removed: only working settings are shown.
+  assert.doesNotMatch(center, /Coming Soon/);
 });
 
 test("brand assets stay business identity only - no Design Studio program settings", () => {
