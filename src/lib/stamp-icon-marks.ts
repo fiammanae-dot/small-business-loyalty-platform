@@ -55,6 +55,19 @@ export const stampEmojiMarks: Record<CardDesignStampIcon, string> = {
   DAISY: "\u{1F33C}",
   HYACINTH: "\u{1FABB}",
   BOUQUET: "\u{1F490}",
+  PERFUME_BOTTLE: "\u{1F9F4}",
+  OUD_WOOD: "\u{1FAB5}",
+  OIL_LAMP: "\u{1FA94}",
+  CANDLE: "\u{1F56F}\uFE0F",
+  SCENT: "\u{1F4A8}",
+  AMPHORA: "\u{1F3FA}",
+  HERBS: "\u{1F33F}",
+  LEAVES: "\u{1F343}",
+  CRESCENT_MOON: "\u{1F319}",
+  PALM_TREE: "\u{1F334}",
+  RIBBON: "\u{1F380}",
+  SHOPPING_BAGS: "\u{1F6CD}\uFE0F",
+  JAR: "\u{1FAD9}",
 };
 
 export function getStampEmoji(stampIcon: CardDesignStampIcon) {

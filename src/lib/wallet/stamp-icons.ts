@@ -263,6 +263,66 @@ export const STAMP_ICONS: StampIcon[] = [
     "emoji": "🪻",
     "label": "Hyacinth",
     "file": "1fabb"
+  },
+  {
+    "emoji": "🪵",
+    "label": "Oud wood",
+    "file": "1fab5"
+  },
+  {
+    "emoji": "🪔",
+    "label": "Oil lamp",
+    "file": "1fa94"
+  },
+  {
+    "emoji": "🕯️",
+    "label": "Candle",
+    "file": "1f56f-fe0f"
+  },
+  {
+    "emoji": "💨",
+    "label": "Scent",
+    "file": "1f4a8"
+  },
+  {
+    "emoji": "🏺",
+    "label": "Amphora",
+    "file": "1f3fa"
+  },
+  {
+    "emoji": "🌿",
+    "label": "Herbs",
+    "file": "1f33f"
+  },
+  {
+    "emoji": "🍃",
+    "label": "Leaves",
+    "file": "1f343"
+  },
+  {
+    "emoji": "🌙",
+    "label": "Crescent moon",
+    "file": "1f319"
+  },
+  {
+    "emoji": "🌴",
+    "label": "Palm tree",
+    "file": "1f334"
+  },
+  {
+    "emoji": "🎀",
+    "label": "Ribbon",
+    "file": "1f380"
+  },
+  {
+    "emoji": "🛍️",
+    "label": "Shopping bags",
+    "file": "1f6cd-fe0f"
+  },
+  {
+    "emoji": "🫙",
+    "label": "Jar",
+    "file": "1fad9"
   }
 ];
 
