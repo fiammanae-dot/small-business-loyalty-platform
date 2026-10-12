@@ -17,7 +17,8 @@ export const beautySalonStampIcons = ["LIPSTICK", "MIRROR", "MAKEUP_BRUSH", "NAI
 // Flowers, for florists, spas and any business whose packages are named after a flower.
 export const flowerStampIcons = ["TULIP", "ROSE", "WATER_LILY", "HIBISCUS", "CHERRY_BLOSSOM", "SUNFLOWER", "DAISY", "HYACINTH", "BOUQUET"] as const;
 export const fragranceStampIcons = ["PERFUME_BOTTLE", "OUD_WOOD", "OIL_LAMP", "CANDLE", "SCENT", "AMPHORA", "HERBS", "LEAVES", "CRESCENT_MOON", "PALM_TREE", "RIBBON", "SHOPPING_BAGS", "JAR"] as const;
-export const clinicStampIcons = ["SPARKLE", "GEM", "STAR", "CHECK", "HEART"] as const;
+export const medicalStampIcons = ["SYRINGE", "PILL", "STETHOSCOPE", "BANDAGE", "TOOTH", "DNA", "MICROSCOPE", "TEST_TUBE", "CLINIC", "MEDICAL_SYMBOL", "MENDING_HEART", "SPARKLING_HEART", "LASER", "SUN", "SPONGE", "SOAP", "BATHTUB", "FACE_MASSAGE", "LIPS", "EYE", "SAUNA", "THERMOMETER", "DOCTOR", "WOMAN_DOCTOR", "YOGA", "GLOWING_STAR"] as const;
+export const clinicStampIcons = ["SPARKLE", "GEM", "SYRINGE", "SPARKLING_HEART", "FACE_MASSAGE", "LIPS", "LASER", "TOOTH", "STAR", "CHECK", "HEART"] as const;
 export const stampIcons = [
   ...generalStampIcons,
   ...barbershopStampIcons,
@@ -27,6 +28,7 @@ export const stampIcons = [
   ...beautySalonStampIcons,
   ...flowerStampIcons,
   ...fragranceStampIcons,
+  ...medicalStampIcons,
 ] as const;
 export type CardDesignStampIcon = (typeof stampIcons)[number];
 export type CardDesignProgressStyle = "linear";
