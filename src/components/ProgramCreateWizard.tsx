@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { ProgramMilestonesField, type MilestoneDraft } from "@/components/ProgramMilestonesField";
 import { WalletCardPictureField } from "@/components/WalletCardPictureField";
+import { PackageRulesFields } from "@/components/PackageRulesFields";
 import type { BusinessType, CardTheme, StartingStampPolicy } from "@prisma/client";
 import type { CardDesignLayoutStyle, CardDesignStampIcon } from "@/lib/card-design";
 import { buildProgramPassView, walletColourLayoutStyle, walletPreviewDesign } from "@/lib/wallet-pass-view";
@@ -136,7 +137,18 @@ export function ProgramCreateWizard({
   }
 
   return (
-    <form ref={wizardRef} action={action} className="grid gap-6">
+    <form
+      ref={wizardRef}
+      action={action}
+      onSubmit={(event) => {
+        // Only step 2 may create the program. The step buttons carry distinct
+        // keys so React does not turn the clicked "Continue" button into the
+        // "Create" submit button mid-click (which used to create the program
+        // straight from step 1); this guard also stops Enter in a step-1 field.
+        if (step !== 2) event.preventDefault();
+      }}
+      className="grid gap-6"
+    >
       <input type="hidden" name={csrfName} value={csrfToken} />
       <input type="hidden" name="cardTheme" value={defaults.cardTheme ?? "BUSINESS_DEFAULT"} />
       <input type="hidden" name="layoutStyle" value={layoutStyle} />
@@ -213,6 +225,12 @@ export function ProgramCreateWizard({
                 <textarea name="membershipBenefits" rows={4} placeholder="Priority booking&#10;Exclusive member pricing&#10;Complimentary consultation" className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none business-ring focus:ring-0" />
               </label>
             </div>
+          </SectionCard>
+        ) : null}
+
+        {isMembership ? (
+          <SectionCard title="Package rules" description="Expiry, visits per month and treatment repeats. You can change these later on the program page.">
+            <PackageRulesFields />
           </SectionCard>
         ) : null}
 
@@ -315,16 +333,16 @@ export function ProgramCreateWizard({
         {step === 1 ? (
           <>
             <span className="hidden text-xs text-[#9CA3AF] sm:block">Nothing is created until you finish card design.</span>
-            <Button type="button" variant="business" onClick={() => goToStep(2)} rightIcon={<ArrowRight className="h-4 w-4" aria-hidden />} className="ml-auto">
+            <Button key="program-continue" type="button" variant="business" onClick={(event) => { event.preventDefault(); goToStep(2); }} rightIcon={<ArrowRight className="h-4 w-4" aria-hidden />} className="ml-auto">
               Continue to card design
             </Button>
           </>
         ) : (
           <>
-            <Button type="button" variant="outline" onClick={() => goToStep(1)} leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden />}>
+            <Button key="program-back" type="button" variant="outline" onClick={() => goToStep(1)} leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden />}>
               Back
             </Button>
-            <Button type="submit" variant="business" leftIcon={<Check className="h-4 w-4" aria-hidden />}>
+            <Button key="program-create" type="submit" variant="business" leftIcon={<Check className="h-4 w-4" aria-hidden />}>
               {submitLabel}
             </Button>
           </>

@@ -1,7 +1,8 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { logAuditEvent } from "@/lib/audit";
-import { computeMembershipForfeit } from "@/lib/membership-sessions";
+import { computeFixedTermForfeit, computeMembershipForfeit } from "@/lib/membership-sessions";
+import { getPackageVisits } from "@/lib/package-visits";
 import { prisma } from "@/lib/prisma";
 import { syncGoogleWalletObjectAfterLoyaltyChange } from "@/lib/google-wallet/service";
 import { syncAppleWalletPassSafe } from "@/lib/walletwallet/service";
@@ -76,7 +77,9 @@ export async function GET(request: NextRequest) {
         bonusStamps: true,
         sessionsForfeited: true,
         forfeitCyclesProcessed: true,
-        loyaltyProgram: { select: { requiredStamps: true, name: true, businessId: true } },
+        loyaltyProgram: {
+          select: { requiredStamps: true, name: true, businessId: true, packageValidity: true, packageTermMonths: true },
+        },
       },
       orderBy: { id: "asc" },
       take: MEMBERSHIP_BATCH_SIZE,
@@ -97,34 +100,43 @@ export async function GET(request: NextRequest) {
         // once every cycle has already been evaluated.
         if (enrollment.forfeitCyclesProcessed >= requiredStamps) continue;
 
-        const [allVisits, undoEvents] = await Promise.all([
-          prisma.stampTransaction.findMany({
-            where: { customerProgramMembershipId: enrollment.id },
-            select: { id: true, createdAt: true },
-          }),
-          prisma.auditEvent.findMany({
-            where: { action: "STAMP_UNDONE", entityType: "customer_program_membership", entityId: String(enrollment.id) },
-            select: { metadata: true },
-          }),
-        ]);
-        // An undone visit never happened: it must not keep a month "visited".
-        const undoneIds = new Set(
-          undoEvents
-            .map((event) => Number((event.metadata as { originalStampTransactionId?: unknown } | null)?.originalStampTransactionId))
-            .filter((id) => Number.isFinite(id)),
-        );
-        const visits = allVisits.filter((visit) => !undoneIds.has(visit.id));
+        const program = enrollment.loyaltyProgram;
+        // Lifetime packages never lose visits.
+        if (program.packageValidity === "LIFETIME") continue;
 
-        const result = computeMembershipForfeit({
-          enrolledAt: enrollment.enrolledAt,
-          now,
-          requiredStamps,
-          earnedStamps: enrollment.earnedStamps,
-          bonusStamps: enrollment.bonusStamps,
-          sessionsForfeited: enrollment.sessionsForfeited,
-          forfeitCyclesProcessed: enrollment.forfeitCyclesProcessed,
-          visitTimestamps: visits.map((visit) => visit.createdAt),
-        });
+        let result: { newSessionsForfeited: number; newForfeitCyclesProcessed: number; forfeitedThisRun: number };
+        if (program.packageValidity === "FIXED_TERM") {
+          // Everything left expires at once on the end date.
+          const fixed = computeFixedTermForfeit({
+            enrolledAt: enrollment.enrolledAt,
+            now,
+            termMonths: program.packageTermMonths ?? 0,
+            requiredStamps,
+            earnedStamps: enrollment.earnedStamps,
+            bonusStamps: enrollment.bonusStamps,
+            sessionsForfeited: enrollment.sessionsForfeited,
+          });
+          if (!fixed.expired) continue;
+          result = {
+            newSessionsForfeited: fixed.newSessionsForfeited,
+            // Marks the term as fully processed so it is not looked at again.
+            newForfeitCyclesProcessed: requiredStamps,
+            forfeitedThisRun: fixed.forfeitedThisRun,
+          };
+        } else {
+          // An undone visit never happened: it must not keep a month "visited".
+          const visits = await getPackageVisits(prisma, enrollment.id);
+          result = computeMembershipForfeit({
+            enrolledAt: enrollment.enrolledAt,
+            now,
+            requiredStamps,
+            earnedStamps: enrollment.earnedStamps,
+            bonusStamps: enrollment.bonusStamps,
+            sessionsForfeited: enrollment.sessionsForfeited,
+            forfeitCyclesProcessed: enrollment.forfeitCyclesProcessed,
+            visitTimestamps: visits.map((visit) => visit.createdAt),
+          });
+        }
 
         const cyclesChanged = result.newForfeitCyclesProcessed !== enrollment.forfeitCyclesProcessed;
         const forfeitChanged = result.newSessionsForfeited !== enrollment.sessionsForfeited;
@@ -149,6 +161,7 @@ export async function GET(request: NextRequest) {
               entityId: enrollment.id,
               metadata: {
                 programName: enrollment.loyaltyProgram.name,
+                rule: enrollment.loyaltyProgram.packageValidity,
                 forfeitedThisRun: result.forfeitedThisRun,
                 sessionsForfeited: result.newSessionsForfeited,
                 forfeitCyclesProcessed: result.newForfeitCyclesProcessed,

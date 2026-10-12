@@ -22,6 +22,7 @@ import {
   type ProgramRewardRow,
 } from "@/lib/program-rewards";
 import { generateScanToken } from "@/lib/scan";
+import { parsePackageRulesForm } from "@/lib/package-rules-form";
 import { commerciallyUsableStatuses, limitReachedMessage, programsUsedTowardLimit } from "@/lib/subscriptions";
 import { stampEmojiForDesign } from "@/lib/stamp-icon-marks";
 import { summarizeWalletSyncForUser, syncWalletProvidersForProgram } from "@/lib/wallet-sync";
@@ -176,6 +177,17 @@ export async function createProgramAction(formData: FormData) {
     : parsed.data.rewardDescription;
   const milestones = parsed.data.isMembership ? [] : milestonesFromForm(formData, parsed.data.requiredStamps, path);
 
+  // Package rules: expiry, visits per month and treatment repeats.
+  let packageRules = null as Extract<ReturnType<typeof parsePackageRulesForm>, { ok: true }>["rules"] | null;
+  if (parsed.data.isMembership) {
+    const rules = parsePackageRulesForm(formData, {
+      includedVisits: parsed.data.requiredStamps,
+      treatmentCount: new Set(parsed.data.membershipTreatments.map((name) => name.toLowerCase())).size,
+    });
+    if (!rules.ok) fail(path, rules.message);
+    packageRules = rules.rules;
+  }
+
   const program = await prisma.$transaction(async (tx) => {
     const created = await tx.loyaltyProgram.create({
     data: {
@@ -200,6 +212,7 @@ export async function createProgramAction(formData: FormData) {
       isMembership: parsed.data.isMembership,
       priceAmount: parsed.data.isMembership ? parsed.data.priceAmount ?? null : null,
       membershipBenefits: parsed.data.isMembership ? parsed.data.membershipBenefits : [],
+      ...(packageRules ?? {}),
       cardDesign: cardDesign as unknown as Prisma.InputJsonValue,
       cardTheme: getCardThemeForDesignStudioTemplate(parsedDesign.data.layoutStyle),
     },
@@ -247,7 +260,7 @@ export async function createProgramAction(formData: FormData) {
     action: "PROGRAM_CREATED",
     entityType: "loyalty_program",
     entityId: program.uuid,
-    metadata: { active: parsed.data.active, requiredStamps: parsed.data.requiredStamps },
+    metadata: { active: parsed.data.active, requiredStamps: parsed.data.requiredStamps, ...(packageRules ?? {}) },
   });
 
   enqueueWalletSync({ programId: program.id, programUuid: program.uuid, businessId: user.businessId, trigger: "program-created" });
@@ -619,3 +632,51 @@ export async function enrollCustomerInProgramAction(formData: FormData) {
   redirect(`${path}?success=Customer enrolled.`);
 }
 
+
+/** Change a package's rules from its program page (expiry, visits a month, treatment repeats). */
+export async function updatePackageRulesAction(formData: FormData) {
+  validateActionSecurity(formData, "dashboard:package-rules", "/dashboard/programs");
+  const user = await requireBusinessOwner();
+  const uuid = getString(formData, "programUuid");
+  const path = `/dashboard/programs/${uuid}`;
+  const program = await prisma.loyaltyProgram.findFirst({
+    where: { uuid, businessId: user.businessId, isMembership: true },
+    select: {
+      id: true,
+      requiredStamps: true,
+      packageValidity: true,
+      packageTermMonths: true,
+      packageOneVisitPerMonth: true,
+      packageUniqueTreatments: true,
+      membershipTreatments: { where: { active: true }, select: { name: true } },
+    },
+  });
+  if (!program) fail("/dashboard/programs", "Package not found.");
+
+  const rules = parsePackageRulesForm(formData, {
+    includedVisits: program.requiredStamps,
+    treatmentCount: new Set(program.membershipTreatments.map((treatment) => treatment.name.toLowerCase())).size,
+  });
+  if (!rules.ok) fail(path, rules.message);
+
+  await prisma.loyaltyProgram.update({ where: { id: program.id }, data: rules.rules });
+  await logAuditEvent({
+    actorUserId: user.id,
+    businessId: user.businessId,
+    action: "PACKAGE_RULES_UPDATED",
+    entityType: "loyalty_program",
+    entityId: program.id,
+    metadata: {
+      before: {
+        packageValidity: program.packageValidity,
+        packageTermMonths: program.packageTermMonths,
+        packageOneVisitPerMonth: program.packageOneVisitPerMonth,
+        packageUniqueTreatments: program.packageUniqueTreatments,
+      },
+      after: rules.rules,
+    },
+  });
+
+  revalidatePath(path);
+  redirect(`${path}?success=Package rules saved.`);
+}

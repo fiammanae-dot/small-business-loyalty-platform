@@ -34,7 +34,7 @@ test("the render model treats a membership as a depleting card with no reward", 
 
 test("the public card page feeds membership sessions into the model", () => {
   const page = read("src/app/card/[token]/page.tsx");
-  assert.match(page, /import \{ membershipSessionSummary \} from "@\/lib\/membership-sessions"/);
+  assert.match(page, /import \{[^}]*membershipSessionSummary[^}]*\} from "@\/lib\/membership-sessions"/);
   // Membership branch computes the session summary and counts down.
   assert.match(page, /const summary = membershipSessionSummary\(\{/);
   assert.match(page, /sessionsForfeited: programMembership\.sessionsForfeited/);

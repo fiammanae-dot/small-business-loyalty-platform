@@ -110,3 +110,71 @@ export function computeMembershipForfeit(input: {
     forfeitedThisRun,
   };
 }
+
+export type PackageValidityValue = "LIFETIME" | "MONTHLY_FORFEIT" | "FIXED_TERM";
+
+export type PackageRules = {
+  packageValidity: PackageValidityValue;
+  packageTermMonths: number | null;
+  packageOneVisitPerMonth: boolean;
+  packageUniqueTreatments: boolean;
+};
+
+/**
+ * The package month that contains `now`. Package months run from the join (or
+ * renewal) date, the same months the monthly expiry uses: joined 10 Jan means
+ * 10 Jan - 10 Feb, 10 Feb - 10 Mar, and so on.
+ */
+export function packageMonthWindow(enrolledAt: Date, now: Date): { start: Date; end: Date } {
+  let k = 0;
+  // A package lasts at most a few years; the bound only guards bad data.
+  while (k < 600 && addMonths(enrolledAt, k + 1) <= now) k += 1;
+  return { start: addMonths(enrolledAt, k), end: addMonths(enrolledAt, k + 1) };
+}
+
+/** When every unused visit expires, or null when the package has no end date. */
+export function packageExpiresAt(rules: Pick<PackageRules, "packageValidity" | "packageTermMonths">, enrolledAt: Date): Date | null {
+  if (rules.packageValidity !== "FIXED_TERM" || !rules.packageTermMonths || rules.packageTermMonths < 1) return null;
+  return addMonths(enrolledAt, rules.packageTermMonths);
+}
+
+export function isPackageExpired(rules: Pick<PackageRules, "packageValidity" | "packageTermMonths">, enrolledAt: Date, now: Date) {
+  const expiresAt = packageExpiresAt(rules, enrolledAt);
+  return expiresAt !== null && now >= expiresAt;
+}
+
+/**
+ * Fixed-term expiry: once the term has passed, every visit still left is
+ * forfeited in one go. Returns the new forfeited count (unchanged before the
+ * end date or when nothing is left).
+ */
+export function computeFixedTermForfeit(input: {
+  enrolledAt: Date;
+  now: Date;
+  termMonths: number;
+  requiredStamps: number;
+  earnedStamps: number;
+  bonusStamps?: number;
+  sessionsForfeited: number;
+}): { newSessionsForfeited: number; forfeitedThisRun: number; expired: boolean } {
+  const expired = input.termMonths >= 1 && input.now >= addMonths(input.enrolledAt, input.termMonths);
+  const used = input.earnedStamps + (input.bonusStamps ?? 0);
+  const remaining = Math.max(0, input.requiredStamps - used - input.sessionsForfeited);
+  if (!expired || remaining === 0) {
+    return { newSessionsForfeited: input.sessionsForfeited, forfeitedThisRun: 0, expired };
+  }
+  return { newSessionsForfeited: input.sessionsForfeited + remaining, forfeitedThisRun: remaining, expired };
+}
+
+/** One plain sentence per rule, for the owner, staff and customer screens. */
+export function describePackageRules(rules: PackageRules): string[] {
+  const lines: string[] = [];
+  if (rules.packageValidity === "LIFETIME") lines.push("Lifetime - visits never expire.");
+  else if (rules.packageValidity === "FIXED_TERM") {
+    const months = rules.packageTermMonths ?? 0;
+    lines.push(`Expires ${months} month${months === 1 ? "" : "s"} after joining - unused visits are lost.`);
+  } else lines.push("Loses 1 visit for each month without a visit.");
+  lines.push(rules.packageOneVisitPerMonth ? "One visit per month." : "More than one visit a month allowed.");
+  lines.push(rules.packageUniqueTreatments ? "Each treatment can be used only once." : "Treatments can be repeated.");
+  return lines;
+}

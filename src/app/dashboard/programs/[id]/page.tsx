@@ -23,7 +23,9 @@ import { getProgramJoinQrDataUrl, getProgramJoinUrl } from "@/lib/program-join";
 import { progressValue, programCustomerStatusLabel, startingStampPolicyLabel } from "@/lib/programs";
 import { businessTypeLabels } from "@/lib/roles";
 import { prisma } from "@/lib/prisma";
-import { toggleProgramAction } from "@/app/dashboard/programs/actions";
+import { toggleProgramAction, updatePackageRulesAction } from "@/app/dashboard/programs/actions";
+import { PackageRulesFields } from "@/components/PackageRulesFields";
+import { describePackageRules } from "@/lib/membership-sessions";
 
 export default async function ProgramDetailPage({
   params,
@@ -175,6 +177,33 @@ export default async function ProgramDetailPage({
                 </ButtonLink>
               </div>
             </SectionCard>
+
+            {isMembership ? (
+              <SectionCard title="Package rules" description="How visits expire, how often the customer can come, and whether treatments can repeat.">
+                <ul className="mb-4 grid gap-1 rounded-lg border border-[#E5E7EB] bg-[#F9FAFB] p-3 text-sm text-[#334155]">
+                  {describePackageRules(program).map((line) => (
+                    <li key={line}>&bull; {line}</li>
+                  ))}
+                </ul>
+                <details>
+                  <summary className="cursor-pointer text-sm font-semibold business-text">Change package rules</summary>
+                  <form action={updatePackageRulesAction} className="mt-4 grid gap-4">
+                    <CsrfInput scope="dashboard:package-rules" />
+                    <input type="hidden" name="programUuid" value={program.uuid} />
+                    <PackageRulesFields
+                      defaults={{
+                        packageValidity: program.packageValidity,
+                        packageTermMonths: program.packageTermMonths,
+                        packageOneVisitPerMonth: program.packageOneVisitPerMonth,
+                        packageUniqueTreatments: program.packageUniqueTreatments,
+                      }}
+                    />
+                    <p className="text-xs text-[#6B7280]">New rules apply from now on to every customer on this package. Visits already lost are not given back.</p>
+                    <button type="submit" className="business-button h-11 w-fit rounded-md px-5 text-sm font-semibold">Save package rules</button>
+                  </form>
+                </details>
+              </SectionCard>
+            ) : null}
 
             {isMembership ? (
               // A paid package has no public join link: anyone could otherwise

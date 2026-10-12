@@ -119,6 +119,7 @@ export function maxSeverity(a: ActivityAlertSeverity, b: ActivityAlertSeverity):
 
 export function alertCategory(alertType: string) {
   if (alertType.startsWith("CASHBACK")) return "Cashback";
+  if (alertType.startsWith("PACKAGE")) return "Package";
   if (alertType.includes("COOLDOWN")) return "Cooldown";
   if (alertType.includes("REFERRAL")) return "Referral";
   if (alertType.includes("SCAN") || alertType.includes("WRONG_BUSINESS")) return "Scanning";

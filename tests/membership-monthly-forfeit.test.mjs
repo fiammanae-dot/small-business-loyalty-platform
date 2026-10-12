@@ -54,7 +54,9 @@ test("a prepaid membership with no sessions left cannot be stamped again", () =>
 
 test("an undone visit does not keep a month 'visited', and wallets refresh after a forfeit", () => {
   const route = readFileSync("src/app/api/cron/membership-expiry/route.ts", "utf8");
-  assert.match(route, /action: "STAMP_UNDONE", entityType: "customer_program_membership", entityId: String\(enrollment\.id\)/);
-  assert.match(route, /const visits = allVisits\.filter\(\(visit\) => !undoneIds\.has\(visit\.id\)\);/);
+  assert.match(route, /const visits = await getPackageVisits\(prisma, enrollment\.id\);/);
+  const loader = readFileSync("src/lib/package-visits.ts", "utf8");
+  assert.match(loader, /action: "STAMP_UNDONE", entityType: "customer_program_membership", entityId: String\(customerProgramMembershipId\)/);
+  assert.match(loader, /return visits\.filter\(\(visit\) => !undoneIds\.has\(visit\.id\)\);/);
   assert.match(route, /if \(result\.forfeitedThisRun > 0\) \{\s*await syncGoogleWalletObjectAfterLoyaltyChange\(enrollment\.id\);\s*await syncAppleWalletPassSafe\(enrollment\.id\);/);
 });

@@ -211,6 +211,16 @@ enum ScanEventResult {
   DISABLED
 }
 
+/// How a package's prepaid visits expire.
+enum PackageValidity {
+  /// Visits never expire.
+  LIFETIME
+  /// Each package month without a visit loses one visit.
+  MONTHLY_FORFEIT
+  /// All unused visits expire packageTermMonths after joining.
+  FIXED_TERM
+}
+
 enum StampTransactionSource {
   QR_SCAN
 }
@@ -933,6 +943,16 @@ model LoyaltyProgram {
   priceAmount               Decimal?     @map("price_amount") @db.Decimal(10, 2)
   /// Member perks shown on the tier (priority booking, member pricing, etc.).
   membershipBenefits        String[]     @default([]) @map("membership_benefits")
+  /// Package rules (isMembership only). Defaults keep the original behaviour:
+  /// lose one visit per month without a visit, several visits a month allowed,
+  /// any treatment may be repeated.
+  packageValidity           PackageValidity @default(MONTHLY_FORFEIT) @map("package_validity")
+  /// FIXED_TERM only: every unused visit expires this many months after joining (or renewal).
+  packageTermMonths         Int?         @map("package_term_months")
+  /// true = at most one visit per package month (an owner/manager can override with a reason).
+  packageOneVisitPerMonth   Boolean      @default(false) @map("package_one_visit_per_month")
+  /// true = each treatment on the menu can be used only once per package.
+  packageUniqueTreatments   Boolean      @default(false) @map("package_unique_treatments")
   cardTheme                 CardTheme    @default(BUSINESS_DEFAULT) @map("card_theme")
   /// The emoji drawn on the wallet card, one per stamp. Null falls back to a tick.
   stampEmoji           String?             @map("stamp_emoji")
