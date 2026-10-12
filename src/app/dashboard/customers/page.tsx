@@ -22,6 +22,7 @@ import { businessTracksVehicles, formatPlateDisplay, parsePlateQuery } from "@/l
 import { getNextReward, getReadyRewards, singleCardReward } from "@/lib/rewards";
 import { membershipSessionSummary } from "@/lib/membership-sessions";
 import { prisma } from "@/lib/prisma";
+import { businessSellsPackages } from "@/lib/programs";
 import { areTiersVisible } from "@/lib/customer-tiers";
 
 const tierOptions = ["BRONZE", "SILVER", "GOLD", "VIP"] as const;
@@ -48,7 +49,7 @@ export default async function CustomersPage({
   const tiersVisible = areTiersVisible(business.membershipSettings?.enabled);
   // Membership businesses sell prepaid sessions, not reward cards, so the
   // reward/near-reward filters don't apply.
-  const membershipMode = Boolean(business.membershipSettings?.enabled);
+  const membershipMode = await businessSellsPackages(business.id);
   const params = await searchParams;
   const query = params.q?.trim();
   const normalizedQueryPhone = query ? normalizePhone(query) : null;

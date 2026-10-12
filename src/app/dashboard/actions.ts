@@ -840,7 +840,8 @@ export async function saveCooldownRuleAction(formData: FormData) {
     maximumStampsPerTransaction: getString(formData, "maximumStampsPerTransaction") || "5",
     maximumStampsPerCustomerPerDay: getString(formData, "maximumStampsPerCustomerPerDay") || undefined,
     maximumStampsPerStaffPerDay: getString(formData, "maximumStampsPerStaffPerDay") || undefined,
-    generateAlert: getCheckbox(formData, "generateAlert"),
+    // Alerts for rule breaks are switched in Alert policies now.
+    generateAlert: true,
   });
 
   if (!parsed.success) fail("/dashboard/settings", parsed.error.issues[0]?.message ?? "Validation failed.");

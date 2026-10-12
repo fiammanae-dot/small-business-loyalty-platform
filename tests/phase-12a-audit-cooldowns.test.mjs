@@ -74,6 +74,6 @@ test("cooldown controls remain available without dashboard duplication", () => {
 
   assert.doesNotMatch(dashboard, /Cooldown Monitoring/);
   assert.doesNotMatch(dashboard, /Top violating customers and staff/);
-  assert.match(settings, /Cooldown policy/);
+  assert.match(settings, /Stamp limits/);
   assert.match(actions, /COOLDOWN_RULE_UPDATED/);
 });

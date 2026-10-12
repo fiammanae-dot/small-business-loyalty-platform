@@ -23,14 +23,6 @@ const colorFields = [
   { name: "textColor", label: "Text Color", helper: "Default text on branded surfaces." },
 ] as const;
 
-const futureAssets = [
-  { name: "Light Logo", description: "Optimized for dark surfaces." },
-  { name: "Dark Logo", description: "Optimized for light surfaces." },
-  { name: "Email Logo", description: "Used in customer email messages." },
-  { name: "Website Favicon", description: "Browser tab icon for hosted pages." },
-  { name: "Business Cover Image", description: "Hero image for public pages." },
-] as const;
-
 export function BrandAssetsCenter({
   csrfInput,
   businessName,
@@ -85,22 +77,6 @@ export function BrandAssetsCenter({
                     className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 font-mono text-sm uppercase outline-none business-ring focus:ring-0"
                   />
                 </div>
-              </div>
-            ))}
-          </div>
-        </SectionCard>
-
-        <SectionCard title="Future Brand Assets" description="Planned brand asset slots. These are placeholders and are not connected yet.">
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {futureAssets.map((asset) => (
-              <div key={asset.name} className="rounded-md border border-dashed border-[#CBD5E1] bg-[#F8FAFC] p-4 opacity-80">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-semibold text-[#111827]">{asset.name}</p>
-                  <span className="rounded-full bg-[#E2E8F0] px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-[#475569]">
-                    Coming Soon
-                  </span>
-                </div>
-                <p className="mt-1 text-xs text-[#64748B]">{asset.description}</p>
               </div>
             ))}
           </div>

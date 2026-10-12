@@ -17,7 +17,7 @@ import {
   StatusBadge,
 } from "@/components/ui";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
-import { progressValue } from "@/lib/programs";
+import { progressValue, businessSellsPackages } from "@/lib/programs";
 import { businessTypeLabels } from "@/lib/roles";
 import { formatAed } from "@/lib/cashback";
 import { prisma } from "@/lib/prisma";
@@ -38,7 +38,7 @@ export default async function ProgramsPage({
   const { user, business } = await getBusinessOwnerContext();
   // Membership businesses sell prepaid sessions, not reward cards, so this page
   // drops reward-ready language and shows sessions instead.
-  const membershipMode = Boolean(business.membershipSettings?.enabled);
+  const membershipMode = await businessSellsPackages(business.id);
   const params = await searchParams;
   const query = (params.q ?? "").trim().toLowerCase();
   const status = params.status ?? "";
