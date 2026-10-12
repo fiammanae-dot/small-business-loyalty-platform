@@ -20,6 +20,7 @@ import { getOperationalBusinessBranding } from "@/lib/business-branding";
 import { getActiveSupportSessionForCurrentAdmin } from "@/lib/support-sessions";
 import type { AuthUser } from "@/lib/session";
 import { roleHomePath, roleLabels } from "@/lib/roles";
+import { BrandLockup } from "@/components/BrandLogo";
 
 type SupportShellSession = {
   id: number;
@@ -99,11 +100,8 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
       <header className="border-b border-[#E7E9EE] bg-white">
         <div className="mx-auto flex max-w-screen-2xl min-w-0 flex-col gap-2 px-4 py-2.5 sm:px-6 sm:py-4 lg:gap-4 lg:px-8">
           <div className="flex min-w-0 items-center justify-between gap-4">
-            <Link href={roleHomePath[user.role]} className="flex min-w-0 items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#E86A33] text-xs font-bold text-white shadow-[0_2px_6px_rgba(232,106,51,0.35)] business-bg sm:h-9 sm:w-9 sm:text-sm">
-                LC
-              </span>
-              <span className="text-sm font-bold tracking-tight text-[#171A21]">Loyalty Card UAE</span>
+            <Link href={roleHomePath[user.role]} className="flex min-w-0 items-center gap-2" aria-label="Loyalty Card UAE home">
+              <BrandLockup className="h-9 w-auto sm:h-10" priority />
               {activeSupportSession ? (
                 <span className="rounded-md bg-red-600 px-2 py-1 text-xs font-black uppercase text-white">Support</span>
               ) : null}

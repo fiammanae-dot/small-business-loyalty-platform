@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ForgotPasswordForm } from "@/components/ForgotPasswordForm";
 import { createCsrfToken } from "@/lib/csrf";
 import { redirectAuthenticatedUser } from "@/lib/session";
+import { BrandLockup } from "@/components/BrandLogo";
 
 export default async function ForgotPasswordPage() {
   await redirectAuthenticatedUser();
@@ -9,11 +10,8 @@ export default async function ForgotPasswordPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-white px-4 py-10 text-[#111827]">
       <section className="w-full max-w-md rounded-md border border-[#E5E7EB] bg-white p-6 shadow-sm">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[#F97316] text-sm font-bold text-white">
-            LC
-          </span>
-          <span className="text-sm font-semibold">Loyalty Card UAE</span>
+        <Link href="/" className="inline-flex" aria-label="Loyalty Card UAE homepage">
+          <BrandLockup className="h-10 w-auto" priority />
         </Link>
         <div className="mt-8">
           <p className="text-sm font-semibold uppercase tracking-wide text-[#F97316]">Password reset</p>
