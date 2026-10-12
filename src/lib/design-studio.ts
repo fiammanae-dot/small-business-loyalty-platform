@@ -7,6 +7,7 @@ import {
   getCardStyleForLayoutStyle,
   getCardThemeForLayoutStyle,
   getRecommendedStampIconsForBusinessType,
+  medicalStampIcons,
   resolveCardDesign,
   resolveCustomStampIconUrl,
   stampIcons,
@@ -64,8 +65,16 @@ const crossIndustryStampIcons: readonly CardDesignStampIcon[] = [
   "COFFEE_BEAN", "ESPRESSO", "CHEF_HAT", "BURGER", "BUBBLES", "CAR", "WHEEL", "CHECK", "DIAMOND", "CIRCLE",
 ];
 
+/**
+ * Medical and skin-care icons (syringe, tooth, laser, ...) are offered to the
+ * businesses that treat people: clinics, beauty salons and "Other" (dental,
+ * physio and similar practices register as Other). A cafe never sees them.
+ */
+const MEDICAL_ICON_BUSINESS_TYPES: ReadonlySet<string> = new Set(["AESTHETIC_CLINIC", "BEAUTY_SALON", "OTHER"]);
+
 export function getAllowedStampIconsForBusinessType(businessType: Parameters<typeof getRecommendedStampIconsForBusinessType>[0]) {
-  return Array.from(new Set([...getRecommendedStampIconsForBusinessType(businessType), ...crossIndustryStampIcons, ...generalStampIcons, ...flowerStampIcons, ...fragranceStampIcons])).filter(
+  const medical = businessType && MEDICAL_ICON_BUSINESS_TYPES.has(businessType) ? medicalStampIcons : [];
+  return Array.from(new Set([...getRecommendedStampIconsForBusinessType(businessType), ...crossIndustryStampIcons, ...generalStampIcons, ...flowerStampIcons, ...fragranceStampIcons, ...medical])).filter(
     (icon): icon is CardDesignStampIcon => (stampIcons as readonly string[]).includes(icon),
   );
 }

@@ -323,6 +323,136 @@ export const STAMP_ICONS: StampIcon[] = [
     "emoji": "🫙",
     "label": "Jar",
     "file": "1fad9"
+  },
+  {
+    "emoji": "💉",
+    "label": "Syringe",
+    "file": "1f489"
+  },
+  {
+    "emoji": "💊",
+    "label": "Pill",
+    "file": "1f48a"
+  },
+  {
+    "emoji": "🩺",
+    "label": "Stethoscope",
+    "file": "1fa7a"
+  },
+  {
+    "emoji": "🩹",
+    "label": "Bandage",
+    "file": "1fa79"
+  },
+  {
+    "emoji": "🦷",
+    "label": "Tooth",
+    "file": "1f9b7"
+  },
+  {
+    "emoji": "🧬",
+    "label": "DNA",
+    "file": "1f9ec"
+  },
+  {
+    "emoji": "🔬",
+    "label": "Microscope",
+    "file": "1f52c"
+  },
+  {
+    "emoji": "🧪",
+    "label": "Test tube",
+    "file": "1f9ea"
+  },
+  {
+    "emoji": "🏥",
+    "label": "Clinic",
+    "file": "1f3e5"
+  },
+  {
+    "emoji": "⚕️",
+    "label": "Medical symbol",
+    "file": "2695-fe0f"
+  },
+  {
+    "emoji": "❤️‍🩹",
+    "label": "Mending heart",
+    "file": "2764-fe0f-200d-1fa79"
+  },
+  {
+    "emoji": "💖",
+    "label": "Sparkling heart",
+    "file": "1f496"
+  },
+  {
+    "emoji": "⚡",
+    "label": "Laser",
+    "file": "26a1"
+  },
+  {
+    "emoji": "☀️",
+    "label": "Sun",
+    "file": "2600-fe0f"
+  },
+  {
+    "emoji": "🧽",
+    "label": "Sponge",
+    "file": "1f9fd"
+  },
+  {
+    "emoji": "🧼",
+    "label": "Soap",
+    "file": "1f9fc"
+  },
+  {
+    "emoji": "🛁",
+    "label": "Bathtub",
+    "file": "1f6c1"
+  },
+  {
+    "emoji": "💆",
+    "label": "Face massage",
+    "file": "1f486"
+  },
+  {
+    "emoji": "👄",
+    "label": "Lips",
+    "file": "1f444"
+  },
+  {
+    "emoji": "👁️",
+    "label": "Eye",
+    "file": "1f441-fe0f"
+  },
+  {
+    "emoji": "🧖",
+    "label": "Sauna",
+    "file": "1f9d6"
+  },
+  {
+    "emoji": "🌡️",
+    "label": "Thermometer",
+    "file": "1f321-fe0f"
+  },
+  {
+    "emoji": "🧑‍⚕️",
+    "label": "Doctor",
+    "file": "1f9d1-200d-2695-fe0f"
+  },
+  {
+    "emoji": "👩‍⚕️",
+    "label": "Woman doctor",
+    "file": "1f469-200d-2695-fe0f"
+  },
+  {
+    "emoji": "🧘",
+    "label": "Yoga",
+    "file": "1f9d8"
+  },
+  {
+    "emoji": "🌟",
+    "label": "Glowing star",
+    "file": "1f31f"
   }
 ];
 
