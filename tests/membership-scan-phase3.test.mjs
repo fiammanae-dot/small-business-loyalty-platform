@@ -36,7 +36,8 @@ test("the scanner says Use Session for memberships and offers renewal when deple
   const page = read("src/app/scan/[token]/page.tsx");
   assert.match(page, /import \{[^}]*renewMembershipAction[^}]*\} from "@\/app\/scan\/actions"/);
   // Depletion is computed once and gates the UI.
-  assert.match(page, /const membershipDepleted = membershipSummary \? membershipSummary\.remaining <= 0 : false/);
+  // (an expired fixed-term package counts as used up too)
+  assert.match(page, /const membershipDepleted = membershipSummary \? membershipSummary\.remaining <= 0 \|\| Boolean\(packageStatus\?\.expired\) : false/);
   // Membership wording.
   assert.match(page, /isMembership \? "Use Visit" : "Issue Stamp"/);
   assert.match(page, /isMembership \? "Use one visit\?" : "Issue stamp\?"/);

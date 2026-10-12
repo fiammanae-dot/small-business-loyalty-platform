@@ -13,6 +13,7 @@ export const alertTypeLabels: Record<string, string> = {
   CASHBACK_LARGE_BILL: "Cashback on a large bill",
   CASHBACK_FREQUENT_EARN: "Cashback added often to one customer",
   CASHBACK_LARGE_REDEMPTION: "Large cashback used",
+  PACKAGE_RULE_OVERRIDE: "Package rule overridden",
   COOLDOWN_MAX_STAMPS_PER_TRANSACTION: "Loyalty rule: too many stamps at once",
   COOLDOWN_MINIMUM_MINUTES_BETWEEN_STAMPS: "Loyalty rule: stamped again too soon",
   COOLDOWN_MAX_STAMPS_PER_CUSTOMER_PER_DAY: "Loyalty rule: customer daily limit",

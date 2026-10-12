@@ -16,13 +16,14 @@ import { DetailPageLayout } from "@/components/layouts";
 import { BRANCH_INACTIVE_MESSAGE, hasUsableSubscription, SUBSCRIPTION_REQUIRED_MESSAGE } from "@/lib/commercial-access";
 import { businessOwnerOperationalDefaults, resolveBusinessBranding } from "@/lib/business-branding";
 import { getCardUrl, maskPhoneNumber } from "@/lib/customer-cards";
-import { formatDateTime } from "@/lib/format";
 import { formatUaePhoneDisplay } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { checkScanVolumeAlert } from "@/lib/alert-engine";
 import { areTiersVisible, fromStoredTier } from "@/lib/customer-tiers";
 import { progressValue, programCustomerStatusLabel } from "@/lib/programs";
-import { membershipSessionSummary } from "@/lib/membership-sessions";
+import { describePackageRules, isPackageExpired, membershipSessionSummary, packageExpiresAt, packageMonthWindow } from "@/lib/membership-sessions";
+import { getPackageVisits, usedTreatmentKeys } from "@/lib/package-visits";
+import { formatDate, formatDateTime } from "@/lib/format";
 import { extractReferralCode, resolveReferralLandingReferrer } from "@/lib/referrals";
 import { getNextReward, getReadyRewards, singleCardReward, type CardReward } from "@/lib/rewards";
 import { roleHomePath } from "@/lib/roles";
@@ -377,7 +378,7 @@ export default async function ScanResultPage({
 
   const customerName = (businessMembership.firstName + " " + (businessMembership.lastName ?? "")).trim();
   const program = programMembership.loyaltyProgram;
-  const membershipTreatmentOptions = program.membershipTreatments.map((treatment) => ({ id: treatment.id, name: treatment.name }));
+
   const progress = progressValue(programMembership.earnedStamps, programMembership.bonusStamps);
   const cardUrl = await getCardUrl(businessMembership.cardToken);
   const issuedTransactionId = qs.issued ? Number(qs.issued) : null;
@@ -430,7 +431,31 @@ export default async function ScanResultPage({
         sessionsForfeited: programMembership.sessionsForfeited,
       })
     : null;
-  const membershipDepleted = membershipSummary ? membershipSummary.remaining <= 0 : false;
+  // The owner's package rules, worked out for this customer's current term.
+  const packageStatus = program.isMembership
+    ? await (async () => {
+        const termStart = programMembership.enrolledAt;
+        const visits = await getPackageVisits(prisma, programMembership.id, termStart);
+        const window = packageMonthWindow(termStart, scanTimestamp);
+        const visitThisMonth = visits.find((visit) => visit.createdAt >= window.start && visit.createdAt < window.end) ?? null;
+        return {
+          rules: describePackageRules(program),
+          expiresAt: packageExpiresAt(program, termStart),
+          expired: isPackageExpired(program, termStart, scanTimestamp),
+          oneVisitPerMonth: program.packageOneVisitPerMonth,
+          visitThisMonth,
+          nextVisitFrom: window.end,
+          used: usedTreatmentKeys(visits),
+        };
+      })()
+    : null;
+  const membershipDepleted = membershipSummary ? membershipSummary.remaining <= 0 || Boolean(packageStatus?.expired) : false;
+  // With "only one of each", treatments already used in this package are greyed out.
+  const membershipTreatmentOptions = program.membershipTreatments.map((treatment) => ({
+    id: treatment.id,
+    name: treatment.name,
+    used: Boolean(program.packageUniqueTreatments && packageStatus?.used.ids.has(treatment.id)),
+  }));
   const redemption = redeemedId
     ? await prisma.rewardRedemption.findFirst({
         where: {
@@ -495,7 +520,7 @@ export default async function ScanResultPage({
 
       {program.isMembership && membershipSummary ? (
         <>
-          <MembershipSessionsNote summary={membershipSummary} />
+          <MembershipSessionsNote summary={membershipSummary} packageStatus={packageStatus} />
           {membershipDepleted ? (
             <MembershipRenewPanel
               token={scanToken}
@@ -751,7 +776,7 @@ function QuickScanActions({
   completesCard: boolean;
   canRedeem: boolean;
   isMembership: boolean;
-  treatments: { id: number; name: string }[];
+  treatments: { id: number; name: string; used?: boolean }[];
   confirmationTheme: ConfirmationDialogTheme;
 }) {
   return (
@@ -962,7 +987,7 @@ function AdvancedStampOptions({
   /** Open when a stamp was just blocked, so the reason / override fields are in view. */
   defaultOpen?: boolean;
   isMembership: boolean;
-  treatments: { id: number; name: string }[];
+  treatments: { id: number; name: string; used?: boolean }[];
   confirmationTheme: ConfirmationDialogTheme;
 }) {
   return (
@@ -1234,7 +1259,7 @@ function StampIssuanceSection({
   requiredStamps: number;
   canOverrideCooldown: boolean;
   isMembership: boolean;
-  treatments: { id: number; name: string }[];
+  treatments: { id: number; name: string; used?: boolean }[];
   confirmationTheme: ConfirmationDialogTheme;
 }) {
   return (
@@ -1294,14 +1319,14 @@ function StampIssuanceSection({
           <div className="rounded-md border business-border-soft bg-white p-3 md:col-span-3">
             <label className="flex items-center gap-2 text-sm font-semibold text-[#111827]">
               <input type="checkbox" name="overrideCooldown" className="h-4 w-4 rounded border-[#E5E7EB]" />
-              Override cooldown rule
+              {isMembership ? "Override (cooldown or package rule)" : "Override cooldown rule"}
             </label>
             <label className="mt-3 grid gap-2 text-sm font-semibold text-[#111827]">
               Override reason
               <input
                 name="overrideReason"
                 className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm font-normal outline-none focus:border-[var(--business-primary,#F97316)] focus:ring-4 focus:ring-[var(--business-primary-soft,#ffedd5)]"
-                placeholder="Required when overriding a cooldown violation"
+                placeholder={isMembership ? "Required when overriding a rule, e.g. customer had to reschedule" : "Required when overriding a cooldown violation"}
               />
             </label>
           </div>
@@ -1346,22 +1371,47 @@ function MembershipRenewPanel({
   );
 }
 
-function MembershipSessionsNote({ summary }: { summary: ReturnType<typeof membershipSessionSummary> }) {
-  const depleted = summary.remaining <= 0;
+function MembershipSessionsNote({
+  summary,
+  packageStatus,
+}: {
+  summary: ReturnType<typeof membershipSessionSummary>;
+  packageStatus: {
+    rules: string[];
+    expiresAt: Date | null;
+    expired: boolean;
+    oneVisitPerMonth: boolean;
+    visitThisMonth: { createdAt: Date } | null;
+    nextVisitFrom: Date;
+  } | null;
+}) {
+  const expired = Boolean(packageStatus?.expired);
+  const depleted = summary.remaining <= 0 || expired;
   return (
     <section className={`rounded-md border p-4 ${depleted ? "border-red-200 bg-red-50 text-red-700" : "business-border-soft business-bg-soft business-text-strong"}`}>
       <p className="text-sm font-semibold">
-        Membership: {summary.remaining} of {summary.total} visit{summary.total === 1 ? "" : "s"} remaining
+        {expired
+          ? `Package expired on ${packageStatus?.expiresAt ? formatDate(packageStatus.expiresAt) : "its end date"}`
+          : `Membership: ${summary.remaining} of ${summary.total} visit${summary.total === 1 ? "" : "s"} remaining`}
       </p>
       <p className="mt-1 text-xs">
-        {summary.used} used{summary.forfeited > 0 ? ` \u00b7 ${summary.forfeited} expired (unused monthly sessions)` : ""}
+        {summary.used} used{summary.forfeited > 0 ? ` \u00b7 ${summary.forfeited} expired` : ""}
+        {!expired && packageStatus?.expiresAt ? ` \u00b7 valid until ${formatDate(packageStatus.expiresAt)}` : ""}
         {depleted ? " \u2014 no visits left to redeem." : ""}
       </p>
+      {packageStatus && !depleted && packageStatus.oneVisitPerMonth && packageStatus.visitThisMonth ? (
+        <p className="mt-2 rounded-md border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-700">
+          Already visited this month ({formatDate(packageStatus.visitThisMonth.createdAt)}). This package allows one visit a month &mdash; next visit from {formatDate(packageStatus.nextVisitFrom)}.
+        </p>
+      ) : null}
+      {packageStatus ? (
+        <p className="mt-2 text-xs opacity-80">{packageStatus.rules.join(" ")}</p>
+      ) : null}
     </section>
   );
 }
 
-function MembershipTreatmentFields({ treatments }: { treatments: { id: number; name: string }[] }) {
+function MembershipTreatmentFields({ treatments }: { treatments: { id: number; name: string; used?: boolean }[] }) {
   return (
     <div className="mb-3 grid gap-2 text-left">
       <label className="grid gap-1 text-sm font-semibold text-[#111827]">
@@ -1376,8 +1426,9 @@ function MembershipTreatmentFields({ treatments }: { treatments: { id: number; n
             Select a treatment…
           </option>
           {treatments.map((treatment) => (
-            <option key={treatment.id} value={treatment.id}>
+            <option key={treatment.id} value={treatment.id} disabled={treatment.used}>
               {treatment.name}
+              {treatment.used ? " (already used)" : ""}
             </option>
           ))}
           <option value="other">Other (type below)</option>

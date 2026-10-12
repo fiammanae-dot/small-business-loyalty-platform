@@ -18,7 +18,7 @@ import { areTiersVisible, calculateCustomerTier, computeTierMaintenance, fromSto
 import { formatDate, formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { progressValue } from "@/lib/programs";
-import { membershipSessionSummary } from "@/lib/membership-sessions";
+import { isPackageExpired, membershipSessionSummary, packageExpiresAt } from "@/lib/membership-sessions";
 import { getNextReward, getReadyRewards, singleCardReward } from "@/lib/rewards";
 import { getScanQrDataUrl } from "@/lib/scan";
 import { getReferralUrl } from "@/lib/referrals";
@@ -91,13 +91,30 @@ export default async function PublicCustomerCardPage({
           bonusStamps: programMembership.bonusStamps,
           sessionsForfeited: programMembership.sessionsForfeited,
         });
-        const sessionsRemaining = summary.remaining;
+        const pkg = programMembership.loyaltyProgram;
+        const expiresAt = packageExpiresAt(pkg, programMembership.enrolledAt);
+        const expired = isPackageExpired(pkg, programMembership.enrolledAt, new Date());
+        const sessionsRemaining = expired ? 0 : summary.remaining;
         const sessionsTotal = summary.total;
+        // What the customer needs to know about their package, in their words.
+        const packageNotes = [
+          expired && expiresAt
+            ? `Expired on ${formatDate(expiresAt)}`
+            : expiresAt
+              ? `Valid until ${formatDate(expiresAt)}`
+              : pkg.packageValidity === "LIFETIME"
+                ? "Your visits never expire"
+                : "Visit at least once a month - each month without a visit uses one visit",
+          pkg.packageOneVisitPerMonth ? "One visit per month" : null,
+          pkg.packageUniqueTreatments ? "Each treatment can be used once" : null,
+        ].filter((note): note is string => Boolean(note));
         const completion = sessionsTotal > 0 ? Math.round((sessionsRemaining / sessionsTotal) * 100) : 0;
         const statusText =
           sessionsRemaining > 0
             ? `${sessionsRemaining} of ${sessionsTotal} visit${sessionsTotal === 1 ? "" : "s"} left`
-            : "Membership complete";
+            : expired
+              ? "Package expired"
+              : "Membership complete";
         return {
           programMembership,
           qrCode: await getScanQrDataUrl(programMembership.scanToken),
@@ -105,6 +122,7 @@ export default async function PublicCustomerCardPage({
           sessionsTotal,
           sessionsRemaining,
           statusText,
+          packageNotes,
           progress: sessionsRemaining,
           required: sessionsTotal,
           remaining: sessionsRemaining,
@@ -144,6 +162,7 @@ export default async function PublicCustomerCardPage({
         sessionsTotal: 0,
         sessionsRemaining: 0,
         statusText: null as string | null,
+        packageNotes: [] as string[],
         progress,
         required,
         remaining,
@@ -371,6 +390,17 @@ export default async function PublicCustomerCardPage({
                 </p>
                 <p className="mt-1 text-base font-semibold text-[#1E293B]">{primaryProgram.rewardName}</p>
                 <p className="mt-1 text-sm text-[#64748B]">{primaryCardModel.progress.statusText}</p>
+              </section>
+            ) : null}
+            {primaryProgram.isMembership ? (
+              <section className="w-full rounded-[22px] border border-[#E5E7EB] bg-white p-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">Your package</p>
+                <p className="mt-1 text-base font-semibold text-[#1E293B]">{primaryProgram.statusText}</p>
+                <ul className="mt-2 grid gap-1 text-sm text-[#64748B]">
+                  {primaryProgram.packageNotes.map((note) => (
+                    <li key={note}>{note}</li>
+                  ))}
+                </ul>
               </section>
             ) : null}
             {cashbackPassView ? (

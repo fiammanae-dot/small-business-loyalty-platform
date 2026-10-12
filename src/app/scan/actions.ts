@@ -5,7 +5,7 @@ import { z } from "zod";
 import { logAuditEvent } from "@/lib/audit";
 import { isOutOfAssignedBranch, requireBusinessScopedUser } from "@/lib/authz";
 import { createAbuseAlert, getAlertRule } from "@/lib/alert-engine";
-import { enforceStampCooldown } from "@/lib/cooldowns";
+import { canOverrideCooldown, enforceStampCooldown } from "@/lib/cooldowns";
 import { validateCsrfForm } from "@/lib/csrf";
 import { createCustomerNotification } from "@/lib/customer-notifications";
 import { calculateCustomerTier, isTierUpgrade } from "@/lib/customer-tiers";
@@ -14,7 +14,9 @@ import { syncGoogleWalletObjectAfterLoyaltyChange } from "@/lib/google-wallet/se
 import { syncAppleWalletPassSafe, syncAppleWalletAfterTierChange } from "@/lib/walletwallet/service";
 import { prisma } from "@/lib/prisma";
 import { getStartingBonusStampsForEvent, progressValue } from "@/lib/programs";
-import { membershipSessionSummary } from "@/lib/membership-sessions";
+import { isPackageExpired, membershipSessionSummary, packageExpiresAt, packageMonthWindow } from "@/lib/membership-sessions";
+import { getPackageVisits, usedTreatmentKeys } from "@/lib/package-visits";
+import { formatDate } from "@/lib/format";
 import { qualifyReferralFromFirstStamp } from "@/lib/referrals";
 import { cardRewardsFor, getReadyRewards, isRewardReady } from "@/lib/rewards";
 import { formatAed } from "@/lib/cashback";
@@ -170,6 +172,8 @@ export async function issueStampAction(formData: FormData) {
   // (membershipTreatmentId) or a free-text "Other" name captured at the counter.
   let membershipTreatmentId: number | null = null;
   let treatmentName: string | null = null;
+  // Set when an owner/manager recorded a visit the package rules would block.
+  let packageRuleOverride: { rules: string[]; reason: string } | null = null;
   if (programMembership.loyaltyProgram.isMembership) {
     const sessions = membershipSessionSummary({
       requiredStamps: programMembership.loyaltyProgram.requiredStamps,
@@ -197,6 +201,61 @@ export async function issueStampAction(formData: FormData) {
       treatmentName = chosen.name;
     } else {
       fail(data.scanToken, "Select the treatment for this visit.");
+    }
+
+    // The owner's package rules. Visits counted are the real ones in this term
+    // (since joining or the last renewal), undone visits left out.
+    const pkg = programMembership.loyaltyProgram;
+    const termStart = programMembership.enrolledAt;
+    const nowForRules = new Date();
+    if (isPackageExpired(pkg, termStart, nowForRules)) {
+      const expiredOn = packageExpiresAt(pkg, termStart);
+      fail(data.scanToken, `This package expired on ${expiredOn ? formatDate(expiredOn) : "its end date"}. Renew it if the customer has paid again.`);
+    }
+    if (pkg.packageOneVisitPerMonth || pkg.packageUniqueTreatments) {
+      const termVisits = await getPackageVisits(prisma, programMembership.id, termStart);
+      const canOverride = canOverrideCooldown(user.role);
+      const overrideReason = data.overrideReason?.trim() ?? "";
+      const overriding = data.overrideCooldown && canOverride && overrideReason.length > 0;
+      const blockedBy: string[] = [];
+
+      if (pkg.packageOneVisitPerMonth) {
+        const window = packageMonthWindow(termStart, nowForRules);
+        const visitThisMonth = termVisits.find((visit) => visit.createdAt >= window.start && visit.createdAt < window.end);
+        if (visitThisMonth) {
+          const message = `This package allows one visit per month. This customer already visited on ${formatDate(visitThisMonth.createdAt)}; the next visit is from ${formatDate(window.end)}.`;
+          if (!overriding) {
+            fail(
+              data.scanToken,
+              canOverride
+                ? `${message} To record it anyway, tick "Override" and write a reason under Advanced stamp options.`
+                : `${message} Ask an owner or manager if it must be recorded today.`,
+            );
+          }
+          blockedBy.push("ONE_VISIT_PER_MONTH");
+        }
+      }
+
+      if (pkg.packageUniqueTreatments) {
+        const used = usedTreatmentKeys(termVisits);
+        const alreadyUsed =
+          (membershipTreatmentId !== null && used.ids.has(membershipTreatmentId)) ||
+          (treatmentName !== null && used.names.has(treatmentName.trim().toLowerCase()));
+        if (alreadyUsed) {
+          const message = `${treatmentName} was already used in this package, and each treatment can be used only once. Choose a different treatment.`;
+          if (!overriding) {
+            fail(
+              data.scanToken,
+              canOverride
+                ? `${message} To record it anyway, tick "Override" and write a reason under Advanced stamp options.`
+                : message,
+            );
+          }
+          blockedBy.push("TREATMENT_ALREADY_USED");
+        }
+      }
+
+      if (blockedBy.length > 0) packageRuleOverride = { rules: blockedBy, reason: overrideReason };
     }
   }
 
@@ -273,7 +332,7 @@ export async function issueStampAction(formData: FormData) {
         customerProgramMembershipId: programMembership.id,
         issuedByUserId: user.id,
         quantity: data.quantity,
-        reason: data.reason || null,
+        reason: data.reason || (packageRuleOverride ? `Package rule override: ${packageRuleOverride.reason}` : null),
         source: "QR_SCAN",
         idempotencyKey: data.idempotencyKey,
         membershipTreatmentId,
@@ -282,6 +341,34 @@ export async function issueStampAction(formData: FormData) {
       },
       select: { id: true },
     });
+
+    if (packageRuleOverride) {
+      const overriddenRules = packageRuleOverride.rules
+        .map((rule) => (rule === "ONE_VISIT_PER_MONTH" ? "a second visit this month" : "a treatment already used"))
+        .join(" and ");
+      await logAuditEvent({
+        tx,
+        actorUserId: user.id,
+        businessId: user.businessId as number,
+        branchId,
+        action: "PACKAGE_RULE_OVERRIDE",
+        entityType: "customer_program_membership",
+        entityId: programMembership.id,
+        metadata: { rules: packageRuleOverride.rules, reason: packageRuleOverride.reason, stampTransactionId: stampTransaction.id, treatmentName },
+      });
+      await createAbuseAlert({
+        tx,
+        businessId: user.businessId as number,
+        branchId,
+        userId: user.id,
+        customerProgramMembershipId: programMembership.id,
+        alertType: "PACKAGE_RULE_OVERRIDE",
+        severity: "MEDIUM",
+        description: `${issuedByName} recorded ${overriddenRules} for ${customerName} on ${programMembership.loyaltyProgram.name} by overriding the package rules. Reason: ${packageRuleOverride.reason}.`,
+        dedupeScope: `package-override:${stampTransaction.id}`,
+        metadata: { rules: packageRuleOverride.rules, reason: packageRuleOverride.reason },
+      });
+    }
 
     const customer24h = await tx.stampTransaction.aggregate({
       where: {
