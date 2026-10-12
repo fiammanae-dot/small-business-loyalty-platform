@@ -25,7 +25,7 @@ test("every flower is a real stamp icon with artwork for the web and the wallet"
   const marks = read("src/lib/stamp-icon-marks.ts");
   const catalog = read("src/lib/wallet/stamp-icons.ts");
   const art = read("src/lib/wallet/stamp-icon-art.ts");
-  assert.match(design, /\.\.\.flowerStampIcons,\n\] as const;/);
+  assert.match(design, /  \.\.\.flowerStampIcons,\n/);
   for (const [key, file] of Object.entries(FLOWERS)) {
     assert.match(design, new RegExp(`export const flowerStampIcons = \\[[^\\]]*"${key}"`), key);
     assert.match(marks, new RegExp(`  ${key}: "\\\\u\\{${file.toUpperCase()}\\}",`), key);
@@ -37,5 +37,5 @@ test("every flower is a real stamp icon with artwork for the web and the wallet"
 
 test("flowers are offered to every type of business in Design Studio", () => {
   const studio = read("src/lib/design-studio.ts");
-  assert.match(studio, /\.\.\.generalStampIcons, \.\.\.flowerStampIcons\]/);
+  assert.match(studio, /\.\.\.generalStampIcons, \.\.\.flowerStampIcons[,\]]/);
 });
