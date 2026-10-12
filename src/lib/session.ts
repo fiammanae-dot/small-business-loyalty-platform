@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createHmac, timingSafeEqual } from "crypto";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { RecordStatus, UserRole } from "@prisma/client";
@@ -147,6 +148,34 @@ export async function destroySession() {
   });
 }
 
+/**
+ * One user lookup per request. A page, its access check (requireRole) and the
+ * page frame (DashboardShell) all ask "who is signed in"; React's per-request
+ * cache answers the repeats from memory. Keyed on the session's user and role,
+ * so it can never hand one user's record to another.
+ */
+const loadSessionUser = cache((userId: number, role: UserRole) =>
+  prisma.user.findFirst({
+    where: { id: userId, role, status: "ACTIVE" },
+    select: {
+      id: true,
+      uuid: true,
+      name: true,
+      email: true,
+      role: true,
+      sessionVersion: true,
+      forcePasswordChange: true,
+      twoFactorEnabled: true,
+      businessId: true,
+      business: { select: { status: true } },
+      branchId: true,
+    },
+  }),
+);
+
+/** The platform-wide 2FA rule, read once per request for the access checks. */
+const loadTwoFactorRequirement = cache(() => getTwoFactorRequirement());
+
 export async function getCurrentUser(): Promise<AuthUser | null> {
   const cookieStore = await cookies();
   const session = verifySessionValue(cookieStore.get(SESSION_COOKIE)?.value);
@@ -162,30 +191,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   }
 
   try {
-    const user = await prisma.user.findFirst({
-      where: {
-        id: session.userId,
-        role: session.role,
-        status: "ACTIVE",
-      },
-      select: {
-        id: true,
-        uuid: true,
-        name: true,
-        email: true,
-        role: true,
-        sessionVersion: true,
-        forcePasswordChange: true,
-        twoFactorEnabled: true,
-        businessId: true,
-        business: {
-          select: {
-            status: true,
-          },
-        },
-        branchId: true,
-      },
-    });
+    const user = await loadSessionUser(session.userId, session.role);
 
     if (!user || user.sessionVersion !== session.sessionVersion) {
       attachMonitoringContext(null);
@@ -248,7 +254,7 @@ export async function requireRole(role: UserRole) {
  */
 export async function requiresTwoFactorEnrollment(user: Pick<AuthUser, "role" | "twoFactorEnabled">) {
   if (user.twoFactorEnabled || !canUseTwoFactor(user.role)) return false;
-  return requiresTwoFactorSetup(user, await getTwoFactorRequirement());
+  return requiresTwoFactorSetup(user, await loadTwoFactorRequirement());
 }
 
 export async function redirectAuthenticatedUser() {

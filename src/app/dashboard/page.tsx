@@ -11,6 +11,7 @@ import { formatDate, formatDateTime } from "@/lib/format";
 import { getPlanComplianceSummary, type PlanComplianceSummary } from "@/lib/plan-compliance";
 import { requireSupportBusinessContext } from "@/lib/support-sessions";
 import { prisma } from "@/lib/prisma";
+import { getProgramActivityTotals } from "@/lib/program-stats";
 import { businessTypeLabels } from "@/lib/roles";
 
 type ServeQueueItem = {
@@ -35,6 +36,13 @@ export default async function BusinessDashboard({
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
+  // Started alongside the queries below rather than after them.
+  const activityTotalsPromise = getProgramActivityTotals(user.businessId);
+  const planCompliancePromise = getPlanComplianceSummary({
+    businessId: user.businessId,
+    planCode: plan?.code,
+    recordAuditEvent: !supportSession?.readOnly,
+  });
   const [
     newCustomersToday,
     stampsToday,
@@ -94,8 +102,6 @@ export default async function BusinessDashboard({
             earnedStamps: true,
             bonusStamps: true,
             status: true,
-            stampTransactions: { select: { quantity: true } },
-            rewardRedemptions: { select: { id: true } },
             businessCustomerMembership: { select: { uuid: true, firstName: true, lastName: true } },
           },
         },
@@ -119,11 +125,8 @@ export default async function BusinessDashboard({
     }),
   ]);
 
-  const planCompliance = await getPlanComplianceSummary({
-    businessId: user.businessId,
-    planCode: plan?.code,
-    recordAuditEvent: !supportSession?.readOnly,
-  });
+  const activityTotals = await activityTotalsPromise;
+  const planCompliance = await planCompliancePromise;
   const totalOpenAlerts = highAlerts + mediumAlerts + lowAlerts;
   const customerCount = business._count.customerMemberships;
   const branchCount = business._count.branches;
@@ -143,11 +146,8 @@ export default async function BusinessDashboard({
       : program.memberships.filter(
           (membership) => membership.status !== "COMPLETED" && membership.earnedStamps + membership.bonusStamps >= program.requiredStamps,
         ).length;
-    const totalStampsIssued = program.memberships.reduce(
-      (sum, membership) =>
-        sum + membership.stampTransactions.reduce((stampSum, transaction) => stampSum + transaction.quantity, 0),
-      0,
-    );
+    // Added up by the database, not by loading every stamp ever given.
+    const totalStampsIssued = activityTotals.stampsIssued(program.id);
 
     return {
       id: program.id,
@@ -156,7 +156,7 @@ export default async function BusinessDashboard({
       members: memberCount,
       progressPercent: Math.min(100, Math.round((averageProgress / program.requiredStamps) * 100)),
       rewardReady,
-      rewardsEarned: program.memberships.reduce((sum, membership) => sum + membership.rewardRedemptions.length, 0),
+      rewardsEarned: activityTotals.rewardsRedeemed(program.id),
       totalStampsIssued,
       rewardName: program.rewardName,
       createdAt: program.createdAt,

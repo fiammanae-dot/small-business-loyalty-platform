@@ -46,7 +46,7 @@ test("the customer list never marks a membership reward-ready or near-reward", (
   // Membership rows report no reward state and show sessions remaining.
   assert.match(page, /if \(isMembership\) \{[\s\S]*current: sessions\.remaining,[\s\S]*rewardReady: false,[\s\S]*nearReward: false,/);
   // The Reward-ready / Near-reward filter segments are hidden in membership mode.
-  assert.match(page, /\.\.\.\(membershipMode\s*\?\s*\[\]\s*:\s*\[/);
+  assert.match(page, /\.\.\.\(membershipMode \|\| !rewardStates\s*\?\s*\[\]\s*:\s*\[/);
   assert.match(page, /\{membershipMode \? null : <FilterSelect name="reward"/);
 });
 

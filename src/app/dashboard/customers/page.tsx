@@ -21,6 +21,7 @@ import { formatUaePhoneDisplay, normalizePhone } from "@/lib/phone";
 import { businessTracksVehicles, formatPlateDisplay, parsePlateQuery } from "@/lib/vehicles";
 import { getNextReward, getReadyRewards, singleCardReward } from "@/lib/rewards";
 import { membershipSessionSummary } from "@/lib/membership-sessions";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { businessSellsPackages } from "@/lib/programs";
 import { areTiersVisible } from "@/lib/customer-tiers";
@@ -36,6 +37,7 @@ type CustomerSearchParams = {
   program?: string;
   tier?: string;
   reward?: string;
+  page?: string;
   error?: string;
   success?: string;
 };
@@ -61,78 +63,94 @@ export default async function CustomersPage({
   const branchId = params.branch && !Number.isNaN(Number(params.branch)) ? Number(params.branch) : undefined;
   const rewardFilter = ["ready", "near"].includes(params.reward ?? "") ? params.reward : undefined;
 
-  const [programs, customers, allCustomers] = await Promise.all([
+  // Who is reward-ready / near a reward depends on milestones and claimed
+  // rewards, so it is worked out from a small query (stamp counts only, no
+  // customer details) instead of loading every customer in full.
+  // Also loaded when a reward filter is in the link, so ?reward=ready keeps
+  // working for businesses that sell packages as well as stamp cards.
+  const rewardStates = membershipMode && !rewardFilter ? null : await loadRewardStates(user.businessId);
+
+  const where: Prisma.BusinessCustomerMembershipWhereInput = {
+    businessId: user.businessId,
+    ...(status ? { status: status as "ACTIVE" | "INACTIVE" | "BLOCKED" } : {}),
+    ...(source ? { source: source as "STAFF" | "OWNER" | "IMPORT" | "SELF_SIGNUP" } : {}),
+    ...(consent ? { marketingConsent: consent === "yes" } : {}),
+    ...(tier ? { currentTier: tier as "BRONZE" | "SILVER" | "GOLD" | "VIP" } : {}),
+    ...(branchId ? { createdBranchId: branchId } : {}),
+    ...(params.program ? { programMemberships: { some: { loyaltyProgram: { uuid: params.program } } } } : {}),
+    ...(rewardFilter && rewardStates
+      ? { id: { in: [...(rewardFilter === "ready" ? rewardStates.ready : rewardStates.near)] } }
+      : {}),
+    ...(query
+      ? {
+          OR: [
+            { firstName: { contains: query, mode: "insensitive" } },
+            { lastName: { contains: query, mode: "insensitive" } },
+            { phone: { contains: query, mode: "insensitive" } },
+            { normalizedPhone: { contains: query, mode: "insensitive" } },
+            ...(normalizedQueryPhone ? [{ normalizedPhone: normalizedQueryPhone }] : []),
+            ...(plateQuery.normalizedPlate ? [{ normalizedPlate: plateQuery.normalizedPlate }] : []),
+            ...(plateQuery.numberOnly ? [{ vehicleNumber: plateQuery.numberOnly }] : []),
+            { email: { contains: query, mode: "insensitive" } },
+            { cardToken: { contains: query, mode: "insensitive" } },
+            { referralCode: { contains: query, mode: "insensitive" } },
+            { programMemberships: { some: { loyaltyProgram: { name: { contains: query, mode: "insensitive" } } } } },
+          ],
+        }
+      : {}),
+  };
+
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+  const requestedPage = Math.max(1, Math.floor(Number(params.page) || 1));
+  const businessScope = { businessId: user.businessId };
+
+  // One page of customers, plus counts the database works out on its own.
+  const [programs, totalMatching, allCount, activeCount, inactiveCount, vipCount, noConsentCount, newThisMonth] = await Promise.all([
     prisma.loyaltyProgram.findMany({
       where: { businessId: user.businessId, active: true },
       orderBy: { name: "asc" },
       select: { uuid: true, name: true },
     }),
-    prisma.businessCustomerMembership.findMany({
-      where: {
-        businessId: user.businessId,
-        ...(status ? { status: status as "ACTIVE" | "INACTIVE" | "BLOCKED" } : {}),
-        ...(source ? { source: source as "STAFF" | "OWNER" | "IMPORT" | "SELF_SIGNUP" } : {}),
-        ...(consent ? { marketingConsent: consent === "yes" } : {}),
-        ...(tier ? { currentTier: tier as "BRONZE" | "SILVER" | "GOLD" | "VIP" } : {}),
-        ...(branchId ? { createdBranchId: branchId } : {}),
-        ...(params.program ? { programMemberships: { some: { loyaltyProgram: { uuid: params.program } } } } : {}),
-        ...(query
-          ? {
-              OR: [
-                { firstName: { contains: query, mode: "insensitive" } },
-                { lastName: { contains: query, mode: "insensitive" } },
-                { phone: { contains: query, mode: "insensitive" } },
-                { normalizedPhone: { contains: query, mode: "insensitive" } },
-                ...(normalizedQueryPhone ? [{ normalizedPhone: normalizedQueryPhone }] : []),
-                ...(plateQuery.normalizedPlate ? [{ normalizedPlate: plateQuery.normalizedPlate }] : []),
-                ...(plateQuery.numberOnly ? [{ vehicleNumber: plateQuery.numberOnly }] : []),
-                { email: { contains: query, mode: "insensitive" } },
-                { cardToken: { contains: query, mode: "insensitive" } },
-                { referralCode: { contains: query, mode: "insensitive" } },
-                { programMemberships: { some: { loyaltyProgram: { name: { contains: query, mode: "insensitive" } } } } },
-              ],
-            }
-          : {}),
-      },
-      include: customerInclude,
-      orderBy: { joinedAt: "desc" },
-    }),
-    prisma.businessCustomerMembership.findMany({
-      where: { businessId: user.businessId },
-      include: customerInclude,
-      orderBy: { joinedAt: "desc" },
-    }),
+    prisma.businessCustomerMembership.count({ where }),
+    prisma.businessCustomerMembership.count({ where: businessScope }),
+    prisma.businessCustomerMembership.count({ where: { ...businessScope, status: "ACTIVE" } }),
+    prisma.businessCustomerMembership.count({ where: { ...businessScope, status: "INACTIVE" } }),
+    tiersVisible ? prisma.businessCustomerMembership.count({ where: { ...businessScope, currentTier: "VIP" } }) : Promise.resolve(0),
+    prisma.businessCustomerMembership.count({ where: { ...businessScope, marketingConsent: false } }),
+    prisma.businessCustomerMembership.count({ where: { ...businessScope, joinedAt: { gte: monthStart } } }),
   ]);
+  const pageCount = Math.max(1, Math.ceil(totalMatching / CUSTOMERS_PER_PAGE));
+  const currentPage = Math.min(requestedPage, pageCount);
+  const customers = await prisma.businessCustomerMembership.findMany({
+    where,
+    include: customerInclude,
+    orderBy: [{ joinedAt: "desc" }, { id: "desc" }],
+    skip: (currentPage - 1) * CUSTOMERS_PER_PAGE,
+    take: CUSTOMERS_PER_PAGE,
+  });
 
-  const allRows = allCustomers.map(toCustomerSummary);
-  const rowsWithUrls = customers.map((membership) => ({
+  const customerRows = customers.map((membership) => ({
     ...toCustomerSummary(membership),
     raw: membership,
     customerName: getCustomerName(membership),
   }));
-  const customerRows = rowsWithUrls.filter((row) => {
-    if (rewardFilter === "ready") return row.rewardReady;
-    if (rewardFilter === "near") return row.nearReward;
-    return true;
-  });
-
-  const monthStart = new Date();
-  monthStart.setDate(1);
-  monthStart.setHours(0, 0, 0, 0);
-  const newThisMonth = allRows.filter((row) => row.joinedAt >= monthStart).length;
+  const firstShown = totalMatching === 0 ? 0 : (currentPage - 1) * CUSTOMERS_PER_PAGE + 1;
+  const lastShown = (currentPage - 1) * CUSTOMERS_PER_PAGE + customerRows.length;
 
   const segments: Array<{ key: string; label: string; count: number; href: string; tone?: "warning" }> = [
-    { key: "all", label: "All customers", count: allRows.length, href: buildSegmentHref(query, {}) },
-    ...(membershipMode
+    { key: "all", label: "All customers", count: allCount, href: buildSegmentHref(query, {}) },
+    ...(membershipMode || !rewardStates
       ? []
       : [
-          { key: "reward", label: "Reward ready", count: allRows.filter((row) => row.rewardReady).length, href: buildSegmentHref(query, { reward: "ready" }), tone: "warning" as const },
-          { key: "near", label: "Near reward", count: allRows.filter((row) => row.nearReward).length, href: buildSegmentHref(query, { reward: "near" }) },
+          { key: "reward", label: "Reward ready", count: rewardStates.ready.size, href: buildSegmentHref(query, { reward: "ready" }), tone: "warning" as const },
+          { key: "near", label: "Near reward", count: rewardStates.near.size, href: buildSegmentHref(query, { reward: "near" }) },
         ]),
-    ...(tiersVisible ? [{ key: "vip", label: "VIP", count: allRows.filter((row) => row.tier === "VIP").length, href: buildSegmentHref(query, { tier: "VIP" }) }] : []),
-    { key: "active", label: "Active", count: allRows.filter((row) => row.status === "ACTIVE").length, href: buildSegmentHref(query, { status: "ACTIVE" }) },
-    { key: "inactive", label: "Inactive", count: allRows.filter((row) => row.status === "INACTIVE").length, href: buildSegmentHref(query, { status: "INACTIVE" }) },
-    { key: "noconsent", label: "No marketing consent", count: allRows.filter((row) => !row.marketingConsent).length, href: buildSegmentHref(query, { consent: "no" }) },
+    ...(tiersVisible ? [{ key: "vip", label: "VIP", count: vipCount, href: buildSegmentHref(query, { tier: "VIP" }) }] : []),
+    { key: "active", label: "Active", count: activeCount, href: buildSegmentHref(query, { status: "ACTIVE" }) },
+    { key: "inactive", label: "Inactive", count: inactiveCount, href: buildSegmentHref(query, { status: "INACTIVE" }) },
+    { key: "noconsent", label: "No marketing consent", count: noConsentCount, href: buildSegmentHref(query, { consent: "no" }) },
   ];
   const activeSegment = resolveSegment(params);
   const hasAdvancedFilters = Boolean(params.branch || params.program || params.source);
@@ -273,7 +291,9 @@ export default async function CustomersPage({
           <section aria-label="Customer directory" className="min-w-0">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm font-semibold text-[#171A21]">
-                Showing {customerRows.length} customer{customerRows.length === 1 ? "" : "s"}
+                {totalMatching > CUSTOMERS_PER_PAGE
+                  ? `Showing ${firstShown}\u2013${lastShown} of ${totalMatching.toLocaleString("en-US")} customers`
+                  : `Showing ${totalMatching} customer${totalMatching === 1 ? "" : "s"}`}
               </p>
               <p className="text-xs text-[#7A8091]">{newThisMonth} joined this month</p>
             </div>
@@ -306,6 +326,7 @@ export default async function CustomersPage({
                     <CustomerMobileCard key={row.raw.id} row={row} tiersVisible={tiersVisible} />
                   ))}
                 </div>
+                {pageCount > 1 ? <CustomerPager params={params} currentPage={currentPage} pageCount={pageCount} /> : null}
               </>
             ) : (
               <EmptyState
@@ -323,6 +344,72 @@ export default async function CustomersPage({
       </div>
     </DashboardShell>
   );
+}
+
+const CUSTOMERS_PER_PAGE = 50;
+
+/** Previous / next page links that keep the current search and filters. */
+function CustomerPager({ params, currentPage, pageCount }: { params: CustomerSearchParams; currentPage: number; pageCount: number }) {
+  const hrefFor = (page: number) => {
+    const next = new URLSearchParams();
+    for (const key of ["q", "status", "consent", "source", "branch", "program", "tier", "reward"] as const) {
+      const value = params[key];
+      if (value) next.set(key, value);
+    }
+    if (page > 1) next.set("page", String(page));
+    const suffix = next.toString();
+    return suffix ? `/dashboard/customers?${suffix}` : "/dashboard/customers";
+  };
+  const linkClass =
+    "inline-flex h-10 items-center rounded-lg border border-[#E7E9EE] bg-white px-4 text-sm font-semibold text-[#3D4352] transition hover:bg-[#F3F4F7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary,#16A34A)]";
+  return (
+    <nav aria-label="Customer pages" className="mt-4 flex items-center justify-between gap-3">
+      {currentPage > 1 ? <Link href={hrefFor(currentPage - 1)} className={linkClass}>&larr; Previous</Link> : <span />}
+      <span className="text-sm text-[#7A8091]">Page {currentPage} of {pageCount}</span>
+      {currentPage < pageCount ? <Link href={hrefFor(currentPage + 1)} className={linkClass}>Next &rarr;</Link> : <span />}
+    </nav>
+  );
+}
+
+/**
+ * Which customers are reward-ready or two visits from their next reward,
+ * using the same rules as each row (milestones and claimed rewards count).
+ * Reads only stamp counts, so it stays light with thousands of customers.
+ */
+async function loadRewardStates(businessId: number) {
+  const [programs, enrollments] = await Promise.all([
+    prisma.loyaltyProgram.findMany({
+      where: { businessId, isMembership: false },
+      select: {
+        id: true,
+        requiredStamps: true,
+        rewardName: true,
+        rewardDescription: true,
+        programRewards: { orderBy: { atStamp: "asc" }, select: { atStamp: true, rewardName: true, rewardDescription: true, completesCard: true } },
+      },
+    }),
+    prisma.customerProgramMembership.findMany({
+      where: { status: "ACTIVE", loyaltyProgram: { businessId, isMembership: false } },
+      select: { businessCustomerMembershipId: true, loyaltyProgramId: true, earnedStamps: true, bonusStamps: true, claimedRewardStamps: true },
+    }),
+  ]);
+  const rewardsByProgram = new Map(programs.map((program) => [program.id, program.programRewards.length ? program.programRewards : singleCardReward(program)]));
+  const ready = new Set<number>();
+  const near = new Set<number>();
+  for (const enrollment of enrollments) {
+    const rewards = rewardsByProgram.get(enrollment.loyaltyProgramId);
+    if (!rewards) continue;
+    const cardInput = { earnedStamps: enrollment.earnedStamps, bonusStamps: enrollment.bonusStamps, rewards, claimedRewardStamps: enrollment.claimedRewardStamps };
+    const readyRewards = getReadyRewards(cardInput);
+    if (readyRewards.length > 0) {
+      ready.add(enrollment.businessCustomerMembershipId);
+      continue;
+    }
+    const nextReward = getNextReward(cardInput);
+    const untilNext = nextReward ? nextReward.atStamp - (enrollment.earnedStamps + enrollment.bonusStamps) : null;
+    if (untilNext !== null && untilNext > 0 && untilNext <= 2) near.add(enrollment.businessCustomerMembershipId);
+  }
+  return { ready, near };
 }
 
 const customerInclude = {

@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { BusinessBranding } from "@prisma/client";
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import type { AuthUser } from "@/lib/session";
 
@@ -41,15 +42,17 @@ export function resolveBusinessBranding(
   };
 }
 
+// The page frame and the scanner both read the branding; once per request is enough.
+const loadBusinessBranding = cache((businessId: number) =>
+  prisma.business.findFirst({ where: { id: businessId }, select: { branding: true } }),
+);
+
 export async function getOperationalBusinessBranding(user: AuthUser) {
   if (user.role === "PLATFORM_OWNER" || !user.businessId) {
     return null;
   }
 
-  const business = await prisma.business.findFirst({
-    where: { id: user.businessId },
-    select: { branding: true },
-  });
+  const business = await loadBusinessBranding(user.businessId);
 
   return resolveBusinessBranding(business?.branding, user.role === "BUSINESS_OWNER" ? businessOwnerOperationalDefaults : undefined);
 }

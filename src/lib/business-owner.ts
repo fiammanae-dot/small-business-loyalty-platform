@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -37,6 +38,11 @@ export async function requireBusinessOwnerForWrite(): Promise<{ id: number; busi
   return { id: user.id, businessId: user.businessId };
 }
 
+// Loaded once per request, however many parts of the page ask for it.
+const loadOwnerBusiness = cache((businessId: number) =>
+  prisma.business.findFirst({ where: { id: businessId }, include: businessOwnerInclude }),
+);
+
 export async function getBusinessOwnerContext() {
   const supportContext = await getActiveSupportSessionForCurrentAdmin();
   if (supportContext) {
@@ -44,10 +50,7 @@ export async function getBusinessOwnerContext() {
   }
 
   const user = await requireBusinessOwner();
-  const business = await prisma.business.findFirst({
-    where: { id: user.businessId },
-    include: businessOwnerInclude,
-  });
+  const business = await loadOwnerBusiness(user.businessId);
 
   if (!business) {
     redirect("/login");

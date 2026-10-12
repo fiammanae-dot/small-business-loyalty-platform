@@ -123,7 +123,10 @@ test("csv exports and launch readiness are business or platform scoped", () => {
 
 test("demo mode is platform controlled and visible in the shared shell", () => {
   assert.match(read("src/app/platform/settings/actions.ts"), /requirePlatformAdmin\(\)/);
-  assert.match(read("src/components/DashboardShell.tsx"), /Demo/);
+  // Demo mode is read where it is shown (platform settings); the shell used to
+  // run the query on every page and throw the answer away.
+  assert.match(read("src/app/platform/settings/page.tsx"), /isDemoModeEnabled\(\)/);
+  assert.doesNotMatch(read("src/components/DashboardShell.tsx"), /await isDemoModeEnabled\(\);/);
   assert.match(read("prisma/migrations/0016_phase_7f_operational_readiness/migration.sql"), /platform_settings/);
 });
 
