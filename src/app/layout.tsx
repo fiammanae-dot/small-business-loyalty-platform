@@ -1,17 +1,26 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { Suspense } from "react";
 import { AppToaster } from "@/components/AppToaster";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+// Brand fonts (Loyalty Card UAE guidelines): Comfortaa for headings and short
+// lines, Nunito for body text and app screens. Both are SIL Open Font License
+// variable fonts, served from the app itself (no Google Fonts request).
+const comfortaa = localFont({
+  src: "./fonts/Comfortaa-Variable.woff2",
+  variable: "--font-comfortaa",
+  weight: "300 700",
+  display: "swap",
+  fallback: ["Arial Rounded MT Bold", "Arial", "sans-serif"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const nunito = localFont({
+  src: "./fonts/Nunito-Variable.woff2",
+  variable: "--font-nunito",
+  weight: "200 1000",
+  display: "swap",
+  fallback: ["Segoe UI", "Arial", "sans-serif"],
 });
 
 export const metadata: Metadata = {
@@ -49,7 +58,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full overflow-x-clip antialiased`}
+      className={`${comfortaa.variable} ${nunito.variable} h-full overflow-x-clip antialiased`}
     >
       <body className="min-h-full flex flex-col overflow-x-clip">
         {children}
