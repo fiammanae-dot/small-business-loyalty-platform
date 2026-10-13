@@ -31,8 +31,9 @@
   --color-muted-bg: var(--light-gray);
   --color-muted-border: var(--medium-gray);
   
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-nunito), "Segoe UI", Arial, sans-serif;
+  --font-display: var(--font-comfortaa), var(--font-nunito), Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 html,
@@ -44,7 +45,17 @@ body {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-nunito), "Segoe UI", Arial, sans-serif;
+}
+
+/* Brand typography: headings in Comfortaa (Light for big headings, Bold for
+   small ones), everything people read for longer in Nunito. */
+@layer base {
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+  }
 }
 
 button,
