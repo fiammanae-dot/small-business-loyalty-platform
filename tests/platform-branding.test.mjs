@@ -45,7 +45,11 @@ test("the brand artwork and icons are in place", () => {
   ]) {
     assert.ok(existsSync(file), file);
   }
-  assert.equal(read("src/app/icon.svg"), read("public/brand/app-icon-dark.svg"));
+  // The tab icon is the plain symbol: ink ring (white on a dark tab bar), orange dot, no background.
+  const icon = read("src/app/icon.svg");
+  assert.doesNotMatch(icon, /<rect/);
+  assert.match(icon, /prefers-color-scheme:dark/);
+  assert.match(icon, /fill="#F26A21"/);
   const manifest = read("src/app/manifest.ts");
   assert.match(manifest, /name: "Loyalty Card UAE"/);
   assert.match(manifest, /purpose: "maskable"/);
