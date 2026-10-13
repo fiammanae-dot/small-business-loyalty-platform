@@ -112,5 +112,5 @@ test("the two uploads stay in separate folders", () => {
   // a card photo can never be mistaken for a logo when tidying up later.
   assert.match(storage, /folder: "logos" \| "wallet-photos"/);
   assert.match(storage, /saveImageFile\(buffer, extension, "logos"\)/);
-  assert.match(storage, /saveImageFile\(buffer, extension, "wallet-photos"\)/);
+  assert.match(storage, /saveImageFile\(await normaliseWalletPhoto\(buffer\), "jpg", "wallet-photos"\)/);
 });
