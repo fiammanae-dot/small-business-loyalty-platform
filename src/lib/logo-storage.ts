@@ -147,8 +147,35 @@ export function saveLogoFile(buffer: Buffer, extension: string) {
   return saveImageFile(buffer, extension, "logos");
 }
 
-export function saveWalletPhotoFile(buffer: Buffer, extension: string) {
-  return saveImageFile(buffer, extension, "wallet-photos");
+/**
+ * The banner across the top of a wallet pass. Apple shows it at most 1125 x
+ * 432 px and the pass provider refuses banners over 1MB, so every upload is
+ * resized to fit that width and saved as a JPEG (a photo, not a mark): a 4MB
+ * phone picture becomes ~150KB with no visible loss on the card.
+ */
+export const WALLET_PHOTO_MAX_WIDTH = 1125;
+export const WALLET_PHOTO_MAX_HEIGHT = 1000;
+export const WALLET_PHOTO_PROVIDER_LIMIT_BYTES = 1024 * 1024;
+
+export async function normaliseWalletPhoto(buffer: Buffer): Promise<Buffer> {
+  const { default: sharp } = await import("sharp");
+  let quality = 85;
+  let out = await sharp(buffer, { failOn: "none" })
+    .rotate() // honour the phone's orientation tag
+    .resize({ width: WALLET_PHOTO_MAX_WIDTH, height: WALLET_PHOTO_MAX_HEIGHT, fit: "inside", withoutEnlargement: true })
+    .flatten({ background: "#ffffff" })
+    .jpeg({ quality, mozjpeg: true })
+    .toBuffer();
+  // Very detailed pictures can still be large; step the quality down until they fit.
+  while (out.length > WALLET_PHOTO_PROVIDER_LIMIT_BYTES * 0.8 && quality > 50) {
+    quality -= 10;
+    out = await sharp(out).jpeg({ quality, mozjpeg: true }).toBuffer();
+  }
+  return out;
+}
+
+export async function saveWalletPhotoFile(buffer: Buffer, _extension: string) {
+  return saveImageFile(await normaliseWalletPhoto(buffer), "jpg", "wallet-photos");
 }
 
 /** A business's own stamp icon, already normalised to a square PNG. */
