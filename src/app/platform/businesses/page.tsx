@@ -242,7 +242,7 @@ export default async function BusinessesPage({
         <p className="text-sm text-[#7A8091]">Search, filter, and manage business tenants.</p>
         <Link
           href="/platform/businesses/new"
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(232,106,51,0.25)] transition hover:bg-[var(--accent-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 sm:h-10"
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(242,106,33,0.25)] transition hover:bg-[var(--accent-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 sm:h-10"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
           Create Business

@@ -75,7 +75,7 @@ export default async function PlatformHealthPage() {
         <div className="mt-6">
           <Link
             href="/platform"
-            className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]"
+            className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] transition hover:border-[#F26A21] hover:text-[#F26A21]"
           >
             Back to platform
           </Link>

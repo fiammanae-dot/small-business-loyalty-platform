@@ -53,11 +53,11 @@ export default async function StartSupportSessionPage({
       <section className="max-w-3xl rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-sm font-semibold text-[#F97316]">Support Access</p>
+            <p className="text-sm font-semibold text-[#F26A21]">Support Access</p>
             <h2 className="mt-1 text-2xl font-semibold text-[#111827]">{business.name}</h2>
             <p className="mt-2 text-sm text-[#6B7280]">Create a secure, time-limited support context for this business workspace.</p>
           </div>
-          <Link href={`/platform/businesses/${business.uuid}`} className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] hover:border-[#F97316] hover:text-[#F97316]">
+          <Link href={`/platform/businesses/${business.uuid}`} className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] hover:border-[#F26A21] hover:text-[#F26A21]">
             Back to business
           </Link>
         </div>
@@ -110,7 +110,7 @@ export default async function StartSupportSessionPage({
               <label className="grid gap-2 text-sm font-medium text-[#111827]">
                 Reason for access
                 <RequiredMark />
-                <textarea name="reason" required rows={4} disabled={archived} className="min-h-28 rounded-md border border-[#E5E7EB] px-3 py-2 text-sm font-normal outline-none focus:border-[#F97316] disabled:bg-[#F3F4F6]" placeholder="Describe why support access is needed." />
+                <textarea name="reason" required rows={4} disabled={archived} className="min-h-28 rounded-md border border-[#E5E7EB] px-3 py-2 text-sm font-normal outline-none focus:border-[#F26A21] disabled:bg-[#F3F4F6]" placeholder="Describe why support access is needed." />
               </label>
 
               <fieldset className="grid gap-3">
@@ -133,7 +133,7 @@ export default async function StartSupportSessionPage({
                 <input type="checkbox" name="readOnly" defaultChecked disabled={archived} className="h-5 w-5 rounded border-[#E5E7EB]" />
               </label>
 
-              <button type="submit" disabled={archived} className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-[#D1D5DB] sm:w-fit">
+              <button type="submit" disabled={archived} className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-[#F26A21] px-4 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-[#D1D5DB] sm:w-fit">
                 Start Support Session
               </button>
             </form>

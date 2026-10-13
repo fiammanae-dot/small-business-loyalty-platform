@@ -120,7 +120,7 @@ export default async function EngagementCenterPage({
           />
           <input name="from" type="date" defaultValue={params.from ?? ""} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm" />
           <input name="to" type="date" defaultValue={params.to ?? ""} className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm" />
-          <button className="h-10 rounded-md border border-[#F97316] px-4 text-sm font-semibold business-primary md:col-span-5">Apply filters</button>
+          <button className="h-10 rounded-md border border-[#F26A21] px-4 text-sm font-semibold business-primary md:col-span-5">Apply filters</button>
         </form>
       </section>
 

@@ -10,8 +10,8 @@ function read(file) {
 
 test("design tokens define brand, semantic, spacing, focus, and breakpoint foundations", function () {
   const tokens = read("src/lib/design-tokens.ts");
-  assert.match(tokens, /primary: "#F97316"/);
-  assert.match(tokens, /dark: "#EA580C"/);
+  assert.match(tokens, /primary: "#F26A21"/);
+  assert.match(tokens, /dark: "#C2410C"/);
   assert.match(tokens, /success/);
   assert.match(tokens, /warning/);
   assert.match(tokens, /danger/);

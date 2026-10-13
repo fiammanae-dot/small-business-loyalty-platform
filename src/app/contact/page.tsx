@@ -46,8 +46,8 @@ function ContactCard({
   external?: boolean;
 }) {
   const card = (
-    <div className="h-full rounded-[26px] border border-[#E5E7EB] bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-[0_24px_60px_rgba(249,115,22,0.12)]">
-      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-50 text-[#F97316]">
+    <div className="h-full rounded-[26px] border border-[#E5E7EB] bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-[0_24px_60px_rgba(242,106,33,0.12)]">
+      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-50 text-[#F26A21]">
         <Icon className="h-6 w-6" aria-hidden="true" />
       </span>
       <h2 className="mt-5 text-xl font-extrabold text-[#08111F]">{title}</h2>

@@ -4,7 +4,7 @@ import { z } from "zod";
 // platform admin business editor and the Business Owner Brand Assets Center so
 // the two writers can never drift apart.
 
-export const brandColorSchema = z.string().trim().regex(/^#[0-9A-Fa-f]{6}$/, "Use a hex color like #F97316.");
+export const brandColorSchema = z.string().trim().regex(/^#[0-9A-Fa-f]{6}$/, "Use a hex color like #F26A21.");
 
 // Accepts uploaded logos (site-relative /uploads/logos/... paths), legacy
 // absolute URLs saved before uploads existed, or empty (no logo).

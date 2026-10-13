@@ -198,7 +198,7 @@ export default async function OperationsCenterPage({ searchParams }: { searchPar
       <section className="flex flex-col gap-1">
         <p className="text-xs text-[#9AA0AD]">
           Support · Compliance ·{" "}
-          <Link href="/platform/health" className="underline hover:text-[#F97316]">
+          <Link href="/platform/health" className="underline hover:text-[#F26A21]">
             Platform Health
           </Link>{" "}
           · Background Jobs coming soon
@@ -238,7 +238,7 @@ export default async function OperationsCenterPage({ searchParams }: { searchPar
         </div>
         <Link
           href="/platform/operations-center/support/start"
-          className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(232,106,51,0.25)] transition hover:bg-[var(--accent-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+          className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(242,106,33,0.25)] transition hover:bg-[var(--accent-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
         >
           <LifeBuoy className="h-4 w-4" aria-hidden="true" />
           Start Support Session

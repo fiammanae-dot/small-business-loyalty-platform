@@ -93,7 +93,7 @@ function PrepareButton({ eventUuid, channel, label }: { eventUuid: string; chann
       <CsrfInput scope="dashboard:messages" />
       <input type="hidden" name="eventUuid" value={eventUuid} />
       <input type="hidden" name="channel" value={channel} />
-      <button type="submit" className="rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white">
+      <button type="submit" className="rounded-md bg-[#F26A21] px-4 py-2 text-sm font-semibold text-white">
         {label}
       </button>
     </form>

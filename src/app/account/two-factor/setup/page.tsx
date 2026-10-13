@@ -49,10 +49,10 @@ export default async function TwoFactorSetupPage() {
         </Link>
 
         <div className="mt-8">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-[#F97316]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-[#F26A21]">
             <ShieldCheck className="h-6 w-6" aria-hidden="true" />
           </div>
-          <p className="mt-5 text-sm font-semibold uppercase tracking-wide text-[#F97316]">Account security</p>
+          <p className="mt-5 text-sm font-semibold uppercase tracking-wide text-[#F26A21]">Account security</p>
           <h1 className="mt-2 text-2xl font-semibold tracking-tight">Two-factor authentication</h1>
           <p className="mt-2 text-sm leading-6 text-[#6B7280]">
             Add a second step to your sign-in using an authenticator app. Backup codes let you back in if you lose your device.
@@ -72,7 +72,7 @@ export default async function TwoFactorSetupPage() {
 
         {!required || enabled ? (
           <p className="mt-8 text-sm text-[#6B7280]">
-            <Link href={roleHomePath[user.role]} className="font-semibold text-[#F97316] hover:underline">
+            <Link href={roleHomePath[user.role]} className="font-semibold text-[#F26A21] hover:underline">
               Back to workspace
             </Link>
           </p>

@@ -35,7 +35,7 @@ export function DemoRequestForm() {
         event.preventDefault();
         setSubmitted(true);
       }}
-      className="grid gap-4 rounded-[30px] border border-orange-100 bg-white p-5 shadow-[0_24px_70px_rgba(249,115,22,0.14)] sm:p-7"
+      className="grid gap-4 rounded-[30px] border border-orange-100 bg-white p-5 shadow-[0_24px_70px_rgba(242,106,33,0.14)] sm:p-7"
     >
       <FormField label="Business name" name="businessName" placeholder="Rawabi Coffee" required />
       <FormField label="Contact person name" name="contactName" placeholder="Ahmed Mahmoud" required />
@@ -45,7 +45,7 @@ export function DemoRequestForm() {
       </div>
       <label className="grid gap-2 text-sm font-semibold text-[#111827]">
         Country<RequiredMark />
-        <select name="country" required className="h-12 rounded-2xl border border-[#E5E7EB] bg-white px-4 text-sm outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100">
+        <select name="country" required className="h-12 rounded-2xl border border-[#E5E7EB] bg-white px-4 text-sm outline-none transition focus:border-[#F26A21] focus:ring-4 focus:ring-orange-100">
           <option value="">Select country</option>
           {countries.map((country) => (
             <option key={country} value={country}>{country}</option>
@@ -55,7 +55,7 @@ export function DemoRequestForm() {
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="grid gap-2 text-sm font-semibold text-[#111827]">
           Business type<RequiredMark />
-          <select name="businessType" required className="h-12 rounded-2xl border border-[#E5E7EB] bg-white px-4 text-sm outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100">
+          <select name="businessType" required className="h-12 rounded-2xl border border-[#E5E7EB] bg-white px-4 text-sm outline-none transition focus:border-[#F26A21] focus:ring-4 focus:ring-orange-100">
             <option value="">Select type</option>
             {businessTypes.map((type) => (
               <option key={type} value={type}>{type}</option>
@@ -70,10 +70,10 @@ export function DemoRequestForm() {
           name="message"
           rows={5}
           placeholder="Tell us about your loyalty program goals."
-          className="resize-y rounded-2xl border border-[#E5E7EB] px-4 py-3 text-sm outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+          className="resize-y rounded-2xl border border-[#E5E7EB] px-4 py-3 text-sm outline-none transition focus:border-[#F26A21] focus:ring-4 focus:ring-orange-100"
         />
       </label>
-      <button type="submit" className="min-h-12 rounded-2xl bg-[#FF5A0A] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#EA580C] focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:ring-offset-2">
+      <button type="submit" className="min-h-12 rounded-2xl bg-[#F26A21] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#C2410C] focus:outline-none focus:ring-2 focus:ring-[#F26A21] focus:ring-offset-2">
         Request Demo
       </button>
       <p className="text-xs leading-5 text-[#64748B]">
@@ -94,7 +94,7 @@ function FormField({ label, name, type = "text", placeholder, required = false, 
         min={min}
         placeholder={placeholder}
         required={required}
-        className="h-12 rounded-2xl border border-[#E5E7EB] px-4 text-sm outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+        className="h-12 rounded-2xl border border-[#E5E7EB] px-4 text-sm outline-none transition focus:border-[#F26A21] focus:ring-4 focus:ring-orange-100"
       />
     </label>
   );

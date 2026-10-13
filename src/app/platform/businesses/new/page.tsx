@@ -21,7 +21,7 @@ export default async function NewBusinessPage({
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title="Create business">
       <div>
-        <Link href="/platform/businesses" className="text-sm font-semibold text-[#F97316]">
+        <Link href="/platform/businesses" className="text-sm font-semibold text-[#F26A21]">
           Back to businesses
         </Link>
       </div>

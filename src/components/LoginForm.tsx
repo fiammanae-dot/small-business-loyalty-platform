@@ -26,7 +26,7 @@ export function LoginForm({ csrfToken }: { csrfToken: string }) {
           type="email"
           autoComplete="email"
           required
-          className="h-11 w-full rounded-md border border-[#E5E7EB] bg-white px-3 text-sm text-[#111827] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+          className="h-11 w-full rounded-md border border-[#E5E7EB] bg-white px-3 text-sm text-[#111827] outline-none transition focus:border-[#F26A21] focus:ring-4 focus:ring-orange-100"
           placeholder="Enter your email"
         />
       </div>
@@ -42,7 +42,7 @@ export function LoginForm({ csrfToken }: { csrfToken: string }) {
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
             required
-            className="h-11 w-full rounded-md border border-[#E5E7EB] bg-white px-3 pr-12 text-sm text-[#111827] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+            className="h-11 w-full rounded-md border border-[#E5E7EB] bg-white px-3 pr-12 text-sm text-[#111827] outline-none transition focus:border-[#F26A21] focus:ring-4 focus:ring-orange-100"
             placeholder="Enter your password"
           />
           <button
@@ -50,7 +50,7 @@ export function LoginForm({ csrfToken }: { csrfToken: string }) {
             onClick={() => setShowPassword((value) => !value)}
             aria-label={showPassword ? "Hide password" : "Show password"}
             aria-pressed={showPassword}
-            className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-[#6B7280] transition hover:bg-orange-50 hover:text-[#F97316] focus:outline-none focus:ring-4 focus:ring-orange-100"
+            className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-[#6B7280] transition hover:bg-orange-50 hover:text-[#F26A21] focus:outline-none focus:ring-4 focus:ring-orange-100"
           >
             {showPassword ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
           </button>
@@ -66,12 +66,12 @@ export function LoginForm({ csrfToken }: { csrfToken: string }) {
       <button
         type="submit"
         disabled={isPending}
-        className="h-11 w-full rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70"
+        className="h-11 w-full rounded-md bg-[#F26A21] px-4 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70"
       >
         {isPending ? "Signing in..." : "Sign in"}
       </button>
 
-      <Link href="/forgot-password" className="block text-center text-sm font-semibold text-[#F97316] hover:text-[#EA580C]">
+      <Link href="/forgot-password" className="block text-center text-sm font-semibold text-[#F26A21] hover:text-[#C2410C]">
         Forgot Password?
       </Link>
     </form>

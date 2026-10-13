@@ -170,7 +170,7 @@ export default function HomePage() {
         </div>
         <div className="mx-auto grid max-w-[1080px] gap-5 md:grid-cols-3">
           {plans.map((plan) => (
-            <div key={plan.name} className={`relative rounded-[18px] bg-white p-8 ${plan.popular ? "border-2 border-orange-500 shadow-[0_24px_50px_-24px_rgba(249,115,22,0.4)]" : "border border-slate-100"}`}>
+            <div key={plan.name} className={`relative rounded-[18px] bg-white p-8 ${plan.popular ? "border-2 border-orange-500 shadow-[0_24px_50px_-24px_rgba(242,106,33,0.4)]" : "border border-slate-100"}`}>
               {plan.popular ? <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-orange-500 px-4 py-1.5 text-xs font-extrabold uppercase tracking-wider text-white">Popular</div> : null}
               <div className="mb-3.5 text-base font-extrabold">{plan.name}</div>
               <div className="text-[40px] font-black tracking-tight">

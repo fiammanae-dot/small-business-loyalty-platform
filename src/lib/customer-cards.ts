@@ -7,11 +7,11 @@ import { getRequestBaseUrl } from "@/lib/app-url";
 import { formatUaePhoneDisplay } from "@/lib/phone";
 
 export const defaultCardBranding = {
-  primaryColor: "#F97316",
+  primaryColor: "#F26A21",
   secondaryColor: "#FDBA74",
   backgroundColor: "#FFFFFF",
   textColor: "#111827",
-  buttonColor: "#F97316",
+  buttonColor: "#F26A21",
   logoUrl: null,
 };
 

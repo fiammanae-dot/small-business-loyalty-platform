@@ -120,11 +120,11 @@ export default async function BusinessSettingsPage({ searchParams }: { searchPar
             businessName={business.name}
             initialAssets={{
               logoUrl: business.branding?.logoUrl ?? "",
-              primaryColor: business.branding?.primaryColor ?? "#F97316",
+              primaryColor: business.branding?.primaryColor ?? "#F26A21",
               secondaryColor: business.branding?.secondaryColor ?? "#FDBA74",
               backgroundColor: business.branding?.backgroundColor ?? "#FFFFFF",
               textColor: business.branding?.textColor ?? "#111827",
-              buttonColor: business.branding?.buttonColor ?? "#F97316",
+              buttonColor: business.branding?.buttonColor ?? "#F26A21",
             }}
           />
         ) : null}

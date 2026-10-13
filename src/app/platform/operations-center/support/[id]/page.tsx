@@ -71,7 +71,7 @@ export default async function SupportSessionReportPage({
     <DashboardShell user={currentUser} eyebrow="System Administrator" title="Support Session Report">
       <div className="grid gap-6">
         <div data-support-session-mobile-view className="grid gap-4 lg:hidden">
-          <Link href="/platform/operations-center" className="inline-flex min-h-10 w-fit items-center gap-2 rounded-md border border-[#CBD5E1] bg-white px-3 text-sm font-semibold text-[#0F172A] transition hover:border-[#F97316] hover:text-[#F97316]">
+          <Link href="/platform/operations-center" className="inline-flex min-h-10 w-fit items-center gap-2 rounded-md border border-[#CBD5E1] bg-white px-3 text-sm font-semibold text-[#0F172A] transition hover:border-[#F26A21] hover:text-[#F26A21]">
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Operations Center
           </Link>
@@ -111,7 +111,7 @@ export default async function SupportSessionReportPage({
 
         <div className="hidden gap-6 lg:grid">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <Link href="/platform/operations-center" className="inline-flex min-h-10 w-fit items-center gap-2 rounded-md border border-[#CBD5E1] bg-white px-3 text-sm font-semibold text-[#0F172A] transition hover:border-[#F97316] hover:text-[#F97316]">
+            <Link href="/platform/operations-center" className="inline-flex min-h-10 w-fit items-center gap-2 rounded-md border border-[#CBD5E1] bg-white px-3 text-sm font-semibold text-[#0F172A] transition hover:border-[#F26A21] hover:text-[#F26A21]">
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
               Back to Operations Center
             </Link>

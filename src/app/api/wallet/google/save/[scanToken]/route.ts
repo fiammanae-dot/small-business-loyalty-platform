@@ -74,7 +74,7 @@ function allowRequest(key: string) {
 
 function unavailable(message: string, status: number) {
   return new NextResponse(
-    `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Google Wallet | Loyalty Card UAE</title></head><body style="font-family:Arial,sans-serif;margin:0;min-height:100vh;display:grid;place-items:center;background:#f8fafc;color:#0f172a"><main style="max-width:420px;padding:24px;text-align:center"><h1 style="font-size:24px;margin:0 0 12px">Google Wallet unavailable</h1><p style="line-height:1.6;color:#475569">${escapeHtml(message)}</p><a href="/" style="color:#f97316;font-weight:700">Return to Loyalty Card UAE</a></main></body></html>`,
+    `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Google Wallet | Loyalty Card UAE</title></head><body style="font-family:Arial,sans-serif;margin:0;min-height:100vh;display:grid;place-items:center;background:#f8fafc;color:#0f172a"><main style="max-width:420px;padding:24px;text-align:center"><h1 style="font-size:24px;margin:0 0 12px">Google Wallet unavailable</h1><p style="line-height:1.6;color:#475569">${escapeHtml(message)}</p><a href="/" style="color:#F26A21;font-weight:700">Return to Loyalty Card UAE</a></main></body></html>`,
     {
       status,
       headers: {

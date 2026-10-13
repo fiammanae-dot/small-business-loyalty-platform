@@ -73,11 +73,11 @@ export function BusinessForm({ action, plans, error, mode, business, csrfInput }
   };
   const editBrandingDefaults = {
     logoUrl: "",
-    primaryColor: "#F97316",
+    primaryColor: "#F26A21",
     secondaryColor: "#FDBA74",
     backgroundColor: "#FFFFFF",
     textColor: "#111827",
-    buttonColor: "#F97316",
+    buttonColor: "#F26A21",
   };
   const defaultBrandingValues = mode === "create" ? createBrandingDefaults : editBrandingDefaults;
   const [logoUrl, setLogoUrl] = useState(() => value("logoUrl", branding?.logoUrl ?? defaultBrandingValues.logoUrl));
@@ -233,7 +233,7 @@ export function BusinessForm({ action, plans, error, mode, business, csrfInput }
       <button
         type="submit"
         disabled={isPending && shouldUseStatefulAction}
-        className="inline-flex h-11 items-center justify-center rounded-md bg-[#F97316] px-5 text-sm font-semibold text-white transition hover:bg-orange-600"
+        className="inline-flex h-11 items-center justify-center rounded-md bg-[#F26A21] px-5 text-sm font-semibold text-white transition hover:bg-orange-600"
       >
         {isPending && shouldUseStatefulAction ? "Creating..." : mode === "create" ? "Create business" : "Save changes"}
       </button>
@@ -268,11 +268,11 @@ function WizardSteps() {
   const steps = ["Business Details", "Owner Account", "First Branch", "Subscription Plan", "Branding", "Review & Create"];
   return (
     <section className="rounded-md border border-[#E5E7EB] bg-white p-5">
-      <p className="text-sm font-semibold text-[#F97316]">Create organization</p>
+      <p className="text-sm font-semibold text-[#F26A21]">Create organization</p>
       <div className="mt-4 grid gap-2 md:grid-cols-3 xl:grid-cols-6">
         {steps.map((step, index) => (
           <div key={step} className="rounded-md border border-[#E5E7EB] p-3">
-            <p className="text-xs font-semibold uppercase text-[#F97316]">Step {index + 1}</p>
+            <p className="text-xs font-semibold uppercase text-[#F26A21]">Step {index + 1}</p>
             <p className="mt-1 text-sm font-semibold text-[#111827]">{step}</p>
           </div>
         ))}
@@ -284,7 +284,7 @@ function WizardSteps() {
 function StepHeading({ step, title }: { step?: number; title: string }) {
   return (
     <div>
-      {step ? <p className="text-sm font-semibold text-[#F97316]">Step {step}</p> : null}
+      {step ? <p className="text-sm font-semibold text-[#F26A21]">Step {step}</p> : null}
       <h2 className="mt-1 text-lg font-semibold text-[#111827]">{title}</h2>
     </div>
   );
@@ -362,7 +362,7 @@ function Field({
         required={required}
         aria-invalid={Boolean(error)}
         aria-describedby={errorId}
-        className="h-11 w-full rounded-md border border-[#E5E7EB] bg-white px-3 text-sm text-[#111827] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+        className="h-11 w-full rounded-md border border-[#E5E7EB] bg-white px-3 text-sm text-[#111827] outline-none transition focus:border-[#F26A21] focus:ring-4 focus:ring-orange-100"
       />
       {error ? <span id={errorId} className="block text-sm text-red-700">{error}</span> : null}
     </label>
@@ -372,7 +372,7 @@ function Field({
 function Checkbox({ label, name, defaultChecked }: { label: string; name: string; defaultChecked: boolean }) {
   return (
     <label className="flex h-11 items-center gap-3 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm font-medium text-[#111827]">
-      <input name={name} type="checkbox" defaultChecked={defaultChecked} className="h-4 w-4 accent-[#F97316]" />
+      <input name={name} type="checkbox" defaultChecked={defaultChecked} className="h-4 w-4 accent-[#F26A21]" />
       {label}
     </label>
   );
@@ -404,7 +404,7 @@ function SelectField<T extends string>({
         required
         aria-invalid={Boolean(error)}
         aria-describedby={errorId}
-        className="h-11 w-full rounded-md border border-[#E5E7EB] bg-white px-3 text-sm text-[#111827] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+        className="h-11 w-full rounded-md border border-[#E5E7EB] bg-white px-3 text-sm text-[#111827] outline-none transition focus:border-[#F26A21] focus:ring-4 focus:ring-orange-100"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

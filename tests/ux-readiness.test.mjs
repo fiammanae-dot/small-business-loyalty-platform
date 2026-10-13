@@ -153,9 +153,9 @@ test("new business creation defaults branding to black and white without changin
   assert.match(businessForm, /createBrandingDefaults[\s\S]*primaryColor: "#000000"/);
   assert.match(businessForm, /createBrandingDefaults[\s\S]*secondaryColor: "#FFFFFF"/);
   assert.match(businessForm, /createBrandingDefaults[\s\S]*buttonColor: "#000000"/);
-  assert.match(businessForm, /editBrandingDefaults[\s\S]*primaryColor: "#F97316"/);
+  assert.match(businessForm, /editBrandingDefaults[\s\S]*primaryColor: "#F26A21"/);
   assert.match(businessForm, /editBrandingDefaults[\s\S]*secondaryColor: "#FDBA74"/);
-  assert.match(businessForm, /editBrandingDefaults[\s\S]*buttonColor: "#F97316"/);
+  assert.match(businessForm, /editBrandingDefaults[\s\S]*buttonColor: "#F26A21"/);
   assert.match(businessActions, /primaryColor: colorSchema\.default\("#000000"\)/);
   assert.match(businessActions, /secondaryColor: colorSchema\.default\("#FFFFFF"\)/);
   assert.match(businessActions, /buttonColor: colorSchema\.default\("#000000"\)/);

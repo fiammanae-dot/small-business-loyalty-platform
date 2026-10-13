@@ -300,7 +300,7 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
                 aria-current={active ? "page" : undefined}
                 className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition ${
                   active
-                    ? "bg-[#E86A33] business-button text-white shadow-sm"
+                    ? "bg-[#F26A21] business-button text-white shadow-sm"
                     : item.accent
                       ? "border border-[#F4C7AE] business-border-soft bg-[#FBEFE8] business-bg-soft business-primary-strong shadow-sm"
                       : "text-[#7A8091] business-hover"
@@ -354,7 +354,7 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
               <button
                 type="button"
                 onClick={() => setMoreOpen(false)}
-                className="rounded-full px-3 py-1.5 text-sm font-bold text-[#7A8091] hover:bg-[#FBEFE8] hover:text-[#C24E1E]"
+                className="rounded-full px-3 py-1.5 text-sm font-bold text-[#7A8091] hover:bg-[#FBEFE8] hover:text-[#C2410C]"
               >
                 Close
               </button>
@@ -371,11 +371,11 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
                     aria-current={active ? "page" : undefined}
                     className={`flex min-h-12 items-center gap-3 rounded-xl border px-3 py-3 text-sm font-bold transition duration-150 active:scale-[0.98] ${
                       active
-                        ? "border-[#F4C7AE] bg-[#FBEFE8] text-[#C24E1E] shadow-sm ring-1 ring-[#F4C7AE]"
-                        : "border-[#E7E9EE] bg-white text-[#5A6070] hover:border-[#F4C7AE] hover:bg-[#FBEFE8] hover:text-[#C24E1E]"
+                        ? "border-[#F4C7AE] bg-[#FBEFE8] text-[#C2410C] shadow-sm ring-1 ring-[#F4C7AE]"
+                        : "border-[#E7E9EE] bg-white text-[#5A6070] hover:border-[#F4C7AE] hover:bg-[#FBEFE8] hover:text-[#C2410C]"
                     }`}
                   >
-                    <item.icon className={`h-5 w-5 transition-colors ${active ? "text-[#C24E1E]" : "text-[#E86A33]"}`} aria-hidden="true" />
+                    <item.icon className={`h-5 w-5 transition-colors ${active ? "text-[#C2410C]" : "text-[#F26A21]"}`} aria-hidden="true" />
                     <span className="min-w-0 truncate">{item.label}</span>
                   </Link>
                 );
@@ -387,7 +387,7 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
 
       {moreActive && !moreOpen ? (
         <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 flex justify-center px-4">
-          <span className="max-w-[min(22rem,calc(100vw-2rem))] truncate rounded-full border border-[#F4C7AE] bg-white px-3 py-1.5 text-xs font-bold text-[#C24E1E] shadow-lg">
+          <span className="max-w-[min(22rem,calc(100vw-2rem))] truncate rounded-full border border-[#F4C7AE] bg-white px-3 py-1.5 text-xs font-bold text-[#C2410C] shadow-lg">
             More - {activeMoreItem?.label}
           </span>
         </div>
@@ -408,7 +408,7 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
                 onClick={() => setMoreOpen(false)}
                 aria-current={active ? "page" : undefined}
                 className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition ${
-                  active ? "bg-[#E86A33] text-white shadow-sm" : "text-[#7A8091] hover:bg-[#FBEFE8] hover:text-[#C24E1E]"
+                  active ? "bg-[#F26A21] text-white shadow-sm" : "text-[#7A8091] hover:bg-[#FBEFE8] hover:text-[#C2410C]"
                 }`}
               >
                 <item.icon className="h-5 w-5" aria-hidden="true" />
@@ -421,7 +421,7 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
             onClick={() => setMoreOpen((current) => !current)}
             aria-expanded={moreOpen}
             className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition ${
-              moreOpen || moreActive ? "bg-[#FBEFE8] text-[#C24E1E]" : "text-[#7A8091] hover:bg-[#FBEFE8] hover:text-[#C24E1E]"
+              moreOpen || moreActive ? "bg-[#FBEFE8] text-[#C2410C]" : "text-[#7A8091] hover:bg-[#FBEFE8] hover:text-[#C2410C]"
             }`}
           >
             <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
@@ -455,7 +455,7 @@ export function MobileBranchNavigation({ role }: RoleNavigationProps) {
               aria-current={active ? "page" : undefined}
               className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition ${
                 active
-                  ? "bg-[#E86A33] business-button text-white shadow-sm"
+                  ? "bg-[#F26A21] business-button text-white shadow-sm"
                   : item.accent
                     ? "border border-[#F4C7AE] business-border-soft bg-[#FBEFE8] business-bg-soft business-primary-strong shadow-sm"
                     : "text-[#7A8091] business-hover"
@@ -492,7 +492,7 @@ export function MobileStaffNavigation({ role }: RoleNavigationProps) {
               aria-current={active ? "page" : undefined}
               className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-bold transition ${
                 active
-                  ? "bg-[#E86A33] business-button text-white shadow-sm"
+                  ? "bg-[#F26A21] business-button text-white shadow-sm"
                   : item.accent
                     ? "border border-[#F4C7AE] business-border-soft bg-[#FBEFE8] business-bg-soft business-primary-strong shadow-sm"
                     : "text-[#7A8091] business-hover"

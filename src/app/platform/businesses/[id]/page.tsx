@@ -101,7 +101,7 @@ export default async function BusinessDetailPage({ params, searchParams }: { par
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-4 shadow-sm md:p-5">
         <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-sm font-semibold text-[#6B7280]">
-          <Link href="/platform/businesses" className="transition hover:text-[#F97316] hover:underline">
+          <Link href="/platform/businesses" className="transition hover:text-[#F26A21] hover:underline">
             Businesses
           </Link>
           <ChevronRight className="h-4 w-4" aria-hidden="true" />
@@ -118,7 +118,7 @@ export default async function BusinessDetailPage({ params, searchParams }: { par
           </div>
 
           <div className="grid gap-2 sm:flex sm:flex-wrap sm:justify-end">
-            <Link href={`/platform/businesses/${business.uuid}/edit`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white transition hover:bg-orange-600">
+            <Link href={`/platform/businesses/${business.uuid}/edit`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#F26A21] px-4 text-sm font-semibold text-white transition hover:bg-orange-600">
               <Pencil className="h-4 w-4" />
               Edit
             </Link>
@@ -129,7 +129,7 @@ export default async function BusinessDetailPage({ params, searchParams }: { par
                 <input type="hidden" name="businessUuid" value={business.uuid} />
                 <ConfirmSubmitButton
                   message="Restore this business? It returns as Inactive until you re-enable it from this page."
-                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316] sm:w-auto"
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] transition hover:border-[#F26A21] hover:text-[#F26A21] sm:w-auto"
                 >
                   <RotateCcw className="h-4 w-4" />
                   Restore
@@ -143,7 +143,7 @@ export default async function BusinessDetailPage({ params, searchParams }: { par
                 <input type="hidden" name="nextStatus" value={nextStatus} />
                 <ConfirmSubmitButton
                   message={nextStatus === "ACTIVE" ? "Enable this business and restore access?" : "Disable this business? Owners, staff, scanners, and customer activity may be blocked."}
-                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316] sm:w-auto"
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] transition hover:border-[#F26A21] hover:text-[#F26A21] sm:w-auto"
                 >
                   <Power className="h-4 w-4" />
                   {nextStatus === "ACTIVE" ? "Enable" : "Disable"}
@@ -167,7 +167,7 @@ export default async function BusinessDetailPage({ params, searchParams }: { par
           </div>
         ) : (
           <details className="mt-4 rounded-md border border-[#E5E7EB] bg-white">
-            <summary className="flex cursor-pointer list-none items-center gap-2 rounded-md px-4 py-3 text-sm font-semibold text-[#111827] transition hover:bg-[#FAFAFA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316]">
+            <summary className="flex cursor-pointer list-none items-center gap-2 rounded-md px-4 py-3 text-sm font-semibold text-[#111827] transition hover:bg-[#FAFAFA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F26A21]">
               <Archive className="h-4 w-4" />
               Archive this business
             </summary>
@@ -188,7 +188,7 @@ export default async function BusinessDetailPage({ params, searchParams }: { par
                     required
                     rows={2}
                     placeholder="e.g. Requested by owner, non-payment, closed business"
-                    className="mt-1 w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#F97316] focus:ring-2 focus:ring-orange-100"
+                    className="mt-1 w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#F26A21] focus:ring-2 focus:ring-orange-100"
                   />
                 </label>
                 <ConfirmSubmitButton
@@ -233,11 +233,11 @@ export default async function BusinessDetailPage({ params, searchParams }: { par
           <InfoRow label="Created" value={formatDate(business.createdAt)} />
         </InfoCard>
         <InfoCard title="Branding colors">
-          <ColorRow label="Primary" value={branding?.primaryColor ?? "#F97316"} />
+          <ColorRow label="Primary" value={branding?.primaryColor ?? "#F26A21"} />
           <ColorRow label="Secondary" value={branding?.secondaryColor ?? "#FDBA74"} />
           <ColorRow label="Background" value={branding?.backgroundColor ?? "#FFFFFF"} />
           <ColorRow label="Text" value={branding?.textColor ?? "#111827"} />
-          <ColorRow label="Button" value={branding?.buttonColor ?? "#F97316"} />
+          <ColorRow label="Button" value={branding?.buttonColor ?? "#F26A21"} />
         </InfoCard>
         <InfoCard title="Support Access">
           {activeSupportSession ? (
@@ -259,7 +259,7 @@ export default async function BusinessDetailPage({ params, searchParams }: { par
               <InfoRow label="Reason" value={lastSupportSession.reason} />
             </div>
           ) : null}
-          <Link href={`/platform/businesses/${business.uuid}/support-session`} className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] hover:border-[#F97316] hover:text-[#F97316]">
+          <Link href={`/platform/businesses/${business.uuid}/support-session`} className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] hover:border-[#F26A21] hover:text-[#F26A21]">
             Open Support Session
           </Link>
         </InfoCard>        <InfoCard title="Business owner user">
@@ -279,10 +279,10 @@ export default async function BusinessDetailPage({ params, searchParams }: { par
       <section className="max-w-full min-w-0 overflow-hidden rounded-md border border-[#E5E7EB] bg-white p-4 md:p-5">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm font-semibold text-[#F97316]">Billing Tab</p>
+            <p className="text-sm font-semibold text-[#F26A21]">Billing Tab</p>
             <h2 className="text-lg font-semibold text-[#111827]">Business billing profile</h2>
           </div>
-          <Link href="/platform/billing-center" className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827] hover:border-[#F97316] hover:text-[#F97316]">
+          <Link href="/platform/billing-center" className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#E5E7EB] px-4 py-2 text-sm font-semibold text-[#111827] hover:border-[#F26A21] hover:text-[#F26A21]">
             Open Billing Center
           </Link>
         </div>
@@ -570,7 +570,7 @@ function SubscriptionActionsPanel({ subscriptionId }: { subscriptionId: number }
             Start Trial
             <div className="mt-2 flex gap-2">
               <input name="days" type="number" min="1" max="365" defaultValue="14" className="h-10 w-24 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm" />
-              <button type="submit" className="h-10 flex-1 rounded-md border border-[#F97316] px-3 text-sm font-semibold text-[#F97316] transition hover:bg-orange-50">
+              <button type="submit" className="h-10 flex-1 rounded-md border border-[#F26A21] px-3 text-sm font-semibold text-[#F26A21] transition hover:bg-orange-50">
                 Apply
               </button>
             </div>
@@ -583,7 +583,7 @@ function SubscriptionActionsPanel({ subscriptionId }: { subscriptionId: number }
             Extend
             <div className="mt-2 flex gap-2">
               <input name="days" type="number" min="1" max="3650" defaultValue="30" className="h-10 w-24 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm" />
-              <button type="submit" className="h-10 flex-1 rounded-md bg-[#F97316] px-3 text-sm font-semibold text-white transition hover:bg-orange-600">
+              <button type="submit" className="h-10 flex-1 rounded-md bg-[#F26A21] px-3 text-sm font-semibold text-white transition hover:bg-orange-600">
                 Apply
               </button>
             </div>
@@ -602,7 +602,7 @@ function SubscriptionStatusButton({ subscriptionId, nextStatus, label }: { subsc
       <input type="hidden" name="nextStatus" value={nextStatus} />
       <ConfirmSubmitButton
         message={subscriptionConfirmationMessage(nextStatus)}
-        className="min-h-10 w-full rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]"
+        className="min-h-10 w-full rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827] transition hover:border-[#F26A21] hover:text-[#F26A21]"
       >
         {label}
       </ConfirmSubmitButton>

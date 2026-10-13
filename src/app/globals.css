@@ -1,19 +1,25 @@
 @import "tailwindcss";
 
 :root {
+  /* Brand colours (Loyalty Card UAE brand kit) */
+  --brand-orange: #F26A21;
+  --brand-orange-deep: #C2410C;
+  --brand-ink: #141210;
+  --brand-cream: #FAF7F2;
+
   --background: #FFFFFF;
   --foreground: #171A21;
-  --primary-orange: #E86A33;
-  --dark-orange: #C24E1E;
-  --light-orange: #F4C7AE;
+  --primary-orange: var(--brand-orange);
+  --dark-orange: var(--brand-orange-deep);
+  --light-orange: #F9C9AE;
   --light-gray: #F3F4F7;
   --medium-gray: #E7E9EE;
 
   /* Calm Professional app tokens */
   --app-canvas: #F6F7F9;
-  --accent: #E86A33;
-  --accent-deep: #C24E1E;
-  --accent-soft: #FBEFE8;
+  --accent: var(--brand-orange);
+  --accent-deep: var(--brand-orange-deep);
+  --accent-soft: #FDEEE5;
   
   /* ألوان الحالات والتحذيرات */
   --success: #22C55E;
@@ -30,6 +36,19 @@
   --color-primary-light: var(--light-orange);
   --color-muted-bg: var(--light-gray);
   --color-muted-border: var(--medium-gray);
+  --color-brand-orange: var(--brand-orange);
+  --color-brand-orange-deep: var(--brand-orange-deep);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-cream: var(--brand-cream);
+  /* Tailwind's orange scale, retuned to the brand so bg-orange-500 and the like are brand orange. */
+  --color-orange-50: #FEF4EE;
+  --color-orange-100: #FDE4D6;
+  --color-orange-200: #F9C9AE;
+  --color-orange-300: #F6A77E;
+  --color-orange-400: #F4894E;
+  --color-orange-500: var(--brand-orange);
+  --color-orange-600: var(--brand-orange-deep);
+  --color-orange-700: #9A3412;
   
   --font-sans: var(--font-nunito), "Segoe UI", Arial, sans-serif;
   --font-display: var(--font-comfortaa), var(--font-nunito), Arial, sans-serif;
@@ -88,14 +107,14 @@ input {
   0%,
   8% {
     background: #fff7ed;
-    color: #f97316;
+    color: #F26A21;
     opacity: 0.24;
     transform: scale(0.94);
   }
 
   14%,
   82% {
-    background: #f97316;
+    background: #F26A21;
     color: #ffffff;
     opacity: 1;
     transform: scale(1);
@@ -103,7 +122,7 @@ input {
 
   100% {
     background: #fff7ed;
-    color: #f97316;
+    color: #F26A21;
     opacity: 0.24;
     transform: scale(0.94);
   }
@@ -205,7 +224,7 @@ input {
   }
 
   .homepage-stamp {
-    background: #f97316;
+    background: #F26A21;
     color: #ffffff;
     opacity: 1;
     transform: none;
@@ -267,7 +286,7 @@ input {
 
 .homepage-confetti span {
   animation: homepage-confetti 6.4s ease-in-out infinite;
-  background: #f97316;
+  background: #F26A21;
   border-radius: 999px;
   height: 7px;
   opacity: 0;
@@ -290,14 +309,14 @@ input {
 
 .homepage-network-line {
   animation: homepage-network-line 2.8s ease-in-out infinite;
-  stroke: #f97316;
+  stroke: #F26A21;
   stroke-dasharray: 8 10;
   stroke-linecap: round;
   stroke-width: 2;
 }
 
 .homepage-data-particle {
-  fill: #f97316;
+  fill: #F26A21;
   opacity: 0.8;
 }
 
@@ -341,7 +360,7 @@ input {
 }
 
 .homepage-mini-trend::before {
-  background: linear-gradient(135deg, transparent 45%, #f97316 46%, #f97316 54%, transparent 55%);
+  background: linear-gradient(135deg, transparent 45%, #F26A21 46%, #F26A21 54%, transparent 55%);
   content: "";
   inset: 6px 0 10px;
   position: absolute;
@@ -349,7 +368,7 @@ input {
 
 .homepage-mini-trend::after {
   animation: homepage-dot-rise 1.8s ease-in-out infinite;
-  background: #f97316;
+  background: #F26A21;
   border-radius: 999px;
   content: "";
   height: 10px;
@@ -366,7 +385,7 @@ input {
   background: #fff7ed;
   border: 1px solid #fed7aa;
   border-radius: 14px;
-  color: #f97316;
+  color: #F26A21;
   display: flex;
   justify-content: center;
 }
@@ -385,7 +404,7 @@ input {
 
 .homepage-mini-bars::before,
 .homepage-mini-bars::after {
-  background: #f97316;
+  background: #F26A21;
   border-radius: 999px;
   bottom: 8px;
   content: "";
@@ -407,9 +426,9 @@ input {
 
 .homepage-mini-network::before {
   background:
-    radial-gradient(circle at 12px 24px, #f97316 0 5px, transparent 6px),
-    radial-gradient(circle at 42px 10px, #f97316 0 5px, transparent 6px),
-    radial-gradient(circle at 70px 30px, #f97316 0 5px, transparent 6px),
+    radial-gradient(circle at 12px 24px, #F26A21 0 5px, transparent 6px),
+    radial-gradient(circle at 42px 10px, #F26A21 0 5px, transparent 6px),
+    radial-gradient(circle at 70px 30px, #F26A21 0 5px, transparent 6px),
     linear-gradient(25deg, transparent 34%, #fed7aa 35%, #fed7aa 38%, transparent 39%),
     linear-gradient(155deg, transparent 38%, #fed7aa 39%, #fed7aa 42%, transparent 43%);
   content: "";
@@ -560,14 +579,14 @@ input {
   0%,
   7% {
     background: #fff7ed;
-    color: #f97316;
+    color: #F26A21;
     opacity: 0.24;
     transform: scale(0.92);
   }
 
   13%,
   90% {
-    background: #f97316;
+    background: #F26A21;
     color: #ffffff;
     opacity: 1;
     transform: scale(1);
@@ -575,7 +594,7 @@ input {
 
   100% {
     background: #fff7ed;
-    color: #f97316;
+    color: #F26A21;
     opacity: 0.24;
     transform: scale(0.92);
   }
@@ -832,7 +851,7 @@ input {
   }
 
   .homepage-journey-stamp {
-    background: #f97316;
+    background: #F26A21;
     color: #ffffff;
     opacity: 1;
     transform: none;
@@ -851,34 +870,34 @@ input {
   --business-primary-strong: color-mix(in srgb, var(--business-primary) 86%, #111827);
 }
 
-.business-text { color: var(--business-text, #E86A33); }
-.business-primary { color: var(--business-primary, #E86A33); }
-.business-primary-strong { color: var(--business-primary-strong, #C24E1E); }
-.business-text-strong { color: var(--business-primary-strong, #C24E1E); }
+.business-text { color: var(--business-text, #F26A21); }
+.business-primary { color: var(--business-primary, #F26A21); }
+.business-primary-strong { color: var(--business-primary-strong, #C2410C); }
+.business-text-strong { color: var(--business-primary-strong, #C2410C); }
 .business-bg {
-  background-color: var(--business-primary, #E86A33);
+  background-color: var(--business-primary, #F26A21);
   color: var(--business-bg-foreground, #ffffff);
 }
 .business-button {
-  background-color: var(--business-button, #E86A33);
+  background-color: var(--business-button, #F26A21);
   color: var(--business-button-foreground, #ffffff);
 }
 .business-bg-soft { background-color: var(--business-primary-soft, #FBEFE8); }
 .business-secondary-bg-soft { background-color: var(--business-secondary-soft, #FBEFE8); }
-.business-border { border-color: var(--business-primary, #E86A33); }
+.business-border { border-color: var(--business-primary, #F26A21); }
 .business-border-soft { border-color: var(--business-primary-border, #F4C7AE); }
 .business-ring:focus {
-  border-color: var(--business-primary, #E86A33);
+  border-color: var(--business-primary, #F26A21);
   box-shadow: 0 0 0 4px var(--business-primary-soft, #FBEFE8);
 }
 .business-hover:hover {
   border-color: var(--business-primary-border, #F4C7AE);
   background-color: var(--business-primary-soft, #FBEFE8);
-  color: var(--business-primary-strong, #C24E1E);
+  color: var(--business-primary-strong, #C2410C);
 }
-.business-theme .business-progress { background-color: var(--business-primary, #E86A33); }
+.business-theme .business-progress { background-color: var(--business-primary, #F26A21); }
 .business-theme .business-action-primary {
-  background-color: var(--business-button, #E86A33);
+  background-color: var(--business-button, #F26A21);
   color: var(--business-button-foreground, #ffffff);
 }
 .business-theme .business-action-primary:hover {

@@ -15,7 +15,7 @@ type MetricCardProps = {
 
 const tones = {
   neutral: "border-[#E7E9EE] bg-white text-[#171A21]",
-  brand: "border-[#F4C7AE] bg-[#FBEFE8] text-[#C24E1E]",
+  brand: "border-[#F4C7AE] bg-[#FBEFE8] text-[#C2410C]",
   success: "border-[#CBEAD6] bg-[#E9F6EE] text-[#1D7A46]",
   warning: "border-[#F3D9A4] bg-[#FFFBF2] text-[#B25E09]",
   danger: "border-[#FECACA] bg-[#FEF2F2] text-[#B91C1C]",
