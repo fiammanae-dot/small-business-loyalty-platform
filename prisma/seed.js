@@ -31,7 +31,7 @@ const subscriptionPlans = [
     maxLoyaltyPrograms: 15,
     maxStaff: 30,
     monthlyPrice: "0.00",
-    annualPrice: "1000.00",
+    annualPrice: "3000.00",
     billingCycleSupport: ["YEARLY"],
   },
 ];

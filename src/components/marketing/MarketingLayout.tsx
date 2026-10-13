@@ -11,32 +11,51 @@ export const marketingNavItems = [
   { label: "Company", href: "/company" },
 ];
 
+/**
+ * The three plans, as sold. Every plan has every feature; they differ only in
+ * how many branches, programs and staff logins a business may have. Keep in
+ * step with the plan rows in prisma/seed.js and the staff limits in migration
+ * 0069.
+ */
 export const officialPlans = [
   {
     name: "Starter",
     price: "AED 100/month",
-    annual: "AED 1000/year",
-    branches: "1 branch",
-    programs: "1 program",
-    bestFor: "Single-location shops starting their first digital loyalty program.",
+    annual: "or AED 1,000/year (save AED 200)",
+    limits: ["1 branch", "1 loyalty program", "3 staff logins", "Unlimited customers"],
+    bestFor: "A single shop, salon or clinic launching its first digital loyalty card.",
   },
   {
     name: "Growth",
     price: "AED 200/month",
-    annual: "AED 2000/year",
-    branches: "3 branches",
-    programs: "5 programs",
-    bestFor: "Growing local brands running multiple rewards and active teams.",
+    annual: "or AED 2,000/year (save AED 400)",
+    limits: ["Up to 3 branches", "Up to 5 loyalty programs", "10 staff logins", "Unlimited customers"],
+    bestFor: "A growing brand running stamps, packages or cashback side by side, with a team across branches.",
     featured: true,
   },
   {
     name: "Multi Branch",
-    price: "AED 3000/year",
-    annual: "Yearly only",
-    branches: "10 branches",
-    programs: "15 programs",
-    bestFor: "Multi-location businesses that need branch-level operations.",
+    price: "AED 3,000/year",
+    annual: "Billed yearly",
+    limits: ["Up to 10 branches", "Up to 15 loyalty programs", "30 staff logins", "Unlimited customers"],
+    bestFor: "Chains that need branch managers, branch-level reporting and one card across every location.",
   },
+];
+
+/** What every plan includes. The plans differ only in the limits above. */
+export const includedInEveryPlan = [
+  "Apple Wallet and Google Wallet cards, no app to install",
+  "Stamp, package and cashback programs",
+  "QR scanner on any phone, nothing to buy",
+  "Customer tiers (Silver, Gold, VIP) worked out automatically",
+  "Referral rewards for the customer and their friend",
+  "Alerts for unusual activity, with owner and manager overrides",
+  "Printable \"Scan to join\" poster and shareable join link",
+  "Business dashboard with customer, visit and reward reports",
+  "Your own logo, colours and stamp icon on every card",
+  "CSV exports and WhatsApp sharing",
+  "Support from the Loyalty Card UAE team",
+  "Stamp undo and manager overrides, every one logged",
 ];
 
 export function MarketingFrame({ children }: { children: React.ReactNode }) {
@@ -182,10 +201,13 @@ export function PricingPlanCards({ compact = false }: { compact?: boolean }) {
           <h3 className="text-2xl font-extrabold tracking-[-0.03em] text-[#08111F]">{plan.name}</h3>
           <p className="mt-4 text-3xl font-extrabold text-[#C2410C]">{plan.price}</p>
           <p className="mt-1 text-sm font-semibold text-[#64748B]">{plan.annual}</p>
-          <div className="mt-6 grid gap-3 text-sm font-semibold text-[#334155]">
-            <p className="rounded-2xl bg-white px-4 py-3 shadow-sm">{plan.branches}</p>
-            <p className="rounded-2xl bg-white px-4 py-3 shadow-sm">{plan.programs}</p>
-          </div>
+          <ul className="mt-6 grid gap-2 text-sm font-semibold text-[#334155]">
+            {plan.limits.map((limit) => (
+              <li key={limit} className="rounded-2xl bg-white px-4 py-3 shadow-sm">
+                {limit}
+              </li>
+            ))}
+          </ul>
           <p className="mt-5 text-sm leading-6 text-[#607089]">{plan.bestFor}</p>
           <Link href="/request-demo" className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#F26A21] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#C2410C] focus:outline-none focus:ring-2 focus:ring-[#F26A21] focus:ring-offset-2">
             Request Demo
