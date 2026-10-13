@@ -1,41 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { RequiredMark } from "@/components/ui/RequiredMark";
+import { submitDemoRequestAction, type DemoRequestState } from "@/app/request-demo/actions";
 
-const businessTypes = ["Coffee Shop", "Restaurant", "Salon / Barber", "Gym", "Retail Store", "Car Care", "Service Business", "Other"];
+const businessTypes = ["Coffee Shop", "Restaurant", "Salon / Barber", "Clinic / Aesthetic", "Gym", "Retail Store", "Car Care", "Perfume / Oud", "Service Business", "Other"];
 const countries = ["United Arab Emirates", "Saudi Arabia", "Kuwait", "Qatar", "Bahrain", "Oman", "Jordan", "Egypt", "Other"];
 
 export function DemoRequestForm() {
-  const [submitted, setSubmitted] = useState(false);
+  const [state, formAction, pending] = useActionState<DemoRequestState | null, FormData>(submitDemoRequestAction, null);
 
-  if (submitted) {
+  if (state?.ok) {
     return (
       <div className="rounded-[28px] border border-emerald-200 bg-emerald-50 p-6 text-emerald-900 shadow-sm">
         <CheckCircle2 className="h-10 w-10 text-emerald-600" aria-hidden="true" />
         <h2 className="mt-4 text-2xl font-semibold">Request received</h2>
         <p className="mt-3 text-sm leading-6">
-          Thank you. Our team will review your details and follow up with the next step.
+          Thank you. We have your details and will be in touch within one working day to arrange your demo.
         </p>
-        <button
-          type="button"
-          onClick={() => setSubmitted(false)}
-          className="mt-5 rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-emerald-800 shadow-sm transition hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
-        >
-          Submit another request
-        </button>
       </div>
     );
   }
 
   return (
     <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        setSubmitted(true);
-      }}
-      className="grid gap-4 rounded-[30px] border border-orange-100 bg-white p-5 shadow-[0_24px_70px_rgba(242,106,33,0.14)] sm:p-7"
+      action={formAction}
+      className="relative grid gap-4 rounded-[30px] border border-orange-100 bg-white p-5 shadow-[0_24px_70px_rgba(242,106,33,0.14)] sm:p-7"
     >
       <FormField label="Business name" name="businessName" placeholder="Rawabi Coffee" required />
       <FormField label="Contact person name" name="contactName" placeholder="Ahmed Mahmoud" required />
@@ -73,8 +64,24 @@ export function DemoRequestForm() {
           className="resize-y rounded-2xl border border-[#E5E7EB] px-4 py-3 text-sm outline-none transition focus:border-[#F26A21] focus:ring-4 focus:ring-orange-100"
         />
       </label>
-      <button type="submit" className="min-h-12 rounded-2xl bg-[#F26A21] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#C2410C] focus:outline-none focus:ring-2 focus:ring-[#F26A21] focus:ring-offset-2">
-        Request Demo
+      {/* Honeypot: hidden from people, filled in by bots. */}
+      <div aria-hidden="true" className="absolute -left-[9999px] top-0 h-0 w-0 overflow-hidden">
+        <label>
+          Website
+          <input type="text" name="website" tabIndex={-1} autoComplete="off" />
+        </label>
+      </div>
+      {state && !state.ok ? (
+        <p role="alert" className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+          {state.error}
+        </p>
+      ) : null}
+      <button
+        type="submit"
+        disabled={pending}
+        className="min-h-12 rounded-2xl bg-[#F26A21] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#C2410C] focus:outline-none focus:ring-2 focus:ring-[#F26A21] focus:ring-offset-2 disabled:cursor-wait disabled:opacity-70"
+      >
+        {pending ? "Sending..." : "Request Demo"}
       </button>
       <p className="text-xs leading-5 text-[#64748B]">
         We use your details only to prepare a relevant Loyalty Card UAE demo.

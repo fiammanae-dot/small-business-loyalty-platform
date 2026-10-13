@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
+  Inbox,
   Activity,
   Bell,
   Building2,
@@ -105,6 +106,7 @@ const platformMobilePrimaryItems: NavigationItem[] = [
 ];
 
 const platformMobileMoreItems: NavigationItem[] = [
+  { href: "/platform/demo-requests", label: "Demo requests", icon: Inbox },
   { href: "/platform/plans", label: "Plans", icon: Package },
   { href: "/platform/subscriptions", label: "Subscriptions", icon: CreditCard },
   { href: "/platform/invoices", label: "Invoices", icon: Receipt },
@@ -121,6 +123,7 @@ const platformMobileMoreItems: NavigationItem[] = [
 const platformSidebarItems: NavigationItem[] = [
   { href: "/platform", label: "Dashboard", icon: LayoutDashboard },
   { href: "/platform/businesses", label: "Businesses", icon: Building2 },
+  { href: "/platform/demo-requests", label: "Demo requests", icon: Inbox },
   { href: "/platform/plans", label: "Plans", icon: Package },
   { href: "/platform/subscriptions", label: "Subscriptions", icon: CreditCard },
   { href: "/platform/invoices", label: "Invoices", icon: Receipt },
