@@ -479,6 +479,38 @@ model TwoFactorBackupCode {
   @@map("two_factor_backup_codes")
 }
 
+/// A "Request Demo" form submission from the public website. Read by the
+/// System Administrator on /platform/demo-requests and emailed on arrival.
+model DemoRequest {
+  id           Int               @id @default(autoincrement())
+  uuid         String            @unique @default(uuid()) @db.Uuid
+  businessName String            @map("business_name")
+  contactName  String            @map("contact_name")
+  email        String
+  phone        String
+  country      String
+  businessType String            @map("business_type")
+  branches     Int
+  message      String?
+  status       DemoRequestStatus @default(NEW)
+  note         String?
+  ipAddress    String?           @map("ip_address")
+  emailedAt    DateTime?         @map("emailed_at")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+
+  @@index([status, createdAt])
+  @@index([createdAt])
+  @@map("demo_requests")
+}
+
+enum DemoRequestStatus {
+  NEW
+  CONTACTED
+  WON
+  LOST
+}
+
 /// One row per successful sign-in: who, which device and where from. Used for
 /// plan compliance (the same login used in two places) and account security.
 model LoginEvent {
