@@ -8,6 +8,14 @@ const nextConfig: NextConfig = {
   // breaks the binary it loads at runtime, so it has to be required as-is.
   serverExternalPackages: ["sharp"],
 
+  // Uploads (card picture up to 4MB, logo and stamp icon up to 2MB) go through
+  // server actions, whose request body is capped at 1MB unless raised here.
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "5mb",
+    },
+  },
+
   async headers() {
     const securityHeaders = [
       {
