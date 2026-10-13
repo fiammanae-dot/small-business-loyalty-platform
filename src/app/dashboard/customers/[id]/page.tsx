@@ -148,6 +148,20 @@ export default async function CustomerProfilePage({
     select: { enabled: true, ratePercent: true, currency: true },
   });
   const cashbackEnabled = Boolean(cashbackSettings?.enabled);
+  // Wallet status of the cashback card, with the last error, so a failed "Add
+  // to Wallet" can be read here instead of in the server logs.
+  const cashbackWalletPasses = cashbackEnabled
+    ? await Promise.all([
+        prisma.appleWalletFeaturePass.findUnique({
+          where: { businessCustomerMembershipId_kind: { businessCustomerMembershipId: membership.id, kind: "CASHBACK" } },
+          select: { status: true, lastSyncedAt: true, lastError: true },
+        }),
+        prisma.googleWalletCashbackPass.findUnique({
+          where: { businessCustomerMembershipId: membership.id },
+          select: { status: true, lastSyncedAt: true, lastError: true },
+        }),
+      ])
+    : [null, null];
   const cashbackRate = Number(cashbackSettings?.ratePercent ?? 0);
   const cashbackCurrency = cashbackSettings?.currency ?? "AED";
   const cashbackBalance = Number(membership.cashbackBalance ?? 0);
@@ -518,6 +532,7 @@ return (
                       defaultRate={cashbackRate}
                       overrideRate={membership.cashbackRateOverride != null ? Number(membership.cashbackRateOverride) : null}
                       transactions={cashbackLedger}
+                      wallet={{ apple: cashbackWalletPasses[0], google: cashbackWalletPasses[1] }}
                     />
                   ),
                 },
@@ -1231,6 +1246,22 @@ function startOfDay(value: Date) {
   return date;
 }
 
+type WalletPassStatus = { status: string; lastSyncedAt: Date | null; lastError: string | null };
+
+/** One line per wallet: added or not, when it last synced, and the last error in full. */
+function WalletPassLine({ label, pass }: { label: string; pass: WalletPassStatus | null }) {
+  if (!pass) return <p>{label}: not added yet</p>;
+  return (
+    <div>
+      <p>
+        {label}: {pass.status.toLowerCase().replace("_", " ")}
+        {pass.lastSyncedAt ? ` · synced ${formatDateTime(pass.lastSyncedAt)}` : ""}
+      </p>
+      {pass.lastError ? <p className="mt-0.5 break-words text-red-700">Last error: {pass.lastError}</p> : null}
+    </div>
+  );
+}
+
 function CashbackPanel({
   membershipUuid,
   joined,
@@ -1240,6 +1271,7 @@ function CashbackPanel({
   defaultRate,
   overrideRate,
   transactions,
+  wallet,
 }: {
   membershipUuid: string;
   joined: boolean;
@@ -1248,6 +1280,7 @@ function CashbackPanel({
   currency: string;
   defaultRate: number;
   overrideRate: number | null;
+  wallet: { apple: WalletPassStatus | null; google: WalletPassStatus | null };
   transactions: Array<{
     id: number;
     type: "EARN" | "SPEND" | "REVERSAL";
@@ -1290,6 +1323,10 @@ function CashbackPanel({
         <div className="mt-4 rounded-lg border border-[#E7E9EE] bg-[#F8FAFC] p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">Current balance</p>
           <p className="mt-1 text-3xl font-bold tabular-nums text-[#111827]">{formatAed(balance, currency)}</p>
+        </div>
+        <div className="mt-3 grid gap-1 text-xs text-[#6B7280]">
+          <WalletPassLine label="Apple Wallet" pass={wallet.apple} />
+          <WalletPassLine label="Google Wallet" pass={wallet.google} />
         </div>
         <form action={saveCustomerCashbackRateAction} className="mt-4 grid gap-2 rounded-lg border border-[#E7E9EE] bg-[#F8FAFC] p-4">
           <CsrfInput scope="dashboard:customer-cashback-rate" />

@@ -37,11 +37,15 @@ async function request<T>(config: WalletWalletConfig, method: string, path: stri
     json = { raw: text };
   }
   if (!res.ok) {
-    const message =
-      json && typeof json === "object" && "error" in json && typeof (json as { error: unknown }).error === "string"
-        ? (json as { error: string }).error
-        : `HTTP ${res.status}`;
-    throw new Error(`WalletWallet ${method} ${path} failed: ${message}`);
+    // Keep whatever the provider said (its "error", "message" or "details",
+    // else the raw body), so the stored last error explains the refusal.
+    const record = json && typeof json === "object" ? (json as Record<string, unknown>) : {};
+    const said = [record.error, record.message, record.details]
+      .map((value) => (typeof value === "string" ? value : value ? JSON.stringify(value) : ""))
+      .filter(Boolean)
+      .join(" - ");
+    const message = said || (typeof record.raw === "string" && record.raw.trim()) || "";
+    throw new Error(`WalletWallet ${method} ${path} failed (HTTP ${res.status})${message ? `: ${message.slice(0, 500)}` : ""}`);
   }
   return json as T;
 }
