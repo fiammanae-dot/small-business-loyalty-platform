@@ -6,11 +6,11 @@ import { prisma } from "@/lib/prisma";
 import type { AuthUser } from "@/lib/session";
 
 export const defaultBusinessBranding = {
-  primaryColor: "#F97316",
+  primaryColor: "#F26A21",
   secondaryColor: "#FDBA74",
   backgroundColor: "#FFFFFF",
   textColor: "#111827",
-  buttonColor: "#F97316",
+  buttonColor: "#F26A21",
   logoUrl: null as string | null,
 };
 

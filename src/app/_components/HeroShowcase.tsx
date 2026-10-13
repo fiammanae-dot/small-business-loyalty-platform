@@ -130,7 +130,7 @@ export default function HeroShowcase() {
         <div className="mb-1.5 text-base font-extrabold text-slate-800">Reward yourself</div>
         <div className="mb-3.5 text-[13px] leading-relaxed text-slate-500">Hit the visit goal and redeem a reward at the counter.</div>
         <div className="relative flex h-[104px] items-center gap-3.5 overflow-hidden rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 px-4">
-          <div className="flex h-14 w-14 flex-none items-center justify-center rounded-2xl bg-orange-500 text-white shadow-[0_8px_18px_-4px_rgba(249,115,22,0.5)]">
+          <div className="flex h-14 w-14 flex-none items-center justify-center rounded-2xl bg-orange-500 text-white shadow-[0_8px_18px_-4px_rgba(242,106,33,0.5)]">
             <Gift className="h-7 w-7" aria-hidden="true" />
           </div>
           <div>
@@ -181,7 +181,7 @@ export default function HeroShowcase() {
                       key={index}
                       className="flex aspect-square flex-1 items-center justify-center rounded-full transition-all duration-300"
                       style={{
-                        background: active ? "#F97316" : "#1E293B",
+                        background: active ? "#F26A21" : "#1E293B",
                         color: active ? "#fff" : "#CBD5E1",
                         transform: pop ? "scale(1.15)" : "scale(1)",
                       }}
@@ -234,7 +234,7 @@ export default function HeroShowcase() {
           <div className="absolute inset-x-0 bottom-0 flex h-16 items-center justify-around border-t border-slate-100 bg-white px-3.5">
             <PhoneNavItem active label="Home" icon={<Coffee className="h-4 w-4" />} />
             <PhoneNavItem label="Rewards" icon={<Gift className="h-4 w-4" />} />
-            <div className="-mt-3.5 flex h-[46px] w-[46px] items-center justify-center rounded-[14px] bg-orange-500 text-white shadow-[0_8px_18px_-4px_rgba(249,115,22,0.6)]">
+            <div className="-mt-3.5 flex h-[46px] w-[46px] items-center justify-center rounded-[14px] bg-orange-500 text-white shadow-[0_8px_18px_-4px_rgba(242,106,33,0.6)]">
               <QrCode className="h-5 w-5" aria-hidden="true" />
             </div>
             <PhoneNavItem label="Wallet" icon={<CreditCardIcon />} />

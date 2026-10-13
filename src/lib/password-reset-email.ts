@@ -36,10 +36,10 @@ export function buildPasswordResetEmail({ resetUrl, expiresInMinutes }: Password
             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse; max-width:560px; background:#FFFFFF; border:1px solid #E2E8F0; border-radius:16px; overflow:hidden;">
               <tr>
                 <td style="padding:28px 28px 12px 28px; text-align:center;">
-                  <div style="display:inline-block; width:48px; height:48px; border-radius:14px; background:#FFF7ED; color:#F97316; font-size:24px; font-weight:800; line-height:48px; text-align:center;">
+                  <div style="display:inline-block; width:48px; height:48px; border-radius:14px; background:#FFF7ED; color:#F26A21; font-size:24px; font-weight:800; line-height:48px; text-align:center;">
                     LC
                   </div>
-                  <p style="margin:12px 0 0 0; color:#F97316; font-size:13px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase;">
+                  <p style="margin:12px 0 0 0; color:#F26A21; font-size:13px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase;">
                     Loyalty Card UAE
                   </p>
                   <p style="margin:4px 0 0 0; color:#64748B; font-size:13px;">
@@ -59,7 +59,7 @@ export function buildPasswordResetEmail({ resetUrl, expiresInMinutes }: Password
               </tr>
               <tr>
                 <td align="center" style="padding:22px 28px 10px 28px;">
-                  <a href="${resetUrl}" style="display:inline-block; min-width:220px; background:#F97316; color:#FFFFFF; padding:14px 22px; border-radius:10px; text-decoration:none; font-size:16px; font-weight:800; text-align:center;">
+                  <a href="${resetUrl}" style="display:inline-block; min-width:220px; background:#F26A21; color:#FFFFFF; padding:14px 22px; border-radius:10px; text-decoration:none; font-size:16px; font-weight:800; text-align:center;">
                     Reset Password
                   </a>
                 </td>
@@ -85,7 +85,7 @@ export function buildPasswordResetEmail({ resetUrl, expiresInMinutes }: Password
                   <p style="margin:0; color:#1E293B; font-size:14px; font-weight:800;">Loyalty Card UAE</p>
                   <p style="margin:4px 0 0 0; color:#64748B; font-size:13px;">Digital Loyalty Platform</p>
                   <p style="margin:8px 0 0 0; color:#64748B; font-size:13px;">
-                    <a href="mailto:support@loyaltycarduae.com" style="color:#EA580C; text-decoration:none;">support@loyaltycarduae.com</a>
+                    <a href="mailto:support@loyaltycarduae.com" style="color:#C2410C; text-decoration:none;">support@loyaltycarduae.com</a>
                   </p>
                 </td>
               </tr>

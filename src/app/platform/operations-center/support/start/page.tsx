@@ -71,11 +71,11 @@ export default async function OperationsStartSupportSessionPage({
       <div className="grid gap-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-[#F97316]">Operations Center</p>
+            <p className="text-sm font-semibold uppercase tracking-wide text-[#F26A21]">Operations Center</p>
             <h2 className="mt-1 text-2xl font-bold text-[#0F172A]">Open a support session</h2>
             <p className="mt-2 text-sm leading-6 text-[#64748B]">Select a business, enter a reason, and start secure time-limited support access.</p>
           </div>
-          <Link href="/platform/operations-center" className="inline-flex min-h-10 items-center justify-center rounded-md border border-[#CBD5E1] bg-white px-4 text-sm font-semibold text-[#0F172A] transition hover:border-[#F97316] hover:text-[#F97316]">
+          <Link href="/platform/operations-center" className="inline-flex min-h-10 items-center justify-center rounded-md border border-[#CBD5E1] bg-white px-4 text-sm font-semibold text-[#0F172A] transition hover:border-[#F26A21] hover:text-[#F26A21]">
             Cancel
           </Link>
         </div>
@@ -98,7 +98,7 @@ export default async function OperationsStartSupportSessionPage({
                 </select>
               </div>
             </label>
-            <button type="submit" className="inline-flex min-h-10 items-center justify-center rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white transition hover:bg-orange-600">
+            <button type="submit" className="inline-flex min-h-10 items-center justify-center rounded-md bg-[#F26A21] px-4 text-sm font-semibold text-white transition hover:bg-orange-600">
               Continue
             </button>
           </form>
@@ -151,7 +151,7 @@ export default async function OperationsStartSupportSessionPage({
               <label className="grid gap-2 text-sm font-semibold text-[#111827]">
                 Reason for access
                 <RequiredMark />
-                <textarea name="reason" required rows={4} className="min-h-28 rounded-md border border-[#E5E7EB] px-3 py-2 text-sm font-normal outline-none focus:border-[#F97316]" placeholder="Describe why support access is needed." />
+                <textarea name="reason" required rows={4} className="min-h-28 rounded-md border border-[#E5E7EB] px-3 py-2 text-sm font-normal outline-none focus:border-[#F26A21]" placeholder="Describe why support access is needed." />
               </label>
 
               <fieldset className="grid gap-3">
@@ -183,7 +183,7 @@ export default async function OperationsStartSupportSessionPage({
                 </label>
               </div>
 
-              <button type="submit" className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white transition hover:bg-orange-600 sm:w-fit">
+              <button type="submit" className="inline-flex min-h-11 w-full items-center justify-center rounded-md bg-[#F26A21] px-4 text-sm font-semibold text-white transition hover:bg-orange-600 sm:w-fit">
                 {selectedBusiness.supportAccessPolicy === "IMMEDIATE" ? "Start Support Session" : "Submit Support Request"}
               </button>
             </form>

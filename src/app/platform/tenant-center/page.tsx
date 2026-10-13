@@ -105,7 +105,7 @@ export default async function PlatformTenantCenterPage({
       <section className="max-w-full overflow-hidden rounded-xl border border-[#E7E9EE] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)]">
         <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-[#F97316]" aria-hidden="true" />
+            <Filter className="h-4 w-4 text-[#F26A21]" aria-hidden="true" />
             <h2 className="text-sm font-bold tracking-tight text-[#171A21]">Tenant filters</h2>
             <span className="text-sm text-[#9CA3AF]">· {filteredTenants.length} shown</span>
           </div>
@@ -139,7 +139,7 @@ export default async function PlatformTenantCenterPage({
             <option value="Attention Needed">Attention Needed</option>
             <option value="At Risk">At Risk</option>
           </select>
-          <button type="submit" className="h-10 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white">Apply</button>
+          <button type="submit" className="h-10 rounded-md bg-[#F26A21] px-4 text-sm font-semibold text-white">Apply</button>
           <Link href="/platform/tenant-center" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827]">Clear</Link>
         </form>
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -152,7 +152,7 @@ export default async function PlatformTenantCenterPage({
           ].map((option) => {
             const active = (params.status ?? "") === option.value;
             return (
-              <Link key={option.value || "all"} href={buildTenantHref(params, { status: option.value })} className={`inline-flex h-8 items-center rounded-full px-3 text-xs font-semibold transition ${active ? "bg-[#F97316] text-white" : "border border-[#E5E7EB] bg-white text-[#6B7280] hover:border-[#F97316] hover:text-[#F97316]"}`}>
+              <Link key={option.value || "all"} href={buildTenantHref(params, { status: option.value })} className={`inline-flex h-8 items-center rounded-full px-3 text-xs font-semibold transition ${active ? "bg-[#F26A21] text-white" : "border border-[#E5E7EB] bg-white text-[#6B7280] hover:border-[#F26A21] hover:text-[#F26A21]"}`}>
                 {option.label}
               </Link>
             );
@@ -164,7 +164,7 @@ export default async function PlatformTenantCenterPage({
       <section className="max-w-full overflow-hidden rounded-xl border border-[#E7E9EE] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)] md:p-5">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+            <Building2 className="h-5 w-5 text-[#F26A21]" aria-hidden="true" />
             <h2 className="text-base font-bold tracking-tight text-[#171A21]">Tenants</h2>
           </div>
           <span className="text-sm font-semibold text-[#9CA3AF]">{filteredTenants.length} shown</span>
@@ -275,7 +275,7 @@ function TenantCard({ tenant }: { tenant: DecoratedTenant }) {
     <article className={`min-w-0 rounded-xl border border-[#E7E9EE] border-l-[3px] ${healthAccent} bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)]`}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${isActive ? "bg-[#FEF0E6] text-[#F97316]" : "bg-[#F1EFE8] text-[#5F5E5A]"}`}>
+          <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${isActive ? "bg-[#FEF0E6] text-[#F26A21]" : "bg-[#F1EFE8] text-[#5F5E5A]"}`}>
             <Building2 className="h-5 w-5" aria-hidden="true" />
           </span>
           <div className="min-w-0">
@@ -360,11 +360,11 @@ function SmallBadge({ label, tone }: { label: string; tone: "success" | "warn" |
 }
 
 function ActionLink({ href, label }: { href: string; label: string }) {
-  return <Link href={href} className="rounded-md border border-[#E5E7EB] px-2 py-1 text-xs font-semibold text-[#111827] hover:border-[#F97316] hover:text-[#F97316]">{label}</Link>;
+  return <Link href={href} className="rounded-md border border-[#E5E7EB] px-2 py-1 text-xs font-semibold text-[#111827] hover:border-[#F26A21] hover:text-[#F26A21]">{label}</Link>;
 }
 
 function ExportButton({ href, icon, label }: { href: string; icon: ReactNode; label: string }) {
-  return <Link href={href} className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]">{icon}{label}</Link>;
+  return <Link href={href} className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-[#E5E7EB] px-3 text-sm font-semibold text-[#111827] transition hover:border-[#F26A21] hover:text-[#F26A21]">{icon}{label}</Link>;
 }
 
 

@@ -1,31 +1,56 @@
-import Image from "next/image";
-
 /**
- * The Loyalty Card UAE brand: the ring-and-dot symbol with the "loyalty card /
- * uae" wordmark. The artwork is the brand's own (public/brand/); the dark
- * version is for light backgrounds, the white version for dark ones.
+ * The Loyalty Card UAE brand, from the brand kit in public/brand/ (vector, so
+ * it is sharp at every size):
+ *
+ * - BrandLockup: the ring-and-dot symbol with the "loyalty card / uae"
+ *   wordmark, beside it (horizontal) or above it (stacked).
+ * - BrandMark: the symbol on its own.
+ *
+ * `tone` picks the version for the background it sits on: "dark" artwork for
+ * light backgrounds, "light" for dark ones, "on-orange" for brand orange.
  */
-const LOCKUP = { width: 983, height: 198 } as const;
+export type BrandTone = "dark" | "light" | "on-orange";
 
-export function BrandLockup({ tone = "dark", className = "h-9 w-auto", priority = false }: { tone?: "dark" | "light"; className?: string; priority?: boolean }) {
+const LOCKUP = {
+  horizontal: { width: 1019, height: 204, dark: "full-colour", light: "white", "on-orange": "on-orange" },
+  stacked: { width: 583, height: 412, dark: "full-colour", light: "white", "on-orange": "on-orange" },
+} as const;
+
+export function BrandLockup({
+  tone = "dark",
+  variant = "horizontal",
+  className = "h-9 w-auto",
+  priority = false,
+}: {
+  tone?: BrandTone;
+  variant?: "horizontal" | "stacked";
+  className?: string;
+  priority?: boolean;
+}) {
+  const art = LOCKUP[variant];
   return (
-    <Image
-      src={tone === "light" ? "/brand/loyalty-card-uae-white.png" : "/brand/loyalty-card-uae.png"}
+    // eslint-disable-next-line @next/next/no-img-element -- static SVG from the brand kit; next/image adds nothing for vectors
+    <img
+      src={`/brand/logo-${variant}-${art[tone]}.svg`}
       alt="Loyalty Card UAE"
-      width={LOCKUP.width}
-      height={LOCKUP.height}
-      priority={priority}
+      width={art.width}
+      height={art.height}
+      decoding="async"
+      loading={priority ? "eager" : "lazy"}
+      fetchPriority={priority ? "high" : undefined}
       className={className}
     />
   );
 }
 
-/** The symbol on its own: a ring in the current text colour with the orange dot. */
-export function BrandMark({ className = "h-8 w-8" }: { className?: string }) {
+const MARK_DOT: Record<BrandTone, string> = { dark: "#F26A21", light: "#F26A21", "on-orange": "#141210" };
+
+/** The symbol alone. The ring takes the current text colour; the dot is brand orange (ink on orange). */
+export function BrandMark({ className = "h-8 w-8", tone = "dark" }: { className?: string; tone?: BrandTone }) {
   return (
-    <svg viewBox="326 204 192 192" className={className} aria-hidden="true" focusable="false">
-      <circle cx="421.5" cy="299.5" r="88.5" fill="none" stroke="currentColor" strokeWidth="6" />
-      <circle cx="485" cy="236.5" r="24" fill="#F26A21" />
+    <svg viewBox="4 4 56 56" className={className} aria-hidden="true" focusable="false">
+      <circle cx="32" cy="32" r="22" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="47.56" cy="16.44" r="6" fill={MARK_DOT[tone]} />
     </svg>
   );
 }

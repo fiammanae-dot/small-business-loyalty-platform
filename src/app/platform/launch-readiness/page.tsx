@@ -75,7 +75,7 @@ export default async function LaunchReadinessPage() {
               {passing} of {checks.length} checks passing{failing > 0 ? ` · ${failing} check${failing === 1 ? "" : "s"} need${failing === 1 ? "s" : ""} attention` : ""}
             </p>
           </div>
-          <a href="/platform/launch-readiness" className="shrink-0 rounded-md bg-[#F97316] px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600">
+          <a href="/platform/launch-readiness" className="shrink-0 rounded-md bg-[#F26A21] px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600">
             Re-run checks
           </a>
         </div>

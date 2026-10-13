@@ -175,10 +175,10 @@ export function FaqKnowledgeCenter() {
 
   return (
     <div>
-      <section className="border-b border-[#EEF2F6] bg-[radial-gradient(circle_at_20%_15%,rgba(249,115,22,0.10),transparent_32%),linear-gradient(180deg,#FFFFFF,#F8FAFC)] px-5 py-16 sm:px-8 lg:px-16">
+      <section className="border-b border-[#EEF2F6] bg-[radial-gradient(circle_at_20%_15%,rgba(242,106,33,0.10),transparent_32%),linear-gradient(180deg,#FFFFFF,#F8FAFC)] px-5 py-16 sm:px-8 lg:px-16">
         <div className="mx-auto max-w-[1180px]">
           <div className="max-w-3xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-[#F97316] shadow-sm">
+            <span className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-[#F26A21] shadow-sm">
               <HelpCircle className="h-4 w-4" aria-hidden="true" />
               Help Center
             </span>
@@ -197,7 +197,7 @@ export function FaqKnowledgeCenter() {
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search by topic, customer, branch, billing..."
-              className="h-16 w-full rounded-2xl border border-[#E5E7EB] bg-white pl-14 pr-5 text-base font-semibold text-[#111827] shadow-sm outline-none transition placeholder:text-[#94A3B8] focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+              className="h-16 w-full rounded-2xl border border-[#E5E7EB] bg-white pl-14 pr-5 text-base font-semibold text-[#111827] shadow-sm outline-none transition placeholder:text-[#94A3B8] focus:border-[#F26A21] focus:ring-4 focus:ring-orange-100"
             />
           </label>
           <p className="mt-3 text-sm font-medium text-[#64748B]">
@@ -226,8 +226,8 @@ export function FaqKnowledgeCenter() {
                   key={category}
                   type="button"
                   onClick={() => setActiveCategory(category)}
-                  className={`min-h-11 shrink-0 rounded-full border px-4 text-sm font-bold transition focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:ring-offset-2 ${
-                    activeCategory === category ? "border-[#F97316] bg-[#F97316] text-white" : "border-[#E5E7EB] bg-white text-[#334155]"
+                  className={`min-h-11 shrink-0 rounded-full border px-4 text-sm font-bold transition focus:outline-none focus:ring-2 focus:ring-[#F26A21] focus:ring-offset-2 ${
+                    activeCategory === category ? "border-[#F26A21] bg-[#F26A21] text-white" : "border-[#E5E7EB] bg-white text-[#334155]"
                   }`}
                 >
                   {category}
@@ -239,7 +239,7 @@ export function FaqKnowledgeCenter() {
           <div className="min-w-0">
             <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-[13px] font-black uppercase tracking-[0.14em] text-[#F97316]">{activeCategory}</p>
+                <p className="text-[13px] font-black uppercase tracking-[0.14em] text-[#F26A21]">{activeCategory}</p>
                 <h2 className="mt-1 text-3xl font-black tracking-tight text-[#111827]">Frequently Asked Questions</h2>
               </div>
               <p className="text-sm font-semibold text-[#64748B]">{filteredFaqs.length} question{filteredFaqs.length === 1 ? "" : "s"}</p>
@@ -256,10 +256,10 @@ export function FaqKnowledgeCenter() {
                       aria-expanded={open}
                       aria-controls={panelId}
                       onClick={() => setOpenId(open ? "" : faq.id)}
-                      className="flex w-full items-center justify-between gap-4 px-5 py-5 text-left transition hover:bg-[#FFF7ED] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#F97316] sm:px-6"
+                      className="flex w-full items-center justify-between gap-4 px-5 py-5 text-left transition hover:bg-[#FFF7ED] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#F26A21] sm:px-6"
                     >
                       <span className="text-base font-black tracking-tight text-[#111827] sm:text-lg">{faq.question}</span>
-                      <ChevronDown className={`h-5 w-5 shrink-0 text-[#F97316] transition-transform ${open ? "rotate-180" : ""}`} aria-hidden="true" />
+                      <ChevronDown className={`h-5 w-5 shrink-0 text-[#F26A21] transition-transform ${open ? "rotate-180" : ""}`} aria-hidden="true" />
                     </button>
                     <div id={panelId} hidden={!open} className="border-t border-[#EEF2F6] px-5 py-5 sm:px-6">
                       <div className="max-w-3xl text-sm leading-7 text-[#607089] sm:text-base">{faq.answer}</div>
@@ -273,7 +273,7 @@ export function FaqKnowledgeCenter() {
               <div className="rounded-[24px] border border-dashed border-[#CBD5E1] bg-[#F8FAFC] p-8 text-center">
                 <p className="text-lg font-black text-[#111827]">No questions found in this category.</p>
                 <p className="mt-2 text-sm leading-6 text-[#64748B]">Try another keyword or choose a different category.</p>
-                <button type="button" onClick={() => setQuery("")} className="mt-5 rounded-xl bg-[#F97316] px-5 py-3 text-sm font-black text-white transition hover:bg-[#EA580C] focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:ring-offset-2">
+                <button type="button" onClick={() => setQuery("")} className="mt-5 rounded-xl bg-[#F26A21] px-5 py-3 text-sm font-black text-white transition hover:bg-[#C2410C] focus:outline-none focus:ring-2 focus:ring-[#F26A21] focus:ring-offset-2">
                   Clear search
                 </button>
               </div>
@@ -290,7 +290,7 @@ export function FaqKnowledgeCenter() {
             <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">Book a demo or contact us and we will walk you through the best setup for your business.</p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Link href="/request-demo" className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#F97316] px-6 text-sm font-black text-white transition hover:bg-[#EA580C] focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#111827]">
+            <Link href="/request-demo" className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#F26A21] px-6 text-sm font-black text-white transition hover:bg-[#C2410C] focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#111827]">
               Book a Demo
             </Link>
             <Link href={supportWhatsAppUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/20 px-6 text-sm font-black text-white transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#111827]">
@@ -309,8 +309,8 @@ function CategoryButton({ category, active, onClick }: { category: FaqCategory; 
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-2xl px-4 py-3 text-left text-sm font-bold transition focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:ring-offset-2 ${
-        active ? "bg-[#F97316] text-white shadow-sm" : "text-[#334155] hover:bg-[#FFF7ED] hover:text-[#EA580C]"
+      className={`rounded-2xl px-4 py-3 text-left text-sm font-bold transition focus:outline-none focus:ring-2 focus:ring-[#F26A21] focus:ring-offset-2 ${
+        active ? "bg-[#F26A21] text-white shadow-sm" : "text-[#334155] hover:bg-[#FFF7ED] hover:text-[#C2410C]"
       }`}
     >
       {category}

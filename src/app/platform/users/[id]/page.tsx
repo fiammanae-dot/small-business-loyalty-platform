@@ -128,7 +128,7 @@ export default async function PlatformUserDetailPage({ params }: { params: Promi
                   </div>
                 </div>
               </div>
-              <Link href="/platform/users" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] transition hover:border-[#F97316] hover:text-[#F97316]">
+              <Link href="/platform/users" className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] transition hover:border-[#F26A21] hover:text-[#F26A21]">
                 Back to Users
               </Link>
             </div>
@@ -197,7 +197,7 @@ function UserActionsPanel({ user, currentUserId }: { user: PlatformUserDetail; c
     <aside className="rounded-2xl border border-[#E5E7EB] bg-white p-5 shadow-sm xl:sticky xl:top-6">
       <p className="text-sm font-black uppercase tracking-[0.16em] text-[#6B7280]">Actions</p>
       <div className="mt-4 grid gap-2">
-        <Link href={`/platform/users/${user.id}/edit`} className="inline-flex h-10 items-center justify-center rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white transition hover:bg-orange-600">
+        <Link href={`/platform/users/${user.id}/edit`} className="inline-flex h-10 items-center justify-center rounded-md bg-[#F26A21] px-4 text-sm font-semibold text-white transition hover:bg-orange-600">
           Edit User
         </Link>
         <PlatformUserPasswordResetAction userId={user.id} userName={displayName} csrfToken={createCsrfToken("platform:users")} />
@@ -281,7 +281,7 @@ function TimelineSection({ title, description, events, empty }: { title: string;
         <ol className="mt-5 grid gap-4">
           {events.map((event) => (
             <li key={event.id} className="relative border-l-2 border-[#E5E7EB] pl-4">
-              <span className="absolute -left-[5px] top-1.5 h-2 w-2 rounded-full bg-[#F97316]" aria-hidden="true" />
+              <span className="absolute -left-[5px] top-1.5 h-2 w-2 rounded-full bg-[#F26A21]" aria-hidden="true" />
               <p className="text-sm font-black text-[#111827]">{formatAction(event.action)}</p>
               <p className="mt-1 text-xs text-[#6B7280]">{formatDateTime(event.createdAt)} by {event.actorUser?.name ?? event.actorUser?.email ?? "System"}</p>
               <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">{event.entityType}{event.entityId ? ` #${event.entityId}` : ""}</p>

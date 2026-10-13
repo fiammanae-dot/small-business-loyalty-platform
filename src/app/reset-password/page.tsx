@@ -20,7 +20,7 @@ export default async function ResetPasswordPage({
           <BrandLockup className="h-10 w-auto" priority />
         </Link>
         <div className="mt-8">
-          <p className="text-sm font-semibold uppercase tracking-wide text-[#F97316]">Password reset</p>
+          <p className="text-sm font-semibold uppercase tracking-wide text-[#F26A21]">Password reset</p>
           <h1 className="mt-2 text-2xl font-semibold tracking-tight">Create a new password</h1>
           <p className="mt-2 text-sm leading-6 text-[#6B7280]">
             Reset links expire after 30 minutes and can be used once.

@@ -13,10 +13,10 @@ export default async function LoginPage() {
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl flex-col justify-center gap-8 lg:grid lg:grid-cols-[1fr_440px] lg:items-center">
         <section className="hidden lg:block">
           <Link href="/" className="inline-flex" aria-label="Loyalty Card UAE homepage">
-            <BrandLockup className="h-14 w-auto" priority />
+            <BrandLockup variant="stacked" className="h-40 w-auto" priority />
           </Link>
           <div className="mt-12 max-w-xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1 text-sm font-semibold text-[#EA580C] shadow-sm">
+            <span className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1 text-sm font-semibold text-[#C2410C] shadow-sm">
               <Sparkles className="h-4 w-4" aria-hidden="true" />
               Secure workspace access
             </span>
@@ -39,10 +39,10 @@ export default async function LoginPage() {
             <BrandLockup className="h-10 w-auto" priority />
           </Link>
           <div className="mt-8 lg:mt-0">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-[#F97316]">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-[#F26A21]">
               <ShieldCheck className="h-6 w-6" aria-hidden="true" />
             </div>
-            <p className="mt-5 text-sm font-semibold uppercase tracking-wide text-[#F97316]">Secure login</p>
+            <p className="mt-5 text-sm font-semibold uppercase tracking-wide text-[#F26A21]">Secure login</p>
             <h2 className="mt-2 text-3xl font-semibold tracking-tight">Welcome back</h2>
             <p className="mt-2 text-sm leading-6 text-[#6B7280]">
               Use your assigned account to access your Loyalty Card UAE workspace.
@@ -60,7 +60,7 @@ export default async function LoginPage() {
 function LoginBenefit({ text }: { text: string }) {
   return (
     <div className="flex items-center gap-3 rounded-md border border-orange-100 bg-white px-4 py-3 shadow-sm">
-      <CheckCircle2 className="h-5 w-5 shrink-0 text-[#F97316]" aria-hidden="true" />
+      <CheckCircle2 className="h-5 w-5 shrink-0 text-[#F26A21]" aria-hidden="true" />
       <span>{text}</span>
     </div>
   );

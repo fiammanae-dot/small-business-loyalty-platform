@@ -62,7 +62,7 @@ export function PlanBillingCycleFields({
           key={`${selectedPlan?.id ?? "plan"}-${selectedCycle}`}
           name="billingCycle"
           defaultValue={selectedCycle}
-          className="h-11 w-full rounded-md border border-[#E5E7EB] bg-white px-3 text-sm text-[#111827] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+          className="h-11 w-full rounded-md border border-[#E5E7EB] bg-white px-3 text-sm text-[#111827] outline-none transition focus:border-[#F26A21] focus:ring-4 focus:ring-orange-100"
         >
           {supportedCycles.map((cycle) => (
             <option key={cycle} value={cycle}>

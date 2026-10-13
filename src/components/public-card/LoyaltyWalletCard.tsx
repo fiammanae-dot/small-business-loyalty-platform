@@ -433,7 +433,7 @@ function CardHeader({
                   backgroundColor: theme.badgeBackground,
                   color: theme.badgeText,
                   borderColor: theme.badgeBorder,
-                  boxShadow: theme.style === "modern-clean" ? "0 0 0 1px rgba(249,115,22,0.10), 0 0 18px rgba(249,115,22,0.10)" : undefined,
+                  boxShadow: theme.style === "modern-clean" ? "0 0 0 1px rgba(242,106,33,0.10), 0 0 18px rgba(242,106,33,0.10)" : undefined,
                 }}
                 title={tierLabel}
               >

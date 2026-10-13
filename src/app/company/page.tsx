@@ -60,7 +60,7 @@ export default function CompanyPage() {
 
       <section className="border-y border-[#EEF2F6] bg-[#FAFBFC] px-5 py-16 sm:px-8 lg:px-16">
         <div className="mx-auto max-w-[980px] rounded-[36px] border border-[#E5E7EB] bg-white p-8 shadow-[0_18px_55px_rgba(15,23,42,0.07)] sm:p-10">
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-[#EA580C]">Vision</p>
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-[#C2410C]">Vision</p>
           <h2 className="mt-3 text-3xl font-extrabold tracking-[-0.04em] text-[#08111F] sm:text-5xl">A loyalty layer for every local business</h2>
           <p className="mt-5 text-lg leading-8 text-[#607089]">
             We believe local businesses deserve software that feels premium, works on the devices they already use, and helps them build stronger customer relationships without adding operational complexity.

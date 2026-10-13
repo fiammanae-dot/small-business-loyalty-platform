@@ -216,7 +216,7 @@ function Input({ label, name, defaultValue }: { label: string; name: string; def
         {label}
         <RequiredMark />
       </span>
-      <input name={name} defaultValue={defaultValue} required className="h-10 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none focus:border-[#F97316] focus:ring-4 focus:ring-orange-100" />
+      <input name={name} defaultValue={defaultValue} required className="h-10 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none focus:border-[#F26A21] focus:ring-4 focus:ring-orange-100" />
     </label>
   );
 }

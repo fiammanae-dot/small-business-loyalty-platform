@@ -121,7 +121,7 @@ export default async function PlatformSettingsPage({
         <section className="rounded-2xl border border-[#E7E9EE] bg-white p-4 shadow-sm md:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0">
-              <p className="text-[13px] font-semibold uppercase tracking-[0.18em] text-[#F97316]">Operational configuration center</p>
+              <p className="text-[13px] font-semibold uppercase tracking-[0.18em] text-[#F26A21]">Operational configuration center</p>
               <h2 className="mt-2 text-2xl font-black tracking-tight text-[#111827]">Control real platform readiness from one place.</h2>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-[#64748B]">
                 View security posture, provider readiness, action restrictions, audit activity, integrations, and launch operations without exposing secrets.
@@ -145,7 +145,7 @@ export default async function PlatformSettingsPage({
                 role="tab"
                 aria-selected={active}
                 className={`flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-3 text-sm font-semibold transition ${
-                  active ? "border-[#F97316] text-[#F97316]" : "border-transparent text-[#64748B] hover:text-[#1E293B]"
+                  active ? "border-[#F26A21] text-[#F26A21]" : "border-transparent text-[#64748B] hover:text-[#1E293B]"
                 }`}
               >
                 <tab.icon className="h-4 w-4" aria-hidden="true" />
@@ -248,7 +248,7 @@ function TwoFactorRequirementToggle({
         <input type="hidden" name="enabled" value={enabled ? "false" : "true"} />
         <button
           type="submit"
-          className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white px-4 text-sm font-bold text-[#111827] transition hover:border-[#F97316] hover:text-[#EA580C] focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:ring-offset-2"
+          className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white px-4 text-sm font-bold text-[#111827] transition hover:border-[#F26A21] hover:text-[#C2410C] focus:outline-none focus:ring-2 focus:ring-[#F26A21] focus:ring-offset-2"
         >
           {enabled ? "Make optional" : "Require"}
         </button>
@@ -326,7 +326,7 @@ function RestrictionsTab({ demoModeEnabled }: { demoModeEnabled: boolean }) {
         <form action={toggleDemoModeAction}>
           <CsrfInput scope="platform:settings" />
           <input type="hidden" name="enabled" value={demoModeEnabled ? "false" : "true"} />
-          <button type="submit" className="inline-flex min-h-10 items-center justify-center rounded-xl bg-[#F97316] px-4 text-sm font-bold text-white transition hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:ring-offset-2">
+          <button type="submit" className="inline-flex min-h-10 items-center justify-center rounded-xl bg-[#F26A21] px-4 text-sm font-bold text-white transition hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-[#F26A21] focus:ring-offset-2">
             {demoModeEnabled ? "Disable Restrictions" : "Enable Restrictions"}
           </button>
         </form>
@@ -381,7 +381,7 @@ function AuditLogsTab({ auditEvents }: { auditEvents: AuditEventRow[] }) {
       <div className="mt-5 grid gap-3 md:hidden">
         {auditEvents.map((event) => (
           <article key={event.id} className="rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#F97316]">Audit event</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#F26A21]">Audit event</p>
             <h3 className="mt-1 text-sm font-semibold text-[#111827]">{formatAction(event.action)}</h3>
             <div className="mt-4 grid gap-2 text-sm">
               <MobileDetailLine label="Entity" value={`${event.entityType}${event.entityId ? ` #${event.entityId}` : ""}`} />
@@ -527,7 +527,7 @@ function formatAction(action: string) {
 function SectionHeader({ icon: Icon, title, description }: { icon: LucideIcon; title: string; description: string }) {
   return (
     <div className="flex min-w-0 items-start gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-[#F97316]">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-[#F26A21]">
         <Icon className="h-5 w-5" aria-hidden="true" />
       </div>
       <div className="min-w-0">
@@ -555,7 +555,7 @@ function StatusRow({
     <article className="min-w-0 rounded-2xl border border-[#E7E9EE] bg-[#FAFAFA] p-4">
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-[#F97316]">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-[#F26A21]">
             <Icon className="h-4 w-4" aria-hidden="true" />
           </span>
           <p className="min-w-0 text-sm font-bold text-[#111827]">{label}</p>
@@ -586,9 +586,9 @@ function StatusBadge({ label, tone }: { label: string; tone: StatusTone }) {
 
 function AdminLink({ href, label, description }: { href: string; label: string; description: string }) {
   return (
-    <Link href={href} className="group flex min-w-0 items-center justify-between gap-3 overflow-hidden rounded-xl border border-[#E7E9EE] bg-white p-4 transition hover:border-[#F97316] hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:ring-offset-2">
+    <Link href={href} className="group flex min-w-0 items-center justify-between gap-3 overflow-hidden rounded-xl border border-[#E7E9EE] bg-white p-4 transition hover:border-[#F26A21] hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F26A21] focus:ring-offset-2">
       <div className="min-w-0">
-        <p className="break-words font-bold text-[#111827] group-hover:text-[#EA580C]">{label}</p>
+        <p className="break-words font-bold text-[#111827] group-hover:text-[#C2410C]">{label}</p>
         <p className="mt-0.5 break-words text-sm leading-5 text-[#64748B]">{description}</p>
       </div>
       <ChevronRight className="h-4 w-4 shrink-0 text-[#CBD5E1]" aria-hidden="true" />
@@ -598,7 +598,7 @@ function AdminLink({ href, label, description }: { href: string; label: string; 
 
 function LinkButton({ href, icon: Icon, label }: { href: string; icon: LucideIcon; label: string }) {
   return (
-    <Link href={href} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-[#E5E7EB] bg-white px-3 text-sm font-bold text-[#111827] transition hover:border-[#F97316] hover:text-[#EA580C] focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:ring-offset-2">
+    <Link href={href} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-[#E5E7EB] bg-white px-3 text-sm font-bold text-[#111827] transition hover:border-[#F26A21] hover:text-[#C2410C] focus:outline-none focus:ring-2 focus:ring-[#F26A21] focus:ring-offset-2">
       <Icon className="h-4 w-4" aria-hidden="true" />
       {label}
     </Link>
@@ -625,7 +625,7 @@ function ReadOnlyCallout({ title, description }: { title: string; description: s
   return (
     <div className="rounded-xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] p-4">
       <div className="flex items-center gap-2">
-        <AlertTriangle className="h-4 w-4 text-[#F97316]" aria-hidden="true" />
+        <AlertTriangle className="h-4 w-4 text-[#F26A21]" aria-hidden="true" />
         <p className="text-sm font-black text-[#111827]">{title}</p>
         <StatusBadge label="Coming soon" tone="soon" />
       </div>

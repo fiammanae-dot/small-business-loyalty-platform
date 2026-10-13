@@ -1,8 +1,8 @@
 export const designTokens = {
   colors: {
     brand: {
-      primary: "#F97316",
-      dark: "#EA580C",
+      primary: "#F26A21",
+      dark: "#C2410C",
       soft: "#FFF7ED",
       text: "#1E293B",
       background: "#FFFFFF",
@@ -44,9 +44,9 @@ export const designTokens = {
     pageTitle: "text-2xl font-bold md:text-3xl",
   },
   focusRing:
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] focus-visible:ring-offset-2",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F26A21] focus-visible:ring-offset-2",
   businessFocusRing:
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary,#F97316)] focus-visible:ring-offset-2",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--business-primary,#F26A21)] focus-visible:ring-offset-2",
   transitions: {
     fast: "duration-150",
     normal: "duration-200",

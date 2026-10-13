@@ -38,11 +38,11 @@ export default function SupportPage() {
           <div>
             <SectionHeading eyebrow="Contact" title="Reach the support team" description="Use email or WhatsApp for account, wallet, or technical support. We do not ask for passwords or full payment details over support channels." />
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link href="https://wa.me/971505009707" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-[#FF5A0A] px-6 text-sm font-bold text-white transition hover:bg-[#EA580C] focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:ring-offset-2">
+              <Link href="https://wa.me/971505009707" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-[#F26A21] px-6 text-sm font-bold text-white transition hover:bg-[#C2410C] focus:outline-none focus:ring-2 focus:ring-[#F26A21] focus:ring-offset-2">
                 <MessageCircle className="h-4 w-4" aria-hidden="true" />
                 WhatsApp Support
               </Link>
-              <Link href="mailto:support@loyaltycarduae.com" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#E5E7EB] bg-white px-6 text-sm font-bold text-[#111827] transition hover:bg-[#FFF7ED] focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:ring-offset-2">
+              <Link href="mailto:support@loyaltycarduae.com" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#E5E7EB] bg-white px-6 text-sm font-bold text-[#111827] transition hover:bg-[#FFF7ED] focus:outline-none focus:ring-2 focus:ring-[#F26A21] focus:ring-offset-2">
                 Email Support
               </Link>
             </div>
@@ -53,7 +53,7 @@ export default function SupportPage() {
               const Icon = item.icon;
               const content = (
                 <div className="flex gap-4 rounded-[24px] border border-[#E5E7EB] bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.05)]">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-orange-50 text-[#F97316]">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-orange-50 text-[#F26A21]">
                     <Icon className="h-5 w-5" aria-hidden="true" />
                   </span>
                   <div>

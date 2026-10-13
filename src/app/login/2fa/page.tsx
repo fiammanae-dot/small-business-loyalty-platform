@@ -20,10 +20,10 @@ export default async function TwoFactorChallengePage() {
         </Link>
 
         <div className="mt-8">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-[#F97316]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-[#F26A21]">
             <ShieldCheck className="h-6 w-6" aria-hidden="true" />
           </div>
-          <p className="mt-5 text-sm font-semibold uppercase tracking-wide text-[#F97316]">Two-factor authentication</p>
+          <p className="mt-5 text-sm font-semibold uppercase tracking-wide text-[#F26A21]">Two-factor authentication</p>
           <h1 className="mt-2 text-2xl font-semibold tracking-tight">Confirm it&apos;s you</h1>
           <p className="mt-2 text-sm leading-6 text-[#6B7280]">
             Your password was accepted. Enter the code from your authenticator app to finish signing in.
@@ -36,7 +36,7 @@ export default async function TwoFactorChallengePage() {
 
         <p className="mt-6 text-sm text-[#6B7280]">
           Lost your device?{" "}
-          <Link href="/support" className="font-semibold text-[#F97316] hover:underline">
+          <Link href="/support" className="font-semibold text-[#F26A21] hover:underline">
             Contact support
           </Link>
         </p>

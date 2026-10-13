@@ -24,7 +24,7 @@ export function ForgotPasswordForm({ csrfToken }: { csrfToken: string }) {
           type="email"
           autoComplete="email"
           required
-          className="h-11 w-full rounded-md border border-[#E5E7EB] bg-white px-3 text-sm text-[#111827] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+          className="h-11 w-full rounded-md border border-[#E5E7EB] bg-white px-3 text-sm text-[#111827] outline-none transition focus:border-[#F26A21] focus:ring-4 focus:ring-orange-100"
           placeholder="you@example.com"
         />
       </div>
@@ -44,12 +44,12 @@ export function ForgotPasswordForm({ csrfToken }: { csrfToken: string }) {
       <button
         type="submit"
         disabled={isPending}
-        className="h-11 w-full rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70"
+        className="h-11 w-full rounded-md bg-[#F26A21] px-4 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70"
       >
         {isPending ? "Sending..." : "Send Reset Link"}
       </button>
 
-      <Link href="/login" className="block text-center text-sm font-semibold text-[#F97316] hover:text-[#EA580C]">
+      <Link href="/login" className="block text-center text-sm font-semibold text-[#F26A21] hover:text-[#C2410C]">
         Back to login
       </Link>
     </form>

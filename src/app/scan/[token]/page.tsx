@@ -1295,7 +1295,7 @@ function StampIssuanceSection({
               {[1, 2, 3, 4, 5].map((quantity) => (
                 <label key={quantity} className="cursor-pointer">
                   <input className="peer sr-only" type="radio" name="quantity" value={quantity} defaultChecked={quantity === 1} />
-                  <span className="flex min-h-12 items-center justify-center rounded-md border border-[#E5E7EB] bg-white text-sm font-semibold text-[#111827] transition peer-checked:border-[var(--business-primary,#F97316)] peer-checked:bg-[var(--business-button,#F97316)] peer-checked:text-[var(--business-button-foreground,#ffffff)]">
+                  <span className="flex min-h-12 items-center justify-center rounded-md border border-[#E5E7EB] bg-white text-sm font-semibold text-[#111827] transition peer-checked:border-[var(--business-primary,#F26A21)] peer-checked:bg-[var(--business-button,#F26A21)] peer-checked:text-[var(--business-button-foreground,#ffffff)]">
                     +{quantity}
                   </span>
                 </label>
@@ -1308,7 +1308,7 @@ function StampIssuanceSection({
           <textarea
             name="reason"
             rows={3}
-            className="rounded-md border border-[#E5E7EB] px-3 py-2 text-sm font-normal outline-none focus:border-[var(--business-primary,#F97316)] focus:ring-4 focus:ring-[var(--business-primary-soft,#ffedd5)]"
+            className="rounded-md border border-[#E5E7EB] px-3 py-2 text-sm font-normal outline-none focus:border-[var(--business-primary,#F26A21)] focus:ring-4 focus:ring-[var(--business-primary-soft,#ffedd5)]"
             placeholder="Required for multiple stamps or repeated stamps in a short time. Reason: customer purchased multiple items."
           />
         </label>
@@ -1329,7 +1329,7 @@ function StampIssuanceSection({
               Override reason
               <input
                 name="overrideReason"
-                className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm font-normal outline-none focus:border-[var(--business-primary,#F97316)] focus:ring-4 focus:ring-[var(--business-primary-soft,#ffedd5)]"
+                className="h-10 rounded-md border border-[#E5E7EB] px-3 text-sm font-normal outline-none focus:border-[var(--business-primary,#F26A21)] focus:ring-4 focus:ring-[var(--business-primary-soft,#ffedd5)]"
                 placeholder={isMembership ? "Required when overriding a rule, e.g. customer had to reschedule" : "Required when overriding a cooldown violation"}
               />
             </label>
@@ -1424,7 +1424,7 @@ function MembershipTreatmentFields({ treatments }: { treatments: { id: number; n
           name="membershipTreatment"
           required
           defaultValue=""
-          className="h-11 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm font-normal text-[#111827] outline-none focus:border-[var(--business-primary,#F97316)] focus:ring-4 focus:ring-[var(--business-primary-soft,#ffedd5)]"
+          className="h-11 rounded-md border border-[#E5E7EB] bg-white px-3 text-sm font-normal text-[#111827] outline-none focus:border-[var(--business-primary,#F26A21)] focus:ring-4 focus:ring-[var(--business-primary-soft,#ffedd5)]"
         >
           <option value="" disabled>
             Select a treatment…
@@ -1442,7 +1442,7 @@ function MembershipTreatmentFields({ treatments }: { treatments: { id: number; n
         name="treatmentOther"
         maxLength={200}
         placeholder="If Other: type the treatment used"
-        className="h-11 rounded-md border border-[#E5E7EB] px-3 text-sm font-normal text-[#111827] outline-none focus:border-[var(--business-primary,#F97316)] focus:ring-4 focus:ring-[var(--business-primary-soft,#ffedd5)]"
+        className="h-11 rounded-md border border-[#E5E7EB] px-3 text-sm font-normal text-[#111827] outline-none focus:border-[var(--business-primary,#F26A21)] focus:ring-4 focus:ring-[var(--business-primary-soft,#ffedd5)]"
       />
     </div>
   );

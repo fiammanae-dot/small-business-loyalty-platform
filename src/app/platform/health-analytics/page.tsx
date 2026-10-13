@@ -20,7 +20,7 @@ type ChartPoint = {
   value: number;
 };
 
-const planMixColors = ["#F0997B", "#E86A33", "#993C1D", "#C24E1E", "#F4C7AE", "#712B13"];
+const planMixColors = ["#F0997B", "#F26A21", "#993C1D", "#C2410C", "#F4C7AE", "#712B13"];
 
 export default async function PlatformHealthAnalyticsPage() {
   const user = await requireRole("PLATFORM_OWNER");

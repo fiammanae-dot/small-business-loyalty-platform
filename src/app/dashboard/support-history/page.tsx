@@ -91,7 +91,7 @@ export default async function BusinessSupportHistoryPage() {
             <EmptyState
               title="No support access recorded."
               description="Loyalty Card UAE support sessions for your business will appear here after they are completed."
-              action={<Link href="/dashboard" className="inline-flex min-h-10 items-center rounded-md border border-[#CBD5E1] px-4 text-sm font-semibold text-[#0F172A] transition hover:border-[#F97316] hover:text-[#F97316]">Back to Dashboard</Link>}
+              action={<Link href="/dashboard" className="inline-flex min-h-10 items-center rounded-md border border-[#CBD5E1] px-4 text-sm font-semibold text-[#0F172A] transition hover:border-[#F26A21] hover:text-[#F26A21]">Back to Dashboard</Link>}
             />
           )}
         </SectionCard>

@@ -99,7 +99,7 @@ function SetupState({
           required
           maxLength={6}
           placeholder="123456"
-          className="h-11 w-full max-w-xs rounded-md border border-[#E5E7EB] bg-white px-3 text-sm tracking-widest outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+          className="h-11 w-full max-w-xs rounded-md border border-[#E5E7EB] bg-white px-3 text-sm tracking-widest outline-none transition focus:border-[#F26A21] focus:ring-4 focus:ring-orange-100"
         />
 
         {state.error ? (
@@ -109,7 +109,7 @@ function SetupState({
         <button
           type="submit"
           disabled={isPending}
-          className="h-11 w-fit rounded-md bg-[#F97316] px-5 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70"
+          className="h-11 w-fit rounded-md bg-[#F26A21] px-5 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70"
         >
           {isPending ? "Verifying..." : "Turn on two-factor authentication"}
         </button>
@@ -157,7 +157,7 @@ function EnabledState({
       <form action={regenerateAction} className="grid gap-3 rounded-xl border border-[#E5E7EB] bg-[#F8FAFC] p-4">
         <input type="hidden" name="csrfToken" value={csrfToken} />
         <div className="flex items-center gap-2">
-          <KeyRound className="h-4 w-4 text-[#F97316]" aria-hidden="true" />
+          <KeyRound className="h-4 w-4 text-[#F26A21]" aria-hidden="true" />
           <p className="text-sm font-bold text-[#111827]">Regenerate backup codes</p>
         </div>
         <p className="text-sm leading-6 text-[#64748B]">
@@ -175,7 +175,7 @@ function EnabledState({
           required
           maxLength={6}
           placeholder="123456"
-          className="h-11 w-full max-w-xs rounded-md border border-[#E5E7EB] bg-white px-3 text-sm tracking-widest outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+          className="h-11 w-full max-w-xs rounded-md border border-[#E5E7EB] bg-white px-3 text-sm tracking-widest outline-none transition focus:border-[#F26A21] focus:ring-4 focus:ring-orange-100"
         />
         {regenerateState.error ? (
           <p role="alert" className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{regenerateState.error}</p>
@@ -213,7 +213,7 @@ function EnabledState({
                 autoComplete="one-time-code"
                 maxLength={6}
                 placeholder="123456"
-                className="h-11 w-full max-w-xs rounded-md border border-[#E5E7EB] bg-white px-3 text-sm tracking-widest outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+                className="h-11 w-full max-w-xs rounded-md border border-[#E5E7EB] bg-white px-3 text-sm tracking-widest outline-none transition focus:border-[#F26A21] focus:ring-4 focus:ring-orange-100"
               />
               <label htmlFor="disable-password" className="text-sm font-medium text-[#111827]">
                 Or your account password
@@ -223,7 +223,7 @@ function EnabledState({
                 name="password"
                 type="password"
                 autoComplete="current-password"
-                className="h-11 w-full max-w-xs rounded-md border border-[#E5E7EB] bg-white px-3 text-sm outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+                className="h-11 w-full max-w-xs rounded-md border border-[#E5E7EB] bg-white px-3 text-sm outline-none transition focus:border-[#F26A21] focus:ring-4 focus:ring-orange-100"
               />
               {disableState.error ? (
                 <p role="alert" className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{disableState.error}</p>

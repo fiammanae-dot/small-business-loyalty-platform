@@ -9,7 +9,7 @@ const tones: Record<StatusBadgeTone, string> = {
   warning: "border-[#F3D9A4] bg-[#FCF0DC] text-[#B25E09]",
   danger: "border-[#FECACA] bg-[#FEF2F2] text-[#B91C1C]",
   info: "border-[#BAE6FD] bg-[#F0F9FF] text-[#0369A1]",
-  brand: "border-[#F4C7AE] bg-[#FBEFE8] text-[#C24E1E]",
+  brand: "border-[#F4C7AE] bg-[#FBEFE8] text-[#C2410C]",
   business: "business-border-soft business-bg-soft business-text",
 };
 

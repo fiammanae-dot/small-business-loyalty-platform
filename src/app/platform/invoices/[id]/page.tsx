@@ -40,7 +40,7 @@ export default async function PlatformInvoiceDetailPage({
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title={invoice.invoiceNumber}>
       <div className="flex flex-wrap gap-3">
-        <Link href="/platform/invoices" className="inline-flex h-10 items-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] hover:border-[#F97316] hover:text-[#F97316]">
+        <Link href="/platform/invoices" className="inline-flex h-10 items-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] hover:border-[#F26A21] hover:text-[#F26A21]">
           Back to invoices
         </Link>
         {invoice.status === "DRAFT" ? <StatusForm uuid={invoice.uuid} status="ISSUED" label="Mark Issued" /> : null}
@@ -91,7 +91,7 @@ export default async function PlatformInvoiceDetailPage({
               </label>
               <ConfirmSubmitButton
                 message="Record this payment amount against the invoice?"
-                className="h-11 rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white"
+                className="h-11 rounded-md bg-[#F26A21] px-4 text-sm font-semibold text-white"
               >
                 Record Payment
               </ConfirmSubmitButton>
@@ -151,7 +151,7 @@ function StatusForm({ uuid, status, label }: { uuid: string; status: InvoiceStat
       <input type="hidden" name="nextStatus" value={status} />
       <ConfirmSubmitButton
         message={invoiceStatusConfirmationMessage(status)}
-        className="inline-flex h-10 items-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] hover:border-[#F97316] hover:text-[#F97316]"
+        className="inline-flex h-10 items-center rounded-md border border-[#E5E7EB] px-4 text-sm font-semibold text-[#111827] hover:border-[#F26A21] hover:text-[#F26A21]"
       >
         {label}
       </ConfirmSubmitButton>

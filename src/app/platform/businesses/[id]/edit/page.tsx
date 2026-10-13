@@ -41,7 +41,7 @@ export default async function EditBusinessPage({
   return (
     <DashboardShell user={user} eyebrow="System Administrator" title={`Edit ${business.name}`}>
       <div>
-        <Link href={`/platform/businesses/${business.uuid}`} className="text-sm font-semibold text-[#F97316]">
+        <Link href={`/platform/businesses/${business.uuid}`} className="text-sm font-semibold text-[#F26A21]">
           Back to business
         </Link>
       </div>

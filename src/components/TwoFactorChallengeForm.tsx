@@ -28,7 +28,7 @@ export function TwoFactorChallengeForm({ csrfToken }: { csrfToken: string }) {
           required
           placeholder="123456 or backup code"
           aria-describedby="two-factor-code-help"
-          className="h-11 w-full rounded-md border border-[#E5E7EB] bg-white px-3 text-sm tracking-widest text-[#111827] outline-none transition focus:border-[#F97316] focus:ring-4 focus:ring-orange-100"
+          className="h-11 w-full rounded-md border border-[#E5E7EB] bg-white px-3 text-sm tracking-widest text-[#111827] outline-none transition focus:border-[#F26A21] focus:ring-4 focus:ring-orange-100"
         />
         <p id="two-factor-code-help" className="text-xs leading-5 text-[#6B7280]">
           Enter the 6-digit code from your authenticator app, or one of your single-use backup codes.
@@ -44,7 +44,7 @@ export function TwoFactorChallengeForm({ csrfToken }: { csrfToken: string }) {
       <button
         type="submit"
         disabled={isPending}
-        className="h-11 w-full rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70"
+        className="h-11 w-full rounded-md bg-[#F26A21] px-4 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70"
       >
         {isPending ? "Verifying..." : "Verify and continue"}
       </button>

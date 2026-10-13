@@ -28,7 +28,7 @@ export default function PricingPage() {
           <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {included.map((item) => (
               <div key={item} className="flex items-center gap-3 rounded-2xl border border-[#E5E7EB] bg-white px-4 py-4 text-sm font-bold text-[#111827] shadow-sm">
-                <CheckCircle2 className="h-5 w-5 text-[#F97316]" aria-hidden="true" />
+                <CheckCircle2 className="h-5 w-5 text-[#F26A21]" aria-hidden="true" />
                 {item}
               </div>
             ))}

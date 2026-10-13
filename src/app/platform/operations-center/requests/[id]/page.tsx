@@ -54,14 +54,14 @@ export default async function SupportRequestDetailPage({
       <div className="grid gap-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-sm font-semibold text-[#64748B]">
-            <Link href="/platform/operations-center" className="inline-flex items-center gap-2 transition hover:text-[#F97316] hover:underline">
+            <Link href="/platform/operations-center" className="inline-flex items-center gap-2 transition hover:text-[#F26A21] hover:underline">
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
               Operations Center
             </Link>
             <ChevronRight className="h-4 w-4" aria-hidden="true" />
             <span className="text-[#0F172A]">{request.business.name}</span>
           </nav>
-          <Link href={`/platform/businesses/${request.business.uuid}`} className="inline-flex min-h-10 items-center justify-center rounded-md border border-[#CBD5E1] bg-white px-4 text-sm font-semibold text-[#0F172A] transition hover:border-[#F97316] hover:text-[#F97316]">
+          <Link href={`/platform/businesses/${request.business.uuid}`} className="inline-flex min-h-10 items-center justify-center rounded-md border border-[#CBD5E1] bg-white px-4 text-sm font-semibold text-[#0F172A] transition hover:border-[#F26A21] hover:text-[#F26A21]">
             Open Business
           </Link>
         </div>
@@ -170,14 +170,14 @@ function RequestActions({
 }) {
   return (
     <aside className="grid gap-2 sm:flex sm:flex-wrap sm:justify-end">
-      <Link href={`/platform/businesses/${businessUuid}`} className="inline-flex min-h-10 items-center justify-center rounded-md border border-[#CBD5E1] bg-white px-4 text-sm font-semibold text-[#0F172A] transition hover:border-[#F97316] hover:text-[#F97316]">
+      <Link href={`/platform/businesses/${businessUuid}`} className="inline-flex min-h-10 items-center justify-center rounded-md border border-[#CBD5E1] bg-white px-4 text-sm font-semibold text-[#0F172A] transition hover:border-[#F26A21] hover:text-[#F26A21]">
         Open Business
       </Link>
-      <Link href={`/platform/operations-center/support/start?businessId=${businessId}`} className="inline-flex min-h-10 items-center justify-center rounded-md bg-[#F97316] px-4 text-sm font-semibold text-white transition hover:bg-orange-600">
+      <Link href={`/platform/operations-center/support/start?businessId=${businessId}`} className="inline-flex min-h-10 items-center justify-center rounded-md bg-[#F26A21] px-4 text-sm font-semibold text-white transition hover:bg-orange-600">
         Start Session
       </Link>
       {session ? (
-        <Link href={`/platform/operations-center/support/${session.id}`} className="inline-flex min-h-10 items-center justify-center rounded-md border border-[#CBD5E1] bg-white px-4 text-sm font-semibold text-[#0F172A] transition hover:border-[#F97316] hover:text-[#F97316]">
+        <Link href={`/platform/operations-center/support/${session.id}`} className="inline-flex min-h-10 items-center justify-center rounded-md border border-[#CBD5E1] bg-white px-4 text-sm font-semibold text-[#0F172A] transition hover:border-[#F26A21] hover:text-[#F26A21]">
           View Session
         </Link>
       ) : null}
