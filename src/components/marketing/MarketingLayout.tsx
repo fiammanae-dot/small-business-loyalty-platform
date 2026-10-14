@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { ArrowRight, CheckCircle2, Menu } from "lucide-react";
 import { BrandLockup } from "@/components/BrandLogo";
+import { WhatsAppFloat } from "@/components/marketing/WhatsAppFloat";
 
 export const marketingNavItems = [
   { label: "Product", href: "/benefits" },
@@ -66,6 +67,7 @@ export function MarketingFrame({ children }: { children: React.ReactNode }) {
         {children}
         <MarketingFooter />
       </div>
+      <WhatsAppFloat />
     </main>
   );
 }
