@@ -1,6 +1,7 @@
 import Link from "next/link";
 import HeroShowcase from "./_components/HeroShowcase";
 import { BrandLockup } from "@/components/BrandLogo";
+import { WhatsAppFloat } from "@/components/marketing/WhatsAppFloat";
 
 const stats = [
   { icon: "Secure", value: "Protected", label: "Role-based access" },
@@ -248,6 +249,7 @@ export default function HomePage() {
           <span>loyaltycarduae.com</span>
         </div>
       </footer>
+      <WhatsAppFloat />
     </main>
   );
 }
