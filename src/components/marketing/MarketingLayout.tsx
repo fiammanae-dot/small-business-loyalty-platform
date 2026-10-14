@@ -20,15 +20,15 @@ export const marketingNavItems = [
 export const officialPlans = [
   {
     name: "Starter",
-    price: "AED 100/month",
-    annual: "or AED 1,000/year (save AED 200)",
+    price: "AED 1,000/year",
+    annual: "or AED 100/month",
     limits: ["1 branch", "1 loyalty program", "3 staff logins", "Unlimited customers"],
     bestFor: "A single shop, salon or clinic launching its first digital loyalty card.",
   },
   {
     name: "Growth",
-    price: "AED 200/month",
-    annual: "or AED 2,000/year (save AED 400)",
+    price: "AED 2,000/year",
+    annual: "or AED 200/month",
     limits: ["Up to 3 branches", "Up to 5 loyalty programs", "10 staff logins", "Unlimited customers"],
     bestFor: "A growing brand running stamps, packages or cashback side by side, with a team across branches.",
     featured: true,

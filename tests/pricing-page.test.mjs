@@ -18,9 +18,12 @@ test("each plan card lists branches, programs and staff logins matching the plan
   assert.match(layout, /\{plan\.limits\.map\(/);
 });
 
-test("prices on the page match the plan rows", () => {
-  assert.match(layout, /name: "Starter",\s*price: "AED 100\/month",\s*annual: "or AED 1,000\/year/);
-  assert.match(layout, /name: "Growth",\s*price: "AED 200\/month",\s*annual: "or AED 2,000\/year/);
+test("the yearly price leads on every plan, with the monthly option underneath", () => {
+  assert.match(layout, /name: "Starter",\s*price: "AED 1,000\/year",\s*annual: "or AED 100\/month"/);
+  assert.match(layout, /name: "Growth",\s*price: "AED 2,000\/year",\s*annual: "or AED 200\/month"/);
+  const home = readFileSync("src/app/page.tsx", "utf8");
+  assert.match(home, /name: "Starter", price: "AED 1,000", per: "\/yr", note: "or AED 100\/month"/);
+  assert.match(home, /name: "Growth", price: "AED 2,000", per: "\/yr", note: "or AED 200\/month"/);
   assert.match(layout, /name: "Multi Branch",\s*price: "AED 3,000\/year",\s*annual: "Billed yearly"/);
   for (const file of ["prisma/seed.js", "prisma/seed-pilot.js", "src/lib/seed-data.ts"]) {
     const source = readFileSync(file, "utf8");
