@@ -94,7 +94,8 @@ export default async function CashbackProgramDetailPage({ searchParams }: { sear
           <MetricCard label="Outstanding balance" value={formatAed(outstanding, currency)} tone="warning" />
         </section>
 
-        <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+        {/* Cards keep their own height (no stretching to the taller column). */}
+        <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr] xl:items-start">
           <div className="grid gap-5">
             <SectionCard title="Program Information" description="How cashback is earned and who can earn it.">
               <div className="grid gap-3 md:grid-cols-2">
@@ -107,6 +108,14 @@ export default async function CashbackProgramDetailPage({ searchParams }: { sear
                 <Info label="Referral reward" value={settings?.referralRewardAmount != null && Number(settings.referralRewardAmount) > 0 ? `${formatAed(Number(settings.referralRewardAmount), currency)} to the referrer` : "None"} />
                 <Info label="Card style" value={cardThemeLabel(settings?.cardTheme ?? "BUSINESS_DEFAULT")} />
                 <Info label="Created" value={settings?.createdAt ? formatDate(settings.createdAt) : "-"} />
+              </div>
+            </SectionCard>
+
+            <SectionCard title="Balance summary" description="Cashback issued, spent and still owed to customers.">
+              <div className="grid gap-3 md:grid-cols-3">
+                <Info label="Cashback given (all time)" value={formatAed(given, currency)} />
+                <Info label="Redeemed (all time)" value={formatAed(redeemed, currency)} />
+                <Info label="Outstanding balance" value={formatAed(outstanding, currency)} />
               </div>
             </SectionCard>
           </div>
@@ -142,14 +151,6 @@ export default async function CashbackProgramDetailPage({ searchParams }: { sear
               <div className="grid gap-3">
                 <p className="text-sm text-[#64748B]">Edit the cashback rate, per-transaction caps, card theme and picture in the cashback setup.</p>
                 <ButtonLink href={EDIT_HREF} variant="business">Edit cashback card</ButtonLink>
-              </div>
-            </SectionCard>
-
-            <SectionCard title="Balance summary" description="Cashback issued, spent and still owed to customers.">
-              <div className="grid gap-3">
-                <Info label="Cashback given (all time)" value={formatAed(given, currency)} />
-                <Info label="Redeemed (all time)" value={formatAed(redeemed, currency)} />
-                <Info label="Outstanding balance" value={formatAed(outstanding, currency)} />
               </div>
             </SectionCard>
           </div>

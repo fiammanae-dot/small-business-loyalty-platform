@@ -30,3 +30,14 @@ test("the programs list links the cashback name to the detail page, not the wiza
   // the explicit edit affordance still points to the wizard
   assert.match(page, /<ButtonLink href=\{editHref\} variant="outline">Edit cashback card<\/ButtonLink>/);
 });
+
+test("the cashback page columns are balanced: balance summary on the left, card design under the join QR", () => {
+  const page = readFileSync("src/app/dashboard/programs/cashback/page.tsx", "utf8");
+  assert.match(page, /className="grid gap-5 xl:grid-cols-\[1\.1fr_0\.9fr\] xl:items-start"/);
+  const info = page.indexOf('title="Program Information"');
+  const balance = page.indexOf('title="Balance summary"');
+  const qr = page.indexOf('title="Program Join QR"');
+  const design = page.indexOf('title="Card design"');
+  assert.ok(info < balance && balance < qr && qr < design, "order: info, balance, QR, card design");
+  assert.match(page, /title="Balance summary"[^]*?<div className="grid gap-3 md:grid-cols-3">/);
+});
