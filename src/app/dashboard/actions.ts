@@ -20,7 +20,7 @@ import { countActiveStaff, getBusinessPlanLimits, lockBusinessLimit } from "@/li
 import { createFormFailure, isFormActionError, type PreservedFormState } from "@/lib/form-state";
 import { refreshBusinessGoogleCashbackPasses, syncGoogleWalletObjectAfterLoyaltyChange } from "@/lib/google-wallet/service";
 import { refreshBusinessCashbackPasses, syncAppleWalletPassSafe } from "@/lib/walletwallet/service";
-import { hasWalletRelevantBrandingChange, hasWalletRelevantBusinessChange } from "@/lib/wallet-sync/change-detection";
+import { hasWalletRelevantBrandingChange } from "@/lib/wallet-sync/change-detection";
 import { enqueueWalletSyncForBusiness } from "@/lib/wallet-sync/enqueue";
 import { commerciallyUsableStatuses, limitReachedMessage, programsUsedTowardLimit } from "@/lib/subscriptions";
 import {
@@ -35,11 +35,6 @@ import {
   vehicleColumnsFrom,
 } from "@/lib/customers";
 import { normalizePhone } from "@/lib/phone";
-
-// Business type is set by the platform, so the owner form only changes the name.
-const profileSchema = z.object({
-  name: z.string().trim().min(1, "Business name is required."),
-});
 
 const branchSchema = z.object({
   branchId: z.coerce.number().int().positive().optional(),
@@ -192,42 +187,6 @@ function generateTemporaryPassword() {
   }
 
   return characters.join("");
-}
-
-export async function updateBusinessProfileAction(formData: FormData) {
-  validateActionSecurity(formData, "dashboard:business-profile", "/dashboard/settings");
-  const user = await requireBusinessOwner();
-  const parsed = profileSchema.safeParse({
-    name: getString(formData, "name"),
-  });
-
-  if (!parsed.success) fail("/dashboard/settings", parsed.error.issues[0]?.message ?? "Validation failed.");
-
-  const businessBeforeUpdate = await prisma.business.findUnique({
-    where: { id: user.businessId },
-    select: { name: true, branding: true },
-  });
-
-  await prisma.business.update({
-    where: { id: user.businessId },
-    data: {
-      name: parsed.data.name,
-    },
-  });
-
-  if (
-    businessBeforeUpdate &&
-    hasWalletRelevantBusinessChange(
-      { name: businessBeforeUpdate.name, branding: businessBeforeUpdate.branding },
-      { name: parsed.data.name, branding: businessBeforeUpdate.branding },
-    )
-  ) {
-    enqueueWalletSyncForBusiness({ businessId: user.businessId, trigger: "business-profile" });
-  }
-
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/settings");
-  redirect("/dashboard/settings?success=Business profile updated.");
 }
 
 export async function saveBranchAction(formData: FormData) {
