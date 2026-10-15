@@ -64,23 +64,16 @@ test("enqueue module centralizes async, retrying, structured-logged wallet sync 
   assert.match(enqueue, /for \(const program of programs\) \{\s*await runWithRetry\(/);
 });
 
-test("Business Edit enqueues wallet sync exactly once, gated by change detection", () => {
-  const actions = read("src/app/dashboard/actions.ts");
-  assert.match(actions, /import \{ hasWalletRelevantBrandingChange, hasWalletRelevantBusinessChange \} from "@\/lib\/wallet-sync\/change-detection"/);
+test("the System Administrator's business form enqueues wallet sync exactly once, gated by change detection", () => {
+  const actions = read("src/app/platform/businesses/actions.ts");
+  assert.match(actions, /import \{ hasWalletRelevantBusinessChange \} from "@\/lib\/wallet-sync\/change-detection"/);
   assert.match(actions, /import \{ enqueueWalletSyncForBusiness \} from "@\/lib\/wallet-sync\/enqueue"/);
-
-  const fnBody = actions.slice(
-    actions.indexOf("export async function updateBusinessProfileAction"),
-    actions.indexOf("export async function saveBranchAction"),
-  );
-
-  assert.match(fnBody, /businessBeforeUpdate = await prisma\.business\.findUnique/);
-  const writeIndex = fnBody.indexOf("await prisma.business.update");
-  const enqueueIndex = fnBody.indexOf("enqueueWalletSyncForBusiness(");
+  const writeIndex = actions.indexOf("tx.business.update");
+  const enqueueIndex = actions.indexOf("enqueueWalletSyncForBusiness(");
   assert.ok(writeIndex > -1 && enqueueIndex > -1 && writeIndex < enqueueIndex, "business must be saved before wallet sync is enqueued");
-  assert.equal(countOccurrences(fnBody, /enqueueWalletSyncForBusiness\(/g), 1, "exactly one wallet sync per save");
-  assert.match(fnBody, /hasWalletRelevantBusinessChange\(/);
-  assert.match(fnBody, /trigger: "business-profile"/);
+  assert.equal(countOccurrences(actions, /enqueueWalletSyncForBusiness\(/g), 1, "exactly one wallet sync per save");
+  assert.match(actions, /hasWalletRelevantBusinessChange\(/);
+  assert.match(actions, /trigger: "admin-business-form"/);
 });
 
 test("Brand Assets enqueues wallet sync exactly once, gated by branding change detection", () => {

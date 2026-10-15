@@ -3,8 +3,7 @@ import { CsrfInput } from "@/components/CsrfInput";
 import { DashboardShell } from "@/components/DashboardShell";
 import { BrandAssetsCenter } from "@/components/BrandAssetsCenter";
 import { ButtonLink, EmptyState, MetricCard, PageIntro, SectionCard, StatusBadge } from "@/components/ui";
-import { saveAbusePolicyAction, saveCooldownRuleAction, saveCustomerTierSettingsAction, saveScannerSettingsAction, updateBusinessProfileAction } from "@/app/dashboard/actions";
-import { RequiredMark } from "@/components/ui/RequiredMark";
+import { saveAbusePolicyAction, saveCooldownRuleAction, saveCustomerTierSettingsAction, saveScannerSettingsAction } from "@/app/dashboard/actions";
 import { saveSupportAccessPolicyAction } from "@/app/platform/businesses/support-actions";
 import { sendWhatsAppTestMessageAction } from "@/app/dashboard/settings/whatsapp-actions";
 import { getBusinessOwnerContext, getCurrentPlan } from "@/lib/business-owner";
@@ -169,24 +168,23 @@ function BusinessProfileSection({ business, user }: { business: Awaited<ReturnTy
   const primaryBranch = business.branches[0];
   return (
     <SectionCard title="Business Profile" description="Your business name as customers see it on cards, passes and messages.">
-      <form action={updateBusinessProfileAction} className="grid gap-4">
-        <CsrfInput scope="dashboard:business-profile" />
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="min-w-0 space-y-2">
-            <span className="text-sm font-medium text-[#111827]">Business Name<RequiredMark /></span>
-            <input name="name" defaultValue={business.name} required className="h-11 w-full rounded-md border border-[#E5E7EB] px-3 text-sm outline-none business-ring business-border" />
-          </label>
-          <label className="min-w-0 space-y-2">
-            <span className="text-sm font-medium text-[#111827]">Business Type</span>
-            {/* Set by the platform when the business is created; owners cannot change it. */}
-            <div className="flex h-11 w-full items-center rounded-md border border-[#E5E7EB] bg-[#F9FAFB] px-3 text-sm text-[#374151]" aria-readonly="true">
-              {businessTypeLabels[business.businessType]}
-            </div>
-            <span className="block text-xs text-[#6B7280]">To change your business type, contact Loyalty Card UAE support.</span>
-          </label>
+      {/* Name and type are set by the platform when the business is created; owners cannot change them. */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="min-w-0 space-y-2">
+          <span className="text-sm font-medium text-[#111827]">Business Name</span>
+          <div className="flex h-11 w-full items-center rounded-md border border-[#E5E7EB] bg-[#F9FAFB] px-3 text-sm text-[#374151]" aria-readonly="true">
+            {business.name}
+          </div>
+          <span className="block text-xs text-[#6B7280]">To change your business name, contact Loyalty Card UAE support.</span>
         </div>
-        <button type="submit" className="h-11 w-fit rounded-md business-button px-4 text-sm font-semibold text-white">Save business profile</button>
-      </form>
+        <div className="min-w-0 space-y-2">
+          <span className="text-sm font-medium text-[#111827]">Business Type</span>
+          <div className="flex h-11 w-full items-center rounded-md border border-[#E5E7EB] bg-[#F9FAFB] px-3 text-sm text-[#374151]" aria-readonly="true">
+            {businessTypeLabels[business.businessType]}
+          </div>
+          <span className="block text-xs text-[#6B7280]">To change your business type, contact Loyalty Card UAE support.</span>
+        </div>
+      </div>
       <div className="mt-5 grid gap-3 border-t border-[#EEF1F4] pt-5 md:grid-cols-3">
         <Item label="Owner" value={user.name} />
         <Item label="Owner email" value={user.email} />
