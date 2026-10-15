@@ -3,6 +3,7 @@ import { drawStampStripSvg } from "@/lib/wallet/stamp-strip-svg";
 import { findStampIcon, stampIconUrl } from "@/lib/wallet/stamp-icons";
 import type { WalletPassBanner, WalletPassField, WalletPassView } from "@/lib/wallet-pass-view";
 import { applePrimaryFields } from "@/lib/wallet-pass-view";
+import { sameOriginImage } from "@/lib/same-origin-image";
 import { BusinessLogoAvatar } from "@/components/BusinessLogoAvatar";
 
 export type WalletPlatform = "apple" | "google";
@@ -156,10 +157,11 @@ function PassLogo({ url, name, shape }: { url: string | null; name: string; shap
   // to load, so a pass never shows a broken image where the logo goes.
   // Apple draws the logo in its own shape (up to 160 x 50 pt) straight on the
   // pass colour; Google crops it into a circle.
+  const logoUrl = url ? sameOriginImage(url) : null;
   return shape === "square" ? (
-    <BusinessLogoAvatar logoUrl={url} businessName={name} size="md" wide className="rounded-lg bg-white text-[#111827]" />
+    <BusinessLogoAvatar logoUrl={logoUrl} businessName={name} size="md" wide className="rounded-lg bg-white text-[#111827]" />
   ) : (
-    <BusinessLogoAvatar logoUrl={url} businessName={name} size="md" className="rounded-full bg-white text-[#111827]" />
+    <BusinessLogoAvatar logoUrl={logoUrl} businessName={name} size="md" className="rounded-full bg-white text-[#111827]" />
   );
 }
 
@@ -215,15 +217,4 @@ function SampleQr() {
       <path d={finderPath(0, 0) + finderPath(cells - 7, 0) + finderPath(0, cells - 7)} fill="#111827" fillRule="evenodd" />
     </svg>
   );
-}
-
-/**
- * Photos stored on the platform's R2 storage are drawn through /api/media, a
- * same-origin copy, so the browser never needs CORS from storage: the photo
- * shows, and the card's "Download" image includes it. The route itself only
- * serves the platform's own storage folders; anything else is left as is.
- */
-function sameOriginImage(url: string): string {
-  if (!/^https:\/\/[^/]+\/(wallet-photos|logos|stamp-icons)\//.test(url)) return url;
-  return `/api/media?u=${encodeURIComponent(url)}`;
 }
