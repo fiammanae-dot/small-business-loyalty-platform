@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { Bell, Gift, Plus, QrCode, Search, TicketCheck, TrendingUp, UserCheck, Users } from "lucide-react";
+import { Bell, Gift, MessageCircle, Plus, QrCode, Search, TicketCheck, TrendingUp, UserCheck, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { MetricCard } from "@/components/ui/MetricCard";
 import { formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { countOutreachInbox } from "@/lib/outreach";
 import { requireRole } from "@/lib/session";
 
 export default async function BranchDashboard() {
@@ -201,6 +202,8 @@ export default async function BranchDashboard() {
     };
   });
 
+  const outreachWaiting = user.branchId ? await countOutreachInbox({ businessId, branchId }) : 0;
+
   return (
     <DashboardShell user={user} eyebrow="Branch Manager" title="Branch manager dashboard" hideWelcomeMessage>
       <section className="grid gap-4 md:grid-cols-2">
@@ -213,6 +216,12 @@ export default async function BranchDashboard() {
         <Action href="/branch/customers" icon={Search} title="Find Customer" description="Search customers by name, phone, email, or card number." />
         <Action href="/branch/customers/new" icon={Plus} title="Add Customer" description="Enroll a customer for this branch without changing program settings." />
         <Action href="/branch/programs" icon={Gift} title="Programs" description="Review active loyalty programs and branch performance." />
+        <Action
+          href="/branch/outreach"
+          icon={MessageCircle}
+          title={outreachWaiting > 0 ? `WhatsApp outreach (${outreachWaiting})` : "WhatsApp outreach"}
+          description={outreachWaiting > 0 ? `${outreachWaiting} ${outreachWaiting === 1 ? "customer" : "customers"} to contact today: birthdays, quiet customers, ready rewards.` : "Birthdays, quiet customers and ready rewards, each with a one-tap WhatsApp message."}
+        />
       </section>
 
       <section className="rounded-md border border-[#E5E7EB] bg-white p-5 shadow-sm">

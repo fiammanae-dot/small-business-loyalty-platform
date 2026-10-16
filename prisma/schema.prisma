@@ -364,6 +364,16 @@ enum ReferralEventType {
   REWARD_PENDING
 }
 
+enum OutreachStatus {
+  SENT
+  SKIPPED
+}
+
+enum OutreachCampaignStatus {
+  ACTIVE
+  ARCHIVED
+}
+
 enum ReferralRewardType {
   NONE
   STAMPS
@@ -420,6 +430,8 @@ model User {
   createdCustomerMemberships BusinessCustomerMembership[]
   scanEvents                 ScanEvent[]
   loginEvents                LoginEvent[]
+  outreachMessagesSent       OutreachMessage[]
+  outreachCampaignsCreated   OutreachCampaign[]
   stampTransactions          StampTransaction[]
   rewardRedemptions          RewardRedemption[]
   activityAlerts             ActivityAlert[]              @relation("ActivityAlertUser")
@@ -604,6 +616,9 @@ model Business {
   payments                      Payment[]
   invoiceAuditLogs              InvoiceAuditLog[]
   engagementEvents              EngagementEvent[]
+  outreachSettings              BusinessOutreachSettings?
+  outreachCampaigns             OutreachCampaign[]
+  outreachMessages              OutreachMessage[]
   messageTemplates              MessageTemplate[]
   customerNotificationTemplates CustomerNotificationTemplate[]
   communicationSettings         BusinessCommunicationSettings?
@@ -687,6 +702,7 @@ model Branch {
   users                       User[]
   createdCustomerMemberships  BusinessCustomerMembership[]
   scanEvents                  ScanEvent[]
+  outreachMessages            OutreachMessage[]
   stampTransactions           StampTransaction[]
   rewardRedemptions           RewardRedemption[]
   activityAlerts              ActivityAlert[]
@@ -928,6 +944,7 @@ model BusinessCustomerMembership {
   appleWalletFeaturePasses AppleWalletFeaturePass[]
   googleWalletCashbackPass GoogleWalletCashbackPass?
   engagementEvents      EngagementEvent[]
+  outreachMessages      OutreachMessage[]
   messageDeliveryQueue  MessageDeliveryQueue[]
   customerNotifications CustomerNotification[]
   referralsMade         Referral[]                  @relation("ReferralReferrer")
@@ -1446,11 +1463,80 @@ model EngagementEvent {
   business             Business                   @relation(fields: [businessId], references: [id], onDelete: Cascade)
   customer             BusinessCustomerMembership @relation(fields: [customerId], references: [id], onDelete: Cascade)
   messageDeliveryQueue MessageDeliveryQueue[]
+  outreachMessage      OutreachMessage?
 
   @@index([businessId, eventType, eventDate])
   @@index([businessId, status, eventDate])
   @@index([customerId, eventDate])
   @@map("engagement_events")
+}
+
+/// Manual WhatsApp outreach (no WhatsApp API yet): which engagement events
+/// the business wants to act on, and how long to leave a customer alone after
+/// any message.
+model BusinessOutreachSettings {
+  id             Int                   @id @default(autoincrement())
+  businessId     Int                   @unique @map("business_id")
+  enabledEvents  EngagementEventType[] @default([BIRTHDAY, INACTIVE_30_DAYS, INACTIVE_60_DAYS, INACTIVE_90_DAYS, REWARD_READY]) @map("enabled_events")
+  /// Days to wait after any message before the same customer is listed again.
+  quietDays      Int                   @default(14) @map("quiet_days")
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @updatedAt @map("updated_at")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@map("business_outreach_settings")
+}
+
+/// A promotion sent by hand to a segment of customers, one WhatsApp tap each.
+model OutreachCampaign {
+  id              Int                    @id @default(autoincrement())
+  uuid            String                 @unique @default(uuid()) @db.Uuid
+  businessId      Int                    @map("business_id")
+  name            String
+  message         String
+  /// Who gets it: VISITED_30 | VISITED_90 | VISITED_180 | QUIET_90 | ALL
+  segment         String
+  status          OutreachCampaignStatus @default(ACTIVE)
+  createdByUserId Int                    @map("created_by_user_id")
+  createdAt       DateTime               @default(now()) @map("created_at")
+  updatedAt       DateTime               @updatedAt @map("updated_at")
+
+  business  Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  createdBy User              @relation(fields: [createdByUserId], references: [id])
+  messages  OutreachMessage[]
+
+  @@index([businessId, status, createdAt])
+  @@map("outreach_campaigns")
+}
+
+/// One WhatsApp message sent (or skipped) by hand to one customer, for an
+/// engagement event or a campaign. The quiet rule reads this log.
+model OutreachMessage {
+  id                Int                  @id @default(autoincrement())
+  uuid              String               @unique @default(uuid()) @db.Uuid
+  businessId        Int                  @map("business_id")
+  membershipId      Int                  @map("membership_id")
+  branchId          Int?                 @map("branch_id")
+  engagementEventId Int?                 @unique @map("engagement_event_id")
+  campaignId        Int?                 @map("campaign_id")
+  eventType         EngagementEventType? @map("event_type")
+  status            OutreachStatus
+  text              String
+  sentByUserId      Int                  @map("sent_by_user_id")
+  createdAt         DateTime             @default(now()) @map("created_at")
+
+  business        Business                   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  membership      BusinessCustomerMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  branch          Branch?                    @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  engagementEvent EngagementEvent?           @relation(fields: [engagementEventId], references: [id], onDelete: SetNull)
+  campaign        OutreachCampaign?          @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  sentBy          User                       @relation(fields: [sentByUserId], references: [id])
+
+  @@unique([campaignId, membershipId])
+  @@index([businessId, membershipId, status, createdAt])
+  @@index([businessId, createdAt])
+  @@map("outreach_messages")
 }
 
 model MessageTemplate {

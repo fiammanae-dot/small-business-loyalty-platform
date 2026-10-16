@@ -31,7 +31,8 @@ import {
   Gift,
   UserPlus,
   Users,
-  } from "lucide-react";
+  MessageCircle,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { AuthUser } from "@/lib/session";
 
@@ -66,6 +67,7 @@ const businessOwnerNavigationGroups: Array<{ label: string; items: NavigationIte
     items: [
       { href: "/dashboard/programs", label: "Programs", icon: Sparkles },
       { href: "/dashboard/referrals", label: "Referrals", icon: Share2 },
+      { href: "/dashboard/outreach", label: "WhatsApp outreach", icon: MessageCircle },
       { href: "/dashboard/wallet-broadcast", label: "Messages", icon: MessageSquare, activePaths: ["/dashboard/messages"] },
     ],
   },
@@ -90,6 +92,7 @@ const mobilePrimaryItems: NavigationItem[] = [
 const mobileMoreItems: NavigationItem[] = [
   { href: "/dashboard/programs", label: "Programs", icon: Sparkles },
   { href: "/dashboard/referrals", label: "Referrals", icon: Share2 },
+  { href: "/dashboard/outreach", label: "WhatsApp outreach", icon: MessageCircle },
   { href: "/dashboard/staff", label: "Staff", icon: UserPlus },
   { href: "/dashboard/branches", label: "Branches", icon: Building2 },
   { href: "/dashboard/support-history", label: "Support History", icon: ShieldCheck },
@@ -171,6 +174,7 @@ const branchMobileItems: NavigationItem[] = [
   { href: "/branch/customers/new", label: "Enroll", icon: UserPlus },
   { href: "/branch/scanner", label: "Scanner", icon: QrCode, accent: true },
   { href: "/branch/programs", label: "Programs", icon: Gift },
+  { href: "/branch/outreach", label: "WhatsApp", icon: MessageCircle },
 ];
 const staffMobileItems: NavigationItem[] = [
   { href: "/staff/customers/new", label: "Enroll", icon: UserPlus },
@@ -448,7 +452,7 @@ export function MobileBranchNavigation({ role }: RoleNavigationProps) {
       className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E7E9EE] bg-white/95 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur lg:hidden"
       aria-label="Mobile branch manager navigation"
     >
-      <div className="mx-auto grid max-w-sm grid-cols-3 gap-2">
+      <div className="mx-auto grid max-w-sm grid-cols-4 gap-2">
         {branchMobileItems.map((item) => {
           const active = isActivePath(pathname, item.href, item.activePaths);
           return (
