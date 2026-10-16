@@ -68,7 +68,6 @@ function programData(formData: FormData, businessType: string, defaultCardTheme 
     requiredStamps: getString(formData, "requiredStamps"),
     startingBonusStamps: getString(formData, "startingBonusStamps") || "0",
     startingStampPolicy: getString(formData, "startingStampPolicy") || "FIRST_ENROLLMENT_ONLY",
-    referralRewardBonusStamps: getString(formData, "referralRewardBonusStamps") || "1",
     cardTheme: getString(formData, "cardTheme") || defaultCardTheme,
     stampEmoji: getString(formData, "stampEmoji") || null,
     walletHeroStyle: getString(formData, "walletHeroStyle") || "STAMPS",
@@ -199,7 +198,6 @@ export async function createProgramAction(formData: FormData) {
       requiredStamps: parsed.data.requiredStamps,
       startingBonusStamps: parsed.data.startingBonusStamps,
       startingStampPolicy: parsed.data.startingStampPolicy,
-      referralRewardBonusStamps: parsed.data.referralRewardBonusStamps,
       // Kept in step with the card design's icon (the one every surface draws).
       stampEmoji: stampEmojiForDesign(cardDesign),
       walletHeroStyle: parsed.data.walletHeroStyle,
@@ -316,7 +314,6 @@ export async function updateProgramAction(formData: FormData) {
       requiredStamps: parsed.data.requiredStamps,
       startingBonusStamps: parsed.data.startingBonusStamps,
       startingStampPolicy: parsed.data.startingStampPolicy,
-      referralRewardBonusStamps: parsed.data.referralRewardBonusStamps,
       cardTheme: parsed.data.cardTheme,
       walletHeroStyle: parsed.data.walletHeroStyle,
       walletPhotoUrl: parsed.data.walletPhotoUrl,

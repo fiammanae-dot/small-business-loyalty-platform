@@ -364,6 +364,12 @@ enum ReferralEventType {
   REWARD_PENDING
 }
 
+enum ReferralRewardType {
+  NONE
+  STAMPS
+  CASHBACK
+}
+
 enum CustomerTierCriteria {
   VISITS_ONLY
 }
@@ -613,6 +619,7 @@ model Business {
   tierSetting                   CustomerTierSetting?
   membershipSettings            BusinessMembershipSettings?
   cashbackSettings              BusinessCashbackSettings?
+  referralSettings              BusinessReferralSettings?
   supportSessions               SupportSession[]
   supportRequests               SupportRequest[]
   supportSessionActivities      SupportSessionActivity[]
@@ -993,6 +1000,7 @@ model LoyaltyProgram {
   startingStampPolicy       StartingStampPolicy @default(FIRST_ENROLLMENT_ONLY) @map("starting_stamp_policy")
   rewardName                String       @map("reward_name")
   rewardDescription         String       @map("reward_description")
+  /// Legacy: the referral reward now lives on BusinessReferralSettings. Kept for history only.
   referralRewardBonusStamps Int          @default(1) @map("referral_reward_bonus_stamps")
   /// Membership package (Feature 1): true marks this program as a paid
   /// membership tier rather than an ordinary stamp card.
@@ -1031,6 +1039,7 @@ model LoyaltyProgram {
   walletBroadcasts  WalletBroadcast[]
   rewardRedemptions RewardRedemption[]
   referralRewards   ReferralReward[]
+  referralSettings  BusinessReferralSettings[]
   cooldownEvents    CooldownEvent[]
   googleWalletClass GoogleWalletClass?
 
@@ -1574,6 +1583,7 @@ model BusinessCashbackSettings {
   joinToken     String   @unique @default(uuid()) @map("join_token") @db.Uuid
   /// Referral reward: cashback added to the referrer's balance when a friend they
   /// referred makes their first cashback purchase. NULL / 0 = no reward.
+  /// Legacy: the referral reward now lives on BusinessReferralSettings. Kept for history only.
   referralRewardAmount Decimal? @map("referral_reward_amount") @db.Decimal(12, 2)
   // Program-style identity so cashback is a real program, not just a toggle:
   // its own name and card design (theme, hero image, design JSON), mirroring
@@ -1589,6 +1599,28 @@ model BusinessCashbackSettings {
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
   @@map("business_cashback_settings")
+}
+
+/// One referral reward per business, whatever program the friend's first
+/// activity lands in: bonus stamps on one chosen stamp program, or cashback.
+/// The friend may get a welcome reward of the same kind.
+model BusinessReferralSettings {
+  id                 Int                @id @default(autoincrement())
+  businessId         Int                @unique @map("business_id")
+  rewardType         ReferralRewardType @default(NONE) @map("reward_type")
+  /// STAMPS: the stamp program the bonus stamps go to (never a package).
+  stampProgramId     Int?               @map("stamp_program_id")
+  referrerStamps     Int                @default(1) @map("referrer_stamps")
+  friendStamps       Int                @default(0) @map("friend_stamps")
+  referrerCashback   Decimal            @default(0) @map("referrer_cashback") @db.Decimal(12, 2)
+  friendCashback     Decimal            @default(0) @map("friend_cashback") @db.Decimal(12, 2)
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+
+  business     Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  stampProgram LoyaltyProgram? @relation(fields: [stampProgramId], references: [id], onDelete: SetNull)
+
+  @@map("business_referral_settings")
 }
 
 model MessageDeliveryQueue {

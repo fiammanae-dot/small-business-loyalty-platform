@@ -38,13 +38,13 @@ test("customer enrollment creates referral context without public self-registrat
   assert.match(referrals, /SELF_REFERRAL_BLOCKED/);
   assert.match(referrals, /Self-referrals are blocked/);
   assert.match(referrals, /findActiveReferralReferrerForEnrollment/);
-  assert.match(referralPage, /Join the loyalty program and complete your first visit\. Both you and/);
+  assert.match(referralPage, /Join and complete your first visit/);
   assert.match(referralPage, /READY TO SHOW IN STORE/);
   assert.match(referralPage, /Show this QR code to staff/);
   assert.match(referralPage, /Staff can scan this QR code or enter Referral ID \{displayReferralId\} during enrollment/);
   assert.match(referralPage, /How it works/);
   assert.match(referralPage, /Visit the branch/);
-  assert.match(referralPage, /Your referral reward is activated/);
+  assert.match(referralPage, /The referral reward is paid/);
   assert.doesNotMatch(referralPage, /Show this referral QR to staff when visiting the branch/);
   assert.match(referralPage, /ReferralInviteActions/);
   assert.match(referralPage, /friendlyReferralId/);
@@ -57,15 +57,14 @@ test("customer enrollment creates referral context without public self-registrat
   assert.doesNotMatch(referralPage, /create.*Customer/i);
 });
 
-test("first stamp qualifies referral and grants configured bonus stamps", () => {
+test("first stamp qualifies referral and grants the business's referral reward", () => {
   const scanActions = read("src/app/scan/actions.ts");
   const referrals = read("src/lib/referrals.ts");
 
-  assert.match(scanActions, /qualifyReferralFromFirstStamp/);
-  assert.match(referrals, /previousStamps/);
+  assert.match(scanActions, /qualifyReferral\(/);
   assert.match(referrals, /REFERRAL_QUALIFIED/);
-  assert.match(referrals, /referralRewardBonusStamps/);
-  assert.match(referrals, /bonusStamps: \{ increment: bonusStamps \}/);
+  assert.match(referrals, /businessReferralSettings\.findUnique/);
+  assert.match(referrals, /bonusStamps: \{ increment: grant\.stamps \}/);
 });
 
 test("public customer card exposes referral link and aggregate referral stats only", () => {

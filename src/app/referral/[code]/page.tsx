@@ -8,6 +8,7 @@ import { areTiersVisible, fromStoredTier } from "@/lib/customer-tiers";
 import { prisma } from "@/lib/prisma";
 import { businessTypeLabels } from "@/lib/roles";
 import { extractReferralCode, resolveReferralLandingReferrer } from "@/lib/referrals";
+import { describeReferralReward, getReferralSettings } from "@/lib/referral-settings";
 import { BrandMark } from "@/components/BrandLogo";
 
 export default async function ReferralLandingPage({
@@ -42,9 +43,18 @@ export default async function ReferralLandingPage({
   });
   const referrerName = `${referrer.firstName} ${referrer.lastName ?? ""}`.trim();
   const referrerDisplayName = referrerName || "your referrer";
-  const rewardMessage = referrerName
-    ? `Join the loyalty program and complete your first visit. Both you and ${referrerName} will receive referral rewards.`
-    : "Join the loyalty program and complete your first visit. Both you and your referrer will receive referral rewards.";
+  // Promise only what the business actually pays (see referral-settings.ts).
+  const reward = describeReferralReward(
+    await getReferralSettings(referrer.businessId),
+    (await prisma.businessCashbackSettings.findUnique({ where: { businessId: referrer.businessId }, select: { currency: true } }))?.currency ?? "AED",
+  );
+  const rewardMessage = reward.friend && reward.referrer
+    ? `Join and complete your first visit: you get ${reward.friend}, and ${referrerDisplayName} gets ${reward.referrer}.`
+    : reward.referrer
+      ? `Join and complete your first visit, and ${referrerDisplayName} gets ${reward.referrer}.`
+      : reward.friend
+        ? `Join and complete your first visit to get ${reward.friend}.`
+        : "Join the loyalty program and complete your first visit to count as a referral.";
   const tiersVisible = areTiersVisible(
     (await prisma.businessMembershipSettings.findUnique({ where: { businessId: referrer.businessId }, select: { enabled: true } }))?.enabled,
   );
@@ -136,8 +146,8 @@ export default async function ReferralLandingPage({
               {[
                 "Visit the branch",
                 "Show this QR code to staff",
-                "Complete your first loyalty visit",
-                "Your referral reward is activated",
+                "Complete your first visit or purchase",
+                "The referral reward is paid",
               ].map((step, index) => (
                 <li key={step} className="flex gap-3">
                   <span

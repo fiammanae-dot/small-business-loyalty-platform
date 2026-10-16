@@ -10,14 +10,14 @@ import { validateCsrfForm } from "@/lib/csrf";
 import { createCustomerNotification } from "@/lib/customer-notifications";
 import { calculateCustomerTier, isTierUpgrade } from "@/lib/customer-tiers";
 import { createEngagementEventIfAllowed, createProgramEngagementEvents } from "@/lib/engagement";
-import { syncGoogleWalletObjectAfterLoyaltyChange } from "@/lib/google-wallet/service";
-import { syncAppleWalletPassSafe, syncAppleWalletAfterTierChange } from "@/lib/walletwallet/service";
+import { syncGoogleWalletAfterCashbackChange, syncGoogleWalletObjectAfterLoyaltyChange } from "@/lib/google-wallet/service";
+import { syncAppleWalletAfterCashbackChange, syncAppleWalletPassSafe, syncAppleWalletAfterTierChange } from "@/lib/walletwallet/service";
 import { prisma } from "@/lib/prisma";
 import { getStartingBonusStampsForEvent, progressValue } from "@/lib/programs";
 import { isPackageExpired, membershipSessionSummary, packageExpiresAt, packageMonthWindow } from "@/lib/membership-sessions";
 import { getPackageVisits, usedTreatmentKeys } from "@/lib/package-visits";
 import { formatDate } from "@/lib/format";
-import { qualifyReferralFromFirstStamp } from "@/lib/referrals";
+import { qualifyReferral } from "@/lib/referrals";
 import { cardRewardsFor, getReadyRewards, isRewardReady } from "@/lib/rewards";
 import { formatAed } from "@/lib/cashback";
 import { CashbackError, DuplicateCashbackError, earnCashback, spendCashback } from "@/lib/cashback-ledger";
@@ -312,6 +312,9 @@ export async function issueStampAction(formData: FormData) {
   }
 
   let transactionId: number;
+  // Memberships whose cashback balance a referral reward changed (wallet cards refreshed after commit).
+  let referralCashbackMembershipIds: number[] = [];
+  const cashbackCurrency = (await prisma.businessCashbackSettings.findUnique({ where: { businessId: user.businessId as number }, select: { currency: true } }))?.currency ?? "AED";
   try {
     transactionId = await prisma.$transaction(async (tx) => {
     const updatedMembership = await tx.customerProgramMembership.update({
@@ -529,15 +532,17 @@ export async function issueStampAction(formData: FormData) {
       });
     }
 
-    await qualifyReferralFromFirstStamp({
+    // The friend's first visit (stamp or package) qualifies their referral.
+    const referral = await qualifyReferral({
       tx,
       businessId: user.businessId as number,
       referredMembershipId: programMembership.businessCustomerMembershipId,
-      loyaltyProgramId: updatedMembership.loyaltyProgramId,
-      stampTransactionId: stampTransaction.id,
+      activity: { kind: "STAMP", stampTransactionId: stampTransaction.id, loyaltyProgramId: updatedMembership.loyaltyProgramId },
       branchId,
+      currency: cashbackCurrency,
       now,
     });
+    referralCashbackMembershipIds = referral.cashbackMembershipIds;
 
     await createProgramEngagementEvents({
       tx,
@@ -595,6 +600,10 @@ export async function issueStampAction(formData: FormData) {
   await syncGoogleWalletObjectAfterLoyaltyChange(programMembership.id);
   await syncAppleWalletPassSafe(programMembership.id);
   await syncAppleWalletAfterTierChange(programMembership.businessCustomerMembershipId);
+  for (const membershipId of referralCashbackMembershipIds) {
+    await syncGoogleWalletAfterCashbackChange(membershipId);
+    await syncAppleWalletAfterCashbackChange(membershipId);
+  }
   success(data.scanToken, transactionId, shareAfterStamp);
 }
 

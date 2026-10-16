@@ -34,7 +34,6 @@ export default async function NewProgramPage({
             rate={cb?.ratePercent != null ? cb.ratePercent.toString() : "5"}
             maxBill={cb?.maxBillAmount != null ? cb.maxBillAmount.toString() : ""}
             maxRedemption={cb?.maxRedemption != null ? cb.maxRedemption.toString() : ""}
-            referralReward={cb?.referralRewardAmount != null ? cb.referralRewardAmount.toString() : ""}
             name={cb?.name ?? ""}
             cardTheme={cb?.cardTheme ?? "BUSINESS_DEFAULT"}
             walletPhotoUrl={cb?.walletPhotoUrl ?? null}

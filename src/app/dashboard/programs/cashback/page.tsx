@@ -105,7 +105,7 @@ export default async function CashbackProgramDetailPage({ searchParams }: { sear
                 <Info label="Currency" value={currency} />
                 <Info label="Max bill per transaction" value={settings?.maxBillAmount != null ? formatAed(Number(settings.maxBillAmount), currency) : "No limit"} />
                 <Info label="Max redemption per transaction" value={settings?.maxRedemption != null ? formatAed(Number(settings.maxRedemption), currency) : "No limit"} />
-                <Info label="Referral reward" value={settings?.referralRewardAmount != null && Number(settings.referralRewardAmount) > 0 ? `${formatAed(Number(settings.referralRewardAmount), currency)} to the referrer` : "None"} />
+                <Info label="Referral reward" value={<Link href="/dashboard/referrals" className="business-text underline-offset-2 hover:underline">Set in the Referral Center</Link>} />
                 <Info label="Card style" value={cardThemeLabel(settings?.cardTheme ?? "BUSINESS_DEFAULT")} />
                 <Info label="Created" value={settings?.createdAt ? formatDate(settings.createdAt) : "-"} />
               </div>
@@ -223,7 +223,7 @@ export default async function CashbackProgramDetailPage({ searchParams }: { sear
   );
 }
 
-function Info({ label, value }: { label: string; value: string }) {
+function Info({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="rounded-md border border-[#E2E8F0] bg-[#F8FAFC] p-3">
       <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">{label}</p>

@@ -8,6 +8,8 @@ import { logAuditEvent } from "@/lib/audit";
 import { createAbuseAlert, getAlertRule } from "@/lib/alert-engine";
 import { createCustomerNotification } from "@/lib/customer-notifications";
 import { normalizePhone } from "@/lib/phone";
+import { generateScanToken } from "@/lib/scan";
+import { toView } from "@/lib/referral-settings-rules";
 
 type ReferralCodeInput = {
   tx: TxClient;
@@ -395,202 +397,26 @@ export async function createPendingReferralForEnrollment({
   }
 }
 
-export async function qualifyReferralFromFirstStamp({
-  tx,
-  businessId,
-  referredMembershipId,
-  loyaltyProgramId,
-  stampTransactionId,
-  branchId,
-  now,
-}: {
-  tx: TxClient;
-  businessId: number;
-  referredMembershipId: number;
-  loyaltyProgramId: number;
-  stampTransactionId: number;
-  branchId: number | null;
-  now: Date;
-}) {
-  const referral = await tx.referral.findFirst({
-    where: {
-      businessId,
-      referredMembershipId,
-      status: "PENDING",
-    },
-    select: {
-      id: true,
-      referrerMembershipId: true,
-      referralCode: true,
-    },
-  });
-
-  if (!referral) return;
-
-  const previousStamps = await tx.stampTransaction.aggregate({
-    where: {
-      businessId,
-      customerProgramMembership: {
-        businessCustomerMembershipId: referredMembershipId,
-      },
-      id: { not: stampTransactionId },
-    },
-    _sum: { quantity: true },
-  });
-
-  if ((previousStamps._sum.quantity ?? 0) > 0) return;
-
-  const program = await tx.loyaltyProgram.findFirst({
-    where: { id: loyaltyProgramId, businessId },
-    select: { id: true, name: true, referralRewardBonusStamps: true },
-  });
-  if (!program) return;
-
-  await tx.referral.update({
-    where: { id: referral.id },
-    data: {
-      status: "QUALIFIED",
-      firstStampTransactionId: stampTransactionId,
-      referredFirstStampBranchId: branchId,
-      qualifiedAt: now,
-    },
-  });
-  await logAuditEvent({
-    tx,
-    businessId,
-    branchId,
-    action: "REFERRAL_QUALIFIED",
-    entityType: "referral",
-    entityId: referral.id,
-    metadata: {
-      loyaltyProgramId,
-      stampTransactionId,
-      referredMembershipId,
-    },
-  });
-
-  await tx.referralEvent.create({
-    data: {
-      businessId,
-      referralId: referral.id,
-      eventType: "REFERRAL_QUALIFIED",
-      metadata: {
-        loyaltyProgramId,
-        loyaltyProgramName: program.name,
-        stampTransactionId,
-        branchId,
-      },
-    },
-  });
-
-  const bonusStamps = Math.max(0, program.referralRewardBonusStamps);
-  const referrerProgramMembership = await tx.customerProgramMembership.findFirst({
-    where: {
-      businessCustomerMembershipId: referral.referrerMembershipId,
-      loyaltyProgramId,
-      status: "ACTIVE",
-    },
-    select: { id: true },
-  });
-
-  if (bonusStamps > 0 && referrerProgramMembership) {
-    await tx.customerProgramMembership.update({
-      where: { id: referrerProgramMembership.id },
-      data: { bonusStamps: { increment: bonusStamps } },
-    });
-
-    await tx.referralReward.create({
-      data: {
-        businessId,
-        referralId: referral.id,
-        loyaltyProgramId,
-        referrerProgramMembershipId: referrerProgramMembership.id,
-        bonusStamps,
-        status: "GRANTED",
-        grantedAt: now,
-      },
-    });
-
-    await tx.referralEvent.create({
-      data: {
-        businessId,
-        referralId: referral.id,
-        eventType: "REWARD_GRANTED",
-        metadata: {
-          loyaltyProgramId,
-          loyaltyProgramName: program.name,
-          bonusStamps,
-          referrerProgramMembershipId: referrerProgramMembership.id,
-        },
-      },
-    });
-    await createCustomerNotification({
-      tx,
-      businessId,
-      customerId: referral.referrerMembershipId,
-      notificationType: "REFERRAL_REWARD_EARNED",
-      metadata: {
-        loyaltyProgramId,
-        loyaltyProgramName: program.name,
-        bonus_stamps: bonusStamps,
-        bonus_plural: bonusStamps === 1 ? "" : "s",
-      },
-    });
-    await logAuditEvent({
-      tx,
-      businessId,
-      branchId,
-      action: "REFERRAL_REWARD_GRANTED",
-      entityType: "referral_reward",
-      entityId: referral.id,
-      metadata: {
-        loyaltyProgramId,
-        bonusStamps,
-        referrerProgramMembershipId: referrerProgramMembership.id,
-      },
-    });
-  } else {
-    await tx.referralReward.create({
-      data: {
-        businessId,
-        referralId: referral.id,
-        loyaltyProgramId,
-        referrerProgramMembershipId: referrerProgramMembership?.id ?? null,
-        bonusStamps,
-        status: "PENDING",
-        grantedAt: null,
-      },
-    });
-
-    await tx.referralEvent.create({
-      data: {
-        businessId,
-        referralId: referral.id,
-        eventType: "REWARD_PENDING",
-        metadata: {
-          loyaltyProgramId,
-          loyaltyProgramName: program.name,
-          reason: referrerProgramMembership ? "No bonus stamps configured." : "Referrer is not enrolled in this program.",
-        },
-      },
-    });
-  }
-}
+type ReferralActivity =
+  | { kind: "STAMP"; stampTransactionId: number; loyaltyProgramId: number }
+  | { kind: "CASHBACK"; cashbackTransactionId: number };
 
 /**
- * Cashback referrals: a friend who joined (with a referral) qualifies the
- * referral on their FIRST cashback purchase, and the referrer is paid the
- * business's cashback referral reward into their cashback balance. Runs inside
- * the earn transaction, so the referral and both balances move together.
+ * A referred friend's FIRST activity of any kind (a stamp or package visit in
+ * any program, or a cashback purchase) qualifies their referral. The reward is
+ * the business's one referral reward (see referral-settings.ts), paid whatever
+ * program the first activity was in: bonus stamps on the chosen stamp card
+ * (the referrer and friend are enrolled in it if needed; never a package), or
+ * cashback into the cashback balance. Runs inside the scan/earn transaction.
  *
- * Returns the referrer's membership id when a reward was paid, so the caller
- * can refresh the referrer's wallet cards after the transaction commits.
+ * Returns the memberships whose cashback balance changed, so the caller can
+ * refresh their wallet cards after the transaction commits.
  */
-export async function qualifyReferralFromFirstCashback({
+export async function qualifyReferral({
   tx,
   businessId,
   referredMembershipId,
-  cashbackTransactionId,
+  activity,
   branchId,
   currency,
   now,
@@ -598,95 +424,195 @@ export async function qualifyReferralFromFirstCashback({
   tx: TxClient;
   businessId: number;
   referredMembershipId: number;
-  cashbackTransactionId: number;
+  activity: ReferralActivity;
   branchId: number | null;
   currency: string;
   now: Date;
-}): Promise<{ rewardedMembershipId: number } | null> {
+}): Promise<{ cashbackMembershipIds: number[] }> {
+  const none = { cashbackMembershipIds: [] as number[] };
   const referral = await tx.referral.findFirst({
     where: { businessId, referredMembershipId, status: "PENDING" },
     select: { id: true, referrerMembershipId: true },
   });
-  if (!referral) return null;
+  if (!referral) return none;
 
-  // Only the friend's first cashback purchase qualifies the referral.
-  const earlierEarns = await tx.cashbackTransaction.count({
-    where: { businessId, businessCustomerMembershipId: referredMembershipId, type: "EARN", id: { not: cashbackTransactionId } },
-  });
-  if (earlierEarns > 0) return null;
+  // Only the friend's first activity counts.
+  if (activity.kind === "STAMP") {
+    const previous = await tx.stampTransaction.aggregate({
+      where: { businessId, customerProgramMembership: { businessCustomerMembershipId: referredMembershipId }, id: { not: activity.stampTransactionId } },
+      _sum: { quantity: true },
+    });
+    if ((previous._sum.quantity ?? 0) > 0) return none;
+  } else {
+    const earlier = await tx.cashbackTransaction.count({
+      where: { businessId, businessCustomerMembershipId: referredMembershipId, type: "EARN", id: { not: activity.cashbackTransactionId } },
+    });
+    if (earlier > 0) return none;
+  }
 
   await tx.referral.update({
     where: { id: referral.id },
-    data: { status: "QUALIFIED", qualifiedAt: now },
-  });
-  await tx.referralEvent.create({
     data: {
-      businessId,
-      referralId: referral.id,
-      eventType: "REFERRAL_QUALIFIED",
-      metadata: { via: "CASHBACK", cashbackTransactionId, branchId },
+      status: "QUALIFIED",
+      qualifiedAt: now,
+      ...(activity.kind === "STAMP" ? { firstStampTransactionId: activity.stampTransactionId, referredFirstStampBranchId: branchId } : {}),
     },
   });
-  await logAuditEvent({
-    tx,
-    businessId,
-    branchId,
-    action: "REFERRAL_QUALIFIED",
-    entityType: "referral",
-    entityId: referral.id,
-    metadata: { via: "CASHBACK", cashbackTransactionId, referredMembershipId },
-  });
+  const via = activity.kind === "STAMP" ? { via: "STAMP", loyaltyProgramId: activity.loyaltyProgramId, stampTransactionId: activity.stampTransactionId } : { via: "CASHBACK", cashbackTransactionId: activity.cashbackTransactionId };
+  await logAuditEvent({ tx, businessId, branchId, action: "REFERRAL_QUALIFIED", entityType: "referral", entityId: referral.id, metadata: { ...via, referredMembershipId } });
+  await tx.referralEvent.create({ data: { businessId, referralId: referral.id, eventType: "REFERRAL_QUALIFIED", metadata: { ...via, branchId } } });
 
-  const settings = await tx.businessCashbackSettings.findUnique({
+  const settingsRow = await tx.businessReferralSettings.findUnique({
     where: { businessId },
-    select: { enabled: true, referralRewardAmount: true },
+    include: { stampProgram: { select: { id: true, name: true, active: true, isMembership: true, startingBonusStamps: true, startingStampPolicy: true, rewardName: true } } },
   });
-  const reward = Math.round(Number(settings?.referralRewardAmount ?? 0) * 100) / 100;
-  if (!settings?.enabled || !(reward > 0)) return null;
+  const settings = toView(settingsRow);
 
-  // Pay the referrer under their own row lock. Receiving cashback makes them a
-  // cashback member if they were not one already.
-  await tx.$queryRaw`SELECT id FROM "business_customer_memberships" WHERE id = ${referral.referrerMembershipId} FOR UPDATE`;
-  const referrer = await tx.businessCustomerMembership.findUnique({
-    where: { id: referral.referrerMembershipId },
-    select: { id: true, businessId: true, status: true, cashbackBalance: true, cashbackJoinedAt: true },
-  });
-  if (!referrer || referrer.businessId !== businessId || referrer.status !== "ACTIVE") return null;
+  if (settings.rewardType === "STAMPS" && settingsRow?.stampProgram) {
+    const program = settingsRow.stampProgram;
+    const grants: Array<{ membershipId: number; stamps: number; who: "referrer" | "friend" }> = [
+      { membershipId: referral.referrerMembershipId, stamps: settings.referrerStamps, who: "referrer" },
+      { membershipId: referredMembershipId, stamps: settings.friendStamps, who: "friend" },
+    ];
+    for (const grant of grants) {
+      if (grant.stamps <= 0) continue;
+      const programMembershipId = await ensureProgramMembership({ tx, businessId, membershipId: grant.membershipId, program });
+      if (!programMembershipId) continue;
+      await tx.customerProgramMembership.update({ where: { id: programMembershipId }, data: { bonusStamps: { increment: grant.stamps } } });
+      if (grant.who === "referrer") {
+        await tx.referralReward.create({
+          data: { businessId, referralId: referral.id, loyaltyProgramId: program.id, referrerProgramMembershipId: programMembershipId, bonusStamps: grant.stamps, status: "GRANTED", grantedAt: now },
+        });
+      }
+      await tx.referralEvent.create({
+        data: {
+          businessId,
+          referralId: referral.id,
+          eventType: "REWARD_GRANTED",
+          metadata: { to: grant.who, loyaltyProgramId: program.id, loyaltyProgramName: program.name, bonusStamps: grant.stamps, programMembershipId },
+        },
+      });
+      await createCustomerNotification({
+        tx,
+        businessId,
+        customerId: grant.membershipId,
+        notificationType: "REFERRAL_REWARD_EARNED",
+        metadata: { loyaltyProgramId: program.id, loyaltyProgramName: program.name, bonus_stamps: grant.stamps, bonus_plural: grant.stamps === 1 ? "" : "s" },
+      });
+      await logAuditEvent({
+        tx,
+        businessId,
+        branchId,
+        action: "REFERRAL_REWARD_GRANTED",
+        entityType: "referral_reward",
+        entityId: referral.id,
+        metadata: { to: grant.who, loyaltyProgramId: program.id, bonusStamps: grant.stamps, programMembershipId },
+      });
+    }
+    return none;
+  }
 
-  const balanceAfter = Math.round((Number(referrer.cashbackBalance) + reward) * 100) / 100;
-  await tx.businessCustomerMembership.update({
-    where: { id: referrer.id },
-    data: { cashbackBalance: balanceAfter, ...(referrer.cashbackJoinedAt ? {} : { cashbackJoinedAt: now }) },
-  });
-  const row = await tx.cashbackTransaction.create({
+  if (settings.rewardType === "CASHBACK") {
+    const cashback = await tx.businessCashbackSettings.findUnique({ where: { businessId }, select: { enabled: true } });
+    if (!cashback?.enabled) {
+      await tx.referralEvent.create({ data: { businessId, referralId: referral.id, eventType: "REWARD_PENDING", metadata: { reason: "Cashback is switched off." } } });
+      return none;
+    }
+    const paid: number[] = [];
+    for (const grant of [
+      { membershipId: referral.referrerMembershipId, amount: settings.referrerCashback, who: "referrer" as const },
+      { membershipId: referredMembershipId, amount: settings.friendCashback, who: "friend" as const },
+    ]) {
+      if (!(grant.amount > 0)) continue;
+      const rowId = await payReferralCashback({ tx, businessId, membershipId: grant.membershipId, amount: grant.amount, branchId, currency, now });
+      if (!rowId) continue;
+      paid.push(grant.membershipId);
+      await tx.referralEvent.create({
+        data: { businessId, referralId: referral.id, eventType: "REWARD_GRANTED", metadata: { to: grant.who, via: "CASHBACK", cashbackAmount: grant.amount, currency, cashbackTransactionId: rowId } },
+      });
+      await logAuditEvent({
+        tx,
+        businessId,
+        branchId,
+        action: "REFERRAL_REWARD_GRANTED",
+        entityType: "cashback_transaction",
+        entityId: rowId,
+        metadata: { to: grant.who, referralId: referral.id, cashbackAmount: grant.amount },
+      });
+    }
+    return { cashbackMembershipIds: paid };
+  }
+
+  await tx.referralEvent.create({ data: { businessId, referralId: referral.id, eventType: "REWARD_PENDING", metadata: { reason: "No referral reward set up." } } });
+  return none;
+}
+
+/** The customer's membership in the reward's stamp program, enrolling them if they are not in it yet. */
+async function ensureProgramMembership({
+  tx,
+  businessId,
+  membershipId,
+  program,
+}: {
+  tx: TxClient;
+  businessId: number;
+  membershipId: number;
+  program: { id: number; startingBonusStamps: number; startingStampPolicy: "NEVER" | "FIRST_ENROLLMENT_ONLY" | "EVERY_COMPLETED_CARD" };
+}): Promise<number | null> {
+  const membership = await tx.businessCustomerMembership.findFirst({ where: { id: membershipId, businessId, status: "ACTIVE" }, select: { id: true } });
+  if (!membership) return null;
+  const existing = await tx.customerProgramMembership.findFirst({ where: { businessCustomerMembershipId: membershipId, loyaltyProgramId: program.id }, select: { id: true, status: true } });
+  if (existing) return existing.status === "ACTIVE" ? existing.id : null;
+  const created = await tx.customerProgramMembership.create({
     data: {
-      businessId,
-      businessCustomerMembershipId: referrer.id,
-      branchId,
-      type: "EARN",
-      amount: reward,
-      balanceAfter,
-      currency,
-      note: "Referral reward",
+      businessCustomerMembershipId: membershipId,
+      loyaltyProgramId: program.id,
+      earnedStamps: 0,
+      // Starting stamps only when the policy gives them on first enrolment.
+      bonusStamps: program.startingStampPolicy === "NEVER" ? 0 : Math.max(0, program.startingBonusStamps),
+      enrollmentSource: "OWNER",
+      status: "ACTIVE",
+      scanToken: generateScanToken(),
+      scanStatus: "ACTIVE",
+      scanCreatedAt: new Date(),
     },
     select: { id: true },
   });
-  await tx.referralEvent.create({
-    data: {
-      businessId,
-      referralId: referral.id,
-      eventType: "REWARD_GRANTED",
-      metadata: { via: "CASHBACK", cashbackAmount: reward, currency, cashbackTransactionId: row.id },
-    },
+  return created.id;
+}
+
+/** Credits cashback to a member under their own row lock; joins them to cashback if needed. Returns the transaction id. */
+async function payReferralCashback({
+  tx,
+  businessId,
+  membershipId,
+  amount,
+  branchId,
+  currency,
+  now,
+}: {
+  tx: TxClient;
+  businessId: number;
+  membershipId: number;
+  amount: number;
+  branchId: number | null;
+  currency: string;
+  now: Date;
+}): Promise<number | null> {
+  await tx.$queryRaw`SELECT id FROM "business_customer_memberships" WHERE id = ${membershipId} FOR UPDATE`;
+  const member = await tx.businessCustomerMembership.findUnique({
+    where: { id: membershipId },
+    select: { id: true, businessId: true, status: true, cashbackBalance: true, cashbackJoinedAt: true },
   });
-  await logAuditEvent({
-    tx,
-    businessId,
-    branchId,
-    action: "REFERRAL_REWARD_GRANTED",
-    entityType: "cashback_transaction",
-    entityId: row.id,
-    metadata: { referralId: referral.id, cashbackAmount: reward, balanceAfter },
+  if (!member || member.businessId !== businessId || member.status !== "ACTIVE") return null;
+  const balanceAfter = Math.round((Number(member.cashbackBalance) + amount) * 100) / 100;
+  await tx.businessCustomerMembership.update({
+    where: { id: member.id },
+    data: { cashbackBalance: balanceAfter, ...(member.cashbackJoinedAt ? {} : { cashbackJoinedAt: now }) },
   });
-  return { rewardedMembershipId: referrer.id };
+  const row = await tx.cashbackTransaction.create({
+    data: { businessId, businessCustomerMembershipId: member.id, branchId, type: "EARN", amount, balanceAfter, currency, note: "Referral reward" },
+    select: { id: true },
+  });
+  return row.id;
 }
