@@ -43,7 +43,7 @@ test("tier and referral behavior remain business-level while rewards stay progra
   const schema = read("prisma/schema.prisma");
 
   assert.match(scanActions, /customerProgramMembership:\s*\{ businessCustomerMembershipId: programMembership\.businessCustomerMembershipId \}/);
-  assert.match(scanActions, /qualifyReferralFromFirstStamp\(\{[\s\S]*referredMembershipId:\s*programMembership\.businessCustomerMembershipId[\s\S]*loyaltyProgramId:\s*updatedMembership\.loyaltyProgramId/);
+  assert.match(scanActions, /qualifyReferral\(\{[\s\S]*referredMembershipId:\s*programMembership\.businessCustomerMembershipId[\s\S]*loyaltyProgramId:\s*updatedMembership\.loyaltyProgramId/);
   assert.match(schema, /model BusinessCustomerMembership[\s\S]*referralCode\s+String\?[\s\S]*currentTier\s+CustomerTierName/s);
   assert.match(schema, /model CustomerProgramMembership[\s\S]*@@unique\(\[businessCustomerMembershipId, loyaltyProgramId\]\)/s);
 });

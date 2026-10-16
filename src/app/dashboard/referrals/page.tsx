@@ -7,16 +7,26 @@ import { Avatar, MetricCard } from "@/components/ui";
 import { getBusinessOwnerContext } from "@/lib/business-owner";
 import { formatDate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { describeReferralReward, getReferralSettings, listReferralRewardPrograms } from "@/lib/referral-settings";
+import { CsrfInput } from "@/components/CsrfInput";
+import { ReferralRewardSettingsForm } from "@/components/ReferralRewardSettingsForm";
+import { saveReferralSettingsAction } from "./actions";
 
 const referralStatuses = ["PENDING", "QUALIFIED", "REJECTED", "EXPIRED"] as const;
 
 export default async function ReferralsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; search?: string; reward?: string }>;
+  searchParams: Promise<{ status?: string; search?: string; reward?: string; error?: string; success?: string }>;
 }) {
   const { user } = await getBusinessOwnerContext();
   const params = await searchParams;
+  const [referralSettings, rewardPrograms, cashbackSettings] = await Promise.all([
+    getReferralSettings(user.businessId as number),
+    listReferralRewardPrograms(user.businessId as number),
+    prisma.businessCashbackSettings.findUnique({ where: { businessId: user.businessId as number }, select: { enabled: true, currency: true } }),
+  ]);
+  const rewardText = describeReferralReward(referralSettings, cashbackSettings?.currency ?? "AED");
   const selectedStatus = referralStatuses.includes(params.status as (typeof referralStatuses)[number])
     ? (params.status as ReferralStatus)
     : undefined;
@@ -130,6 +140,26 @@ export default async function ReferralsPage({
 
   return (
     <DashboardShell user={user} eyebrow="Business Owner" title="Referral Center" hideWelcomeMessage>
+      {params.error || params.success ? (
+        <p className={`rounded-md border px-3 py-2 text-sm ${params.error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>{params.error ?? params.success}</p>
+      ) : null}
+
+      <section className="min-w-0 rounded-xl border border-[#E7E9EE] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)] md:p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="text-base font-bold tracking-tight text-[#171A21]">Referral reward</h2>
+            <p className="mt-0.5 text-[13px] text-[#7A8091]">
+              One reward for the whole business, paid on the friend&apos;s first visit or purchase in any program.
+              {rewardText.referrer ? ` Today: ${rewardText.referrer} for the referrer${rewardText.friend ? `, ${rewardText.friend} for the friend` : ""}.` : " Today: no reward is paid."}
+            </p>
+          </div>
+          <Gift className="h-5 w-5 shrink-0 business-text" aria-hidden="true" />
+        </div>
+        <div className="mt-4">
+          <ReferralRewardSettingsForm settings={referralSettings} programs={rewardPrograms} cashbackEnabled={Boolean(cashbackSettings?.enabled)} currency={cashbackSettings?.currency ?? "AED"} action={saveReferralSettingsAction} csrfInput={<CsrfInput scope="dashboard:referral-settings" />} />
+        </div>
+      </section>
+
       <section className="min-w-0 rounded-xl border border-[#E7E9EE] bg-white p-4 shadow-[0_1px_2px_rgba(15,18,25,0.04)] md:p-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
@@ -243,8 +273,8 @@ export default async function ReferralsPage({
             <ol className="mt-3 grid gap-2.5 text-sm text-[#475569]">
               <HowStep n={1} title="Invited" detail="Customer shares their referral link." />
               <HowStep n={2} title="Joined" detail="Staff enrolls the referred customer with that code." />
-              <HowStep n={3} title="First visit" detail="Referral stays pending until the first valid stamp." />
-              <HowStep n={4} title="Qualified" detail="Reward is granted after qualification." />
+              <HowStep n={3} title="First visit" detail="Pending until the friend's first stamp, package visit or cashback purchase, in any program." />
+              <HowStep n={4} title="Rewarded" detail="The referral reward above is paid to the referrer (and the friend, if set)." />
             </ol>
           </section>
         </div>

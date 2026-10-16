@@ -105,7 +105,6 @@ export const programSchema = z
     requiredStamps: z.coerce.number().int().min(1, "Required stamps must be at least 1."),
     startingBonusStamps: z.coerce.number().int().min(0, "Starting stamps cannot be negative."),
     startingStampPolicy: z.enum(startingStampPolicyValues).default("FIRST_ENROLLMENT_ONLY"),
-    referralRewardBonusStamps: z.coerce.number().int().min(0, "Referral reward bonus stamps cannot be negative."),
     cardTheme: z.enum(["BUSINESS_DEFAULT", "COFFEE_CAFE", "RESTAURANT", "BEAUTY_SALON", "AUTOMOTIVE", "RETAIL_GENERAL"]).default("BUSINESS_DEFAULT"),
     // Only an icon we ship artwork for is stored; anything else becomes null and
     // the card falls back to a plain tick rather than drawing nothing.

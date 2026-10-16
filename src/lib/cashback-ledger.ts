@@ -6,7 +6,7 @@ import { createAbuseAlert, getAlertRule } from "@/lib/alert-engine";
 import type { Prisma } from "@prisma/client";
 import { applyCashbackDelta, CASHBACK_NOT_JOINED_MESSAGE, canSpendCashback, computeCashbackEarn, formatAed } from "@/lib/cashback";
 import { syncGoogleWalletAfterCashbackChange } from "@/lib/google-wallet/service";
-import { qualifyReferralFromFirstCashback } from "@/lib/referrals";
+import { qualifyReferral } from "@/lib/referrals";
 import { syncAppleWalletAfterCashbackChange } from "@/lib/walletwallet/service";
 
 /**
@@ -192,23 +192,23 @@ export async function earnCashback(input: {
       });
       await checkCashbackEarnAlerts(tx, { ...input, amount, transactionId: row.id });
       // A friend's first cashback purchase qualifies their referral and pays the referrer.
-      const referral = await qualifyReferralFromFirstCashback({
+      const referral = await qualifyReferral({
         tx,
         businessId: input.businessId,
         referredMembershipId: locked.id,
-        cashbackTransactionId: row.id,
+        activity: { kind: "CASHBACK", cashbackTransactionId: row.id },
         branchId: input.branchId,
         currency: input.currency,
         now: new Date(),
       });
-      return { amount, balanceAfter, rewardedMembershipId: referral?.rewardedMembershipId ?? null };
+      return { amount, balanceAfter, rewardedMembershipIds: referral.cashbackMembershipIds.filter((id) => id !== locked.id) };
     });
     // Refresh the wallet cashback cards so the balance updates (the referrer's too, if paid).
     await syncGoogleWalletAfterCashbackChange(input.membershipId);
     await syncAppleWalletAfterCashbackChange(input.membershipId);
-    if (walletResult.rewardedMembershipId) {
-      await syncGoogleWalletAfterCashbackChange(walletResult.rewardedMembershipId);
-      await syncAppleWalletAfterCashbackChange(walletResult.rewardedMembershipId);
+    for (const membershipId of walletResult.rewardedMembershipIds) {
+      await syncGoogleWalletAfterCashbackChange(membershipId);
+      await syncAppleWalletAfterCashbackChange(membershipId);
     }
     return { amount: walletResult.amount, balanceAfter: walletResult.balanceAfter };
   } catch (error) {

@@ -25,7 +25,6 @@ type ProgramDefaults = {
   requiredStamps?: number;
   startingBonusStamps?: number;
   startingStampPolicy?: StartingStampPolicy;
-  referralRewardBonusStamps?: number;
   cardTheme?: CardTheme;
   stampEmoji?: string | null;
   walletHeroStyle?: "STAMPS" | "PHOTO" | null;
@@ -58,7 +57,6 @@ export function ProgramForm({
   const requiredStamps = defaults.requiredStamps ?? template?.requiredStamps ?? 1;
   const startingBonusStamps = defaults.startingBonusStamps ?? template?.startingBonusStamps ?? 0;
   const startingStampPolicy = defaults.startingStampPolicy ?? "FIRST_ENROLLMENT_ONLY";
-  const referralRewardBonusStamps = defaults.referralRewardBonusStamps ?? 1;
   const rewardName = defaults.rewardName ?? template?.rewardName ?? "";
   const rewardDescription = defaults.rewardDescription ?? template?.rewardDescription ?? "";
   const cardTheme = defaults.cardTheme ?? "BUSINESS_DEFAULT";
@@ -131,7 +129,6 @@ export function ProgramForm({
         <div className="grid gap-5">
           <div className="grid gap-4 md:grid-cols-2">
             <Input name="startingBonusStamps" label="Starting Stamps" type="number" min="0" defaultValue={startingBonusStamps.toString()} required />
-            <Input name="referralRewardBonusStamps" label="Referral Reward Bonus Stamps" type="number" min="0" defaultValue={referralRewardBonusStamps.toString()} required />
           </div>
           <fieldset className="space-y-3">
             <legend className="text-sm font-semibold text-[#111827]">Apply when</legend>

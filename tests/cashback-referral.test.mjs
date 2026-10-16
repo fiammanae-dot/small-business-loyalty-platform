@@ -9,12 +9,10 @@ import { test } from "node:test";
 
 const read = (path) => readFileSync(path, "utf8");
 
-test("the business sets a cashback referral reward", () => {
-  assert.match(read("prisma/schema.prisma"), /referralRewardAmount Decimal\? @map\("referral_reward_amount"\) @db\.Decimal\(12, 2\)/);
-  assert.match(read("prisma/migrations/0066_cashback_referral_reward/migration.sql"), /ADD COLUMN "referral_reward_amount" DECIMAL\(12,2\)/);
-  const actions = read("src/app/dashboard/actions.ts");
-  assert.match(actions, /if \(formData\.has\("referralRewardAmount"\)\)/);
-  assert.match(read("src/components/CashbackSetupForm.tsx"), /name="referralRewardAmount"/);
+test("the cashback setup no longer carries its own referral reward (it lives in the Referral Center)", () => {
+  assert.doesNotMatch(read("src/app/dashboard/actions.ts"), /referralRewardAmount/);
+  assert.doesNotMatch(read("src/components/CashbackSetupForm.tsx"), /referralRewardAmount/);
+  assert.match(read("src/components/CashbackSetupForm.tsx"), /set once for the whole business in the Referral Center/);
 });
 
 test("the cashback join page records who referred a new customer", () => {
@@ -29,19 +27,20 @@ test("the cashback join page records who referred a new customer", () => {
 
 test("the first cashback purchase qualifies the referral and pays the referrer once", () => {
   const referrals = read("src/lib/referrals.ts");
-  const fn = referrals.slice(referrals.indexOf("export async function qualifyReferralFromFirstCashback"));
+  const fn = referrals.slice(referrals.indexOf("export async function qualifyReferral("));
   assert.match(fn, /where: \{ businessId, referredMembershipId, status: "PENDING" \}/);
-  assert.match(fn, /type: "EARN", id: \{ not: cashbackTransactionId \}/);
-  assert.match(fn, /if \(earlierEarns > 0\) return null;/);
-  assert.match(fn, /status: "QUALIFIED", qualifiedAt: now/);
-  assert.match(fn, /if \(!settings\?\.enabled \|\| !\(reward > 0\)\) return null;/);
+  assert.match(fn, /type: "EARN", id: \{ not: activity\.cashbackTransactionId \}/);
+  assert.match(fn, /if \(earlier > 0\) return none;/);
+  assert.match(fn, /status: "QUALIFIED",\s*qualifiedAt: now/);
+  assert.match(fn, /if \(!cashback\?\.enabled\) \{/);
   assert.match(fn, /FOR UPDATE/);
   assert.match(fn, /note: "Referral reward"/);
   assert.match(fn, /eventType: "REWARD_GRANTED"/);
 
   const ledger = read("src/lib/cashback-ledger.ts");
-  assert.match(ledger, /const referral = await qualifyReferralFromFirstCashback\(\{/);
-  assert.match(ledger, /if \(walletResult\.rewardedMembershipId\) \{/);
+  assert.match(ledger, /const referral = await qualifyReferral\(\{/);
+  assert.match(ledger, /activity: \{ kind: "CASHBACK", cashbackTransactionId: row\.id \}/);
+  assert.match(ledger, /for \(const membershipId of walletResult\.rewardedMembershipIds\) \{/);
   // The referrer's history names the reward.
   assert.match(read("src/app/dashboard/customers/[id]/page.tsx"), /\{entry\.note \?\? label\}/);
 });
