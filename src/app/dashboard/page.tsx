@@ -12,6 +12,7 @@ import { getPlanComplianceSummary, type PlanComplianceSummary } from "@/lib/plan
 import { complianceStatusLabel } from "@/lib/plan-compliance-rules";
 import { requireSupportBusinessContext } from "@/lib/support-sessions";
 import { prisma } from "@/lib/prisma";
+import { countOutreachInbox } from "@/lib/outreach";
 import { getProgramActivityTotals } from "@/lib/program-stats";
 import { businessTypeLabels } from "@/lib/roles";
 
@@ -62,6 +63,7 @@ export default async function BusinessDashboard({
     referralConversionsToday,
     latestSupportSession,
     activeBusinessSupportSession,
+    outreachWaiting,
   ] = await Promise.all([
     prisma.businessCustomerMembership.count({ where: { businessId: user.businessId, createdAt: { gte: todayStart } } }),
     prisma.stampTransaction.aggregate({
@@ -124,6 +126,7 @@ export default async function BusinessDashboard({
       orderBy: { startedAt: "desc" },
       select: { startedAt: true, expiresAt: true, status: true, reason: true },
     }),
+    countOutreachInbox({ businessId: user.businessId as number }),
   ]);
 
   const activityTotals = await activityTotalsPromise;
@@ -294,6 +297,18 @@ export default async function BusinessDashboard({
                   {totalOpenAlerts} open {totalOpenAlerts === 1 ? "alert needs" : "alerts need"} review
                 </span>
                 <span className="text-xs font-semibold text-[#B91C1C]">Review →</span>
+              </Link>
+            ) : null}
+
+            {outreachWaiting > 0 ? (
+              <Link
+                href="/dashboard/outreach"
+                className="flex items-center justify-between gap-3 rounded-xl border border-[#BBF7D0] bg-[#F0FDF4] px-4 py-3 transition hover:bg-[#DCFCE7]"
+              >
+                <span className="text-sm font-bold text-[#166534]">
+                  {outreachWaiting} {outreachWaiting === 1 ? "customer" : "customers"} to contact on WhatsApp today
+                </span>
+                <span className="text-xs font-semibold text-[#15803D]">Open →</span>
               </Link>
             ) : null}
 
