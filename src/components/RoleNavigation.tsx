@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useT } from "@/i18n/client";
+import { translateLabel } from "@/i18n/translate";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
@@ -144,6 +146,7 @@ const platformSidebarItems: NavigationItem[] = [
 
 export function PlatformSidebarNav() {
   const pathname = usePathname();
+  const t = useT();
 
   return (
     <nav className="grid gap-1" aria-label="Platform navigation">
@@ -162,7 +165,7 @@ export function PlatformSidebarNav() {
             }`}
           >
             <item.icon className="h-4 w-4" aria-hidden="true" />
-            {item.label}
+            {translateLabel(t, "nav", item.label)}
           </Link>
         );
       })}
@@ -184,6 +187,7 @@ const staffMobileItems: NavigationItem[] = [
 
 export function RoleNavigation({ role }: RoleNavigationProps) {
   const pathname = usePathname();
+  const t = useT();
 
   if (role !== "BUSINESS_OWNER") {
     return null;
@@ -197,15 +201,15 @@ export function RoleNavigation({ role }: RoleNavigationProps) {
             <Store className="h-5 w-5" aria-hidden="true" />
           </span>
           <div>
-            <p className="text-sm font-bold text-[#171A21]">Business Workspace</p>
-            <p className="text-xs font-medium text-[#7A8091]">Daily operations</p>
+            <p className="text-sm font-bold text-[#171A21]">{t("shell.businessWorkspace")}</p>
+            <p className="text-xs font-medium text-[#7A8091]">{t("shell.dailyOperations")}</p>
           </div>
         </div>
 
         <nav className="mt-4 grid gap-4" aria-label="Business navigation">
           {businessOwnerNavigationGroups.map((group) => (
-            <div key={group.label}>
-              <p className="px-2 pb-1.5 text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#9AA0AD]">{group.label}</p>
+            <div key={translateLabel(t, "nav", group.label)}>
+              <p className="px-2 pb-1.5 text-[10.5px] font-bold uppercase tracking-[0.08em] text-[#9AA0AD]">{translateLabel(t, "nav", group.label)}</p>
               <div className="grid gap-1">
                 {group.items.map((item) => (
                   item.accent ? (
@@ -227,6 +231,7 @@ export function RoleNavigation({ role }: RoleNavigationProps) {
 
 export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
   const pathname = usePathname();
+  const t = useT();
   const [moreOpen, setMoreOpen] = useState(false);
 
   if (role !== "BUSINESS_OWNER") {
@@ -248,13 +253,13 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
           />
           <div className="fixed inset-x-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-40 max-h-[72vh] overflow-hidden rounded-3xl border border-[#E7E9EE] bg-white shadow-2xl">
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E7E9EE] bg-white px-4 py-3">
-              <p className="text-base font-bold text-[#171A21]">More{activeMoreItem ? ` - ${activeMoreItem.label}` : ""}</p>
+              <p className="text-base font-bold text-[#171A21]">{t("shell.more")}{activeMoreItem ? ` - ${translateLabel(t, "nav", activeMoreItem.label)}` : ""}</p>
               <button
                 type="button"
                 onClick={() => setMoreOpen(false)}
                 className="rounded-full px-3 py-1.5 text-sm font-bold text-[#7A8091] transition duration-150 active:scale-[0.98] business-hover"
               >
-                Close
+                {t("common.close")}
               </button>
             </div>
             <div className="grid max-h-[calc(72vh-56px)] grid-cols-2 gap-2 overflow-y-auto px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3">
@@ -274,7 +279,7 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
                     }`}
                   >
                     <item.icon className={`h-5 w-5 transition-colors ${active ? "business-primary-strong" : "business-primary"}`} aria-hidden="true" />
-                    <span className="min-w-0 truncate">{item.label}</span>
+                    <span className="min-w-0 truncate">{translateLabel(t, "nav", item.label)}</span>
                   </Link>
                 );
               })}
@@ -286,7 +291,7 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
       {moreActive && !moreOpen ? (
         <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 flex justify-center px-4">
           <span className="max-w-[min(22rem,calc(100vw-2rem))] truncate rounded-full border border-[#F4C7AE] business-border-soft bg-white px-3 py-1.5 text-xs font-bold business-primary-strong shadow-lg">
-            More - {activeMoreItem?.label}
+            {t("shell.more")} - {activeMoreItem ? translateLabel(t, "nav", activeMoreItem.label) : ""}
           </span>
         </div>
       ) : null}
@@ -314,7 +319,7 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
                 }`}
               >
                 <item.icon className={item.accent && !active ? "h-6 w-6" : "h-5 w-5"} aria-hidden="true" />
-                <span className="max-w-full truncate">{item.label}</span>
+                <span className="max-w-full truncate">{translateLabel(t, "nav", item.label)}</span>
               </Link>
             );
           })}
@@ -327,7 +332,7 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
             }`}
           >
             <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
-            <span className="max-w-full truncate">More</span>
+            <span className="max-w-full truncate">{t("shell.more")}</span>
           </button>
         </div>
       </nav>
@@ -336,6 +341,7 @@ export function MobileBusinessNavigation({ role }: RoleNavigationProps) {
 }
 export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
   const pathname = usePathname();
+  const t = useT();
   const [moreOpen, setMoreOpen] = useState(false);
 
   if (role !== "PLATFORM_OWNER") {
@@ -357,13 +363,13 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
           />
           <div className="fixed inset-x-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-40 max-h-[72vh] overflow-hidden rounded-3xl border border-[#E7E9EE] bg-white shadow-2xl">
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E7E9EE] bg-white px-4 py-3">
-              <p className="text-base font-bold text-[#171A21]">More{activeMoreItem ? ` - ${activeMoreItem.label}` : ""}</p>
+              <p className="text-base font-bold text-[#171A21]">{t("shell.more")}{activeMoreItem ? ` - ${translateLabel(t, "nav", activeMoreItem.label)}` : ""}</p>
               <button
                 type="button"
                 onClick={() => setMoreOpen(false)}
                 className="rounded-full px-3 py-1.5 text-sm font-bold text-[#7A8091] hover:bg-[#FBEFE8] hover:text-[#C2410C]"
               >
-                Close
+                {t("common.close")}
               </button>
             </div>
             <div className="grid max-h-[calc(72vh-56px)] grid-cols-2 gap-2 overflow-y-auto px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3">
@@ -383,7 +389,7 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
                     }`}
                   >
                     <item.icon className={`h-5 w-5 transition-colors ${active ? "text-[#C2410C]" : "text-[#F26A21]"}`} aria-hidden="true" />
-                    <span className="min-w-0 truncate">{item.label}</span>
+                    <span className="min-w-0 truncate">{translateLabel(t, "nav", item.label)}</span>
                   </Link>
                 );
               })}
@@ -395,7 +401,7 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
       {moreActive && !moreOpen ? (
         <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 flex justify-center px-4">
           <span className="max-w-[min(22rem,calc(100vw-2rem))] truncate rounded-full border border-[#F4C7AE] bg-white px-3 py-1.5 text-xs font-bold text-[#C2410C] shadow-lg">
-            More - {activeMoreItem?.label}
+            {t("shell.more")} - {activeMoreItem ? translateLabel(t, "nav", activeMoreItem.label) : ""}
           </span>
         </div>
       ) : null}
@@ -419,7 +425,7 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
                 }`}
               >
                 <item.icon className="h-5 w-5" aria-hidden="true" />
-                <span className="max-w-full truncate">{item.label}</span>
+                <span className="max-w-full truncate">{translateLabel(t, "nav", item.label)}</span>
               </Link>
             );
           })}
@@ -432,7 +438,7 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
             }`}
           >
             <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
-            More
+            {t("shell.more")}
           </button>
         </div>
       </nav>
@@ -442,6 +448,7 @@ export function MobilePlatformNavigation({ role }: RoleNavigationProps) {
 
 export function MobileBranchNavigation({ role }: RoleNavigationProps) {
   const pathname = usePathname();
+  const t = useT();
 
   if (role !== "BRANCH_MANAGER") {
     return null;
@@ -469,7 +476,7 @@ export function MobileBranchNavigation({ role }: RoleNavigationProps) {
               }`}
             >
               <item.icon className={item.accent ? "h-6 w-6" : "h-5 w-5"} aria-hidden="true" />
-              <span className="max-w-full truncate">{item.label}</span>
+              <span className="max-w-full truncate">{translateLabel(t, "nav", item.label)}</span>
             </Link>
           );
         })}
@@ -479,6 +486,7 @@ export function MobileBranchNavigation({ role }: RoleNavigationProps) {
 }
 export function MobileStaffNavigation({ role }: RoleNavigationProps) {
   const pathname = usePathname();
+  const t = useT();
 
   if (role !== "STAFF") {
     return null;
@@ -506,7 +514,7 @@ export function MobileStaffNavigation({ role }: RoleNavigationProps) {
               }`}
             >
               <item.icon className={item.accent ? "h-6 w-6" : "h-5 w-5"} aria-hidden="true" />
-              <span className="max-w-full truncate">{item.label}</span>
+              <span className="max-w-full truncate">{translateLabel(t, "nav", item.label)}</span>
             </Link>
           );
         })}
@@ -523,6 +531,7 @@ function NavigationLink({
   pathname: string;
   compact?: boolean;
 }) {
+  const t = useT();
   const active = isActivePath(pathname, item.href, item.activePaths);
 
   return (
@@ -549,7 +558,7 @@ function NavigationLink({
         <item.icon className="h-4 w-4" aria-hidden="true" />
       </span>
       <span className="min-w-0">
-        <span className={`block truncate ${item.accent ? "text-sm font-bold" : "text-[13.5px] font-semibold"}`}>{item.label}</span>
+        <span className={`block truncate ${item.accent ? "text-sm font-bold" : "text-[13.5px] font-semibold"}`}>{translateLabel(t, "nav", item.label)}</span>
         {!compact && item.description ? <span className="block truncate text-xs font-medium opacity-75">{item.description}</span> : null}
       </span>
     </Link>

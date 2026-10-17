@@ -6,19 +6,21 @@ import { useActionState, useState } from "react";
 import type { LoginState } from "@/app/login/actions";
 import { loginAction } from "@/app/login/actions";
 import { RequiredMark } from "@/components/ui/RequiredMark";
+import { useT } from "@/i18n/client";
 
 const initialState: LoginState = {};
 
 export function LoginForm({ csrfToken }: { csrfToken: string }) {
   const [state, formAction, isPending] = useActionState(loginAction, initialState);
   const [showPassword, setShowPassword] = useState(false);
+  const t = useT();
 
   return (
     <form action={formAction} className="space-y-5">
       <input type="hidden" name="csrfToken" value={csrfToken} />
       <div className="space-y-2">
         <label htmlFor="email" className="text-sm font-medium text-[#111827]">
-          Email<RequiredMark />
+          {t("login.emailLabel")}<RequiredMark />
         </label>
         <input
           id="email"
@@ -27,13 +29,13 @@ export function LoginForm({ csrfToken }: { csrfToken: string }) {
           autoComplete="email"
           required
           className="h-11 w-full rounded-md border border-[#E5E7EB] bg-white px-3 text-sm text-[#111827] outline-none transition focus:border-[#F26A21] focus:ring-4 focus:ring-orange-100"
-          placeholder="Enter your email"
+          placeholder={t("login.emailPlaceholder")}
         />
       </div>
 
       <div className="space-y-2">
         <label htmlFor="password" className="text-sm font-medium text-[#111827]">
-          Password<RequiredMark />
+          {t("login.passwordLabel")}<RequiredMark />
         </label>
         <div className="relative">
           <input
@@ -42,15 +44,15 @@ export function LoginForm({ csrfToken }: { csrfToken: string }) {
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
             required
-            className="h-11 w-full rounded-md border border-[#E5E7EB] bg-white px-3 pr-12 text-sm text-[#111827] outline-none transition focus:border-[#F26A21] focus:ring-4 focus:ring-orange-100"
-            placeholder="Enter your password"
+            className="h-11 w-full rounded-md border border-[#E5E7EB] bg-white px-3 pe-12 text-sm text-[#111827] outline-none transition focus:border-[#F26A21] focus:ring-4 focus:ring-orange-100"
+            placeholder={t("login.passwordPlaceholder")}
           />
           <button
             type="button"
             onClick={() => setShowPassword((value) => !value)}
-            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-label={showPassword ? t("login.hidePassword") : t("login.showPassword")}
             aria-pressed={showPassword}
-            className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-[#6B7280] transition hover:bg-orange-50 hover:text-[#F26A21] focus:outline-none focus:ring-4 focus:ring-orange-100"
+            className="absolute end-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-[#6B7280] transition hover:bg-orange-50 hover:text-[#F26A21] focus:outline-none focus:ring-4 focus:ring-orange-100"
           >
             {showPassword ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
           </button>
@@ -68,11 +70,11 @@ export function LoginForm({ csrfToken }: { csrfToken: string }) {
         disabled={isPending}
         className="h-11 w-full rounded-md bg-[#F26A21] px-4 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70"
       >
-        {isPending ? "Signing in..." : "Sign in"}
+        {isPending ? t("login.submitting") : t("login.submit")}
       </button>
 
       <Link href="/forgot-password" className="block text-center text-sm font-semibold text-[#F26A21] hover:text-[#C2410C]">
-        Forgot Password?
+        {t("login.forgotPassword")}
       </Link>
     </form>
   );
