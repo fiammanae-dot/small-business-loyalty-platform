@@ -2,6 +2,9 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Suspense } from "react";
 import { AppToaster } from "@/components/AppToaster";
+import { I18nProvider } from "@/i18n/client";
+import { directionFor } from "@/i18n/locales";
+import { getLocale } from "@/i18n/server";
 import "./globals.css";
 
 // Brand fonts (Loyalty Card UAE guidelines): Comfortaa for headings and short
@@ -21,6 +24,20 @@ const nunito = localFont({
   weight: "200 1000",
   display: "swap",
   fallback: ["Segoe UI", "Arial", "sans-serif"],
+});
+
+// Arabic UI text: IBM Plex Sans Arabic (OFL). Comfortaa and Nunito have no
+// Arabic glyphs, so html[lang="ar"] switches both font tokens to this one.
+const plexArabic = localFont({
+  src: [
+    { path: "./fonts/IBMPlexSansArabic-400.woff2", weight: "400" },
+    { path: "./fonts/IBMPlexSansArabic-500.woff2", weight: "500" },
+    { path: "./fonts/IBMPlexSansArabic-600.woff2", weight: "600" },
+    { path: "./fonts/IBMPlexSansArabic-700.woff2", weight: "700" },
+  ],
+  variable: "--font-arabic",
+  display: "swap",
+  fallback: ["Segoe UI", "Tahoma", "Arial", "sans-serif"],
 });
 
 export const metadata: Metadata = {
@@ -50,18 +67,20 @@ export const viewport: Viewport = {
   themeColor: "#141210",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
   return (
     <html
-      lang="en"
-      className={`${comfortaa.variable} ${nunito.variable} h-full overflow-x-clip antialiased`}
+      lang={locale}
+      dir={directionFor(locale)}
+      className={`${comfortaa.variable} ${nunito.variable} ${plexArabic.variable} h-full overflow-x-clip antialiased`}
     >
       <body className="min-h-full flex flex-col overflow-x-clip">
-        {children}
+        <I18nProvider locale={locale}>{children}</I18nProvider>
         <Suspense>
           <AppToaster />
         </Suspense>

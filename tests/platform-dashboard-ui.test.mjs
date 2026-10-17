@@ -45,7 +45,7 @@ test("platform dashboard uses SaaS admin hierarchy, KPIs, icons, and recent acti
   assert.doesNotMatch(page, /Operational indicators/);
   assert.doesNotMatch(page, /HealthMetric/);
   assert.match(shell, /headerAside/);
-  assert.match(shell, /Welcome back/);
+  assert.match(shell, /t\("shell\.welcomeBack"\)/);
   assert.match(shell, /Dashboard/);
   assert.match(nav, /Businesses/);
   assert.match(nav, /Analytics/);

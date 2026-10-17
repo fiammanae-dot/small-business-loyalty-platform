@@ -17,7 +17,7 @@ test("forgot password and reset password routes exist and are linked from login"
   const resetPage = read("src/app/reset-password/page.tsx");
 
   assert.match(loginForm, /href="\/forgot-password"/);
-  assert.match(loginForm, /Forgot Password\?/);
+  assert.match(loginForm, /t\("login\.forgotPassword"\)/);
   assert.match(forgotPage, /Send Reset Link|Reset your password/);
   assert.match(resetPage, /reset links expire after 30 minutes/i);
 });

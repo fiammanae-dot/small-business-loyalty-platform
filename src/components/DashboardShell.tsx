@@ -19,8 +19,10 @@ import { endSupportSessionAction } from "@/app/platform/businesses/support-actio
 import { getOperationalBusinessBranding } from "@/lib/business-branding";
 import { getActiveSupportSessionForCurrentAdmin } from "@/lib/support-sessions";
 import type { AuthUser } from "@/lib/session";
-import { roleHomePath, roleLabels } from "@/lib/roles";
+import { roleHomePath } from "@/lib/roles";
 import { BrandLockup } from "@/components/BrandLogo";
+import { LanguageSwitch } from "@/components/LanguageSwitch";
+import { getT } from "@/i18n/server";
 
 type SupportShellSession = {
   id: number;
@@ -63,6 +65,8 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
   const supportContext = supportSession === undefined && user.role === "BUSINESS_OWNER" ? await getActiveSupportSessionForCurrentAdmin() : null;
   const activeSupportSession = supportSession ?? supportContext?.supportSession ?? null;
   const businessBranding = await getOperationalBusinessBranding(user);
+  const t = await getT();
+  const roleLabel = t(`role.${user.role}`);
   const hasSidebar = user.role === "PLATFORM_OWNER" || user.role === "BUSINESS_OWNER";
   const showDefaultAccountCard = !hideWelcomeMessage && user.role !== "BUSINESS_OWNER" && user.role !== "PLATFORM_OWNER";
   const supportNavSession = activeSupportSession
@@ -80,14 +84,14 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
           <FileText className="h-5 w-5" aria-hidden="true" />
         </div>
         <div>
-          <p className="truncate text-sm font-bold text-[#171A21]">Welcome back</p>
-          <p className="text-xs font-semibold business-primary-strong">{roleLabels[user.role]}</p>
+          <p className="truncate text-sm font-bold text-[#171A21]">{t("shell.welcomeBack")}</p>
+          <p className="text-xs font-semibold business-primary-strong">{roleLabel}</p>
         </div>
       </div>
       <div className="mt-4 grid gap-2 text-sm">
-        <ShellInfo label="Email" value={user.email} />
-        <ShellInfo label="Last Login" value="Current session" />
-        <ShellInfo label="Role" value={roleLabels[user.role]} />
+        <ShellInfo label={t("shell.email")} value={user.email} />
+        <ShellInfo label={t("shell.lastLogin")} value={t("shell.currentSession")} />
+        <ShellInfo label={t("shell.role")} value={roleLabel} />
       </div>
     </div>
   ) : null);
@@ -100,21 +104,24 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
       <header className="border-b border-[#E7E9EE] bg-white">
         <div className="mx-auto flex max-w-screen-2xl min-w-0 flex-col gap-2 px-4 py-2.5 sm:px-6 sm:py-4 lg:gap-4 lg:px-8">
           <div className="flex min-w-0 items-center justify-between gap-4">
-            <Link href={roleHomePath[user.role]} className="flex min-w-0 items-center gap-2" aria-label="Loyalty Card UAE home">
+            <Link href={roleHomePath[user.role]} className="flex min-w-0 items-center gap-2" aria-label={t("shell.home")}>
               <BrandLockup className="h-9 w-auto sm:h-10" priority />
               {activeSupportSession ? (
-                <span className="rounded-md bg-red-600 px-2 py-1 text-xs font-black uppercase text-white">Support</span>
+                <span className="rounded-md bg-red-600 px-2 py-1 text-xs font-black uppercase text-white">{t("shell.support")}</span>
               ) : null}
             </Link>
-            <form action="/logout" method="post">
-              <CsrfInput scope="logout" />
-              <button
-                type="submit"
-                className="rounded-lg border border-[#E7E9EE] bg-white px-3 py-1.5 text-sm font-semibold text-[#3D4352] transition business-hover sm:py-2"
-              >
-                Logout
-              </button>
-            </form>
+            <div className="flex shrink-0 items-center gap-2">
+              {user.role === "PLATFORM_OWNER" ? null : <LanguageSwitch />}
+              <form action="/logout" method="post">
+                <CsrfInput scope="logout" />
+                <button
+                  type="submit"
+                  className="h-9 rounded-lg border border-[#E7E9EE] bg-white px-3 text-sm font-semibold text-[#3D4352] transition business-hover"
+                >
+                  {t("shell.logout")}
+                </button>
+              </form>
+            </div>
           </div>
           {user.role !== "BUSINESS_OWNER" ? (
             <nav className="hidden gap-2 overflow-x-auto text-sm text-[#7A8091] sm:flex">
@@ -187,7 +194,7 @@ export async function DashboardShell({ user, title, eyebrow, children, headerAsi
               {activeSupportSession ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-red-600 px-2.5 py-1 text-xs font-black uppercase text-white">
                   <ShieldAlert className="h-3.5 w-3.5" aria-hidden="true" />
-                  Support
+                  {t("shell.support")}
                 </span>
               ) : null}
             </div>
@@ -215,7 +222,7 @@ function ShellInfo({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg bg-[#F3F4F7] px-3 py-2">
       <span className="text-xs font-semibold text-[#7A8091]">{label}</span>
-      <span className="truncate text-right text-sm font-semibold text-[#171A21]">{value}</span>
+      <span className="truncate text-end text-sm font-semibold text-[#171A21]">{value}</span>
     </div>
   );
 }

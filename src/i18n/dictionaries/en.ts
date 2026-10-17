@@ -1,0 +1,77 @@
+/**
+ * English: the source of truth. Every key here must exist in ar.ts (a test
+ * checks). Keys are grouped by screen; "nav.*" are keyed by the English
+ * menu label so the menus stay readable in the code.
+ */
+export const en = {
+  "lang.switchTo": "العربية",
+  "lang.switchToAria": "Switch to Arabic",
+
+  "common.save": "Save",
+  "common.cancel": "Cancel",
+  "common.delete": "Delete",
+  "common.edit": "Edit",
+  "common.back": "Back",
+  "common.close": "Close",
+  "common.search": "Search",
+  "common.loading": "Loading...",
+
+  "role.PLATFORM_OWNER": "System Administrator",
+  "role.BUSINESS_OWNER": "Business Owner",
+  "role.BRANCH_MANAGER": "Branch Manager",
+  "role.STAFF": "Staff",
+
+  "shell.home": "Loyalty Card UAE home",
+  "shell.support": "Support",
+  "shell.logout": "Logout",
+  "shell.welcomeBack": "Welcome back",
+  "shell.email": "Email",
+  "shell.lastLogin": "Last Login",
+  "shell.currentSession": "Current session",
+  "shell.role": "Role",
+  "shell.businessWorkspace": "Business Workspace",
+  "shell.dailyOperations": "Daily operations",
+  "shell.platformWorkspace": "Platform Workspace",
+  "shell.more": "More",
+  "shell.menu": "Menu",
+
+  "nav.Operate": "Operate",
+  "nav.Grow": "Grow",
+  "nav.Manage": "Manage",
+  "nav.Dashboard": "Dashboard",
+  "nav.Customers": "Customers",
+  "nav.Scanner": "Scanner",
+  "nav.Activity": "Activity",
+  "nav.Alerts": "Alerts",
+  "nav.Programs": "Programs",
+  "nav.Referrals": "Referrals",
+  "nav.WhatsApp outreach": "WhatsApp outreach",
+  "nav.WhatsApp": "WhatsApp",
+  "nav.Messages": "Messages",
+  "nav.Staff": "Staff",
+  "nav.Branches": "Branches",
+  "nav.Support History": "Support History",
+  "nav.Settings": "Settings",
+  "nav.Enroll": "Enroll",
+
+  "login.eyebrow": "Secure workspace access",
+  "login.headline": "Sign in to manage loyalty operations.",
+  "login.lead": "Existing Loyalty Card UAE users can access customer cards, scanner workflows, rewards, referrals, billing, and platform administration from the right workspace.",
+  "login.benefit1": "Role-based dashboards for every team member",
+  "login.benefit2": "Protected sessions and secure password reset",
+  "login.benefit3": "Operational tools for scanner, rewards, and customers",
+  "login.secureLogin": "Secure login",
+  "login.welcomeBack": "Welcome back",
+  "login.useAccount": "Use your assigned account to access your Loyalty Card UAE workspace.",
+  "login.emailLabel": "Email",
+  "login.emailPlaceholder": "Enter your email",
+  "login.passwordLabel": "Password",
+  "login.passwordPlaceholder": "Enter your password",
+  "login.showPassword": "Show password",
+  "login.hidePassword": "Hide password",
+  "login.forgotPassword": "Forgot password?",
+  "login.submit": "Sign in",
+  "login.submitting": "Signing in...",
+} as const;
+
+export type DictionaryKey = keyof typeof en;
