@@ -34,5 +34,26 @@ export function otherLocale(locale: Locale): Locale {
 
 /** BCP 47 tag for Intl: Arabic as written in the UAE (Western digits, Arabic month names). */
 export function intlTag(locale: Locale): string {
-  return locale === "ar" ? "ar-AE-u-nu-latn" : "en-AE";
+  return locale === "ar" ? "ar-AE-u-nu-latn" : "en-GB";
+}
+
+/**
+ * The browser's preferred language, from an Accept-Language header: Arabic
+ * when it is listed before any other language we speak, otherwise English.
+ * Used only for visitors who have not chosen yet (no cookie).
+ */
+export function localeFromAcceptLanguage(header: string | null | undefined): Locale {
+  if (!header) return DEFAULT_LOCALE;
+  const ranked = header
+    .split(",")
+    .map((part, index) => {
+      const [tag, ...params] = part.trim().split(";");
+      const q = params.map((p) => p.trim()).find((p) => p.startsWith("q="));
+      const weight = q ? Number(q.slice(2)) : 1;
+      return { lang: tag.trim().toLowerCase().split("-")[0], weight: Number.isFinite(weight) ? weight : 0, index };
+    })
+    .filter((entry) => entry.weight > 0)
+    .sort((a, b) => b.weight - a.weight || a.index - b.index);
+  const first = ranked.find((entry) => isLocale(entry.lang));
+  return first ? (first.lang as Locale) : DEFAULT_LOCALE;
 }

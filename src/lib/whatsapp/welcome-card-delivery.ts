@@ -28,6 +28,8 @@ export type WelcomeCardCustomer = {
   phone: string | null;
   cardToken: string;
   marketingConsent: boolean;
+  /** "en" / "ar" when the customer chose; the message is written in it. */
+  preferredLocale?: string | null;
 };
 
 export type WelcomeCardContext = {
@@ -69,7 +71,7 @@ export type WelcomeCardDeps = {
   formatRecipient(phone: string): string | null;
   maskRecipient(phone: string): string;
   /** Human-readable rendering stored on the queue row for the audit trail. */
-  renderMessageBody(input: { businessName: string; customerName: string; cardUrl: string }): string;
+  renderMessageBody(input: { businessName: string; customerName: string; cardUrl: string; locale?: string | null }): string;
   /** Decrypts the stored token and returns a sender, or an error when it cannot. */
   createSender(channel: WelcomeCardChannel): Promise<WhatsAppSender | { error: string }>;
   logError(event: string, detail: unknown): void;
@@ -112,6 +114,7 @@ export async function deliverWelcomeCard(
     businessName: context.businessName,
     customerName: customer.firstName,
     cardUrl,
+    locale: customer.preferredLocale,
   });
 
   // 5. Record the attempt before sending, so a crash mid-send still leaves a

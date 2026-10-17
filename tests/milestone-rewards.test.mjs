@@ -181,10 +181,10 @@ test("the card and the Wallet pass name the next reward, not the last one", () =
   assert.match(card, /programRewards: \{ orderBy: \{ atStamp: "asc" \} \}/);
 
   // Two rewards waiting must both be named rather than one hiding the other.
-  assert.match(mapper, /readyRewards\.map\(\(reward\) => reward\.rewardName\)\.join\(" and "\)/);
+  assert.match(mapper, /readyRewards\.map\(\(reward\) => reward\.rewardName\)\.join\(/);
 
   // A finished card has nothing to count down to and must not say "0 visits".
-  assert.match(mapper, /All rewards on this card have been claimed\./);
+  assert.match(mapper, /t\("pass\.allClaimed"\)/);
 });
 
 test("the scanner names the reward it will actually hand over", () => {

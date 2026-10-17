@@ -3,18 +3,24 @@ import { maskPhoneNumber } from "@/lib/customer-cards";
 import { areTiersVisible, fromStoredTier } from "@/lib/customer-tiers";
 import { prisma } from "@/lib/prisma";
 import { lookupActiveReferralReferrers, type ReferralReferrerLookupMatch } from "@/lib/referrals";
+import { getT } from "@/i18n/server";
+import type { Locale } from "@/i18n/locales";
 
 export async function ReferralReferrerLookupPreview({
   businessId,
   query,
   selectedReferralCode,
+  locale,
 }: {
   businessId: number;
   query?: string;
   selectedReferralCode?: string;
+  /** Customer join pages pass their own language; staff screens use the signed-in one. */
+  locale?: Locale;
 }) {
   const trimmedQuery = query?.trim();
   if (!trimmedQuery) return null;
+  const t = await getT(locale);
 
   const lookup = await lookupActiveReferralReferrers({ businessId, query: trimmedQuery });
   const tiersVisible = areTiersVisible(
@@ -24,7 +30,7 @@ export async function ReferralReferrerLookupPreview({
   if (lookup.status === "TOO_SHORT") {
     return (
       <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-        Enter at least 2 characters to search.
+        {t("join.lookup.minChars")}
       </p>
     );
   }
@@ -32,19 +38,19 @@ export async function ReferralReferrerLookupPreview({
   if (lookup.status === "NOT_FOUND") {
     return (
       <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-        No matching referrer found.
+        {t("join.lookup.none")}
       </p>
     );
   }
 
   if (lookup.status === "FOUND" && lookup.matches[0]) {
-    return <ConfirmedReferrerCard referrer={lookup.matches[0]} showTier={tiersVisible} />;
+    return <ConfirmedReferrerCard referredByLabel={t("join.lookup.referredBy")} referrer={lookup.matches[0]} showTier={tiersVisible} />;
   }
 
   if (lookup.status === "MULTIPLE") {
     return (
       <div className="rounded-md border border-[#E5E7EB] bg-white p-3 text-sm">
-        <p className="font-semibold text-[#111827]">Choose the matching referrer</p>
+        <p className="font-semibold text-[#111827]">{t("join.lookup.choose")}</p>
         <div className="mt-3 grid gap-2">
           {lookup.matches.map((match) => (
             <label key={match.id} className="flex gap-3 rounded-md border border-[#E5E7EB] p-3 hover:bg-[#F8FAFC]">
@@ -67,12 +73,12 @@ export async function ReferralReferrerLookupPreview({
   return null;
 }
 
-function ConfirmedReferrerCard({ referrer, showTier }: { referrer: ReferralReferrerLookupMatch; showTier: boolean }) {
+function ConfirmedReferrerCard({ referrer, showTier, referredByLabel }: { referrer: ReferralReferrerLookupMatch; showTier: boolean; referredByLabel: string }) {
   return (
     <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-900">
       <input type="hidden" name="referralCode" value={referrer.referralCode} />
       <div className="flex flex-wrap items-center gap-2">
-        <span className="font-semibold">Referred by: {referrerName(referrer)}</span>
+        <span className="font-semibold">{referredByLabel} {referrerName(referrer)}</span>
         <StatusBadge status="ACTIVE" />
       </div>
       <p className="mt-1">

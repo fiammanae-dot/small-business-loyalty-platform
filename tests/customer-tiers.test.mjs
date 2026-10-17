@@ -109,13 +109,13 @@ test("public customer card shows tiers without exposing spend or internal analyt
   const walletCard = read("src/components/public-card/LoyaltyWalletCard.tsx");
   const tierPanel = read("src/components/public-card/TierStatusPanel.tsx");
 
-  assert.match(card, /tier\.badgeLabel/);
+  assert.match(card, /tier=\{tier\.tier\}/);
   assert.match(card, /tier\.badgeIcon/);
   assert.match(card, /visitsRemaining=\{tier\.visitsRemaining\}/);
   assert.match(card, /progressPercent=\{tier\.progressPercent\}/);
-  assert.match(walletCard, /Scan this card/);
-  assert.match(tierPanel, /Customer tier/);
-  assert.match(tierPanel, /Exclusive Rewards Available/);
+  assert.match(walletCard, /t\("card\.scanThisCard"\)/);
+  assert.match(tierPanel, /t\("tierPanel\.title"\)/);
+  assert.match(tierPanel, /t\("tierPanel\.exclusive"\)/);
 
   for (const source of [card, walletCard, tierPanel]) {
     for (const forbidden of [

@@ -64,7 +64,8 @@ body {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-nunito), "Segoe UI", Arial, sans-serif;
+  /* --font-sans is the brand font, or the Arabic one under lang="ar". */
+  font-family: var(--font-sans, var(--font-nunito)), "Segoe UI", Arial, sans-serif;
 }
 
 /* Brand typography: headings in Comfortaa (Light for big headings, Bold for
@@ -79,24 +80,23 @@ body {
 
 /* Arabic: one typeface for headings and body (the brand fonts have no Arabic
    glyphs). Slightly taller lines because Arabic letters carry marks above and
-   below the baseline. */
-html[lang="ar"] {
+   below the baseline. Keyed on any lang="ar" element, so a customer page can
+   be Arabic inside an English document. */
+html[lang="ar"],
+[lang="ar"] {
   --font-sans: var(--font-arabic), "Segoe UI", Tahoma, Arial, sans-serif;
   --font-display: var(--font-arabic), "Segoe UI", Tahoma, Arial, sans-serif;
-}
-
-html[lang="ar"] body {
   font-family: var(--font-sans);
   line-height: 1.7;
 }
 
 /* Letter-spacing and all-caps are Latin typographic devices; Arabic letters
    must stay joined and have no case. */
-html[lang="ar"] [class*="tracking-"] {
+[lang="ar"] [class*="tracking-"] {
   letter-spacing: 0;
 }
 
-html[lang="ar"] .uppercase {
+[lang="ar"] .uppercase {
   text-transform: none;
 }
 

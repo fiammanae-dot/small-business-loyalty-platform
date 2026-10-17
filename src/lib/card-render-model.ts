@@ -2,6 +2,8 @@ import type { CardTheme } from "@prisma/client";
 import type { CardDesign, CardDesignInput, CardSectionVisibility } from "@/lib/card-design";
 import { resolveCardDesign } from "@/lib/card-design";
 import { resolveCardThemeColors } from "@/lib/card-themes";
+import { translateFor } from "@/i18n/dictionaries";
+import { resolveLocale } from "@/i18n/locales";
 
 export type CardRenderBranding = {
   primaryColor: string;
@@ -45,6 +47,8 @@ export type CardRenderModelInput = {
    * the card, regardless of the saved card design. Forces the tier badge off.
    */
   tiersHidden?: boolean;
+  /** The viewer's language ("en" / "ar") for the status and helper texts. */
+  locale?: string | null;
   /**
    * A prepaid membership card counts DOWN: it is issued full and each visit uses
    * one session. When set, the card shows sessionsRemaining filled slots out of
@@ -119,6 +123,7 @@ export type CardRenderModel = {
 };
 
 export function buildCardRenderModel(input: CardRenderModelInput): CardRenderModel {
+  const t = translateFor(resolveLocale(input.locale));
   const design = resolveCardDesign(input.cardDesign);
   const resolvedColors = resolveCardThemeColors({
     cardTheme: input.cardTheme,
@@ -138,12 +143,12 @@ export function buildCardRenderModel(input: CardRenderModelInput): CardRenderMod
     ? Math.round((membershipRemaining / membershipTotal) * 100)
     : (hasProgram ? Math.min(Math.max(input.program?.completion ?? Math.round((current / required) * 100), 0), 100) : 0);
   const rewardReady = isMembership ? false : (hasProgram ? Boolean(input.program?.rewardReady) : false);
-  const remainingText = remaining === 1 ? "1 visit remaining" : `${remaining} visits remaining`;
+  const remainingText = t.plural("card.visitsRemaining", remaining);
   const statusText = isMembership
-    ? (membershipRemaining > 0 ? `${membershipRemaining} of ${membershipTotal} visit${membershipTotal === 1 ? "" : "s"} left` : "Membership complete")
-    : (hasProgram ? (rewardReady ? "Reward Ready" : remainingText) : "No active program yet");
-  const displayProgram = input.program?.name || "Loyalty Card";
-  const displayReward = input.program?.rewardName || "Loyalty reward";
+    ? (membershipRemaining > 0 ? t.plural("card.visitsLeft", membershipTotal, { remaining: membershipRemaining, total: membershipTotal }) : t("card.membershipComplete"))
+    : (hasProgram ? (rewardReady ? t("card.rewardReady") : remainingText) : t("card.noProgram"));
+  const displayProgram = input.program?.name || t("card.loyaltyCard");
+  const displayReward = input.program?.rewardName || t("card.loyaltyReward");
   const cardUrl = input.business.cardUrl ?? null;
 
   // The hero wallet card consumes `design` directly and re-reads its
@@ -234,7 +239,7 @@ export function buildCardRenderModel(input: CardRenderModelInput): CardRenderMod
     },
     qr: {
       code: input.qr.code,
-      helperText: input.qr.helperText || (hasProgram ? "Scan this card" : "Show this QR code to staff to find your customer card."),
+      helperText: input.qr.helperText || (hasProgram ? t("card.scanThisCard") : t("card.showQrToStaff")),
       cardUrl,
     },
   };

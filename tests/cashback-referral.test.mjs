@@ -17,7 +17,7 @@ test("the cashback setup no longer carries its own referral reward (it lives in 
 
 test("the cashback join page records who referred a new customer", () => {
   const page = read("src/app/join/cashback/[token]/page.tsx");
-  assert.match(page, /Referred by a friend\?/);
+  assert.match(page, /t\("join\.referredTitle"\)/);
   assert.match(page, /<ReferralReferrerLookupPreview businessId=\{settings\.businessId\}/);
   const action = read("src/app/join/cashback/[token]/actions.ts");
   assert.match(action, /extractReferralCode\(referralLookupInput\)/);

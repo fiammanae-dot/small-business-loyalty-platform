@@ -25,7 +25,7 @@ test("body text is Nunito and headings are Comfortaa", () => {
   const css = read("src/app/globals.css");
   assert.match(css, /--font-sans: var\(--font-nunito\)/);
   assert.match(css, /--font-display: var\(--font-comfortaa\)/);
-  assert.match(css, /body \{[^}]*font-family: var\(--font-nunito\)/);
+  assert.match(css, /body \{[^}]*font-family: var\(--font-sans, var\(--font-nunito\)\)/);
   // In the base layer, so a heading can still pick another font with a utility class.
   assert.match(css, /@layer base \{\s*h1,\s*h2,\s*h3 \{\s*font-family: var\(--font-display\);/);
   assert.doesNotMatch(css, /geist/i);

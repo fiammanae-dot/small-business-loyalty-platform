@@ -12,7 +12,7 @@ const read = (p) => readFileSync(p, "utf8");
 test("the cashback pass uses the program's name, theme and picture", () => {
   const mapper = read("src/lib/walletwallet/mapper.ts");
   // name
-  assert.match(mapper, /const cardName = cs\?\.name\?\.trim\(\) \|\| "Cashback"/);
+  assert.match(mapper, /const cardName = cs\?\.name\?\.trim\(\) \|\| t\("pass\.cashback"\)/);
   assert.match(mapper, /description: `\$\{cardName\} - \$\{businessName\}`/);
   // theme-driven colour and the picture, through the shared pass view
   assert.match(mapper, /const view = buildCashbackPassView\(\{/);

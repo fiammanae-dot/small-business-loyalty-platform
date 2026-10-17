@@ -6,5 +6,5 @@ import { en } from "./en";
 export const dictionaries: Record<Locale, Dictionary> = { en, ar };
 
 export function translateFor(locale: Locale): Translate {
-  return createTranslate(dictionaries[locale], en);
+  return createTranslate(dictionaries[locale], en, locale);
 }

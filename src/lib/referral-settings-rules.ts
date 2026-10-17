@@ -2,6 +2,9 @@
  * Pure rules for the business referral reward (no database), so they can be
  * unit-tested and shared by the form, the action and the public landing page.
  */
+import { translateFor } from "@/i18n/dictionaries";
+import { resolveLocale } from "@/i18n/locales";
+
 export type ReferralRewardKind = "NONE" | "STAMPS" | "CASHBACK";
 
 export type ReferralSettingsView = {
@@ -103,22 +106,21 @@ export function parseReferralSettingsInput(
   return { ok: true, data: { rewardType, stampProgramId: null, referrerStamps: 1, friendStamps: 0, referrerCashback, friendCashback } };
 }
 
-function stamps(n: number) {
-  return `${n} bonus stamp${n === 1 ? "" : "s"}`;
-}
-
-/** Plain-language summary for the owner's page and the friend's landing page. */
-export function describeReferralReward(settings: ReferralSettingsView, currency = "AED"): { referrer: string | null; friend: string | null } {
+/** Plain-language summary for the owner's page and the friend's landing page, in the reader's language. */
+export function describeReferralReward(settings: ReferralSettingsView, currency = "AED", locale: string | null = "en"): { referrer: string | null; friend: string | null } {
+  const t = translateFor(resolveLocale(locale));
+  const stamps = (n: number) => t("referral.reward.stampsOn", { stamps: t.plural("referral.reward.stamps", n), program: settings.stampProgramName ?? "" });
+  const cashback = (amount: number) => t("referral.reward.cashback", { currency, amount: amount.toFixed(2) });
   if (settings.rewardType === "STAMPS" && settings.stampProgramName) {
     return {
-      referrer: settings.referrerStamps > 0 ? `${stamps(settings.referrerStamps)} on ${settings.stampProgramName}` : null,
-      friend: settings.friendStamps > 0 ? `${stamps(settings.friendStamps)} on ${settings.stampProgramName}` : null,
+      referrer: settings.referrerStamps > 0 ? stamps(settings.referrerStamps) : null,
+      friend: settings.friendStamps > 0 ? stamps(settings.friendStamps) : null,
     };
   }
   if (settings.rewardType === "CASHBACK") {
     return {
-      referrer: settings.referrerCashback > 0 ? `${currency} ${settings.referrerCashback.toFixed(2)} cashback` : null,
-      friend: settings.friendCashback > 0 ? `${currency} ${settings.friendCashback.toFixed(2)} cashback` : null,
+      referrer: settings.referrerCashback > 0 ? cashback(settings.referrerCashback) : null,
+      friend: settings.friendCashback > 0 ? cashback(settings.friendCashback) : null,
     };
   }
   return { referrer: null, friend: null };

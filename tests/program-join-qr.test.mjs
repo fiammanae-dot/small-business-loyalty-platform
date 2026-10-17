@@ -28,7 +28,7 @@ test("public program join page renders enrollment and verified card success", ()
   assert.match(page, /name="lastName"/);
   assert.match(page, /name="phone"/);
   assert.match(page, /getCardUrl\(successMembership\.cardToken\)/);
-  assert.match(page, /Open My Loyalty Card/);
+  assert.match(page, /t\("join\.openCard"\)/);
 
   assert.match(action, /normalizePhone/);
   assert.match(action, /findUnique\(\{\s*where: \{ joinToken: parsed\.data\.token \}/s);
@@ -94,7 +94,7 @@ test("public program join handles duplicate submissions safely", () => {
   assert.match(action, /error\.code === "P2002"/);
   assert.match(action, /findExistingProgramCardToken/);
   assert.match(action, /programMemberships: \{ some: \{ loyaltyProgramId: programId \} \}/);
-  assert.match(action, /Enrollment could not be completed\. Please try again\./);
+  assert.match(action, /t\("join\.error\.failed"\)/);
   assert.doesNotMatch(action, /stampTransaction\.create/);
   assert.doesNotMatch(action, /rewardRedemption\.create/);
 });

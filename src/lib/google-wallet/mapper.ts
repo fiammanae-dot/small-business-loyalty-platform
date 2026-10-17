@@ -18,6 +18,8 @@ import { cardRewardsFor, getNextReward, getReadyRewards, type CardReward } from 
 import { getBaseUrl } from "@/lib/customer-cards";
 import { stampImagePath } from "@/lib/wallet/stamp-image";
 import { buildCashbackPassView, buildProgramPassView } from "@/lib/wallet-pass-view";
+import { translateFor } from "@/i18n/dictionaries";
+import { resolveLocale } from "@/i18n/locales";
 import { getScanUrl } from "@/lib/scan";
 import { passLogoUrl } from "@/lib/wallet/pass-logo";
 import { fromStoredTier } from "@/lib/customer-tiers";
@@ -119,6 +121,8 @@ export async function buildGoogleWalletObjectPayload({
 }) {
   const customer = membership.businessCustomerMembership;
   const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim();
+  // The pass is written in the customer's own language (chosen on the join page or card).
+  const t = translateFor(resolveLocale(customer.preferredLocale));
   const progress = progressValue(membership.earnedStamps, membership.bonusStamps);
   const required = Math.max(1, membership.loyaltyProgram.requiredStamps);
   // A prepaid membership pass counts DOWN: it is issued full and each visit uses
@@ -152,24 +156,24 @@ export async function buildGoogleWalletObjectPayload({
   const cardUrl = await getCardUrl(customer.cardToken);
   const scanUrl = await getScanUrl(membership.scanToken);
   const objectTextModules = [
-    { id: "customer", header: "Customer", body: customerName },
-    { id: "program", header: "Program", body: membership.loyaltyProgram.name },
+    { id: "customer", header: t("pass.customer"), body: customerName },
+    { id: "program", header: t("pass.program"), body: membership.loyaltyProgram.name },
     ...(!isMembership && customer.business.tierSetting
-      ? [{ id: "tier", header: "Tier", body: fromStoredTier(customer.currentTier as Parameters<typeof fromStoredTier>[0]) ?? "Bronze" }]
+      ? [{ id: "tier", header: t("pass.tier"), body: t(`tier.${fromStoredTier(customer.currentTier as Parameters<typeof fromStoredTier>[0]) ?? "Bronze"}`) }]
       : []),
     ...(!isMembership
       ? [
           {
             id: "reward",
-            header: rewardReady ? "Reward ready" : "Next reward",
+            header: rewardReady ? t("pass.rewardReady") : t("pass.nextReward"),
             body: rewardReady
               // More than one can be waiting - a customer who never claimed the
               // milestone and then finished the card has both, and the pass
               // should say so rather than name one and hide the other.
-              ? readyRewards.map((reward) => reward.rewardName).join(" and ") + " ready to redeem."
+              ? t("pass.readyToRedeem", { rewards: readyRewards.map((reward) => reward.rewardName).join(t.locale === "ar" ? " و" : " and ") })
               : nextReward
-                ? `${remaining} visit${remaining === 1 ? "" : "s"} until ${nextReward.rewardName}.`
-                : "All rewards on this card have been claimed.",
+                ? t.plural("pass.visitsUntil", remaining, { reward: nextReward.rewardName })
+                : t("pass.allClaimed"),
           },
         ]
       : []),
@@ -200,6 +204,7 @@ export async function buildGoogleWalletObjectPayload({
     progress,
     membership: isMembership ? { remaining: sessionsRemaining, total: sessionsTotal } : null,
     reward: { ready: rewardReady, visitsToNext: nextReward ? remaining : null },
+    locale: customer.preferredLocale,
   });
   const stampImage =
     view.banner?.kind === "photo"
@@ -208,8 +213,8 @@ export async function buildGoogleWalletObjectPayload({
         ? imageModule(
             `${baseUrl}${stampImagePath(program.uuid, view.banner.filled, view.banner.total, view.banner.emoji, view.banner.customIconUrl)}`,
             isMembership
-              ? `${sessionsRemaining} of ${sessionsTotal} visits remaining`
-              : `${Math.min(progress, required)} of ${required} stamps collected`,
+              ? t("pass.visitsRemainingAlt", { remaining: sessionsRemaining, total: sessionsTotal })
+              : t("pass.stampsCollected", { collected: Math.min(progress, required), total: required }),
           )
         : undefined;
 
@@ -235,7 +240,7 @@ export async function buildGoogleWalletObjectPayload({
       uris: [
         {
           uri: cardUrl,
-          description: "Open loyalty card",
+          description: t("pass.openCard"),
         },
       ],
     },
@@ -284,6 +289,7 @@ async function cashbackView(customer: GoogleWalletCashbackCustomer, appUrl: stri
     },
     customerName: `${customer.firstName} ${customer.lastName ?? ""}`.trim(),
     balance: `${currency} ${Number(customer.cashbackBalance ?? 0).toFixed(2)}`,
+    locale: customer.preferredLocale,
   });
 }
 
@@ -340,10 +346,10 @@ export async function buildGoogleWalletCashbackObjectPayload({
     // The barcode opens the customer's card for staff, same as the Apple cashback card.
     barcode: { type: "QR_CODE", value: cardUrl, alternateText: view.barcodeAltText },
     textModulesData: [
-      { id: "member", header: "Member", body: view.customerName },
-      { id: "program", header: "Program", body: view.title },
+      { id: "member", header: view.secondaryFields[0]?.label ?? "Member", body: view.customerName },
+      { id: "program", header: view.header.label ?? "Program", body: view.title },
     ],
-    linksModuleData: { uris: [{ uri: cardUrl, description: "Open loyalty card" }] },
+    linksModuleData: { uris: [{ uri: cardUrl, description: translateFor(resolveLocale(customer.preferredLocale))("pass.openCard") }] },
   });
 }
 

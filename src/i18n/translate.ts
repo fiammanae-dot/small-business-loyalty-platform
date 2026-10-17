@@ -13,10 +13,23 @@ export function interpolate(text: string, vars?: Vars): string {
   return text.replace(/\{(\w+)\}/g, (match, name: string) => (name in vars ? String(vars[name]) : match));
 }
 
-export type Translate = (key: string, vars?: Vars) => string;
+export type Translate = {
+  (key: string, vars?: Vars): string;
+  /** Picks key_one / key_two / key_other for the count and fills {count}. */
+  plural: (key: string, count: number, vars?: Vars) => string;
+  locale: Locale;
+};
 
-export function createTranslate(dictionary: Dictionary, fallback: Dictionary): Translate {
-  return (key, vars) => interpolate(dictionary[key] ?? fallback[key] ?? key, vars);
+export function createTranslate(dictionary: Dictionary, fallback: Dictionary, locale: Locale = "en"): Translate {
+  const lookup = (key: string) => dictionary[key] ?? fallback[key] ?? key;
+  const t = ((key: string, vars?: Vars) => interpolate(lookup(key), vars)) as Translate;
+  t.plural = (key, count, vars) => {
+    const suffix = pluralKey(locale, count);
+    const text = dictionary[key + suffix] ?? dictionary[key + "_other"] ?? fallback[key + suffix] ?? fallback[key + "_other"] ?? key;
+    return interpolate(text, { count, ...vars });
+  };
+  t.locale = locale;
+  return t;
 }
 
 /**

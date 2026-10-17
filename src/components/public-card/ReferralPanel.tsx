@@ -2,6 +2,8 @@ import { Link2, Sparkles } from "lucide-react";
 import { ReferralShareActions } from "@/components/ReferralShareActions";
 import type { WalletTheme } from "@/components/public-card/WalletCardShell";
 import { withAlpha } from "@/lib/card-themes";
+import { translateFor } from "@/i18n/dictionaries";
+import type { Locale } from "@/i18n/locales";
 
 export type ReferralPanelProps = {
   referralUrl: string;
@@ -12,6 +14,7 @@ export type ReferralPanelProps = {
   rewardsEarned: string;
   buttonColor: string;
   theme: WalletTheme;
+  locale?: Locale;
 };
 
 export function ReferralPanel({
@@ -23,7 +26,9 @@ export function ReferralPanel({
   rewardsEarned,
   buttonColor,
   theme,
+  locale = "en",
 }: ReferralPanelProps) {
+  const t = translateFor(locale);
   return (
     <section className="rounded-[28px] border border-[#E5E7EB] bg-white p-5 shadow-sm">
       <details className="group">
@@ -33,38 +38,38 @@ export function ReferralPanel({
               <Sparkles className="h-5 w-5" aria-hidden="true" />
             </span>
             <div className="min-w-0">
-              <h2 className="text-base font-black text-[#1E293B]">Refer a friend</h2>
-              <p className="mt-1 text-sm text-[#64748B]">Share your link and track referral rewards.</p>
+              <h2 className="text-base font-black text-[#1E293B]">{t("referralPanel.title")}</h2>
+              <p className="mt-1 text-sm text-[#64748B]">{t("referralPanel.subtitle")}</p>
             </div>
           </div>
           <span className="shrink-0 rounded-full px-3 py-1 text-xs font-black uppercase tracking-wide transition" style={{ backgroundColor: withAlpha(theme.accent, 0.08), color: theme.accent }}>
-            Details
+            {t("referralPanel.details")}
           </span>
         </summary>
 
         <div className="mt-4 border-t border-[#E5E7EB] pt-4">
           <p className="text-sm leading-6 text-[#64748B]">
-            Share your referral link. Rewards are granted after your friend joins and earns their first stamp.
+            {t("referralPanel.explain")}
           </p>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl p-4" style={{ backgroundColor: withAlpha(theme.accent, 0.08) }}>
-              <p className="text-xs font-black uppercase tracking-wide" style={{ color: theme.text }}>Referral Code</p>
+              <p className="text-xs font-black uppercase tracking-wide" style={{ color: theme.text }}>{t("referralPanel.code")}</p>
               <p className="mt-2 break-all font-mono text-lg font-black text-[#1E293B]">{referralCode}</p>
             </div>
             <div className="rounded-2xl bg-[#F8FAFC] p-4">
               <p className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-[#64748B]">
                 <Link2 className="h-3.5 w-3.5" aria-hidden="true" />
-                Referral Link
+                {t("referralPanel.link")}
               </p>
               <p className="mt-2 line-clamp-2 break-all text-sm font-semibold text-[#1E293B]">{referralUrl}</p>
             </div>
           </div>
 
           <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-            <Info label="Pending Referrals" value={pendingReferrals.toString()} />
-            <Info label="Qualified Referrals" value={qualifiedReferrals.toString()} />
-            <Info label="Rewards Earned" value={rewardsEarned} />
+            <Info label={t("referralPanel.pending")} value={pendingReferrals.toString()} />
+            <Info label={t("referralPanel.qualified")} value={qualifiedReferrals.toString()} />
+            <Info label={t("referralPanel.rewards")} value={rewardsEarned} />
           </div>
 
           <div className="mt-4">

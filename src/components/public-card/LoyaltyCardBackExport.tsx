@@ -1,28 +1,29 @@
 import { WalletCardShell } from "@/components/public-card/WalletCardShell";
 import type { LoyaltyWalletCardProps } from "@/components/public-card/LoyaltyWalletCard";
 import { resolveCardDesign } from "@/lib/card-design";
+import { translateFor } from "@/i18n/dictionaries";
+import type { Locale } from "@/i18n/locales";
 
-export function LoyaltyCardBackExport({ wallet }: { wallet: Omit<LoyaltyWalletCardProps, "exportMode"> }) {
+export function LoyaltyCardBackExport({ wallet, locale = "en" }: { wallet: Omit<LoyaltyWalletCardProps, "exportMode">; locale?: Locale }) {
+  const t = translateFor(locale);
   const design = resolveCardDesign(wallet.cardDesign);
   const displayRequired = wallet.required && wallet.required > 0 ? wallet.required : 1;
   const displayProgress = wallet.required && wallet.required > 0 ? (wallet.progress ?? 0) : 0;
-  const displayReward = wallet.rewardName ?? "Loyalty reward";
-  const displayProgram = wallet.programName ?? "Loyalty Card";
+  const displayReward = wallet.rewardName ?? t("card.loyaltyReward");
+  const displayProgram = wallet.programName ?? t("card.loyaltyCard");
   const remaining = wallet.remaining ?? 0;
   const statusText = wallet.required && wallet.required > 0
     ? wallet.rewardReady
-      ? "Reward Ready"
-      : remaining === 1
-        ? "1 visit remaining"
-        : `${remaining} visits remaining`
-    : "No active program yet";
+      ? t("card.rewardReady")
+      : t.plural("card.visitsRemaining", remaining)
+    : t("card.noProgram");
   const summaryRows = [
-    ...(design.visibleSections.businessName ? [["Business", wallet.businessName]] : []),
-    ...(design.visibleSections.customerName ? [["Customer", wallet.customerName]] : []),
-    ...(design.visibleSections.programName ? [["Program", displayProgram]] : []),
-    ...(design.visibleSections.progress ? [["Progress", `${displayProgress} / ${displayRequired} visits`]] : []),
-    ...(design.visibleSections.rewardBox ? [["Reward", displayReward]] : []),
-    ...(design.visibleSections.visits ? [["Status", wallet.rewardReady ? "Reward Ready" : statusText]] : []),
+    ...(design.visibleSections.businessName ? [[t("pass.business"), wallet.businessName]] : []),
+    ...(design.visibleSections.customerName ? [[t("pass.customer"), wallet.customerName]] : []),
+    ...(design.visibleSections.programName ? [[t("pass.program"), displayProgram]] : []),
+    ...(design.visibleSections.progress ? [[t("card.progress"), `${displayProgress} / ${displayRequired} ${t("pass.visits").toLowerCase()}`]] : []),
+    ...(design.visibleSections.rewardBox ? [[t("card.reward"), displayReward]] : []),
+    ...(design.visibleSections.visits ? [[t("pass.status"), wallet.rewardReady ? t("card.rewardReady") : statusText]] : []),
   ];
 
   return (
@@ -32,9 +33,9 @@ export function LoyaltyCardBackExport({ wallet }: { wallet: Omit<LoyaltyWalletCa
           <div className="grid gap-2">
             <div className="min-w-0">
               <p className="text-[12px] font-semibold uppercase tracking-[0.18em]" style={{ color: wallet.theme.mutedText }}>
-                Scan View
+                {t("card.scanView")}
               </p>
-              <h2 className="mt-1 text-[24px] font-extrabold leading-tight tracking-[-0.04em]">Present this QR at checkout</h2>
+              <h2 className="mt-1 text-[24px] font-extrabold leading-tight tracking-[-0.04em]">{t("card.presentQr")}</h2>
             </div>
           </div>
 
@@ -42,21 +43,21 @@ export function LoyaltyCardBackExport({ wallet }: { wallet: Omit<LoyaltyWalletCa
             <div className="mx-auto flex h-[214px] w-[214px] items-center justify-center rounded-[18px] border border-black/5 bg-white p-4">
               {wallet.qrCode ? (
                 <div
-                  aria-label={`${wallet.businessName} customer card QR code`}
+                  aria-label={t("card.qrAlt", { business: wallet.businessName })}
                   className="h-full w-full bg-contain bg-center bg-no-repeat"
                   style={{ backgroundImage: `url("${wallet.qrCode}")` }}
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center rounded-md text-sm font-bold text-[#64748B]">
-                  QR pending
+                  {t("card.qrPending")}
                 </div>
               )}
             </div>
             <p className="pt-4 text-[15px] font-semibold" style={{ color: wallet.theme.cardText }}>
-              Present this QR at checkout
+              {t("card.presentQr")}
             </p>
             <p className="pt-1 text-[13px]" style={{ color: wallet.theme.mutedText }}>
-              {wallet.qrHelperText ?? "Scan this card"}
+              {wallet.qrHelperText ?? t("card.scanThisCard")}
             </p>
           </section> : null}
 

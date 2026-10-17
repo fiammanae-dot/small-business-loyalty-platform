@@ -49,10 +49,10 @@ test("card render model preserves existing fallback display behavior", () => {
 
   assert.match(model, /const hasProgram = Boolean\(input\.program && input\.program\.required > 0\)/);
   assert.match(model, /hasProgram \? Math\.max\(input\.program\?\.required \?\? 1, 1\) : 1/);
-  assert.match(model, /hasProgram \? \(rewardReady \? "Reward Ready" : remainingText\) : "No active program yet"/);
-  assert.match(model, /displayProgram = input\.program\?\.name \|\| "Loyalty Card"/);
-  assert.match(model, /displayReward = input\.program\?\.rewardName \|\| "Loyalty reward"/);
-  assert.match(model, /helperText: input\.qr\.helperText \|\| \(hasProgram \? "Scan this card" : "Show this QR code to staff to find your customer card\."\)/);
+  assert.match(model, /hasProgram \? \(rewardReady \? t\("card\.rewardReady"\) : remainingText\) : t\("card\.noProgram"\)/);
+  assert.match(model, /displayProgram = input\.program\?\.name \|\| t\("card\.loyaltyCard"\)/);
+  assert.match(model, /displayReward = input\.program\?\.rewardName \|\| t\("card\.loyaltyReward"\)/);
+  assert.match(model, /helperText: input\.qr\.helperText \|\| \(hasProgram \? t\("card\.scanThisCard"\) : t\("card\.showQrToStaff"\)\)/);
 });
 
 test("public card passes render model design into wallet card renderers", () => {
