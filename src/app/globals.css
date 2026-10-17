@@ -83,6 +83,20 @@ input {
   -webkit-tap-highlight-color: transparent;
 }
 
+/*
+ * iPhones zoom the whole page in when a form control with text smaller than
+ * 16px is focused, and stay zoomed afterwards: after signing in, the dashboard
+ * showed up wider than the screen. On touch screens every control gets at
+ * least 16px text (left unlayered on purpose so it wins over utility classes).
+ */
+@media (hover: none) and (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+}
+
 .homepage-stamp {
   animation: homepage-stamp-fill 5.2s ease-in-out infinite;
   opacity: 0.24;
