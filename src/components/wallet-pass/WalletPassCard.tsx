@@ -9,7 +9,9 @@ import { BusinessLogoAvatar } from "@/components/BusinessLogoAvatar";
 export type WalletPlatform = "apple" | "google";
 
 /**
- * A customer's card exactly as Apple or Google Wallet lays it out.
+ * A customer's card exactly as Apple or Google Wallet lays it out. Always
+ * left-to-right, like the wallets themselves: an Arabic customer sees Arabic
+ * labels in the same slots, and "4 / 10" stays "4 / 10".
  *
  * It renders a WalletPassView - the same object the Apple pass body is built
  * from - into the slots each wallet has: colour, logo and name, banner picture,
@@ -43,6 +45,7 @@ function AppleCard({ view, qrCode, style, className }: { view: WalletPassView; q
   return (
     <div
       data-wallet-pass="apple"
+      dir="ltr"
       className={`w-full max-w-[340px] overflow-hidden rounded-[14px] ring-1 ring-black/5 shadow-[0_12px_30px_rgba(15,23,42,0.22)] ${className}`}
       style={{ ...style, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif" }}
     >
@@ -92,6 +95,7 @@ function GoogleCard({ view, qrCode, style, className }: { view: WalletPassView; 
   return (
     <div
       data-wallet-pass="google"
+      dir="ltr"
       className={`w-full max-w-[340px] overflow-hidden rounded-[24px] ring-1 ring-black/5 shadow-[0_12px_30px_rgba(15,23,42,0.22)] ${className}`}
       style={{ ...style, fontFamily: "'Google Sans', Roboto, 'Segoe UI', Arial, sans-serif" }}
     >
@@ -107,7 +111,7 @@ function GoogleCard({ view, qrCode, style, className }: { view: WalletPassView; 
         ))}
       </div>
       <div className="px-5 pt-3">
-        <PassField field={{ label: "Member", value: view.customerName }} muted={view.colors.muted} casing="normal" />
+        <PassField field={{ label: view.memberLabel, value: view.customerName }} muted={view.colors.muted} casing="normal" />
       </div>
 
       <div className="flex justify-center px-5 pb-5 pt-5">

@@ -11,6 +11,9 @@ import { prisma } from "@/lib/prisma";
 import { isPublicActionRateLimited, recordPublicActionAttempt } from "@/lib/rate-limit";
 import { createPendingReferralForEnrollment, extractReferralCode, findActiveReferralReferrerByPhone, generateReferralCode } from "@/lib/referrals";
 import { getRequestInfo } from "@/lib/request-info";
+import { joinIssueMessage } from "@/i18n/join-errors";
+import { resolveLocale } from "@/i18n/locales";
+import { getT } from "@/i18n/server";
 import { scheduleWelcomeCardMessage } from "@/lib/whatsapp/send-welcome-card";
 
 /**
@@ -38,6 +41,10 @@ function fail(token: string, message: string): never {
 
 export async function joinCashbackProgramAction(formData: FormData) {
   const token = getString(formData, "token");
+  // The customer's language: the hidden field the form carries (the cookie
+  // may be missing in a private tab), so errors and the new card speak it.
+  const locale = resolveLocale(getString(formData, "locale") || undefined);
+  const t = await getT(locale);
   const parsed = joinCashbackSchema.safeParse({
     token,
     firstName: getString(formData, "firstName"),
@@ -48,23 +55,23 @@ export async function joinCashbackProgramAction(formData: FormData) {
     ...readVehicleFormFields(formData),
   });
   const marketingConsent = getCheckbox(formData, "marketingConsent");
-  if (!parsed.success) fail(token, parsed.error.issues[0]?.message ?? "Joining failed.");
+  if (!parsed.success) fail(token, joinIssueMessage(t, parsed.error.issues[0], "join.error.failed"));
 
   const normalizedPhone = normalizePhone(parsed.data.phone);
-  if (!normalizedPhone) fail(token, "Enter a valid UAE mobile number such as 0501234567 or +971501234567.");
+  if (!normalizedPhone) fail(token, t("join.error.invalidPhone"));
 
   const settings = await prisma.businessCashbackSettings.findUnique({
     where: { joinToken: parsed.data.token },
     include: { business: { select: { id: true, name: true, status: true } } },
   });
   if (!settings?.enabled || settings.business.status !== "ACTIVE") {
-    fail(parsed.data.token, "This cashback program is not available for public enrollment.");
+    fail(parsed.data.token, t("join.error.notPublic"));
   }
   const businessId = settings.business.id;
 
   const { ipAddress } = await getRequestInfo();
   if (await isPublicActionRateLimited({ scope: JOIN_CASHBACK_RATE_LIMIT_SCOPE, ipAddress, identifier: parsed.data.token })) {
-    fail(parsed.data.token, "Too many attempts. Please wait a few minutes and try again.");
+    fail(parsed.data.token, t("join.error.rateLimited"));
   }
   await recordPublicActionAttempt({
     scope: JOIN_CASHBACK_RATE_LIMIT_SCOPE,
@@ -80,8 +87,8 @@ export async function joinCashbackProgramAction(formData: FormData) {
   let referralCodeForEnrollment = extractReferralCode(referralLookupInput);
   if (!referralCodeForEnrollment && referralLookupInput.trim()) {
     const phoneLookup = await findActiveReferralReferrerByPhone({ tx: prisma, businessId, phone: referralLookupInput });
-    if (phoneLookup.status === "INVALID_PHONE") fail(parsed.data.token, "Check the referrer and select a matching customer before submitting.");
-    if (phoneLookup.status === "NOT_FOUND" || !phoneLookup.referrer?.referralCode) fail(parsed.data.token, "No matching referrer found.");
+    if (phoneLookup.status === "INVALID_PHONE") fail(parsed.data.token, t("join.error.checkReferrer"));
+    if (phoneLookup.status === "NOT_FOUND" || !phoneLookup.referrer?.referralCode) fail(parsed.data.token, t("join.error.noReferrer"));
     referralCodeForEnrollment = phoneLookup.referrer.referralCode;
   }
 
@@ -94,7 +101,7 @@ export async function joinCashbackProgramAction(formData: FormData) {
       });
 
       if (existing) {
-        if (existing.status !== "ACTIVE") fail(parsed.data.token, "This customer account is not available for public enrollment.");
+        if (existing.status !== "ACTIVE") fail(parsed.data.token, t("join.error.accountUnavailable"));
         const joined = await enrollInCashback({ tx, businessId, membershipId: existing.id, actorUserId: null, source: "SELF_SIGNUP" });
         return { cardToken: existing.cardToken, welcomeMembershipId: joined ? existing.id : null };
       }
@@ -104,7 +111,7 @@ export async function joinCashbackProgramAction(formData: FormData) {
           where: { businessId, email: { equals: parsed.data.email, mode: "insensitive" } },
           select: { id: true },
         });
-        if (duplicateEmail) fail(parsed.data.token, "This customer is already enrolled in your business.");
+        if (duplicateEmail) fail(parsed.data.token, t("join.error.alreadyEnrolled"));
       }
 
       const globalCustomer =
@@ -139,6 +146,7 @@ export async function joinCashbackProgramAction(formData: FormData) {
           email: parsed.data.email || null,
           birthday: parseBirthday(parsed.data.birthday),
           marketingConsent,
+          preferredLocale: locale,
           source: "SELF_SIGNUP",
           status: "ACTIVE",
           cardToken: generateCardToken(),
@@ -170,7 +178,7 @@ export async function joinCashbackProgramAction(formData: FormData) {
       });
       if (existing) redirect(`/join/cashback/${encodeURIComponent(parsed.data.token)}?card=${encodeURIComponent(existing.cardToken)}`);
     }
-    fail(parsed.data.token, "Joining could not be completed. Please try again.");
+    fail(parsed.data.token, t("join.error.failed"));
   }
 
   if (result.welcomeMembershipId !== null) {

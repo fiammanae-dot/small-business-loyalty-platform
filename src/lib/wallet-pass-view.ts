@@ -3,6 +3,8 @@ import { getCardStyleForLayoutStyle, type CardDesignInput, type CardDesignLayout
 import { resolveWalletCardColors } from "@/lib/card-themes";
 import { DARK_FOREGROUND } from "@/lib/color-contrast";
 import { customStampIconForDesign, stampEmojiForDesign } from "@/lib/stamp-icon-marks";
+import { translateFor } from "@/i18n/dictionaries";
+import { resolveLocale } from "@/i18n/locales";
 
 /**
  * What a customer's wallet pass shows, decided once.
@@ -36,6 +38,8 @@ export type WalletPassView = {
   /** The card's own name (program or cashback program). */
   title: string;
   customerName: string;
+  /** "Member", in the customer's language (the web card's Google layout shows it). */
+  memberLabel: string;
   /** Apple: the field at the top right of the pass. */
   header: WalletPassField;
   /** Apple: the row under the banner. */
@@ -89,10 +93,13 @@ export type ProgramPassInput = {
   tierName?: string | null;
   /** For Google's "Remaining" row on a stamp card. */
   reward?: { ready: boolean; visitsToNext: number | null } | null;
+  /** The customer's language ("en" / "ar"): the field labels are written in it. */
+  locale?: string | null;
 };
 
 export function buildProgramPassView(input: ProgramPassInput): WalletPassView {
   const { program } = input;
+  const t = translateFor(resolveLocale(input.locale));
   const isMembership = program.isMembership;
   const required = Math.max(1, program.requiredStamps);
   const collected = Math.min(Math.max(0, input.progress), required);
@@ -113,35 +120,35 @@ export function buildProgramPassView(input: ProgramPassInput): WalletPassView {
       };
 
   const header: WalletPassField = isMembership
-    ? { label: "Membership", value: program.name }
-    : { label: "Visits", value: `${collected} / ${required}`, changeMessage: "Progress: %@" };
+    ? { label: t("pass.membership"), value: program.name }
+    : { label: t("pass.visits"), value: `${collected} / ${required}`, changeMessage: t("pass.progress") };
 
   // The program card is single-purpose: its own data plus the holder's name.
   // Cashback is its own card; tier rides on a stamp card when the business runs tiers.
   const secondaryFields: WalletPassField[] = [];
   if (isMembership) {
-    secondaryFields.push({ label: "Visits left", value: `${membershipRemaining} of ${membershipTotal}`, changeMessage: "%@ visits left" });
+    secondaryFields.push({ label: t("pass.visitsLeft"), value: t("pass.ofTotal", { remaining: membershipRemaining, total: membershipTotal }), changeMessage: t("pass.visitsLeftChange") });
   } else {
-    secondaryFields.push({ label: "Program", value: program.name });
-    if (input.tierName) secondaryFields.push({ label: "Tier", value: input.tierName, changeMessage: "Tier: %@" });
+    secondaryFields.push({ label: t("pass.program"), value: program.name });
+    if (input.tierName) secondaryFields.push({ label: t("pass.tier"), value: t(`tier.${input.tierName}`), changeMessage: t("pass.tierChange") });
   }
-  secondaryFields.push({ label: "Member", value: input.customerName });
+  secondaryFields.push({ label: t("pass.member"), value: input.customerName });
 
   const visitsToNext = input.reward?.visitsToNext ?? null;
   const google = isMembership
     ? {
-        primary: { label: "Visits left", value: `${membershipRemaining} of ${membershipTotal}` },
-        secondary: { label: "Status", value: membershipRemaining > 0 ? "Active" : "Used up" },
+        primary: { label: t("pass.visitsLeft"), value: t("pass.ofTotal", { remaining: membershipRemaining, total: membershipTotal }) },
+        secondary: { label: t("pass.status"), value: membershipRemaining > 0 ? t("pass.active") : t("pass.usedUp") },
       }
     : {
-        primary: { label: "Visits", value: `${collected} / ${required}` },
+        primary: { label: t("pass.visits"), value: `${collected} / ${required}` },
         secondary: {
-          label: "Remaining",
+          label: t("pass.remaining"),
           value: input.reward?.ready
-            ? "Reward ready"
+            ? t("pass.rewardReady")
             : visitsToNext !== null
-              ? `${visitsToNext} visit${visitsToNext === 1 ? "" : "s"}`
-              : "Complete",
+              ? t.plural("pass.visitCount", visitsToNext)
+              : t("pass.complete"),
         },
       };
 
@@ -152,11 +159,12 @@ export function buildProgramPassView(input: ProgramPassInput): WalletPassView {
     logoUrl: input.logoUrl,
     title: program.name,
     customerName: input.customerName,
+    memberLabel: t("pass.member"),
     header,
     secondaryFields,
     banner,
     google,
-    barcodeAltText: WALLET_BARCODE_ALT_TEXT,
+    barcodeAltText: t("pass.scanAtCheckout"),
   };
 }
 
@@ -168,15 +176,18 @@ export type CashbackPassInput = {
   customerName: string;
   /** Already formatted, e.g. "AED 25.00". */
   balance: string;
+  /** The customer's language ("en" / "ar"): the field labels are written in it. */
+  locale?: string | null;
 };
 
 export function buildCashbackPassView(input: CashbackPassInput): WalletPassView {
-  const title = input.cashback.name?.trim() || "Cashback";
+  const t = translateFor(resolveLocale(input.locale));
+  const title = input.cashback.name?.trim() || t("pass.cashback");
   const photo = input.cashback.photoUrl || null;
-  const balanceField: WalletPassField = { label: "Balance", value: input.balance, changeMessage: "Balance: %@" };
+  const balanceField: WalletPassField = { label: t("pass.balance"), value: input.balance, changeMessage: t("pass.balanceChange") };
   // Apple draws primary fields ON TOP of a banner, so with a photo the balance
   // moves into the row under it (Member left, Balance right).
-  const secondaryFields: WalletPassField[] = [{ label: "Member", value: input.customerName }];
+  const secondaryFields: WalletPassField[] = [{ label: t("pass.member"), value: input.customerName }];
   if (photo) secondaryFields.push(balanceField);
 
   return {
@@ -190,12 +201,13 @@ export function buildCashbackPassView(input: CashbackPassInput): WalletPassView 
     logoUrl: input.logoUrl,
     title,
     customerName: input.customerName,
-    header: { label: "Program", value: title },
+    memberLabel: t("pass.member"),
+    header: { label: t("pass.program"), value: title },
     secondaryFields,
     banner: photo ? { kind: "photo", url: photo } : null,
     google: { primary: balanceField, secondary: null },
     // The cashback barcode opens the customer's card for staff, not a stamp scan.
-    barcodeAltText: "Show at checkout",
+    barcodeAltText: t("pass.showAtCheckout"),
   };
 }
 

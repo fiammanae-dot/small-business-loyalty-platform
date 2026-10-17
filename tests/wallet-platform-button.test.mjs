@@ -41,7 +41,7 @@ test("the customer's card page shows one button, a QR on computers, and hides an
   assert.match(share, /const showApple = platform !== "google" && platform !== "desktop";/);
   assert.match(share, /const showGoogle = platform !== "apple" && platform !== "desktop";/);
   assert.match(share, /platform === "desktop" \? \(/);
-  assert.match(share, /Scan with your phone/);
+  assert.match(share, /t\("share\.scanToAdd"\)/);
   // The cashback card is Apple-only, so it is only offered where Apple Wallet exists.
   assert.match(share, /cashbackAppleWalletUrl && showApple/);
   assert.match(share, /const showWhatsApp = Boolean\(whatsappUrl\) \|\| !hideUnavailableWhatsApp;/);

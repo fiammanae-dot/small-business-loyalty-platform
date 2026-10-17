@@ -14,7 +14,7 @@ import { getBaseUrl, getCardQrDataUrl, getCardUrl, resolveBranding } from "@/lib
 import { resolveCardThemeColors } from "@/lib/card-themes";
 import type { CardDesignInput } from "@/lib/card-design";
 import { buildCardRenderModel } from "@/lib/card-render-model";
-import { areTiersVisible, calculateCustomerTier, computeTierMaintenance, fromStoredTier, tierQualificationWindowLabels } from "@/lib/customer-tiers";
+import { areTiersVisible, calculateCustomerTier, computeTierMaintenance, fromStoredTier } from "@/lib/customer-tiers";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { progressValue } from "@/lib/programs";
@@ -31,6 +31,10 @@ import {
   TierStatusPanel,
 } from "@/components/public-card";
 import { BrandMark } from "@/components/BrandLogo";
+import { CustomerLanguageSwitch } from "@/components/CustomerLanguageSwitch";
+import { I18nProvider } from "@/i18n/client";
+import { directionFor } from "@/i18n/locales";
+import { getT, getVisitorLocale } from "@/i18n/server";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -65,6 +69,11 @@ export default async function PublicCustomerCardPage({
   if (!membership || membership.cardStatus !== "ACTIVE" || membership.status !== "ACTIVE" || membership.business.status !== "ACTIVE") {
     return <CardUnavailable />;
   }
+  // The customer's language: the switch on this page, else what they chose
+  // when joining, else the phone's language. Dates follow it too.
+  const locale = await getVisitorLocale(membership.preferredLocale);
+  const t = await getT(locale);
+  const fmtDate = (value: Date) => formatDate(value, locale);
 
   await prisma.businessCustomerMembership.update({
     where: { id: membership.id },
@@ -100,22 +109,22 @@ export default async function PublicCustomerCardPage({
         // What the customer needs to know about their package, in their words.
         const packageNotes = [
           expired && expiresAt
-            ? `Expired on ${formatDate(expiresAt)}`
+            ? t("card.expiredOn", { date: fmtDate(expiresAt) })
             : expiresAt
-              ? `Valid until ${formatDate(expiresAt)}`
+              ? t("card.validUntil", { date: fmtDate(expiresAt) })
               : pkg.packageValidity === "LIFETIME"
-                ? "Your visits never expire"
-                : "Visit at least once a month - each month without a visit uses one visit",
-          pkg.packageOneVisitPerMonth ? "One visit per month" : null,
-          pkg.packageUniqueTreatments ? "Each treatment can be used once" : null,
+                ? t("card.neverExpire")
+                : t("card.monthlyRule"),
+          pkg.packageOneVisitPerMonth ? t("card.oneVisitPerMonth") : null,
+          pkg.packageUniqueTreatments ? t("card.uniqueTreatments") : null,
         ].filter((note): note is string => Boolean(note));
         const completion = sessionsTotal > 0 ? Math.round((sessionsRemaining / sessionsTotal) * 100) : 0;
         const statusText =
           sessionsRemaining > 0
-            ? `${sessionsRemaining} of ${sessionsTotal} visit${sessionsTotal === 1 ? "" : "s"} left`
+            ? t.plural("card.visitsLeft", sessionsTotal, { remaining: sessionsRemaining, total: sessionsTotal })
             : expired
-              ? "Package expired"
-              : "Membership complete";
+              ? t("card.packageExpired")
+              : t("card.membershipComplete");
         return {
           programMembership,
           qrCode: await getScanQrDataUrl(programMembership.scanToken),
@@ -225,7 +234,6 @@ export default async function PublicCustomerCardPage({
     config: membership.business.tierSetting,
     tier: tier.tier,
   });
-  const tierWindowLabel = tierQualificationWindowLabels[tier.tierQualificationWindow];
   if (membership.currentTier !== tier.storedTier) {
     await prisma.businessCustomerMembership.update({
       where: { id: membership.id },
@@ -245,10 +253,11 @@ export default async function PublicCustomerCardPage({
       name: membership.business.name,
       cardUrl,
     },
+    locale,
     customer: {
       name: customerName,
-      memberSince: formatDate(membership.createdAt),
-      tierLabel: tier.badgeLabel,
+      memberSince: fmtDate(membership.createdAt),
+      tierLabel: t("tier.badge", { tier: t(`tier.${tier.tier}`) }).toUpperCase(),
       tierIcon: tier.badgeIcon,
       phone: membership.normalizedPhone,
     },
@@ -269,7 +278,7 @@ export default async function PublicCustomerCardPage({
         : null,
     qr: {
       code: primaryProgram?.qrCode ?? cardQrCode,
-      helperText: primaryProgram ? "Scan this card" : "Show this QR code to staff to find your customer card.",
+      helperText: primaryProgram ? t("card.scanThisCard") : t("card.showQrToStaff"),
     },
     tiersHidden: !tiersVisible,
   });
@@ -312,6 +321,7 @@ export default async function PublicCustomerCardPage({
             ? fromStoredTier(tier.storedTier) ?? "Bronze"
             : null,
         reward: { ready: primaryProgram.rewardReady, visitsToNext: primaryProgram.hasNextReward ? primaryProgram.remaining : null },
+        locale,
       })
     : null;
   // The cashback card, exactly as the Apple / Google cashback pass shows it.
@@ -332,6 +342,7 @@ export default async function PublicCustomerCardPage({
           },
           customerName,
           balance: `${cashbackSettings.currency} ${Number(membership.cashbackBalance ?? 0).toFixed(2)}`,
+          locale,
         })
       : null;
   const walletCardProps = {
@@ -356,13 +367,19 @@ export default async function PublicCustomerCardPage({
   };
 
   return (
+    <I18nProvider locale={locale}>
     <BusinessBrandingProvider branding={resolveBusinessBranding(membership.business.branding)}>
     <main
+      lang={locale}
+      dir={directionFor(locale)}
       className="min-h-screen px-4 py-5 text-[#1E293B]"
       style={{ backgroundColor: primaryCardTheme.pageBackground, color: branding.textColor }}
     >
       <div className="mx-auto flex w-full max-w-lg flex-col gap-4 md:max-w-2xl">
-        <div className="pointer-events-none fixed left-[-10000px] top-0" aria-hidden="true">
+        <div className="mx-auto flex w-full max-w-[360px] justify-end">
+          <CustomerLanguageSwitch cardToken={token} />
+        </div>
+        <div className="pointer-events-none fixed start-[-10000px] top-0" aria-hidden="true">
           <div data-loyalty-card-front-export>
             {primaryPassView ? (
               <div className="w-[360px] p-3">
@@ -377,7 +394,7 @@ export default async function PublicCustomerCardPage({
             )}
           </div>
           <div data-loyalty-card-back-export>
-            <LoyaltyCardBackExport wallet={walletCardProps} />
+            <LoyaltyCardBackExport wallet={walletCardProps} locale={locale} />
           </div>
         </div>
 
@@ -387,7 +404,7 @@ export default async function PublicCustomerCardPage({
             {!primaryProgram.isMembership ? (
               <section className="w-full rounded-[22px] border border-[#E5E7EB] bg-white p-4 shadow-sm">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
-                  {primaryProgram.rewardReady ? "Reward ready" : "Next reward"}
+                  {primaryProgram.rewardReady ? t("card.rewardReady") : t("card.nextReward")}
                 </p>
                 <p className="mt-1 text-base font-semibold text-[#1E293B]">{primaryProgram.rewardName}</p>
                 <p className="mt-1 text-sm text-[#64748B]">{primaryCardModel.progress.statusText}</p>
@@ -395,7 +412,7 @@ export default async function PublicCustomerCardPage({
             ) : null}
             {primaryProgram.isMembership ? (
               <section className="w-full rounded-[22px] border border-[#E5E7EB] bg-white p-4 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">Your package</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">{t("card.yourPackage")}</p>
                 <p className="mt-1 text-base font-semibold text-[#1E293B]">{primaryProgram.statusText}</p>
                 <ul className="mt-2 grid gap-1 text-sm text-[#64748B]">
                   {primaryProgram.packageNotes.map((note) => (
@@ -421,7 +438,7 @@ export default async function PublicCustomerCardPage({
         {tiersVisible ? (
           <div className="mx-auto w-full max-w-[360px]">
             <TierStatusPanel
-              badgeLabel={tier.badgeLabel}
+              tier={tier.tier}
               badgeIcon={tier.badgeIcon}
               isVip={tier.isVip}
               nextTier={tier.nextTier}
@@ -432,7 +449,8 @@ export default async function PublicCustomerCardPage({
               windowedVisits={tierMaintenance.windowedVisits}
               expiresAt={tierMaintenance.expiresAt ? tierMaintenance.expiresAt.toISOString() : null}
               isPermanent={tierMaintenance.isPermanent}
-              windowLabel={tierWindowLabel}
+              windowKey={tier.tierQualificationWindow}
+              locale={locale}
             />
           </div>
         ) : null}
@@ -445,9 +463,10 @@ export default async function PublicCustomerCardPage({
               businessName={membership.business.name}
               pendingReferrals={pendingReferrals}
               qualifiedReferrals={qualifiedReferrals}
-              rewardsEarned={`${referralRewards._sum.bonusStamps ?? 0} stamps`}
+              rewardsEarned={t("card.stampsEarned", { count: referralRewards._sum.bonusStamps ?? 0 })}
               buttonColor={branding.buttonColor}
               theme={primaryCardTheme}
+              locale={locale}
             />
           </div>
         ) : null}
@@ -455,13 +474,13 @@ export default async function PublicCustomerCardPage({
         <section className="mx-auto w-full max-w-[360px] rounded-[28px] border border-[#E5E7EB] bg-white p-5 shadow-sm">
           <div className="flex items-center gap-2">
             <QrCode className="h-5 w-5" style={{ color: primaryCardTheme.accent }} aria-hidden="true" />
-            <h2 className="text-base font-semibold text-[#1E293B]">Save Your Card</h2>
+            <h2 className="text-base font-semibold text-[#1E293B]">{t("card.saveTitle")}</h2>
           </div>
           <p className="mt-2 text-sm leading-6 text-[#64748B]">
-            This link stays the same and always shows your latest stamps, reward status, tier, and QR code.
+            {t("card.saveText")}
           </p>
           <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
-            Last Updated: {formatDateTime(lastUpdatedAt)}
+            {t("card.lastUpdated", { date: formatDateTime(lastUpdatedAt, locale) })}
           </p>
           <div className="mt-4 space-y-3">
             <CardShareActions
@@ -469,7 +488,6 @@ export default async function PublicCustomerCardPage({
               businessName={membership.business.name}
               customerName={customerName}
               recipientPhone={membership.normalizedPhone}
-              whatsappLabel="Share via WhatsApp"
               walletPrograms={walletPrograms}
               cashbackAppleWalletUrl={cashbackAppleWalletUrl}
               cashbackGoogleWalletUrl={cashbackGoogleWalletUrl}
@@ -491,7 +509,7 @@ export default async function PublicCustomerCardPage({
           <section className="rounded-[28px] border border-[#E5E7EB] bg-white p-5 shadow-sm">
             <div className="flex items-center gap-2">
               <Gift className="h-5 w-5" style={{ color: primaryCardTheme.accent }} aria-hidden="true" />
-              <h2 className="text-base font-semibold text-[#1E293B]">Additional programs</h2>
+              <h2 className="text-base font-semibold text-[#1E293B]">{t("card.additionalPrograms")}</h2>
             </div>
             <div className="mt-4 grid gap-3">
               {programCards.slice(1).map(({ programMembership, qrCode, progress, required, remaining, completion, rewardReady, rewardName, theme, isMembership }) => (
@@ -507,6 +525,7 @@ export default async function PublicCustomerCardPage({
                   rewardReady={rewardReady}
                   theme={theme}
                   isMembership={isMembership}
+                  locale={locale}
                 />
               ))}
             </div>
@@ -515,19 +534,22 @@ export default async function PublicCustomerCardPage({
       </div>
     </main>
     </BusinessBrandingProvider>
+    </I18nProvider>
   );
 }
 
-function CardUnavailable() {
+async function CardUnavailable() {
+  const locale = await getVisitorLocale();
+  const t = await getT(locale);
   return (
-    <main className="flex min-h-screen items-center justify-center bg-white px-4">
+    <main lang={locale} dir={directionFor(locale)} className="flex min-h-screen items-center justify-center bg-white px-4">
       <section className="w-full max-w-sm rounded-md border border-[#E5E7EB] bg-white p-6 text-center shadow-sm">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[#FAF7F2] text-[#141210]">
           <BrandMark className="h-7 w-7" />
         </div>
-        <h1 className="mt-5 text-2xl font-semibold text-[#111827]">Card not available</h1>
+        <h1 className="mt-5 text-2xl font-semibold text-[#111827]">{t("card.unavailableTitle")}</h1>
         <p className="mt-3 text-sm leading-6 text-[#6B7280]">
-          This customer card is unavailable or has been disabled.
+          {t("card.unavailableText")}
         </p>
       </section>
     </main>

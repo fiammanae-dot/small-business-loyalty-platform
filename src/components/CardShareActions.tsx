@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { refineWalletPlatformInBrowser, type WalletPlatform } from "@/lib/wallet-platform";
 import { auditLoyaltyCardWhatsAppShare } from "@/app/card-share-actions";
 import { buildResendCardWhatsAppMessage, buildWelcomeCardWhatsAppMessage, getWhatsAppManualLink } from "@/lib/whatsapp-messages";
+import { useLocale, useT } from "@/i18n/client";
 
 type CardShareActionsProps = {
   cardUrl: string;
@@ -33,15 +34,17 @@ type CardShareActionsProps = {
   buttonColor?: string;
   compact?: boolean;
   messageType?: "welcome" | "resend";
+  /** The customer's language for the WhatsApp text; defaults to the screen's language. */
+  messageLocale?: string | null;
 };
 
 export function CardShareActions({
   cardUrl,
   businessName,
-  customerName = "Customer",
+  customerName,
   recipientPhone,
   auditMembershipUuid,
-  whatsappLabel = "Send via WhatsApp",
+  whatsappLabel,
   showCopy = true,
   showWallet = true,
   googleWalletUrl,
@@ -55,7 +58,10 @@ export function CardShareActions({
   buttonColor,
   compact = false,
   messageType = "welcome",
+  messageLocale,
 }: CardShareActionsProps) {
+  const t = useT();
+  const uiLocale = useLocale();
   const [message, setMessage] = useState("");
   const [platform, setPlatform] = useState<WalletPlatform | undefined>(walletPlatform);
   useEffect(() => {
@@ -66,27 +72,28 @@ export function CardShareActions({
   const [sharing, setSharing] = useState(false);
   const shareText = useMemo(
     () => {
-      const input = { businessName, cardUrl, customerName };
+      const input = { businessName, cardUrl, customerName: customerName ?? t("pass.customer"), locale: messageLocale ?? uiLocale };
       return messageType === "resend" ? buildResendCardWhatsAppMessage(input) : buildWelcomeCardWhatsAppMessage(input);
     },
-    [businessName, cardUrl, customerName, messageType],
+    [businessName, cardUrl, customerName, messageType, messageLocale, uiLocale, t],
   );
   const whatsappUrl = useMemo(() => getWhatsAppManualLink(recipientPhone, shareText), [recipientPhone, shareText]);
   const showWhatsApp = Boolean(whatsappUrl) || !hideUnavailableWhatsApp;
-  const disabledWhatsappLabel = recipientPhone ? "Invalid phone" : "No phone";
+  const disabledWhatsappLabel = recipientPhone ? t("share.invalidPhone") : t("share.noPhone");
+  const whatsappButtonLabel = whatsappLabel ?? t("share.sendWhatsapp");
 
   async function copyLink() {
     try {
       await navigator.clipboard.writeText(cardUrl);
-      setMessage("Card link copied.");
+      setMessage(t("share.linkCopied"));
     } catch {
-      setMessage("Copy is not available in this browser.");
+      setMessage(t("share.copyUnavailable"));
     }
   }
 
   async function shareViaWhatsApp() {
     if (!whatsappUrl) {
-      setMessage(recipientPhone ? "Customer phone number is invalid." : "Customer phone number required.");
+      setMessage(recipientPhone ? t("share.phoneInvalid") : t("share.phoneRequired"));
       return;
     }
 
@@ -96,9 +103,9 @@ export function CardShareActions({
         await auditLoyaltyCardWhatsAppShare(auditMembershipUuid);
       }
       window.open(whatsappUrl, "_blank", "noopener,noreferrer");
-      setMessage("WhatsApp message prepared.");
+      setMessage(t("share.whatsappPrepared"));
     } catch {
-      setMessage("WhatsApp share could not be logged. Please try again.");
+      setMessage(t("share.whatsappLogFailed"));
     } finally {
       setSharing(false);
     }
@@ -113,7 +120,7 @@ export function CardShareActions({
             onClick={copyLink}
             className={compact ? "rounded-md border border-[#E5E7EB] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#111827] transition business-hover" : "rounded-md border border-[#E5E7EB] bg-white px-4 py-3 text-sm font-semibold text-[#111827] transition business-hover"}
           >
-            Copy card link
+            {t("share.copyLink")}
           </button>
         ) : null}
         {!showWhatsApp ? null : compact && !whatsappUrl ? (
@@ -129,17 +136,17 @@ export function CardShareActions({
             type="button"
             onClick={shareViaWhatsApp}
             disabled={!whatsappUrl || sharing}
-            title={!whatsappUrl ? disabledWhatsappLabel : whatsappLabel}
+            title={!whatsappUrl ? disabledWhatsappLabel : whatsappButtonLabel}
             className={compact ? "whitespace-nowrap rounded-md border border-[#E5E7EB] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#111827] transition business-hover disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-500" : "rounded-md px-4 py-3 text-center text-sm font-semibold disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-600 business-button"}
             style={!compact && whatsappUrl && !sharing && buttonColor ? { backgroundColor: buttonColor } : undefined}
           >
-            {sharing ? "Preparing..." : whatsappUrl ? whatsappLabel : disabledWhatsappLabel}
+            {sharing ? t("share.preparing") : whatsappUrl ? whatsappButtonLabel : disabledWhatsappLabel}
           </button>
         )}
       </div>
       {!compact && showWhatsApp && !whatsappUrl ? (
         <p className="text-center text-sm font-medium text-[#9A3412]">
-          {recipientPhone ? "Customer phone number is invalid." : "Customer phone number required."}
+          {recipientPhone ? t("share.phoneInvalid") : t("share.phoneRequired")}
         </p>
       ) : null}
 
@@ -151,11 +158,11 @@ export function CardShareActions({
           <div className="flex items-center gap-4 rounded-md border border-[#E5E7EB] bg-[#F8FAFC] p-4">
             {cardQrCode ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={cardQrCode} alt="QR code to open this card on your phone" className="h-28 w-28 shrink-0 rounded bg-white" />
+              <img src={cardQrCode} alt={t("share.qrAlt")} className="h-28 w-28 shrink-0 rounded bg-white" />
             ) : null}
             <div>
-              <p className="text-sm font-semibold text-[#111827]">Add this card to your phone&apos;s wallet</p>
-              <p className="mt-1 text-sm text-[#64748B]">Scan with your phone&apos;s camera, then tap the Add to Wallet button that appears.</p>
+              <p className="text-sm font-semibold text-[#111827]">{t("share.addToPhoneWallet")}</p>
+              <p className="mt-1 text-sm text-[#64748B]">{t("share.scanToAdd")}</p>
             </div>
           </div>
         ) : walletPrograms ? (
@@ -170,7 +177,7 @@ export function CardShareActions({
                     rel="noopener noreferrer"
                     className="rounded-md bg-black px-4 py-3 text-center text-sm font-semibold text-white"
                   >
-                    Add to Apple Wallet
+                    {t("share.addApple")}
                   </a>
                 ) : null}
                 {showGoogle ? (
@@ -180,7 +187,7 @@ export function CardShareActions({
                     rel="noopener noreferrer"
                     className="rounded-md border border-[#E5E7EB] bg-white px-4 py-3 text-center text-sm font-semibold text-[#111827] transition business-hover"
                   >
-                    Add to Google Wallet
+                    {t("share.addGoogle")}
                   </a>
                 ) : null}
               </div>
@@ -195,15 +202,15 @@ export function CardShareActions({
               rel="noopener noreferrer"
               className="rounded-md bg-black px-4 py-3 text-center text-sm font-semibold text-white"
             >
-              Add to Apple Wallet
+              {t("share.addApple")}
             </a>
           ) : (
             <button
               type="button"
-              onClick={() => setMessage("Apple Wallet pass is not available yet.")}
+              onClick={() => setMessage(t("share.appleUnavailable"))}
               className="rounded-md bg-black px-4 py-3 text-sm font-semibold text-white"
             >
-              Add to Apple Wallet
+              {t("share.addApple")}
             </button>
           )}
           {googleWalletUrl ? (
@@ -213,22 +220,22 @@ export function CardShareActions({
               rel="noopener noreferrer"
               className="rounded-md border border-[#E5E7EB] bg-white px-4 py-3 text-center text-sm font-semibold text-[#111827] transition business-hover"
             >
-              Add to Google Wallet
+              {t("share.addGoogle")}
             </a>
           ) : (
             <button
               type="button"
-              onClick={() => setMessage("Google Wallet is not available for this card yet.")}
+              onClick={() => setMessage(t("share.googleUnavailable"))}
               className="rounded-md border border-[#E5E7EB] bg-white px-4 py-3 text-sm font-semibold text-[#111827] transition business-hover"
             >
-              Add to Google Wallet
+              {t("share.addGoogle")}
             </button>
           )}
         </div>
         )}
         {/* The cashback card is its own pass; each phone gets the button for its own wallet. */}
         {platform !== "desktop" && (cashbackAppleWalletUrl || cashbackGoogleWalletUrl) && walletPrograms && walletPrograms.length > 0 ? (
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">Cashback</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">{t("share.cashback")}</p>
         ) : null}
         {cashbackAppleWalletUrl && showApple ? (
           <a
@@ -237,7 +244,7 @@ export function CardShareActions({
             rel="noopener noreferrer"
             className="block rounded-md border-2 border-black bg-white px-4 py-3 text-center text-sm font-semibold text-black"
           >
-            Add Cashback card to Apple Wallet
+            {t("share.addCashbackApple")}
           </a>
         ) : null}
         {cashbackGoogleWalletUrl && showGoogle ? (
@@ -247,7 +254,7 @@ export function CardShareActions({
             rel="noopener noreferrer"
             className="block rounded-md border-2 border-[#111827] bg-white px-4 py-3 text-center text-sm font-semibold text-[#111827] transition business-hover"
           >
-            Add Cashback card to Google Wallet
+            {t("share.addCashbackGoogle")}
           </a>
         ) : null}
         </>

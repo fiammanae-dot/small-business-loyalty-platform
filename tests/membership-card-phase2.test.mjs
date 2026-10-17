@@ -22,8 +22,8 @@ test("the render model treats a membership as a depleting card with no reward", 
   // No reward for a membership.
   assert.match(model, /const rewardReady = isMembership \? false/);
   // Status wording counts down and ends at "Membership complete".
-  assert.match(model, /visit\$\{membershipTotal === 1 \? "" : "s"\} left/);
-  assert.match(model, /"Membership complete"/);
+  assert.match(model, /t\.plural\("card\.visitsLeft", membershipTotal/);
+  assert.match(model, /t\("card\.membershipComplete"\)/);
   // The reward box is suppressed for memberships.
   assert.match(model, /rewardBox: design\.visibleSections\.rewardBox && hasProgram && !isMembership/);
   // The returned design itself carries rewardBox:false for memberships, so the
@@ -55,9 +55,9 @@ test("the wallet hero and program cards render the membership wording", () => {
 
   const prog = read("src/components/public-card/ProgramRewardCard.tsx");
   assert.match(prog, /isMembership\?: boolean/);
-  assert.match(prog, /Prepaid membership/);
-  assert.match(prog, /"Used up"/);
-  assert.match(prog, /Show to use a visit\./);
+  assert.match(prog, /t\("card\.prepaidMembership"\)/);
+  assert.match(prog, /t\("pass\.usedUp"\)/);
+  assert.match(prog, /t\("card\.showToUseVisit"\)/);
 });
 
 test("the Google Wallet pass header depletes for a membership", () => {
@@ -68,7 +68,7 @@ test("the Google Wallet pass header depletes for a membership", () => {
   // image uses remaining, not collected - both decided by the shared view.
   assert.match(mapper, /membership: isMembership \? \{ remaining: sessionsRemaining, total: sessionsTotal \} : null/);
   const view = read("src/lib/wallet-pass-view.ts");
-  assert.match(view, /primary: \{ label: "Visits left", value: `\$\{membershipRemaining\} of \$\{membershipTotal\}` \}/);
+  assert.match(view, /primary: \{ label: t\("pass\.visitsLeft"\), value: t\("pass\.ofTotal", \{ remaining: membershipRemaining, total: membershipTotal \}\) \}/);
   assert.match(view, /filled: isMembership \? membershipRemaining : collected/);
   // The class describes the package, not a reward.
   assert.match(mapper, /membershipClassBody\(membership\)/);

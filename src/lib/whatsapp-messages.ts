@@ -1,9 +1,12 @@
 import { formatUaePhoneForWhatsApp } from "@/lib/phone";
+import { resolveLocale } from "@/i18n/locales";
 
 type CardMessageInput = {
   businessName: string;
   customerName: string;
   cardUrl: string;
+  /** The customer's language ("en" / "ar"); messages are written in it. */
+  locale?: string | null;
 };
 
 type StampUpdateMessageInput = CardMessageInput & {
@@ -16,7 +19,20 @@ type RewardReadyMessageInput = CardMessageInput & {
   programName: string;
 };
 
-export function buildWelcomeCardWhatsAppMessage({ businessName, customerName, cardUrl }: CardMessageInput) {
+export function buildWelcomeCardWhatsAppMessage({ businessName, customerName, cardUrl, locale }: CardMessageInput) {
+  if (resolveLocale(locale) === "ar") {
+    return `مرحباً ${customerName}،
+
+أهلاً بك في ${businessName}!
+بطاقة الولاء الخاصة بك جاهزة.
+
+افتح بطاقتك من هنا:
+${cardUrl}
+
+احتفظ بهذه الرسالة لزياراتك القادمة واعرض رمز QR عند كسب الأختام أو استبدال المكافآت.
+
+شكراً لانضمامك إلى برنامج الولاء.`;
+  }
   return `Hello ${customerName},
 
 Welcome to ${businessName}!
@@ -30,7 +46,15 @@ You can save this message for future visits and present the QR code when earning
 Thank you for joining our loyalty program.`;
 }
 
-export function buildResendCardWhatsAppMessage({ businessName, customerName, cardUrl }: CardMessageInput) {
+export function buildResendCardWhatsAppMessage({ businessName, customerName, cardUrl, locale }: CardMessageInput) {
+  if (resolveLocale(locale) === "ar") {
+    return `مرحباً ${customerName}،
+
+هذه بطاقة الولاء الخاصة بك لدى ${businessName}:
+${cardUrl}
+
+اعرض هذه البطاقة عند الدفع لكسب الأختام ومتابعة مكافآتك وتقدمك.`;
+  }
   return `Hello ${customerName},
 
 Here is your ${businessName} loyalty card:
@@ -44,7 +68,21 @@ export function buildUpdatedCardWhatsAppMessage({
   cardUrl,
   currentVisits,
   requiredVisits,
+  locale,
 }: StampUpdateMessageInput) {
+  if (resolveLocale(locale) === "ar") {
+    return `شكراً لزيارتك ${businessName}!
+
+تم تحديث بطاقة الولاء الخاصة بك.
+
+تقدمك الحالي:
+${currentVisits} / ${requiredVisits}
+
+اعرض بطاقتك المحدثة من هنا:
+${cardUrl}
+
+نتطلع لرؤيتك مرة أخرى!`;
+  }
   return `Thank you for visiting ${businessName}!
 
 Your loyalty card has just been updated.
@@ -64,7 +102,24 @@ export function buildRewardReadyWhatsAppMessage({
   cardUrl,
   rewardName,
   programName,
+  locale,
 }: RewardReadyMessageInput) {
+  if (resolveLocale(locale) === "ar") {
+    return `مرحباً ${customerName}،
+
+مكافأتك جاهزة لدى ${businessName}.
+
+المكافأة:
+${rewardName}
+
+البرنامج:
+${programName}
+
+اعرض بطاقة الولاء من هنا:
+${cardUrl}
+
+اعرض بطاقتك عند الدفع لاستبدال مكافأتك.`;
+  }
   return `Hello ${customerName},
 
 Your reward is ready at ${businessName}.

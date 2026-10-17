@@ -919,6 +919,10 @@ model BusinessCustomerMembership {
   referralEnabled  Boolean                  @default(true) @map("referral_enabled")
   currentTier      CustomerTierName         @default(BRONZE) @map("current_tier")
   tierUpdatedAt    DateTime?                @map("tier_updated_at")
+  /// "en" or "ar": the language the customer chose on the join page or card.
+  /// Null until they choose (then the phone's language decides the web pages
+  /// and passes are English). Wallet passes and messages follow it.
+  preferredLocale  String?                  @map("preferred_locale")
   notes            String?
   /// Vehicle, for car care businesses. Emirate + code + number as entered;
   /// normalizedPlate is the derived key searches match on, never displayed.

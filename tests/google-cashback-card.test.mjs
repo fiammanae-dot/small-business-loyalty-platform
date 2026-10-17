@@ -58,7 +58,7 @@ test("the card page offers the right cashback button per phone and shows the cas
 
   const share = read("src/components/CardShareActions.tsx");
   assert.match(share, /\{cashbackGoogleWalletUrl && showGoogle \? \(/);
-  assert.match(share, /Add Cashback card to Google Wallet/);
+  assert.match(share, /t\("share\.addCashbackGoogle"\)/);
   assert.match(share, /\{cashbackAppleWalletUrl && showApple \? \(/);
   // A cashback-only customer gets no broken "not available yet" program buttons.
   assert.match(share, /\) : walletPrograms \? \(/);

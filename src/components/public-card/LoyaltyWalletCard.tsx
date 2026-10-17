@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState, type CSSProperties } from "react";
 import { BusinessLogoAvatar } from "@/components/BusinessLogoAvatar";
+import { useT } from "@/i18n/client";
 import { StampSlot } from "@/components/design-studio/StampIconGraphic";
 import { WalletCardShell, type WalletTheme } from "@/components/public-card/WalletCardShell";
 import { resolveCardDesign, type CardDesign, type CardDesignInput } from "@/lib/card-design";
@@ -51,7 +52,7 @@ export function LoyaltyWalletCard({
   tierIcon,
   qrCode,
   rewardReady,
-  qrHelperText = "Scan this card",
+  qrHelperText,
   theme,
   exportMode = false,
   programName,
@@ -64,16 +65,17 @@ export function LoyaltyWalletCard({
   cardDesign,
 }: LoyaltyWalletCardProps) {
   const [mode, setMode] = useState<"wallet" | "scan">("wallet");
+  const t = useT();
   const design = resolveCardDesign(cardDesign);
   const displayRequired = required > 0 ? required : 1;
   const displayProgress = required > 0 ? progress : 0;
   const displayCompletion = required > 0 ? completion : 0;
-  const displayReward = rewardName ?? "Loyalty reward";
-  const displayProgram = programName ?? "Loyalty Card";
-  const remainingText = remaining === 1 ? "1 visit remaining" : `${remaining} visits remaining`;
+  const displayReward = rewardName ?? t("card.loyaltyReward");
+  const displayProgram = programName ?? t("card.loyaltyCard");
+  const remainingText = t.plural("card.visitsRemaining", remaining);
   // The page supplies statusText for memberships ("3 of 10 sessions left" /
   // "Membership complete"); fall back to the reward-countdown wording otherwise.
-  const statusText = statusTextProp ?? (required > 0 ? (rewardReady ? "Reward Ready" : remainingText) : "No active program yet");
+  const statusText = statusTextProp ?? (required > 0 ? (rewardReady ? t("card.rewardReady") : remainingText) : t("card.noProgram"));
   const showScanView = !exportMode && mode === "scan";
 
   return (
@@ -161,7 +163,7 @@ export function LoyaltyWalletCard({
         </div>
       )}
 
-      <span className="sr-only">Customer {customerName}. Member Since {memberSince}.</span>
+      <span className="sr-only">{t("pass.customer")} {customerName}. {t("card.memberSince", { date: memberSince })}.</span>
     </WalletCardShell>
   );
 }
@@ -203,6 +205,7 @@ function WalletView({
   tierLabel: string;
   onScan: () => void;
 }) {
+  const t = useT();
   return (
     <div className={`flex h-full flex-col px-6 pb-5 pt-7 ${cardPaddingClass(design)}`}>
       <div className="flex-1">
@@ -227,7 +230,7 @@ function WalletView({
               {customerName}
             </h2>
             <p className={supportingClass(design)} style={{ color: theme.mutedText }}>
-              Member since {memberSince}
+              {t("card.memberSince", { date: memberSince })}
             </p>
           </section>
         ) : null}
@@ -257,7 +260,7 @@ function WalletView({
 
       {design.visibleSections.footer ? (
         <div className="pt-5">
-          <CardFlipFooterButton label="View QR Code" icon="📱" onClick={onScan} theme={theme} exportMode={exportMode} />
+          <CardFlipFooterButton label={t("card.viewQr")} icon="📱" onClick={onScan} theme={theme} exportMode={exportMode} />
         </div>
       ) : null}
     </div>
@@ -286,18 +289,19 @@ function ScanView({
   displayReward: string;
   exportMode: boolean;
   qrCode: string | null;
-  qrHelperText: string;
+  qrHelperText?: string;
   rewardReady: boolean;
   statusText: string;
   theme: WalletTheme;
   design: CardDesign;
   onBack: () => void;
 }) {
+  const t = useT();
   return (
     <div className={`flex h-full flex-col px-6 pb-5 pt-7 ${cardPaddingClass(design)}`}>
       <div className="flex-1">
         <p className="text-[12px] font-semibold uppercase tracking-[0.18em]" style={{ color: theme.mutedText }}>
-          Scan View
+          {t("card.scanView")}
         </p>
 
         {design.visibleSections.qr ? (
@@ -309,10 +313,10 @@ function ScanView({
             sizeClassName="h-[264px] w-[264px]"
           />
           <p className="pt-5 text-[15px] font-semibold leading-snug" style={{ color: theme.cardText }}>
-            Present this QR code to a staff member to collect your loyalty stamp.
+            {t("card.presentQrToStaff")}
           </p>
           <p className="pt-1.5 text-[13px]" style={{ color: theme.mutedText }}>
-            {qrHelperText}
+            {qrHelperText ?? t("card.scanThisCard")}
           </p>
         </section>
         ) : null}
@@ -320,10 +324,10 @@ function ScanView({
         <section className="pt-7">
           <div className="rounded-[18px] px-4 py-4 ring-1" style={{ backgroundColor: theme.rewardPanelBackground, color: theme.rewardPanelText, borderColor: theme.rewardPanelBorder }}>
             <div className="grid gap-3">
-              {design.visibleSections.programName ? <SummaryLine label="Program" value={displayProgram} theme={theme} /> : null}
-              {design.visibleSections.progress ? <SummaryLine label="Progress" value={`${displayProgress} / ${displayRequired} visits`} theme={theme} /> : null}
-              {design.visibleSections.rewardBox ? <SummaryLine label="Next reward" value={displayReward} theme={theme} /> : null}
-              {design.visibleSections.visits ? <SummaryLine label="Status" value={rewardReady ? "Reward Ready" : statusText} theme={theme} /> : null}
+              {design.visibleSections.programName ? <SummaryLine label={t("pass.program")} value={displayProgram} theme={theme} /> : null}
+              {design.visibleSections.progress ? <SummaryLine label={t("card.progress")} value={`${displayProgress} / ${displayRequired} ${t("pass.visits").toLowerCase()}`} theme={theme} /> : null}
+              {design.visibleSections.rewardBox ? <SummaryLine label={t("card.nextReward")} value={displayReward} theme={theme} /> : null}
+              {design.visibleSections.visits ? <SummaryLine label={t("pass.status")} value={rewardReady ? t("card.rewardReady") : statusText} theme={theme} /> : null}
             </div>
           </div>
         </section>
@@ -331,7 +335,7 @@ function ScanView({
 
       {design.visibleSections.footer ? (
         <div className="pt-5">
-          <CardFlipFooterButton label="Back to Loyalty Card" icon="💳" onClick={onBack} theme={theme} exportMode={exportMode} />
+          <CardFlipFooterButton label={t("card.backToCard")} icon="💳" onClick={onBack} theme={theme} exportMode={exportMode} />
         </div>
       ) : null}
     </div>
@@ -460,6 +464,7 @@ function RewardPanel({
   statusText: string;
   theme: WalletTheme;
 }) {
+  const t = useT();
   const style = rewardPanelStyle(design, theme, rewardReady);
   return (
     <section
@@ -469,12 +474,12 @@ function RewardPanel({
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: rewardReady ? "#2F6F44" : theme.rewardPanelMuted }}>
-            Next reward
+            {t("card.nextReward")}
           </p>
           <p className="pt-1 text-[17px] font-bold">{displayReward}</p>
         </div>
         <div className="shrink-0 rounded-full px-3 py-1 text-[13px] font-black" style={{ backgroundColor: rewardReady ? "#DCFCE7" : theme.badgeBackground, color: rewardReady ? "#15803D" : theme.badgeText }}>
-          {rewardReady ? "Reward Ready" : statusText}
+          {rewardReady ? t("card.rewardReady") : statusText}
         </div>
       </div>
     </section>

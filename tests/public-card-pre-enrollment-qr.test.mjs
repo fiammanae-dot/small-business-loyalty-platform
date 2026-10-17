@@ -19,9 +19,9 @@ test("public customer card shows a card-level QR before program enrollment", () 
   assert.match(publicCard, /const walletCardProps = \{/);
   assert.match(publicCard, /qrCode: primaryCardModel\.qr\.code/);
   assert.match(publicCard, /<LoyaltyWalletCard \{\.\.\.walletCardProps\} \/>/);
-  assert.match(publicCard, /Show this QR code to staff to find your customer card\./);
+  assert.match(publicCard, /t\("card\.showQrToStaff"\)/);
   assert.match(walletCard, /qrHelperText\?: string/);
-  assert.match(walletCard, /qrHelperText = "Scan this card"/);
+  assert.match(walletCard, /qrHelperText \?\? t\("card\.scanThisCard"\)/);
   assert.doesNotMatch(publicCard, /qrCode=\{primaryProgram\?\.qrCode \?\? null\}/);
   assert.doesNotMatch(publicCard, /qrCode: primaryProgram\?\.qrCode \?\? null/);
 });

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toPng } from "html-to-image";
 import { getReadableForeground, hasReadableContrast } from "@/lib/color-contrast";
+import { useT } from "@/i18n/client";
 
 type SaveCardImageButtonProps = {
   frontTargetSelector: string;
@@ -22,6 +23,7 @@ function filenameSafe(value: string) {
 }
 
 export function SaveCardImageButton({ frontTargetSelector, backTargetSelector, customerName, buttonColor }: SaveCardImageButtonProps) {
+  const t = useT();
   const [message, setMessage] = useState("");
   const [savingSide, setSavingSide] = useState<"front" | "back" | null>(null);
   const buttonForeground = getReadableForeground(buttonColor);
@@ -32,7 +34,7 @@ export function SaveCardImageButton({ frontTargetSelector, backTargetSelector, c
     const targetSelector = side === "front" ? frontTargetSelector : backTargetSelector;
     const target = document.querySelector<HTMLElement>(targetSelector);
     if (!target) {
-      setMessage("Card image is not available yet.");
+      setMessage(t("share.imageUnavailable"));
       return;
     }
 
@@ -58,10 +60,10 @@ export function SaveCardImageButton({ frontTargetSelector, backTargetSelector, c
       document.body.appendChild(link);
       link.click();
       link.remove();
-      setMessage(`Loyalty card ${side} image downloaded successfully.`);
+      setMessage(t("share.imageSaved", { side: t(`share.${side}`) }));
     } catch (error) {
       console.error("Loyalty card image export failed", error);
-      setMessage("Could not save the card image. Please try again.");
+      setMessage(t("share.imageFailed"));
     } finally {
       setSavingSide(null);
     }
@@ -77,7 +79,7 @@ export function SaveCardImageButton({ frontTargetSelector, backTargetSelector, c
           className="w-full rounded-md px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-600"
           style={!savingSide && buttonColor ? { backgroundColor: buttonColor, color: buttonForeground } : undefined}
         >
-          {savingSide === "front" ? "Preparing front..." : "\uD83D\uDCF7 Download Front"}
+          {savingSide === "front" ? t("share.preparingFront") : `\uD83D\uDCF7 ${t("share.downloadFront")}`}
         </button>
         <button
           type="button"
@@ -86,7 +88,7 @@ export function SaveCardImageButton({ frontTargetSelector, backTargetSelector, c
           className="w-full rounded-md border px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-500"
           style={!savingSide && buttonColor ? { borderColor: outlineColor, color: outlineTextColor } : undefined}
         >
-          {savingSide === "back" ? "Preparing back..." : "\u25A3 Download Back"}
+          {savingSide === "back" ? t("share.preparingBack") : `\u25A3 ${t("share.downloadBack")}`}
         </button>
       </div>
       {message ? <p className="text-center text-sm font-medium business-text">{message}</p> : null}

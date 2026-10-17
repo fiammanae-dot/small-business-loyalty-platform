@@ -33,8 +33,8 @@ test("loyalty card WhatsApp share uses the approved welcome template and secure 
 test("WhatsApp share disables when customer phone is missing or invalid", () => {
   const component = read("src/components/CardShareActions.tsx");
 
-  assert.match(component, /Customer phone number required/);
-  assert.match(component, /Customer phone number is invalid/);
+  assert.match(component, /t\("share\.phoneRequired"\)/);
+  assert.match(component, /t\("share\.phoneInvalid"\)/);
   assert.match(component, /disabled=\{!whatsappUrl \|\| sharing\}/);
 });
 
@@ -104,10 +104,10 @@ test("card delivery controls are available on registration success, profiles, li
     assert.match(source, /cardUrl/);
   }
 
-  assert.match(publicCard, /whatsappLabel="Share via WhatsApp"/);
-  assert.match(publicCard, /Save Your Card/);
-  assert.match(publicCard, /Last Updated:/);
-  assert.match(publicCard, /always shows your latest stamps, reward status, tier, and QR code/);
+  assert.match(publicCard, /hideUnavailableWhatsApp/);
+  assert.match(publicCard, /t\("card\.saveTitle"\)/);
+  assert.match(publicCard, /t\("card\.lastUpdated"/);
+  assert.match(publicCard, /t\("card\.saveText"\)/);
 });
 
 test("manual WhatsApp phase does not add Cloud API sending or provider environment usage", () => {

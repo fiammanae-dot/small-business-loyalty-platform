@@ -27,8 +27,8 @@ test("the cashback pass shows the balance, program name and member", () => {
   assert.match(mapper, /const view = buildCashbackPassView\(/);
   assert.match(mapper, /headerFields: \[view\.header\]/);
   const view = read("src/lib/wallet-pass-view.ts");
-  assert.match(view, /header: \{ label: "Program", value: title \}/);
-  assert.match(view, /const secondaryFields: WalletPassField\[\] = \[\{ label: "Member", value: input\.customerName \}\];/);
+  assert.match(view, /header: \{ label: t\("pass\.program"\), value: title \}/);
+  assert.match(view, /const secondaryFields: WalletPassField\[\] = \[\{ label: t\("pass\.member"\), value: input\.customerName \}\];/);
   assert.match(view, /if \(photo\) secondaryFields\.push\(balanceField\)/);
   // barcode is the customer's card URL (per-customer, not per-program)
   assert.match(mapper, /const cardUrl = await getCardUrl\(customer\.cardToken\)/);
@@ -56,7 +56,7 @@ test("the mint route and card button expose the cashback card", () => {
 
   const share = read("src/components/CardShareActions.tsx");
   assert.match(share, /cashbackAppleWalletUrl\?: string \| null;/);
-  assert.match(share, /Add Cashback card to Apple Wallet/);
+  assert.match(share, /t\("share\.addCashbackApple"\)/);
 
   const page = read("src/app/card/[token]/page.tsx");
   // Only cashback members get the cashback wallet card.

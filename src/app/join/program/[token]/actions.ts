@@ -21,6 +21,9 @@ import { isPublicActionRateLimited, recordPublicActionAttempt } from "@/lib/rate
 import { createPendingReferralForEnrollment, extractReferralCode, findActiveReferralReferrerByPhone, generateReferralCode } from "@/lib/referrals";
 import { getRequestInfo } from "@/lib/request-info";
 import { generateScanToken } from "@/lib/scan";
+import { joinIssueMessage } from "@/i18n/join-errors";
+import { resolveLocale } from "@/i18n/locales";
+import { getT } from "@/i18n/server";
 
 const JOIN_PROGRAM_RATE_LIMIT_SCOPE = "public_join_program" as const;
 
@@ -56,6 +59,10 @@ async function findExistingProgramCardToken(normalizedPhone: string, businessId:
 }
 export async function joinProgramAction(formData: FormData) {
   const token = getString(formData, "token");
+  // The customer's language: the hidden field the form carries (the cookie
+  // may be missing in a private tab), so errors and the new card speak it.
+  const locale = resolveLocale(getString(formData, "locale") || undefined);
+  const t = await getT(locale);
   const parsed = joinProgramSchema.safeParse({
     token,
     firstName: getString(formData, "firstName"),
@@ -67,11 +74,11 @@ export async function joinProgramAction(formData: FormData) {
   });
   const marketingConsent = getCheckbox(formData, "marketingConsent");
 
-  if (!parsed.success) fail(token, parsed.error.issues[0]?.message ?? "Enrollment failed.");
+  if (!parsed.success) fail(token, joinIssueMessage(t, parsed.error.issues[0], "join.error.failed"));
 
   const normalizedPhone = normalizePhone(parsed.data.phone);
   if (!normalizedPhone) {
-    fail(token, "Enter a valid UAE mobile number such as 0501234567 or +971501234567.");
+    fail(token, t("join.error.invalidPhone"));
   }
 
   const program = await prisma.loyaltyProgram.findUnique({
@@ -79,11 +86,11 @@ export async function joinProgramAction(formData: FormData) {
     include: { business: true },
   });
   if (!program || !program.active || program.business.status !== "ACTIVE") {
-    fail(parsed.data.token, "This program is not available for public enrollment.");
+    fail(parsed.data.token, t("join.error.notPublic"));
   }
   // Paid packages are added by staff after payment, never by the public link.
   if (program.isMembership) {
-    fail(parsed.data.token, "This package is added by our team after payment. Please ask at the counter.");
+    fail(parsed.data.token, t("join.error.paidPackage"));
   }
 
   const { ipAddress } = await getRequestInfo();
@@ -93,7 +100,7 @@ export async function joinProgramAction(formData: FormData) {
     identifier: parsed.data.token,
   });
   if (rateLimited) {
-    fail(parsed.data.token, "Too many enrollment attempts. Please wait a few minutes and try again.");
+    fail(parsed.data.token, t("join.error.rateLimited"));
   }
   await recordPublicActionAttempt({
     scope: JOIN_PROGRAM_RATE_LIMIT_SCOPE,
@@ -118,10 +125,10 @@ export async function joinProgramAction(formData: FormData) {
     });
 
     if (phoneLookup.status === "INVALID_PHONE") {
-      fail(parsed.data.token, "Check the referrer and select a matching customer before submitting.");
+      fail(parsed.data.token, t("join.error.checkReferrer"));
     }
     if (phoneLookup.status === "NOT_FOUND" || !phoneLookup.referrer?.referralCode) {
-      fail(parsed.data.token, "No matching referrer found.");
+      fail(parsed.data.token, t("join.error.noReferrer"));
     }
 
     referralCodeForEnrollment = phoneLookup.referrer.referralCode;
@@ -168,7 +175,7 @@ export async function joinProgramAction(formData: FormData) {
 
     if (existingMembership) {
       if (existingMembership.status !== "ACTIVE") {
-        fail(parsed.data.token, "This customer account is not available for public enrollment.");
+        fail(parsed.data.token, t("join.error.accountUnavailable"));
       }
 
       // Only a first-time enrollment into this program raises WELCOME_CUSTOMER,
@@ -224,7 +231,7 @@ export async function joinProgramAction(formData: FormData) {
         select: { id: true },
       });
       if (duplicateEmailMembership) {
-        fail(parsed.data.token, "This customer is already enrolled in your business.");
+        fail(parsed.data.token, t("join.error.alreadyEnrolled"));
       }
     }
 
@@ -246,6 +253,7 @@ export async function joinProgramAction(formData: FormData) {
         email: parsed.data.email || null,
         birthday: parseBirthday(parsed.data.birthday),
         marketingConsent,
+        preferredLocale: locale,
         source: "SELF_SIGNUP",
         status: "ACTIVE",
         cardToken: generateCardToken(),
@@ -308,7 +316,7 @@ export async function joinProgramAction(formData: FormData) {
       }
     }
 
-    fail(parsed.data.token, "Enrollment could not be completed. Please try again.");
+    fail(parsed.data.token, t("join.error.failed"));
   }
 
   if (result.welcomeMembershipId !== null) {

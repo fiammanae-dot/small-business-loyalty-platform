@@ -11,7 +11,7 @@ test("paid packages cannot be self-joined through a public link", () => {
   const page = read("src/app/join/program/[token]/page.tsx");
   assert.match(page, /if \(program\.isMembership\) \{\s*return \(\s*<JoinUnavailable/);
   const action = read("src/app/join/program/[token]/actions.ts");
-  assert.match(action, /if \(program\.isMembership\) \{\s*fail\(parsed\.data\.token, "This package is added by our team after payment/);
+  assert.match(action, /if \(program\.isMembership\) \{\s*fail\(parsed\.data\.token, t\("join\.error\.paidPackage"\)/);
   // No join QR / poster for packages on the owner and branch pages.
   assert.match(read("src/app/dashboard/programs/[id]/page.tsx"), /\{isMembership \? \(\s*\/\/ A paid package has no public join link/);
   assert.match(read("src/app/branch/programs/[id]/page.tsx"), /\{program\.isMembership \? \(\s*\/\/ Paid packages have no public join QR/);

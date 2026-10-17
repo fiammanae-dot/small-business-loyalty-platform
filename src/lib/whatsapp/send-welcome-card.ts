@@ -49,7 +49,7 @@ function createDeps(): WelcomeCardDeps {
         }),
         prisma.businessCustomerMembership.findFirst({
           where: { id: membershipId, businessId, status: "ACTIVE" },
-          select: { id: true, firstName: true, phone: true, cardToken: true, marketingConsent: true },
+          select: { id: true, firstName: true, phone: true, cardToken: true, marketingConsent: true, preferredLocale: true },
         }),
       ]);
 
@@ -116,8 +116,8 @@ function createDeps(): WelcomeCardDeps {
     buildCardUrl: (cardToken) => getCardUrl(cardToken),
     formatRecipient: (phone) => formatUaePhoneForWhatsApp(phone),
     maskRecipient: (phone) => maskPhoneNumber(phone),
-    renderMessageBody: ({ businessName, customerName, cardUrl }) =>
-      buildWelcomeCardWhatsAppMessage({ businessName, customerName, cardUrl }),
+    renderMessageBody: ({ businessName, customerName, cardUrl, locale }) =>
+      buildWelcomeCardWhatsAppMessage({ businessName, customerName, cardUrl, locale }),
 
     createSender: async (channel) => resolveSenderForChannel(channel),
 

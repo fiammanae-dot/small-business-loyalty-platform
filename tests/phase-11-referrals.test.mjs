@@ -38,19 +38,18 @@ test("customer enrollment creates referral context without public self-registrat
   assert.match(referrals, /SELF_REFERRAL_BLOCKED/);
   assert.match(referrals, /Self-referrals are blocked/);
   assert.match(referrals, /findActiveReferralReferrerForEnrollment/);
-  assert.match(referralPage, /Join and complete your first visit/);
-  assert.match(referralPage, /READY TO SHOW IN STORE/);
-  assert.match(referralPage, /Show this QR code to staff/);
-  assert.match(referralPage, /Staff can scan this QR code or enter Referral ID \{displayReferralId\} during enrollment/);
-  assert.match(referralPage, /How it works/);
-  assert.match(referralPage, /Visit the branch/);
-  assert.match(referralPage, /The referral reward is paid/);
+  assert.match(referralPage, /t\("referral\.rewardBoth"/);
+  assert.match(referralPage, /t\("referral\.readyToShow"\)/);
+  assert.match(referralPage, /t\("referral\.showQr"\)/);
+  assert.match(referralPage, /t\("referral\.idHelp", \{ id: /);
+  assert.match(referralPage, /t\("referral\.howItWorks"\)/);
+  assert.match(referralPage, /t\("referral\.step1"\), t\("referral\.step2"\), t\("referral\.step3"\), t\("referral\.step4"\)/);
   assert.doesNotMatch(referralPage, /Show this referral QR to staff when visiting the branch/);
   assert.match(referralPage, /ReferralInviteActions/);
   assert.match(referralPage, /friendlyReferralId/);
   assert.match(referralPage, /QRCode\.toDataURL/);
   assert.match(referralPage, /ReferralRegistered/);
-  assert.match(referralPage, /This referral has already been used and is linked to a customer account/);
+  assert.match(referralPage, /t\("referral\.registeredText"\)/);
   assert.doesNotMatch(referralPage, /Staff enrollment/);
   assert.doesNotMatch(referralPage, /Manager enrollment/);
   assert.doesNotMatch(referralPage, /Copy Referral Code/);
@@ -72,11 +71,11 @@ test("public customer card exposes referral link and aggregate referral stats on
   const referralPanel = read("src/components/public-card/ReferralPanel.tsx");
 
   for (const expected of [
-    "Refer a friend",
-    "Referral Link",
-    "Pending Referrals",
-    "Qualified Referrals",
-    "Rewards Earned",
+    't\\("referralPanel\\.title"\\)',
+    't\\("referralPanel\\.link"\\)',
+    't\\("referralPanel\\.pending"\\)',
+    't\\("referralPanel\\.qualified"\\)',
+    't\\("referralPanel\\.rewards"\\)',
     "ReferralShareActions",
   ]) {
     assert.match(referralPanel, new RegExp(expected));
@@ -167,10 +166,10 @@ test("customer enrollment supports same-business referral lookup by phone", () =
   assert.match(customers, /findActiveReferralReferrerByPhone/);
   assert.match(customers, /referralCodeForEnrollment = phoneLookup\.referrer\.referralCode/);
   assert.match(customers, /createPendingReferralForEnrollment/);
-  assert.match(preview, /Referred by:/);
-  assert.match(preview, /Enter at least 2 characters to search/);
-  assert.match(preview, /No matching referrer found/);
-  assert.match(preview, /Choose the matching referrer/);
+  assert.match(preview, /t\("join\.lookup\.referredBy"\)/);
+  assert.match(preview, /t\("join\.lookup\.minChars"\)/);
+  assert.match(preview, /t\("join\.lookup\.none"\)/);
+  assert.match(preview, /t\("join\.lookup\.choose"\)/);
   assert.match(preview, /maskPhoneNumber/);
   assert.match(customerForm, /Referred by/);
   assert.match(customerForm, /Phone, name, referral code, or referral link/);

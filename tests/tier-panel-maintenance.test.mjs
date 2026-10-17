@@ -178,18 +178,18 @@ test("the window length has one definition shared by the opening and expiry shif
 });
 
 test("the panel renders maintain and upgrade states without fetching anything", () => {
-  for (const prop of ["maintainThreshold", "windowedVisits", "expiresAt", "isPermanent", "windowLabel"]) {
+  for (const prop of ["maintainThreshold", "windowedVisits", "expiresAt", "isPermanent", "windowKey"]) {
     assert.match(panelSource, new RegExp(`${prop}\\??:`), `${prop} must be an accepted prop`);
     assert.match(cardPageSource, new RegExp(`${prop}=\\{`), `${prop} must be passed from the card page`);
   }
 
-  assert.match(panelSource, /Status valid until \{validUntil\}/);
-  assert.match(panelSource, /Permanent status/);
-  assert.match(panelSource, /Maintain \{tierName\}/);
-  assert.match(panelSource, /Upgrade to/);
-  assert.match(panelSource, /Top tier member/, "the VIP state is preserved");
-  assert.match(panelSource, /Customer tier/);
-  assert.match(panelSource, /Exclusive Rewards Available/);
+  assert.match(panelSource, /t\("tierPanel\.validUntil", \{ date: validUntil \}\)/);
+  assert.match(panelSource, /t\("tierPanel\.permanent"\)/);
+  assert.match(panelSource, /t\("tierPanel\.maintain", \{ tier: tierName \}\)/);
+  assert.match(panelSource, /t\("tierPanel\.upgradeTo"\)/);
+  assert.match(panelSource, /t\("tierPanel\.topTier"\)/, "the VIP state is preserved");
+  assert.match(panelSource, /t\("tierPanel\.title"\)/);
+  assert.match(panelSource, /t\("tierPanel\.exclusive"\)/);
   assert.match(panelSource, /getTierTone/, "the existing tone styling is preserved");
 
   // Bronze shows neither a validity line nor a maintain card.
@@ -204,7 +204,7 @@ test("the panel renders maintain and upgrade states without fetching anything", 
 test("the card page feeds the panel from the tier data it already computed", () => {
   assert.match(cardPageSource, /computeTierMaintenance\(\{[\s\S]*?visitEvents: tierVisitDates/);
   assert.match(cardPageSource, /tier: tier\.tier/);
-  assert.match(cardPageSource, /tierQualificationWindowLabels\[tier\.tierQualificationWindow\]/);
+  assert.match(cardPageSource, /windowKey=\{tier\.tierQualificationWindow\}/);
   assert.match(cardPageSource, /expiresAt=\{tierMaintenance\.expiresAt \? tierMaintenance\.expiresAt\.toISOString\(\) : null\}/);
 
   // The same visit list feeds both calls - no second query was added.

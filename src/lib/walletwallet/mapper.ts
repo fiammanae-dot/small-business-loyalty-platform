@@ -11,6 +11,8 @@ import { fromStoredTier } from "@/lib/customer-tiers";
 import { passLogoUrl } from "@/lib/wallet/pass-logo";
 import { applePrimaryFields, buildCashbackPassView, buildProgramPassView, type WalletPassView } from "@/lib/wallet-pass-view";
 import type { CardTheme, Prisma, WalletHeroStyle } from "@prisma/client";
+import { translateFor } from "@/i18n/dictionaries";
+import { resolveLocale } from "@/i18n/locales";
 
 function absoluteUrl(url: string | null | undefined, base: string): string | null {
   if (!url) return null;
@@ -37,6 +39,8 @@ export async function buildWalletWalletPassBody(membership: GoogleWalletProgramM
   const branding = resolveBranding(business.branding);
   const businessName = business.name;
   const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim();
+  // The pass is written in the customer's own language (chosen on the join page or card).
+  const t = translateFor(resolveLocale(customer.preferredLocale));
   const isMembership = program.isMembership;
   const required = Math.max(1, program.requiredStamps);
   const progress = progressValue(membership.earnedStamps, membership.bonusStamps);
@@ -82,16 +86,17 @@ export async function buildWalletWalletPassBody(membership: GoogleWalletProgramM
     tierName: !isMembership && business.tierSetting
       ? fromStoredTier(customer.currentTier as Parameters<typeof fromStoredTier>[0]) ?? "Bronze"
       : null,
+    locale: customer.preferredLocale,
   });
 
   // backFields[0] is a stable notification anchor for on-demand banners. Its
   // position must never change between create and update (fields are keyed by
   // order), so it stays first.
   const backFields: WalletWalletField[] = [
-    { label: "Notifications", value: options?.notification?.trim() || " ", changeMessage: "%@" },
-    { label: "Program", value: program.name },
-    { label: "Business", value: businessName },
-    { label: "Member", value: customerName },
+    { label: t("pass.notifications"), value: options?.notification?.trim() || " ", changeMessage: "%@" },
+    { label: t("pass.program"), value: program.name },
+    { label: t("pass.business"), value: businessName },
+    { label: t("pass.member"), value: customerName },
   ];
 
   const body: WalletWalletPassBody = {
@@ -133,6 +138,7 @@ function applyPassLook(body: WalletWalletPassBody, view: WalletPassView, baseUrl
 export type FeaturePassCustomer = {
   firstName: string;
   lastName: string | null;
+  preferredLocale?: string | null;
   cardToken: string;
   cashbackBalance: unknown;
   currentTier: string | null;
@@ -161,11 +167,12 @@ export async function buildCashbackPassBody(customer: FeaturePassCustomer, optio
   const branding = resolveBranding(customer.business.branding);
   const businessName = customer.business.name;
   const customerName = `${customer.firstName} ${customer.lastName ?? ""}`.trim();
+  const t = translateFor(resolveLocale(customer.preferredLocale));
   const cs = customer.business.cashbackSettings;
   // The cashback program's own identity (phase 2): its name, card theme and
   // card picture, so the card is branded like a real program rather than the
   // generic business default.
-  const cardName = cs?.name?.trim() || "Cashback";
+  const cardName = cs?.name?.trim() || t("pass.cashback");
   const currency = cs?.currency ?? "AED";
   const balance = `${currency} ${Number(customer.cashbackBalance ?? 0).toFixed(2)}`;
 
@@ -188,6 +195,7 @@ export async function buildCashbackPassBody(customer: FeaturePassCustomer, optio
     },
     customerName,
     balance,
+    locale: customer.preferredLocale,
   });
 
   const body: WalletWalletPassBody = {
@@ -201,10 +209,10 @@ export async function buildCashbackPassBody(customer: FeaturePassCustomer, optio
     primaryFields: applePrimaryFields(view) as WalletWalletField[],
     secondaryFields: view.secondaryFields as WalletWalletField[],
     backFields: [
-      { label: "Notifications", value: options?.notification?.trim() || " ", changeMessage: "%@" },
-      { label: "Program", value: cardName },
-      { label: "Business", value: businessName },
-      { label: "Member", value: customerName },
+      { label: t("pass.notifications"), value: options?.notification?.trim() || " ", changeMessage: "%@" },
+      { label: t("pass.program"), value: cardName },
+      { label: t("pass.business"), value: businessName },
+      { label: t("pass.member"), value: customerName },
     ] as WalletWalletField[],
     sharingProhibited: true,
     colorPreset: "dark",

@@ -66,7 +66,7 @@ test("public card and customer 360 expose real google wallet save links", () => 
   assert.match(customer360, /Google Wallet:/);
   assert.match(customer360, /Regenerate Google Wallet pass/);
   assert.match(shareActions, /googleWalletUrl\?: string \| null/);
-  assert.match(shareActions, /Add to Google Wallet/);
+  assert.match(shareActions, /t\("share\.addGoogle"\)/);
   assert.doesNotMatch(shareActions, /Google Wallet pass is not available yet\./);
 });
 

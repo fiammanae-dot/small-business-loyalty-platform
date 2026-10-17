@@ -106,8 +106,8 @@ test("the daily job follows each package's rule", () => {
 
 test("customers see when their package expires", () => {
   const card = read("src/app/card/[token]/page.tsx");
-  assert.match(card, /`Valid until \$\{formatDate\(expiresAt\)\}`/);
-  assert.match(card, /"Your visits never expire"/);
+  assert.match(card, /t\("card\.validUntil", \{ date: fmtDate\(expiresAt\) \}\)/);
+  assert.match(card, /t\("card\.neverExpire"\)/);
 });
 
 test("'Continue to card design' never creates the program from step 1", () => {

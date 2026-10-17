@@ -41,11 +41,17 @@ test("English and Arabic dictionaries carry exactly the same keys, and Arabic is
   for (const [key, value] of Object.entries(ar)) {
     assert.ok(value.trim().length > 0, `${key} is empty`);
     if (key.startsWith("lang.")) continue;
-    assert.match(value, /[؀-ۿ]/, `${key} has no Arabic text: ${value}`);
+    // Brand names and codes stay Latin (VIP, Apple Wallet); everything else is Arabic.
+    if (!/^(VIP|Apple Wallet|Google Wallet)$/.test(value)) assert.match(value, /[\u0600-\u06FF]/, `${key} has no Arabic text: ${value}`);
     assert.doesNotMatch(value, /[٠-٩]/, `${key} uses Eastern digits`);
-    // Placeholders must survive translation.
-    const placeholders = (text) => (text.match(/\{\w+\}/g) ?? []).sort();
-    assert.deepEqual(placeholders(value), placeholders(en[key]), `${key} placeholders differ`);
+    // Placeholders must survive translation (Arabic may drop {count} in a
+    // singular/dual form, where the word itself carries the number).
+    const placeholders = (text) => new Set(text.match(/\{\w+\}/g) ?? []);
+    for (const ph of placeholders(en[key])) {
+      if (ph === "{count}" && /_(one|two)$/.test(key)) continue;
+      assert.ok(placeholders(value).has(ph), `${key} lost placeholder ${ph}`);
+    }
+    for (const ph of placeholders(value)) assert.ok(placeholders(en[key]).has(ph), `${key} invented placeholder ${ph}`);
   }
 });
 
@@ -70,8 +76,8 @@ test("root layout sets lang and dir from the cookie and loads the Arabic font", 
   assert.match(layout, /IBMPlexSansArabic-400\.woff2/);
   assert.match(layout, /<I18nProvider locale=\{locale\}>/);
   const css = read("src/app/globals.css");
-  assert.match(css, /html\[lang="ar"\] \{\s*--font-sans: var\(--font-arabic\)/);
-  assert.match(css, /html\[lang="ar"\] \[class\*="tracking-"\] \{\s*letter-spacing: 0/);
+  assert.match(css, /\[lang="ar"\] \{\s*--font-sans: var\(--font-arabic\)/);
+  assert.match(css, /\[lang="ar"\] \[class\*="tracking-"\] \{\s*letter-spacing: 0/);
   const server = read("src/i18n/server.ts");
   assert.match(server, /import "server-only"/);
   assert.match(server, /store\.get\(LOCALE_COOKIE\)/);

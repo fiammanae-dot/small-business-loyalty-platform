@@ -13,7 +13,7 @@ test("the stamp program pass carries the tier (Apple), gated on stamp programs +
   const mapper = read("src/lib/walletwallet/mapper.ts");
   assert.match(mapper, /tierName: !isMembership && business\.tierSetting\s*\n\s*\? fromStoredTier\(/);
   const view = read("src/lib/wallet-pass-view.ts");
-  assert.match(view, /if \(input\.tierName\) secondaryFields\.push\(\{ label: "Tier", value: input\.tierName/);
+  assert.match(view, /if \(input\.tierName\) secondaryFields\.push\(\{ label: t\("pass\.tier"\), value: t\(`tier\.\$\{input\.tierName\}`\)/);
 });
 
 test("the stamp program pass carries the tier (Google), gated on stamp programs + tiers", () => {

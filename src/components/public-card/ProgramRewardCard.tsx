@@ -1,6 +1,8 @@
 import Image from "next/image";
 import type { WalletTheme } from "@/components/public-card/WalletCardShell";
 import { withAlpha } from "@/lib/card-themes";
+import { translateFor } from "@/i18n/dictionaries";
+import type { Locale } from "@/i18n/locales";
 
 export type ProgramRewardCardProps = {
   programName: string;
@@ -13,6 +15,7 @@ export type ProgramRewardCardProps = {
   rewardReady: boolean;
   theme: WalletTheme;
   isMembership?: boolean;
+  locale?: Locale;
 };
 
 export function ProgramRewardCard({
@@ -26,19 +29,21 @@ export function ProgramRewardCard({
   rewardReady,
   theme,
   isMembership = false,
+  locale = "en",
 }: ProgramRewardCardProps) {
+  const t = translateFor(locale);
   return (
     <div className="rounded-2xl border p-4" style={{ borderColor: withAlpha(theme.accent, 0.18), backgroundColor: withAlpha(theme.accent, 0.03) }}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-semibold text-[#111827]">{programName}</p>
-          <p className="mt-1 text-sm text-[#6B7280]">{isMembership ? "Prepaid membership" : `Reward: ${rewardName}`}</p>
+          <p className="mt-1 text-sm text-[#6B7280]">{isMembership ? t("card.prepaidMembership") : t("card.rewardLabel", { reward: rewardName })}</p>
         </div>
         <span
           className="rounded-full px-3 py-1 text-xs font-semibold"
           style={rewardReady ? { backgroundColor: "#DCFCE7", color: "#15803D" } : { backgroundColor: withAlpha(theme.accent, 0.1), color: theme.accent }}
         >
-          {isMembership ? (remaining > 0 ? `${remaining} left` : "Used up") : rewardReady ? "Ready" : `${remaining} left`}
+          {isMembership ? (remaining > 0 ? t("card.left", { count: remaining }) : t("pass.usedUp")) : rewardReady ? t("card.ready") : t("card.left", { count: remaining })}
         </span>
       </div>
       <div className="mt-4 flex items-center gap-3">
@@ -48,15 +53,15 @@ export function ProgramRewardCard({
         </div>
       </div>
       <div className="mt-4 flex items-center gap-3 rounded-2xl bg-[#FAFAFA] p-3">
-        <Image src={qrCode} alt={`${programName} scan QR`} width={84} height={84} unoptimized />
+        <Image src={qrCode} alt={t("card.programScanQr", { program: programName })} width={84} height={84} unoptimized />
         <p className="text-sm font-medium text-[#111827]">
           {isMembership
             ? remaining > 0
-              ? "Show to use a visit."
-              : "All visits used \u2014 ask staff to renew."
+              ? t("card.showToUseVisit")
+              : t("card.allVisitsUsed")
             : rewardReady
-              ? "Show to redeem this reward."
-              : "Show to earn stamps for this program."}
+              ? t("card.showToRedeem")
+              : t("card.showToEarn")}
         </p>
       </div>
     </div>
